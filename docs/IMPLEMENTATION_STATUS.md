@@ -107,12 +107,42 @@ consumer).
 
 ## Phase 4 — Core UI components
 
-- [ ] `mc-button`, `mc-field`, `mc-select`, `mc-checkbox`, `mc-radio`, `mc-card`,
-      `mc-badge`, `mc-price`, `mc-rating`, `mc-alert`, `mc-breadcrumb`,
-      `mc-pagination`, `mc-quantity`, `mc-modal`, `mc-drawer`, `mc-toast`
-- [ ] Each component: Twig contract, CSS, JS (if needed), a11y states, doc example
+- [x] `mc-button` — `assets/src/css/components/button.css`; primary (default)/
+      secondary/ghost/danger variants, sm/lg sizes, native `disabled`/
+      `:focus-visible` states, component-local `--mc-button-*` vars from
+      semantic tokens. CSS only, no JS needed. Doc:
+      `docs/developer/components/button.md`
+- [x] `mc-alert` — `assets/src/css/components/alert.css`; success (default)/
+      danger/warning/info variants, bg/border tints via `color-mix()` from a
+      single `--mc-alert-accent` var (no new hardcoded/primitive tint
+      colors). Optional dismiss button wired through
+      `assets/src/js/components/alert.js` via the
+      `data-mc-action="dismiss-alert"` hook, imported into both `catalog.js`
+      and `admin.js`. Doc: `docs/developer/components/alert.md`
+- [ ] `mc-field`, `mc-select`, `mc-checkbox`, `mc-radio`, `mc-card`,
+      `mc-badge`, `mc-price`, `mc-rating`, `mc-breadcrumb`, `mc-pagination`,
+      `mc-quantity`, `mc-modal`, `mc-drawer`, `mc-toast`
+- [x] Definition of Done pattern established for this phase (documented
+      contract, `mc-*` BEM, JS only via `data-mc-*` when needed, tokens not
+      hardcoded values, a11y states, doc example) — repeat for each
+      remaining component
 
-Not started.
+**In progress.** `mc-button` and `mc-alert` done (first two components per
+Implementation Guide §45/§88 step 13, chosen deliberately over doing all
+sixteen in one run). Fourteen components remain. No Twig rendering pipeline
+exists yet (Phase 6/8), so each component ships as CSS(+JS) plus a plain
+HTML markup contract documented under `docs/developer/components/` — a
+future `ComponentRenderer`/Twig helper wraps the same class contract without
+changing it, per CLAUDE.md §85 (API arrives with a real consumer, not ahead
+of one).
+
+Verified with `npm install` (0 vulnerabilities), `npm run build` (minified;
+confirmed `.mc-button`/`.mc-alert` rules and `--mc-*` token references
+present in `assets/dist/css/index.min.css`, and the `dismiss-alert` hook
+present in both `assets/dist/js/catalog.min.js` and `admin.min.js`) and
+`npm run dev` (sourcemapped). Not yet rendered inside an actual OpenCart
+page/theme — that starts with Phase 6 (Product Card) or Phase 8 (Theme
+resolver).
 
 ## Phase 5 — Layout conventions
 
@@ -279,31 +309,34 @@ Not started.
 
 ## Next step for the next routine run
 
-**Phase 3 — Design System (tokens) is complete.** Start **Phase 4 — Core UI
-components**, per `CLAUDE.md` §21 step 13 and `MINTCART_IMPLEMENTATION_GUIDE.md`
-§45:
+**Phase 4 — Core UI components is in progress.** `mc-button` and `mc-alert`
+are done (see above). Continue with the next one or two components from the
+remaining list, per `MINTCART_IMPLEMENTATION_GUIDE.md` §45/§79:
 
-- Pick one or two components to start with rather than all sixteen at once —
-  `mc-button` and `mc-alert` are natural first components (simple, no JS
-  required for `mc-button`, and both are listed first in Implementation
-  Guide §45/§88 step 13). Do not attempt the full component set in a single
-  run (CLAUDE.md §4a-equivalent scope discipline — one coherent increment).
-- Each component needs, per the Definition of Done in
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §79: a documented contract, `mc-*` BEM
-  markup, CSS that reads from `--mc-*` tokens (not hardcoded values), JS only
-  if actually needed and using `data-mc-*` hooks (never a CSS class) if so,
-  keyboard/accessibility support, and a short usage doc/example.
-- There is no Twig rendering pipeline or theme yet (that is Phase 6-8), so a
-  component at this stage is CSS (+ JS if needed) plus a plain HTML usage
-  example under something like `docs/developer/components/` — do not invent
-  a `ComponentRenderer`/Twig integration ahead of a real consumer
-  (CLAUDE.md §85); that arrives with Phase 6 (Product Card) or Phase 8
-  (Theme resolver).
-- Add each new component's CSS file under `assets/src/css/components/` and
-  import it from `index.css` in the documented layer order (elements →
-  components → utilities → compatibility → theme overrides, per
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §11).
-- Verify with `npm run build`/`npm run dev` that the bundle still compiles.
+- `mc-field`, `mc-select`, `mc-checkbox`, `mc-radio`, `mc-card`, `mc-badge`,
+  `mc-price`, `mc-rating`, `mc-breadcrumb`, `mc-pagination`, `mc-quantity`,
+  `mc-modal`, `mc-drawer`, `mc-toast`.
+- Reasonable next pick: `mc-field` + `mc-badge` (form input primitive plus a
+  second simple, mostly-CSS component, mirroring how `mc-button`/`mc-alert`
+  were paired). `mc-modal`/`mc-drawer`/`mc-toast` are more involved (real JS,
+  focus management) — save those for a dedicated run once the simpler
+  components are done.
+- Follow the same pattern established by `mc-button`/`mc-alert`: CSS under
+  `assets/src/css/components/<name>.css`, imported from `index.css` in the
+  existing layer position (right after `settings/tokens.css`, before
+  `compatibility/`); JS only if the component actually needs it, as a small
+  module under `assets/src/js/components/<name>.js` imported from both
+  `catalog.js` and `admin.js`, using `data-mc-action="..."` hooks only
+  (never a CSS class) per `MINTCART_IMPLEMENTATION_GUIDE.md` §14; a doc file
+  under `docs/developer/components/<name>.md` with the markup contract,
+  variants, behavior hooks, accessibility notes and tokens consumed.
+- Do not invent a `ComponentRenderer`/Twig integration yet — there is still
+  no consumer for one (that arrives with Phase 6 Product Card or Phase 8
+  Theme resolver, per CLAUDE.md §85).
+- Verify with `npm run build`/`npm run dev` and grep the compiled output for
+  the new class/hook names, same as this run did.
+- Do not attempt the full remaining component set in one run — one or two
+  components per increment (CLAUDE.md §4a-equivalent scope discipline).
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
