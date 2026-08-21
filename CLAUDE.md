@@ -322,6 +322,27 @@ new MintCart theme
 
 ---
 
+
+## 8A. Controller / reusable action invariant
+
+When refactoring or creating MintCart controllers:
+
+```text
+Controller = orchestration
+Reusable Service/Action = shared logic
+Provider/ViewModel = normalized presentation data
+Twig = rendering
+```
+
+Do not duplicate product-list preparation across Category, Search, Manufacturer, Specials and Blocks.
+
+Prefer one shared Product Listing pipeline and one ProductViewProvider.
+
+Expose fine-grained documented stage events where extensions need stable hooks.
+
+Do not introduce a large HMVC framework merely for terminology; reuse logic by responsibility and real use case.
+
+
 ## 9. Theme architecture
 
 Theme dependency direction:

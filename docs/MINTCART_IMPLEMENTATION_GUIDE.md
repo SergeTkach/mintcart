@@ -1518,6 +1518,202 @@ OpenCart4Adapter
 
 ---
 
+
+# 38A. Controller decomposition rules
+
+Для нового MintCart-коду і поступового refactor старих OpenCart controllers дотримуватися правила:
+
+```text
+Controller orchestrates.
+Service/Action performs reusable work.
+Provider builds normalized view data.
+Twig renders.
+```
+
+Controller action не повинен залишатися великим процедурним методом, якщо його можна природно розбити на етапи.
+
+Добре:
+
+```php
+public function index(): void
+{
+    $this->initialize();
+    $this->loadContext();
+    $this->buildBreadcrumbs();
+    $this->buildListing();
+    $this->buildLayout();
+    $this->render();
+}
+```
+
+Допустимий chaining:
+
+```php
+public function index(): void
+{
+    $this
+        ->initialize()
+        ->loadContext()
+        ->buildBreadcrumbs()
+        ->buildListing()
+        ->buildLayout()
+        ->render();
+}
+```
+
+Chaining не є самоціллю.
+
+Головна вимога:
+
+```text
+meaningful stage
+=
+окремий method/service
++
+можлива documented extension point
+```
+
+Не створювати десятки дрібних methods лише для візуально короткого `index()`.
+
+---
+
+# 38B. Fine-grained event rules
+
+Не вішати нові MintCart extension points тільки на весь controller action, якщо extensions реально потребують втручання в окремий етап.
+
+Приклади documented stage events:
+
+```text
+catalog.category.breadcrumbs.before
+catalog.category.breadcrumbs.after
+
+catalog.category.listing.before
+catalog.category.listing.after
+
+catalog.category.layout.before
+catalog.category.layout.after
+```
+
+Правила:
+
+1. event name стабільний і семантичний;
+2. event відповідає реальному extension use case;
+3. не створювати event на кожен приватний helper;
+4. передавати контрольований context/data contract;
+5. не змушувати extension мутувати весь controller object;
+6. documented events є частиною extension API.
+
+За потреби реалізувати lightweight stage helper, щоб не дублювати `before/after` boilerplate.
+
+---
+
+# 38C. Product listing reuse
+
+Не дублювати формування списку товарів у:
+
+```text
+category
+search
+manufacturer
+special
+featured
+latest
+bestseller
+related
+homepage blocks
+```
+
+Створити reusable `ProductListingService` або еквівалентний сервіс.
+
+Вхід:
+
+```text
+ProductListRequest / ListingContext
+```
+
+Наприклад:
+
+```text
+category_id
+manufacturer_id
+search
+filter
+sort
+order
+start
+limit
+```
+
+Вихід:
+
+```text
+ProductListResult
+```
+
+Мінімум:
+
+```text
+products[]
+total
+pagination
+sort
+order
+limit
+```
+
+---
+
+# 38D. One ProductViewProvider
+
+Усі listing contexts повинні використовувати один provider для presentation data товару.
+
+Наприклад:
+
+```text
+MintCart\Commerce\ProductViewProvider
+```
+
+Він формує normalized product data для Theme API.
+
+Не повторювати в controller:
+
+```php
+foreach ($results as $result) {
+    $data['products'][] = [
+        // duplicate image/price/special/rating logic
+    ];
+}
+```
+
+Category/Search/Manufacturer/Special/Blocks повинні отримувати однаковий normalized `ProductView`.
+
+Це критична вимога Theme API:
+
+```text
+один product-card override
+→ працює у всіх listing contexts
+```
+
+---
+
+# 38E. HMVC principle without framework overengineering
+
+Можна використовувати HMVC-подібний підхід до перевикористання page fragments/actions, але не вводити великий HMVC framework лише заради терміну.
+
+Правило:
+
+> Reuse by responsibility, not by copying controllers.
+
+Виносити окремий reusable action/service, коли:
+
+- логіка використовується у кількох controllers/blocks;
+- вона має самостійну відповідальність;
+- її корисно тестувати окремо;
+- для неї потрібна стабільна extension point.
+
+Не перетворювати кожен controller method на окремий class без реальної потреби.
+
+
 # 39. Не дублювати OpenCart DB
 
 Якщо OpenCart уже має поле/setting:

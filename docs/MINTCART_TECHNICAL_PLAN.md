@@ -453,6 +453,282 @@ checkout.before_confirm
 
 ---
 
+
+# 15A. Controller Decomposition & Reusable Actions
+
+OpenCart controller actions не повинні залишатися великими процедурними «простирадлами», якщо сценарій можна розбити на стабільні етапи.
+
+Головний принцип:
+
+```text
+Controller = orchestration
+Service / Action = reusable logic
+Component / ViewModel = presentation data
+Twig = rendering
+```
+
+Контролер повинен читатися як сценарій сторінки.
+
+Наприклад:
+
+```php
+public function index(): void
+{
+    $this->initialize();
+    $this->loadContext();
+    $this->buildBreadcrumbs();
+    $this->buildMainContent();
+    $this->buildPositions();
+    $this->render();
+}
+```
+
+Method chaining допустимий:
+
+```php
+public function index(): void
+{
+    $this
+        ->initialize()
+        ->loadContext()
+        ->buildBreadcrumbs()
+        ->buildMainContent()
+        ->buildPositions()
+        ->render();
+}
+```
+
+але chaining не є вимогою сам по собі.
+
+Важлива не форма запису, а те, що:
+
+```text
+кожен великий етап
+=
+окремий method/service
++
+окрема extension point
+```
+
+---
+
+# 15B. Fine-grained Events
+
+MintCart не повинен обмежувати extensions лише подіями на рівні всього controller action.
+
+Потрібні стабільні before/after extension points для значущих етапів.
+
+Приклади:
+
+```text
+catalog.category.context.before
+catalog.category.context.after
+
+catalog.category.breadcrumbs.before
+catalog.category.breadcrumbs.after
+
+catalog.category.listing.before
+catalog.category.listing.after
+
+catalog.category.positions.before
+catalog.category.positions.after
+
+catalog.category.render.before
+catalog.category.render.after
+```
+
+Назви подій повинні бути стабільними й документованими.
+
+Не створювати event для кожного дрібного приватного helper-а.
+
+Event boundary повинен відповідати реальному extension use case.
+
+За можливості не дублювати вручну boilerplate `before/after` у сотнях методів.
+
+Можна створити невеликий reusable stage/pipeline helper, якщо він не ускладнює читання коду.
+
+Наприклад концептуально:
+
+```php
+$this->stage('breadcrumbs', function () {
+    $this->buildBreadcrumbs();
+});
+```
+
+де `stage()` викликає documented `before` / `after` events.
+
+---
+
+# 15C. Reusable Product Listing Pipeline
+
+Category, Search, Manufacturer, Specials та ecommerce blocks не повинні кожен окремо формувати однаковий масив товарів.
+
+Створити спільну listing infrastructure.
+
+Цільові consumers:
+
+```text
+Category
+Search
+Manufacturer
+Specials
+Featured
+Latest
+Bestsellers
+Related Products
+Homepage Products Block
+Custom landing pages
+```
+
+Орієнтовна схема:
+
+```text
+Listing Context / Request
+        ↓
+ProductListingService
+        ↓
+Product query / OpenCart adapter
+        ↓
+ProductViewProvider
+        ↓
+ProductListResult
+        ↓
+Product Card component
+```
+
+`ProductListResult` повинен містити нормалізовані дані, наприклад:
+
+```text
+products[]
+total
+pagination
+sort
+order
+limit
+filters/context
+```
+
+Не копіювати в кожен controller конструкцію на кшталт:
+
+```php
+foreach ($results as $result) {
+    $data['products'][] = [
+        // image
+        // price
+        // special
+        // rating
+        // ...
+    ];
+}
+```
+
+Це має робити один `ProductViewProvider`.
+
+---
+
+# 15D. Product View Provider
+
+Один provider формує presentation data для товару.
+
+Приклад контракту:
+
+```text
+id
+name
+url
+image
+secondary_image
+image_alt
+price
+special
+tax
+rating
+stock
+badges
+options_summary
+actions
+```
+
+Theme, Category, Search, Manufacturer і Blocks не повинні кожен по-своєму збирати ці дані.
+
+Таким чином:
+
+```text
+Category
+Search
+Manufacturer
+Special
+Blocks
+    ↓
+ProductListing
+    ↓
+ProductView[]
+    ↓
+product-card.twig
+```
+
+Theme override `product-card.twig` автоматично застосовується до всіх listing contexts.
+
+---
+
+# 15E. Reusable Page Actions
+
+Повторювані сценарії сторінок треба виносити в reusable actions/services там, де це реально зменшує дублювання.
+
+Кандидати:
+
+```text
+BreadcrumbBuilder
+ProductListingService
+PaginationBuilder
+SortOptionsBuilder
+LimitOptionsBuilder
+LayoutPositionLoader
+SeoMetaBuilder
+ProductViewProvider
+```
+
+Не створювати «HMVC заради HMVC».
+
+Не потрібно переносити кожен controller method у окремий клас.
+
+Виділяти reusable action/service тоді, коли:
+
+```text
+логіка повторюється
+або
+потрібна окрема extension point
+або
+вона має окрему відповідальність і тестується незалежно
+```
+
+---
+
+# 15F. Controller Refactoring Rule
+
+При роботі зі старим OpenCart controller:
+
+1. спочатку зрозуміти існуючий flow;
+2. знайти повторювані частини;
+3. виділити meaningful stages;
+4. винести reusable logic у services/actions;
+5. додати fine-grained events тільки в стабільних точках;
+6. зберегти backward compatibility;
+7. не переписувати controller повністю, якщо можна зробити поступову декомпозицію.
+
+Мета:
+
+```text
+короткі controller actions
++
+перевикористовувана логіка
++
+дрібні стабільні extension points
++
+мінімум дублювання
+```
+
+
 # 16. Blocks architecture
 
 Розділити:
