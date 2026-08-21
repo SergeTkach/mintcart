@@ -107,12 +107,30 @@ consumer).
 
 ## Phase 4 — Core UI components
 
-- [ ] `mc-button`, `mc-field`, `mc-select`, `mc-checkbox`, `mc-radio`, `mc-card`,
-      `mc-badge`, `mc-price`, `mc-rating`, `mc-alert`, `mc-breadcrumb`,
+- [x] `mc-button` — `assets/src/css/components/button.css`; variants
+      (primary/secondary/outline/ghost/danger), sizes (sm/lg), disabled and
+      `is-loading` states; no JS needed. Doc: `docs/developer/components/button.md`
+- [x] `mc-alert` — `assets/src/css/components/alert.css`; variants
+      (success/danger/warning/info); optional dismiss via
+      `data-mc-action="dismiss-alert"`, wired by
+      `assets/src/js/components/alert.js` (imported from both `catalog.js`
+      and `admin.js`). Doc: `docs/developer/components/alert.md`
+- [ ] `mc-field`, `mc-select`, `mc-checkbox`, `mc-radio`, `mc-card`,
+      `mc-badge`, `mc-price`, `mc-rating`, `mc-breadcrumb`,
       `mc-pagination`, `mc-quantity`, `mc-modal`, `mc-drawer`, `mc-toast`
-- [ ] Each component: Twig contract, CSS, JS (if needed), a11y states, doc example
+- [x] Each shipped component so far: CSS contract (no Twig yet — no theme/
+      renderer exists until Phase 8, per CLAUDE.md §85), JS only where
+      actually needed (`mc-alert`'s dismiss), a11y states, doc example with
+      a Definition-of-Done checklist
 
-Not started.
+**In progress.** 2 of 16 Phase 4 components done (`mc-button`, `mc-alert`).
+Verified with `npm run build` and `npm run dev` — both compile; the bundled
+CSS contains the new component rules (including the `color-mix()` alert
+tints) and the bundled JS contains `initAlertDismiss`/`dismiss-alert`. No
+automated component/visual test harness exists yet in this repo (no test
+runner configured beyond the PHP `tests/mintcart/` suite from Phase 1) — this
+increment's verification is build-compiles + manual code review only; that
+gap is not new to this run.
 
 ## Phase 5 — Layout conventions
 
@@ -279,31 +297,48 @@ Not started.
 
 ## Next step for the next routine run
 
-**Phase 3 — Design System (tokens) is complete.** Start **Phase 4 — Core UI
-components**, per `CLAUDE.md` §21 step 13 and `MINTCART_IMPLEMENTATION_GUIDE.md`
-§45:
+**`mc-button` and `mc-alert` are done.** Continue **Phase 4 — Core UI
+components** with the next one or two components from the remaining list:
 
-- Pick one or two components to start with rather than all sixteen at once —
-  `mc-button` and `mc-alert` are natural first components (simple, no JS
-  required for `mc-button`, and both are listed first in Implementation
-  Guide §45/§88 step 13). Do not attempt the full component set in a single
-  run (CLAUDE.md §4a-equivalent scope discipline — one coherent increment).
-- Each component needs, per the Definition of Done in
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §79: a documented contract, `mc-*` BEM
-  markup, CSS that reads from `--mc-*` tokens (not hardcoded values), JS only
-  if actually needed and using `data-mc-*` hooks (never a CSS class) if so,
-  keyboard/accessibility support, and a short usage doc/example.
-- There is no Twig rendering pipeline or theme yet (that is Phase 6-8), so a
-  component at this stage is CSS (+ JS if needed) plus a plain HTML usage
-  example under something like `docs/developer/components/` — do not invent
-  a `ComponentRenderer`/Twig integration ahead of a real consumer
-  (CLAUDE.md §85); that arrives with Phase 6 (Product Card) or Phase 8
-  (Theme resolver).
-- Add each new component's CSS file under `assets/src/css/components/` and
-  import it from `index.css` in the documented layer order (elements →
-  components → utilities → compatibility → theme overrides, per
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §11).
-- Verify with `npm run build`/`npm run dev` that the bundle still compiles.
+```text
+mc-field, mc-select, mc-checkbox, mc-radio, mc-card, mc-badge, mc-price,
+mc-rating, mc-breadcrumb, mc-pagination, mc-quantity, mc-modal, mc-drawer,
+mc-toast
+```
+
+Suggested next pick: `mc-field` (+ maybe `mc-checkbox`/`mc-radio` alongside
+it if the increment stays small) — form controls are needed before anything
+resembling Setup Wizard/Business Settings (Phase 13-14) and are simple,
+self-contained CSS/markup like `mc-button`/`mc-alert` were. `mc-badge` and
+`mc-price` are natural next-after that, since Phase 6 (Product Card) will
+need both.
+
+Follow the same pattern established this run:
+
+- One or two components per run, not the full remaining fourteen at once
+  (CLAUDE.md §4a scope discipline).
+- Per the Definition of Done (`MINTCART_IMPLEMENTATION_GUIDE.md` §79): a
+  documented contract, `mc-*` BEM markup, CSS reading from `--mc-*` tokens
+  (component-local tier set from semantic tokens, not hardcoded values), JS
+  only if actually needed and only via `data-mc-*` hooks (never a CSS class)
+  if so, keyboard/a11y states, and a usage doc under
+  `docs/developer/components/` (see `button.md`/`alert.md` for the shape —
+  each ends with a DoD checklist, with "theme override checked" left
+  unchecked until Phase 8's resolver exists).
+- No Twig/`ComponentRenderer` yet — that's still Phase 8, no real consumer
+  before then (CLAUDE.md §85). A component at this stage is CSS (+ JS if
+  needed) plus the plain-HTML doc example.
+- New component CSS goes under `assets/src/css/components/`, imported from
+  `index.css` in the documented layer order (tokens → elements → components
+  → utilities → compatibility, per `MINTCART_IMPLEMENTATION_GUIDE.md` §11 —
+  elements/utilities layers are still empty, nothing has needed them yet).
+- If a component needs JS, add it under `assets/src/js/components/` and
+  import/call its init from both `catalog.js` and `admin.js` (like
+  `alert.js`), unless it's genuinely storefront- or admin-only.
+- Verify with `npm run build`/`npm run dev` that the bundle still compiles,
+  and spot-check the new selectors/behavior hooks landed in the bundled
+  output (`grep` the built CSS/JS, as this run did) — there is still no
+  automated frontend test harness in this repo.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
