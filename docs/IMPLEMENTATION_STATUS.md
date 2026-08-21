@@ -52,16 +52,34 @@ no automatic call site yet by design (see ADR 001) — the first real caller wir
 
 ## Phase 2 — Frontend foundation
 
-- [ ] `package.json` + `package-lock.json`
-- [ ] esbuild config
-- [ ] `assets/src/` / `assets/dist/` structure
-- [ ] Pin and install Bootstrap 5.3.8, Swiper 14.1.x, SortableJS 1.15.7,
-      Bootstrap Icons 1.13.x via npm (no CDN)
-- [ ] `catalog.js`, `admin.js`, `index.css` entry points
-- [ ] `css/compatibility/bootstrap3-shim.css` for legacy OpenCart 3 / Bootstrap 3
-      markup (do not load Bootstrap 3 and 5 globally together)
+- [x] `package.json` + `package-lock.json`
+- [x] esbuild config — `build`/`dev` npm scripts (minified vs. sourcemapped),
+      no separate config file needed at this size
+- [x] `assets/src/` / `assets/dist/` structure — `assets/dist/` is generated
+      by `npm run build`/`npm run dev` and gitignored, never committed
+- [x] Pin and install Bootstrap 5.3.8, Swiper 14.1.0, SortableJS 1.15.7,
+      Bootstrap Icons 1.13.1 via npm (no CDN) — exact pins in
+      `package-lock.json`; the guide's "1.13.x"/"14.1.x" ranges resolved to
+      these exact latest-in-range versions at the time this was pinned
+- [x] `catalog.js`, `admin.js`, `index.css` entry points — each JS entry
+      currently only imports Bootstrap 5's JS; no ecommerce/admin behavior
+      yet (no real consumer — CLAUDE.md §85). `index.css` bundles Bootstrap
+      5's CSS; MintCart tokens/elements/components/utilities layers are
+      Phase 3/4, not yet added to the import order documented in the file.
+- [x] `css/compatibility/bootstrap3-shim.css` for legacy OpenCart 3 / Bootstrap 3
+      markup (do not load Bootstrap 3 and 5 globally together) —
+      `assets/src/css/compatibility/bootstrap3-shim.css`; covers
+      `.pull-right`/`.pull-left`, `.hidden-xs`/`.visible-xs`, `.btn-default`,
+      `.panel`/`.panel-heading`/`.panel-body`, `.input-group-btn`. Uses
+      `var(--mc-*, <fallback>)` since Phase 3 tokens don't exist yet.
 
-Not started.
+**Phase 2 is complete.** Verified with `npm install` (0 vulnerabilities),
+`npm run build` (minified output) and `npm run dev` (sourcemapped output) —
+both produce `assets/dist/{js,css}/*` and the shim rules are present in the
+bundled CSS. Not yet wired into any OpenCart Twig template/controller — that
+starts once a theme actually needs to enqueue these bundles (Phase 6+
+Product Card, or Phase 8 Theme resolver), per CLAUDE.md §85 (no API/wiring
+ahead of a real consumer).
 
 ## Phase 3 — Design System (tokens)
 
@@ -246,7 +264,24 @@ Not started.
 
 ## Next step for the next routine run
 
-Continue **Phase 1 — Foundation**: `MintCart\Compatibility\OpenCart3\*` adapters,
-health checks, and CI are still open (see Phase 1 checklist above), or proceed to
-**Phase 2 — Frontend foundation** per `CLAUDE.md` §21 steps 10–12 if Phase 1's
-remaining items are deferred as noted.
+**Phase 2 — Frontend foundation is complete.** Start **Phase 3 — Design System
+(tokens)**, per `CLAUDE.md` §21 step 11-12 and `MINTCART_IMPLEMENTATION_GUIDE.md`
+§44/§16-17:
+
+- Create `assets/src/css/settings/tokens.css` with the primitive/semantic/
+  component-local `--mc-*` custom property tiers on `:root`: color, typography,
+  spacing, radius, border, shadow, motion, z-index (categories listed in
+  `MINTCART_IMPLEMENTATION_GUIDE.md` §17).
+- Neutral MintCart default values only — do not carry over Livenza/Cartello
+  branding or any specific author's palette (CLAUDE.md §3).
+- Add `tokens.css` to `assets/src/css/index.css`'s `@import` order, right after
+  Bootstrap 5 and before the compatibility shim (per the order documented in
+  that file's own header comment and `MINTCART_IMPLEMENTATION_GUIDE.md` §11).
+- Once tokens exist, `assets/src/css/compatibility/bootstrap3-shim.css`'s
+  `var(--mc-*, <fallback>)` declarations (added in Phase 2) will pick up the
+  real values automatically — no change needed there.
+- Verify with `npm run build`/`npm run dev` that the bundle still compiles and
+  that the token custom properties are present in the output CSS.
+
+Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
+health checks, CI) stay intentionally deferred — no real consumer yet.
