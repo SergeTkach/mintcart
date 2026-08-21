@@ -1,0 +1,23 @@
+{
+  "name": "mintcart-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MintCart frontend build pipeline (Bootstrap 5 + vanilla JS, esbuild).",
+  "scripts": {
+    "build": "npm run build:js && npm run build:css",
+    "build:js": "esbuild assets/src/js/catalog.js --bundle --minify --outfile=assets/dist/js/catalog.min.js && esbuild assets/src/js/admin.js --bundle --minify --outfile=assets/dist/js/admin.min.js",
+    "build:css": "esbuild assets/src/css/index.css --bundle --minify --outfile=assets/dist/css/index.min.css",
+    "dev": "npm run dev:js && npm run dev:css",
+    "dev:js": "esbuild assets/src/js/catalog.js --bundle --sourcemap --outfile=assets/dist/js/catalog.js && esbuild assets/src/js/admin.js --bundle --sourcemap --outfile=assets/dist/js/admin.js",
+    "dev:css": "esbuild assets/src/css/index.css --bundle --sourcemap --outfile=assets/dist/css/index.css"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
+  "dependencies": {
+    "bootstrap": "5.3.8",
+    "bootstrap-icons": "1.13.1",
+    "sortablejs": "1.15.7",
+    "swiper": "14.1.0"
+  }
+}
