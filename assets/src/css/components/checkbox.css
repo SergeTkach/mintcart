@@ -1,0 +1,48 @@
+/**
+ * mc-checkbox
+ *
+ * MintCart-owned checkbox component (docs/MINTCART_IMPLEMENTATION_GUIDE.md §45,
+ * Definition of Done §79). Styles the native `<input type="checkbox">` via
+ * `accent-color` rather than hiding it behind a custom SVG faux-control -
+ * simpler, keeps native keyboard/AT semantics for free, and does not invent a
+ * checkmark icon dependency ahead of the Bootstrap Icons SVG renderer
+ * (MINTCART_IMPLEMENTATION_GUIDE.md §21, Phase 21, no consumer yet - CLAUDE.md §85).
+ *
+ * Contract: docs/developer/components/checkbox.md
+ */
+
+.mc-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-2);
+    cursor: pointer;
+}
+
+.mc-checkbox__input {
+    flex: 0 0 auto;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+    accent-color: var(--mc-primary);
+    cursor: pointer;
+}
+
+.mc-checkbox__input:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+.mc-checkbox__input:disabled {
+    cursor: not-allowed;
+}
+
+.mc-checkbox:has(.mc-checkbox__input:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.mc-checkbox__label {
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-base);
+    color: var(--mc-text);
+}

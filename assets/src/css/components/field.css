@@ -1,0 +1,109 @@
+/**
+ * mc-field
+ *
+ * MintCart-owned form field wrapper (docs/MINTCART_IMPLEMENTATION_GUIDE.md §45,
+ * Definition of Done §79). Covers text/email/password/number/etc. `<input>`,
+ * `<textarea>` and `<select>` behind one shared `.mc-field__control` look, so
+ * a form doesn't mix three different control styles.
+ *
+ * Contract: docs/developer/components/field.md
+ *
+ * `select.mc-field__control`'s chevron is an inline SVG data URI placeholder,
+ * same approach as mc-alert's dismiss glyph (see alert.css header comment) -
+ * swap for `{{ mc_icon('chevron-down') }}`-driven markup once the Bootstrap
+ * Icons SVG renderer lands (MINTCART_IMPLEMENTATION_GUIDE.md §21, Phase 21,
+ * not yet built - no consumer before this).
+ */
+
+.mc-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-1);
+}
+
+.mc-field__label {
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-medium);
+    color: var(--mc-text);
+}
+
+.mc-field__control {
+    --mc-field-border-color: var(--mc-border);
+    --mc-field-bg: var(--mc-surface);
+    --mc-field-color: var(--mc-text);
+
+    display: block;
+    width: 100%;
+    padding: var(--mc-space-2) var(--mc-space-3);
+    border: var(--mc-border-width) solid var(--mc-field-border-color);
+    border-radius: var(--mc-radius-md);
+    background-color: var(--mc-field-bg);
+    color: var(--mc-field-color);
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-base);
+    line-height: var(--mc-line-height-normal);
+    transition:
+        border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        box-shadow var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-field__control::placeholder {
+    color: var(--mc-muted);
+}
+
+/* Keyboard focus only, matches mc-button's focus treatment plus a soft ring
+   (a border-color-only change is too subtle for a text field). */
+.mc-field__control:focus-visible {
+    outline: none;
+    border-color: var(--mc-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-accent) 25%, transparent);
+}
+
+.mc-field__control:disabled,
+.mc-field__control[aria-disabled='true'] {
+    background-color: var(--mc-surface-alt);
+    color: var(--mc-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+textarea.mc-field__control {
+    min-height: 6rem;
+    resize: vertical;
+}
+
+select.mc-field__control {
+    appearance: none;
+    padding-right: var(--mc-space-8);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23495057' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--mc-space-3) center;
+    background-size: 1rem;
+}
+
+.mc-field__help {
+    margin: 0;
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-xs);
+    color: var(--mc-muted);
+}
+
+.mc-field__error {
+    margin: 0;
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-xs);
+    color: var(--mc-danger);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Error state (transient - CLAUDE.md §13, not a BEM modifier)             */
+/* ---------------------------------------------------------------------- */
+
+.mc-field.has-error .mc-field__control {
+    --mc-field-border-color: var(--mc-danger);
+}
+
+.mc-field.has-error .mc-field__control:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-danger) 25%, transparent);
+}

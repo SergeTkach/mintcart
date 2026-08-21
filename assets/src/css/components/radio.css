@@ -1,0 +1,46 @@
+/**
+ * mc-radio
+ *
+ * MintCart-owned radio button component (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §45, Definition of Done §79). Same rationale as mc-checkbox (see
+ * checkbox.css header comment): styles the native `<input type="radio">`
+ * via `accent-color` instead of a custom SVG faux-control.
+ *
+ * Contract: docs/developer/components/radio.md
+ */
+
+.mc-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-2);
+    cursor: pointer;
+}
+
+.mc-radio__input {
+    flex: 0 0 auto;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+    accent-color: var(--mc-primary);
+    cursor: pointer;
+}
+
+.mc-radio__input:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+.mc-radio__input:disabled {
+    cursor: not-allowed;
+}
+
+.mc-radio:has(.mc-radio__input:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.mc-radio__label {
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-base);
+    color: var(--mc-text);
+}
