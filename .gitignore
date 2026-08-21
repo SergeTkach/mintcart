@@ -1,0 +1,54 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+/.idea/
+/.vscode/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+vendor/
+
+# MintCart / OpenCart runtime (upload/)
+upload/.htaccess
+upload/config.php
+upload/admin/config.php
+upload/install.lock
+
+upload/catalog/view/data/*
+!upload/catalog/view/data/index.html
+
+upload/catalog/view/html/*
+!upload/catalog/view/html/index.html
+
+upload/image/*
+!upload/image/index.html
+!upload/image/cache/
+upload/image/cache/*
+!upload/image/cache/index.html
+
+upload/system/storage/*
+!upload/system/storage/backup/
+upload/system/storage/backup/*
+!upload/system/storage/backup/index.html
+
+upload/system/storage/cache/*
+!upload/system/storage/cache/index.html
+
+upload/system/storage/download/*
+!upload/system/storage/download/index.html
+
+upload/system/storage/logs/*
+!upload/system/storage/logs/index.html
+
+upload/system/storage/session/*
+!upload/system/storage/session/index.html
+
+# Backups
+*.zip
