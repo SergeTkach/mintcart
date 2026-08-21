@@ -246,9 +246,7 @@ Not started.
 
 ## Next step for the next routine run
 
-Start **Phase 1 — Foundation**: create the `MintCart\` PHP namespace/bootstrap and
-the migration manager (`mc_migration` table + migration runner), per `CLAUDE.md` §21
-steps 8–9 and `MINTCART_TECHNICAL_PLAN.md` §4/§7. Recommended scope for one increment:
-namespace bootstrap + migration manager + the first migration (creating
-`mc_migration` itself). Defer the OpenCart adapter interfaces and frontend pipeline
-(Phase 2) to subsequent increments if the first one is already substantial.
+Continue **Phase 1 — Foundation**: `MintCart\Compatibility\OpenCart3\*` adapters,
+health checks, and CI are still open (see Phase 1 checklist above), or proceed to
+**Phase 2 — Frontend foundation** per `CLAUDE.md` §21 steps 10–12 if Phase 1's
+remaining items are deferred as noted.
