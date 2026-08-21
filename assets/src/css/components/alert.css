@@ -1,0 +1,103 @@
+/**
+ * mc-alert
+ *
+ * MintCart-owned alert/notice component (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §45, Definition of Done §79). Dismiss behavior (if used) is wired by
+ * `assets/src/js/components/alert.js` via `data-mc-action="dismiss-alert"`,
+ * never by targeting `.mc-alert__dismiss` from JS (CLAUDE.md §14).
+ *
+ * Contract: docs/developer/components/alert.md
+ *
+ * Variant backgrounds/borders are derived from existing primitive tokens
+ * with `color-mix()` rather than adding a full light/dark tint scale for
+ * red/amber/blue to settings/tokens.css - `mc-alert` is currently the only
+ * consumer, so a handful of extra unused primitive tokens would be
+ * speculative (CLAUDE.md §85/§17).
+ */
+
+.mc-alert {
+    --mc-alert-bg: var(--mc-surface-alt);
+    --mc-alert-border-color: var(--mc-border);
+    --mc-alert-color: var(--mc-text);
+
+    display: flex;
+    align-items: flex-start;
+    gap: var(--mc-space-3);
+    padding: var(--mc-space-4);
+    border: var(--mc-border-width) solid var(--mc-alert-border-color);
+    border-radius: var(--mc-radius-md);
+    background-color: var(--mc-alert-bg);
+    color: var(--mc-alert-color);
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-sm);
+    line-height: var(--mc-line-height-normal);
+}
+
+.mc-alert__body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mc-alert__title {
+    display: block;
+    margin-bottom: var(--mc-space-1);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-alert__message {
+    margin: 0;
+}
+
+.mc-alert__dismiss {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--mc-radius-sm);
+    background-color: transparent;
+    color: inherit;
+    cursor: pointer;
+    appearance: none;
+    transition: background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-alert__dismiss:hover {
+    background-color: rgb(0 0 0 / 8%);
+}
+
+.mc-alert__dismiss:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Variants                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.mc-alert--success {
+    --mc-alert-bg: var(--mc-color-mint-50);
+    --mc-alert-border-color: var(--mc-color-mint-300);
+    --mc-alert-color: var(--mc-color-mint-800);
+}
+
+.mc-alert--danger {
+    --mc-alert-bg: color-mix(in srgb, var(--mc-color-red-500) 12%, var(--mc-color-white));
+    --mc-alert-border-color: color-mix(in srgb, var(--mc-color-red-500) 35%, var(--mc-color-white));
+    --mc-alert-color: var(--mc-color-red-700);
+}
+
+.mc-alert--warning {
+    --mc-alert-bg: color-mix(in srgb, var(--mc-color-amber-500) 18%, var(--mc-color-white));
+    --mc-alert-border-color: color-mix(in srgb, var(--mc-color-amber-500) 45%, var(--mc-color-white));
+    --mc-alert-color: var(--mc-color-gray-900);
+}
+
+.mc-alert--info {
+    --mc-alert-bg: color-mix(in srgb, var(--mc-color-blue-500) 12%, var(--mc-color-white));
+    --mc-alert-border-color: color-mix(in srgb, var(--mc-color-blue-500) 35%, var(--mc-color-white));
+    --mc-alert-color: var(--mc-color-blue-700);
+}

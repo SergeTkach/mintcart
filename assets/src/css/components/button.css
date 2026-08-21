@@ -1,0 +1,181 @@
+/**
+ * mc-button
+ *
+ * MintCart-owned button component (docs/MINTCART_IMPLEMENTATION_GUIDE.md §45,
+ * Definition of Done §79). Works on `<button>` and `<a>` alike - it is a
+ * presentation contract only, never a behavior hook (CLAUDE.md §14): actions
+ * are wired from `data-mc-action`, not from `.mc-button` itself.
+ *
+ * Contract: docs/developer/components/button.md
+ *
+ * Component-local tokens (`--mc-button-*`) are set from semantic tokens
+ * (settings/tokens.css) per the three-tier system in
+ * docs/MINTCART_IMPLEMENTATION_GUIDE.md §16.
+ */
+
+.mc-button {
+    --mc-button-bg: var(--mc-primary);
+    --mc-button-bg-hover: var(--mc-primary-hover);
+    --mc-button-bg-active: var(--mc-primary-active);
+    --mc-button-color: var(--mc-on-primary);
+    --mc-button-border-color: transparent;
+    --mc-button-radius: var(--mc-radius-md);
+    --mc-button-padding-y: var(--mc-space-2);
+    --mc-button-padding-x: var(--mc-space-4);
+    --mc-button-font-size: var(--mc-font-size-base);
+    --mc-button-gap: var(--mc-space-2);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--mc-button-gap);
+    padding: var(--mc-button-padding-y) var(--mc-button-padding-x);
+    border: var(--mc-border-width) solid var(--mc-button-border-color);
+    border-radius: var(--mc-button-radius);
+    background-color: var(--mc-button-bg);
+    color: var(--mc-button-color);
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-button-font-size);
+    font-weight: var(--mc-font-weight-medium);
+    line-height: var(--mc-line-height-tight);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    appearance: none;
+    transition:
+        background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-button:hover {
+    background-color: var(--mc-button-bg-hover);
+    border-color: var(--mc-button-bg-hover);
+}
+
+.mc-button:active {
+    background-color: var(--mc-button-bg-active);
+    border-color: var(--mc-button-bg-active);
+}
+
+/* Keyboard focus only - mouse/touch activation shouldn't show a ring. */
+.mc-button:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+.mc-button:disabled,
+.mc-button[aria-disabled='true'] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Variants                                                                 */
+/* ---------------------------------------------------------------------- */
+
+/* .mc-button--primary is the default look above; the modifier class is
+   still valid to write explicitly for clarity at call sites. */
+.mc-button--primary {
+    --mc-button-bg: var(--mc-primary);
+    --mc-button-bg-hover: var(--mc-primary-hover);
+    --mc-button-bg-active: var(--mc-primary-active);
+    --mc-button-color: var(--mc-on-primary);
+    --mc-button-border-color: transparent;
+}
+
+.mc-button--secondary {
+    --mc-button-bg: var(--mc-surface-alt);
+    --mc-button-bg-hover: var(--mc-color-gray-200);
+    --mc-button-bg-active: var(--mc-color-gray-300);
+    --mc-button-color: var(--mc-text);
+    --mc-button-border-color: var(--mc-border);
+}
+
+.mc-button--outline {
+    --mc-button-bg: transparent;
+    --mc-button-bg-hover: var(--mc-surface-alt);
+    --mc-button-bg-active: var(--mc-color-gray-200);
+    --mc-button-color: var(--mc-primary);
+    --mc-button-border-color: var(--mc-primary);
+}
+
+.mc-button--ghost {
+    --mc-button-bg: transparent;
+    --mc-button-bg-hover: var(--mc-surface-alt);
+    --mc-button-bg-active: var(--mc-color-gray-200);
+    --mc-button-color: var(--mc-text);
+    --mc-button-border-color: transparent;
+}
+
+.mc-button--danger {
+    --mc-button-bg: var(--mc-danger);
+    --mc-button-bg-hover: var(--mc-color-red-700);
+    --mc-button-bg-active: var(--mc-color-red-700);
+    --mc-button-color: var(--mc-on-danger);
+    --mc-button-border-color: transparent;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Sizes                                                                    */
+/* ---------------------------------------------------------------------- */
+
+.mc-button--sm {
+    --mc-button-padding-y: var(--mc-space-1);
+    --mc-button-padding-x: var(--mc-space-3);
+    --mc-button-font-size: var(--mc-font-size-sm);
+    --mc-button-gap: var(--mc-space-1);
+}
+
+.mc-button--lg {
+    --mc-button-padding-y: var(--mc-space-3);
+    --mc-button-padding-x: var(--mc-space-6);
+    --mc-button-font-size: var(--mc-font-size-lg);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Loading state (transient - CLAUDE.md §13, not a BEM modifier)           */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Consumer JS toggles `is-loading` (and should set `aria-busy="true"` and
+ * `disabled` on the element - this rule alone only handles the visuals).
+ * The label text is hidden via `color: transparent`, which does not touch
+ * the `--mc-button-color` custom property, so the spinner below can still
+ * read the correct color for the active variant.
+ */
+.mc-button.is-loading {
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+}
+
+.mc-button.is-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1em;
+    height: 1em;
+    margin: -0.5em 0 0 -0.5em;
+    border: var(--mc-border-width-thick) solid var(--mc-button-color);
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: mc-button-spin 0.75s linear infinite;
+}
+
+@keyframes mc-button-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* Loading state is essential motion (WCAG 2.2 §2.3.3), so it is slowed
+       rather than removed - a static ring would no longer communicate
+       "in progress". */
+    .mc-button.is-loading::after {
+        animation-duration: 2.5s;
+    }
+}
