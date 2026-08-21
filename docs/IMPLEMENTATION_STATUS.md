@@ -83,12 +83,27 @@ ahead of a real consumer).
 
 ## Phase 3 — Design System (tokens)
 
-- [ ] Primitive / semantic / component-local CSS custom property tiers
-- [ ] Token categories: color, typography, spacing, radius, border, shadow, motion,
-      z-index
-- [ ] Neutral MintCart default tokens (no Livenza/Cartello branding carried over)
+- [x] Primitive / semantic CSS custom property tiers — `assets/src/css/settings/tokens.css`,
+      on `:root`. Component-local tier (e.g. `--mc-button-bg`) is deferred to each
+      component's own CSS in Phase 4 — no consumer yet (CLAUDE.md §85)
+- [x] Token categories: color, typography, spacing, radius, border, shadow,
+      container, motion, z-index
+- [x] Neutral MintCart default tokens (no Livenza/Cartello branding carried over) —
+      a mint-green primary scale plus a neutral gray scale; no author-specific
+      palette from `references/`
+- [x] Wired into `assets/src/css/index.css` between Bootstrap 5 and the
+      compatibility shim, per the documented import order
+      (`MINTCART_IMPLEMENTATION_GUIDE.md` §11)
+- [x] `bootstrap3-shim.css`'s `var(--mc-*, <fallback>)` declarations now resolve
+      to real token values (verified in the built bundle, see below)
 
-Not started.
+**Phase 3 is complete.** Verified with `npm run build` and `npm run dev` — both
+compile cleanly; `assets/dist/css/index.min.css` contains the `--mc-*` custom
+properties (e.g. `--mc-primary`, `--mc-radius-md: 0.375rem`) and the shim rules
+now resolve against them instead of their fallback values. No Twig/PHP consumes
+these tokens yet — that starts with Phase 4 (Core UI components) or whichever
+component needs styling first, per CLAUDE.md §85 (no API/wiring ahead of a real
+consumer).
 
 ## Phase 4 — Core UI components
 
@@ -264,24 +279,31 @@ Not started.
 
 ## Next step for the next routine run
 
-**Phase 2 — Frontend foundation is complete.** Start **Phase 3 — Design System
-(tokens)**, per `CLAUDE.md` §21 step 11-12 and `MINTCART_IMPLEMENTATION_GUIDE.md`
-§44/§16-17:
+**Phase 3 — Design System (tokens) is complete.** Start **Phase 4 — Core UI
+components**, per `CLAUDE.md` §21 step 13 and `MINTCART_IMPLEMENTATION_GUIDE.md`
+§45:
 
-- Create `assets/src/css/settings/tokens.css` with the primitive/semantic/
-  component-local `--mc-*` custom property tiers on `:root`: color, typography,
-  spacing, radius, border, shadow, motion, z-index (categories listed in
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §17).
-- Neutral MintCart default values only — do not carry over Livenza/Cartello
-  branding or any specific author's palette (CLAUDE.md §3).
-- Add `tokens.css` to `assets/src/css/index.css`'s `@import` order, right after
-  Bootstrap 5 and before the compatibility shim (per the order documented in
-  that file's own header comment and `MINTCART_IMPLEMENTATION_GUIDE.md` §11).
-- Once tokens exist, `assets/src/css/compatibility/bootstrap3-shim.css`'s
-  `var(--mc-*, <fallback>)` declarations (added in Phase 2) will pick up the
-  real values automatically — no change needed there.
-- Verify with `npm run build`/`npm run dev` that the bundle still compiles and
-  that the token custom properties are present in the output CSS.
+- Pick one or two components to start with rather than all sixteen at once —
+  `mc-button` and `mc-alert` are natural first components (simple, no JS
+  required for `mc-button`, and both are listed first in Implementation
+  Guide §45/§88 step 13). Do not attempt the full component set in a single
+  run (CLAUDE.md §4a-equivalent scope discipline — one coherent increment).
+- Each component needs, per the Definition of Done in
+  `MINTCART_IMPLEMENTATION_GUIDE.md` §79: a documented contract, `mc-*` BEM
+  markup, CSS that reads from `--mc-*` tokens (not hardcoded values), JS only
+  if actually needed and using `data-mc-*` hooks (never a CSS class) if so,
+  keyboard/accessibility support, and a short usage doc/example.
+- There is no Twig rendering pipeline or theme yet (that is Phase 6-8), so a
+  component at this stage is CSS (+ JS if needed) plus a plain HTML usage
+  example under something like `docs/developer/components/` — do not invent
+  a `ComponentRenderer`/Twig integration ahead of a real consumer
+  (CLAUDE.md §85); that arrives with Phase 6 (Product Card) or Phase 8
+  (Theme resolver).
+- Add each new component's CSS file under `assets/src/css/components/` and
+  import it from `index.css` in the documented layer order (elements →
+  components → utilities → compatibility → theme overrides, per
+  `MINTCART_IMPLEMENTATION_GUIDE.md` §11).
+- Verify with `npm run build`/`npm run dev` that the bundle still compiles.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
