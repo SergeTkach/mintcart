@@ -22,4 +22,6 @@
 @import './components/field.css';
 @import './components/checkbox.css';
 @import './components/radio.css';
+@import './components/badge.css';
+@import './components/price.css';
 @import './compatibility/bootstrap3-shim.css';
