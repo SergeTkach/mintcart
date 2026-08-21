@@ -115,22 +115,36 @@ consumer).
       `data-mc-action="dismiss-alert"`, wired by
       `assets/src/js/components/alert.js` (imported from both `catalog.js`
       and `admin.js`). Doc: `docs/developer/components/alert.md`
-- [ ] `mc-field`, `mc-select`, `mc-checkbox`, `mc-radio`, `mc-card`,
-      `mc-badge`, `mc-price`, `mc-rating`, `mc-breadcrumb`,
+- [x] `mc-field` — `assets/src/css/components/field.css`; shared
+      `.mc-field__control` look for text `<input>`, `<textarea>` and
+      `<select>`, plus label/help/error markup and a `has-error` state; no
+      JS. Doc: `docs/developer/components/field.md`
+- [x] `mc-checkbox` — `assets/src/css/components/checkbox.css`; styles the
+      native `<input type="checkbox">` via `accent-color` (no custom
+      faux-control/icon dependency); no JS. Doc:
+      `docs/developer/components/checkbox.md`
+- [x] `mc-radio` — `assets/src/css/components/radio.css`; same approach as
+      `mc-checkbox` for `<input type="radio">`; no JS. Doc:
+      `docs/developer/components/radio.md`
+- [ ] `mc-select` (dedicated component beyond `mc-field__control`'s shared
+      select styling — not attempted this run; see "Next step" below),
+      `mc-card`, `mc-badge`, `mc-price`, `mc-rating`, `mc-breadcrumb`,
       `mc-pagination`, `mc-quantity`, `mc-modal`, `mc-drawer`, `mc-toast`
 - [x] Each shipped component so far: CSS contract (no Twig yet — no theme/
       renderer exists until Phase 8, per CLAUDE.md §85), JS only where
       actually needed (`mc-alert`'s dismiss), a11y states, doc example with
       a Definition-of-Done checklist
 
-**In progress.** 2 of 16 Phase 4 components done (`mc-button`, `mc-alert`).
-Verified with `npm run build` and `npm run dev` — both compile; the bundled
-CSS contains the new component rules (including the `color-mix()` alert
-tints) and the bundled JS contains `initAlertDismiss`/`dismiss-alert`. No
-automated component/visual test harness exists yet in this repo (no test
+**In progress.** 5 of 16 Phase 4 components done (`mc-button`, `mc-alert`,
+`mc-field`, `mc-checkbox`, `mc-radio`). Verified with `npm run build` and
+`npm run dev` — both compile; the bundled CSS contains the new component
+rules (`.mc-field__control`, `.mc-checkbox`, `.mc-radio` and their states —
+spot-checked with `grep -o` against `assets/dist/css/index.min.css`). No JS
+was added (all three are native-control-only, no `data-mc-*` hook needed).
+No automated component/visual test harness exists yet in this repo (no test
 runner configured beyond the PHP `tests/mintcart/` suite from Phase 1) — this
-increment's verification is build-compiles + manual code review only; that
-gap is not new to this run.
+increment's verification is build-compiles + bundled-output grep + manual
+code review only; that gap is not new to this run.
 
 ## Phase 5 — Layout conventions
 
@@ -297,21 +311,30 @@ Not started.
 
 ## Next step for the next routine run
 
-**`mc-button` and `mc-alert` are done.** Continue **Phase 4 — Core UI
-components** with the next one or two components from the remaining list:
+**`mc-button`, `mc-alert`, `mc-field`, `mc-checkbox` and `mc-radio` are
+done.** Continue **Phase 4 — Core UI components** with the next one or two
+components from the remaining list:
 
 ```text
-mc-field, mc-select, mc-checkbox, mc-radio, mc-card, mc-badge, mc-price,
-mc-rating, mc-breadcrumb, mc-pagination, mc-quantity, mc-modal, mc-drawer,
-mc-toast
+mc-card, mc-badge, mc-price, mc-rating, mc-breadcrumb, mc-pagination,
+mc-quantity, mc-modal, mc-drawer, mc-toast
 ```
 
-Suggested next pick: `mc-field` (+ maybe `mc-checkbox`/`mc-radio` alongside
-it if the increment stays small) — form controls are needed before anything
-resembling Setup Wizard/Business Settings (Phase 13-14) and are simple,
-self-contained CSS/markup like `mc-button`/`mc-alert` were. `mc-badge` and
-`mc-price` are natural next-after that, since Phase 6 (Product Card) will
-need both.
+(`mc-select` was intentionally left off — `mc-field.css`'s
+`select.mc-field__control` already covers the common case of a `<select>`
+inside a form field. Only revisit a dedicated `mc-select` component if a
+real consumer needs something `mc-field__control` can't do, e.g. a custom
+searchable/multi-select widget — per CLAUDE.md §85, no API ahead of a real
+consumer.)
+
+Suggested next pick: `mc-badge` and `mc-price` together — both are small,
+self-contained, and Phase 6 (Product Card) will need both as its first real
+consumer. `mc-quantity` (a stepper input) pairs naturally with `mc-field`
+and is also needed by Product Card/cart. `mc-card`, `mc-rating`,
+`mc-breadcrumb`, `mc-pagination` can follow. `mc-modal`/`mc-drawer`/
+`mc-toast` are more involved (need real JS behavior, focus management per
+Functional Scope §27 Accessibility) — tackle those as their own dedicated
+run(s) rather than folding them in alongside something else.
 
 Follow the same pattern established this run:
 
