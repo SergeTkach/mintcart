@@ -12,8 +12,10 @@
 import 'bootstrap';
 
 import { initAlertDismiss } from './components/alert.js';
+import { initQuantityStepper } from './components/quantity.js';
 
 // MintCart admin primitives (McDrawer, McModal, McToast, McConfirm, McTabs,
 // McSortable, McMediaPicker, McEntityPicker, McProgress - Phase 11) are
 // added here once implemented.
 initAlertDismiss();
+initQuantityStepper();
