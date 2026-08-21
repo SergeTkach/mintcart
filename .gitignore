@@ -15,6 +15,9 @@ Thumbs.db
 node_modules/
 vendor/
 
+# Scratch
+/temp/
+
 # MintCart / OpenCart runtime (upload/)
 upload/**/.htaccess
 upload/**/config.php
