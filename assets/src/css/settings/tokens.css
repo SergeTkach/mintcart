@@ -1,0 +1,220 @@
+/**
+ * MintCart design tokens.
+ *
+ * Three tiers (docs/MINTCART_IMPLEMENTATION_GUIDE.md §16-17,
+ * docs/MINTCART_TECHNICAL_PLAN.md §10):
+ *
+ *   1. Primitive  - raw scales (--mc-color-gray-500, --mc-space-4). Not used
+ *                   directly in component CSS.
+ *   2. Semantic   - what a primitive means in MintCart's UI
+ *                   (--mc-primary, --mc-surface, --mc-border). Components
+ *                   consume semantic tokens.
+ *   3. Component-local - defined per component (--mc-button-bg) and set
+ *                   from semantic tokens; those live in each component's
+ *                   own CSS file (Phase 4), not here.
+ *
+ * Values are a neutral MintCart default palette. No author-specific
+ * branding (Livenza/Cartello) is carried over from references/ (CLAUDE.md §3).
+ *
+ * Only technical/decorative values are tokenized here, per the categories
+ * listed in the Implementation Guide: color, typography, spacing, radius,
+ * border, shadow, motion, z-index. Plain CSS keywords (display, position,
+ * overflow, ...) are never tokenized.
+ */
+
+:root {
+    /* ---------------------------------------------------------------- */
+    /* Primitive: color                                                  */
+    /* ---------------------------------------------------------------- */
+
+    --mc-color-white: #ffffff;
+    --mc-color-black: #000000;
+
+    --mc-color-gray-50: #f8f9fa;
+    --mc-color-gray-100: #f1f3f5;
+    --mc-color-gray-200: #e9ecef;
+    --mc-color-gray-300: #dee2e6;
+    --mc-color-gray-400: #ced4da;
+    --mc-color-gray-500: #adb5bd;
+    --mc-color-gray-600: #6c757d;
+    --mc-color-gray-700: #495057;
+    --mc-color-gray-800: #343a40;
+    --mc-color-gray-900: #212529;
+
+    --mc-color-mint-50: #ecfdf5;
+    --mc-color-mint-100: #d1fae5;
+    --mc-color-mint-200: #a7f3d0;
+    --mc-color-mint-300: #6ee7b7;
+    --mc-color-mint-400: #34d399;
+    --mc-color-mint-500: #10b981;
+    --mc-color-mint-600: #059669;
+    --mc-color-mint-700: #047857;
+    --mc-color-mint-800: #065f46;
+    --mc-color-mint-900: #064e3b;
+
+    --mc-color-red-500: #dc3545;
+    --mc-color-red-600: #c82333;
+    --mc-color-red-700: #a71d2a;
+
+    --mc-color-amber-400: #ffca2c;
+    --mc-color-amber-500: #ffc107;
+    --mc-color-amber-600: #e0a800;
+
+    --mc-color-blue-500: #0d6efd;
+    --mc-color-blue-600: #0b5ed7;
+    --mc-color-blue-700: #0a58ca;
+
+    /* ---------------------------------------------------------------- */
+    /* Semantic: color                                                   */
+    /* ---------------------------------------------------------------- */
+
+    --mc-primary: var(--mc-color-mint-600);
+    --mc-primary-hover: var(--mc-color-mint-700);
+    --mc-primary-active: var(--mc-color-mint-800);
+    --mc-on-primary: var(--mc-color-white);
+
+    --mc-accent: var(--mc-color-blue-500);
+    --mc-on-accent: var(--mc-color-white);
+
+    --mc-surface: var(--mc-color-white);
+    --mc-surface-alt: var(--mc-color-gray-50);
+    --mc-surface-inverse: var(--mc-color-gray-900);
+
+    --mc-text: var(--mc-color-gray-900);
+    --mc-text-inverse: var(--mc-color-white);
+    --mc-muted: var(--mc-color-gray-600);
+    --mc-border: var(--mc-color-gray-400);
+    --mc-border-strong: var(--mc-color-gray-600);
+
+    --mc-success: var(--mc-color-mint-600);
+    --mc-on-success: var(--mc-color-white);
+    --mc-danger: var(--mc-color-red-600);
+    --mc-on-danger: var(--mc-color-white);
+    --mc-warning: var(--mc-color-amber-500);
+    --mc-on-warning: var(--mc-color-gray-900);
+    --mc-info: var(--mc-color-blue-500);
+    --mc-on-info: var(--mc-color-white);
+
+    /* ---------------------------------------------------------------- */
+    /* Typography                                                         */
+    /* ---------------------------------------------------------------- */
+
+    --mc-font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+    --mc-font-family-heading: var(--mc-font-family-base);
+    --mc-font-family-mono: SFMono-Regular, Menlo, Consolas, "Liberation Mono",
+        monospace;
+
+    --mc-font-size-xs: 0.75rem;
+    --mc-font-size-sm: 0.875rem;
+    --mc-font-size-base: 1rem;
+    --mc-font-size-lg: 1.125rem;
+    --mc-font-size-xl: 1.25rem;
+    --mc-font-size-2xl: 1.5rem;
+    --mc-font-size-3xl: 1.875rem;
+    --mc-font-size-4xl: 2.25rem;
+
+    --mc-font-weight-normal: 400;
+    --mc-font-weight-medium: 500;
+    --mc-font-weight-semibold: 600;
+    --mc-font-weight-bold: 700;
+
+    --mc-line-height-tight: 1.2;
+    --mc-line-height-normal: 1.5;
+    --mc-line-height-relaxed: 1.75;
+
+    /* ---------------------------------------------------------------- */
+    /* Spacing scale                                                      */
+    /* ---------------------------------------------------------------- */
+
+    --mc-space-0: 0;
+    --mc-space-1: 0.25rem;
+    --mc-space-2: 0.5rem;
+    --mc-space-3: 0.75rem;
+    --mc-space-4: 1rem;
+    --mc-space-5: 1.25rem;
+    --mc-space-6: 1.5rem;
+    --mc-space-8: 2rem;
+    --mc-space-10: 2.5rem;
+    --mc-space-12: 3rem;
+    --mc-space-16: 4rem;
+
+    /* ---------------------------------------------------------------- */
+    /* Radius                                                             */
+    /* ---------------------------------------------------------------- */
+
+    --mc-radius-none: 0;
+    --mc-radius-sm: 0.25rem;
+    --mc-radius-md: 0.375rem;
+    --mc-radius-lg: 0.5rem;
+    --mc-radius-xl: 0.75rem;
+    --mc-radius-pill: 999px;
+
+    /* ---------------------------------------------------------------- */
+    /* Border                                                             */
+    /* ---------------------------------------------------------------- */
+
+    --mc-border-width: 1px;
+    --mc-border-width-thick: 2px;
+
+    /* ---------------------------------------------------------------- */
+    /* Shadow                                                             */
+    /* ---------------------------------------------------------------- */
+
+    --mc-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+    --mc-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --mc-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.14);
+
+    /* ---------------------------------------------------------------- */
+    /* Container                                                          */
+    /* ---------------------------------------------------------------- */
+
+    /*
+     * MintCart does not re-implement Bootstrap's grid/container
+     * breakpoints (CLAUDE.md §6/§46). This single token is for
+     * MintCart-owned content wrappers (e.g. prose, checkout steps) that
+     * need a readable max width outside the grid, not a replacement for
+     * `.container`/`.container-*`.
+     */
+    --mc-content-max-width: 75rem;
+
+    /* ---------------------------------------------------------------- */
+    /* Motion                                                             */
+    /* ---------------------------------------------------------------- */
+
+    --mc-motion-duration-fast: 120ms;
+    --mc-motion-duration-base: 200ms;
+    --mc-motion-duration-slow: 320ms;
+
+    --mc-motion-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --mc-motion-easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
+    --mc-motion-easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
+
+    /* ---------------------------------------------------------------- */
+    /* Z-index                                                            */
+    /* ---------------------------------------------------------------- */
+
+    --mc-z-dropdown: 1000;
+    --mc-z-sticky: 1020;
+    --mc-z-fixed: 1030;
+    --mc-z-drawer: 1040;
+    --mc-z-modal-backdrop: 1050;
+    --mc-z-modal: 1060;
+    --mc-z-toast: 1070;
+    --mc-z-tooltip: 1080;
+}
+
+/*
+ * Respect the user's reduced-motion preference for MintCart-owned
+ * animation (docs/MINTCART_FUNCTIONAL_SCOPE.md §27 Accessibility).
+ * Component CSS should read motion durations/easing from these tokens
+ * rather than hardcoding transition values, so this override applies
+ * uniformly.
+ */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --mc-motion-duration-fast: 0ms;
+        --mc-motion-duration-base: 0ms;
+        --mc-motion-duration-slow: 0ms;
+    }
+}
