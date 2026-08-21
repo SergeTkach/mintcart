@@ -1,0 +1,18 @@
+/**
+ * MintCart CSS entry point.
+ *
+ * Bundled with esbuild into assets/dist/css/index.min.css (production) or
+ * assets/dist/css/index.css (dev, with sourcemap). See package.json scripts.
+ *
+ * Import order (docs/MINTCART_IMPLEMENTATION_GUIDE.md §11):
+ *   Bootstrap 5 -> MintCart tokens -> elements -> components -> utilities
+ *   -> compatibility -> theme overrides
+ *
+ * Tokens/elements/components/utilities layers ship in Phase 3 (Design
+ * tokens) and Phase 4 (Core UI components) - see docs/IMPLEMENTATION_STATUS.md.
+ * Phase 2 only wires the build pipeline and the Bootstrap 3 compatibility
+ * shim required so legacy OpenCart 3 markup keeps working.
+ */
+
+@import 'bootstrap/dist/css/bootstrap.css';
+@import './compatibility/bootstrap3-shim.css';
