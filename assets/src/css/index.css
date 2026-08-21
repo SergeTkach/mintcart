@@ -8,13 +8,17 @@
  *   Bootstrap 5 -> MintCart tokens -> elements -> components -> utilities
  *   -> compatibility -> theme overrides
  *
- * Elements/components/utilities layers ship in Phase 4 (Core UI components)
- * - see docs/IMPLEMENTATION_STATUS.md. Phase 3 adds the `--mc-*` design
- * token tiers (settings/tokens.css). Phase 2 wired the build pipeline and
- * the Bootstrap 3 compatibility shim required so legacy OpenCart 3 markup
- * keeps working.
+ * Phase 4 (Core UI components) adds the components/ layer one component at
+ * a time - see docs/IMPLEMENTATION_STATUS.md. The elements/ (typography,
+ * forms, media) and utilities/ layers have no consumer yet and are added
+ * when one exists (CLAUDE.md §85). Phase 3 added the `--mc-*` design token
+ * tiers (settings/tokens.css). Phase 2 wired the build pipeline and the
+ * Bootstrap 3 compatibility shim required so legacy OpenCart 3 markup keeps
+ * working.
  */
 
 @import 'bootstrap/dist/css/bootstrap.css';
 @import './settings/tokens.css';
+@import './components/button.css';
+@import './components/alert.css';
 @import './compatibility/bootstrap3-shim.css';

@@ -1,0 +1,106 @@
+/**
+ * mc-button component.
+ *
+ * Contract (docs/developer/components/button.md):
+ *   <button class="mc-button [mc-button--variant] [mc-button--size]" ...>
+ *
+ * Variants (default is primary, no modifier needed): mc-button--secondary,
+ * mc-button--ghost, mc-button--danger.
+ * Sizes (default is the base size, no modifier needed): mc-button--sm,
+ * mc-button--lg.
+ *
+ * States use native semantics rather than extra classes
+ * (docs/MINTCART_IMPLEMENTATION_GUIDE.md §13): hover/active/focus-visible are
+ * plain CSS pseudo-classes, disabled reads the native `disabled` attribute.
+ *
+ * No JS of its own - a plain `<button>`/`<a>` is already keyboard usable.
+ * Behavior hooks (e.g. `data-mc-action="add-to-cart"`) are added by the
+ * consumer per use case, never targeted by this file
+ * (docs/MINTCART_IMPLEMENTATION_GUIDE.md §14/§79).
+ */
+
+.mc-button {
+    --mc-button-bg: var(--mc-primary);
+    --mc-button-bg-hover: var(--mc-primary-hover);
+    --mc-button-bg-active: var(--mc-primary-active);
+    --mc-button-color: var(--mc-on-primary);
+    --mc-button-border: transparent;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--mc-space-2);
+    padding: var(--mc-space-2) var(--mc-space-4);
+    border: var(--mc-border-width) solid var(--mc-button-border);
+    border-radius: var(--mc-radius-md);
+    background: var(--mc-button-bg);
+    color: var(--mc-button-color);
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-base);
+    font-weight: var(--mc-font-weight-medium);
+    line-height: var(--mc-line-height-tight);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-button:hover {
+    background: var(--mc-button-bg-hover);
+}
+
+.mc-button:active {
+    background: var(--mc-button-bg-active);
+}
+
+.mc-button:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+.mc-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+/* ---------------------------------------------------------------- */
+/* Variants                                                           */
+/* ---------------------------------------------------------------- */
+
+.mc-button--secondary {
+    --mc-button-bg: var(--mc-surface-alt);
+    --mc-button-bg-hover: var(--mc-color-gray-200);
+    --mc-button-bg-active: var(--mc-color-gray-300);
+    --mc-button-color: var(--mc-text);
+    --mc-button-border: var(--mc-border);
+}
+
+.mc-button--ghost {
+    --mc-button-bg: transparent;
+    --mc-button-bg-hover: var(--mc-surface-alt);
+    --mc-button-bg-active: var(--mc-color-gray-200);
+    --mc-button-color: var(--mc-primary);
+}
+
+.mc-button--danger {
+    --mc-button-bg: var(--mc-danger);
+    --mc-button-bg-hover: var(--mc-color-red-700);
+    --mc-button-bg-active: var(--mc-color-red-700);
+    --mc-button-color: var(--mc-on-danger);
+}
+
+/* ---------------------------------------------------------------- */
+/* Sizes                                                              */
+/* ---------------------------------------------------------------- */
+
+.mc-button--sm {
+    padding: var(--mc-space-1) var(--mc-space-3);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-button--lg {
+    padding: var(--mc-space-3) var(--mc-space-6);
+    font-size: var(--mc-font-size-lg);
+}

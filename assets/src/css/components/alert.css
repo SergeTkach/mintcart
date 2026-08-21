@@ -1,0 +1,84 @@
+/**
+ * mc-alert component.
+ *
+ * Contract (docs/developer/components/alert.md):
+ *   <div class="mc-alert [mc-alert--variant]" role="status">
+ *       <div class="mc-alert__body">...</div>
+ *       <button class="mc-alert__close" data-mc-action="dismiss-alert"
+ *           aria-label="...">...</button>
+ *   </div>
+ *
+ * Variants (default is success, no modifier needed): mc-alert--danger,
+ * mc-alert--warning, mc-alert--info.
+ *
+ * Background/border tints are derived from a single semantic accent token
+ * per variant via color-mix(), not hardcoded hex values or new primitive
+ * tokens - keeps every color traceable to settings/tokens.css.
+ *
+ * The optional `.mc-alert__close` button is wired by
+ * assets/src/js/components/alert.js through the `data-mc-action="dismiss-alert"`
+ * hook (docs/MINTCART_IMPLEMENTATION_GUIDE.md §14) - this file never targets
+ * that button by behavior, only by presentation.
+ */
+
+.mc-alert {
+    --mc-alert-accent: var(--mc-success);
+    --mc-alert-bg: color-mix(in srgb, var(--mc-alert-accent) 12%, var(--mc-surface));
+    --mc-alert-border: color-mix(in srgb, var(--mc-alert-accent) 35%, var(--mc-surface));
+
+    display: flex;
+    align-items: flex-start;
+    gap: var(--mc-space-3);
+    padding: var(--mc-space-4);
+    border: var(--mc-border-width) solid var(--mc-alert-border);
+    border-radius: var(--mc-radius-md);
+    background: var(--mc-alert-bg);
+    color: var(--mc-text);
+    font-size: var(--mc-font-size-sm);
+    line-height: var(--mc-line-height-normal);
+}
+
+.mc-alert__body {
+    flex: 1 1 auto;
+}
+
+.mc-alert__close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--mc-space-1);
+    border: 0;
+    background: transparent;
+    color: inherit;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-alert__close:hover,
+.mc-alert__close:focus-visible {
+    opacity: 1;
+}
+
+.mc-alert__close:focus-visible {
+    outline: var(--mc-border-width-thick) solid currentColor;
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- */
+/* Variants                                                           */
+/* ---------------------------------------------------------------- */
+
+.mc-alert--danger {
+    --mc-alert-accent: var(--mc-danger);
+}
+
+.mc-alert--warning {
+    --mc-alert-accent: var(--mc-warning);
+}
+
+.mc-alert--info {
+    --mc-alert-accent: var(--mc-info);
+}

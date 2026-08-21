@@ -12,7 +12,7 @@
  */
 
 import 'bootstrap';
+import './components/alert.js';
 
-// MintCart-owned catalog behavior modules are added here as components ship
-// (Phase 4 onward). This entry point intentionally has no ecommerce logic
-// yet: Phase 2 only proves the build pipeline compiles and bundles.
+// Further MintCart-owned catalog behavior modules are added here as
+// components ship (Phase 4 onward).
