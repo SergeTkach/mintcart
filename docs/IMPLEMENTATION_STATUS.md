@@ -24,14 +24,31 @@ Phase 0 is **complete**.
 
 ## Phase 1 — Foundation
 
-- [ ] Create MintCart PHP namespace/bootstrap (`MintCart\`)
-- [ ] Service container / service registry bridge into OpenCart's existing registry
+- [x] Create MintCart PHP namespace/bootstrap (`MintCart\`) — `MintCart\Core\Bootstrap`,
+      autoloaded via OpenCart's existing `library()` autoloader
+      (`upload/system/library/mintcart/core/bootstrap.php`); see `docs/adr/001-mintcart-core-foundation.md`
+- [x] Service container / service registry bridge into OpenCart's existing registry —
+      `MintCart\Core\Bootstrap` wraps `\Registry`, no parallel DI container
 - [ ] OpenCart adapter interfaces (`MintCart\Compatibility\OpenCart3\*`)
-- [ ] Migration manager (`mc_migration` table, ordered/logged/apply-once migrations)
-- [ ] Version information / basic logging / health checks
+- [x] Migration manager (`mc_migration` table, ordered/logged/apply-once migrations) —
+      `MintCart\Core\Migration\MigrationManager` +
+      `MintCart\Core\Migration\MigrationInterface`; naming convention and file shape
+      documented in `upload/system/mintcart/migrations/README.md`; no MintCart-owned
+      table exists yet so the migrations directory is currently empty; covered by
+      `tests/mintcart/core/migration-manager-test.php` (in-memory DB double — no
+      MySQL server available in this environment; real-DB verification is still
+      needed before this is exercised against a live install)
+- [x] Version information — `MintCart\Core\Version`
+- [x] Basic logging — `MintCart\Core\Logger` (wraps OpenCart's `\Log`, writes to a
+      dedicated `mintcart.log`)
+- [ ] Health checks
 - [ ] CI (if in scope for this stage)
 
-Not started. **This is the next step** for the following routine run.
+**In progress.** Remaining for a future run: `MintCart\Compatibility\OpenCart3\*`
+adapters (no consumer needs one yet — first candidate is likely `SettingsAdapter`
+when Business Settings/Setup Wizard starts, per `CLAUDE.md` §85 "API appears when
+there's a real consumer"), a health-check surface, and CI. `Bootstrap::boot()` has
+no automatic call site yet by design (see ADR 001) — the first real caller wires it.
 
 ## Phase 2 — Frontend foundation
 
