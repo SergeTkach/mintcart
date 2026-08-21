@@ -11,11 +11,11 @@
  * OpenCart 3 / its ecosystem (docs/MINTCART_IMPLEMENTATION_GUIDE.md §10).
  * Add an entry here only once a concrete legacy template is found using it.
  *
- * `--mc-*` custom properties are referenced with fallback values because
- * the MintCart design token system ships in Phase 3
- * (docs/IMPLEMENTATION_STATUS.md). Once tokens.css defines `--mc-surface`,
- * `--mc-border`, etc. on `:root`, these rules pick the real values up
- * automatically - the fallbacks only apply until then.
+ * `--mc-*` custom properties are referenced with fallback values so this
+ * file keeps working even when loaded before settings/tokens.css defines
+ * them on `:root` (e.g. a theme importing this shim standalone). In the
+ * default MintCart import order (index.css) tokens.css loads first, so
+ * these rules pick up the real token values.
  */
 
 .pull-right {
