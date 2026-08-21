@@ -137,24 +137,37 @@ consumer).
       special-price look; matches the `price`/`special`/`tax` fields
       `ProductViewProvider` (Technical Plan §15D) will supply once Phase 6
       exists; no JS. Doc: `docs/developer/components/price.md`
+- [x] `mc-quantity` — `assets/src/css/components/quantity.css` +
+      `assets/src/js/components/quantity.js` (`initQuantityStepper`, wired
+      into both `catalog.js`/`admin.js`); decrement/increment via
+      `data-mc-action="quantity-decrement"`/`"quantity-increment"`, clamped
+      to the input's native `min`/`max`/`step`, button disabled state kept
+      in sync at the bounds, dispatches a native `change` event plus
+      `mc:quantity:change` (`{ detail: { value } }`, bubbling) on
+      button-driven steps. Doc: `docs/developer/components/quantity.md`
+- [x] `mc-rating` — `assets/src/css/components/rating.css`; read-only star
+      display for the future `ProductView.rating` field (Technical Plan
+      §15D); pure CSS (two stacked ★ layers, filled layer clipped by
+      `--mc-rating-value`), `role="img"` + `aria-label` conveys the value to
+      assistive tech, no JS. Doc: `docs/developer/components/rating.md`
 - [ ] `mc-select` (dedicated component beyond `mc-field__control`'s shared
       select styling — not attempted; see "Next step" below), `mc-card`,
-      `mc-rating`, `mc-breadcrumb`, `mc-pagination`, `mc-quantity`,
-      `mc-modal`, `mc-drawer`, `mc-toast`
+      `mc-breadcrumb`, `mc-pagination`, `mc-modal`, `mc-drawer`, `mc-toast`
 - [x] Each shipped component so far: CSS contract (no Twig yet — no theme/
       renderer exists until Phase 8, per CLAUDE.md §85), JS only where
-      actually needed (`mc-alert`'s dismiss), a11y states, doc example with
-      a Definition-of-Done checklist
+      actually needed (`mc-alert`'s dismiss, `mc-quantity`'s stepper), a11y
+      states, doc example with a Definition-of-Done checklist
 
-**In progress.** 7 of 16 Phase 4 components done (`mc-button`, `mc-alert`,
-`mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`, `mc-price`). Verified with
-`npm run build` and `npm run dev` — both compile; the bundled CSS contains
-the new component rules (`.mc-badge` + its 4 variants, `.mc-price` +
-`__current`/`__original`/`__tax`/`--special` — spot-checked with `grep -o`
-against `assets/dist/css/index.min.css`). No JS was added (both are purely
-presentational, no `data-mc-*` hook needed). No automated component/visual
-test harness exists yet in this repo (no test runner configured beyond the
-PHP `tests/mintcart/` suite from Phase 1) — this increment's verification is
+**In progress.** 9 of 16 Phase 4 components done (`mc-button`, `mc-alert`,
+`mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`, `mc-price`, `mc-quantity`,
+`mc-rating`). Verified with `npm run build` and `npm run dev` — both
+compile; the bundled CSS contains `.mc-quantity`/`.mc-rating` and their
+modifiers/elements, and the bundled JS contains `initQuantityStepper` plus
+the `quantity-increment`/`quantity-decrement`/`mc:quantity:change` hooks
+(spot-checked with `grep -o` against `assets/dist/css/index.min.css` and
+`assets/dist/js/catalog.min.js`). No automated component/visual test
+harness exists yet in this repo (no test runner configured beyond the PHP
+`tests/mintcart/` suite from Phase 1) — this increment's verification is
 build-compiles + bundled-output grep + manual code review only; that gap is
 not new to this run.
 
@@ -323,13 +336,13 @@ Not started.
 
 ## Next step for the next routine run
 
-**`mc-button`, `mc-alert`, `mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`
-and `mc-price` are done.** Continue **Phase 4 — Core UI components** with
-the next one or two components from the remaining list:
+**`mc-button`, `mc-alert`, `mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`,
+`mc-price`, `mc-quantity` and `mc-rating` are done.** Continue **Phase 4 —
+Core UI components** with the next one or two components from the
+remaining list:
 
 ```text
-mc-card, mc-rating, mc-breadcrumb, mc-pagination, mc-quantity, mc-modal,
-mc-drawer, mc-toast
+mc-card, mc-breadcrumb, mc-pagination, mc-modal, mc-drawer, mc-toast
 ```
 
 (`mc-select` was intentionally left off — `mc-field.css`'s
@@ -339,14 +352,16 @@ real consumer needs something `mc-field__control` can't do, e.g. a custom
 searchable/multi-select widget — per CLAUDE.md §85, no API ahead of a real
 consumer.)
 
-Suggested next pick: `mc-quantity` (a stepper input, pairs naturally with
-`mc-field` and is needed by Product Card/cart) and `mc-rating` together —
-both small and self-contained, and both are Phase 6 (Product Card)
-consumers alongside `mc-badge`/`mc-price` already shipped. `mc-card`,
-`mc-breadcrumb`, `mc-pagination` can follow. `mc-modal`/`mc-drawer`/
-`mc-toast` are more involved (need real JS behavior, focus management per
-Functional Scope §27 Accessibility) — tackle those as their own dedicated
-run(s) rather than folding them in alongside something else.
+Suggested next pick: `mc-breadcrumb` and `mc-pagination` together — both
+small, self-contained, no JS, and both are named directly in Technical Plan
+§15E's reusable-action list (`BreadcrumbBuilder`, `PaginationBuilder`) as
+things every listing page (category/search/manufacturer) will need once
+Phase 6 exists. `mc-card` (a generic content/media card, distinct from the
+future `mc-product-card` — see Implementation Guide §26 component tree) can
+follow. `mc-modal`/`mc-drawer`/`mc-toast` are more involved (need real JS
+behavior, focus management per Functional Scope §27 Accessibility) — tackle
+those as their own dedicated run(s) rather than folding them in alongside
+something else.
 
 Follow the same pattern established this run:
 
