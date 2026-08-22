@@ -92,12 +92,14 @@ $html = $renderer->render('product-card', [
 
 ## What this does not do yet
 
-- **No controller wiring yet.** No controller calls `ComponentRenderer` or
-  `ProductViewProvider` together yet — `ControllerProductCategory` (the
-  simplest existing listing controller) still builds its own product array
-  and renders `product/category.twig`'s inline product loop. That wiring,
-  plus a second minimal test theme proving the override milestone
-  end-to-end, is the next increment (`docs/IMPLEMENTATION_STATUS.md`'s
+- **One controller wired so far.** `ControllerProductCategory`
+  (`docs/upstream-diff.md` has the full compatibility rationale) calls both
+  classes per product row and renders the result through the new
+  `mint_default/template/product/category.twig` page. Search, Manufacturer
+  and Special still build their own inline product arrays — same pattern,
+  different controller, still to do. A second minimal test theme actually
+  overriding `product-card.twig` to prove the milestone end-to-end
+  (`CLAUDE.md` §19) is also still to do (`docs/IMPLEMENTATION_STATUS.md`'s
   Phase 8 section has the concrete plan).
 - **Only `product-card` has a Mint Default template today.** `header`,
   `footer` and other future components (`MINTCART_IMPLEMENTATION_GUIDE.md`
@@ -107,10 +109,11 @@ $html = $renderer->render('product-card', [
   it's asked for.
 - **No caching across `render()` calls.** Each call builds its own
   `\Template('Twig')` instance, which builds its own `\Twig\Environment`
-  internally. Once controller wiring (the next increment) calls `render()`
-  once per product in a listing, this means one `Twig\Environment` per
-  product on that page rather than one reused across the loop. Not
-  addressed here per `MINTCART_IMPLEMENTATION_GUIDE.md` §67 ("start with
+  internally. `ControllerProductCategory` now calls `render()` once per
+  product in a listing, so a category page with 20-40 products builds
+  20-40 separate `Twig\Environment` instances rather than one reused across
+  the loop. Not addressed here per `MINTCART_IMPLEMENTATION_GUIDE.md` §67 ("start with
   measurements", not a cache built ahead of an observed cost) — revisit once
-  controller wiring exists and this can actually be profiled on a real
-  listing page.
+  this can actually be profiled against a real database and a real Twig
+  install, which this environment still doesn't have (see "No OpenCart
+  dependency in `resolve()`" above).
