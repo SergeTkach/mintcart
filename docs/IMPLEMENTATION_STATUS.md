@@ -353,13 +353,54 @@ Not started.
 
 ## Phase 8 — Theme resolver
 
-- [ ] `MintCart\Design\ComponentRenderer` (active theme override → parent/base
+- [x] `MintCart\Design\ComponentRenderer` (active theme override → parent/base
       theme → Mint Default fallback)
+- [ ] Wire `ControllerProductCategory` to `ProductViewProvider` + `ComponentRenderer`
 - [ ] Prove: a test theme overriding only `product-card.twig` gets everything else
       from Mint Default automatically, 0 OCMOD
 
-Not started. **Critical architecture milestone** — see `CLAUDE.md` §19 / Technical
+In progress. **Critical architecture milestone** — see `CLAUDE.md` §19 / Technical
 Plan §45. Must pass before broad feature build-out.
+
+**Sub-step 1 done (this run):** `MintCart\Design\ComponentRenderer`
+(`upload/system/library/mintcart/design/componentrenderer.php`) resolves a
+component name against the active theme, its `theme.json` "parent" chain,
+then `mint_default`, deliberately separate from OpenCart's existing
+`event/theme.php` (which resolves whole page routes, not components shared
+across many pages) — see `docs/developer/theme-api/component-renderer.md`
+for the full design rationale, inspected against the actual
+`system/engine/loader.php` / `system/library/template/*` mechanism per
+`CLAUDE.md` §10/§84 rather than assumed from memory.
+
+A minimal `mint_default` theme directory now exists
+(`catalog/view/theme/mint_default/theme.json` + a real
+`template/mint/components/product-card.twig` matching
+`docs/developer/components/product-card.md`'s documented contract exactly).
+
+Verified: `php -l` on the new class (clean); the 6-scenario
+`tests/mintcart/design/component-renderer-test.php` smoke test — override
+found on the active theme, found via the parent chain, falls back to
+`mint_default`, a cyclic parent chain doesn't infinite-loop, "not found
+anywhere" throws, and a missing/malformed `theme.json` is treated as "no
+parent" rather than a hard failure — all pass, exit 0. `render()`'s use of
+the OpenCart `\Template('Twig')` adaptor is not exercised by the test: this
+environment has no `vendor/twig/twig` installed, a pre-existing gap
+affecting every Twig page in this repo when run outside a full web request,
+not something this class introduces (see the doc's "No OpenCart dependency
+in resolve()" section for detail).
+
+**Next step for a future run:** wire `ControllerProductCategory` (the
+simplest existing listing controller — `upload/catalog/controller/product/category.php`)
+to call `MintCart\Commerce\ProductViewProvider` + `ComponentRenderer` instead
+of its current inline `$data['products'][] = [...]` array-building and
+`product/category.twig`'s inline product loop, resolving the active theme
+directory from `config_theme`/`theme_default_directory` the same way
+`event/theme.php` already does (do not duplicate that lookup — extract it if
+a second call site needs it). After that lands and is verified against a
+real request, add a second minimal test theme that overrides only
+`product-card.twig` to prove the fallback milestone end-to-end
+(`CLAUDE.md` §19) — per the checkpoint guidance below, keep these as two
+separate runs rather than one.
 
 ## Phase 9 — Presets
 
@@ -491,80 +532,60 @@ Not started.
 
 ## Next step for the next routine run
 
-**`mc-button`, `mc-alert`, `mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`,
-`mc-price`, `mc-quantity`, `mc-rating`, `mc-breadcrumb`, `mc-pagination`,
-`mc-card`, `mc-modal`, `mc-drawer` and `mc-toast` are done — Phase 4 is
-complete** except for the intentionally-deferred `mc-select`
-(`mc-field.css`'s `select.mc-field__control` already covers the common case
-of a `<select>` inside a form field; only revisit a dedicated `mc-select`
-component if a real consumer needs something it can't do, e.g. a custom
-searchable/multi-select widget — per CLAUDE.md §85, no API ahead of a real
-consumer).
+Phases 4, 5 and 6 are complete (see their sections above). **Phase 8 — Theme
+resolver is in progress**, the **critical architecture milestone**
+(`CLAUDE.md` §19, `MINTCART_TECHNICAL_PLAN.md` §45) — everything built in
+Phase 4/5/6 has no way to render on a real page until it's finished. Do not
+proceed to Phase 9+ until it passes.
 
-**Phase 5 — Layout conventions is done.** `docs/developer/layout-conventions.md`
-documents the Bootstrap-5-grid-is-the-only-layout-system rule with examples,
-and the "no Bootstrap 3 assumptions / no import-order conflicts" check was
-done statically against the current CSS tree (see the Phase 5 section above
-for exactly what was grepped/confirmed) — there is still no Twig/theme to
-render a real page against, so a live browser check stays deferred to
-Phase 8.
+**Sub-step 1 is done** (see the Phase 8 section above for detail):
+`MintCart\Design\ComponentRenderer` exists and is fully smoke-tested
+(6 scenarios covering override/parent-chain/fallback/cycle/missing/malformed
+manifest), and a minimal `mint_default` theme directory now has a real
+`product-card.twig` matching the documented contract exactly.
 
-**Phase 6 — Product Card is complete.** Both sub-steps are done:
-`ProductViewProvider` (prior run) and `mc-product-card` CSS/JS + documented
-Twig contract (this run) — see the Phase 6 section above for what was
-verified. `docs/developer/components/product-card.md` is the template
-contract; there is still no live `.twig` file or controller wiring (that's
-Phase 8, once the Theme resolver exists to actually resolve one).
+**Sub-step 2 (next run): wire `ControllerProductCategory`.** Concretely:
 
-The next run should start **Phase 8 — Theme resolver**
-(`MINTCART_TECHNICAL_PLAN.md` §11, `MINTCART_IMPLEMENTATION_GUIDE.md` §28–29,
-`CLAUDE.md` §19 "First architecture milestone"), the **critical architecture
-milestone** — everything built so far (Phase 4/5/6 CSS/JS/PHP) has no way to
-actually render on a page until this exists:
+- Read `upload/catalog/controller/product/category.php` in full first — it
+  currently builds `$data['products'][] = [...]` inline and
+  `catalog/view/theme/default/template/product/category.twig` loops over
+  that array directly. Don't guess its current shape from memory
+  (`CLAUDE.md` §10/§84).
+- Resolve the active theme directory the same way
+  `catalog/controller/event/theme.php` already does (`config_theme`, or
+  `theme_default_directory` when `config_theme == 'default'`) — do not
+  duplicate that logic uninspected; consider whether it's worth extracting
+  once a second call site needs it, but don't over-abstract for a single
+  caller (`CLAUDE.md` §17).
+- For each product row, call `MintCart\Commerce\ProductViewProvider::build()`
+  then `MintCart\Design\ComponentRenderer::render('product-card', ...)`,
+  passing the `text_*` strings `docs/developer/components/product-card.md`
+  documents (add them to `catalog/language/en-gb/product/category.php` if
+  missing) instead of the controller's current per-product array building.
+- Verify against a real request if this environment can run the full
+  OpenCart bootstrap (DB configured, `vendor/twig/twig` installed via
+  `composer install` against `upload/composer.json`) — if it cannot
+  (e.g. no MySQL, no vendor dir, same gaps noted in earlier phases), verify
+  what you can statically (`php -l`, a standalone test exercising the
+  controller method's logic with fakes/doubles in the style of
+  `tests/mintcart/commerce/product-view-provider-test.php`) and say
+  explicitly what could not be verified end-to-end and why.
+- Checkpoint here (`CLAUDE.md` §4a) — do not also build the second test
+  theme in the same run. A half-wired controller is worse than stopping
+  cleanly after this lands.
 
-```text
-- [ ] `MintCart\Design\ComponentRenderer` (active theme override → parent/base
-      theme → Mint Default fallback)
-- [ ] Prove: a test theme overriding only `product-card.twig` gets everything
-      else from Mint Default automatically, 0 OCMOD
-```
-
-This is a large, foundational increment — bigger than Phase 6. Before
-writing code:
-
-- Re-read `CLAUDE.md` §19 and `MINTCART_TECHNICAL_PLAN.md` §11/§45 for
-  exactly what "pass" means: **Mint Default** theme + **a second test
-  theme**, both using the same providers/Commerce services/component
-  contract, differing only in DOM/tokens/style, with 0 OCMOD/controller
-  patches/copied business logic. If this milestone can't be made to work,
-  stop and fix the Theme API before continuing — do not proceed to Phase 9+.
-- This is the first phase that needs an actual **MintCart theme directory**
-  to exist (`MINTCART_IMPLEMENTATION_GUIDE.md` §26/§30 — `theme.json`,
-  `mint_default`), which nothing before Phase 6 needed. Read how OpenCart 3
-  resolves `$this->load->view()`/theme paths today
-  (`system/engine/loader.php`, `system/library/template/*`, the `default`
-  theme's directory layout) before designing where `ComponentRenderer`'s
-  override lookup sits relative to that — per `CLAUDE.md` §10/§84, inspect
-  the actual mechanism rather than assuming it from memory.
-- Concretely, this phase likely needs, in order: (1) a minimal `mint_default`
-  theme directory with a `theme.json` manifest and a first real
-  `product-card.twig` rendering the contract documented in
-  `docs/developer/components/product-card.md`; (2) `ComponentRenderer`'s
-  override-lookup logic (active theme → parent → Mint Default fallback);
-  (3) wiring `ControllerProductCategory` (the simplest existing listing
-  controller — see `upload/catalog/controller/product/category.php`) to call
-  `ProductViewProvider` + `ComponentRenderer` instead of its current inline
-  array-building and `product/category.twig` product loop; (4) a second
-  minimal test theme that overrides only `product-card.twig`, proving (2)'s
-  fallback actually works end-to-end.
-- Given the size, treat this as multiple sub-steps and checkpoint after each
-  (CLAUDE.md §4a) — e.g. land `ComponentRenderer` + `mint_default`'s
-  `product-card.twig` as one run, the controller wiring as a second, the
-  second test theme + milestone proof as a third, rather than attempting all
-  of it in one pass. This is exactly the kind of run where hitting the usage
-  limit mid-way is most costly (partially-wired controller, broken page) —
-  prefer stopping at a clean boundary (e.g. `ComponentRenderer` alone, not
-  yet called by any controller) over a half-wired one.
+**Sub-step 3 (after sub-step 2 lands): the milestone proof.** Add a second
+minimal test theme (e.g. `test_theme`) with only a
+`template/mint/components/product-card.twig` override (different DOM from
+Mint Default's — e.g. drop the secondary-image swap, use a simpler badge
+layout — enough to prove it's genuinely a different template, not a copy).
+Switch the active theme to it (via `config_theme`, however that's set in
+this environment) and confirm: the product-card renders the **override**,
+every other page/component still works via the Mint Default fallback, and
+this took **0 OCMOD, 0 controller patches, 0 copied business logic**. Record
+the result in `docs/adr/` — if it does NOT pass cleanly, per `CLAUDE.md` §19
+stop and fix the Theme API before touching Phase 9+, and document exactly
+what broke.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
