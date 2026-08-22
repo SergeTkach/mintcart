@@ -30,9 +30,14 @@ product row it builds a `ProductViewProvider` result and renders it via
 `ComponentRenderer` into `$data['product_cards']`, consumed by the new
 `mint_default/template/product/category.twig` page. Search/Manufacturer/
 Special aren't wired yet — same pattern, different controller, still to do.
-A second test theme actually overriding `product-card.twig` to prove the
-`CLAUDE.md` §19 milestone end-to-end is also still to do — see
-`docs/IMPLEMENTATION_STATUS.md`'s Phase 8 section.
+
+A second theme, `catalog/view/theme/test_theme/`, overrides only
+`product-card.twig` with a genuinely different DOM (single badge, no
+secondary-image swap, no wishlist/compare quick-actions, no quick-order
+button) — see `docs/adr/002-theme-api-milestone-proof.md` for the full
+milestone-proof writeup and its one open caveat (resolution is proven;
+live rendering on a real install still needs a human, no MySQL/Twig vendor
+in this environment).
 
 ## Markup contract
 
@@ -214,4 +219,4 @@ padding via CSS only — same DOM/contract, no separate template.
 - [x] No OCMOD required
 - [x] Ships a real Mint Default `.twig` file, resolvable via `ComponentRenderer`
 - [x] Live controller wiring — `ControllerProductCategory` renders it via `ProductViewProvider` + `ComponentRenderer` (Search/Manufacturer/Special still to do)
-- [ ] Theme override checked end-to-end — needs a second test theme (next Phase 8 increment)
+- [x] Theme override checked — `catalog/view/theme/test_theme/` overrides only `product-card.twig` with a genuinely different DOM; `ComponentRenderer` resolves it correctly in both directions (override active vs. Mint Default active), see `docs/adr/002-theme-api-milestone-proof.md`. Resolution is proven; a human still needs to confirm the override actually **renders** correctly on a real install (no MySQL/`vendor/twig/twig` in this environment — same gap as every earlier Phase 8 entry)
