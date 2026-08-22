@@ -14,14 +14,16 @@ import 'bootstrap';
 import { initAlertDismiss } from './components/alert.js';
 import { initQuantityStepper } from './components/quantity.js';
 import { initModalTriggers } from './components/modal.js';
+import { initDrawerTriggers } from './components/drawer.js';
 
-// MintCart admin primitives (McDrawer, McToast, McConfirm, McTabs,
-// McSortable, McMediaPicker, McEntityPicker, McProgress - Phase 11) are
-// added here once implemented. `mc-modal`'s CSS/JS (Phase 4, shared with
-// catalog.js) already covers the admin dialog use case; a future McModal
-// JS class (if a real consumer needs an imperative open()/close() API
-// beyond data-mc-action triggers) would wrap this same component, not
-// replace it.
+// MintCart admin primitives (McToast, McConfirm, McTabs, McSortable,
+// McMediaPicker, McEntityPicker, McProgress - Phase 11) are added here once
+// implemented. `mc-modal`'s and `mc-drawer`'s CSS/JS (Phase 4, shared with
+// catalog.js) already cover the admin dialog/panel use cases; a future
+// McModal/McDrawer JS class (if a real consumer needs an imperative
+// open()/close() API beyond data-mc-action triggers) would wrap these same
+// components, not replace them.
 initAlertDismiss();
 initQuantityStepper();
 initModalTriggers();
+initDrawerTriggers();
