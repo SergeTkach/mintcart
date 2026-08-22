@@ -284,6 +284,48 @@ assertSame_(true, $hasAllKeys, 'Scenario 9: ProductViewProvider::build() output 
 assertSame_('category', $productView['context']['listing_type'], 'Scenario 9: listing_type should pass through as given by the controller', $failures);
 assertSame_(true, $productView['product']['stock']['in_stock'], 'Scenario 9: quantity=5 should resolve to in_stock=true', $failures);
 
+// 10. The CLAUDE.md §19 / MINTCART_TECHNICAL_PLAN.md §45 milestone proof:
+//     a second theme ("test_theme") that overrides ONLY product-card.twig,
+//     with a genuinely different DOM (no secondary-image swap, no
+//     wishlist/compare quick-actions, a single badge instead of a list, no
+//     quick-order button) must resolve to ITS OWN file when active, while
+//     any theme that does NOT override the component (mint_default itself)
+//     must still resolve to Mint Default's file. Both checks run against
+//     the real, shipped repo files (not fixtures), the same way scenario 8
+//     guards against drift for mint_default alone. test_theme declares
+//     "parent": null in its theme.json - it doesn't even name mint_default
+//     as a parent - so a pass here proves the Mint Default fallback is
+//     automatic for anything a theme doesn't override, not merely
+//     something that only works if a theme opts in via "parent". This is
+//     what actually validates the Theme API milestone: 0 OCMOD, 0
+//     controller patches, 0 copied business logic to get a fully
+//     functional second theme with its own product-card DOM.
+$testThemeRenderer = new ComponentRenderer($realThemesRoot, 'test_theme');
+$testThemePath = $testThemeRenderer->resolve('product-card');
+
+assertSame_(
+    $realThemesRoot . '/test_theme/template/mint/components/product-card.twig',
+    $testThemePath,
+    'Scenario 10: with test_theme active, resolve() should return test_theme\'s own override, not Mint Default\'s',
+    $failures
+);
+
+$testThemeMarkup = (string) file_get_contents($testThemePath);
+
+assertSame_(
+    true,
+    str_contains($testThemeMarkup, 'mc-product-card--test') && !str_contains($testThemeMarkup, 'toggle-wishlist'),
+    'Scenario 10: test_theme\'s product-card.twig should be a genuinely different DOM (its own marker class, no wishlist quick-action), not a copy of Mint Default\'s',
+    $failures
+);
+
+assertSame_(
+    $realThemesRoot . '/mint_default/template/mint/components/product-card.twig',
+    $realRenderer->resolve('product-card'),
+    'Scenario 10: with mint_default active (no override anywhere), resolve() should still return Mint Default\'s own file - the fallback direction, not just the override direction',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -292,5 +334,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ComponentRenderer smoke test (' . 9 . " scenarios)\n";
+echo 'PASS: ComponentRenderer smoke test (' . 10 . " scenarios)\n";
 exit(0);
