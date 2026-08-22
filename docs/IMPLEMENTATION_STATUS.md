@@ -162,31 +162,39 @@ consumer).
       navigation, same as OpenCart today), disabled prev/next boundary is a
       non-focusable `<span aria-disabled="true">` rather than a dead `<a
       href="#">`; no JS. Doc: `docs/developer/components/pagination.md`
+- [x] `mc-card` — `assets/src/css/components/card.css`; generic
+      content/media card layout primitive (`__media`, `__body`, `__title`,
+      `__text`, `__actions`, `__footer`), distinct from the future
+      ecommerce-specific `mc-product-card` (Phase 6); `--flush` (no body
+      padding) and `--hoverable` (shadow/lift affordance for a clickable
+      card, respects `prefers-reduced-motion`) modifiers; no JS. Doc:
+      `docs/developer/components/card.md`
 - [ ] `mc-select` (dedicated component beyond `mc-field__control`'s shared
-      select styling — not attempted; see "Next step" below), `mc-card`,
-      `mc-modal`, `mc-drawer`, `mc-toast`
+      select styling — not attempted; see "Next step" below), `mc-modal`,
+      `mc-drawer`, `mc-toast`
 - [x] Each shipped component so far: CSS contract (no Twig yet — no theme/
       renderer exists until Phase 8, per CLAUDE.md §85), JS only where
       actually needed (`mc-alert`'s dismiss, `mc-quantity`'s stepper), a11y
       states, doc example with a Definition-of-Done checklist
 
-**In progress.** 11 of 16 Phase 4 components done (`mc-button`, `mc-alert`,
+**In progress.** 12 of 16 Phase 4 components done (`mc-button`, `mc-alert`,
 `mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`, `mc-price`, `mc-quantity`,
-`mc-rating`, `mc-breadcrumb`, `mc-pagination`). Verified with `npm run
-build` and `npm run dev` — both compile; the bundled CSS contains
-`.mc-breadcrumb`/`.mc-pagination` and their elements/modifiers (spot-checked
-with `grep -o` against `assets/dist/css/index.min.css`). No automated
-component/visual test harness exists yet in this repo (no test runner
-configured beyond the PHP `tests/mintcart/` suite from Phase 1) — this
-increment's verification is build-compiles + bundled-output grep + manual
-code review only; that gap is not new to this run.
+`mc-rating`, `mc-breadcrumb`, `mc-pagination`, `mc-card`). Verified with
+`npm run build` and `npm run dev` — both compile; the bundled CSS contains
+`.mc-card` and its elements/modifiers (spot-checked with `grep -o` against
+`assets/dist/css/index.min.css`). No automated component/visual test
+harness exists yet in this repo (no test runner configured beyond the PHP
+`tests/mintcart/` suite from Phase 1) — this increment's verification is
+build-compiles + bundled-output grep + manual code review only; that gap is
+not new to this run.
 
-**Next step:** `mc-card` (Technical Plan §15E doesn't name it directly, but
-Implementation Guide §45 lists it as a core primitive and it's the last
-simple, no-JS Phase 4 component remaining). `mc-select`, `mc-modal`,
-`mc-drawer`, `mc-toast` remain after that — the latter three need real JS
-plus focus management (Functional Scope §27 Accessibility) and should each
-get their own dedicated run.
+**Next step:** `mc-select`, `mc-modal`, `mc-drawer`, `mc-toast` remain.
+`mc-select` is a dedicated select-widget component beyond what
+`mc-field__control` already covers (searchable/multi-select) — still no
+real consumer, so keep deferring unless one shows up (CLAUDE.md §85).
+`mc-modal`/`mc-drawer`/`mc-toast` need real JS plus focus management
+(Functional Scope §27 Accessibility) and should each get their own
+dedicated run rather than being folded in together.
 
 ## Phase 5 — Layout conventions
 
@@ -354,31 +362,33 @@ Not started.
 ## Next step for the next routine run
 
 **`mc-button`, `mc-alert`, `mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`,
-`mc-price`, `mc-quantity` and `mc-rating` are done.** Continue **Phase 4 —
-Core UI components** with the next one or two components from the
-remaining list:
+`mc-price`, `mc-quantity`, `mc-rating`, `mc-breadcrumb`, `mc-pagination` and
+`mc-card` are done.** Continue **Phase 4 — Core UI components** with the
+next remaining component:
 
 ```text
-mc-card, mc-breadcrumb, mc-pagination, mc-modal, mc-drawer, mc-toast
+mc-modal, mc-drawer, mc-toast
 ```
 
-(`mc-select` was intentionally left off — `mc-field.css`'s
+(`mc-select` remains intentionally deferred — `mc-field.css`'s
 `select.mc-field__control` already covers the common case of a `<select>`
 inside a form field. Only revisit a dedicated `mc-select` component if a
 real consumer needs something `mc-field__control` can't do, e.g. a custom
 searchable/multi-select widget — per CLAUDE.md §85, no API ahead of a real
 consumer.)
 
-Suggested next pick: `mc-breadcrumb` and `mc-pagination` together — both
-small, self-contained, no JS, and both are named directly in Technical Plan
-§15E's reusable-action list (`BreadcrumbBuilder`, `PaginationBuilder`) as
-things every listing page (category/search/manufacturer) will need once
-Phase 6 exists. `mc-card` (a generic content/media card, distinct from the
-future `mc-product-card` — see Implementation Guide §26 component tree) can
-follow. `mc-modal`/`mc-drawer`/`mc-toast` are more involved (need real JS
-behavior, focus management per Functional Scope §27 Accessibility) — tackle
-those as their own dedicated run(s) rather than folding them in alongside
-something else.
+`mc-modal`, `mc-drawer` and `mc-toast` are the last three Phase 4 items and
+are more involved than everything shipped so far — each needs real JS
+behavior and focus management (Functional Scope §27 Accessibility:
+keyboard navigation, dialogs manage focus, non-mouse alternative). Bootstrap
+5 already ships `modal`/`offcanvas` primitives that
+`MINTCART_IMPLEMENTATION_GUIDE.md` §9 explicitly allows reusing for generic
+UI primitives rather than reimplementing from scratch — evaluate wrapping
+Bootstrap's JS behavior behind the `mc-*`/`data-mc-*` contract (so the
+Theme API surface stays semantic per Implementation Guide §9) rather than
+writing a parallel modal/offcanvas implementation, unless a concrete gap
+shows up. Tackle these one at a time, each as its own dedicated run, rather
+than folding more than one into a single increment.
 
 Follow the same pattern established this run:
 
