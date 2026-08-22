@@ -263,10 +263,26 @@ it, per CLAUDE.md §85). With `mc-toast` landed, the next run should move to
 
 ## Phase 5 — Layout conventions
 
-- [ ] Document Bootstrap 5 grid/utility usage rules (no parallel grid framework)
-- [ ] Verify responsive storefront layout achievable without Bootstrap 3
+- [x] Document Bootstrap 5 grid/utility usage rules (no parallel grid framework)
+- [x] Verify responsive storefront layout achievable without Bootstrap 3
 
-Not started.
+Complete. `docs/developer/layout-conventions.md` documents the rule
+(Bootstrap 5 grid/utilities are the only layout system; `mc-*` is for
+MintCart-owned components, never a parallel grid framework —
+`MINTCART_IMPLEMENTATION_GUIDE.md` §46) with the same
+Bootstrap-wraps-`mc-*` pattern already used in every Phase 4 component doc.
+
+The "verify responsive layout without Bootstrap 3" item was checked
+statically, since no Twig/theme exists yet to render a real page against
+(that's Phase 8): `grep -rnE '\.(container|row|col-|g-[0-9]|d-flex|d-grid)\b'`
+across `assets/src/css/components/` and `assets/src/css/settings/` found no
+component CSS overriding a Bootstrap grid/utility class name (one comment
+hit only), `bootstrap3-shim.css` only touches legacy leaf classes
+(`.pull-right`, `.panel`, `.btn-default`, ...) never grid/container
+classes, and the CSS import order (Bootstrap 5 → tokens → components →
+compatibility) means the shim can only extend legacy markup, never shadow
+component or grid CSS. A live browser check against a real responsive page
+belongs to Phase 8 once a theme exists to render.
 
 ## Phase 6 — Product Card (first reference component)
 
@@ -436,47 +452,56 @@ component if a real consumer needs something it can't do, e.g. a custom
 searchable/multi-select widget — per CLAUDE.md §85, no API ahead of a real
 consumer).
 
-The next run should start **Phase 5 — Layout conventions**:
+**Phase 5 — Layout conventions is done.** `docs/developer/layout-conventions.md`
+documents the Bootstrap-5-grid-is-the-only-layout-system rule with examples,
+and the "no Bootstrap 3 assumptions / no import-order conflicts" check was
+done statically against the current CSS tree (see the Phase 5 section above
+for exactly what was grepped/confirmed) — there is still no Twig/theme to
+render a real page against, so a live browser check stays deferred to
+Phase 8.
+
+The next run should start **Phase 6 — Product Card**
+(`MINTCART_IMPLEMENTATION_GUIDE.md` §47, `MINTCART_TECHNICAL_PLAN.md`
+§15C/§15D), the first reference component and the first real consumer of a
+normalized product data contract:
 
 ```text
-- Document Bootstrap 5 grid/utility usage rules (no parallel grid framework)
-- Verify responsive storefront layout achievable without Bootstrap 3
+- [ ] `ProductViewProvider` contract (id, name, url, image, secondary_image,
+      price, special, tax, rating, stock, badges, options_summary, actions)
+- [ ] `mc-product-card` Twig + CSS + JS
+- [ ] Wishlist / compare / add-to-cart / quick-order support
 ```
 
-This phase (`MINTCART_IMPLEMENTATION_GUIDE.md` §46 /
-`MINTCART_TECHNICAL_PLAN.md` §42 Phase 2) is primarily a documentation +
-verification step, not new components:
+This is a bigger increment than Phase 4's individual components — it is
+the first place PHP (a `MintCart\Commerce\ProductViewProvider`, per
+`MINTCART_TECHNICAL_PLAN.md` §15D) and CSS/JS/Twig meet, and the first
+component with a real business-data contract instead of pure
+display/markup. Before writing code:
 
-- Write the layout-conventions doc (e.g.
-  `docs/developer/layout-conventions.md`) covering: use Bootstrap 5's
-  `.container`/`.container-*`, `.row`, `.col-*`, `.g-*`, `.d-flex`, and
-  other utility classes for structure/spacing/responsiveness; `mc-*`
-  classes are for MintCart-owned semantic components and specific ecommerce
-  layouts, never a parallel grid/utility system
-  (`MINTCART_IMPLEMENTATION_GUIDE.md` §7/§46). Show the pattern already
-  used in every component doc's examples (Bootstrap layout primitives
-  wrapping an `mc-*` component, e.g. `mc-modal.md`'s
-  `<div class="modal-dialog">` inside plain page markup) as the reference
-  shape.
-- "Verify responsive storefront layout achievable without Bootstrap 3" —
-  since there is still no Twig/theme to render a real page against (Phase
-  8 territory), the practical verification at this stage is: confirm
-  `bootstrap3-shim.css` (Phase 2) and the Phase 4 components together don't
-  assume any Bootstrap 3 class/behavior, and that nothing in
-  `assets/src/css/index.css`'s import order conflicts with plain Bootstrap
-  5 grid/utility usage. Document what was checked in this file rather than
-  building a throwaway HTML fixture, unless a real page-level consumer
-  already exists by the time this run happens.
-- Keep this a small, focused increment (CLAUDE.md §4a) — it's
-  documentation/verification, not a new component or subsystem.
-- No Twig/`ComponentRenderer` yet — that's still Phase 8, no real consumer
-  before then (CLAUDE.md §85).
-
-If Phase 5 turns out to already be effectively covered by existing docs and
-verification once inspected, say so explicitly in `IMPLEMENTATION_STATUS.md`
-and move on to **Phase 6 — Product Card** (the first reference component,
-`MINTCART_IMPLEMENTATION_GUIDE.md` §47) in the same run rather than manufacturing
-busywork — but do not skip actually reading/verifying first.
+- Read `MINTCART_IMPLEMENTATION_GUIDE.md` §47 and
+  `MINTCART_TECHNICAL_PLAN.md` §15C/§15D/§27 for the exact contract shape
+  expected (`product` / `display` / `context` per
+  `MINTCART_IMPLEMENTATION_GUIDE.md` §27).
+- Inspect the actual OpenCart 3 `catalog/model/catalog/product.php` and the
+  existing `catalog/controller/product/*` / category/search controllers in
+  this repo (CLAUDE.md §10/§84 — never assume OpenCart's product data
+  shape from memory) to see what raw data is actually available to build
+  the contract from (price/special/tax formatting, image paths, rating
+  aggregation, stock status source).
+- There is still no Twig rendering pipeline or `ComponentRenderer`
+  (Phase 8) — `mc-product-card` at this stage is CSS + a documented Twig
+  template + JS behavior hooks (`data-mc-action="add-to-cart"`, etc.),
+  following the exact same pattern as every Phase 4 component doc, plus a
+  `ProductViewProvider` PHP class with unit-testable output. Wiring an
+  actual controller to call it end-to-end is Phase 8 territory once the
+  theme resolver exists — don't build a full controller integration this
+  phase if it would require guessing at contracts a real theme override
+  hasn't exercised yet (CLAUDE.md §85).
+- Given the size, treat `ProductViewProvider` and `mc-product-card`
+  (CSS/JS/Twig contract + doc) as two sub-steps and checkpoint after each
+  (CLAUDE.md §4a) rather than trying to land both in one pass — commit and
+  push after the provider is done even if the CSS/JS/Twig half doesn't fit
+  in the same run.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
