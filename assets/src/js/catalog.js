@@ -17,6 +17,7 @@ import { initAlertDismiss } from './components/alert.js';
 import { initQuantityStepper } from './components/quantity.js';
 import { initModalTriggers } from './components/modal.js';
 import { initDrawerTriggers } from './components/drawer.js';
+import { initToastTriggers } from './components/toast.js';
 
 // MintCart-owned catalog behavior modules are added here as components ship
 // (Phase 4 onward).
@@ -24,3 +25,4 @@ initAlertDismiss();
 initQuantityStepper();
 initModalTriggers();
 initDrawerTriggers();
+initToastTriggers();

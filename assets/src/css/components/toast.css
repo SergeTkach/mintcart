@@ -1,0 +1,139 @@
+/**
+ * mc-toast
+ *
+ * MintCart-owned transient notification component (e.g. the "Added to
+ * cart" / "Changes saved" feedback `MINTCART_TECHNICAL_PLAN.md` §15 lists
+ * as a Cart UX option alongside drawer/modal, and `MINTCART_FUNCTIONAL_SCOPE.md`
+ * §11 lists generally as "cart drawer / normal cart feedback"). Reuses
+ * Bootstrap 5's `Toast` JS (show/hide, autohide with pause-on-interaction)
+ * the same way `mc-modal`/`mc-drawer` reuse `Modal`/`Offcanvas` -
+ * `MINTCART_IMPLEMENTATION_GUIDE.md` §9 allows this for generic UI
+ * primitives. Unlike `Modal`/`Offcanvas`, Bootstrap's `Toast` deliberately
+ * does *not* manage focus (no focus trap, does not steal focus on show) -
+ * correct for a transient, non-blocking notification per
+ * `MINTCART_FUNCTIONAL_SCOPE.md` §27 (a toast must not interrupt keyboard
+ * flow the way a dialog does). Screen-reader announcement instead relies on
+ * `role="status"`/`role="alert"` + `aria-live`/`aria-atomic` on the markup
+ * itself (see docs/developer/components/toast.md) - Bootstrap's JS does not
+ * add these automatically.
+ *
+ * Bootstrap's own `.toast`/`.toast-container`/`.toast-header`/`.toast-body`
+ * classes stay on the markup because `Toast`'s JS/CSS (show/hide states,
+ * autohide timer, fade transition) lives on those classes - they are
+ * internal implementation, not part of MintCart's public Theme API
+ * contract. `.mc-toast`/`.mc-toast__*` and `data-mc-*` are the contract
+ * (`MINTCART_IMPLEMENTATION_GUIDE.md` §6/§9).
+ *
+ * `.mc-toast` retints Bootstrap's toast purely through its own documented
+ * `--bs-toast-*` CSS custom properties, reading from MintCart's `--mc-*`
+ * tokens - no Bootstrap source recompilation needed (Implementation Guide
+ * §11). Variant tints follow the same `color-mix()` approach as
+ * `mc-alert.css` for consistency (`mc-toast` is currently the only other
+ * consumer of variant coloring - no full light/dark tint scale added to
+ * settings/tokens.css, per CLAUDE.md §85/§17).
+ *
+ * Open/close is driven entirely by `data-mc-action="open-toast"` /
+ * `"close-toast"` (`assets/src/js/components/toast.js`), never Bootstrap's
+ * own `data-bs-dismiss` attribute, so the only documented public hook
+ * surface is `data-mc-*` (CLAUDE.md §14). `data-bs-autohide`/`data-bs-delay`
+ * stay available as generic Bootstrap `Toast` configuration attributes
+ * (Implementation Guide §9 "Sizes and other Bootstrap ... variants" applies
+ * equally here) - they configure behavior, not markup structure or trigger
+ * wiring.
+ *
+ * Contract: docs/developer/components/toast.md
+ */
+
+.mc-toast {
+    --bs-toast-zindex: var(--mc-z-toast);
+    --bs-toast-color: var(--mc-text);
+    --bs-toast-bg: var(--mc-surface);
+    --bs-toast-border-color: var(--mc-border);
+    --bs-toast-border-width: var(--mc-border-width);
+    --bs-toast-border-radius: var(--mc-radius-md);
+    --bs-toast-box-shadow: var(--mc-shadow-lg);
+    --bs-toast-header-color: var(--mc-muted);
+    --bs-toast-header-bg: var(--mc-surface);
+    --bs-toast-header-border-color: var(--mc-border);
+    font-family: var(--mc-font-family-base);
+}
+
+/*
+ * `.toast-container` is a plain wrapping element the page markup provides
+ * (Bootstrap does not append it dynamically, unlike `.modal-backdrop`/
+ * `.offcanvas-backdrop`), so it is never a descendant of `.mc-toast` -
+ * retint its own `--bs-toast-zindex` copy at the class itself so a page
+ * with multiple stacked toasts shares MintCart's z-index tier instead of
+ * Bootstrap's unrelated default.
+ */
+.toast-container {
+    --bs-toast-zindex: var(--mc-z-toast);
+}
+
+.mc-toast__title {
+    color: var(--mc-text);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-toast__message {
+    margin: 0;
+    color: var(--mc-text);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-toast__close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--mc-radius-sm);
+    background-color: transparent;
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-lg);
+    line-height: 1;
+    cursor: pointer;
+    appearance: none;
+    transition: background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-toast__close:hover {
+    background-color: var(--mc-surface-alt);
+    color: var(--mc-text);
+}
+
+.mc-toast__close:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Variants                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.mc-toast--success {
+    --bs-toast-header-color: var(--mc-color-mint-800);
+    --bs-toast-header-bg: var(--mc-color-mint-50);
+    --bs-toast-header-border-color: var(--mc-color-mint-300);
+}
+
+.mc-toast--danger {
+    --bs-toast-header-color: var(--mc-color-red-700);
+    --bs-toast-header-bg: color-mix(in srgb, var(--mc-color-red-500) 12%, var(--mc-color-white));
+    --bs-toast-header-border-color: color-mix(in srgb, var(--mc-color-red-500) 35%, var(--mc-color-white));
+}
+
+.mc-toast--warning {
+    --bs-toast-header-color: var(--mc-color-gray-900);
+    --bs-toast-header-bg: color-mix(in srgb, var(--mc-color-amber-500) 18%, var(--mc-color-white));
+    --bs-toast-header-border-color: color-mix(in srgb, var(--mc-color-amber-500) 45%, var(--mc-color-white));
+}
+
+.mc-toast--info {
+    --bs-toast-header-color: var(--mc-color-blue-700);
+    --bs-toast-header-bg: color-mix(in srgb, var(--mc-color-blue-500) 12%, var(--mc-color-white));
+    --bs-toast-header-border-color: color-mix(in srgb, var(--mc-color-blue-500) 35%, var(--mc-color-white));
+}
