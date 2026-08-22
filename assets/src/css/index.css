@@ -28,4 +28,5 @@
 @import './components/rating.css';
 @import './components/breadcrumb.css';
 @import './components/pagination.css';
+@import './components/card.css';
 @import './compatibility/bootstrap3-shim.css';

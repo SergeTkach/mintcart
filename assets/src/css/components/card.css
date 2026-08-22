@@ -1,0 +1,134 @@
+/**
+ * mc-card
+ *
+ * MintCart-owned generic content/media card (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §26/§45, Definition of Done §79). This is a generic layout primitive (e.g. a
+ * content teaser, an info block) - distinct from the future `mc-product-card`
+ * (Technical Plan §15D/Implementation Guide §47), which will have its own
+ * ecommerce-specific contract (price, badges, add-to-cart, ...) once
+ * `ProductViewProvider` exists in Phase 6. No JS - pure layout/presentation.
+ *
+ * Contract: docs/developer/components/card.md
+ *
+ * Component-local tokens (`--mc-card-*`) are set from semantic tokens
+ * (settings/tokens.css) per the three-tier system in
+ * docs/MINTCART_IMPLEMENTATION_GUIDE.md §16.
+ */
+
+.mc-card {
+    --mc-card-bg: var(--mc-surface);
+    --mc-card-border-color: var(--mc-border);
+    --mc-card-radius: var(--mc-radius-lg);
+    --mc-card-shadow: var(--mc-shadow-sm);
+    --mc-card-padding: var(--mc-space-4);
+
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--mc-card-bg);
+    border: var(--mc-border-width) solid var(--mc-card-border-color);
+    border-radius: var(--mc-card-radius);
+    box-shadow: var(--mc-card-shadow);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Media                                                                    */
+/* ---------------------------------------------------------------------- */
+
+.mc-card__media {
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background-color: var(--mc-surface-alt);
+}
+
+.mc-card__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Body                                                                     */
+/* ---------------------------------------------------------------------- */
+
+.mc-card__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--mc-space-2);
+    padding: var(--mc-card-padding);
+}
+
+.mc-card__title {
+    margin: 0;
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-heading);
+    font-size: var(--mc-font-size-lg);
+    font-weight: var(--mc-font-weight-semibold);
+    line-height: var(--mc-line-height-tight);
+}
+
+.mc-card__text {
+    margin: 0;
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-base);
+    line-height: var(--mc-line-height-normal);
+}
+
+.mc-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+    margin-top: auto;
+    padding-top: var(--mc-space-2);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Footer                                                                   */
+/* ---------------------------------------------------------------------- */
+
+.mc-card__footer {
+    padding: var(--mc-card-padding);
+    border-top: var(--mc-border-width) solid var(--mc-card-border-color);
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Modifiers                                                                */
+/* ---------------------------------------------------------------------- */
+
+/* No body padding - e.g. media/content that should touch the card edges,
+   with padding applied by the consumer's own inner markup instead. */
+.mc-card--flush .mc-card__body {
+    padding: 0;
+}
+
+/*
+ * For a card that is itself a link/button (the whole card is one
+ * `data-mc-action` target), not just decoration around one. Consumer JS
+ * is responsible for the actual interaction; this only supplies the hover
+ * affordance so a clickable card looks clickable.
+ */
+.mc-card--hoverable {
+    transition:
+        box-shadow var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        transform var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-card--hoverable:hover {
+    box-shadow: var(--mc-shadow-md);
+    transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-card--hoverable {
+        transition: box-shadow var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+    }
+
+    .mc-card--hoverable:hover {
+        transform: none;
+    }
+}
