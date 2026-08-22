@@ -40,14 +40,26 @@ into a real `ProductListingService` is expected once Search/Manufacturer/
 Special need the same thing (`docs/IMPLEMENTATION_STATUS.md`'s Phase 8
 notes call this out explicitly).
 
-**Compatibility impact:** None for stores still on the legacy `default`
-OpenCart theme. The new code only runs when the active theme (`config_theme`,
-resolved the same way `event/theme.php` already does) is **not** `'default'`
-— `default/template/product/category.twig` never reads `product_cards` and
-the controller's original `$data['products']` array (the one that template
-depends on) is completely unchanged: same keys, same values, same order,
-same computation. A store that hasn't moved off the stock `default` theme
-pays no extra cost and runs no new code path from this change at all.
+**Compatibility impact:** None for stores on the legacy `default` OpenCart
+theme, or on any unrelated third-party OpenCart theme. The new code only
+runs when the active theme (`config_theme`, resolved the same way
+`event/theme.php` already does) ships a `theme.json` manifest — i.e. it is
+Mint-API-aware. Checking for that manifest, rather than only excluding the
+literal string `'default'`, matters because a third-party OC3 theme is
+neither `'default'` nor Mint-aware: without the manifest check, every
+category page load on such a theme would still build a
+`ComponentRenderer`/`ProductViewProvider` and render a `product-card` for
+every listed product, purely wasted work its own template never reads.
+Under the manifest-based gate, no non-Mint theme (stock `default` or
+third-party) runs any of this new code, and the controller's original
+`$data['products']` array is completely unchanged either way: same keys,
+same values, same order, same computation.
+
+A failure inside the new pipeline (e.g. a missing/unreadable
+`product-card.twig`) is caught per-product and disables the pipeline for
+the rest of that request rather than propagating — a broken Mint component
+degrades that page's product-card grid, it does not take down the whole
+category page for every visitor.
 
 **Tests:** No live end-to-end request test — this environment has no MySQL
 server and no `vendor/twig/twig` installed (`composer install` has not been

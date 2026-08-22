@@ -389,14 +389,39 @@ can't live outside the controller) is in the new `docs/upstream-diff.md` —
 this is the **first** direct OpenCart core file modification MintCart has
 made (every earlier phase only added new files).
 
-Key design decision: the new pipeline only runs when the active theme
-(resolved via a new `mintActiveThemeDirectory()` private method, mirroring
-`event/theme.php`'s own `config_theme`/`theme_default_directory` lookup)
-is **not** `'default'`. The controller's original `$data['products']` array
-— the one `default/template/product/category.twig` actually reads — is
-completely untouched: same keys, same values, same computation, same order.
-A store still on the stock `default` theme runs zero new code from this
-change. Five new language strings the product-card contract needs
+Key design decisions, tightened after review before merge:
+
+- The new pipeline only runs when the active theme (resolved via a new
+  `mintActiveThemeDirectory()` private method, mirroring `event/theme.php`'s
+  own `config_theme`/`theme_default_directory` lookup) **ships a
+  `theme.json` manifest** — not merely "isn't literally `'default'`". The
+  first version of this gate only excluded the string `'default'`, which
+  meant any unrelated third-party OC3 theme (neither `default` nor
+  Mint-aware) would still pay the cost of building a `ComponentRenderer` +
+  `ProductViewProvider` and rendering a `product-card` per listed product,
+  for a `product_cards` array its own template never reads. Checking for
+  `theme.json` instead correctly scopes this to Mint-aware themes only.
+- `ComponentRenderer::render()` is now wrapped in try/catch per product; a
+  failure (e.g. a missing/unreadable `product-card.twig`) logs via
+  `MintCart\Core\Logger` and disables the pipeline for the rest of that
+  request, rather than throwing an uncaught exception that would fatal the
+  entire category page for every visitor.
+- `ProductViewProvider::buildActions()` (Phase 6) had a latent gap this
+  wiring surfaced: it gated `add_to_cart`/`quick_order` on stock quantity
+  alone, ignoring OpenCart's `config_stock_checkout` backorder setting —
+  meaning a store with backorders enabled would have gotten a disabled
+  add-to-cart button on every out-of-stock product on any Mint theme. Fixed
+  by accepting an `allow_out_of_stock_purchase` input (the caller's resolved
+  `config_stock_checkout` value) — see
+  `docs/developer/commerce/product-view-provider.md`. Added a regression
+  test (`tests/mintcart/commerce/product-view-provider-test.php`, now 8
+  scenarios).
+
+The controller's original `$data['products']` array — the one
+`default/template/product/category.twig` (and any third-party theme's own
+category template) actually reads — is completely untouched: same keys,
+same values, same computation, same order, on every theme, Mint-aware or
+not. Five new language strings the product-card contract needs
 (`text_rated`, `text_quick_order`, `text_badge_sale`,
 `text_badge_out_of_stock`, `text_badge_new`) were added to
 `catalog/language/en-gb/product/category.php`; `text_wishlist`/

@@ -131,6 +131,27 @@ assertSame('compact', $view['display']['action_variant'], 'display override: act
 assertSame('search', $view['context']['listing_type'], 'context override: listing_type search', $failures);
 assertSame(3, $view['context']['position'], 'context override: position 3', $failures);
 
+// 8. Out of stock but the caller flags backorders as allowed
+// (OpenCart's config_stock_checkout, the same flag
+// catalog/controller/checkout/cart.php already checks) -> still
+// purchasable. Regression test for the gap ControllerProductCategory's
+// Phase 8 wiring surfaced: buildActions() used to gate purchasability on
+// quantity alone, which would silently disable add-to-cart for stores
+// that have backorders enabled.
+$view = $provider->build([
+    'id' => 6,
+    'name' => 'Product Six',
+    'url' => '#',
+    'image' => 'x.jpg',
+    'price' => '$50.00',
+    'quantity' => 0,
+    'allow_out_of_stock_purchase' => true,
+]);
+
+assertTrue(!$view['product']['stock']['in_stock'], 'backorder allowed: stock.in_stock still false', $failures);
+assertTrue($view['product']['actions']['add_to_cart'], 'backorder allowed: add_to_cart is true despite quantity 0', $failures);
+assertTrue($view['product']['actions']['quick_order'], 'backorder allowed: quick_order is true despite quantity 0', $failures);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -139,5 +160,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ProductViewProvider smoke test (' . 7 . " scenarios)\n";
+echo 'PASS: ProductViewProvider smoke test (' . 8 . " scenarios)\n";
 exit(0);
