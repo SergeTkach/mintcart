@@ -1,0 +1,239 @@
+/**
+ * mc-product-card
+ *
+ * MintCart's ecommerce reference component (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §47, Definition of Done §79; Technical Plan §15D). First real consumer of
+ * `MintCart\Commerce\ProductViewProvider`'s `product`/`display`/`context`
+ * contract (docs/developer/commerce/product-view-provider.md) - contract for
+ * this component: docs/developer/components/product-card.md.
+ *
+ * Distinct from the generic `mc-card` (Phase 4) - this is the
+ * ecommerce-specific layout (media/badges/price/rating/actions), not a
+ * general content card. Composes existing Phase 4 components
+ * (`mc-badge`, `mc-price`, `mc-rating`, `mc-button`) rather than duplicating
+ * their CSS.
+ *
+ * JS: assets/src/js/components/product-card.js (wishlist/compare toggle
+ * button state only - add-to-cart/quick-order stay markup + `data-mc-action`
+ * hooks for the future Phase 15 Cart/QuickOrder client to wire up, per
+ * CLAUDE.md §85).
+ */
+
+.mc-product-card {
+    --mc-product-card-bg: var(--mc-surface);
+    --mc-product-card-border-color: var(--mc-border);
+    --mc-product-card-radius: var(--mc-radius-lg);
+    --mc-product-card-shadow: var(--mc-shadow-sm);
+    --mc-product-card-padding: var(--mc-space-4);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--mc-product-card-bg);
+    border: var(--mc-border-width) solid var(--mc-product-card-border-color);
+    border-radius: var(--mc-product-card-radius);
+    box-shadow: var(--mc-product-card-shadow);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Media                                                                    */
+/* ---------------------------------------------------------------------- */
+
+.mc-product-card__media {
+    position: relative;
+    display: block;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background-color: var(--mc-surface-alt);
+}
+
+.mc-product-card__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/*
+ * Secondary image swap on hover is pure CSS (no JS needed): the secondary
+ * image is absolutely stacked over the primary one and faded in on
+ * `:hover`/`:focus-within` so it also works for keyboard focus inside the
+ * media link, not just a mouse hover.
+ */
+.mc-product-card__image--secondary {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-product-card__media:hover .mc-product-card__image--secondary,
+.mc-product-card__media:focus-within .mc-product-card__image--secondary {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-product-card__image--secondary {
+        transition: none;
+    }
+}
+
+.mc-product-card__badges {
+    position: absolute;
+    top: var(--mc-space-2);
+    left: var(--mc-space-2);
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-product-card__quick-actions {
+    position: absolute;
+    top: var(--mc-space-2);
+    right: var(--mc-space-2);
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-1);
+}
+
+.mc-product-card__action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-pill);
+    background-color: var(--mc-surface);
+    color: var(--mc-muted);
+    cursor: pointer;
+    transition:
+        color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-product-card__action-button:hover {
+    color: var(--mc-text);
+}
+
+.mc-product-card__action-button:focus-visible {
+    outline: 2px solid var(--mc-primary);
+    outline-offset: 2px;
+}
+
+.mc-product-card__action-button[aria-pressed='true'] {
+    border-color: var(--mc-primary);
+    color: var(--mc-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-product-card__action-button {
+        transition: none;
+    }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Body                                                                     */
+/* ---------------------------------------------------------------------- */
+
+.mc-product-card__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--mc-space-2);
+    padding: var(--mc-product-card-padding);
+}
+
+.mc-product-card__title {
+    margin: 0;
+    font-family: var(--mc-font-family-heading);
+    font-size: var(--mc-font-size-base);
+    font-weight: var(--mc-font-weight-semibold);
+    line-height: var(--mc-line-height-tight);
+}
+
+.mc-product-card__title a {
+    color: var(--mc-text);
+    text-decoration: none;
+}
+
+.mc-product-card__title a:hover {
+    text-decoration: underline;
+}
+
+/*
+ * Extends the link's clickable area to the whole card body without adding
+ * a second nested `<a>` around every element (invalid HTML) - a common,
+ * accessible "clickable card" pattern. Requires `.mc-product-card__body`
+ * (or an ancestor up to `.mc-product-card`) to be `position: relative`,
+ * already true via `.mc-product-card`.
+ */
+.mc-product-card__title a::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    content: '';
+}
+
+.mc-product-card__description {
+    margin: 0;
+    overflow: hidden;
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+    line-height: var(--mc-line-height-normal);
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.mc-product-card__stock {
+    margin: 0;
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-product-card__stock--out {
+    color: var(--mc-danger);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Actions                                                                  */
+/* ---------------------------------------------------------------------- */
+
+.mc-product-card__actions {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+    margin-top: auto;
+    padding: 0 var(--mc-product-card-padding) var(--mc-product-card-padding);
+}
+
+.mc-product-card__actions .mc-button {
+    flex: 1 1 auto;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Modifiers                                                                */
+/* ---------------------------------------------------------------------- */
+
+/* Narrower listing contexts (e.g. a "related products" rail) - hides the
+   description and shrinks body padding; still the same DOM/contract, just
+   less content shown, driven by `display.action_variant: 'compact'`. */
+.mc-product-card--compact .mc-product-card__description {
+    display: none;
+}
+
+.mc-product-card--compact .mc-product-card__body {
+    padding: var(--mc-space-3);
+}
