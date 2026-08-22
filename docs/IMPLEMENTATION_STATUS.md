@@ -377,14 +377,21 @@ A minimal `mint_default` theme directory now exists
 `template/mint/components/product-card.twig` matching
 `docs/developer/components/product-card.md`'s documented contract exactly).
 
-Verified: `php -l` on the new class (clean); the 6-scenario
+Verified: `php -l` on the new class (clean); the 7-scenario
 `tests/mintcart/design/component-renderer-test.php` smoke test — override
 found on the active theme, found via the parent chain, falls back to
 `mint_default`, a cyclic parent chain doesn't infinite-loop, "not found
-anywhere" throws, and a missing/malformed `theme.json` is treated as "no
-parent" rather than a hard failure — all pass, exit 0. `render()`'s use of
-the OpenCart `\Template('Twig')` adaptor is not exercised by the test: this
-environment has no `vendor/twig/twig` installed, a pre-existing gap
+anywhere" throws, a missing `theme.json` is treated as "no parent", and a
+`theme.json` that exists but contains invalid JSON is also treated as "no
+parent" rather than a hard failure — all pass, exit 0. `render()` also
+guards against a resolved override file that is empty (0 bytes): the
+underlying `\Template\Twig` adaptor treats a falsy `$code` as "none
+supplied" and would otherwise re-derive the wrong path and throw a
+misleading error, so `render()` short-circuits to an empty string instead
+(not covered by the standalone test, for the same reason `render()`
+generally isn't — see below). `render()`'s use of the OpenCart
+`\Template('Twig')` adaptor is not exercised by the test: this environment
+has no `vendor/twig/twig` installed, a pre-existing gap
 affecting every Twig page in this repo when run outside a full web request,
 not something this class introduces (see the doc's "No OpenCart dependency
 in resolve()" section for detail).

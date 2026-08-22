@@ -100,6 +100,15 @@ final class ComponentRenderer
             throw new \RuntimeException("MintCart\\Design\\ComponentRenderer could not read component file '{$path}'.");
         }
 
+        // Template\Twig::render() treats a falsy $code as "none supplied"
+        // and falls back to re-deriving the path from $filename alone,
+        // which doesn't include the resolved theme directory - it would
+        // look in the wrong place and throw a misleading error instead of
+        // rendering an intentionally empty override. Short-circuit instead.
+        if ($code === '') {
+            return '';
+        }
+
         $template = new \Template('Twig');
 
         foreach ($data as $key => $value) {

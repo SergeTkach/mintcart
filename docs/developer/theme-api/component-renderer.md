@@ -105,3 +105,12 @@ $html = $renderer->render('product-card', [
   file as they are built (Phase 6+ per the technical plan) — `ComponentRenderer`
   itself does not care how many components exist, it only resolves the ones
   it's asked for.
+- **No caching across `render()` calls.** Each call builds its own
+  `\Template('Twig')` instance, which builds its own `\Twig\Environment`
+  internally. Once controller wiring (the next increment) calls `render()`
+  once per product in a listing, this means one `Twig\Environment` per
+  product on that page rather than one reused across the loop. Not
+  addressed here per `MINTCART_IMPLEMENTATION_GUIDE.md` §67 ("start with
+  measurements", not a cache built ahead of an observed cost) — revisit once
+  controller wiring exists and this can actually be profiled on a real
+  listing page.

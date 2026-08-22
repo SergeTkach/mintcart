@@ -176,8 +176,8 @@ try {
 assertSame_(true, $threw, 'Scenario 5: should throw when the component exists nowhere, including Mint Default', $failures);
 removeDirectory($root);
 
-// 6. Missing/malformed theme.json is treated as "no parent", not a hard
-//    failure - resolution still reaches Mint Default.
+// 6. A missing theme.json is treated as "no parent", not a hard failure -
+//    resolution still reaches Mint Default.
 $root = buildThemesFixture([
     'mint_default' => ['components' => ['product-card']],
     'custom_theme' => ['components' => []],
@@ -193,6 +193,24 @@ assertSame_(
 );
 removeDirectory($root);
 
+// 7. A theme.json that exists but is not valid JSON (e.g. hand-edited and
+//    broken) is also treated as "no parent", not a hard failure - distinct
+//    from scenario 6, which only covers a missing file.
+$root = buildThemesFixture([
+    'mint_default' => ['components' => ['product-card']],
+    'custom_theme' => ['components' => []],
+]);
+file_put_contents($root . '/custom_theme/theme.json', '{not valid json');
+
+$renderer = new ComponentRenderer($root, 'custom_theme');
+assertSame_(
+    $root . '/mint_default/template/mint/components/product-card.twig',
+    $renderer->resolve('product-card'),
+    'Scenario 7: a malformed (invalid JSON) theme.json should be treated as no parent, not a hard failure',
+    $failures
+);
+removeDirectory($root);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -201,5 +219,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ComponentRenderer smoke test (' . 6 . " scenarios)\n";
+echo 'PASS: ComponentRenderer smoke test (' . 7 . " scenarios)\n";
 exit(0);
