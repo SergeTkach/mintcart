@@ -32,4 +32,5 @@
 @import './components/modal.css';
 @import './components/drawer.css';
 @import './components/toast.css';
+@import './components/product-card.css';
 @import './compatibility/bootstrap3-shim.css';

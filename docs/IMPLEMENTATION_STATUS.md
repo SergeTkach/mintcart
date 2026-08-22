@@ -297,21 +297,50 @@ belongs to Phase 8 once a theme exists to render.
       Actual controller wiring (Category/Search/Manufacturer/Special calling
       this instead of their inline array-building) is intentionally deferred
       to Phase 8 (Theme resolver) — see "Next step" below.
-- [ ] `mc-product-card` Twig + CSS + JS
-- [ ] Wishlist / compare / add-to-cart / quick-order support
+- [x] `mc-product-card` Twig + CSS + JS — `assets/src/css/components/product-card.css`
+      + `assets/src/js/components/product-card.js` (`initProductCardActions`,
+      wired into `catalog.js` only — storefront component); documented
+      template contract (no live `.twig` file — no theme/`ComponentRenderer`
+      exists yet, see "No live Twig template yet" in the doc) in
+      `docs/developer/components/product-card.md`. Composes `mc-badge`,
+      `mc-price`, `mc-rating`, `mc-button` (Phase 4) rather than duplicating
+      their CSS.
+- [x] Wishlist / compare / add-to-cart / quick-order support — wishlist/compare
+      are a self-contained UI toggle (button `aria-pressed` state +
+      `mc:product-card:wishlist-toggle`/`mc:product-card:compare-toggle`
+      events, no backend call). Add-to-cart/quick-order render in the correct
+      enabled/disabled state from `product.actions` but are intentionally
+      **markup + `data-mc-action` hooks only, no JS behavior yet** — actually
+      adding to a cart or placing a quick order needs `CartService`/
+      `QuickOrderService` (Phase 15), which don't exist yet; see the doc's "Why
+      wishlist/compare toggle but add-to-cart doesn't" section.
 
-**In progress.** `ProductViewProvider` is done and verified (see below); the
-`mc-product-card` CSS/JS/Twig contract half — the second sub-step flagged in
-the previous "Next step" section — is the next piece of this phase.
+**Phase 6 is complete** for what's buildable before the Theme resolver exists.
+Both `ProductViewProvider` (previous run) and `mc-product-card` (this run) are
+done and verified. What's explicitly **not** done, by design, and deferred to
+later phases:
+- Live controller wiring (`ControllerProductCategory`/search/manufacturer/
+  special actually calling `ProductViewProvider` and rendering this template)
+  — Phase 8, once `MintCart\Design\ComponentRenderer` and a real theme exist
+  to resolve the template against.
+- Add-to-cart/quick-order network behavior — Phase 15 (Commerce API).
+- Wishlist/compare persistence — Phase 15 as well (today's toggle is a UI
+  affordance + event only, no storage).
 
-Verified: `php -l` on the new PHP file (clean); the smoke test
-`tests/mintcart/commerce/product-view-provider-test.php` (`php
-tests/mintcart/commerce/product-view-provider-test.php`) — 9 scenarios
-covering required-field validation (throws on missing `id`/`name`/`url`/
-`image`), defaults, sale/out-of-stock/new badge derivation, add-to-cart/
-quick-order purchasability (in-stock + visible price required, wishlist/
-compare always available), and display/context overrides — all pass
-(`PASS: ProductViewProvider smoke test (9 scenarios)`, exit 0).
+Verified: `php -l` on `productviewprovider.php` (clean, previous run); the
+9-scenario `tests/mintcart/commerce/product-view-provider-test.php` smoke
+test (previous run, still passing — `ProductViewProvider` wasn't touched this
+run); `npm install` (0 vulnerabilities, fresh install this run) then `npm run
+build` — both `catalog.min.js` (83.6kb, up from 83.2kb) and `index.min.css`
+(255.8kb, up from 252.3kb) compile cleanly; spot-checked the bundled output
+with `grep` to confirm `.mc-product-card__image--secondary`,
+`.mc-product-card--compact`, `toggle-wishlist`, `toggle-compare` and
+`mc:product-card:wishlist-toggle` are present in `catalog.min.js`/
+`index.min.css`, and confirmed `toggle-wishlist` does **not** appear in
+`admin.min.js` (product-card JS is storefront-only by design). No automated
+component/visual test harness exists yet in this repo (same gap noted in
+every previous Phase 4/5 run) — verification here is build-compiles +
+bundled-output grep + manual review against the Definition of Done checklist.
 
 ## Phase 7 — Header / Footer / Navigation
 
@@ -480,42 +509,62 @@ for exactly what was grepped/confirmed) — there is still no Twig/theme to
 render a real page against, so a live browser check stays deferred to
 Phase 8.
 
-**`ProductViewProvider` is done** (see the Phase 6 section above) — the
-first sub-step of Phase 6 flagged by the previous run. The next run should
-pick up the **second sub-step**:
+**Phase 6 — Product Card is complete.** Both sub-steps are done:
+`ProductViewProvider` (prior run) and `mc-product-card` CSS/JS + documented
+Twig contract (this run) — see the Phase 6 section above for what was
+verified. `docs/developer/components/product-card.md` is the template
+contract; there is still no live `.twig` file or controller wiring (that's
+Phase 8, once the Theme resolver exists to actually resolve one).
+
+The next run should start **Phase 8 — Theme resolver**
+(`MINTCART_TECHNICAL_PLAN.md` §11, `MINTCART_IMPLEMENTATION_GUIDE.md` §28–29,
+`CLAUDE.md` §19 "First architecture milestone"), the **critical architecture
+milestone** — everything built so far (Phase 4/5/6 CSS/JS/PHP) has no way to
+actually render on a page until this exists:
 
 ```text
-- [ ] `mc-product-card` Twig + CSS + JS
-- [ ] Wishlist / compare / add-to-cart / quick-order support
+- [ ] `MintCart\Design\ComponentRenderer` (active theme override → parent/base
+      theme → Mint Default fallback)
+- [ ] Prove: a test theme overriding only `product-card.twig` gets everything
+      else from Mint Default automatically, 0 OCMOD
 ```
 
-Notes for that run:
+This is a large, foundational increment — bigger than Phase 6. Before
+writing code:
 
-- The provider's output contract (`product` / `display` / `context`) is
-  documented in `docs/developer/commerce/product-view-provider.md` — build
-  the Twig template's variable access directly against that shape (e.g.
-  `product.stock.in_stock`, `product.actions.add_to_cart`,
-  `product.badges` as a list of `{type, label}`).
-- There is still no Twig rendering pipeline or `ComponentRenderer`
-  (Phase 8) — `mc-product-card` at this stage is CSS + a documented Twig
-  template + JS behavior hooks (`data-mc-action="add-to-cart"`,
-  `data-mc-action="toggle-wishlist"`, `data-mc-action="toggle-compare"`,
-  `data-mc-action="quick-order"`), following the exact same pattern as
-  every Phase 4 component doc — not a live controller integration. Wiring
-  `ControllerProductCategory` (and search/manufacturer/special) to actually
-  call `ProductViewProvider` and render this template end-to-end is Phase 8
-  territory once the theme resolver exists (don't build that integration
-  this phase — CLAUDE.md §85).
-- `mc-price`, `mc-badge`, `mc-rating`, `mc-quantity`, `mc-button` (Phase 4)
-  already exist and should compose inside `mc-product-card` rather than
-  duplicating their CSS — `mc-product-card` is the layout/media/actions
-  wrapper around them.
-- Reference `MINTCART_IMPLEMENTATION_GUIDE.md` §47 for the full feature
-  list (image, second image, name, price, special, tax, rating, badges,
-  stock, wishlist, compare, add to cart, quick order, optional
-  description) and §12–§14 for BEM/state-class/`data-mc-*` conventions.
-- Given the size, treat the Twig/CSS/JS/doc as this run's single increment
-  and checkpoint (CLAUDE.md §4a) rather than also starting Phase 7.
+- Re-read `CLAUDE.md` §19 and `MINTCART_TECHNICAL_PLAN.md` §11/§45 for
+  exactly what "pass" means: **Mint Default** theme + **a second test
+  theme**, both using the same providers/Commerce services/component
+  contract, differing only in DOM/tokens/style, with 0 OCMOD/controller
+  patches/copied business logic. If this milestone can't be made to work,
+  stop and fix the Theme API before continuing — do not proceed to Phase 9+.
+- This is the first phase that needs an actual **MintCart theme directory**
+  to exist (`MINTCART_IMPLEMENTATION_GUIDE.md` §26/§30 — `theme.json`,
+  `mint_default`), which nothing before Phase 6 needed. Read how OpenCart 3
+  resolves `$this->load->view()`/theme paths today
+  (`system/engine/loader.php`, `system/library/template/*`, the `default`
+  theme's directory layout) before designing where `ComponentRenderer`'s
+  override lookup sits relative to that — per `CLAUDE.md` §10/§84, inspect
+  the actual mechanism rather than assuming it from memory.
+- Concretely, this phase likely needs, in order: (1) a minimal `mint_default`
+  theme directory with a `theme.json` manifest and a first real
+  `product-card.twig` rendering the contract documented in
+  `docs/developer/components/product-card.md`; (2) `ComponentRenderer`'s
+  override-lookup logic (active theme → parent → Mint Default fallback);
+  (3) wiring `ControllerProductCategory` (the simplest existing listing
+  controller — see `upload/catalog/controller/product/category.php`) to call
+  `ProductViewProvider` + `ComponentRenderer` instead of its current inline
+  array-building and `product/category.twig` product loop; (4) a second
+  minimal test theme that overrides only `product-card.twig`, proving (2)'s
+  fallback actually works end-to-end.
+- Given the size, treat this as multiple sub-steps and checkpoint after each
+  (CLAUDE.md §4a) — e.g. land `ComponentRenderer` + `mint_default`'s
+  `product-card.twig` as one run, the controller wiring as a second, the
+  second test theme + milestone proof as a third, rather than attempting all
+  of it in one pass. This is exactly the kind of run where hitting the usage
+  limit mid-way is most costly (partially-wired controller, broken page) —
+  prefer stopping at a clean boundary (e.g. `ComponentRenderer` alone, not
+  yet called by any controller) over a half-wired one.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
