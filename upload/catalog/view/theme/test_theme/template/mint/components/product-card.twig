@@ -1,0 +1,26 @@
+<article class="mc-product-card mc-product-card--test">
+    <a class="mc-product-card__link" href="{{ product.url }}">
+        <img class="mc-product-card__image" src="{{ product.image }}" alt="{{ product.image_alt }}" loading="lazy">
+
+        {% if product.badges|length > 0 %}
+            <span class="mc-badge mc-badge--{{ product.badges[0].type }}">{{ product.badges[0].label ?: text_badge[product.badges[0].type] }}</span>
+        {% endif %}
+
+        <h3 class="mc-product-card__title">{{ product.name }}</h3>
+
+        <span class="mc-price{% if product.special %} mc-price--special{% endif %}">
+            <span class="mc-price__current">{{ product.special ?: product.price }}</span>
+        </span>
+    </a>
+
+    <button
+        type="button"
+        class="mc-button mc-button--primary mc-product-card__add-to-cart"
+        data-mc-action="add-to-cart"
+        data-product-id="{{ product.id }}"
+        data-quantity="{{ product.minimum }}"
+        {{ product.actions.add_to_cart ? '' : 'disabled' }}
+    >
+        {{ text_add_to_cart }}
+    </button>
+</article>
