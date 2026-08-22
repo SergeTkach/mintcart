@@ -149,6 +149,38 @@ class ControllerProductCategory extends Controller {
 
 			$data['products'] = array();
 
+			// MintCart\Design\ComponentRenderer / MintCart\Commerce\ProductViewProvider
+			// wiring (MINTCART_TECHNICAL_PLAN.md §11/§15C-D, Phase 8). Only built
+			// when the active theme ships a theme.json manifest (i.e. it is
+			// Mint-API-aware - Mint Default, or any future/custom Mint theme).
+			// Neither the legacy 'default' theme nor an unrelated third-party
+			// OpenCart theme has one, and neither of their templates reads the
+			// array below this comment, so stores on either kind of theme pay
+			// no extra cost and carry no extra risk from this still-new
+			// pipeline - checking for 'default' by name alone would have left
+			// every non-Mint third-party theme paying that cost for nothing.
+			$mint_theme = $this->mintActiveThemeDirectory();
+			$mint_render_product_cards = is_file(DIR_TEMPLATE . $mint_theme . '/theme.json');
+
+			if ($mint_render_product_cards) {
+				$component_renderer = new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme);
+				$product_view_provider = new \MintCart\Commerce\ProductViewProvider();
+
+				$text_badge = array(
+					'sale'         => $this->language->get('text_badge_sale'),
+					'out-of-stock' => $this->language->get('text_badge_out_of_stock'),
+					'new'          => $this->language->get('text_badge_new')
+				);
+
+				// OpenCart's own backorder flag (catalog/controller/checkout/cart.php
+				// checks the same setting before blocking an out-of-stock add) -
+				// without this, ProductViewProvider would disable add-to-cart for
+				// any out-of-stock product even on a store that allows backorders.
+				$allow_out_of_stock_purchase = (bool)$this->config->get('config_stock_checkout');
+
+				$data['product_cards'] = array();
+			}
+
 			$filter_data = array(
 				'filter_category_id' => $category_id,
 				'filter_filter'      => $filter,
@@ -195,6 +227,8 @@ class ControllerProductCategory extends Controller {
 					$rating = false;
 				}
 
+				$href = $this->url->link('product/product', 'path=' . $this->request->get['path'] . '&product_id=' . $result['product_id'] . $url);
+
 				$data['products'][] = array(
 					'product_id'  => $result['product_id'],
 					'thumb'       => $image,
@@ -205,8 +239,59 @@ class ControllerProductCategory extends Controller {
 					'tax'         => $tax,
 					'minimum'     => $result['minimum'] > 0 ? $result['minimum'] : 1,
 					'rating'      => $result['rating'],
-					'href'        => $this->url->link('product/product', 'path=' . $this->request->get['path'] . '&product_id=' . $result['product_id'] . $url)
+					'href'        => $href
 				);
+
+				if ($mint_render_product_cards) {
+					try {
+						$product_view = $product_view_provider->build(
+							array(
+								'id'                          => $result['product_id'],
+								'name'                        => $result['name'],
+								'url'                         => $href,
+								'image'                       => $image,
+								'price'                       => $price,
+								'special'                     => $special,
+								'tax'                         => $tax,
+								'rating'                      => $rating,
+								'quantity'                    => $result['quantity'],
+								'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
+								'minimum'                     => $result['minimum'],
+								'manufacturer'                => isset($result['manufacturer']) ? $result['manufacturer'] : null,
+								'allow_out_of_stock_purchase' => $allow_out_of_stock_purchase
+							),
+							array(),
+							array(
+								// 1-based: "1st product on this page", not a
+								// zero-based array index.
+								'listing_type' => 'category',
+								'position'     => count($data['products'])
+							)
+						);
+
+						$data['product_cards'][] = $component_renderer->render('product-card', $product_view + array(
+							'text_badge'       => $text_badge,
+							'text_wishlist'    => $this->language->get('button_wishlist'),
+							'text_compare'     => $this->language->get('button_compare'),
+							'text_rated'       => $this->language->get('text_rated'),
+							'text_tax'         => $this->language->get('text_tax'),
+							'text_add_to_cart' => $this->language->get('button_cart'),
+							'text_quick_order' => $this->language->get('text_quick_order')
+						));
+					} catch (\Throwable $e) {
+						// A broken/missing component template (deploy mistake,
+						// permissions, future refactor) must not turn into a
+						// fatal error for every visitor on this page - stop
+						// attempting the new pipeline for the rest of this
+						// request and let the page render without product
+						// cards rather than not render at all. The legacy
+						// $data['products'] array above is unaffected either
+						// way.
+						(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render product-card for product_id ' . $result['product_id'] . ': ' . $e->getMessage());
+
+						$mint_render_product_cards = false;
+					}
+				}
 			}
 
 			$url = '';
@@ -409,5 +494,20 @@ class ControllerProductCategory extends Controller {
 
 			$this->response->setOutput($this->load->view('error/not_found', $data));
 		}
+	}
+
+	/**
+	 * Mirrors catalog/controller/event/theme.php's own active-theme
+	 * resolution (config_theme, falling back to theme_default_directory
+	 * when 'default' is selected) - this is currently the only other call
+	 * site, so it isn't extracted into a shared helper yet; extract once a
+	 * second MintCart-aware controller needs the same lookup (CLAUDE.md §17).
+	 */
+	private function mintActiveThemeDirectory() {
+		if ($this->config->get('config_theme') == 'default') {
+			return $this->config->get('theme_default_directory');
+		}
+
+		return $this->config->get('config_theme');
 	}
 }

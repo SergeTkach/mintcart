@@ -68,6 +68,7 @@ those values into consistent `stock` / `badges` / `actions` fields.
 | `stock_label` | | `?string` | Pre-resolved stock display text (depends on `config_stock_display`, a store setting the provider doesn't know) |
 | `minimum` | | `int` | Minimum order quantity; defaults to `1` |
 | `manufacturer` | | `?string` | |
+| `allow_out_of_stock_purchase` | | `bool` | Caller's resolved `config_stock_checkout` (OpenCart's backorder setting) — see below |
 | `is_new` | | `bool` | Caller-supplied "new" flag — see below |
 | `options_summary` | | `mixed` | Reserved, see below |
 
@@ -94,7 +95,8 @@ display
 
 context
   listing_type (default 'category')
-  position (default null)
+  position (default null; 1-based when the caller sets it — "1st product
+            on this page", not a zero-based array index)
 ```
 
 ### Badges
@@ -113,12 +115,19 @@ OCMOD:
 
 ### `actions`
 
-`add_to_cart` and `quick_order` are both `true` only when the product is in
-stock **and** has a visible price (`price !== false`) — matching the
-purchasability check OpenCart's own `product.php`/`category.php` already
-apply before rendering an add-to-cart control. `wishlist` and `compare` are
-always `true`: both are list actions available regardless of purchasability
-(OpenCart lets you wishlist/compare an out-of-stock or price-hidden item).
+`add_to_cart` and `quick_order` are both `true` when the product **either**
+has stock **or** the caller passes `allow_out_of_stock_purchase: true`
+(OpenCart's `config_stock_checkout` backorder setting —
+`catalog/controller/checkout/cart.php` already checks the same flag before
+blocking an out-of-stock add at checkout) — **and** has a visible price
+(`price !== false`). Without `allow_out_of_stock_purchase`, a store with
+backorders enabled would have its add-to-cart button disabled by this
+component for every out-of-stock product, silently blocking sales checkout
+would otherwise accept — that gap is exactly what surfaced when
+`ControllerProductCategory` first wired this class into a live page
+(`docs/upstream-diff.md`). `wishlist` and `compare` are always `true`: both
+are list actions available regardless of purchasability (OpenCart lets you
+wishlist/compare an out-of-stock or price-hidden item).
 
 ### `options_summary`
 

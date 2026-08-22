@@ -22,11 +22,16 @@ Composes existing Phase 4 components instead of duplicating their CSS:
 `MintCart\Design\ComponentRenderer` (`docs/developer/theme-api/component-renderer.md`)
 and a `mint_default` theme directory now exist, so this component has a real
 `.twig` file — `catalog/view/theme/mint_default/template/mint/components/product-card.twig` —
-matching the markup contract below exactly. No controller calls it yet:
-wiring `ControllerProductCategory` (and Search/Manufacturer/Special) to build
-a `ProductViewProvider` result and render it through `ComponentRenderer`,
-plus a second test theme proving the override milestone
-(`CLAUDE.md` §19), is the next increment — see
+matching the markup contract below exactly.
+
+`ControllerProductCategory` (`upload/catalog/controller/product/category.php`,
+see `docs/upstream-diff.md`) is the first controller wired to it: for each
+product row it builds a `ProductViewProvider` result and renders it via
+`ComponentRenderer` into `$data['product_cards']`, consumed by the new
+`mint_default/template/product/category.twig` page. Search/Manufacturer/
+Special aren't wired yet — same pattern, different controller, still to do.
+A second test theme actually overriding `product-card.twig` to prove the
+`CLAUDE.md` §19 milestone end-to-end is also still to do — see
 `docs/IMPLEMENTATION_STATUS.md`'s Phase 8 section.
 
 ## Markup contract
@@ -208,5 +213,5 @@ padding via CSS only — same DOM/contract, no separate template.
 - [x] No Bootstrap 3 dependency
 - [x] No OCMOD required
 - [x] Ships a real Mint Default `.twig` file, resolvable via `ComponentRenderer`
+- [x] Live controller wiring — `ControllerProductCategory` renders it via `ProductViewProvider` + `ComponentRenderer` (Search/Manufacturer/Special still to do)
 - [ ] Theme override checked end-to-end — needs a second test theme (next Phase 8 increment)
-- [ ] Live controller wiring (Category/Search/Manufacturer/Special actually rendering this template via `ProductViewProvider`) — next Phase 8 increment, see "Live Twig template" above

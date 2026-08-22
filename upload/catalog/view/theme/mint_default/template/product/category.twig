@@ -1,0 +1,111 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item">
+                        <a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+                    </li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        {{ column_left }}
+
+        {% if column_left and column_right %}
+            {% set content_class = 'col-lg-6' %}
+        {% elseif column_left or column_right %}
+            {% set content_class = 'col-lg-9' %}
+        {% else %}
+            {% set content_class = 'col-12' %}
+        {% endif %}
+
+        <div class="{{ content_class }}">
+            {{ content_top }}
+
+            <h1 class="mb-4">{{ heading_title }}</h1>
+
+            {% if thumb or description %}
+                <div class="row g-4 align-items-start mb-4">
+                    {% if thumb %}
+                        <div class="col-sm-3">
+                            <img src="{{ thumb }}" alt="{{ heading_title }}" class="img-fluid rounded">
+                        </div>
+                    {% endif %}
+                    {% if description %}
+                        <div class="col-sm-9">{{ description }}</div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {% if categories %}
+                <div class="mb-4">
+                    <h2 class="h5">{{ text_refine }}</h2>
+                    <div class="row g-2">
+                        {% for category in categories %}
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <a href="{{ category.href }}">{{ category.name }}</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if product_cards %}
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                    <a href="{{ compare }}" id="compare-total" class="mc-button mc-button--secondary mc-button--sm">{{ text_compare }}</a>
+
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-label mb-0" for="input-sort">{{ text_sort }}</label>
+                            <select id="input-sort" class="form-select form-select-sm" onchange="location = this.value;">
+                                {% for item in sorts %}
+                                    <option value="{{ item.href }}"{% if item.value == '%s-%s'|format(sort, order) %} selected{% endif %}>{{ item.text }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-label mb-0" for="input-limit">{{ text_limit }}</label>
+                            <select id="input-limit" class="form-select form-select-sm" onchange="location = this.value;">
+                                {% for item in limits %}
+                                    <option value="{{ item.href }}"{% if item.value == limit %} selected{% endif %}>{{ item.text }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    {% for product_card in product_cards %}
+                        <div class="col-6 col-lg-3">
+                            {{ product_card }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+                    <div>{{ pagination }}</div>
+                    <div>{{ results }}</div>
+                </div>
+            {% endif %}
+
+            {% if not categories and not product_cards %}
+                <p>{{ text_empty }}</p>
+                <div class="text-end">
+                    <a href="{{ continue }}" class="mc-button mc-button--primary">{{ button_continue }}</a>
+                </div>
+            {% endif %}
+
+            {{ content_bottom }}
+        </div>
+
+        {{ column_right }}
+    </div>
+</div>
+{{ footer }}

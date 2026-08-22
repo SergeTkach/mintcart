@@ -112,12 +112,19 @@ final class ProductViewProvider
     }
 
     /**
-     * @param array<string, mixed> $product
+     * @param array<string, mixed> $product Recognizes an optional
+     *        `allow_out_of_stock_purchase` bool - the caller's resolved
+     *        value of OpenCart's `config_stock_checkout` setting (backorder
+     *        support, the same flag `catalog/controller/checkout/cart.php`
+     *        already checks before blocking an out-of-stock add). Without
+     *        it, an out-of-stock product would always disable add-to-cart/
+     *        quick-order here even on a store that has backorders enabled.
      * @return array{add_to_cart: bool, quick_order: bool, wishlist: bool, compare: bool}
      */
     private function buildActions(array $product, bool $inStock): array
     {
-        $purchasable = $inStock && ($product['price'] ?? false) !== false;
+        $canPurchaseOutOfStock = $inStock || !empty($product['allow_out_of_stock_purchase']);
+        $purchasable = $canPurchaseOutOfStock && ($product['price'] ?? false) !== false;
 
         return [
             'add_to_cart' => $purchasable,

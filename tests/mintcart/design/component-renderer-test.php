@@ -23,6 +23,9 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../../../upload/system/library/mintcart/design/componentrenderer.php';
+require __DIR__ . '/../../../upload/system/library/mintcart/commerce/productviewprovider.php';
+
+use MintCart\Commerce\ProductViewProvider;
 
 use MintCart\Design\ComponentRenderer;
 
@@ -211,6 +214,76 @@ assertSame_(
 );
 removeDirectory($root);
 
+// 8. Real-repo integration: ComponentRenderer must resolve the actual
+//    shipped mint_default/template/mint/components/product-card.twig file
+//    at its real path, not just a fixture - this guards against the theme
+//    directory layout (catalog/view/theme/<code>/template/mint/components/)
+//    drifting out of sync with what ComponentRenderer::componentPath()
+//    actually builds.
+$realThemesRoot = __DIR__ . '/../../../upload/catalog/view/theme';
+$realRenderer = new ComponentRenderer($realThemesRoot, 'mint_default');
+$realPath = $realRenderer->resolve('product-card');
+
+assertSame_(
+    true,
+    is_file($realPath),
+    'Scenario 8: resolve() should find the real mint_default product-card.twig file on disk',
+    $failures
+);
+
+$realMarkup = (string) file_get_contents($realPath);
+
+assertSame_(
+    true,
+    str_contains($realMarkup, 'mc-product-card') && str_contains($realMarkup, 'data-mc-action="add-to-cart"'),
+    'Scenario 8: the resolved real product-card.twig should contain the documented mc-product-card markup',
+    $failures
+);
+
+// 9. Composition: a ProductViewProvider::build() result for a realistic
+//    category-listing row is a valid, complete input to
+//    ComponentRenderer::resolve()'d template's documented variable
+//    contract - i.e. the two units this PR wires together in
+//    ControllerProductCategory actually compose. render() itself still
+//    isn't exercised (no vendor/twig/twig, see file docblock), but this
+//    confirms the shape ProductViewProvider emits is exactly what
+//    product-card.twig (and docs/developer/components/product-card.md)
+//    expects, using the same field names ControllerProductCategory now
+//    passes in.
+$productViewProvider = new ProductViewProvider();
+
+$productView = $productViewProvider->build(
+    [
+        'id' => 42,
+        'name' => 'Mint T-Shirt',
+        'url' => 'index.php?route=product/product&product_id=42',
+        'image' => 'catalog/demo/mint-tshirt.jpg',
+        'price' => '$19.99',
+        'special' => false,
+        'tax' => false,
+        'rating' => 4,
+        'quantity' => 5,
+        'stock_label' => 'In Stock',
+        'minimum' => 1,
+        'manufacturer' => 'Mint',
+    ],
+    [],
+    ['listing_type' => 'category', 'position' => 1]
+);
+
+$requiredTemplateVars = ['product', 'display', 'context'];
+$hasAllKeys = true;
+
+foreach ($requiredTemplateVars as $key) {
+    if (!array_key_exists($key, $productView)) {
+        $hasAllKeys = false;
+    }
+}
+
+assertSame_(true, $hasAllKeys, 'Scenario 9: ProductViewProvider::build() output must carry product/display/context for the template contract', $failures);
+assertSame_('category', $productView['context']['listing_type'], 'Scenario 9: listing_type should pass through as given by the controller', $failures);
+assertSame_(true, $productView['product']['stock']['in_stock'], 'Scenario 9: quantity=5 should resolve to in_stock=true', $failures);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -219,5 +292,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ComponentRenderer smoke test (' . 7 . " scenarios)\n";
+echo 'PASS: ComponentRenderer smoke test (' . 9 . " scenarios)\n";
 exit(0);

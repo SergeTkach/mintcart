@@ -22,3 +22,10 @@ $_['text_rating_desc']  = 'Rating (Highest)';
 $_['text_model_asc']    = 'Model (A - Z)';
 $_['text_model_desc']   = 'Model (Z - A)';
 $_['text_limit']        = 'Show:';
+
+// Mint Default product-card (docs/developer/components/product-card.md)
+$_['text_rated']              = 'Rated %s out of 5 stars';
+$_['text_quick_order']        = 'Quick Order';
+$_['text_badge_sale']         = 'Sale';
+$_['text_badge_out_of_stock'] = 'Out of Stock';
+$_['text_badge_new']          = 'New';
