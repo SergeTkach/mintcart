@@ -208,25 +208,46 @@ consumer).
       `shown.bs.offcanvas`/`hidden.bs.offcanvas` events are relayed as
       bubbling `mc:drawer:shown`/`mc:drawer:hidden` `CustomEvent`s. Doc:
       `docs/developer/components/drawer.md`
+- [x] `mc-toast` — `assets/src/css/components/toast.css` +
+      `assets/src/js/components/toast.js` (`initToastTriggers`, `showToast`,
+      wired into both `catalog.js`/`admin.js`); wraps Bootstrap 5's `Toast`
+      JS (show/hide, autohide with pause-on-interaction) the same way
+      `mc-modal`/`mc-drawer` wrap `Modal`/`Offcanvas`, but unlike those two
+      `Toast` deliberately does not trap or move focus — correct for a
+      transient, non-blocking notification (Functional Scope §27); screen
+      reader announcement instead relies on `role`/`aria-live`/
+      `aria-atomic` on the markup itself, documented as required since
+      Bootstrap's JS does not add them. `data-mc-action="open-toast"`/
+      `"close-toast"` plus an exported `showToast()` (for a future Phase 15
+      Cart client to call after `mc:cart:updated`) are the public trigger
+      surface; `data-bs-autohide`/`data-bs-delay` remain generic Bootstrap
+      configuration attributes, not part of the `mc-*` contract. Variant
+      tints (`success`/`danger`/`warning`/`info`) recolor `.toast-header`
+      via `color-mix()`, same approach as `mc-alert`. `.toast-container`'s
+      `--bs-toast-zindex` is retinted directly (like `mc-drawer.css` did for
+      `.offcanvas-backdrop`) since it's a plain wrapping element, never a
+      descendant of `.mc-toast`. Doc: `docs/developer/components/toast.md`
 - [ ] `mc-select` (dedicated component beyond `mc-field__control`'s shared
-      select styling — not attempted; see "Next step" below), `mc-toast`
+      select styling — not attempted; see "Next step" below)
 - [x] Each shipped component so far: CSS contract (no Twig yet — no theme/
       renderer exists until Phase 8, per CLAUDE.md §85), JS only where
       actually needed (`mc-alert`'s dismiss, `mc-quantity`'s stepper,
       `mc-modal`'s open/close triggers), a11y states, doc example with a
       Definition-of-Done checklist
 
-**In progress.** 14 of 16 Phase 4 components done (`mc-button`, `mc-alert`,
-`mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`, `mc-price`, `mc-quantity`,
+**Phase 4 is complete** except for the intentionally-deferred `mc-select`
+(15 of 16 components done: `mc-button`, `mc-alert`, `mc-field`,
+`mc-checkbox`, `mc-radio`, `mc-badge`, `mc-price`, `mc-quantity`,
 `mc-rating`, `mc-breadcrumb`, `mc-pagination`, `mc-card`, `mc-modal`,
-`mc-drawer`). Verified with `npm install` (0 vulnerabilities — this run's
-environment needed a fresh install, all packages resolved from the
-committed lockfile with no version drift), `npm run build` (minified) and
-`npm run dev` (sourcemapped), both compiling cleanly — the bundled CSS
-contains `.mc-drawer`/`.mc-drawer__title`/`.mc-drawer__close` and the
-`offcanvas-backdrop{z-index:calc(var(--mc-z-drawer) - 1)}` override, and the
-bundled JS contains the
-`open-drawer`/`close-drawer`/`mc:drawer:shown`/`mc:drawer:hidden` strings in
+`mc-drawer`, `mc-toast`). Verified with `npm install` (0 vulnerabilities —
+this run's environment needed a fresh install, all packages resolved from
+the committed lockfile with no version drift), `npm run build` (minified)
+and `npm run dev` (sourcemapped), both compiling cleanly — the bundled CSS
+contains `.mc-toast`/`.mc-toast__title`/`.mc-toast__message`/
+`.mc-toast__close`/`.mc-toast--success|danger|warning|info` and a second
+`toast-container{--bs-toast-zindex: var(--mc-z-toast)}` rule overriding
+Bootstrap's own default, and the bundled JS contains the
+`open-toast`/`close-toast`/`mc:toast:shown`/`mc:toast:hidden` strings in
 both `catalog.min.js` and `admin.min.js` (spot-checked with `grep -o`
 against `assets/dist/{css,js}/*`). No PHP files were touched in this
 increment, so the Phase 1 PHP `tests/mintcart/` suite is not applicable. No
@@ -234,21 +255,11 @@ automated component/visual test harness exists yet in this repo — this
 increment's verification is build-compiles + bundled-output grep + manual
 code review only, same gap noted in previous Phase 4 runs (not new).
 
-**Next step:** `mc-select`, `mc-toast` remain.
-`mc-select` is a dedicated select-widget component beyond what
-`mc-field__control` already covers (searchable/multi-select) — still no
-real consumer, so keep deferring unless one shows up (CLAUDE.md §85).
-`mc-toast` needs real JS plus focus management (Functional Scope §27
-Accessibility) and should get its own dedicated run. It has no exact
-Bootstrap analogue with matching a11y needs (Bootstrap's own `Toast`
-component is closer to a fit than building from scratch, but check its
-focus/`aria-live` behavior against Functional Scope §27 before deciding to
-reuse vs. build) — `mc-modal`/`mc-drawer` (`assets/src/css/components/
-modal.css`+`.../drawer.css`, `.../js/components/modal.js`+`.../drawer.js`)
-remain the concrete pattern to follow if reuse turns out to fit: Bootstrap
-classes/JS stay internal, `mc-*`/`data-mc-*` is the public contract, CSS
-retints via Bootstrap's own `--bs-*` custom properties, JS relays Bootstrap
-events as `mc:*` `CustomEvent`s.
+**Next step:** `mc-select` remains intentionally deferred — no real
+consumer beyond what `mc-field__control`'s shared `<select>` styling
+already covers (searchable/multi-select would be the trigger to revisit
+it, per CLAUDE.md §85). With `mc-toast` landed, the next run should move to
+**Phase 5 — Layout conventions**.
 
 ## Phase 5 — Layout conventions
 
@@ -417,68 +428,55 @@ Not started.
 
 **`mc-button`, `mc-alert`, `mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`,
 `mc-price`, `mc-quantity`, `mc-rating`, `mc-breadcrumb`, `mc-pagination`,
-`mc-card`, `mc-modal` and `mc-drawer` are done.** Continue **Phase 4 — Core
-UI components** with the next remaining component:
+`mc-card`, `mc-modal`, `mc-drawer` and `mc-toast` are done — Phase 4 is
+complete** except for the intentionally-deferred `mc-select`
+(`mc-field.css`'s `select.mc-field__control` already covers the common case
+of a `<select>` inside a form field; only revisit a dedicated `mc-select`
+component if a real consumer needs something it can't do, e.g. a custom
+searchable/multi-select widget — per CLAUDE.md §85, no API ahead of a real
+consumer).
+
+The next run should start **Phase 5 — Layout conventions**:
 
 ```text
-mc-toast
+- Document Bootstrap 5 grid/utility usage rules (no parallel grid framework)
+- Verify responsive storefront layout achievable without Bootstrap 3
 ```
 
-(`mc-select` remains intentionally deferred — `mc-field.css`'s
-`select.mc-field__control` already covers the common case of a `<select>`
-inside a form field. Only revisit a dedicated `mc-select` component if a
-real consumer needs something `mc-field__control` can't do, e.g. a custom
-searchable/multi-select widget — per CLAUDE.md §85, no API ahead of a real
-consumer.)
+This phase (`MINTCART_IMPLEMENTATION_GUIDE.md` §46 /
+`MINTCART_TECHNICAL_PLAN.md` §42 Phase 2) is primarily a documentation +
+verification step, not new components:
 
-`mc-toast` is the last Phase 4 item and, like `mc-modal`/`mc-drawer` before
-it, needs real JS behavior and focus/announcement management (Functional
-Scope §27 Accessibility). It has no equally exact Bootstrap analogue for
-MintCart's needs — check Bootstrap's own `Toast` component's focus/
-`aria-live` behavior (in `node_modules/bootstrap/dist/js/bootstrap.esm.js`
-and `.../dist/css/bootstrap.css` — `npm install` first) against Functional
-Scope §27 before deciding whether to reuse it (same wrapping pattern as
-`mc-modal`/`mc-drawer`) or build a small custom implementation. Either way,
-see `assets/src/css/components/modal.css`+`drawer.css` and
-`assets/src/js/components/modal.js`+`drawer.js` for the concrete pattern to
-follow if reuse fits: Bootstrap's own structural classes/JS stay internal
-implementation, `mc-*`/`data-mc-*` is the only public contract (never
-Bootstrap's own `data-bs-*` attributes), CSS retints via Bootstrap's own
-`--bs-*` custom properties reading from `--mc-*` tokens (recall
-`.offcanvas-backdrop` taught us not every Bootstrap sub-element exposes a
-custom property — check before assuming one exists, and fall back to a
-direct property override like `drawer.css` did if not), and JS relays
-Bootstrap's own events as `mc:*` `CustomEvent`s. Once `mc-toast` lands,
-Phase 4 is complete except for the intentionally-deferred `mc-select`, and
-the next run should move to **Phase 5 — Layout conventions** (documenting
-Bootstrap 5 grid/utility usage rules) per the phase order in this file.
-
-Follow the same pattern established this run:
-
-- One or two components per run, not the full remaining fourteen at once
-  (CLAUDE.md §4a scope discipline).
-- Per the Definition of Done (`MINTCART_IMPLEMENTATION_GUIDE.md` §79): a
-  documented contract, `mc-*` BEM markup, CSS reading from `--mc-*` tokens
-  (component-local tier set from semantic tokens, not hardcoded values), JS
-  only if actually needed and only via `data-mc-*` hooks (never a CSS class)
-  if so, keyboard/a11y states, and a usage doc under
-  `docs/developer/components/` (see `button.md`/`alert.md` for the shape —
-  each ends with a DoD checklist, with "theme override checked" left
-  unchecked until Phase 8's resolver exists).
+- Write the layout-conventions doc (e.g.
+  `docs/developer/layout-conventions.md`) covering: use Bootstrap 5's
+  `.container`/`.container-*`, `.row`, `.col-*`, `.g-*`, `.d-flex`, and
+  other utility classes for structure/spacing/responsiveness; `mc-*`
+  classes are for MintCart-owned semantic components and specific ecommerce
+  layouts, never a parallel grid/utility system
+  (`MINTCART_IMPLEMENTATION_GUIDE.md` §7/§46). Show the pattern already
+  used in every component doc's examples (Bootstrap layout primitives
+  wrapping an `mc-*` component, e.g. `mc-modal.md`'s
+  `<div class="modal-dialog">` inside plain page markup) as the reference
+  shape.
+- "Verify responsive storefront layout achievable without Bootstrap 3" —
+  since there is still no Twig/theme to render a real page against (Phase
+  8 territory), the practical verification at this stage is: confirm
+  `bootstrap3-shim.css` (Phase 2) and the Phase 4 components together don't
+  assume any Bootstrap 3 class/behavior, and that nothing in
+  `assets/src/css/index.css`'s import order conflicts with plain Bootstrap
+  5 grid/utility usage. Document what was checked in this file rather than
+  building a throwaway HTML fixture, unless a real page-level consumer
+  already exists by the time this run happens.
+- Keep this a small, focused increment (CLAUDE.md §4a) — it's
+  documentation/verification, not a new component or subsystem.
 - No Twig/`ComponentRenderer` yet — that's still Phase 8, no real consumer
-  before then (CLAUDE.md §85). A component at this stage is CSS (+ JS if
-  needed) plus the plain-HTML doc example.
-- New component CSS goes under `assets/src/css/components/`, imported from
-  `index.css` in the documented layer order (tokens → elements → components
-  → utilities → compatibility, per `MINTCART_IMPLEMENTATION_GUIDE.md` §11 —
-  elements/utilities layers are still empty, nothing has needed them yet).
-- If a component needs JS, add it under `assets/src/js/components/` and
-  import/call its init from both `catalog.js` and `admin.js` (like
-  `alert.js`), unless it's genuinely storefront- or admin-only.
-- Verify with `npm run build`/`npm run dev` that the bundle still compiles,
-  and spot-check the new selectors/behavior hooks landed in the bundled
-  output (`grep` the built CSS/JS, as this run did) — there is still no
-  automated frontend test harness in this repo.
+  before then (CLAUDE.md §85).
+
+If Phase 5 turns out to already be effectively covered by existing docs and
+verification once inspected, say so explicitly in `IMPLEMENTATION_STATUS.md`
+and move on to **Phase 6 — Product Card** (the first reference component,
+`MINTCART_IMPLEMENTATION_GUIDE.md` §47) in the same run rather than manufacturing
+busywork — but do not skip actually reading/verifying first.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
