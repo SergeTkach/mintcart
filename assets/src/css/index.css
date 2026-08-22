@@ -29,4 +29,5 @@
 @import './components/breadcrumb.css';
 @import './components/pagination.css';
 @import './components/card.css';
+@import './components/modal.css';
 @import './compatibility/bootstrap3-shim.css';
