@@ -26,4 +26,6 @@
 @import './components/price.css';
 @import './components/quantity.css';
 @import './components/rating.css';
+@import './components/breadcrumb.css';
+@import './components/pagination.css';
 @import './compatibility/bootstrap3-shim.css';

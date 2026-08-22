@@ -1,0 +1,90 @@
+/**
+ * mc-pagination
+ *
+ * MintCart-owned pagination component (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §45, Definition of Done §79). Presentation contract for the
+ * `PaginationBuilder` reusable action named in `MINTCART_TECHNICAL_PLAN.md`
+ * §15E; that provider will supply real page-number/URL data once a listing
+ * consumer exists (Phase 6+ Category/Search/Manufacturer).
+ *
+ * Contract: docs/developer/components/pagination.md
+ *
+ * Links carry a real `href` to the already-computed page URL - like
+ * OpenCart's own pagination, page changes are plain navigation, not an
+ * AJAX/JS behavior, so this component ships with no JS. A disabled prev/next
+ * boundary is a non-interactive `<span aria-disabled="true">`, never an `<a
+ * href="#">` or a real link neutralized with `pointer-events: none`
+ * (Functional Scope §27 keyboard/AT expectations) - the CSS below styles
+ * `a.mc-pagination__link` and `[aria-disabled="true"]` separately for
+ * exactly that reason.
+ */
+
+.mc-pagination {
+    display: flex;
+}
+
+.mc-pagination__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mc-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-pagination__item {
+    display: flex;
+}
+
+.mc-pagination__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    padding: 0 var(--mc-space-2);
+    border: var(--mc-border-width) solid transparent;
+    border-radius: var(--mc-radius-md);
+    color: var(--mc-text);
+    line-height: 1;
+    text-decoration: none;
+    transition:
+        background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+a.mc-pagination__link:hover {
+    background-color: var(--mc-surface-alt);
+    border-color: var(--mc-border);
+}
+
+a.mc-pagination__link:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+.mc-pagination__link--current {
+    background-color: var(--mc-primary);
+    border-color: var(--mc-primary);
+    color: var(--mc-on-primary);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+/* Disabled prev/next boundary - a <span>, not a link (see header comment). */
+.mc-pagination__link[aria-disabled='true'] {
+    color: var(--mc-muted);
+    cursor: not-allowed;
+}
+
+.mc-pagination__ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    color: var(--mc-muted);
+}

@@ -1,0 +1,68 @@
+/**
+ * mc-breadcrumb
+ *
+ * MintCart-owned breadcrumb trail (docs/MINTCART_IMPLEMENTATION_GUIDE.md §45,
+ * Definition of Done §79). Renders the page's location in the catalog
+ * hierarchy - the `BreadcrumbBuilder` reusable action named in
+ * `MINTCART_TECHNICAL_PLAN.md` §15E will feed the trail data once it exists
+ * (Phase 6+); this component only owns the presentation contract.
+ *
+ * Contract: docs/developer/components/breadcrumb.md
+ *
+ * Separators are a CSS `::before` on every item but the first, not an extra
+ * DOM node - there is nothing for JS to hook, so this component is pure CSS.
+ * The current page is marked with `aria-current="page"` (semantic attribute,
+ * not a BEM modifier - CLAUDE.md §13) and is plain text, not a link, since
+ * relinking the page you are already on is not a useful action.
+ */
+
+.mc-breadcrumb {
+    display: block;
+}
+
+.mc-breadcrumb__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-sm);
+    line-height: var(--mc-line-height-normal);
+}
+
+.mc-breadcrumb__item {
+    display: flex;
+    align-items: center;
+    color: var(--mc-muted);
+}
+
+.mc-breadcrumb__item:not(:first-child)::before {
+    content: '/';
+    margin: 0 var(--mc-space-2);
+    color: var(--mc-border-strong);
+}
+
+.mc-breadcrumb__link {
+    color: var(--mc-muted);
+    text-decoration: none;
+    transition: color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-breadcrumb__link:hover {
+    color: var(--mc-text);
+    text-decoration: underline;
+}
+
+.mc-breadcrumb__link:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+    border-radius: var(--mc-radius-sm);
+}
+
+/* Current page - plain text, not a link (see header comment). */
+.mc-breadcrumb__item[aria-current='page'] {
+    color: var(--mc-text);
+    font-weight: var(--mc-font-weight-medium);
+}
