@@ -37,6 +37,7 @@ the Bootstrap classes.
 ```html
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div
+        id="cartToast"
         class="toast mc-toast mc-toast--success"
         role="status"
         aria-live="polite"
