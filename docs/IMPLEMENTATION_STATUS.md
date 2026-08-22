@@ -169,32 +169,60 @@ consumer).
       padding) and `--hoverable` (shadow/lift affordance for a clickable
       card, respects `prefers-reduced-motion`) modifiers; no JS. Doc:
       `docs/developer/components/card.md`
+- [x] `mc-modal` — `assets/src/css/components/modal.css` +
+      `assets/src/js/components/modal.js` (`initModalTriggers`, wired into
+      both `catalog.js`/`admin.js`); wraps Bootstrap 5's `Modal` JS (focus
+      trap, `Escape`-to-close, backdrop click-to-close, scroll lock) rather
+      than reimplementing dialog behavior, per
+      `MINTCART_IMPLEMENTATION_GUIDE.md` §9 ("Not needed to rewrite
+      Bootstrap Modal own without a product reason"). Bootstrap's own
+      `.modal`/`.modal-dialog`/`.modal-content`/... classes stay as internal
+      implementation (required by Bootstrap's JS/CSS); the public contract
+      is `.mc-modal`/`.mc-modal__title`/`.mc-modal__close` plus
+      `data-mc-action="open-modal"`/`"close-modal"` (never Bootstrap's own
+      `data-bs-toggle`/`data-bs-dismiss`). Styling is retinted via
+      Bootstrap's documented `--bs-modal-*`/`--bs-backdrop-*` custom
+      properties reading from `--mc-*` tokens — no Bootstrap source
+      recompilation. Bootstrap's `shown.bs.modal`/`hidden.bs.modal` events
+      are relayed as bubbling `mc:modal:shown`/`mc:modal:hidden`
+      `CustomEvent`s. Doc: `docs/developer/components/modal.md`
 - [ ] `mc-select` (dedicated component beyond `mc-field__control`'s shared
-      select styling — not attempted; see "Next step" below), `mc-modal`,
-      `mc-drawer`, `mc-toast`
+      select styling — not attempted; see "Next step" below), `mc-drawer`,
+      `mc-toast`
 - [x] Each shipped component so far: CSS contract (no Twig yet — no theme/
       renderer exists until Phase 8, per CLAUDE.md §85), JS only where
-      actually needed (`mc-alert`'s dismiss, `mc-quantity`'s stepper), a11y
-      states, doc example with a Definition-of-Done checklist
+      actually needed (`mc-alert`'s dismiss, `mc-quantity`'s stepper,
+      `mc-modal`'s open/close triggers), a11y states, doc example with a
+      Definition-of-Done checklist
 
-**In progress.** 12 of 16 Phase 4 components done (`mc-button`, `mc-alert`,
+**In progress.** 13 of 16 Phase 4 components done (`mc-button`, `mc-alert`,
 `mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`, `mc-price`, `mc-quantity`,
-`mc-rating`, `mc-breadcrumb`, `mc-pagination`, `mc-card`). Verified with
-`npm run build` and `npm run dev` — both compile; the bundled CSS contains
-`.mc-card` and its elements/modifiers (spot-checked with `grep -o` against
-`assets/dist/css/index.min.css`). No automated component/visual test
+`mc-rating`, `mc-breadcrumb`, `mc-pagination`, `mc-card`, `mc-modal`).
+Verified with `npm run build` and `npm run dev` (both `npm install`ed 0
+vulnerabilities and compiled cleanly) — the bundled CSS contains
+`.mc-modal`/`.mc-modal__title`/`.mc-modal__close` and the
+`--bs-backdrop-zindex` override, and the bundled JS contains the
+`open-modal`/`close-modal`/`mc:modal:shown`/`mc:modal:hidden` strings in
+both `catalog.min.js` and `admin.min.js` (spot-checked with `grep -o`
+against `assets/dist/{css,js}/*`). No automated component/visual test
 harness exists yet in this repo (no test runner configured beyond the PHP
 `tests/mintcart/` suite from Phase 1) — this increment's verification is
 build-compiles + bundled-output grep + manual code review only; that gap is
 not new to this run.
 
-**Next step:** `mc-select`, `mc-modal`, `mc-drawer`, `mc-toast` remain.
+**Next step:** `mc-select`, `mc-drawer`, `mc-toast` remain.
 `mc-select` is a dedicated select-widget component beyond what
 `mc-field__control` already covers (searchable/multi-select) — still no
 real consumer, so keep deferring unless one shows up (CLAUDE.md §85).
-`mc-modal`/`mc-drawer`/`mc-toast` need real JS plus focus management
-(Functional Scope §27 Accessibility) and should each get their own
-dedicated run rather than being folded in together.
+`mc-drawer`/`mc-toast` need real JS plus focus management (Functional Scope
+§27 Accessibility) and should each get their own dedicated run rather than
+being folded in together. `mc-drawer` can likely wrap Bootstrap 5's
+`Offcanvas` the same way `mc-modal` just wrapped `Modal` (same §9
+allowance) — evaluate that before writing a parallel implementation.
+`mc-toast` has no exact Bootstrap analogue with matching a11y needs
+(Bootstrap's own `Toast` component is closer to a fit than building from
+scratch, but check its focus/`aria-live` behavior against Functional Scope
+§27 before deciding to reuse vs. build).
 
 ## Phase 5 — Layout conventions
 
@@ -362,12 +390,12 @@ Not started.
 ## Next step for the next routine run
 
 **`mc-button`, `mc-alert`, `mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`,
-`mc-price`, `mc-quantity`, `mc-rating`, `mc-breadcrumb`, `mc-pagination` and
-`mc-card` are done.** Continue **Phase 4 — Core UI components** with the
-next remaining component:
+`mc-price`, `mc-quantity`, `mc-rating`, `mc-breadcrumb`, `mc-pagination`,
+`mc-card` and `mc-modal` are done.** Continue **Phase 4 — Core UI
+components** with the next remaining component:
 
 ```text
-mc-modal, mc-drawer, mc-toast
+mc-drawer, mc-toast
 ```
 
 (`mc-select` remains intentionally deferred — `mc-field.css`'s
@@ -377,18 +405,28 @@ real consumer needs something `mc-field__control` can't do, e.g. a custom
 searchable/multi-select widget — per CLAUDE.md §85, no API ahead of a real
 consumer.)
 
-`mc-modal`, `mc-drawer` and `mc-toast` are the last three Phase 4 items and
-are more involved than everything shipped so far — each needs real JS
-behavior and focus management (Functional Scope §27 Accessibility:
-keyboard navigation, dialogs manage focus, non-mouse alternative). Bootstrap
-5 already ships `modal`/`offcanvas` primitives that
-`MINTCART_IMPLEMENTATION_GUIDE.md` §9 explicitly allows reusing for generic
-UI primitives rather than reimplementing from scratch — evaluate wrapping
-Bootstrap's JS behavior behind the `mc-*`/`data-mc-*` contract (so the
-Theme API surface stays semantic per Implementation Guide §9) rather than
-writing a parallel modal/offcanvas implementation, unless a concrete gap
-shows up. Tackle these one at a time, each as its own dedicated run, rather
-than folding more than one into a single increment.
+`mc-drawer` and `mc-toast` are the last two Phase 4 items and, like
+`mc-modal` before them, need real JS behavior and focus management
+(Functional Scope §27 Accessibility: keyboard navigation, dialogs manage
+focus, non-mouse alternative). `mc-modal` (this run) wraps Bootstrap 5's
+`Modal` JS behind a `data-mc-action="open-modal"`/`"close-modal"` contract,
+keeping Bootstrap's own `.modal`/`.modal-dialog`/... classes as internal
+implementation only (`MINTCART_IMPLEMENTATION_GUIDE.md` §9) — see
+`assets/src/css/components/modal.css` and
+`assets/src/js/components/modal.js` for the concrete pattern to follow
+(CSS retints via Bootstrap's own `--bs-*` custom properties reading from
+`--mc-*` tokens; JS relays Bootstrap's own events as `mc:*` `CustomEvent`s).
+`mc-drawer` is the more direct next candidate for the same pattern —
+Bootstrap 5's `Offcanvas` JS is an almost exact match for a slide-in drawer
+(cart drawer, mobile navigation — Technical Plan §15/Functional Scope §15
+mention a drawer explicitly as one Cart UX option). Evaluate wrapping
+`Offcanvas` the same way before writing a parallel implementation. `mc-toast`
+has no equally exact Bootstrap analogue for MintCart's needs — check
+Bootstrap's own `Toast` component's focus/`aria-live` behavior against
+Functional Scope §27 before deciding whether to reuse it or build a small
+custom one; either way it needs its own dedicated run. Tackle these one at a
+time, each as its own dedicated run, rather than folding more than one into
+a single increment.
 
 Follow the same pattern established this run:
 
