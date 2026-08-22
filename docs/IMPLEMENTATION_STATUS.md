@@ -150,26 +150,43 @@ consumer).
       §15D); pure CSS (two stacked ★ layers, filled layer clipped by
       `--mc-rating-value`), `role="img"` + `aria-label` conveys the value to
       assistive tech, no JS. Doc: `docs/developer/components/rating.md`
+- [x] `mc-breadcrumb` — `assets/src/css/components/breadcrumb.css`;
+      `<nav><ol>` trail feeding the future `BreadcrumbBuilder` reusable
+      action (Technical Plan §15E); separator is a CSS `::before` (no extra
+      DOM node), current page is plain text with `aria-current="page"`
+      rather than a link; no JS. Doc:
+      `docs/developer/components/breadcrumb.md`
+- [x] `mc-pagination` — `assets/src/css/components/pagination.css`;
+      `<nav><ul>` page-link list feeding the future `PaginationBuilder`
+      reusable action (Technical Plan §15E); links carry real `href`s (plain
+      navigation, same as OpenCart today), disabled prev/next boundary is a
+      non-focusable `<span aria-disabled="true">` rather than a dead `<a
+      href="#">`; no JS. Doc: `docs/developer/components/pagination.md`
 - [ ] `mc-select` (dedicated component beyond `mc-field__control`'s shared
       select styling — not attempted; see "Next step" below), `mc-card`,
-      `mc-breadcrumb`, `mc-pagination`, `mc-modal`, `mc-drawer`, `mc-toast`
+      `mc-modal`, `mc-drawer`, `mc-toast`
 - [x] Each shipped component so far: CSS contract (no Twig yet — no theme/
       renderer exists until Phase 8, per CLAUDE.md §85), JS only where
       actually needed (`mc-alert`'s dismiss, `mc-quantity`'s stepper), a11y
       states, doc example with a Definition-of-Done checklist
 
-**In progress.** 9 of 16 Phase 4 components done (`mc-button`, `mc-alert`,
+**In progress.** 11 of 16 Phase 4 components done (`mc-button`, `mc-alert`,
 `mc-field`, `mc-checkbox`, `mc-radio`, `mc-badge`, `mc-price`, `mc-quantity`,
-`mc-rating`). Verified with `npm run build` and `npm run dev` — both
-compile; the bundled CSS contains `.mc-quantity`/`.mc-rating` and their
-modifiers/elements, and the bundled JS contains `initQuantityStepper` plus
-the `quantity-increment`/`quantity-decrement`/`mc:quantity:change` hooks
-(spot-checked with `grep -o` against `assets/dist/css/index.min.css` and
-`assets/dist/js/catalog.min.js`). No automated component/visual test
-harness exists yet in this repo (no test runner configured beyond the PHP
-`tests/mintcart/` suite from Phase 1) — this increment's verification is
-build-compiles + bundled-output grep + manual code review only; that gap is
-not new to this run.
+`mc-rating`, `mc-breadcrumb`, `mc-pagination`). Verified with `npm run
+build` and `npm run dev` — both compile; the bundled CSS contains
+`.mc-breadcrumb`/`.mc-pagination` and their elements/modifiers (spot-checked
+with `grep -o` against `assets/dist/css/index.min.css`). No automated
+component/visual test harness exists yet in this repo (no test runner
+configured beyond the PHP `tests/mintcart/` suite from Phase 1) — this
+increment's verification is build-compiles + bundled-output grep + manual
+code review only; that gap is not new to this run.
+
+**Next step:** `mc-card` (Technical Plan §15E doesn't name it directly, but
+Implementation Guide §45 lists it as a core primitive and it's the last
+simple, no-JS Phase 4 component remaining). `mc-select`, `mc-modal`,
+`mc-drawer`, `mc-toast` remain after that — the latter three need real JS
+plus focus management (Functional Scope §27 Accessibility) and should each
+get their own dedicated run.
 
 ## Phase 5 — Layout conventions
 
