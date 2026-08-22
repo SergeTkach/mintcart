@@ -1,0 +1,8 @@
+{
+    "name": "Mint Default",
+    "code": "mint_default",
+    "version": "1.0.0",
+    "mint_api": "^1.0",
+    "parent": null,
+    "presets": []
+}

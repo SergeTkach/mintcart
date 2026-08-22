@@ -17,17 +17,17 @@ Composes existing Phase 4 components instead of duplicating their CSS:
 `mc-button` (add to cart / quick order). Distinct from the generic `mc-card`
 (Phase 4), which has no ecommerce fields.
 
-## No live Twig template yet
+## Live Twig template
 
-There is still no Twig rendering pipeline or `MintCart\Design\ComponentRenderer`
-(Phase 8) and no MintCart theme directory exists to put a `.twig` file in —
-adding one now would be an orphaned file no controller loads, guessed against
-a theme override that doesn't exist yet (`CLAUDE.md` §85). Like every other
-Phase 4/5 component, this ships as CSS + JS + a **documented** template
-contract below; wiring an actual OpenCart controller
-(`ControllerProductCategory`/search/manufacturer/special) to call
-`ProductViewProvider` and render this markup end-to-end is Phase 8 territory
-once the theme resolver exists.
+`MintCart\Design\ComponentRenderer` (`docs/developer/theme-api/component-renderer.md`)
+and a `mint_default` theme directory now exist, so this component has a real
+`.twig` file — `catalog/view/theme/mint_default/template/mint/components/product-card.twig` —
+matching the markup contract below exactly. No controller calls it yet:
+wiring `ControllerProductCategory` (and Search/Manufacturer/Special) to build
+a `ProductViewProvider` result and render it through `ComponentRenderer`,
+plus a second test theme proving the override milestone
+(`CLAUDE.md` §19), is the next increment — see
+`docs/IMPLEMENTATION_STATUS.md`'s Phase 8 section.
 
 ## Markup contract
 
@@ -207,5 +207,6 @@ padding via CSS only — same DOM/contract, no separate template.
 - [x] Mobile checked (flexible media aspect-ratio, wrapping actions row, no fixed widths)
 - [x] No Bootstrap 3 dependency
 - [x] No OCMOD required
-- [ ] Theme override checked — deferred until the Theme resolver exists (Phase 8); there is no theme to override yet
-- [ ] Live controller wiring (Category/Search/Manufacturer/Special actually rendering this template via `ProductViewProvider`) — deferred to Phase 8, see "No live Twig template yet" above
+- [x] Ships a real Mint Default `.twig` file, resolvable via `ComponentRenderer`
+- [ ] Theme override checked end-to-end — needs a second test theme (next Phase 8 increment)
+- [ ] Live controller wiring (Category/Search/Manufacturer/Special actually rendering this template via `ProductViewProvider`) — next Phase 8 increment, see "Live Twig template" above
