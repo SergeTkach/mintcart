@@ -328,7 +328,7 @@ later phases:
   affordance + event only, no storage).
 
 Verified: `php -l` on `productviewprovider.php` (clean, previous run); the
-9-scenario `tests/mintcart/commerce/product-view-provider-test.php` smoke
+7-scenario `tests/mintcart/commerce/product-view-provider-test.php` smoke
 test (previous run, still passing — `ProductViewProvider` wasn't touched this
 run); `npm install` (0 vulnerabilities, fresh install this run) then `npm run
 build` — both `catalog.min.js` (83.6kb, up from 83.2kb) and `index.min.css`

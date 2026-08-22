@@ -139,5 +139,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ProductViewProvider smoke test (' . 9 . " scenarios)\n";
+echo 'PASS: ProductViewProvider smoke test (' . 7 . " scenarios)\n";
 exit(0);

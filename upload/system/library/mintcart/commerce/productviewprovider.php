@@ -92,7 +92,7 @@ final class ProductViewProvider
     {
         $badges = [];
 
-        if (!empty($product['special']) && $product['special'] !== false) {
+        if (!empty($product['special'])) {
             $badges[] = ['type' => 'sale', 'label' => null];
         }
 
