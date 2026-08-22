@@ -1,0 +1,60 @@
+/**
+ * mc-badge
+ *
+ * MintCart-owned badge/sticker component (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §45, Definition of Done §79). Small labeled marker for product listings/cards
+ * (docs/MINTCART_FUNCTIONAL_SCOPE.md §11 "configurable badges/stickers").
+ *
+ * Contract: docs/developer/components/badge.md
+ *
+ * `--mc-badge-bg`/`--mc-badge-color` are the intended per-instance override
+ * point for a merchant-picked custom sticker color - this is the documented
+ * inline-style exception (data-driven CSS custom property, not a hardcoded
+ * style) from docs/MINTCART_IMPLEMENTATION_GUIDE.md §18, which uses this
+ * exact component as its example:
+ *
+ *   <span class="mc-badge" style="--mc-badge-bg:#e83232">Limited</span>
+ *
+ * No JS - purely presentational, no behavior to hook.
+ */
+
+.mc-badge {
+    --mc-badge-bg: var(--mc-color-gray-700);
+    --mc-badge-color: var(--mc-color-white);
+
+    display: inline-flex;
+    align-items: center;
+    padding: var(--mc-space-1) var(--mc-space-2);
+    border-radius: var(--mc-radius-pill);
+    background-color: var(--mc-badge-bg);
+    color: var(--mc-badge-color);
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-xs);
+    font-weight: var(--mc-font-weight-semibold);
+    line-height: var(--mc-line-height-tight);
+    white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Variants                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.mc-badge--new {
+    --mc-badge-bg: var(--mc-accent);
+    --mc-badge-color: var(--mc-on-accent);
+}
+
+.mc-badge--sale {
+    --mc-badge-bg: var(--mc-danger);
+    --mc-badge-color: var(--mc-on-danger);
+}
+
+.mc-badge--success {
+    --mc-badge-bg: var(--mc-success);
+    --mc-badge-color: var(--mc-on-success);
+}
+
+.mc-badge--out-of-stock {
+    --mc-badge-bg: var(--mc-color-gray-600);
+    --mc-badge-color: var(--mc-color-white);
+}

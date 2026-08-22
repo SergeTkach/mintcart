@@ -1,0 +1,74 @@
+/**
+ * mc-rating
+ *
+ * MintCart-owned read-only rating display (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §45, Definition of Done §79). Renders a 0-5 star value for product listings
+ * (Technical Plan §15D `ProductView.rating`) - built now because Product
+ * Card (Phase 6) is its real consumer (CLAUDE.md §85).
+ *
+ * Contract: docs/developer/components/rating.md
+ *
+ * `--mc-rating-value` is the documented data-driven inline-style exception
+ * (MINTCART_IMPLEMENTATION_GUIDE.md §18) - the fill percentage is per-product
+ * data, not a design decision:
+ *
+ *   <div class="mc-rating" style="--mc-rating-value:80%">
+ *
+ * Purely presentational - no JS, no `data-mc-*` hook. Not an input control;
+ * see docs/developer/components/rating.md for the interactive-rating note.
+ */
+
+.mc-rating {
+    --mc-rating-value: 0%;
+    --mc-rating-color: var(--mc-color-amber-500);
+    --mc-rating-color-empty: var(--mc-color-gray-300);
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-1);
+    font-size: var(--mc-font-size-base);
+    line-height: 1;
+}
+
+.mc-rating__stars {
+    position: relative;
+    display: inline-block;
+}
+
+.mc-rating__stars-empty,
+.mc-rating__stars-filled {
+    display: block;
+    white-space: nowrap;
+    letter-spacing: 0.1em;
+}
+
+.mc-rating__stars-empty {
+    color: var(--mc-rating-color-empty);
+}
+
+.mc-rating__stars-filled {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    width: var(--mc-rating-value);
+    color: var(--mc-rating-color);
+}
+
+.mc-rating__count {
+    color: var(--mc-muted);
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-sm);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Sizes                                                                    */
+/* ---------------------------------------------------------------------- */
+
+.mc-rating--sm {
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-rating--lg {
+    font-size: var(--mc-font-size-lg);
+}

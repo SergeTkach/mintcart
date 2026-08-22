@@ -1,0 +1,56 @@
+/**
+ * mc-price
+ *
+ * MintCart-owned price display component (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §45, Definition of Done §79). Renders the normalized price/special/tax
+ * fields that will come from `ProductViewProvider`
+ * (docs/MINTCART_TECHNICAL_PLAN.md §15D) once Phase 6's Product Card exists -
+ * this component ships first since Product Card needs it as a building block
+ * (CLAUDE.md §85: real consumer identified, provider not built yet).
+ *
+ * Contract: docs/developer/components/price.md
+ *
+ * No JS - purely presentational, no behavior to hook.
+ */
+
+.mc-price {
+    --mc-price-color: var(--mc-text);
+
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--mc-space-1) var(--mc-space-2);
+    font-family: var(--mc-font-family-base);
+}
+
+.mc-price__current {
+    font-size: var(--mc-font-size-lg);
+    font-weight: var(--mc-font-weight-semibold);
+    line-height: var(--mc-line-height-tight);
+    color: var(--mc-price-color);
+}
+
+.mc-price__original {
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-normal);
+    line-height: var(--mc-line-height-tight);
+    color: var(--mc-muted);
+    text-decoration: line-through;
+}
+
+.mc-price__tax {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: var(--mc-font-size-xs);
+    color: var(--mc-muted);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Special price state (transient business state, not a look modifier -    */
+/* whether a product has a special price is data, so this stays a BEM      */
+/* modifier rather than `is-*`/`has-*` per CLAUDE.md §13's own distinction) */
+/* ---------------------------------------------------------------------- */
+
+.mc-price--special .mc-price__current {
+    --mc-price-color: var(--mc-danger);
+}

@@ -1,0 +1,93 @@
+/**
+ * mc-drawer
+ *
+ * MintCart-owned slide-in panel component (cart drawer, mobile navigation -
+ * `MINTCART_TECHNICAL_PLAN.md` §15 / `MINTCART_FUNCTIONAL_SCOPE.md` §15
+ * mention a drawer explicitly as a Cart UX option). Reuses Bootstrap 5's
+ * `Offcanvas` JS (show/hide, focus trap, ESC-to-close, backdrop
+ * click-to-close, scroll lock) the same way `mc-modal` reuses `Modal` -
+ * `MINTCART_IMPLEMENTATION_GUIDE.md` §9 explicitly allows this for generic
+ * UI primitives ("Not needed to rewrite Bootstrap Modal own without a
+ * product reason" applies equally to Offcanvas). Bootstrap's own
+ * `.offcanvas`/`.offcanvas-start|end|top|bottom`/`.offcanvas-header`/
+ * `.offcanvas-body`/`.offcanvas-title` classes stay on the markup because
+ * `Offcanvas`'s JS/CSS (fixed positioning, backdrop, slide transition,
+ * placement variants) lives on those classes - they are internal
+ * implementation, not part of MintCart's public Theme API contract.
+ * `.mc-drawer`/`.mc-drawer__*` and `data-mc-*` are the contract
+ * (`MINTCART_IMPLEMENTATION_GUIDE.md` §6/§9: Bootstrap classes are never
+ * the component contract itself).
+ *
+ * `.mc-drawer` retints Bootstrap's offcanvas purely through its own
+ * documented `--bs-offcanvas-*` CSS custom properties, reading from
+ * MintCart's `--mc-*` tokens - no Bootstrap source recompilation needed
+ * (Implementation Guide §11).
+ *
+ * Open/close is driven entirely by `data-mc-action="open-drawer"` /
+ * `"close-drawer"` (`assets/src/js/components/drawer.js`), never Bootstrap's
+ * own `data-bs-toggle`/`data-bs-dismiss` attributes, so the only documented
+ * public hook surface is `data-mc-*` (CLAUDE.md §14).
+ *
+ * Contract: docs/developer/components/drawer.md
+ */
+
+.mc-drawer {
+    --bs-offcanvas-zindex: var(--mc-z-drawer);
+    --bs-offcanvas-width: 24rem;
+    --bs-offcanvas-color: var(--mc-text);
+    --bs-offcanvas-bg: var(--mc-surface);
+    --bs-offcanvas-border-color: var(--mc-border);
+    --bs-offcanvas-border-width: var(--mc-border-width);
+    --bs-offcanvas-box-shadow: var(--mc-shadow-lg);
+    --bs-offcanvas-transition: transform var(--mc-motion-duration-slow) var(--mc-motion-easing-standard);
+}
+
+/*
+ * Unlike `.modal-backdrop`, Bootstrap's `.offcanvas-backdrop` does not
+ * expose its z-index/color/opacity as CSS custom properties - it is a
+ * separate <body>-level element `Offcanvas` appends, so it can't be scoped
+ * through `.mc-drawer` either way. Override its z-index directly, one below
+ * the drawer's own so the two never collide at an identical stacking value
+ * (Bootstrap's own default keeps a similar 5-unit gap between `.offcanvas`
+ * and `.offcanvas-backdrop`).
+ */
+.offcanvas-backdrop {
+    z-index: calc(var(--mc-z-drawer) - 1);
+}
+
+.mc-drawer__title {
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-heading);
+    font-size: var(--mc-font-size-lg);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-drawer__close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    margin-left: auto;
+    border: 0;
+    border-radius: var(--mc-radius-sm);
+    background-color: transparent;
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-xl);
+    line-height: 1;
+    cursor: pointer;
+    appearance: none;
+    transition: background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-drawer__close:hover {
+    background-color: var(--mc-surface-alt);
+    color: var(--mc-text);
+}
+
+.mc-drawer__close:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
