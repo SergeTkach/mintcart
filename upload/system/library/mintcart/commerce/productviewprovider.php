@@ -1,0 +1,129 @@
+<?php
+namespace MintCart\Commerce;
+
+/**
+ * Normalizes an OpenCart product row (plus the presentation values every
+ * listing controller already resolves — formatted price/special/tax,
+ * resized image URLs, stock label text) into the stable ProductView
+ * contract described in MINTCART_IMPLEMENTATION_GUIDE.md §27 and
+ * MINTCART_TECHNICAL_PLAN.md §15D.
+ *
+ * This is the single place `product` / `display` / `context` shape is
+ * assembled. Category, Search, Manufacturer, Special and Homepage Blocks
+ * controllers must all call this instead of each building their own
+ * `$data['products'][] = [...]` array (MINTCART_TECHNICAL_PLAN.md §15C/§15D).
+ *
+ * Deliberately has no OpenCart dependency (no \Registry, no \DB, no
+ * currency/tax/url services) so it is unit-testable in isolation — currency
+ * formatting, tax calculation and SEO URL building stay OpenCart's job
+ * upstream of this class, exactly as they are today.
+ */
+final class ProductViewProvider
+{
+    /**
+     * @param array<string, mixed> $product Raw product + already-resolved
+     *        presentation values. Required: id, name, url, image.
+     * @param array<string, mixed> $display Display flags for this render.
+     * @param array<string, mixed> $context Listing context (which page/block
+     *        requested this product, its position within the list).
+     *
+     * @return array{product: array<string, mixed>, display: array<string, mixed>, context: array<string, mixed>}
+     */
+    public function build(array $product, array $display = [], array $context = []): array
+    {
+        foreach (['id', 'name', 'url', 'image'] as $required) {
+            if (!array_key_exists($required, $product) || $product[$required] === null || $product[$required] === '') {
+                throw new \InvalidArgumentException("ProductViewProvider::build() requires a non-empty '{$required}' key in \$product.");
+            }
+        }
+
+        $quantity = array_key_exists('quantity', $product) ? $product['quantity'] : null;
+        $inStock = $quantity === null ? true : ((int) $quantity > 0);
+
+        $badges = $this->buildBadges($product, $inStock);
+
+        return [
+            'product' => [
+                'id' => $product['id'],
+                'name' => $product['name'],
+                'url' => $product['url'],
+                'image' => $product['image'],
+                'secondary_image' => $product['secondary_image'] ?? null,
+                'image_alt' => $product['image_alt'] ?? $product['name'],
+                'price' => $product['price'] ?? false,
+                'special' => $product['special'] ?? false,
+                'tax' => $product['tax'] ?? false,
+                'rating' => $product['rating'] ?? false,
+                'stock' => [
+                    'in_stock' => $inStock,
+                    'label' => $product['stock_label'] ?? null,
+                ],
+                'badges' => $badges,
+                'minimum' => isset($product['minimum']) && (int) $product['minimum'] > 0 ? (int) $product['minimum'] : 1,
+                'manufacturer' => $product['manufacturer'] ?? null,
+                // Reserved for the future Product Page listing context
+                // (MINTCART_TECHNICAL_PLAN.md §15D). Category/Search/Manufacturer
+                // results don't carry option data, so there is no real consumer
+                // for this yet — kept in the contract so a theme can rely on the
+                // key existing without a schema change later (CLAUDE.md §85: the
+                // key is documented because Technical Plan already specifies it,
+                // but no logic is invented to populate it ahead of that consumer).
+                'options_summary' => $product['options_summary'] ?? null,
+                'actions' => $this->buildActions($product, $inStock),
+            ],
+            'display' => [
+                'show_rating' => $display['show_rating'] ?? true,
+                'show_description' => $display['show_description'] ?? false,
+                'show_secondary_image' => $display['show_secondary_image'] ?? true,
+                'action_variant' => $display['action_variant'] ?? 'default',
+            ],
+            'context' => [
+                'listing_type' => $context['listing_type'] ?? 'category',
+                'position' => $context['position'] ?? null,
+            ],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $product
+     * @return list<array{type: string, label: ?string}>
+     */
+    private function buildBadges(array $product, bool $inStock): array
+    {
+        $badges = [];
+
+        if (!empty($product['special']) && $product['special'] !== false) {
+            $badges[] = ['type' => 'sale', 'label' => null];
+        }
+
+        if (!$inStock) {
+            $badges[] = ['type' => 'out-of-stock', 'label' => $product['stock_label'] ?? null];
+        }
+
+        // "New" depends on a store-configurable recency threshold that
+        // doesn't exist yet (Business Settings, MINTCART_FUNCTIONAL_SCOPE.md
+        // §3/Phase 14) — the caller decides and passes the flag explicitly
+        // rather than this class guessing a threshold from date_added.
+        if (!empty($product['is_new'])) {
+            $badges[] = ['type' => 'new', 'label' => null];
+        }
+
+        return $badges;
+    }
+
+    /**
+     * @param array<string, mixed> $product
+     * @return array{add_to_cart: bool, quick_order: bool, wishlist: bool, compare: bool}
+     */
+    private function buildActions(array $product, bool $inStock): array
+    {
+        $purchasable = $inStock && ($product['price'] ?? false) !== false;
+
+        return [
+            'add_to_cart' => $purchasable,
+            'quick_order' => $purchasable,
+            'wishlist' => true,
+            'compare' => true,
+        ];
+    }
+}

@@ -286,12 +286,32 @@ belongs to Phase 8 once a theme exists to render.
 
 ## Phase 6 — Product Card (first reference component)
 
-- [ ] `ProductViewProvider` contract (id, name, url, image, secondary_image, price,
-      special, tax, rating, stock, badges, options_summary, actions)
+- [x] `ProductViewProvider` contract (id, name, url, image, secondary_image, price,
+      special, tax, rating, stock, badges, options_summary, actions) —
+      `MintCart\Commerce\ProductViewProvider`
+      (`upload/system/library/mintcart/commerce/productviewprovider.php`),
+      documented in `docs/developer/commerce/product-view-provider.md`.
+      Pure transform, no OpenCart dependency (formatting/tax/URL resolution
+      stays OpenCart's job upstream of it); computes `stock`/`badges`/
+      `actions` consistently instead of each controller doing it ad hoc.
+      Actual controller wiring (Category/Search/Manufacturer/Special calling
+      this instead of their inline array-building) is intentionally deferred
+      to Phase 8 (Theme resolver) — see "Next step" below.
 - [ ] `mc-product-card` Twig + CSS + JS
 - [ ] Wishlist / compare / add-to-cart / quick-order support
 
-Not started.
+**In progress.** `ProductViewProvider` is done and verified (see below); the
+`mc-product-card` CSS/JS/Twig contract half — the second sub-step flagged in
+the previous "Next step" section — is the next piece of this phase.
+
+Verified: `php -l` on the new PHP file (clean); the smoke test
+`tests/mintcart/commerce/product-view-provider-test.php` (`php
+tests/mintcart/commerce/product-view-provider-test.php`) — 9 scenarios
+covering required-field validation (throws on missing `id`/`name`/`url`/
+`image`), defaults, sale/out-of-stock/new badge derivation, add-to-cart/
+quick-order purchasability (in-stock + visible price required, wishlist/
+compare always available), and display/context overrides — all pass
+(`PASS: ProductViewProvider smoke test (9 scenarios)`, exit 0).
 
 ## Phase 7 — Header / Footer / Navigation
 
@@ -460,48 +480,42 @@ for exactly what was grepped/confirmed) — there is still no Twig/theme to
 render a real page against, so a live browser check stays deferred to
 Phase 8.
 
-The next run should start **Phase 6 — Product Card**
-(`MINTCART_IMPLEMENTATION_GUIDE.md` §47, `MINTCART_TECHNICAL_PLAN.md`
-§15C/§15D), the first reference component and the first real consumer of a
-normalized product data contract:
+**`ProductViewProvider` is done** (see the Phase 6 section above) — the
+first sub-step of Phase 6 flagged by the previous run. The next run should
+pick up the **second sub-step**:
 
 ```text
-- [ ] `ProductViewProvider` contract (id, name, url, image, secondary_image,
-      price, special, tax, rating, stock, badges, options_summary, actions)
 - [ ] `mc-product-card` Twig + CSS + JS
 - [ ] Wishlist / compare / add-to-cart / quick-order support
 ```
 
-This is a bigger increment than Phase 4's individual components — it is
-the first place PHP (a `MintCart\Commerce\ProductViewProvider`, per
-`MINTCART_TECHNICAL_PLAN.md` §15D) and CSS/JS/Twig meet, and the first
-component with a real business-data contract instead of pure
-display/markup. Before writing code:
+Notes for that run:
 
-- Read `MINTCART_IMPLEMENTATION_GUIDE.md` §47 and
-  `MINTCART_TECHNICAL_PLAN.md` §15C/§15D/§27 for the exact contract shape
-  expected (`product` / `display` / `context` per
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §27).
-- Inspect the actual OpenCart 3 `catalog/model/catalog/product.php` and the
-  existing `catalog/controller/product/*` / category/search controllers in
-  this repo (CLAUDE.md §10/§84 — never assume OpenCart's product data
-  shape from memory) to see what raw data is actually available to build
-  the contract from (price/special/tax formatting, image paths, rating
-  aggregation, stock status source).
+- The provider's output contract (`product` / `display` / `context`) is
+  documented in `docs/developer/commerce/product-view-provider.md` — build
+  the Twig template's variable access directly against that shape (e.g.
+  `product.stock.in_stock`, `product.actions.add_to_cart`,
+  `product.badges` as a list of `{type, label}`).
 - There is still no Twig rendering pipeline or `ComponentRenderer`
   (Phase 8) — `mc-product-card` at this stage is CSS + a documented Twig
-  template + JS behavior hooks (`data-mc-action="add-to-cart"`, etc.),
-  following the exact same pattern as every Phase 4 component doc, plus a
-  `ProductViewProvider` PHP class with unit-testable output. Wiring an
-  actual controller to call it end-to-end is Phase 8 territory once the
-  theme resolver exists — don't build a full controller integration this
-  phase if it would require guessing at contracts a real theme override
-  hasn't exercised yet (CLAUDE.md §85).
-- Given the size, treat `ProductViewProvider` and `mc-product-card`
-  (CSS/JS/Twig contract + doc) as two sub-steps and checkpoint after each
-  (CLAUDE.md §4a) rather than trying to land both in one pass — commit and
-  push after the provider is done even if the CSS/JS/Twig half doesn't fit
-  in the same run.
+  template + JS behavior hooks (`data-mc-action="add-to-cart"`,
+  `data-mc-action="toggle-wishlist"`, `data-mc-action="toggle-compare"`,
+  `data-mc-action="quick-order"`), following the exact same pattern as
+  every Phase 4 component doc — not a live controller integration. Wiring
+  `ControllerProductCategory` (and search/manufacturer/special) to actually
+  call `ProductViewProvider` and render this template end-to-end is Phase 8
+  territory once the theme resolver exists (don't build that integration
+  this phase — CLAUDE.md §85).
+- `mc-price`, `mc-badge`, `mc-rating`, `mc-quantity`, `mc-button` (Phase 4)
+  already exist and should compose inside `mc-product-card` rather than
+  duplicating their CSS — `mc-product-card` is the layout/media/actions
+  wrapper around them.
+- Reference `MINTCART_IMPLEMENTATION_GUIDE.md` §47 for the full feature
+  list (image, second image, name, price, special, tax, rating, badges,
+  stock, wishlist, compare, add to cart, quick order, optional
+  description) and §12–§14 for BEM/state-class/`data-mc-*` conventions.
+- Given the size, treat the Twig/CSS/JS/doc as this run's single increment
+  and checkpoint (CLAUDE.md §4a) rather than also starting Phase 7.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
