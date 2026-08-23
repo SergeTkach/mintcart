@@ -515,10 +515,47 @@ Not started.
 
 ## Phase 11 — Mint Admin primitives
 
-- [ ] `McDrawer`, `McModal`, `McToast`, `McConfirm`, `McTabs`, `McSortable`,
-      `McMediaPicker`, `McEntityPicker`, `McProgress` (vanilla JS)
+- [x] `McDrawer`, `McModal`, `McToast` — already shipped as `mc-drawer`/
+      `mc-modal`/`mc-toast` in Phase 4 (shared with `catalog.js`); no
+      separate `Mc*` JS class exists on top of them since no consumer has
+      needed an imperative API beyond `data-mc-action` triggers yet
+      (CLAUDE.md §85)
+- [ ] `McConfirm` — open PR #17 (`claude/charming-rubin-nyghvd`, not yet
+      merged as of this run) already implements this as `mc-confirm`;
+      leaving unchecked here until that PR lands to avoid claiming done work
+      this branch didn't do
+- [x] `McSortable` — `mc-sortable`
+      (`assets/src/js/components/sortable.js` + `assets/src/css/components/sortable.css`),
+      wraps SortableJS 1.15.7 (already an npm dependency since Phase 2) for
+      drag reordering, plus `data-mc-action="sortable-move-up"`/
+      `"sortable-move-down"` buttons as the required non-mouse alternative
+      (`MINTCART_IMPLEMENTATION_GUIDE.md` §68). Fires a bubbling
+      `mc:sortable:reorder` CustomEvent (`detail.order`) on either a
+      completed drag or a keyboard move, so a future consumer only needs
+      one listener. Wired into `admin.js` only (every Functional Scope §6
+      drag-and-drop scenario is admin-side). Doc:
+      `docs/developer/components/sortable.md`. No live admin-screen
+      consumer yet — same "ships ahead of its first consumer" pattern as
+      every Phase 4 component (CLAUDE.md §85); most likely first caller is
+      Homepage Builder's block list (Phase 10) or Categories
+      drag-and-drop (Phase 17).
+- [ ] `McTabs`, `McMediaPicker`, `McEntityPicker`, `McProgress` — each still
+      needs a real admin-screen consumer decision before being built
+      (CLAUDE.md §85); `McEntityPicker` is the highest-priority remaining
+      one per Functional Scope §8 (P0) once Phase 12 starts.
 
-Not started.
+**In progress.** This run added `McSortable`. Verified: `npm install`
+(0 vulnerabilities), `npm run build` (minified) and existing PHP test suite
+(`migration-manager-test.php`, `product-view-provider-test.php`,
+`component-renderer-test.php`, all still passing — this increment touched
+no PHP) both clean; `grep` against the built `admin.min.js` confirms
+`sortable-move-up`/`mc:sortable:reorder` are present, and confirms they are
+**absent** from `catalog.min.js` (admin-only, as designed); `grep` against
+the built `index.min.css` confirms `.mc-sortable`/`.mc-sortable__item`/
+`.mc-sortable__handle`/`.mc-sortable__label`/`.mc-sortable__controls`/
+`.mc-sortable__move` are all present. No automated component/visual JS test
+harness exists in this repo yet (same pre-existing gap noted in every
+earlier Phase 4/11 run).
 
 ## Phase 12 — Entity Picker
 
@@ -636,8 +673,40 @@ Not started.
 
 ## Next step for the next routine run
 
-Phases 0–6 and 8 are now complete (see their sections above). **Phase 8 —
-Theme resolver has passed its critical architecture milestone**
+**As of this run (2026-08-23), four other routine/session PRs are open
+against `master`, all `ROUTINE-STATUS: DONE` and awaiting human
+review/merge:**
+
+- #14 — Footer + Presets (`routine/phase7-footer-component-20260823-0753`):
+  Phase 7 Footer, Phase 9 Presets
+- #15 — Header (`claude/charming-rubin-ozhsi6`): Phase 7 Header
+- #16 — Block API storage (`claude/charming-rubin-vn7u4a`): Phase 10
+  `mc_page`/`mc_block` migrations only, no Provider/Renderer yet
+- #17 — McConfirm (`claude/charming-rubin-nyghvd`): Phase 11 `mc-confirm`
+
+This run's branch (`claude/charming-rubin-c34moj`) could not continue any of
+those — each session is bound to its own fixed branch name (harness
+constraint, documented in each PR's body) — so it picked **Phase 11
+McSortable** instead: a Phase 11 primitive none of the four PRs above touch,
+confirmed self-contained (SortableJS was already an npm dependency, no
+schema/consumer dependency on #16's still-unmerged migrations). See the
+Phase 11 section above for what shipped.
+
+**Once #14/#15/#16/#17 merge**, reconcile this file's Phase 7/9/10/11
+sections with whatever they actually landed as (this run did not touch
+those sections, only Phase 11's McSortable line) and pick up:
+
+- Phase 10 Block Provider/Renderer/Template separation (Products first,
+  can reuse the existing `ProductViewProvider`) — once #16's migrations are
+  merged.
+- Phase 11 `McEntityPicker` (P0 per Functional Scope §8) or `McTabs`/
+  `McMediaPicker`/`McProgress` — each still needs a real consumer decision.
+- Phase 17 Categories drag-and-drop — `mc-sortable` (this run) is now
+  available to build on.
+
+Phases 0–6 and 8 are complete regardless of the above (see their sections
+below). **Phase 8 — Theme resolver has passed its critical architecture
+milestone**
 (`CLAUDE.md` §19, `MINTCART_TECHNICAL_PLAN.md` §45): `MintCart\Design\ComponentRenderer`,
 `mint_default`'s `product-card.twig`, `ControllerProductCategory` wired to
 both, and now `catalog/view/theme/test_theme/` proving a second theme can
@@ -649,23 +718,10 @@ environment still has no MySQL/`vendor/twig/twig`, so the proof is at the
 human should still confirm `test_theme`'s override actually renders on a
 real install before the milestone is considered *fully* closed end-to-end.
 
-**Next run should pick one of:**
-
-- **Phase 7 — Header / Footer / Navigation** (deferred until Phase 8 passed,
-  per `CLAUDE.md` §21's ordering: ComponentRenderer before Header/Footer/
-  Blocks). Define the `Header`/`Footer` component contracts per
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
-  provider → contract → Mint Default `.twig` pattern `product-card`
-  established, with centralized business data (no per-theme contact
-  duplication, per `CLAUDE.md` §6/§39).
-- **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
-  on the same DOM, differing only in tokens/settings, validating the design
-  token system independently of the Theme API's component-override
-  mechanism just proven.
-
-Either is a reasonable next increment; re-read whichever section is picked
-in full before starting, per `CLAUDE.md` §10/§84 — don't start from this
-summary alone.
+(Phase 7 Header/Footer and Phase 9 Presets, both listed as reasonable next
+increments here in earlier versions of this file, are now covered by open
+PRs #14/#15 above — see the "four other routine/session PRs are open" note
+near the top of this section for current status and what to pick up next.)
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
