@@ -148,3 +148,97 @@ repo today (no other locale directories to keep in sync).
 
 **Tests:** `php -l` (clean). No automated i18n-completeness check exists in
 this repo yet for any language file.
+
+---
+
+## `upload/catalog/controller/common/footer.php`
+
+**Reason:** Wires Phase 7's Footer component (`MINTCART_TECHNICAL_PLAN.md`
+§14, `MINTCART_IMPLEMENTATION_GUIDE.md` §48) — the second real page-level
+consumer of the Theme API pattern `ControllerProductCategory` established
+in Phase 8. In addition to the controller's existing per-field data
+building (`$data['informations']`/`contact`/`return`/.../`newsletter`,
+completely untouched), also regroups that same already-resolved data into
+`MintCart\Design\FooterViewProvider` columns, reads contacts from
+OpenCart's own `config_telephone`/`config_email`/`config_address` settings
+(never a duplicate Mint-owned table — `CLAUDE.md` §39), and renders the
+result through `MintCart\Design\ComponentRenderer::render('footer', ...)`
+into a new `$data['mc_footer']` string. Adds a private
+`mintActiveThemeDirectory()` helper identical to
+`ControllerProductCategory`'s own (mirrors
+`catalog/controller/event/theme.php`'s active-theme resolution) — kept as a
+second small, self-contained copy rather than extracted into a shared
+helper class for just two 7-line call sites; revisit if a third controller
+needs it (`CLAUDE.md` §85/§86).
+
+**Why it can't live in the MintCart layer instead:** Same rationale as
+`ControllerProductCategory` — `FooterViewProvider` and `ComponentRenderer`
+are deliberately OpenCart-agnostic, but something has to call them with
+this controller's already-resolved footer data (links, contacts, "Powered
+by" text) once per request. OpenCart's `Loader`/routing has no generic
+"run this for every common controller" hook.
+
+**Compatibility impact:** None for the legacy `default` theme or any
+unrelated third-party theme — the new code only runs when the active theme
+ships a `theme.json` manifest (same gate as `category.php`), and neither
+`default`'s nor a third-party theme's own `common/footer.twig` reads
+`$data['mc_footer']`. The controller's original per-field `$data` (still
+what `default`'s `common/footer.twig` renders) is completely unchanged:
+same keys, same values, same computation. A failure inside
+`ComponentRenderer::render()` (e.g. a missing/unreadable `footer.twig`) is
+caught and logged via `MintCart\Core\Logger` rather than propagating — a
+broken Mint footer component degrades to an empty `{{ mc_footer }}` on
+`mint_default`'s own `common/footer.twig`, it does not fatal every page on
+the site (footer is common to all of them).
+
+**Tests:** `php -l` (clean). No new PHP-level test added — `FooterViewProvider`
+and `ComponentRenderer` themselves (the two classes this wiring calls) are
+already covered by their own smoke tests (`tests/mintcart/design/
+footer-view-provider-test.php`, 7 scenarios; `tests/mintcart/design/
+component-renderer-test.php` scenario 11 resolves the real `footer.twig`),
+neither of which changed in this run. Full `tests/mintcart/` suite
+re-run end to end after this change — still passing (migration manager,
+`ProductViewProvider` x8, `ComponentRenderer` x11, `FooterViewProvider` x7).
+Same pre-existing gap as every earlier phase: no MySQL/`vendor/twig/twig`
+in this environment, so no live end-to-end request was exercised. A human
+should smoke-test a real page footer on a `mint_default`-configured install
+(and confirm the legacy `default` theme's footer is pixel-identical to
+before) before this reaches production.
+
+---
+
+## `upload/catalog/view/theme/mint_default/template/common/footer.twig` (new file)
+
+Not an upstream diff — this is a new file `mint_default` ships, not a
+modification to an OpenCart-shipped file. Noted here only because it is
+the page-level template `ControllerCommonFooter::index()`'s
+`$this->load->view('common/footer', $data)` call resolves to once
+`mint_default` is active (via the `event/theme.php` three-tier fallback
+from `docs/adr/003-page-template-fallback-fix.md`): it outputs
+`{{ mc_footer }}` in place of `default`'s own inline footer markup, then
+the same `styles`/`scripts`/`</body></html>` closing OpenCart's page
+assembly needs on every theme.
+
+---
+
+## `upload/catalog/language/en-gb/common/footer.php`
+
+**Reason:** Adds three new language strings the `footer` component's
+documented contract needs and that didn't already exist under any name:
+`text_contact_us`, `text_newsletter_email`, `text_newsletter_submit`.
+(`text_newsletter` itself already existed — reused as-is for both the
+existing "Newsletter" account-link label and the component's newsletter
+section heading, same value either way, same reuse pattern
+`text_wishlist`/`text_compare`/`text_add_to_cart` followed in Phase 8's
+product-card wiring.)
+
+**Why it can't live in the MintCart layer instead:** Same as
+`product/category.php`'s language file — OpenCart's language system is
+file-per-route, loaded by `$this->load->language('common/footer')` in the
+controller above.
+
+**Compatibility impact:** Purely additive — three new keys appended after
+the existing ones, nothing removed or renamed. Only `en-gb` exists in this
+repo today.
+
+**Tests:** `php -l` (clean).

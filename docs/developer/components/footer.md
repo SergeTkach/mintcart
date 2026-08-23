@@ -54,25 +54,34 @@ since `ComponentRenderer::resolve()`/`render()` already take an arbitrary
 component name (`docs/developer/theme-api/component-renderer.md`), not just
 `product-card`.
 
-**No live controller wiring yet.** No `catalog/controller/common/footer.php`
-call site builds a `FooterViewProvider` result or renders this template —
-same phase-split `product-card` went through (provider + CSS/Twig first,
-`ControllerProductCategory` wiring in a later run). A future run should:
+**Live controller wiring is done.** `catalog/controller/common/footer.php`
+(`ControllerCommonFooter::index()`) builds a `FooterViewProvider` result and
+renders it via `ComponentRenderer::render('footer', ...)` into
+`$data['mc_footer']`, gated by the same "only when the active theme ships a
+`theme.json` manifest" check `ControllerProductCategory` uses for
+`product-card` (`docs/upstream-diff.md`). The controller's original
+per-field `$data` (`informations`/`contact`/`return`/`sitemap`/`account`/
+`order`/`wishlist`/`newsletter`/...) is left completely untouched — the
+new code only *regroups* those same already-resolved values into
+`FooterViewProvider` columns, it doesn't change what they resolve to.
+Contacts come from `config_telephone`/`config_email`/`config_address`.
+`catalog/view/theme/mint_default/template/common/footer.twig` is the new
+page-level template that actually outputs `{{ mc_footer }}` (plus the
+`styles`/`scripts`/`</body></html>` every theme's footer template needs);
+the legacy `default` theme's own `common/footer.twig` is untouched and
+never reads `$data['mc_footer']`. The three new language strings the
+template needs (`text_contact_us`, `text_newsletter_email`,
+`text_newsletter_submit`) were added to
+`catalog/language/en-gb/common/footer.php` — `text_newsletter` itself
+already existed and is reused as-is (same "Newsletter" text serves both the
+pre-existing account-link label and the component's newsletter heading).
 
-1. Read `config_telephone`/`config_email`/`config_address` in
-   `ControllerCommonFooter::index()` into the `$contacts` array.
-2. Group the controller's existing `informations`/`contact`/`return`/
-   `sitemap`/`account`/`order`/`wishlist`/`newsletter` links into
-   `$columns` (this is a pure regrouping — none of that data or its
-   resolution logic changes).
-3. Call `ComponentRenderer::render('footer', $data)` the same way
-   `ControllerProductCategory` calls it for `product-card`, guarded by the
-   same "only when the active theme ships a `theme.json` manifest" check
-   documented in `docs/upstream-diff.md`, so stores still on the legacy
-   `default` theme are completely unaffected.
-4. Add the four new language strings the template expects
-   (`text_contact_us`, `text_newsletter`, `text_newsletter_email`,
-   `text_newsletter_submit`) to `catalog/language/en-gb/common/footer.php`.
+**Not yet done:** a second theme overriding `footer.twig` (no live proof a
+Mint-aware theme other than `mint_default` renders a different footer DOM
+the way `test_theme` does for `product-card`) and a live end-to-end
+request test (no MySQL/`vendor/twig/twig` in this environment — see
+`docs/upstream-diff.md`'s entry for this controller for the full
+verification writeup).
 
 ## Markup contract
 

@@ -358,27 +358,27 @@ bundled-output grep + manual review against the Definition of Done checklist.
       settings (no Mint-owned duplicate storage). Header's own business-data
       needs (if any) aren't determined yet since Header hasn't started.
 
-**Footer sub-step is complete** for what's buildable ahead of a live
-controller consumer, same phase-split `product-card` went through in
-Phase 6: `FooterViewProvider` (contract + normalization rules), `mc-footer`
-CSS, and `mint_default`'s `footer.twig` (resolvable today via the existing
-`ComponentRenderer` — no renderer changes were needed since it already
-resolves any component name). Social links, payment badges and the
-newsletter subscribe action all default to empty/disabled — no storage for
-the first two exists yet (Business Settings, Phase 14) and no subscribe
-endpoint exists for the third (Commerce API, Phase 15) — so
-`FooterViewProvider` never invents a data source ahead of a real consumer
-(`CLAUDE.md` §85); see `docs/developer/components/footer.md` for the full
-rationale and the documented next-step checklist for wiring
-`ControllerCommonFooter`.
+**Footer sub-step is complete, including live controller wiring** (this
+run). `FooterViewProvider` (contract + normalization rules), `mc-footer`
+CSS, `mint_default`'s `mint/components/footer.twig`, and now
+`ControllerCommonFooter::index()` actually building a `FooterViewProvider`
+result and rendering it via `ComponentRenderer::render('footer', ...)` into
+`$data['mc_footer']`, consumed by a new
+`mint_default/template/common/footer.twig` page-level template — gated by
+the same `theme.json`-manifest check `ControllerProductCategory` uses for
+`product-card` (`docs/upstream-diff.md`). The controller's original
+per-field `$data` is untouched, so the legacy `default` theme's footer is
+unaffected. Three new language strings were added
+(`text_contact_us`, `text_newsletter_email`, `text_newsletter_submit`);
+`text_newsletter` itself already existed and is reused as-is. Social links,
+payment badges and the newsletter subscribe action still default to
+empty/disabled — no storage for the first two exists yet (Business
+Settings, Phase 14) and no subscribe endpoint exists for the third
+(Commerce API, Phase 15) — so `FooterViewProvider` never invents a data
+source ahead of a real consumer (`CLAUDE.md` §85); see
+`docs/developer/components/footer.md` for the full rationale.
 
 **Not done, by design, deferred to a future run:**
-- Live controller wiring (`ControllerCommonFooter` actually calling
-  `FooterViewProvider` + `ComponentRenderer::render('footer', ...)`) — the
-  contract doc documents the exact four steps this needs (read
-  `config_telephone`/`config_email`/`config_address`, regroup the
-  controller's existing links into columns, call `ComponentRenderer`, add
-  four new language strings).
 - Header, Topbar, Logo, Search, Account, Cart, Navigation, Mobile
   Navigation component contracts — not started at all yet.
 - Theme override proof for `footer.twig` (no second theme overrides it the
@@ -386,20 +386,32 @@ rationale and the documented next-step checklist for wiring
   Phase 8's milestone (already proven with `product-card` alone), but
   worth doing once Header exists too, so a future theme can be checked
   overriding more than one component at once.
+- A live end-to-end request test confirming `mint_default`'s footer
+  actually renders on a real running install (this environment still has
+  no MySQL/`vendor/twig/twig`) — same pre-existing gap noted in every
+  earlier phase, but now more consequential since this is the second
+  change to a controller that serves real traffic on every page.
 
-Verified: `php -l` on the new PHP file (clean); `FooterViewProvider`
-smoke test, 7 scenarios, all passing
-(`tests/mintcart/design/footer-view-provider-test.php`); `ComponentRenderer`
-smoke test extended with scenario 11 (real-repo `footer.twig` resolution),
-11/11 passing; full `tests/mintcart/` suite re-run end to end (migration
+Verified (this run): `php -l` on the modified controller and language file
+(clean); full `tests/mintcart/` suite re-run end to end (migration
 manager, `ProductViewProvider` x8, `ComponentRenderer` x11,
-`FooterViewProvider` x7) — all pass; `footer.twig`'s `if`/`for` tag nesting
-checked balanced with the same script-based technique used for
-`product-card.twig`; `npm run build` compiles cleanly, `mc-footer__*`
-classes present in the bundled `assets/dist/css/index.min.css`. Same
-pre-existing gap as every earlier phase: no MySQL/`vendor/twig/twig` in
-this environment, so `render()`'s actual Twig output was not exercised —
-only `resolve()`'s file-path resolution and the CSS build.
+`FooterViewProvider` x7) — all pass, none affected by this change since
+neither `FooterViewProvider` nor `ComponentRenderer` themselves were
+modified. No new PHP test was added for the controller wiring itself — same
+approach `ControllerProductCategory`'s wiring took (Phase 8 sub-step 2):
+`php -l` + manual review, since OpenCart's `Registry`/`Config`/`Loader`
+aren't mockable in this environment without a full framework bootstrap. A
+human should smoke-test a real page footer on a `mint_default`-configured
+install (and confirm the legacy `default` theme's footer is pixel-identical
+to before) before this reaches production — see
+`docs/upstream-diff.md`'s new entries for the full writeup.
+
+Previous run's verification (Footer provider/CSS/Twig, unaffected by this
+run): `FooterViewProvider` smoke test, 7 scenarios; `ComponentRenderer`
+smoke test scenario 11 (real-repo `footer.twig` resolution); `footer.twig`'s
+`if`/`for` tag nesting checked balanced; `npm run build` compiles cleanly,
+`mc-footer__*` classes present in the bundled
+`assets/dist/css/index.min.css`.
 
 ## Phase 8 — Theme resolver
 
@@ -699,29 +711,33 @@ environment still has no MySQL/`vendor/twig/twig`, so the proof is at the
 human should still confirm `test_theme`'s override actually renders on a
 real install before the milestone is considered *fully* closed end-to-end.
 
-**Update (this run): Phase 7's Footer sub-step is now complete** — see the
-Phase 7 section above for the full writeup. `MintCart\Design\FooterViewProvider`,
-`mc-footer` CSS, and `mint_default`'s `footer.twig` are done and verified
-(11/11 `ComponentRenderer` scenarios, 7/7 `FooterViewProvider` scenarios,
-`npm run build` clean). Header/Topbar/Navigation and the live
-`ControllerCommonFooter` wiring are still not done.
+**Update (this run): Phase 7's Footer sub-step is now fully wired end to
+end** — see the Phase 7 section above for the full writeup.
+`MintCart\Design\FooterViewProvider`, `mc-footer` CSS, `mint_default`'s
+`mint/components/footer.twig`, and now live `ControllerCommonFooter` wiring
+(reads `config_telephone`/`config_email`/`config_address`, regroups the
+controller's existing links into columns, renders via `ComponentRenderer`
+into `$data['mc_footer']`, consumed by a new
+`mint_default/template/common/footer.twig`) are all done and verified
+(full `tests/mintcart/` suite passing, `php -l` clean on the touched PHP
+files). Header/Topbar/Navigation are still not started at all.
 
 **Next run should pick one of:**
 
 - **Phase 7, continued — Header component contract.** Define `Header`/
   `Topbar`/`Logo`/`Search`/`Account`/`Cart`/`Navigation`/`Mobile Navigation`
   per `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
-  provider → contract → Mint Default `.twig` pattern `footer.twig` and
-  `product-card.twig` both established. This is the larger remaining piece
-  of Phase 7 — likely needs its own further split (e.g. a `HeaderViewProvider`
-  contract first, then CSS/Twig, same as Footer did across this run).
-- **Phase 7, continued — wire `ControllerCommonFooter`.** The exact four
-  steps are documented in `docs/developer/components/footer.md`'s "Live
-  Twig template" section: read `config_telephone`/`config_email`/
-  `config_address`, regroup the controller's existing links into columns,
-  call `ComponentRenderer::render('footer', ...)` guarded by the same
-  `theme.json`-manifest check `docs/upstream-diff.md` documents for
-  `ControllerProductCategory`, add four new language strings.
+  provider → contract → Mint Default `.twig` → live controller wiring
+  pattern `footer` and `product-card` both established. This is the larger
+  remaining piece of Phase 7 — likely needs its own further split (e.g. a
+  `HeaderViewProvider` contract first, then CSS/Twig, then
+  `ControllerCommonHeader` wiring, same as Footer did across three runs).
+- **Phase 7 — theme override proof for `footer.twig`.** Add a
+  `footer.twig` override to `catalog/view/theme/test_theme/` (which
+  currently only overrides `product-card.twig`) with a genuinely different
+  DOM, and add a `ComponentRenderer` test scenario confirming resolution
+  picks it up — same technique scenario 10 used for `product-card.twig`.
+  Smaller than starting Header from scratch.
 - **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
   on the same DOM, differing only in tokens/settings, validating the design
   token system independently of the Theme API's component-override
