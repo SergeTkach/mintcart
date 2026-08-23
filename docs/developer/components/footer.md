@@ -76,12 +76,29 @@ template needs (`text_contact_us`, `text_newsletter_email`,
 already existed and is reused as-is (same "Newsletter" text serves both the
 pre-existing account-link label and the component's newsletter heading).
 
-**Not yet done:** a second theme overriding `footer.twig` (no live proof a
-Mint-aware theme other than `mint_default` renders a different footer DOM
-the way `test_theme` does for `product-card`) and a live end-to-end
-request test (no MySQL/`vendor/twig/twig` in this environment — see
-`docs/upstream-diff.md`'s entry for this controller for the full
-verification writeup).
+**Theme override proof is done.** `catalog/view/theme/test_theme/` (already
+overriding `product-card.twig` since Phase 8's milestone proof) now also
+overrides `footer.twig` with a genuinely different DOM: no Bootstrap grid
+columns, no social-links list, no payment badges, no newsletter form — just
+a single stacked link list, an optional one-line phone/email row, and the
+"powered by" text, marked with its own `mc-footer--test` class instead of
+`mint_default`'s `mc-footer`. `test_theme`'s `theme.json` still declares
+`"parent": null`, so this proves `ComponentRenderer` resolves a per-theme
+override independently for *each* component name — a theme can override
+some components (`product-card`, now `footer`) and still inherit everything
+else (Header, once it exists) from Mint Default automatically, 0 OCMOD.
+Verified statically the same way scenario 10 verified `product-card.twig`
+(this environment still has no MySQL/`vendor/twig/twig`, so no live
+`config_theme`-switch-and-load-a-page check was possible):
+`tests/mintcart/design/component-renderer-test.php` scenario 12 confirms
+`ComponentRenderer::resolve('footer')` returns `test_theme`'s own file when
+it's active, and still returns Mint Default's file when `mint_default` is
+active — both directions of the fallback, against the real shipped repo
+files, not fixtures.
+
+**Not yet done:** a live end-to-end request test (no MySQL/`vendor/twig/twig`
+in this environment — see `docs/upstream-diff.md`'s entry for this
+controller for the full verification writeup).
 
 ## Markup contract
 
@@ -211,7 +228,7 @@ elements never reimplement grid math.
 - [x] Ships a real Mint Default `.twig` file, resolvable via
       `ComponentRenderer` (verified: `if`/`for` tag nesting is balanced,
       same script-based check used for `product-card.twig`)
-- [ ] Live controller wiring — not done yet, see "Live Twig template"
-      above for the documented next step
-- [ ] Theme override checked — no second theme overrides `footer.twig` yet
-      (`test_theme` only overrides `product-card.twig` so far)
+- [x] Live controller wiring — `ControllerCommonFooter::index()`, see "Live
+      Twig template" above
+- [x] Theme override checked — `test_theme` now overrides `footer.twig`
+      with a genuinely different DOM, see "Live Twig template" above

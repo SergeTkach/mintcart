@@ -350,6 +350,42 @@ assertSame_(
     $failures
 );
 
+// 12. Theme override proof, extended to a SECOND component: test_theme now
+//     overrides both product-card.twig (scenario 10) and footer.twig, each
+//     with its own genuinely different DOM (footer: no grid columns, no
+//     social/payments/newsletter sections, a single stacked link list and
+//     its own mc-footer--test marker class instead of Mint Default's
+//     mc-footer grid). Proves resolve() picks up a per-theme override
+//     independently for each component name, not just the one component
+//     that existed when the milestone was first proven - a theme can
+//     override some components and inherit the rest from Mint Default at
+//     the same time (test_theme still has no header/other component
+//     overrides at all, and still declares "parent": null).
+$testThemeFooterPath = $testThemeRenderer->resolve('footer');
+
+assertSame_(
+    $realThemesRoot . '/test_theme/template/mint/components/footer.twig',
+    $testThemeFooterPath,
+    'Scenario 12: with test_theme active, resolve(\'footer\') should return test_theme\'s own override, not Mint Default\'s',
+    $failures
+);
+
+$testThemeFooterMarkup = (string) file_get_contents($testThemeFooterPath);
+
+assertSame_(
+    true,
+    str_contains($testThemeFooterMarkup, 'mc-footer--test') && !str_contains($testThemeFooterMarkup, 'mc-footer__newsletter-form'),
+    'Scenario 12: test_theme\'s footer.twig should be a genuinely different DOM (its own marker class, no newsletter form), not a copy of Mint Default\'s',
+    $failures
+);
+
+assertSame_(
+    $realThemesRoot . '/mint_default/template/mint/components/footer.twig',
+    $realRenderer->resolve('footer'),
+    'Scenario 12: with mint_default active (no footer override in test_theme\'s absence), resolve(\'footer\') should still return Mint Default\'s own file',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -358,5 +394,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ComponentRenderer smoke test (' . 11 . " scenarios)\n";
+echo 'PASS: ComponentRenderer smoke test (' . 12 . " scenarios)\n";
 exit(0);
