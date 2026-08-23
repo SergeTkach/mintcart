@@ -378,35 +378,59 @@ Settings, Phase 14) and no subscribe endpoint exists for the third
 source ahead of a real consumer (`CLAUDE.md` §85); see
 `docs/developer/components/footer.md` for the full rationale.
 
+**Theme override proof for `footer.twig` is now done too** (this run).
+`catalog/view/theme/test_theme/` (already overriding `product-card.twig`
+since Phase 8's milestone proof) now also overrides `footer.twig` with a
+genuinely different DOM — a single stacked link list, an optional one-line
+phone/email row, and the powered-by text, marked `mc-footer--test` instead
+of `mint_default`'s grid-based `mc-footer` (no social/payments/newsletter
+sections). `test_theme`'s `theme.json` still declares `"parent": null`.
+`tests/mintcart/design/component-renderer-test.php` scenario 12 confirms
+`resolve('footer')` returns `test_theme`'s own file when it's active and
+still falls back to Mint Default's file otherwise — both directions,
+against the real shipped repo files. This proves the Theme API's
+component-override fallback works independently per component name (a
+theme can override some components and inherit the rest), not just for the
+one component (`product-card`) the original milestone proof used. Full
+writeup in `docs/developer/components/footer.md`.
+
 **Not done, by design, deferred to a future run:**
 - Header, Topbar, Logo, Search, Account, Cart, Navigation, Mobile
   Navigation component contracts — not started at all yet.
-- Theme override proof for `footer.twig` (no second theme overrides it the
-  way `test_theme` overrides `product-card.twig`) — not required to close
-  Phase 8's milestone (already proven with `product-card` alone), but
-  worth doing once Header exists too, so a future theme can be checked
-  overriding more than one component at once.
 - A live end-to-end request test confirming `mint_default`'s footer
-  actually renders on a real running install (this environment still has
-  no MySQL/`vendor/twig/twig`) — same pre-existing gap noted in every
-  earlier phase, but now more consequential since this is the second
-  change to a controller that serves real traffic on every page.
+  (and now `test_theme`'s override) actually renders on a real running
+  install (this environment still has no MySQL/`vendor/twig/twig`) — same
+  pre-existing gap noted in every earlier phase.
 
-Verified (this run): `php -l` on the modified controller and language file
-(clean); full `tests/mintcart/` suite re-run end to end (migration
-manager, `ProductViewProvider` x8, `ComponentRenderer` x11,
-`FooterViewProvider` x7) — all pass, none affected by this change since
-neither `FooterViewProvider` nor `ComponentRenderer` themselves were
-modified. No new PHP test was added for the controller wiring itself — same
-approach `ControllerProductCategory`'s wiring took (Phase 8 sub-step 2):
-`php -l` + manual review, since OpenCart's `Registry`/`Config`/`Loader`
-aren't mockable in this environment without a full framework bootstrap. A
-human should smoke-test a real page footer on a `mint_default`-configured
-install (and confirm the legacy `default` theme's footer is pixel-identical
-to before) before this reaches production — see
-`docs/upstream-diff.md`'s new entries for the full writeup.
+Verified (this run — theme override proof): `test_theme/footer.twig`'s
+`if`/`for` tag nesting checked balanced (same script-based technique used
+for every earlier `.twig` file in this repo); full `tests/mintcart/` suite
+re-run end to end (migration manager, `ProductViewProvider` x8,
+`ComponentRenderer` x12 — up from 11, new scenario 12,
+`FooterViewProvider` x7) — all pass. No PHP files were touched this run
+(only a new `.twig` fixture file and the test file), so no `php -l` beyond
+the test file itself was needed. Same pre-existing gap as every earlier
+phase: no live `config_theme=test_theme`-and-load-a-page check was possible
+(no MySQL/`vendor/twig/twig` in this environment) — a human should confirm
+`test_theme`'s footer actually renders with its distinct DOM before this is
+considered fully closed end-to-end.
 
-Previous run's verification (Footer provider/CSS/Twig, unaffected by this
+Increment 2's verification (`ControllerCommonFooter` wiring, unaffected by
+this run): `php -l` on the modified controller and language file (clean);
+full `tests/mintcart/` suite re-run end to end (migration manager,
+`ProductViewProvider` x8, `ComponentRenderer` x11, `FooterViewProvider` x7)
+— all pass, none affected by that change since neither `FooterViewProvider`
+nor `ComponentRenderer` themselves were modified. No new PHP test was added
+for the controller wiring itself — same approach `ControllerProductCategory`'s
+wiring took (Phase 8 sub-step 2): `php -l` + manual review, since
+OpenCart's `Registry`/`Config`/`Loader` aren't mockable in this environment
+without a full framework bootstrap. A human should smoke-test a real page
+footer on a `mint_default`-configured install (and confirm the legacy
+`default` theme's footer is pixel-identical to before) before this reaches
+production — see `docs/upstream-diff.md`'s new entries for the full
+writeup.
+
+Increment 1's verification (Footer provider/CSS/Twig, unaffected by this
 run): `FooterViewProvider` smoke test, 7 scenarios; `ComponentRenderer`
 smoke test scenario 11 (real-repo `footer.twig` resolution); `footer.twig`'s
 `if`/`for` tag nesting checked balanced; `npm run build` compiles cleanly,
@@ -722,6 +746,14 @@ into `$data['mc_footer']`, consumed by a new
 (full `tests/mintcart/` suite passing, `php -l` clean on the touched PHP
 files). Header/Topbar/Navigation are still not started at all.
 
+**Update (this run): theme override proof for `footer.twig` is done.**
+`catalog/view/theme/test_theme/` now overrides both `product-card.twig`
+(since Phase 8's milestone) and `footer.twig` (this run), each with its own
+genuinely different DOM, still declaring `"parent": null` in `theme.json`.
+`ComponentRenderer` scenario 12 confirms both fallback directions for
+`footer` against the real shipped repo files. Full writeup in the Phase 7
+section above and `docs/developer/components/footer.md`.
+
 **Next run should pick one of:**
 
 - **Phase 7, continued — Header component contract.** Define `Header`/
@@ -732,16 +764,14 @@ files). Header/Topbar/Navigation are still not started at all.
   remaining piece of Phase 7 — likely needs its own further split (e.g. a
   `HeaderViewProvider` contract first, then CSS/Twig, then
   `ControllerCommonHeader` wiring, same as Footer did across three runs).
-- **Phase 7 — theme override proof for `footer.twig`.** Add a
-  `footer.twig` override to `catalog/view/theme/test_theme/` (which
-  currently only overrides `product-card.twig`) with a genuinely different
-  DOM, and add a `ComponentRenderer` test scenario confirming resolution
-  picks it up — same technique scenario 10 used for `product-card.twig`.
-  Smaller than starting Header from scratch.
+  This is now the **only** remaining piece of Phase 7 — Footer is fully
+  done including its theme-override proof.
 - **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
   on the same DOM, differing only in tokens/settings, validating the design
   token system independently of the Theme API's component-override
-  mechanism already proven.
+  mechanism already proven. Likely the smaller option now that Footer's
+  theme-override proof is done — doesn't require designing a new component
+  contract from scratch the way Header does.
 
 Any of these is a reasonable next increment; re-read whichever section is
 picked in full before starting, per `CLAUDE.md` §10/§84 — don't start from
