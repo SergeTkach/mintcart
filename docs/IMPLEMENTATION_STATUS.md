@@ -584,10 +584,47 @@ real install before treating the milestone as *fully* closed end-to-end.
 
 ## Phase 9 — Presets
 
-- [ ] At least two radically different presets (e.g. Clean, Warm) on the same DOM
-- [ ] Differ in colors/fonts/radius/spacing/card look/button look only, not Twig
+- [x] At least two radically different presets (e.g. Clean, Warm) on the same DOM
+- [x] Differ in colors/fonts/radius/spacing/card look/button look only, not Twig
 
-Not started.
+Done. `assets/src/css/presets/clean.css` (documentation-only — Clean is the
+unmodified baseline already in `settings/tokens.css`) and
+`assets/src/css/presets/warm.css` (a terracotta/serif/soft-radius override)
+prove the token system alone carries a genuinely different visual identity
+with **0 Twig changes**: same `product-card.twig`/`footer.twig`/`card.twig`
+markup as Clean, only `--mc-*` custom properties differ. Both are imported
+from `assets/src/css/index.css` and listed in `mint_default/theme.json`'s
+`presets` array.
+
+Mechanism: every Warm rule is scoped under `[data-mc-preset="warm"]` on
+`<html>` — never a bare `:root` — so import order in `index.css` doesn't
+matter (an attribute-scoped selector always outranks a bare `:root`/class
+rule on specificity) and the preset has zero effect unless that attribute
+is set. Clean/Warm differ on: semantic color tokens (mint green ->
+terracotta, white -> warm off-white, gray text -> warm brown), heading
+typography (system sans -> serif), the radius scale (crisp -> soft),
+shadow tokens (neutral -> warm-tinted), two spacing tokens (tighter ->
+roomier), and — the checklist's explicit "card look"/"button look" —
+direct component-local overrides on `.mc-product-card`/`.mc-card` (flat
+bordered -> borderless with a larger radius/shadow/padding) and `.mc-button`
+(rounded rectangle -> pill-shaped). State/functional colors
+(success/danger/warning/info) are deliberately left untouched — they carry
+meaning, not brand identity.
+
+No `data-mc-preset` picker exists yet (that's Setup Wizard/Theme Settings
+work, Phase 13/31, not started) — this phase only had to prove the token
+mechanism itself, per `CLAUDE.md` §19/`MINTCART_TECHNICAL_PLAN.md` §45's
+"prove the architecture before scaling features" rule.
+
+Full write-up, token-by-token diff table, and the "adding a new preset"
+recipe: `docs/developer/theme-api/presets.md`. Verified via
+`tests/mintcart/design/presets-test.php` (new, standalone, no PHPUnit —
+same pattern as every other MintCart smoke test) plus `npm run build:css`
++ inspecting the compiled bundle for all four `[data-mc-preset=warm]` rule
+blocks. Same caveat as the Theme API and Footer milestones: no
+MySQL/live-render environment here, so a human should still confirm the
+visual result on a real install (`<html data-mc-preset="warm">` set by
+hand) before this is considered *fully* closed end-to-end.
 
 ## Phase 10 — Homepage Blocks
 
@@ -754,7 +791,20 @@ genuinely different DOM, still declaring `"parent": null` in `theme.json`.
 `footer` against the real shipped repo files. Full writeup in the Phase 7
 section above and `docs/developer/components/footer.md`.
 
-**Next run should pick one of:**
+**Update (this run): Phase 9 — Presets is done.** `assets/src/css/presets/clean.css`
+(documentation-only, the unmodified baseline) and `assets/src/css/presets/warm.css`
+(a terracotta/serif/soft-radius override scoped under `[data-mc-preset="warm"]`)
+prove the token system alone can carry a radically different look with 0
+Twig changes — same `product-card.twig`/`footer.twig`/`card.twig` markup as
+Clean. See the Phase 9 section above and `docs/developer/theme-api/presets.md`
+for the full write-up, token diff table, and "adding a new preset" recipe.
+Verified via the new `tests/mintcart/design/presets-test.php` (standalone,
+no PHPUnit) and by inspecting the compiled `assets/dist/css/index.min.css`
+bundle for all four `[data-mc-preset=warm]` rule blocks. Same caveat as
+every other design-only milestone here: no live-render environment, so a
+human should still confirm the visual result on a real install.
+
+**Next run should pick:**
 
 - **Phase 7, continued — Header component contract.** Define `Header`/
   `Topbar`/`Logo`/`Search`/`Account`/`Cart`/`Navigation`/`Mobile Navigation`
@@ -765,17 +815,14 @@ section above and `docs/developer/components/footer.md`.
   `HeaderViewProvider` contract first, then CSS/Twig, then
   `ControllerCommonHeader` wiring, same as Footer did across three runs).
   This is now the **only** remaining piece of Phase 7 — Footer is fully
-  done including its theme-override proof.
-- **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
-  on the same DOM, differing only in tokens/settings, validating the design
-  token system independently of the Theme API's component-override
-  mechanism already proven. Likely the smaller option now that Footer's
-  theme-override proof is done — doesn't require designing a new component
-  contract from scratch the way Header does.
+  done including its theme-override proof. It is also now the only
+  unstarted item among Phases 0–9 — Phase 10 (Homepage Blocks) is the next
+  phase-level option after it, but per `CLAUDE.md` §21/§88's starting
+  sequence, Header/Footer/Navigation come before Homepage Blocks.
 
-Any of these is a reasonable next increment; re-read whichever section is
-picked in full before starting, per `CLAUDE.md` §10/§84 — don't start from
-this summary alone.
+Re-read the Phase 7 section (and `docs/developer/components/footer.md` for
+the established pattern to mirror) in full before starting, per `CLAUDE.md`
+§10/§84 — don't start from this summary alone.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
