@@ -31,6 +31,100 @@ class ControllerCommonFooter extends Controller {
 
 		$data['powered'] = sprintf($this->language->get('text_powered'), $this->config->get('config_name'), date('Y', time()));
 
+		// MintCart\Design\ComponentRenderer / MintCart\Design\FooterViewProvider
+		// wiring (MINTCART_TECHNICAL_PLAN.md §14, Phase 7). Only built when the
+		// active theme ships a theme.json manifest (i.e. it is Mint-API-aware),
+		// same gate catalog/controller/product/category.php uses for
+		// product-card - see docs/upstream-diff.md. Neither the legacy
+		// 'default' theme nor an unrelated third-party theme has one, and
+		// neither of their templates read $data['mc_footer'], so stores on
+		// either kind of theme pay no extra cost. The controller's original
+		// per-field data above (informations/contact/return/.../newsletter)
+		// is left completely untouched - this only regroups it, it does not
+		// change what it resolves to.
+		$mint_theme = $this->mintActiveThemeDirectory();
+		$mint_render_footer = is_file(DIR_TEMPLATE . $mint_theme . '/theme.json');
+
+		if ($mint_render_footer) {
+			$information_links = array();
+
+			foreach ($data['informations'] as $information) {
+				$information_links[] = array(
+					'label' => $information['title'],
+					'href'  => $information['href']
+				);
+			}
+
+			$columns = array();
+
+			if ($information_links) {
+				$columns[] = array(
+					'title' => $this->language->get('text_information'),
+					'links' => $information_links
+				);
+			}
+
+			$columns[] = array(
+				'title' => $this->language->get('text_service'),
+				'links' => array(
+					array('label' => $this->language->get('text_contact'), 'href' => $data['contact']),
+					array('label' => $this->language->get('text_return'), 'href' => $data['return']),
+					array('label' => $this->language->get('text_sitemap'), 'href' => $data['sitemap'])
+				)
+			);
+
+			$columns[] = array(
+				'title' => $this->language->get('text_extra'),
+				'links' => array(
+					array('label' => $this->language->get('text_manufacturer'), 'href' => $data['manufacturer']),
+					array('label' => $this->language->get('text_voucher'), 'href' => $data['voucher']),
+					array('label' => $this->language->get('text_affiliate'), 'href' => $data['affiliate']),
+					array('label' => $this->language->get('text_special'), 'href' => $data['special'])
+				)
+			);
+
+			$columns[] = array(
+				'title' => $this->language->get('text_account'),
+				'links' => array(
+					array('label' => $this->language->get('text_account'), 'href' => $data['account']),
+					array('label' => $this->language->get('text_order'), 'href' => $data['order']),
+					array('label' => $this->language->get('text_wishlist'), 'href' => $data['wishlist']),
+					array('label' => $this->language->get('text_newsletter'), 'href' => $data['newsletter'])
+				)
+			);
+
+			// Standard OpenCart Setting storage (config_telephone/config_email/
+			// config_address) - never duplicated into a Mint-owned table, per
+			// CLAUDE.md §39 and MintCart\Design\FooterViewProvider's own contract.
+			$contacts = array(
+				'phone'   => $this->config->get('config_telephone') ?: null,
+				'email'   => $this->config->get('config_email') ?: null,
+				'address' => $this->config->get('config_address') ?: null
+			);
+
+			try {
+				$footer_view_provider = new \MintCart\Design\FooterViewProvider();
+				$component_renderer = new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme);
+
+				$footer_view = $footer_view_provider->build($columns, $contacts, array(), array(), null, $data['powered']);
+
+				$data['mc_footer'] = $component_renderer->render('footer', $footer_view + array(
+					'text_contact_us'        => $this->language->get('text_contact_us'),
+					'text_newsletter'        => $this->language->get('text_newsletter'),
+					'text_newsletter_email'  => $this->language->get('text_newsletter_email'),
+					'text_newsletter_submit' => $this->language->get('text_newsletter_submit')
+				));
+			} catch (\Throwable $e) {
+				// Same rationale as ControllerProductCategory's per-product
+				// catch: a broken/missing footer.twig must not fatal every
+				// page on the site (footer is common to all of them). Falls
+				// back to no mc_footer - mint_default's own common/footer.twig
+				// renders nothing rather than the legacy markup in that case,
+				// same "log and disable for this request" pattern.
+				(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render footer: ' . $e->getMessage());
+			}
+		}
+
 		// Whos Online
 		if ($this->config->get('config_customer_online')) {
 			$this->load->model('tool/online');
@@ -58,7 +152,18 @@ class ControllerCommonFooter extends Controller {
 
 		$data['scripts'] = $this->document->getScripts('footer');
 		$data['styles'] = $this->document->getStyles('footer');
-		
+
 		return $this->load->view('common/footer', $data);
+	}
+
+	// Mirrors catalog/controller/event/theme.php's own active-theme
+	// resolution and catalog/controller/product/category.php's identically
+	// named private helper (MINTCART_TECHNICAL_PLAN.md §11, docs/upstream-diff.md).
+	private function mintActiveThemeDirectory() {
+		if ($this->config->get('config_theme') == 'default') {
+			return $this->config->get('theme_default_directory');
+		}
+
+		return $this->config->get('config_theme');
 	}
 }
