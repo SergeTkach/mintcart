@@ -13,6 +13,56 @@ in the OpenCart 3.0.5.1 baseline belong on this list.
 
 ---
 
+## `upload/catalog/controller/event/theme.php`
+
+**Reason:** Found via live manual verification (`docs/MANUAL_VERIFICATION.md`,
+`docs/adr/003-page-template-fallback-fix.md`) — this is OpenCart's own
+whole-*page*-route template resolver (distinct from
+`MintCart\Design\ComponentRenderer`, which only resolves individual
+component templates like `product-card`). It only ever had a two-tier
+fallback: active theme's own file for this route, else `default`'s. A
+Mint-aware theme that overrides *only* a component and ships no page
+templates of its own — `catalog/view/theme/test_theme/`, exactly the
+`CLAUDE.md` §19 milestone scenario — fell straight through to the legacy
+`default` theme's page template for every route, silently discarding
+anything `ControllerProductCategory` built via `ComponentRenderer` for that
+page (`default`'s templates never read `$data['product_cards']`). Added a
+`mint_default` middle tier to the fallback chain: active theme → `mint_default`
+(only if the active theme ships a `theme.json`, i.e. is Mint-aware) → `default`.
+
+**Why it can't live in the MintCart layer instead:** This is OpenCart's own
+route-to-template resolution, triggered on every `Loader::view()` call via
+the `view/*/before` event — there is no MintCart-owned equivalent for whole
+pages (only for components, via `ComponentRenderer`). Reimplementing
+page-route resolution as a parallel MintCart mechanism and bypassing this
+core file entirely would duplicate logic this file already gets right for
+every other route (search, manufacturer, checkout, ...) and risk diverging
+from it. Extending this one small, already-existing, single-purpose hook is
+the smaller diff.
+
+**Compatibility impact:** None for the legacy `default` theme (`config_theme
+== 'default'` skips the new branch entirely — same code path as before) or
+any third-party theme without a `theme.json` (the added tier is gated on
+that manifest's presence, same gate `category.php`'s pipeline already uses).
+For `mint_default` itself, the new tier is a no-op (its own directory is
+excluded from being added as `mint_default` a second time), so route
+resolution order for `mint_default` is unchanged. Only a *third* Mint-aware
+theme (or a future one) that overrides some but not all page routes changes
+behavior: those un-overridden routes now resolve through `mint_default`
+before falling to `default`, instead of jumping straight to `default`.
+
+**Tests:** `php -l` (clean). Verified live against a real install (MySQL +
+this environment's own OpenCart install, not a sandbox): before the fix,
+`catalog/view/theme/test_theme/template/mint/components/product-card.twig`'s
+markup never appeared in the rendered category page HTML (confirmed via
+`curl` — zero `mc-product-card` occurrences) despite `ComponentRenderer`
+correctly resolving it in isolation; after the fix, the same request returns
+`test_theme`'s distinct DOM (`mc-product-card--test`, no `quick-order`/
+`toggle-wishlist`) for all 5 listed products. See
+`docs/adr/003-page-template-fallback-fix.md` for the full writeup.
+
+---
+
 ## `upload/catalog/controller/product/category.php`
 
 **Reason:** Wires the Theme API's first real page (Phase 8,

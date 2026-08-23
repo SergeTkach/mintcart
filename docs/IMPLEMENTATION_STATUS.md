@@ -357,10 +357,32 @@ Not started.
       theme → Mint Default fallback)
 - [x] Wire `ControllerProductCategory` to `ProductViewProvider` + `ComponentRenderer`
 - [x] Prove: a test theme overriding only `product-card.twig` gets everything else
-      from Mint Default automatically, 0 OCMOD — see "Sub-step 3" below and
-      `docs/adr/002-theme-api-milestone-proof.md`
+      from Mint Default automatically, 0 OCMOD — see "Sub-step 3" below,
+      `docs/adr/002-theme-api-milestone-proof.md`, and the live-verification
+      fix in `docs/adr/003-page-template-fallback-fix.md`
 
-**Phase 8 is complete**, with one caveat carried forward (see Sub-step 3).
+**Phase 8 is complete and verified live** against a real install (not just
+the `resolve()`-level unit test ADR 002 originally relied on). Manual
+verification (`docs/MANUAL_VERIFICATION.md`) surfaced a real end-to-end gap
+that ADR 002's caveat had flagged as unconfirmed: `test_theme`'s
+component-only override never actually rendered on a live category page,
+because OpenCart's own whole-page route resolver
+(`catalog/controller/event/theme.php`) had no `mint_default` fallback tier
+— only `ComponentRenderer` did. Fixed by extending that core file with the
+same three-tier chain (active theme → `mint_default` if Mint-aware →
+`default`); see `docs/adr/003-page-template-fallback-fix.md` and
+`docs/upstream-diff.md` for the full writeup. Re-verified live via `curl`
+against the real running install after the fix: `test_theme`'s distinct
+product-card DOM (`mc-product-card--test`, no quick-order/wishlist/compare)
+now renders correctly. Still open: confirming the fallback also holds in
+the *other* direction (switching back to `mint_default` and seeing its own
+DOM return) — tracked in `docs/MANUAL_VERIFICATION.md`.
+
+A second, unrelated bug found during the same live check: `mint_default`'s
+`product-card.twig` rendered `Ex Tax:: $100.00` (double colon) because
+`text_tax` (`'Ex Tax:'`, already carries a colon) had a redundant `:`
+appended in the template. Fixed in both the live template and its
+documented contract (`docs/developer/components/product-card.md`).
 **Critical architecture milestone passed** — see `CLAUDE.md` §19 / Technical
 Plan §45. Phase 9+ (and the deferred Phase 7) may now proceed.
 
@@ -583,6 +605,16 @@ Not started.
       maintenance → files → migrations → cache clear → health check → done)
 - [ ] Theme/extension rollback (RESEARCH item per Functional Scope §21)
 - [ ] Compatibility Checker (`install.xml` analysis, heuristic warnings only)
+- [ ] **Release packaging script (TODO, not started).** Node/npm (`npm install`
+      && `npm run build`) and the PHP vendor libraries already committed
+      under `upload/system/**/vendor/` are dev/release-time tooling only —
+      the end user installing MintCart must never need Node or Composer.
+      Need a documented/scripted step that runs the frontend build and
+      packages `upload/` (with `assets/dist/` already generated and
+      included) into an installable zip, the same way OpenCart itself ships
+      a pre-built `upload/`. Natural home: alongside Update Manager package
+      manifest work (Technical Plan §33), or a standalone `docs/release.md`
+      if it's needed before Update Manager exists.
 
 Not started.
 
