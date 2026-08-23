@@ -148,3 +148,53 @@ repo today (no other locale directories to keep in sync).
 
 **Tests:** `php -l` (clean). No automated i18n-completeness check exists in
 this repo yet for any language file.
+
+---
+
+## `upload/catalog/controller/common/header.php`
+
+**Reason:** Wires the Theme API's Header component (Phase 7,
+`MINTCART_TECHNICAL_PLAN.md` §14, `MINTCART_IMPLEMENTATION_GUIDE.md` §48) —
+after the controller's existing per-field data resolution, also builds a
+`MintCart\Design\HeaderViewProvider` result and renders it through
+`MintCart\Design\ComponentRenderer::render('header', ...)` into a new
+`$data['mc_header']`. Adds the same `mintActiveThemeDirectory()` private
+helper `ControllerCommonFooter`/`ControllerProductCategory` already use,
+duplicated rather than shared (see those files' own entries above for why —
+same rationale: no shared trait/base-controller layer exists yet, and one
+three-line private method is not worth introducing one for
+[`CLAUDE.md` §17 — no abstraction without a real second consumer beyond
+what already exists]).
+
+**Why it can't live in the MintCart layer instead:** Same reasoning as
+`ControllerCommonFooter`/`ControllerProductCategory` — `HeaderViewProvider`
+and `ComponentRenderer` are OpenCart-agnostic on purpose, but something
+controller-specific still has to call them with this controller's
+already-resolved data (config values, customer session state, the five
+legacy sub-controller HTML fragments) exactly once per request.
+
+**Compatibility impact:** None for stores on the legacy `default` OpenCart
+theme, or on any unrelated third-party OpenCart theme — same
+`theme.json`-manifest gate as the footer/category wiring, so no non-Mint
+theme runs any of this new code. The controller's original per-field
+`$data` (used by `default/template/common/header.twig` and any
+third-party theme's own header template) is completely unchanged: same
+keys, same values, same computation, same sub-controller calls, same
+order. A failure inside the new pipeline (e.g. a missing/unreadable
+`header.twig`) is caught and logged rather than propagating — a broken Mint
+header degrades to no `mc_header` (mint_default's wrapper renders nothing
+in `<body>`), it does not fatal the entire page for every visitor, since
+header renders on every single page of the site.
+
+**Tests:** No live end-to-end request test — same pre-existing gap as
+every earlier MintCart controller change (no MySQL server/`vendor/twig/twig`
+in this environment). Verified instead: `php -l` (clean);
+`tests/mintcart/design/header-view-provider-test.php` (7 scenarios, plain
+arrays, no OpenCart dependency); `tests/mintcart/design/component-renderer-test.php`
+scenario 11 confirms `ComponentRenderer` resolves the real, shipped
+`mint_default`/`test_theme` `header.twig` files at their real repository
+paths, both fallback directions. A human should still smoke-test a real
+page on a configured install before this reaches production — see
+`docs/developer/components/header.md`'s "Known gap" section for the one
+deliberately-deferred piece (MintCart's own compiled asset bundle is still
+not enqueued on any live page).

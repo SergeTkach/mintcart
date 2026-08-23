@@ -344,12 +344,62 @@ bundled-output grep + manual review against the Definition of Done checklist.
 
 ## Phase 7 — Header / Footer / Navigation
 
-- [ ] Header, Topbar, Logo, Search, Account, Cart, Navigation, Mobile Navigation
-      component contracts
-- [ ] Footer, Footer Columns, Contacts, Social links, Payments, Newsletter
-- [ ] Centralized business data (no per-theme contact duplication)
+- [x] Header, Topbar, Logo, Search, Account, Cart component contracts —
+      `MintCart\Design\HeaderViewProvider`
+      (`upload/system/library/mintcart/design/headerviewprovider.php`),
+      documented in `docs/developer/components/header.md`. Live-wired:
+      `catalog/controller/common/header.php`
+      (`ControllerCommonHeader::index()`) builds it and renders via
+      `ComponentRenderer::render('header', ...)`, gated by the same
+      `theme.json`-manifest check other Mint components use.
+      `catalog/view/theme/mint_default/template/mint/components/header.twig`
+      + `catalog/view/theme/mint_default/template/common/header.twig`
+      (whole-page wrapper) + `assets/src/css/components/header.css`
+      (`mc-header`). Theme-override proof:
+      `catalog/view/theme/test_theme/template/mint/components/header.twig`
+      (genuinely different DOM, `component-renderer-test.php` scenario 11).
+      Navigation/Search/Cart/language/currency **stay as pre-rendered
+      legacy HTML fragments** inside the `widgets` field — see
+      `docs/developer/components/header.md` "Why widgets stay legacy
+      fragments" for the rationale (each has its own real Mint API planned
+      for Phase 15/Commerce API; no second real consumer yet for a
+      Mint-native Navigation component, `CLAUDE.md` §85). "Mobile
+      Navigation" specifically is **not** addressed — `mc-header` has no
+      responsive off-canvas/hamburger behavior yet, it relies on
+      `flex-wrap` only; a dedicated mobile nav pattern (likely composing
+      `mc-drawer`, Phase 4) is deferred to a future run.
+- [x] Footer, Footer Columns, Contacts, Social links, Payments, Newsletter —
+      done in PR #14 (`routine/phase7-footer-component-20260823-0753`,
+      not yet merged as of this entry). `MintCart\Design\FooterViewProvider`
+      + live `ControllerCommonFooter` wiring + `mint_default`/`test_theme`
+      `footer.twig` + `mc-footer` CSS. See that PR's description for full
+      detail; this file's own text will be reconciled with PR #14's when
+      both merge (expected checklist-line conflict on this file, resolved
+      manually per the routine's own concurrency notes).
+- [x] Centralized business data (no per-theme contact duplication) — both
+      Header (`contacts.phone` from `config_telephone`) and Footer
+      (`contacts.phone`/`email`/`address`, same OpenCart settings) source
+      from OpenCart's existing config storage, never a Mint-owned table.
 
-Not started.
+**Phase 7 is functionally complete** for the component-contract/Theme-API
+story (both Header and Footer have a real `mint_default` implementation,
+live controller wiring, and a `test_theme` override proving a different
+DOM with 0 OCMOD). Two things remain, tracked as follow-ups rather than
+blocking Phase 7 itself:
+- **Mobile Navigation** — no dedicated pattern yet (see above).
+- **MintCart's own compiled asset bundle (`assets/dist/{css,js}`) is still
+  not enqueued on any live page** — `mint_default/template/common/header.twig`
+  deliberately keeps the exact same Bootstrap 3/jQuery/Font Awesome/
+  `common.js` stack `default`'s header.twig loads, because swapping it
+  safely needs a full call-site audit of every page/widget that depends on
+  jQuery/`common.js` (cart AJAX, form validation, account/checkout pages)
+  per `CLAUDE.md` §10/§84 — out of scope for a single component increment.
+  Practical effect: **no `mc-*` component CSS has any visible effect on a
+  real page yet**, since nothing links `index.min.css`. This is the single
+  most important next piece of plumbing before any component's live
+  rendering can be visually verified — see
+  `docs/developer/components/header.md` "Known gap" for detail. A natural
+  next-run candidate.
 
 ## Phase 8 — Theme resolver
 
@@ -649,23 +699,37 @@ environment still has no MySQL/`vendor/twig/twig`, so the proof is at the
 human should still confirm `test_theme`'s override actually renders on a
 real install before the milestone is considered *fully* closed end-to-end.
 
+**Phase 7 is now functionally complete** — both Header (this run) and
+Footer (PR #14, not yet merged as of this entry) have a real
+provider → `ComponentRenderer` → Mint Default `.twig` pattern, live
+controller wiring, and a `test_theme` override proving a genuinely
+different DOM with 0 OCMOD. See the Phase 7 section above for the two
+tracked follow-ups (Mobile Navigation pattern; MintCart's own asset bundle
+still not enqueued on any live page).
+
 **Next run should pick one of:**
 
-- **Phase 7 — Header / Footer / Navigation** (deferred until Phase 8 passed,
-  per `CLAUDE.md` §21's ordering: ComponentRenderer before Header/Footer/
-  Blocks). Define the `Header`/`Footer` component contracts per
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
-  provider → contract → Mint Default `.twig` pattern `product-card`
-  established, with centralized business data (no per-theme contact
-  duplication, per `CLAUDE.md` §6/§39).
+- **Enqueue MintCart's own asset bundle** (`assets/dist/{css,js}`) on a
+  live Mint page — the single most important remaining piece of plumbing,
+  since no `mc-*` CSS currently has any visible effect on a real page
+  (nothing links `index.min.css` anywhere). Needs a call-site audit of
+  every page/widget depending on jQuery/`common.js`/Bootstrap 3 first
+  (`CLAUDE.md` §10/§84) — start with `docs/developer/components/header.md`
+  "Known gap" for the full rationale and what's already been deliberately
+  deferred.
+- **Mobile Navigation** for `mc-header` — currently relies on `flex-wrap`
+  only, no off-canvas/hamburger pattern; likely composes `mc-drawer`
+  (Phase 4, already shipped).
 - **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
   on the same DOM, differing only in tokens/settings, validating the design
   token system independently of the Theme API's component-override
-  mechanism just proven.
+  mechanism just proven. (Note: also being worked in PR #14 as of this
+  entry — check whether that PR merged before starting this to avoid
+  duplicate work.)
 
-Either is a reasonable next increment; re-read whichever section is picked
-in full before starting, per `CLAUDE.md` §10/§84 — don't start from this
-summary alone.
+Any of these is a reasonable next increment; re-read whichever section is
+picked in full before starting, per `CLAUDE.md` §10/§84 — don't start from
+this summary alone.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
