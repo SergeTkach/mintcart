@@ -1,0 +1,19 @@
+<header class="mc-header mc-header--test">
+    <div class="container">
+        <a href="{{ branding.home }}">{{ branding.name }}</a>
+
+        {% if account.logged %}
+            <span>{{ account.first_name }}</span>
+        {% else %}
+            <a href="{{ links.login }}">{{ text_login }}</a>
+        {% endif %}
+
+        {% if widgets.cart %}
+            <div class="mc-legacy">{{ widgets.cart|raw }}</div>
+        {% endif %}
+    </div>
+
+    {% if widgets.menu %}
+        <div class="mc-legacy">{{ widgets.menu|raw }}</div>
+    {% endif %}
+</header>

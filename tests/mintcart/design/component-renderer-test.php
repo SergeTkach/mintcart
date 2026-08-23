@@ -326,6 +326,38 @@ assertSame_(
     $failures
 );
 
+// 11. Same fallback-direction proof as scenario 10, now for the `header`
+//     component (Phase 7): test_theme overrides ONLY header.twig, with a
+//     genuinely different DOM (a single stacked bar, no account dropdown,
+//     no topbar/currency/language/search widgets - see
+//     upload/catalog/view/theme/test_theme/template/mint/components/header.twig),
+//     while resolve() must still return Mint Default's own header.twig
+//     when mint_default is active (no override anywhere).
+$testThemeHeaderPath = $testThemeRenderer->resolve('header');
+
+assertSame_(
+    $realThemesRoot . '/test_theme/template/mint/components/header.twig',
+    $testThemeHeaderPath,
+    'Scenario 11: with test_theme active, resolve(\'header\') should return test_theme\'s own override, not Mint Default\'s',
+    $failures
+);
+
+$testThemeHeaderMarkup = (string) file_get_contents($testThemeHeaderPath);
+
+assertSame_(
+    true,
+    str_contains($testThemeHeaderMarkup, 'mc-header--test') && !str_contains($testThemeHeaderMarkup, 'mc-header__account-menu'),
+    'Scenario 11: test_theme\'s header.twig should be a genuinely different DOM (its own marker class, no account dropdown), not a copy of Mint Default\'s',
+    $failures
+);
+
+assertSame_(
+    $realThemesRoot . '/mint_default/template/mint/components/header.twig',
+    $realRenderer->resolve('header'),
+    'Scenario 11: with mint_default active (no override anywhere), resolve(\'header\') should still return Mint Default\'s own file - the fallback direction, not just the override direction',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -334,5 +366,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ComponentRenderer smoke test (' . 10 . " scenarios)\n";
+echo 'PASS: ComponentRenderer smoke test (' . 11 . " scenarios)\n";
 exit(0);

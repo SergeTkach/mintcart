@@ -1,0 +1,171 @@
+/**
+ * mc-header
+ *
+ * MintCart-owned storefront header (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §48, Technical Plan §14). Renders the Header component contract built by
+ * `MintCart\Design\HeaderViewProvider` (see
+ * docs/developer/components/header.md for the full contract).
+ *
+ * Bootstrap 5's `.container`/`.row`/`.col-*`/flex utilities provide the
+ * responsive layout around the header's own elements
+ * (docs/developer/layout-conventions.md) - this file only styles the
+ * `mc-header__*` elements themselves, never a parallel grid.
+ *
+ * `.mc-header__widget` wraps the five legacy OpenCart sub-controller
+ * fragments (menu/search/cart/language/currency - see
+ * docs/developer/components/header.md "Why widgets stay legacy fragments")
+ * per the `mc-legacy` compatibility pattern
+ * (MINTCART_IMPLEMENTATION_GUIDE.md §36): it only provides layout slot
+ * spacing, never reaches into the fragment's own markup/IDs/classes.
+ *
+ * No JS - purely presentational. The account menu reuses Bootstrap 5's
+ * dropdown primitive (`data-bs-toggle="dropdown"`), same allowance already
+ * used by `mc-modal`/`mc-drawer` for Bootstrap's Modal/Offcanvas JS
+ * (MINTCART_IMPLEMENTATION_GUIDE.md §9).
+ */
+
+.mc-header {
+    background-color: var(--mc-surface);
+    border-bottom: var(--mc-border-width) solid var(--mc-border);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Topbar                                                                  */
+/* ---------------------------------------------------------------------- */
+
+.mc-header__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-4);
+    padding-top: var(--mc-space-2);
+    padding-bottom: var(--mc-space-2);
+    background-color: var(--mc-surface-alt);
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-header__topbar-start,
+.mc-header__topbar-end {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-4);
+    flex-wrap: wrap;
+}
+
+.mc-header__phone {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-1);
+    color: inherit;
+    text-decoration: none;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Main row: branding / navigation widgets / actions                       */
+/* ---------------------------------------------------------------------- */
+
+.mc-header__main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-4);
+    padding-top: var(--mc-space-4);
+    padding-bottom: var(--mc-space-4);
+}
+
+.mc-header__branding {
+    flex-shrink: 0;
+}
+
+.mc-header__logo {
+    display: inline-flex;
+    align-items: center;
+}
+
+.mc-header__logo img {
+    display: block;
+    max-height: 3rem;
+    width: auto;
+}
+
+.mc-header__logo-text {
+    margin: 0;
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-heading);
+    font-size: var(--mc-font-size-xl);
+    font-weight: var(--mc-font-weight-bold);
+    text-decoration: none;
+}
+
+.mc-header__widgets {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-4);
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mc-header__widget {
+    min-width: 0;
+}
+
+.mc-header__widget--search {
+    flex: 1 1 auto;
+}
+
+.mc-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Account menu                                                            */
+/* ---------------------------------------------------------------------- */
+
+.mc-header__account {
+    position: relative;
+}
+
+.mc-header__account-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-1);
+    background: none;
+    border: 0;
+    color: var(--mc-text);
+    cursor: pointer;
+}
+
+.mc-header__account-menu {
+    z-index: var(--mc-z-dropdown);
+    min-width: 12rem;
+    padding: var(--mc-space-2) 0;
+    margin: var(--mc-space-1) 0 0;
+    background-color: var(--mc-surface);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    box-shadow: var(--mc-shadow-md);
+}
+
+.mc-header__account-menu-link {
+    display: block;
+    padding: var(--mc-space-2) var(--mc-space-4);
+    color: var(--mc-text);
+    text-decoration: none;
+}
+
+.mc-header__account-menu-link:hover,
+.mc-header__account-menu-link:focus-visible {
+    background-color: var(--mc-surface-alt);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Navigation                                                              */
+/* ---------------------------------------------------------------------- */
+
+.mc-header__nav {
+    border-top: var(--mc-border-width) solid var(--mc-border);
+}
