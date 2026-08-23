@@ -118,8 +118,20 @@ unchanged, per the rule above.
 
 This environment still has no MySQL / running storefront (the same gap
 noted for the Theme API milestone, `docs/adr/002-theme-api-milestone-proof.md`),
-so this phase's proof is at the compiled-CSS level rather than an observed
-browser render:
+so this phase's proof is at the source/compiled-CSS level rather than an
+observed browser render.
+
+`tests/mintcart/design/presets-test.php` (standalone, no PHPUnit, same
+pattern as every other MintCart smoke test) checks the preset source files
+directly: `warm.css` never declares a bare `:root` block, only
+`[data-mc-preset="warm"]`-scoped rules; it never redefines a state/functional
+color token; both `clean.css` and `warm.css` are imported by `index.css` and
+listed in `mint_default/theme.json`'s `presets` array; and the two
+component-local "card look"/"button look" overrides the Phase 9 checklist
+calls out are present. `clean.css` is checked to declare zero `--mc-*`
+tokens, since it must stay the unmodified baseline by design.
+
+To also confirm the built bundle:
 
 ```sh
 npm install && npm run build:css
