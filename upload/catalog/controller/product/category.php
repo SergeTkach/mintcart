@@ -163,13 +163,26 @@ class ControllerProductCategory extends Controller {
 			$mint_render_product_cards = is_file(DIR_TEMPLATE . $mint_theme . '/theme.json');
 
 			if ($mint_render_product_cards) {
-				$component_renderer = new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme);
-				$product_view_provider = new \MintCart\Commerce\ProductViewProvider();
-
-				$text_badge = array(
-					'sale'         => $this->language->get('text_badge_sale'),
-					'out-of-stock' => $this->language->get('text_badge_out_of_stock'),
-					'new'          => $this->language->get('text_badge_new')
+				// MintCart\Design\ProductCardListRenderer (MINTCART_TECHNICAL_PLAN.md
+				// §15C) is the shared "raw product row -> product-card HTML" step,
+				// reused by ControllerProductManufacturer's info() action below it -
+				// see that controller for the second consumer.
+				$product_card_renderer = new \MintCart\Design\ProductCardListRenderer(
+					new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme),
+					new \MintCart\Commerce\ProductViewProvider(),
+					array(
+						'badge' => array(
+							'sale'         => $this->language->get('text_badge_sale'),
+							'out-of-stock' => $this->language->get('text_badge_out_of_stock'),
+							'new'          => $this->language->get('text_badge_new')
+						),
+						'wishlist'    => $this->language->get('button_wishlist'),
+						'compare'     => $this->language->get('button_compare'),
+						'rated'       => $this->language->get('text_rated'),
+						'tax'         => $this->language->get('text_tax'),
+						'add_to_cart' => $this->language->get('button_cart'),
+						'quick_order' => $this->language->get('text_quick_order')
+					)
 				);
 
 				// OpenCart's own backorder flag (catalog/controller/checkout/cart.php
@@ -243,53 +256,41 @@ class ControllerProductCategory extends Controller {
 				);
 
 				if ($mint_render_product_cards) {
-					try {
-						$product_view = $product_view_provider->build(
-							array(
-								'id'                          => $result['product_id'],
-								'name'                        => $result['name'],
-								'url'                         => $href,
-								'image'                       => $image,
-								'price'                       => $price,
-								'special'                     => $special,
-								'tax'                         => $tax,
-								'rating'                      => $rating,
-								'quantity'                    => $result['quantity'],
-								'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
-								'minimum'                     => $result['minimum'],
-								'manufacturer'                => isset($result['manufacturer']) ? $result['manufacturer'] : null,
-								'allow_out_of_stock_purchase' => $allow_out_of_stock_purchase
-							),
-							array(),
-							array(
-								// 1-based: "1st product on this page", not a
-								// zero-based array index.
-								'listing_type' => 'category',
-								'position'     => count($data['products'])
-							)
-						);
+					$product_card = $product_card_renderer->render(
+						array(
+							'id'                          => $result['product_id'],
+							'name'                        => $result['name'],
+							'url'                         => $href,
+							'image'                       => $image,
+							'price'                       => $price,
+							'special'                     => $special,
+							'tax'                         => $tax,
+							'rating'                      => $rating,
+							'quantity'                    => $result['quantity'],
+							'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
+							'minimum'                     => $result['minimum'],
+							'manufacturer'                => isset($result['manufacturer']) ? $result['manufacturer'] : null,
+							'allow_out_of_stock_purchase' => $allow_out_of_stock_purchase
+						),
+						array(),
+						array(
+							// 1-based: "1st product on this page", not a
+							// zero-based array index.
+							'listing_type' => 'category',
+							'position'     => count($data['products'])
+						)
+					);
 
-						$data['product_cards'][] = $component_renderer->render('product-card', $product_view + array(
-							'text_badge'       => $text_badge,
-							'text_wishlist'    => $this->language->get('button_wishlist'),
-							'text_compare'     => $this->language->get('button_compare'),
-							'text_rated'       => $this->language->get('text_rated'),
-							'text_tax'         => $this->language->get('text_tax'),
-							'text_add_to_cart' => $this->language->get('button_cart'),
-							'text_quick_order' => $this->language->get('text_quick_order')
-						));
-					} catch (\Throwable $e) {
-						// A broken/missing component template (deploy mistake,
-						// permissions, future refactor) must not turn into a
-						// fatal error for every visitor on this page - stop
-						// attempting the new pipeline for the rest of this
-						// request and let the page render without product
-						// cards rather than not render at all. The legacy
-						// $data['products'] array above is unaffected either
-						// way.
-						(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render product-card for product_id ' . $result['product_id'] . ': ' . $e->getMessage());
-
-						$mint_render_product_cards = false;
+					// A broken/missing component template (deploy mistake,
+					// permissions, future refactor) must not turn into a fatal
+					// error for every visitor on this page -
+					// ProductCardListRenderer logs and returns null instead of
+					// throwing, and stays failed for the rest of this request;
+					// let the page render without product cards rather than not
+					// render at all. The legacy $data['products'] array above is
+					// unaffected either way.
+					if ($product_card !== null) {
+						$data['product_cards'][] = $product_card;
 					}
 				}
 			}
