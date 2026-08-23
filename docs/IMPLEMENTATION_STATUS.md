@@ -515,10 +515,41 @@ Not started.
 
 ## Phase 11 — Mint Admin primitives
 
-- [ ] `McDrawer`, `McModal`, `McToast`, `McConfirm`, `McTabs`, `McSortable`,
-      `McMediaPicker`, `McEntityPicker`, `McProgress` (vanilla JS)
+- [x] `McDrawer`, `McModal`, `McToast` — already shipped as Phase 4 shared
+      components (`assets/src/js/components/{modal,drawer,toast}.js`, wired
+      into both `catalog.js` and `admin.js`); no separate `Mc*` JS class
+      exists on top of them beyond the `data-mc-action` trigger contract
+      those files already provide, since nothing has needed an imperative
+      open()/close() API yet (`CLAUDE.md` §85).
+- [ ] `McConfirm`, `McTabs`, `McSortable` — implemented on other open,
+      not-yet-merged PRs (#17, #19, #18 respectively; see "Next step" below
+      for the full picture) — **not present on this branch**, left unchecked
+      here to avoid claiming work this branch doesn't actually contain.
+- [x] `McProgress` — `assets/src/js/components/progress.js`
+      (`initProgressBars`, `setProgress`) +
+      `assets/src/css/components/progress.css`. Bootstrap 5's progress bar
+      has no JS class to wrap (unlike `Modal`/`Offcanvas`/`Toast`), so this
+      retints Bootstrap's own `--bs-progress-*` custom properties instead
+      and owns a small imperative API (`setProgress(progress, value,
+      options)`) for the one thing static markup can't express: a batch
+      job/Update Manager stage updating the same bar's value over time.
+      Wired into `admin.js` only (Bulk Editor and Update Manager, its
+      expected first consumers, are both admin-only screens — Functional
+      Scope §7/§29 "chunked; resumable; progress; failed batch reporting",
+      Technical Plan §33). Single source of truth is
+      `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, per WAI-ARIA
+      `progressbar` conventions; an `--indeterminate` modifier covers
+      unknown-duration operations (e.g. "Verifying backup"), with a static
+      reduced-motion fallback. Doc:
+      `docs/developer/components/progress.md`.
+- [ ] `McMediaPicker`, `McEntityPicker` — not started; each needs a real
+      admin-screen consumer decision (`CLAUDE.md` §85). `McEntityPicker` is
+      flagged as the highest-priority remaining primitive (P0,
+      `MINTCART_FUNCTIONAL_SCOPE.md` §8) once Phase 12 starts.
 
-Not started.
+**In progress.** 4 of 9 primitives now covered on `master` once #17/#18/#19
+merge (7 of 9 counting `McDrawer`/`McModal`/`McToast`); `McMediaPicker` and
+`McEntityPicker` remain.
 
 ## Phase 12 — Entity Picker
 
@@ -649,23 +680,58 @@ environment still has no MySQL/`vendor/twig/twig`, so the proof is at the
 human should still confirm `test_theme`'s override actually renders on a
 real install before the milestone is considered *fully* closed end-to-end.
 
+**Current state as of this run (six open, not-yet-merged PRs against
+`master`, all `ROUTINE-STATUS: DONE` and awaiting human review):**
+
+- **#14** (`routine/phase7-footer-component-20260823-0753`) — Phase 7
+  Footer + Phase 9 Presets (Clean/Warm)
+- **#15** (`claude/charming-rubin-ozhsi6`) — Phase 7 Header
+- **#16** (`claude/charming-rubin-vn7u4a`) — Phase 10 Block API storage
+  (`mc_page`/`mc_block` migrations only; no Provider/Renderer/blocks yet)
+- **#17** (`claude/charming-rubin-nyghvd`) — Phase 11 `McConfirm`
+- **#18** (`claude/charming-rubin-c34moj`) — Phase 11 `McSortable`
+- **#19** (`claude/charming-rubin-g6q6ql`) — Phase 11 `McTabs`
+
+This run (`claude/charming-rubin-lp3qbi`) added Phase 11's `McProgress` —
+the one remaining Phase 11 primitive with no dependency on any of the above
+(no `mc_block` storage needed, no shared file touched). Each of these
+sessions is bound to its own fixed branch name (see each PR body) rather
+than free to continue an existing PR/branch, which is why six separate PRs
+exist instead of one growing branch — a known limitation of the current
+routine protocol, not a mistake by any individual run.
+
 **Next run should pick one of:**
 
-- **Phase 7 — Header / Footer / Navigation** (deferred until Phase 8 passed,
-  per `CLAUDE.md` §21's ordering: ComponentRenderer before Header/Footer/
-  Blocks). Define the `Header`/`Footer` component contracts per
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
-  provider → contract → Mint Default `.twig` pattern `product-card`
-  established, with centralized business data (no per-theme contact
-  duplication, per `CLAUDE.md` §6/§39).
-- **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
-  on the same DOM, differing only in tokens/settings, validating the design
-  token system independently of the Theme API's component-override
-  mechanism just proven.
+- **Phase 11 — `McMediaPicker`**: needs a real admin-screen consumer
+  decision first (Functional Scope §25 lists thumbnails/search/folders/
+  upload/recent files/safe delete/metadata — a substantial scope; the first
+  real caller is likely Product/Category image fields once those admin
+  screens are built). Consider scoping the *first* increment down to a
+  minimal picker (list + select + upload) rather than the full feature set.
+- **Phase 11 — `McEntityPicker`**: flagged as the highest remaining
+  priority (P0, `MINTCART_FUNCTIONAL_SCOPE.md` §8) but is genuinely Phase 12
+  in scope (a unified picker for products/categories/manufacturers/
+  attributes/options/information/customers with search, filters,
+  pagination, multi-select, keyboard nav) — likely too large for one
+  increment; if picked, scope the first run to one entity type (products)
+  and document the rest as follow-up, per `CLAUDE.md` §17/§20.
+- **Phase 10 — Block Provider/Renderer** (Products block first, reusing the
+  already-shipped `ProductViewProvider`): blocked on #16's `mc_page`/
+  `mc_block` migrations merging first — building this against `master`
+  today would mean re-adding those same migrations here, creating a near-
+  certain conflict with #16 when both are reviewed. **Do not start this
+  until #16 has merged to `master`.**
+- **Phase 7 — Header/Footer** and **Phase 9 — Presets** are already covered
+  by #14/#15 (not yet merged) — do not redo them from `master` in a new
+  branch; that would create a fourth PR touching the same files. If picked
+  up again, it should be by continuing #14 or #15 directly (only possible
+  for a session whose designated branch matches one of theirs), not from a
+  fresh branch off `master`.
 
-Either is a reasonable next increment; re-read whichever section is picked
-in full before starting, per `CLAUDE.md` §10/§84 — don't start from this
-summary alone.
+Once any of #14–#19 merge, re-read the merged state and this file's
+Phase 7/9/10/11 sections will need reconciling with what actually landed —
+whoever merges first should update the others' "Not done" sections rather
+than leaving six independent views of the same phases.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.

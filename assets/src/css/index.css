@@ -33,4 +33,5 @@
 @import './components/drawer.css';
 @import './components/toast.css';
 @import './components/product-card.css';
+@import './components/progress.css';
 @import './compatibility/bootstrap3-shim.css';
