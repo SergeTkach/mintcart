@@ -97,10 +97,15 @@ $html = $renderer->render('product-card', [
   classes per product row and renders the result through the new
   `mint_default/template/product/category.twig` page. Search, Manufacturer
   and Special still build their own inline product arrays — same pattern,
-  different controller, still to do. A second minimal test theme actually
-  overriding `product-card.twig` to prove the milestone end-to-end
-  (`CLAUDE.md` §19) is also still to do (`docs/IMPLEMENTATION_STATUS.md`'s
-  Phase 8 section has the concrete plan).
+  different controller, still to do.
+- **Milestone proof done, with one caveat.** `catalog/view/theme/test_theme/`
+  overrides only `product-card.twig`, with a genuinely different DOM, and
+  `resolve()` correctly returns test_theme's file when it's active and Mint
+  Default's file otherwise (`tests/mintcart/design/component-renderer-test.php`
+  scenario 10; full writeup in `docs/adr/002-theme-api-milestone-proof.md`).
+  What's proven is the resolution mechanism; `render()`'s actual Twig
+  rendering of the override still needs a human on a real install (no
+  MySQL/`vendor/twig/twig` in this environment).
 - **Only `product-card` has a Mint Default template today.** `header`,
   `footer` and other future components (`MINTCART_IMPLEMENTATION_GUIDE.md`
   §26) will each need their own `catalog/view/theme/mint_default/template/mint/components/<name>.twig`

@@ -356,11 +356,13 @@ Not started.
 - [x] `MintCart\Design\ComponentRenderer` (active theme override → parent/base
       theme → Mint Default fallback)
 - [x] Wire `ControllerProductCategory` to `ProductViewProvider` + `ComponentRenderer`
-- [ ] Prove: a test theme overriding only `product-card.twig` gets everything else
-      from Mint Default automatically, 0 OCMOD
+- [x] Prove: a test theme overriding only `product-card.twig` gets everything else
+      from Mint Default automatically, 0 OCMOD — see "Sub-step 3" below and
+      `docs/adr/002-theme-api-milestone-proof.md`
 
-In progress. **Critical architecture milestone** — see `CLAUDE.md` §19 / Technical
-Plan §45. Must pass before broad feature build-out.
+**Phase 8 is complete**, with one caveat carried forward (see Sub-step 3).
+**Critical architecture milestone passed** — see `CLAUDE.md` §19 / Technical
+Plan §45. Phase 9+ (and the deferred Phase 7) may now proceed.
 
 **Sub-step 1:** `MintCart\Design\ComponentRenderer`
 (`upload/system/library/mintcart/design/componentrenderer.php`) resolves a
@@ -452,20 +454,25 @@ human should smoke-test a real category page (ideally with `config_theme`
 set to `mint_default`, and once more with it left on `default` to confirm
 zero behavior change there) before this reaches production.
 
-**Next step for a future run — sub-step 3, the milestone proof:** add a
-second minimal test theme (e.g. `test_theme`) with only a
-`template/mint/components/product-card.twig` override, using different DOM
-from Mint Default's (not just a copy — e.g. a simpler badge layout, no
-secondary-image markup). Switch `config_theme` to it and confirm: the
-product-card renders the **override** on the category page, and this took
-0 OCMOD, 0 controller patches, 0 copied business logic (`CLAUDE.md` §19). If
-this environment still can't run a real request by then, get as close as
-possible statically (e.g. a test confirming `ComponentRenderer` resolves to
-the *test theme's* file, not Mint Default's, when `test_theme` is active)
-and say plainly what still needs a human with a real install to confirm.
-Record the result in `docs/adr/` either way. If it does **not** pass
-cleanly, stop and fix the Theme API before touching Phase 9+, per
-`CLAUDE.md` §19.
+**Sub-step 3 — done, with one caveat.** Added
+`catalog/view/theme/test_theme/` (`theme.json` with `"parent": null` —
+deliberately not even declaring `mint_default` as a parent) with only a
+`template/mint/components/product-card.twig` override, genuinely different
+DOM from Mint Default's (single badge instead of a list, no secondary-image
+swap, no wishlist/compare quick-actions, no quick-order button) while still
+satisfying the same documented contract. This environment still has no
+MySQL server and no `vendor/twig/twig` installed, so a real
+`config_theme`-switch-and-load-a-page check wasn't possible; the closest
+static proof was taken instead: `tests/mintcart/design/component-renderer-test.php`
+scenario 10 confirms `ComponentRenderer::resolve()` returns `test_theme`'s
+own file when it's active, and still returns Mint Default's file when
+`mint_default` is active (no override anywhere) — both directions of the
+fallback, against the real shipped repo files, not fixtures. Full writeup,
+including the explicit caveat (resolution proven; live rendering still
+needs a human), is in `docs/adr/002-theme-api-milestone-proof.md`.
+**Verdict: pass** for what's testable in this environment — Phase 9+ may
+proceed. A human should still confirm the override actually renders on a
+real install before treating the milestone as *fully* closed end-to-end.
 
 ## Phase 9 — Presets
 
@@ -597,63 +604,36 @@ Not started.
 
 ## Next step for the next routine run
 
-Phases 4, 5 and 6 are complete (see their sections above). **Phase 8 — Theme
-resolver is in progress**, the **critical architecture milestone**
-(`CLAUDE.md` §19, `MINTCART_TECHNICAL_PLAN.md` §45) — do not proceed to
-Phase 9+ until it passes.
+Phases 0–6 and 8 are now complete (see their sections above). **Phase 8 —
+Theme resolver has passed its critical architecture milestone**
+(`CLAUDE.md` §19, `MINTCART_TECHNICAL_PLAN.md` §45): `MintCart\Design\ComponentRenderer`,
+`mint_default`'s `product-card.twig`, `ControllerProductCategory` wired to
+both, and now `catalog/view/theme/test_theme/` proving a second theme can
+override only `product-card.twig` and inherit everything else, 0 OCMOD, 0
+controller patches, 0 copied business logic. Full writeup:
+`docs/adr/002-theme-api-milestone-proof.md`. One caveat carried forward: this
+environment still has no MySQL/`vendor/twig/twig`, so the proof is at the
+`resolve()` (file-path resolution) level, not an observed live render — a
+human should still confirm `test_theme`'s override actually renders on a
+real install before the milestone is considered *fully* closed end-to-end.
 
-**Sub-steps 1 and 2 are done** (see the Phase 8 section above for full
-detail): `MintCart\Design\ComponentRenderer` exists and is smoke-tested
-(9 scenarios); `mint_default` has a real `product-card.twig` matching the
-documented contract; `ControllerProductCategory` is wired to
-`ProductViewProvider` + `ComponentRenderer` and renders a new
-`mint_default/template/product/category.twig` page, with zero behavior
-change for stores still on the legacy `default` theme
-(`docs/upstream-diff.md` has the full compatibility rationale).
+**Next run should pick one of:**
 
-**Sub-step 3 (next run): the milestone proof.** This is what actually
-validates or invalidates the Theme API — treat a failure here as a stop
-signal, not something to patch around:
+- **Phase 7 — Header / Footer / Navigation** (deferred until Phase 8 passed,
+  per `CLAUDE.md` §21's ordering: ComponentRenderer before Header/Footer/
+  Blocks). Define the `Header`/`Footer` component contracts per
+  `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
+  provider → contract → Mint Default `.twig` pattern `product-card`
+  established, with centralized business data (no per-theme contact
+  duplication, per `CLAUDE.md` §6/§39).
+- **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
+  on the same DOM, differing only in tokens/settings, validating the design
+  token system independently of the Theme API's component-override
+  mechanism just proven.
 
-- Add a second minimal test theme (e.g. `catalog/view/theme/test_theme/`)
-  with a `theme.json` (`"parent": "mint_default"` or `null` — either is
-  valid, per `docs/developer/theme-api/component-renderer.md`'s resolution
-  order) and **only** a `template/mint/components/product-card.twig`
-  override. Make the DOM genuinely different from Mint Default's, not a
-  copy with a class renamed — e.g. drop the secondary-image swap and quick
-  actions, use a simpler single-badge layout. It still has to satisfy the
-  same contract in `docs/developer/components/product-card.md` (same
-  `product`/`display`/`context`/`text_*` inputs), since that contract is
-  what makes it a real override rather than a broken one.
-- If this environment can run a real request by now (MySQL configured,
-  `vendor/twig/twig` installed via `composer install` against
-  `upload/composer.json`, demo product data): set `config_theme` to
-  `test_theme` and load a real category page. Confirm the product cards
-  render the **override** DOM, the rest of the page still renders (header,
-  footer, breadcrumbs, etc. — none of that goes through `ComponentRenderer`
-  yet, so it's unaffected either way), and this took 0 OCMOD, 0 controller
-  patches, 0 copied business logic. Then switch back to `mint_default` and
-  confirm the Mint Default DOM returns — the fallback has to work in both
-  directions.
-- If this environment still can't run a real request, get as close as
-  possible statically: a test confirming `ComponentRenderer::resolve()`
-  returns `test_theme`'s file (not Mint Default's) when `test_theme` is
-  active, and Mint Default's file when it isn't — extending
-  `tests/mintcart/design/component-renderer-test.php`'s existing real-repo
-  scenario (scenario 8) rather than only fixture directories. State plainly
-  in the PR that a human still needs to confirm this on a real install
-  before treating the milestone as fully proven, and what exactly is left
-  to check.
-- Record the outcome in `docs/adr/` either way — pass or fail, this is
-  exactly the kind of decision `CLAUDE.md` §15 says shouldn't live only in
-  chat/PR history. If it does **not** pass cleanly, stop and fix the Theme
-  API before touching Phase 9+, and document precisely what broke.
-
-After sub-step 3, Phase 8's checklist is complete. Only then consider moving
-to Phase 7 (Header/Footer — deferred until now per `CLAUDE.md` §21's
-ordering, ComponentRenderer before Header/Footer/Blocks) or Phase 9+, and
-only after re-reading whichever of those sections is picked next in full,
-per `CLAUDE.md` §10/§84.
+Either is a reasonable next increment; re-read whichever section is picked
+in full before starting, per `CLAUDE.md` §10/§84 — don't start from this
+summary alone.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
