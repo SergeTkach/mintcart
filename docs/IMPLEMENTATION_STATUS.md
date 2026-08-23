@@ -515,10 +515,30 @@ Not started.
 
 ## Phase 11 — Mint Admin primitives
 
-- [ ] `McDrawer`, `McModal`, `McToast`, `McConfirm`, `McTabs`, `McSortable`,
-      `McMediaPicker`, `McEntityPicker`, `McProgress` (vanilla JS)
+- [x] `McDrawer`, `McModal`, `McToast` — shipped as Phase 4 shared
+      components (`initDrawerTriggers`/`initModalTriggers`/
+      `initToastTriggers`, used by both `catalog.js` and `admin.js`); no
+      separate `Mc*` JS class exists on top of them yet, and none is needed
+      until a real consumer wants an imperative `open()`/`close()` API
+      beyond the `data-mc-action` trigger contract (`CLAUDE.md` §85).
+- [x] `McTabs` — `assets/src/js/components/tabs.js`
+      (`initTabsTriggers`) + `assets/src/css/components/tabs.css`. Wraps
+      Bootstrap 5's `Tab` (active-pane switching, fade transition, arrow-
+      key/Home/End tablist navigation), driven only by
+      `data-mc-action="show-tab"` (`data-bs-target` stays as required
+      internal Bootstrap wiring, same pattern as `mc-modal`'s
+      `.modal-dialog`). Admin-only (`admin.js`, not `catalog.js`) — Phase 11
+      lists it as a Mint Admin primitive; entity edit forms (Product:
+      General/Data/Links/...) are its first expected consumer. Contract:
+      `docs/developer/components/tabs.md`.
+- [ ] `McConfirm`, `McSortable` — implemented on other open, not-yet-merged
+      branches at the time of this entry (see "Next step" below for current
+      PR numbers); not present on this branch yet.
+- [ ] `McMediaPicker`, `McEntityPicker`, `McProgress` — not started.
+      `McEntityPicker` is P0 (`MINTCART_FUNCTIONAL_SCOPE.md` §8) and should
+      be prioritized once Phase 12 starts.
 
-Not started.
+In progress.
 
 ## Phase 12 — Entity Picker
 
@@ -649,23 +669,50 @@ environment still has no MySQL/`vendor/twig/twig`, so the proof is at the
 human should still confirm `test_theme`'s override actually renders on a
 real install before the milestone is considered *fully* closed end-to-end.
 
-**Next run should pick one of:**
+**As of this entry, several other routine/automated sessions have open PRs
+against `master` (none merged yet) that already cover most of the
+previously-listed "next step" candidates:**
 
-- **Phase 7 — Header / Footer / Navigation** (deferred until Phase 8 passed,
-  per `CLAUDE.md` §21's ordering: ComponentRenderer before Header/Footer/
-  Blocks). Define the `Header`/`Footer` component contracts per
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
-  provider → contract → Mint Default `.twig` pattern `product-card`
-  established, with centralized business data (no per-theme contact
-  duplication, per `CLAUDE.md` §6/§39).
-- **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
-  on the same DOM, differing only in tokens/settings, validating the design
-  token system independently of the Theme API's component-override
-  mechanism just proven.
+- #14 — Footer + Presets (`routine/phase7-footer-component-20260823-0753`):
+  Phase 7 Footer, Phase 9 Presets. `ROUTINE-STATUS: DONE`.
+- #15 — Header (`claude/charming-rubin-ozhsi6`): Phase 7 Header.
+  `ROUTINE-STATUS: DONE`.
+- #16 — Block API storage (`claude/charming-rubin-vn7u4a`): Phase 10
+  `mc_page`/`mc_block` migrations only (no Provider/Renderer yet).
+  `ROUTINE-STATUS: DONE`.
+- #17 — `McConfirm` (`claude/charming-rubin-nyghvd`): Phase 11.
+  `ROUTINE-STATUS: DONE`.
+- #18 — `McSortable` (`claude/charming-rubin-c34moj`): Phase 11.
+  `ROUTINE-STATUS: DONE`.
 
-Either is a reasonable next increment; re-read whichever section is picked
-in full before starting, per `CLAUDE.md` §10/§84 — don't start from this
-summary alone.
+This run added **`McTabs`** (Phase 11) on a fifth branch/PR, since it
+touches no file any of the above touch (Bootstrap's `Tab` JS/CSS, wired
+`admin.js`-only). See the Phase 11 section above and
+`docs/developer/components/tabs.md` for the full contract.
+
+**Once #14–#18 merge**, this file's Phase 7/9/10/11 sections will need
+reconciliation between whichever PR merges each section last and the
+others that touched the same checklist lines — expected and documented in
+each PR's own body, not a sign anything went wrong.
+
+**Non-colliding next-increment candidates** (none touched by #14–#18 or
+this run):
+
+- **Phase 10 — Block Provider/Renderer** (Products block first, reusing
+  `ProductViewProvider` from Phase 6) — best started only after #16 merges,
+  since it needs `mc_page`/`mc_block` to exist on `master` to be testable
+  against real storage; starting it earlier risks re-deriving #16's schema
+  decisions independently.
+- **Phase 11 — remaining primitives**: `McMediaPicker`, `McEntityPicker`,
+  `McProgress`. `McEntityPicker` is P0 (`MINTCART_FUNCTIONAL_SCOPE.md` §8)
+  and the natural lead-in to Phase 12.
+- **Phase 12 — Entity Picker** itself, once a Phase 11 primitive or two
+  exists to build it on.
+
+Re-read whichever section is picked in full before starting, per
+`CLAUDE.md` §10/§84 — don't start from this summary alone. Before starting,
+also re-check for newly-opened routine/automated PRs (per this project's
+dedup protocol) in case another session picked the same candidate first.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
