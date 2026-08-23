@@ -1,0 +1,176 @@
+/**
+ * mc-footer
+ *
+ * MintCart-owned storefront footer (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §48, Technical Plan §14). Renders the Footer component contract built by
+ * `MintCart\Design\FooterViewProvider` (docs/developer/commerce - see
+ * docs/developer/components/footer.md for the full contract).
+ *
+ * Bootstrap 5's `.container`/`.row`/`.col-*` provide the responsive column
+ * layout around the footer's link columns (docs/developer/layout-conventions.md)
+ * - this file only styles the `mc-footer__*` elements themselves, never a
+ * parallel grid.
+ *
+ * No JS - purely presentational. The newsletter form (`mc-footer__newsletter`)
+ * has no submit behavior yet; see docs/developer/components/footer.md for why.
+ */
+
+.mc-footer {
+    padding-top: var(--mc-space-10);
+    padding-bottom: var(--mc-space-6);
+    background-color: var(--mc-surface-alt);
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Columns                                                                  */
+/* ---------------------------------------------------------------------- */
+
+.mc-footer__column-title {
+    margin: 0 0 var(--mc-space-3);
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-heading);
+    font-size: var(--mc-font-size-base);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-footer__links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-footer__links a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.mc-footer__links a:hover,
+.mc-footer__links a:focus-visible {
+    color: var(--mc-text);
+    text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Contacts                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.mc-footer__contacts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-2);
+    margin: 0 0 var(--mc-space-4);
+    padding: 0;
+    list-style: none;
+}
+
+.mc-footer__contacts a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.mc-footer__contacts a:hover,
+.mc-footer__contacts a:focus-visible {
+    color: var(--mc-text);
+    text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Social links                                                            */
+/* ---------------------------------------------------------------------- */
+
+.mc-footer__social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+    margin: 0 0 var(--mc-space-4);
+    padding: 0;
+    list-style: none;
+}
+
+.mc-footer__social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--mc-radius-pill);
+    background-color: var(--mc-surface);
+    border: var(--mc-border-width) solid var(--mc-border);
+    color: var(--mc-text);
+    text-decoration: none;
+    transition: background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-footer__social-link:hover,
+.mc-footer__social-link:focus-visible {
+    background-color: var(--mc-surface-inverse);
+    color: var(--mc-text-inverse);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-footer__social-link {
+        transition: none;
+    }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Payments                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.mc-footer__payments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+    margin: 0 0 var(--mc-space-4);
+    padding: 0;
+    list-style: none;
+}
+
+.mc-footer__payment {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--mc-space-1) var(--mc-space-2);
+    border-radius: var(--mc-radius-sm);
+    background-color: var(--mc-surface);
+    border: var(--mc-border-width) solid var(--mc-border);
+    font-size: var(--mc-font-size-xs);
+}
+
+.mc-footer__payment-icon {
+    display: block;
+    max-height: 1.25rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Newsletter                                                              */
+/* ---------------------------------------------------------------------- */
+
+.mc-footer__newsletter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+}
+
+.mc-footer__newsletter-form .mc-field {
+    flex: 1 1 12rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Bottom bar                                                              */
+/* ---------------------------------------------------------------------- */
+
+.mc-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--mc-space-2);
+    margin-top: var(--mc-space-8);
+    padding-top: var(--mc-space-4);
+    border-top: var(--mc-border-width) solid var(--mc-border);
+    font-size: var(--mc-font-size-xs);
+}
