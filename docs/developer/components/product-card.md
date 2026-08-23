@@ -99,7 +99,7 @@ template is:
         <div class="mc-price{% if product.special %} mc-price--special{% endif %}">
             <span class="mc-price__current">{{ product.special ?: product.price }}</span>
             {% if product.special %}<span class="mc-price__original">{{ product.price }}</span>{% endif %}
-            {% if product.tax %}<span class="mc-price__tax">{{ text_tax }}: {{ product.tax }}</span>{% endif %}
+            {% if product.tax %}<span class="mc-price__tax">{{ text_tax }} {{ product.tax }}</span>{% endif %}
         </div>
 
         {% if not product.stock.in_stock and product.stock.label %}
