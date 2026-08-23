@@ -1,0 +1,20 @@
+/**
+ * "Clean" preset.
+ *
+ * Phase 9 (docs/MINTCART_TECHNICAL_PLAN.md §12/§42, Implementation Guide
+ * §24/§50): a preset changes only design tokens/settings values, never the
+ * component DOM (Twig stays identical - see docs/developer/design/presets.md).
+ *
+ * Clean is MintCart's neutral baseline look, already fully defined by
+ * settings/tokens.css - crisp small radii, a flat bordered card, white
+ * surfaces, the default mint/gray palette. This file intentionally
+ * contains no property overrides: it exists only so `data-mc-preset` has
+ * two explicit, listed values (`clean`, `warm`) instead of "unset = the
+ * default", matching how a future preset picker (Phase 13 Setup
+ * Wizard / Phase 31 theme settings, not built yet) will offer Clean as a
+ * real, selectable option rather than an implicit fallback.
+ *
+ * If Clean ever needs its own deltas (e.g. once a third preset makes the
+ * bare default ambiguous), add `:root[data-mc-preset="clean"]` overrides
+ * here the same way assets/src/css/presets/warm.css does.
+ */
