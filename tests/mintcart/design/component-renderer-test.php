@@ -326,6 +326,30 @@ assertSame_(
     $failures
 );
 
+// 11. Real-repo integration for the second component ComponentRenderer now
+//     resolves: mint_default/template/mint/components/footer.twig
+//     (docs/developer/components/footer.md). This is the same drift guard
+//     as scenario 8, extended to confirm resolve()/componentPath() work for
+//     ANY component name, not just the one component that existed when
+//     ComponentRenderer was first built.
+$footerPath = $realRenderer->resolve('footer');
+
+assertSame_(
+    true,
+    is_file($footerPath),
+    'Scenario 11: resolve() should find the real mint_default footer.twig file on disk',
+    $failures
+);
+
+$footerMarkup = (string) file_get_contents($footerPath);
+
+assertSame_(
+    true,
+    str_contains($footerMarkup, 'mc-footer') && str_contains($footerMarkup, 'mc-footer__bottom'),
+    'Scenario 11: the resolved real footer.twig should contain the documented mc-footer markup',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -334,5 +358,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ComponentRenderer smoke test (' . 10 . " scenarios)\n";
+echo 'PASS: ComponentRenderer smoke test (' . 11 . " scenarios)\n";
 exit(0);
