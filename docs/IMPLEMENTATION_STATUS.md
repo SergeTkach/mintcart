@@ -515,10 +515,40 @@ Not started.
 
 ## Phase 11 — Mint Admin primitives
 
-- [ ] `McDrawer`, `McModal`, `McToast`, `McConfirm`, `McTabs`, `McSortable`,
-      `McMediaPicker`, `McEntityPicker`, `McProgress` (vanilla JS)
+- [x] `McDrawer`, `McModal`, `McToast` — covered by Phase 4's `mc-drawer`/
+      `mc-modal`/`mc-toast` (`initDrawerTriggers`/`initModalTriggers`/
+      `initToastTriggers`, shared between `catalog.js` and `admin.js`); no
+      separate `Mc*` class exists on top of them since no real consumer has
+      needed an imperative `open()`/`close()` API beyond `data-mc-action`
+      triggers yet (see the explanatory comment in `assets/src/js/admin.js`)
+- [x] `McConfirm` — `assets/src/css/components/confirm.css` +
+      `assets/src/js/components/confirm.js` (`mcConfirm()`), a
+      `window.confirm()` replacement returning `Promise<boolean>`.
+      Functional Scope §5 groups this with `mc-toast`/`mc-alert` as a P0
+      "Toast / Confirm / Alert primitive"; it's the one of the three that
+      hadn't shipped yet. Unlike the dialog components above, it has no
+      static markup — it builds its own single reusable dialog element on
+      first call, since a confirmation's title/message are always specific
+      to the calling action. Not imported into `catalog.js`/`admin.js` yet
+      — no screen calls it yet (Bulk Editor mass-delete, Phase 16, is the
+      likely first consumer); exported for direct import when one exists,
+      per `CLAUDE.md` §85. Doc: `docs/developer/components/confirm.md`
+- [ ] `McTabs`, `McSortable`, `McMediaPicker`, `McEntityPicker`, `McProgress`
+      (vanilla JS) — not started; each needs a real admin screen consumer
+      (Phase 6 Admin UX / Phase 12 Entity Picker / Phase 16 Bulk Editor),
+      none of which exist yet
 
-Not started.
+**In progress.** `McDrawer`/`McModal`/`McToast`/`McConfirm` done. Verified
+this run: `npm install` (0 vulnerabilities), `npm run build` (minified) and
+`npm run dev` (sourcemapped) both compile cleanly; `grep -o` against the
+built `assets/dist/css/index.min.css` confirms `.mc-confirm`/
+`.mc-confirm__title`/`.mc-confirm__message`/`.mc-confirm__actions` are
+present; confirmed `mcConfirm`/`confirm-accept` do **not** appear in either
+`catalog.min.js` or `admin.min.js` (correctly tree-shaken — nothing imports
+the module yet, as intended). No PHP/Twig files touched this run, so the
+PHP `tests/mintcart/` suite and the `.twig` tag-balance check don't apply.
+No automated component/visual test harness exists yet in this repo (same
+gap noted in every previous Phase 4/11 run).
 
 ## Phase 12 — Entity Picker
 
@@ -649,23 +679,48 @@ environment still has no MySQL/`vendor/twig/twig`, so the proof is at the
 human should still confirm `test_theme`'s override actually renders on a
 real install before the milestone is considered *fully* closed end-to-end.
 
-**Next run should pick one of:**
+**As of this run (2026-08-23), three open PRs already cover the phases this
+section used to recommend — check their status before picking a next step:**
 
-- **Phase 7 — Header / Footer / Navigation** (deferred until Phase 8 passed,
-  per `CLAUDE.md` §21's ordering: ComponentRenderer before Header/Footer/
-  Blocks). Define the `Header`/`Footer` component contracts per
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
-  provider → contract → Mint Default `.twig` pattern `product-card`
-  established, with centralized business data (no per-theme contact
-  duplication, per `CLAUDE.md` §6/§39).
-- **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
-  on the same DOM, differing only in tokens/settings, validating the design
-  token system independently of the Theme API's component-override
-  mechanism just proven.
+- **PR #15** (`claude/charming-rubin-ozhsi6`) — Phase 7 Header component.
+  `ROUTINE-STATUS: DONE`, awaiting human review/merge.
+- **PR #14** (`routine/phase7-footer-component-20260823-0753`) — Phase 7
+  Footer component + Phase 9 Presets (Clean/Warm). `ROUTINE-STATUS: DONE`,
+  awaiting human review/merge.
+- **PR #16** (`claude/charming-rubin-vn7u4a`) — Phase 10 Block API storage
+  only (`mc_page`/`mc_block` migrations); Block Provider/Renderer/templates
+  not yet built. `ROUTINE-STATUS: DONE`, awaiting human review/merge.
 
-Either is a reasonable next increment; re-read whichever section is picked
-in full before starting, per `CLAUDE.md` §10/§84 — don't start from this
-summary alone.
+This run (branch `claude/charming-rubin-nyghvd`) avoided duplicating any of
+the above by starting **Phase 11** instead: `McConfirm`
+(`mc-confirm`/`mcConfirm()`), the one Phase 4/11 dialog primitive that
+hadn't shipped yet, and the last of Functional Scope §5's P0 "Toast /
+Confirm / Alert" trio (`mc-toast`/`mc-alert` already shipped in Phase 4).
+See the Phase 11 section above for what changed and what was verified.
 
-Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
-health checks, CI) stay intentionally deferred — no real consumer yet.
+**Next run should:**
+
+1. Check whether PRs #14/#15/#16 have merged. If any have, reconcile this
+   file's corresponding Phase 7/9/10 sections against `master` (each PR's
+   own description explains what it changed) rather than redoing that work.
+2. If none have merged yet, avoid touching the same files those three PRs
+   touch (Header/Footer providers and templates, `mc-modal`-based Presets
+   token files, `mc_page`/`mc_block` migrations). Reasonable next
+   increments that don't collide:
+   - Continue **Phase 11**: `McTabs`, `McSortable`, `McMediaPicker`,
+     `McEntityPicker`, or `McProgress` — each still needs a real consumer
+     decision first (which admin screen uses it), so re-read
+     `MINTCART_IMPLEMENTATION_GUIDE.md` §52 and Functional Scope §6/§8
+     before picking one; `McSortable` (wrapping SortableJS, already an npm
+     dependency since Phase 2) is the most self-contained of the remaining
+     five since its target use cases (Homepage Blocks, Categories, Menu —
+     Functional Scope §6) are all still unbuilt themselves, so it can only
+     be a generic drag-reorder primitive with no live wiring yet, same
+     shape as this run's `McConfirm`.
+   - Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*`
+     adapters, health checks, CI) — still deferred, no real consumer yet,
+     but worth reconsidering once Business Settings/Setup Wizard (Phase 13)
+     is scheduled, since `SettingsAdapter` would be its first consumer.
+3. Once #14/#15/#16 are merged, Phase 10's next sub-step (Block Provider/
+   Renderer/Template, Products first per PR #16's own notes) and Phase 9's
+   completion become available again as primary candidates.

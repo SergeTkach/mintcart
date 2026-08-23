@@ -17,13 +17,21 @@ import { initModalTriggers } from './components/modal.js';
 import { initDrawerTriggers } from './components/drawer.js';
 import { initToastTriggers } from './components/toast.js';
 
-// MintCart admin primitives (McConfirm, McTabs, McSortable, McMediaPicker,
+// MintCart admin primitives (McTabs, McSortable, McMediaPicker,
 // McEntityPicker, McProgress - Phase 11) are added here once implemented.
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
 // a future McModal/McDrawer/McToast JS class (if a real consumer needs an
 // imperative open()/close() API beyond data-mc-action triggers) would wrap
 // these same components, not replace them.
+//
+// mc-confirm (McConfirm) shipped in `./components/confirm.js` as an
+// exported `mcConfirm()` function, not imported here: it has no boot-time
+// listener to register (it builds its dialog element lazily on first call,
+// see confirm.js), and no admin screen calls it yet - a future screen that
+// needs a confirm prompt (e.g. Bulk Editor mass delete, Phase 16) imports
+// `mcConfirm` directly. Bundling it here with no caller would just be dead
+// code (CLAUDE.md §85: no wiring ahead of a real consumer).
 initAlertDismiss();
 initQuantityStepper();
 initModalTriggers();
