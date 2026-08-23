@@ -505,13 +505,38 @@ Not started.
 
 ## Phase 10 — Homepage Blocks
 
-- [ ] Block API (`mc_page`, `mc_page_description`, `mc_block`, `mc_block_description`)
+- [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
+      `mc_block_description`) — see "Sub-step 1" below
 - [ ] Block Provider / Renderer / Template separation
 - [ ] First blocks: Hero, Products, Categories, Banner Grid, Benefits, Text/Image,
       Brands, Testimonials, FAQ (initial set per Implementation Guide §51)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-Not started.
+In progress (storage layer only). PR #16.
+
+**Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
+and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
+and `mc_block`/`mc_block_description` exactly as documented in
+`MINTCART_TECHNICAL_PLAN.md` §16 / `MINTCART_IMPLEMENTATION_GUIDE.md` §34 — one
+shared table per entity type (`type` distinguishes Hero/Products/Categories/...,
+not a table per block type), InnoDB/utf8mb4, composite `(entity_id, language_id)`
+description PKs and no `FOREIGN KEY` constraints, mirroring OpenCart's own
+`oc_category`/`oc_category_description` split. `settings_json`/`content_json`
+are `LONGTEXT`, not the MySQL `JSON` column type, for broad shared-hosting
+compatibility (`MINTCART_TECHNICAL_PLAN.md` §2). Verified via
+`tests/mintcart/core/mc-block-migrations-test.php`, which runs the real
+migration files through `MigrationManager` and asserts on the emitted
+`CREATE TABLE` statements (no live MySQL in this environment, same
+pre-existing gap as every earlier phase). No Block Provider/Renderer/Twig
+template exists yet — storage only, matching how every previous phase's
+first migration landed ahead of its consumer.
+
+**Next step:** Block Provider / Renderer / Template separation
+(`MintCart\Blocks\...`), starting with one block type end-to-end (Products
+is the natural first pick — it can reuse the existing `ProductViewProvider`
+from Phase 6 rather than inventing new product-shape logic) before adding
+the rest, per `CLAUDE.md` §85 (don't build the other block types' API
+surface before a first real consumer proves the Provider/Renderer split).
 
 ## Phase 11 — Mint Admin primitives
 
@@ -649,19 +674,28 @@ environment still has no MySQL/`vendor/twig/twig`, so the proof is at the
 human should still confirm `test_theme`'s override actually renders on a
 real install before the milestone is considered *fully* closed end-to-end.
 
+**Update (2026-08-23, PR #16):** Phase 7 (Header + Footer) and Phase 9
+(Presets) — the two options this section used to list — are now both done
+in two other open, not-yet-merged PRs: **#14** (Footer + Presets,
+`ROUTINE-STATUS: DONE`) and **#15** (Header, `ROUTINE-STATUS: DONE`). Do
+not start a third attempt at either from this file until you've checked
+whether #14/#15 have merged (`gh pr list --state open`) — if either is
+still open, its work is already done and only needs human review, not a
+redo. This run (PR #16) instead started **Phase 10 — Homepage Blocks**
+sub-step 1 (Block API storage: `mc_page`/`mc_block` migrations — see that
+section above), since it touches no files #14/#15 touch and has no
+merge-order dependency on them landing first.
+
 **Next run should pick one of:**
 
-- **Phase 7 — Header / Footer / Navigation** (deferred until Phase 8 passed,
-  per `CLAUDE.md` §21's ordering: ComponentRenderer before Header/Footer/
-  Blocks). Define the `Header`/`Footer` component contracts per
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
-  provider → contract → Mint Default `.twig` pattern `product-card`
-  established, with centralized business data (no per-theme contact
-  duplication, per `CLAUDE.md` §6/§39).
-- **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
-  on the same DOM, differing only in tokens/settings, validating the design
-  token system independently of the Theme API's component-override
-  mechanism just proven.
+- **Phase 10 — Homepage Blocks, sub-step 2**: Block Provider / Renderer /
+  Template separation, starting with one block type (Products is the
+  natural first pick, per the "Next step" note in Phase 10's own section
+  above) before adding the rest.
+- Once #14 and #15 have both merged: Phase 7's one remaining gap (Mobile
+  Navigation for `mc-header`, per #15's "Not done" list) or Phase 10's next
+  sub-step above — check `docs/IMPLEMENTATION_STATUS.md` on `master` after
+  those merges for the merged, reconciled Phase 7/9 checklists first.
 
 Either is a reasonable next increment; re-read whichever section is picked
 in full before starting, per `CLAUDE.md` §10/§84 — don't start from this
