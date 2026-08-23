@@ -81,13 +81,16 @@ isolation — but *something* still has to call them with this controller's
 already-resolved product data (formatted price/special/tax, resized image,
 rating) once per row. That call site is inherently controller-specific:
 OpenCart's own `Loader`/routing has no generic "run this for every listing
-controller" hook, and Technical Plan §15C's reusable listing pipeline
-(`ProductListingService`) doesn't exist yet — building it now, ahead of a
-second real consumer (Search/Manufacturer/Special), would be exactly the
-premature abstraction `CLAUDE.md` §85 warns against. This wiring is the
-first of several near-identical call sites; extracting the shared shape
-into a real `ProductListingService` is expected once Search/Manufacturer/
-Special need the same thing (`docs/IMPLEMENTATION_STATUS.md`'s Phase 8
+controller" hook, and Technical Plan §15C's full reusable listing pipeline
+(`ProductListingService`, covering the query/pagination/filter side too)
+doesn't exist yet — building it now, ahead of a real consumer needing that
+part shared, would be exactly the premature abstraction `CLAUDE.md` §85
+warns against. **Update:** the render-only slice of that duplication (row →
+product-card HTML) has since been extracted into
+`MintCart\Design\ProductCardListRenderer` once a second real consumer
+(`product/manufacturer.php`) needed it — see that controller's own entry
+below. The query/pagination/filter side remains per-controller for now
+(`docs/IMPLEMENTATION_STATUS.md`'s Phase 8
 notes call this out explicitly).
 
 **Compatibility impact:** None for stores on the legacy `default` OpenCart
@@ -148,3 +151,62 @@ repo today (no other locale directories to keep in sync).
 
 **Tests:** `php -l` (clean). No automated i18n-completeness check exists in
 this repo yet for any language file.
+
+---
+
+## `upload/catalog/controller/product/manufacturer.php`
+
+**Reason:** Wires `ControllerProductManufacturer::info()` to the same
+`product-card` pipeline `product/category.php` established — the second
+real consumer `docs/IMPLEMENTATION_STATUS.md`'s Phase 8 notes flagged as
+the trigger to stop inlining this per-controller. Rather than a third
+inline copy, the shared "row → product-card HTML" step was first extracted
+into `MintCart\Design\ProductCardListRenderer`
+(`upload/system/library/mintcart/design/productcardlistrenderer.php`, no
+OpenCart core file) and `category.php` was refactored to use it too — see
+that class's own doc comment for the full rationale. `manufacturer.php`
+here only builds the renderer, gates it on the same `theme.json` manifest
+check, and calls `render()` once per product row, adding its own copy of
+the small private `mintActiveThemeDirectory()` helper (unchanged from
+`category.php`'s).
+
+**Why it can't live in the MintCart layer instead:** Same as
+`category.php`'s entry above — the call site needs this controller's
+already-resolved product data (formatted price/special/tax, resized image,
+rating, the manufacturer's own name) once per row, and OpenCart's routing
+has no generic hook for that. `ProductCardListRenderer` now holds the part
+that *was* being duplicated; what's left in the controller is genuinely
+controller-specific (building the filter/pagination `$data`, computing
+`$href`).
+
+**Compatibility impact:** Same manifest-gated pattern as `category.php` —
+stores on the legacy `default` theme or an unrelated third-party OpenCart
+theme run none of this new code, and the controller's original
+`$data['products']` array is completely unchanged either way. A failure
+inside the pipeline degrades this page's product-card grid for the rest of
+the request rather than propagating (now `ProductCardListRenderer`'s job,
+not a per-controller try/catch).
+
+**Tests:** No live end-to-end request test — same pre-existing gap as
+`category.php` (no MySQL/`vendor/twig/twig` in this environment). Verified:
+`php -l` (clean); `tests/mintcart/design/product-card-list-renderer-test.php`
+covers the shared renderer's degrade-on-failure contract used by both
+controllers. A human should smoke-test a real manufacturer page on a
+configured install before this reaches production.
+
+---
+
+## `upload/catalog/language/en-gb/product/manufacturer.php`
+
+**Reason:** Same five `product-card` component strings added to
+`product/category.php`'s language file (see that entry above), needed here
+too since `ControllerProductManufacturer::info()` loads
+`product/manufacturer`, not `product/category`.
+
+**Why it can't live in the MintCart layer instead:** Same as
+`product/category.php`'s language entry above.
+
+**Compatibility impact:** Purely additive — five new keys appended, nothing
+removed or renamed.
+
+**Tests:** `php -l` (clean).

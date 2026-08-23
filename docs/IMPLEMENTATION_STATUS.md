@@ -315,17 +315,51 @@ belongs to Phase 8 once a theme exists to render.
       `QuickOrderService` (Phase 15), which don't exist yet; see the doc's "Why
       wishlist/compare toggle but add-to-cart doesn't" section.
 
-**Phase 6 is complete** for what's buildable before the Theme resolver exists.
-Both `ProductViewProvider` (previous run) and `mc-product-card` (this run) are
-done and verified. What's explicitly **not** done, by design, and deferred to
-later phases:
-- Live controller wiring (`ControllerProductCategory`/search/manufacturer/
-  special actually calling `ProductViewProvider` and rendering this template)
-  — Phase 8, once `MintCart\Design\ComponentRenderer` and a real theme exist
-  to resolve the template against.
+**Phase 6 is complete.** `ProductViewProvider`, `mc-product-card`, and now
+live controller wiring for **both** Category (Phase 8) and Manufacturer
+(this run) are done and verified. What's explicitly **not** done, by
+design, and deferred to later phases:
+- Search/Special controller wiring — same pattern as Category/Manufacturer,
+  not yet done; see "Next step" below.
 - Add-to-cart/quick-order network behavior — Phase 15 (Commerce API).
 - Wishlist/compare persistence — Phase 15 as well (today's toggle is a UI
   affordance + event only, no storage).
+
+**This run:** `ControllerProductManufacturer::info()` wired to
+`ProductViewProvider`/`ComponentRenderer`, the second real consumer
+`docs/IMPLEMENTATION_STATUS.md` had flagged as the trigger to stop
+inlining this per controller. Rather than a third inline copy, the shared
+"row → product-card HTML, log-and-degrade on first failure" step was
+extracted out of `ControllerProductCategory` into
+`MintCart\Design\ProductCardListRenderer`
+(`upload/system/library/mintcart/design/productcardlistrenderer.php`,
+`MINTCART_TECHNICAL_PLAN.md` §15C) first, and `category.php` refactored to
+use it too — proving the reuse, not just adding a second copy.
+`manufacturer.php` gains its own `mint_default/template/product/
+manufacturer_info.twig` page template and five language strings
+(`text_rated`, `text_quick_order`, `text_badge_*`) matching `category.php`'s
+language file. Full rationale for both controller changes:
+`docs/upstream-diff.md`. The query/pagination/filter side of each
+controller (Technical Plan §15C's full `ProductListingService`) remains
+per-controller — only the render step is shared now; extracting the query
+side too still has no real consumer forcing the decision yet
+(`CLAUDE.md` §85).
+
+**This run verified:** `php -l` clean on all touched/new PHP files
+(`productcardlistrenderer.php`, `category.php`, `manufacturer.php`,
+`product/manufacturer.php` language file). Full `tests/mintcart/` suite
+re-run: `migration-manager-test.php`, `product-view-provider-test.php`
+(8/8), `component-renderer-test.php` (10/10), new
+`product-card-list-renderer-test.php` (4/4, new — exercises the
+degrade-and-stay-degraded contract) — all pass. `manufacturer_info.twig`'s
+`if`/`for`/`endif`/`endfor` tags checked for balanced nesting (same
+technique used for every earlier `.twig` file). No live end-to-end request
+test — this environment still has no MySQL server or `vendor/twig/twig`
+installed, the same pre-existing gap noted in every earlier phase; a human
+should smoke-test a real manufacturer page on a configured install before
+this reaches production.
+
+Older verification notes below (previous runs, kept for history):
 
 Verified: `php -l` on `productviewprovider.php` (clean, previous run); the
 7-scenario `tests/mintcart/commerce/product-view-provider-test.php` smoke
@@ -636,36 +670,61 @@ Not started.
 
 ## Next step for the next routine run
 
-Phases 0–6 and 8 are now complete (see their sections above). **Phase 8 —
-Theme resolver has passed its critical architecture milestone**
-(`CLAUDE.md` §19, `MINTCART_TECHNICAL_PLAN.md` §45): `MintCart\Design\ComponentRenderer`,
-`mint_default`'s `product-card.twig`, `ControllerProductCategory` wired to
-both, and now `catalog/view/theme/test_theme/` proving a second theme can
-override only `product-card.twig` and inherit everything else, 0 OCMOD, 0
-controller patches, 0 copied business logic. Full writeup:
-`docs/adr/002-theme-api-milestone-proof.md`. One caveat carried forward: this
-environment still has no MySQL/`vendor/twig/twig`, so the proof is at the
-`resolve()` (file-path resolution) level, not an observed live render — a
-human should still confirm `test_theme`'s override actually renders on a
-real install before the milestone is considered *fully* closed end-to-end.
+Phases 0–6 and 8 are complete (see their sections above); Phase 8 passed
+its critical architecture milestone (`CLAUDE.md` §19, `MINTCART_TECHNICAL_PLAN.md`
+§45) — full writeup in `docs/adr/002-theme-api-milestone-proof.md` and
+`docs/adr/003-page-template-fallback-fix.md`.
 
-**Next run should pick one of:**
+**As of this run, seven other routine/session PRs are open against `master`,
+all `ROUTINE-STATUS: DONE` and awaiting human review/merge** (each explains
+in its own body why it picked non-colliding work rather than continuing an
+earlier one, since every session in this environment is bound to a fixed
+branch name it cannot change):
 
-- **Phase 7 — Header / Footer / Navigation** (deferred until Phase 8 passed,
-  per `CLAUDE.md` §21's ordering: ComponentRenderer before Header/Footer/
-  Blocks). Define the `Header`/`Footer` component contracts per
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
-  provider → contract → Mint Default `.twig` pattern `product-card`
-  established, with centralized business data (no per-theme contact
-  duplication, per `CLAUDE.md` §6/§39).
-- **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
-  on the same DOM, differing only in tokens/settings, validating the design
-  token system independently of the Theme API's component-override
-  mechanism just proven.
+- #14 — Footer + Presets (`routine/phase7-footer-component-20260823-0753`)
+- #15 — Header (`claude/charming-rubin-ozhsi6`)
+- #16 — Block API storage, `mc_page`/`mc_block` migrations only
+  (`claude/charming-rubin-vn7u4a`)
+- #17 — McConfirm (`claude/charming-rubin-nyghvd`)
+- #18 — McSortable (`claude/charming-rubin-c34moj`)
+- #19 — McTabs (`claude/charming-rubin-g6q6ql`)
+- #20 — McProgress (`claude/charming-rubin-lp3qbi`)
 
-Either is a reasonable next increment; re-read whichever section is picked
-in full before starting, per `CLAUDE.md` §10/§84 — don't start from this
-summary alone.
+**This run (PR #21, `claude/charming-rubin-gx1pqm`)** added an eighth,
+picking Phase 6/8's own previously-documented next step instead of
+duplicating any of the above: extracted `MintCart\Design\
+ProductCardListRenderer` and wired `ControllerProductManufacturer::info()`
+to it (Search/Special still not wired — see below). This touches none of
+the files #14–#20 touch.
+
+**Before picking the next increment, check whether any of #14–#21 have
+merged** — `docs/IMPLEMENTATION_STATUS.md`'s Phase 7/9/10/11 sections above
+were last updated by whichever of those PRs' own branch wrote them and may
+not reflect what actually landed on `master`; re-read `master`'s copy of
+this file first, per `CLAUDE.md` §10/§84, not this summary alone. Once
+merged, candidates that were blocked on avoiding collision become available
+again (e.g. Phase 10's Block Provider/Renderer, blocked on #16's migrations
+landing first).
+
+**Non-colliding candidates that remain open regardless of #14–#21's merge
+state** (none touch Header/Footer/Presets/Block-storage/admin-primitive
+files):
+
+- **Phase 6/8 — wire Search and Special controllers** to
+  `MintCart\Design\ProductCardListRenderer`, the same pattern this run used
+  for Manufacturer (`upload/catalog/controller/product/search.php`,
+  `upload/catalog/controller/product/special.php` — both currently build
+  their own inline `$data['products']` array only, no `product_cards`).
+  Each needs its own `mint_default/template/product/{search,special}.twig`
+  and its own five `text_rated`/`text_quick_order`/`text_badge_*` language
+  strings, same as this run added for `product/manufacturer.php`.
+- **Phase 14 — Store Readiness**: `MintCart\Onboarding\StoreReadiness`
+  service (computed percentage + checklist: logo, contacts, currency,
+  language, shipping, payment, first product, test-order readiness) — new
+  namespace, touches no file any open PR touches.
+- **Phase 12 — Entity Picker**, scoped down to one entity type first (e.g.
+  products only) rather than the full multi-entity contract at once, per
+  PR #20's note on `McEntityPicker` needing the same scoping decision.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.

@@ -139,6 +139,41 @@ class ControllerProductManufacturer extends Controller {
 
 			$data['products'] = array();
 
+			// MintCart\Design\ProductCardListRenderer wiring
+			// (MINTCART_TECHNICAL_PLAN.md §15C-D, second consumer after
+			// ControllerProductCategory, Phase 8). Only built when the
+			// active theme ships a theme.json manifest - see
+			// ControllerProductCategory::index() for the full rationale,
+			// identical here.
+			$mint_theme = $this->mintActiveThemeDirectory();
+			$mint_render_product_cards = is_file(DIR_TEMPLATE . $mint_theme . '/theme.json');
+
+			if ($mint_render_product_cards) {
+				$product_card_renderer = new \MintCart\Design\ProductCardListRenderer(
+					new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme),
+					new \MintCart\Commerce\ProductViewProvider(),
+					array(
+						'badge' => array(
+							'sale'         => $this->language->get('text_badge_sale'),
+							'out-of-stock' => $this->language->get('text_badge_out_of_stock'),
+							'new'          => $this->language->get('text_badge_new')
+						),
+						'wishlist'    => $this->language->get('button_wishlist'),
+						'compare'     => $this->language->get('button_compare'),
+						'rated'       => $this->language->get('text_rated'),
+						'tax'         => $this->language->get('text_tax'),
+						'add_to_cart' => $this->language->get('button_cart'),
+						'quick_order' => $this->language->get('text_quick_order')
+					)
+				);
+
+				// Same OpenCart backorder flag ControllerProductCategory reads -
+				// see that controller for the full rationale.
+				$allow_out_of_stock_purchase = (bool)$this->config->get('config_stock_checkout');
+
+				$data['product_cards'] = array();
+			}
+
 			$filter_data = array(
 				'filter_manufacturer_id' => $manufacturer_id,
 				'sort'                   => $sort,
@@ -184,6 +219,8 @@ class ControllerProductManufacturer extends Controller {
 					$rating = false;
 				}
 
+				$href = $this->url->link('product/product', 'manufacturer_id=' . $result['manufacturer_id'] . '&product_id=' . $result['product_id'] . $url);
+
 				$data['products'][] = array(
 					'product_id'  => $result['product_id'],
 					'thumb'       => $image,
@@ -194,8 +231,37 @@ class ControllerProductManufacturer extends Controller {
 					'tax'         => $tax,
 					'minimum'     => $result['minimum'] > 0 ? $result['minimum'] : 1,
 					'rating'      => $result['rating'],
-					'href'        => $this->url->link('product/product', 'manufacturer_id=' . $result['manufacturer_id'] . '&product_id=' . $result['product_id'] . $url)
+					'href'        => $href
 				);
+
+				if ($mint_render_product_cards) {
+					$product_card = $product_card_renderer->render(
+						array(
+							'id'                          => $result['product_id'],
+							'name'                        => $result['name'],
+							'url'                         => $href,
+							'image'                       => $image,
+							'price'                       => $price,
+							'special'                     => $special,
+							'tax'                         => $tax,
+							'rating'                      => $rating,
+							'quantity'                    => $result['quantity'],
+							'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
+							'minimum'                     => $result['minimum'],
+							'manufacturer'                => $manufacturer_info['name'],
+							'allow_out_of_stock_purchase' => $allow_out_of_stock_purchase
+						),
+						array(),
+						array(
+							'listing_type' => 'manufacturer',
+							'position'     => count($data['products'])
+						)
+					);
+
+					if ($product_card !== null) {
+						$data['product_cards'][] = $product_card;
+					}
+				}
 			}
 
 			$url = '';
@@ -386,5 +452,13 @@ class ControllerProductManufacturer extends Controller {
 
 			$this->response->setOutput($this->load->view('error/not_found', $data));
 		}
+	}
+
+	private function mintActiveThemeDirectory() {
+		if ($this->config->get('config_theme') == 'default') {
+			return $this->config->get('theme_default_directory');
+		}
+
+		return $this->config->get('config_theme');
 	}
 }
