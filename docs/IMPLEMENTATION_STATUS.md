@@ -967,14 +967,58 @@ Not started.
 
 ## Phase 15 — Commerce API
 
-- [ ] `MintCart\Commerce\CartService`, `SearchService`, `QuickOrderService`,
-      `CheckoutService`, `ProductViewProvider`
-- [ ] Cart JS client (`add/remove/update/refresh`) + `mc:cart:updated` event contract
-- [ ] AJAX Search normalized endpoint
-- [ ] Quick Order component
-- [ ] Modern checkout UI over existing shipping/payment extensions/totals/order model
+- [x] `MintCart\Commerce\ProductViewProvider` — done since Phase 6.
+- [x] `MintCart\Commerce\CartService` + Cart JS client
+      (`add/remove/update/refresh`) + `mc:cart:updated` event contract —
+      `upload/system/library/mintcart/commerce/cartservice.php` +
+      `upload/catalog/controller/mintcart/cart.php`
+      (`ControllerMintcartCart`, route `mintcart/cart/*`, fully additive —
+      zero existing OpenCart file modified) +
+      `assets/src/js/commerce/cart-client.js`. First real consumer:
+      `mc-product-card`'s Add to Cart button
+      (`assets/src/js/components/product-card.js`), which now calls
+      `addToCart()`, shows a `createToast()` confirmation (`toast.js`
+      extended with a build-on-the-fly toast factory), and redirects to
+      the product page when required options/a recurring plan can't be
+      answered from a listing card. Docs:
+      `docs/developer/commerce/cart-service.md`,
+      `docs/developer/commerce/cart-client.md`. Test:
+      `tests/mintcart/commerce/cart-service-test.php` (8 scenarios).
+      **Verified live against a real install** (`http://mintcart.localhost/`)
+      — a first for a MintCart Commerce/controller increment, every earlier
+      phase's caveat was "no MySQL, unverified end-to-end": added five
+      real products via `curl`, quantities/totals recalculated correctly
+      on `update`, `remove` returned the cart to empty, and three products
+      with required options (`product_id` 30/35/42 in the demo catalog)
+      correctly returned `{error, redirect}` and added nothing — confirmed
+      via a follow-up `refresh()` that the cart's item count matched only
+      the five successful adds.
+- [ ] `SearchService`, `QuickOrderService`, `CheckoutService` — not started.
+- [ ] AJAX Search normalized endpoint — not started.
+- [ ] Quick Order component — not started; `mc-product-card`'s
+      `data-mc-action="quick-order"` stays hook-only.
+- [ ] Modern checkout UI over existing shipping/payment extensions/totals/order model — not started.
 
-Not started.
+**Explicitly deferred, not forgotten, from the Cart increment above:**
+- Header's legacy cart dropdown (`common/cart.php`) reacting to
+  `mc:cart:updated` — untouched; a future increment can add a listener
+  that re-fetches the *existing* `common/cart/info` endpoint (zero PHP
+  change) to refresh the dropdown, rather than rendering
+  `event.detail.items` client-side.
+- A `mc-cart-drawer` component.
+- Product-page Add to Cart with a real option picker (today's redirect
+  fallback sends the shopper there, but the page itself doesn't have a
+  Mint-native Add to Cart yet — it renders through the legacy `default`
+  theme's own product page, untouched by this increment).
+- **Still open, unrelated to this increment:** `assets/dist/css/index.min.css`
+  still isn't enqueued anywhere (see Phase 7's "Known gap" and this
+  session's reverted Bootstrap 5 enqueue attempt in `header.twig`'s own
+  comment) — the toast/button this increment ships are functionally
+  correct (real AJAX, real cart mutation, correct event) but not yet
+  *styled* on a live page. Verification above was functional
+  (curl + JSON), not visual.
+
+In progress.
 
 ## Phase 16 — Bulk Editor
 

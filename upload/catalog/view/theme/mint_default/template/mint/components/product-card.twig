@@ -65,6 +65,8 @@
             data-mc-action="add-to-cart"
             data-product-id="{{ product.id }}"
             data-quantity="{{ product.minimum }}"
+            data-mc-text-added="{{ text_added_to_cart }}"
+            data-mc-text-add-error="{{ text_add_to_cart_error }}"
             {{ product.actions.add_to_cart ? '' : 'disabled' }}
         >
             {{ text_add_to_cart }}

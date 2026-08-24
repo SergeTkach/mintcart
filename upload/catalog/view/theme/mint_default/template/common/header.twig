@@ -22,6 +22,18 @@
     account pages, checkout) per CLAUDE.md §10/§84 - out of scope for this
     Header component increment. See docs/developer/components/header.md
     "Known gap: MintCart's own asset bundle is not enqueued yet".
+
+    Tried enqueueing assets/dist/css/index.min.css directly on
+    2026-08-24 (live install check) - confirmed broken: it bundles full
+    Bootstrap 5 CSS (`@import 'bootstrap/dist/css/bootstrap.css'` in
+    assets/src/css/index.css), and loading that alongside the Bootstrap 3
+    stack below is exactly the conflict CLAUDE.md §10 warns about, not a
+    theoretical one - it visibly shrank body text, broke the
+    `.navbar-nav`/dropdown menus, and made the search widget overlap the
+    cart widget on a real page. Reverted. A real fix needs either scoping
+    mc-* CSS to not pull in Bootstrap 5's global reboot/base layer, or the
+    full legacy call-site migration this comment already flagged - not a
+    one-line enqueue.
 #}
 <script src="catalog/view/javascript/jquery/jquery-3.7.1.min.js" type="text/javascript"></script>
 <link href="catalog/view/javascript/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen" />

@@ -121,6 +121,8 @@ template is:
             data-mc-action="add-to-cart"
             data-product-id="{{ product.id }}"
             data-quantity="{{ product.minimum }}"
+            data-mc-text-added="{{ text_added_to_cart }}"
+            data-mc-text-add-error="{{ text_add_to_cart_error }}"
             {{ product.actions.add_to_cart ? '' : 'disabled' }}
         >
             {{ text_add_to_cart }}
@@ -136,9 +138,15 @@ template is:
 ```
 
 `text_badge`, `text_wishlist`, `text_compare`, `text_rated`, `text_tax`,
-`text_add_to_cart`, `text_quick_order` are ordinary OpenCart language
-strings — the same pattern every other `catalog/language/*` file already
-uses, not a new i18n mechanism.
+`text_add_to_cart`, `text_quick_order`, `text_added_to_cart`,
+`text_add_to_cart_error` are ordinary OpenCart language strings — the same
+pattern every other `catalog/language/*` file already uses, not a new
+i18n mechanism. The last two feed `data-mc-text-added`/
+`data-mc-text-add-error` so `product-card.js`'s toast messages are
+translated without hardcoding English in JS (every listing controller's
+language file — category/search/special/manufacturer — carries the same
+two keys, matching how the five product-card keys before them are already
+duplicated per controller).
 
 ## Behavior hooks (`CLAUDE.md` §14)
 
@@ -146,22 +154,37 @@ uses, not a new i18n mechanism.
 |---|---|---|
 | `data-mc-action="toggle-wishlist"` | `.mc-product-card__action-button` | Toggles its own `aria-pressed`, dispatches bubbling `mc:product-card:wishlist-toggle` with `{ productId, active }`. **No network call** — see below. |
 | `data-mc-action="toggle-compare"` | `.mc-product-card__action-button` | Same as wishlist, dispatches `mc:product-card:compare-toggle`. |
-| `data-mc-action="add-to-cart"` | `.mc-product-card__add-to-cart` | **Markup + hook only, no JS shipped yet.** Reserved for the future Cart client (Phase 15, `mc:cart:updated` contract, `MINTCART_TECHNICAL_PLAN.md` §25). |
+| `data-mc-action="add-to-cart"` | `.mc-product-card__add-to-cart` | Calls `MintCart\Commerce\CartService` via `cart-client.js`'s `addToCart()`; dispatches `mc:cart:updated` on success, navigates to the product page if options/a recurring plan are required, shows a toast either way. See below. |
 | `data-mc-action="quick-order"` | `.mc-product-card__quick-order` | **Markup + hook only, no JS shipped yet.** Reserved for the future `QuickOrderService`/component (Phase 15, `MINTCART_TECHNICAL_PLAN.md` §28). |
 
-### Why wishlist/compare toggle but add-to-cart doesn't
+### Why wishlist/compare toggle but add-to-cart does something real now
 
-`initProductCardActions()` only flips a button's pressed state and emits an
-event — it never calls a backend. That's a complete, self-contained UI
-behavior today (same category as `mc-alert`'s dismiss or `mc-quantity`'s
-stepper). Add-to-cart and quick-order are different: making them actually do
-something requires a real Cart/QuickOrder service to call, and that service
-doesn't exist yet (`MintCart\Commerce\CartService`/`QuickOrderService` are
-Phase 15). Shipping fake or guessed AJAX now would mean inventing an API
-surface ahead of its real consumer (`CLAUDE.md` §85) — the buttons render in
-the correct disabled/enabled state today (`product.actions.add_to_cart`) and
-carry the hook a future Cart client attaches to, without pretending to add
-anything to a cart that doesn't exist.
+`initProductCardActions()`'s wishlist/compare handlers only flip a button's
+pressed state and emit an event — they never call a backend. That's a
+complete, self-contained UI behavior (same category as `mc-alert`'s dismiss
+or `mc-quantity`'s stepper); persisting membership is a future
+Wishlist/Compare service's job, not built yet.
+
+**Add-to-cart is different as of Phase 15's first Commerce API
+increment**: clicking `[data-mc-action="add-to-cart"]` calls
+`MintCart\Commerce\CartService` via `../commerce/cart-client.js`'s
+`addToCart()` (`docs/developer/commerce/cart-client.md`) — a real AJAX
+call, a real cart mutation, a real `mc:cart:updated` dispatch, confirmed
+end-to-end against a live install. The button shows `is-loading`
+(`aria-busy="true"`, disabled) while the request is in flight, then either:
+
+- a `createToast()` success toast (text from the button's own
+  `data-mc-text-added` attribute — translated server-side, not hardcoded
+  in JS), or
+- if the product needs options this grid card has no picker for (or a
+  required recurring plan), navigates to the product's own page instead —
+  the same "can't answer it here, send them to the page that can"
+  fallback `checkout/cart.php` itself uses for the same case, or
+- a `createToast()` error toast on a network failure (`data-mc-text-add-error`).
+
+`quick-order` stays intentionally **not** wired — separate
+`QuickOrderService`, not built in this increment
+(`CLAUDE.md` §85: no wiring ahead of a real consumer).
 
 ## Clickable title, not clickable card
 
@@ -216,9 +239,9 @@ padding via CSS only — same DOM/contract, no separate template.
 
 ## Definition of Done checklist (`MINTCART_IMPLEMENTATION_GUIDE.md` §79)
 
-- [x] Documented contract (this file + `docs/developer/commerce/product-view-provider.md`)
+- [x] Documented contract (this file + `docs/developer/commerce/product-view-provider.md` + `docs/developer/commerce/cart-service.md`/`cart-client.md`)
 - [x] `mc-*` BEM markup
-- [x] JS only where actually needed (wishlist/compare toggle state); add-to-cart/quick-order stay hook-only pending Phase 15
+- [x] JS only where actually needed (wishlist/compare toggle state; add-to-cart now calls the real Cart client, Phase 15's first increment — confirmed working against a live install); quick-order stays hook-only, separate `QuickOrderService` not built yet
 - [x] Colors/spacing/fonts read from `--mc-*` tokens
 - [x] Keyboard usable (real `<a>`/`<button>` elements, focus-visible outlines, no keyboard trap)
 - [x] Mobile checked (flexible media aspect-ratio, wrapping actions row, no fixed widths)

@@ -57,6 +57,60 @@ export function showToast(toast) {
     Toast.getOrCreateInstance(toast).show();
 }
 
+const ALERT_VARIANTS = new Set(['danger', 'warning']);
+
+/**
+ * Builds a `.mc-toast` element on the fly and appends it to a (lazily
+ * created) `.toast-container`, for a caller with a message to show but no
+ * pre-existing toast markup to reveal - the "future Phase 15 Cart client"
+ * case this file's own header comment already anticipated. Matches
+ * docs/developer/components/toast.md's documented markup exactly
+ * (`.toast-header`/`.toast-body`, `mc-toast__title`/`__message`/`__close`,
+ * `role`/`aria-live` chosen per variant the same way the static examples
+ * there do). Auto-removes the element from the DOM once it finishes
+ * hiding, so repeated calls don't leak nodes.
+ *
+ * @param {{ title: string, message: string, variant?: 'success'|'danger'|'warning'|'info' }} options
+ * @returns {HTMLElement} the created `.mc-toast` element - not yet shown,
+ *          pass it to `showToast()`.
+ */
+export function createToast({ title, message, variant = 'info' }) {
+    let container = document.querySelector('.toast-container');
+
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(container);
+    }
+
+    const isAlert = ALERT_VARIANTS.has(variant);
+
+    const toast = document.createElement('div');
+    toast.className = `toast mc-toast mc-toast--${variant}`;
+    toast.setAttribute('role', isAlert ? 'alert' : 'status');
+    toast.setAttribute('aria-live', isAlert ? 'assertive' : 'polite');
+    toast.setAttribute('aria-atomic', 'true');
+
+    toast.innerHTML = `
+        <div class="toast-header">
+            <strong class="mc-toast__title"></strong>
+            <button type="button" class="mc-toast__close" data-mc-action="close-toast" aria-label="Close">&times;</button>
+        </div>
+        <div class="toast-body">
+            <p class="mc-toast__message"></p>
+        </div>
+    `;
+
+    toast.querySelector('.mc-toast__title').textContent = title;
+    toast.querySelector('.mc-toast__message').textContent = message;
+
+    container.appendChild(toast);
+
+    toast.addEventListener('hidden.bs.toast', () => toast.remove(), { once: true });
+
+    return toast;
+}
+
 export function initToastTriggers(root = document) {
     root.querySelectorAll('.mc-toast').forEach(relayToastEvents);
 
