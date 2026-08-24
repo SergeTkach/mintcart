@@ -1460,3 +1460,56 @@ all complete, the natural next candidates are:
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks) stay intentionally deferred — no real consumer yet. CI is
 now covered (`.github/workflows/ci.yml`, merged via PR #23).
+
+---
+
+## Update (2026-08-24, human session — read this first)
+
+A human session (not a routine run) did a full manual pass after the
+above: merged the rest of the PR backlog (#25, #26, #27 — see Phase 15
+and Phase 10 below), and — importantly for future routine runs —
+**verified several previously-"unverified in this sandbox" items against
+a real local install** the human has access to (`http://mintcart.localhost/`,
+a configured MySQL database). **This does not change anything about a
+routine's own sandbox** — a routine session still has no MySQL/live
+install of its own and should keep noting "human should verify on a real
+install" for anything it can't test standalone, exactly as before. The
+items below are now confirmed, not still-open verification gaps:
+
+- Phase 8's Theme resolver milestone: `test_theme` overriding
+  header/footer/product-card, `mint_default` falling back to its own DOM
+  correctly in both directions, `default` theme completely unaffected —
+  all confirmed live via `curl` against real category/search/special/
+  manufacturer pages.
+- Phase 10's `mc_page`/`mc_block` migrations: run against real MySQL,
+  schema confirmed exactly matching the migration source
+  (InnoDB/utf8mb4/`LONGTEXT` etc.), idempotency confirmed on a second run.
+- **Phase 15 (Commerce API) has a first real increment**: `MintCart\Commerce\CartService`
+  + `ControllerMintcartCart` (route `mintcart/cart/{add,remove,update,refresh}`,
+  fully additive, zero existing OpenCart file modified) + a Cart JS client
+  (`assets/src/js/commerce/cart-client.js`, `add/remove/update/refresh` +
+  `mc:cart:updated`) + `mc-product-card`'s Add to Cart button now actually
+  works + the legacy header cart widget syncs itself on the same event.
+  Docs: `docs/developer/commerce/cart-service.md`,
+  `docs/developer/commerce/cart-client.md`. **Do not rebuild any of this**
+  — check `docs/developer/commerce/` and the Phase 15 section below before
+  touching cart-related code.
+- **A blanket enqueue of `assets/dist/css/index.min.css` was tried and
+  reverted** (see `upload/catalog/view/theme/mint_default/template/common/header.twig`'s
+  own comment) — it broke legacy Bootstrap-3 widgets (navbar/dropdown,
+  search overlapping cart) by loading full Bootstrap 5 CSS alongside them,
+  confirmed on a real page, not theoretical. **Do not re-attempt a plain
+  `<link>` enqueue.** The real fix is either (a) scoping `mc-*` CSS to not
+  pull in Bootstrap 5's global reboot/base layer, or (b) migrating the
+  remaining legacy header widgets (search, account, menu — cart is now
+  Mint-aware) to Mint-native components first, the same way Cart just was.
+
+**Recommended next increments** (unchanged in spirit from above, just
+reconfirmed current): Phase 10's Block Provider/Renderer (Products block
+first, `ProductViewProvider` already exists to reuse), Phase 12's Entity
+Picker real backends, or continuing Phase 15 with `SearchService` —
+note Search has no dormant markup/hook waiting for it the way Cart did
+(product-card's Add to Cart button already existed from Phase 6), so it
+would need both the endpoint and a new Mint-native search UI, a larger
+scope than Cart was; consider scoping the first increment to the endpoint
+alone if picked.
