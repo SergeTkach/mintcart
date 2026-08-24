@@ -18,9 +18,8 @@ import { initDrawerTriggers } from './components/drawer.js';
 import { initToastTriggers } from './components/toast.js';
 import { initSortableLists } from './components/sortable.js';
 import { initTabsTriggers } from './components/tabs.js';
+import { initProgressBars } from './components/progress.js';
 
-// MintCart admin primitives (McProgress - Phase 11) are added here once
-// implemented.
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
 // a future McModal/McDrawer/McToast JS class (if a real consumer needs an
@@ -60,3 +59,9 @@ initDrawerTriggers();
 initToastTriggers();
 initSortableLists();
 initTabsTriggers();
+initProgressBars();
+
+// `setProgress()` (assets/src/js/components/progress.js) has no
+// declarative trigger to wire here - it's an imperative API called by a
+// future batch-job/Update Manager flow (Phase 16/Technical Plan §33), not a
+// page-load behavior. Exported for that future caller to import directly.

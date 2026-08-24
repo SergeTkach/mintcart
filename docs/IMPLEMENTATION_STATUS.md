@@ -855,8 +855,23 @@ surface before a first real consumer proves the Provider/Renderer split).
       lists it as a Mint Admin primitive; entity edit forms (Product:
       General/Data/Links/...) are its first expected consumer. Contract:
       `docs/developer/components/tabs.md`.
-- [ ] `McProgress` — in progress on another open (non-routine) PR at the
-      time of this entry; check open PRs before redoing.
+- [x] `McProgress` — `assets/src/js/components/progress.js`
+      (`initProgressBars`, `setProgress`) +
+      `assets/src/css/components/progress.css`. Bootstrap 5's progress bar
+      has no JS class to wrap (unlike `Modal`/`Offcanvas`/`Toast`), so this
+      retints Bootstrap's own `--bs-progress-*` custom properties instead
+      and owns a small imperative API (`setProgress(progress, value,
+      options)`) for the one thing static markup can't express: a batch
+      job/Update Manager stage updating the same bar's value over time.
+      Wired into `admin.js` only (Bulk Editor and Update Manager, its
+      expected first consumers, are both admin-only screens — Functional
+      Scope §7/§29 "chunked; resumable; progress; failed batch reporting",
+      Technical Plan §33). Single source of truth is
+      `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, per WAI-ARIA
+      `progressbar` conventions; an `--indeterminate` modifier covers
+      unknown-duration operations (e.g. "Verifying backup"), with a static
+      reduced-motion fallback. Doc:
+      `docs/developer/components/progress.md`.
 - [x] `McEntityPicker` — `assets/src/js/components/entity-picker.js`
       (`createEntityPicker()`) + `assets/src/css/components/entity-picker.css`.
       Search/pagination/multi-select/keyboard-navigation (WAI-ARIA
@@ -881,9 +896,9 @@ surface before a first real consumer proves the Provider/Renderer split).
       deferral as `McEntityPicker`. Doc:
       `docs/developer/components/media-picker.md`.
 
-`McDrawer`/`McModal`/`McToast` (via Phase 4), `McConfirm`, `McSortable`,
-`McTabs`, `McEntityPicker` and `McMediaPicker` are done. `McProgress`
-remains, pending whichever open PR lands it.
+**All nine Phase 11 primitives are now done:** `McDrawer`/`McModal`/
+`McToast` (via Phase 4), `McConfirm`, `McSortable`, `McTabs`, `McProgress`,
+`McEntityPicker` and `McMediaPicker`.
 
 `McConfirm` verified: `npm install` (0 vulnerabilities), `npm run build`
 (minified) and `npm run dev` (sourcemapped) both compile cleanly;
@@ -909,6 +924,12 @@ touched, so the PHP `tests/mintcart/` suite doesn't apply.
 (minified) clean; `grep` against the built `admin.min.js` confirms
 `show-tab`/`data-mc-action` wiring is present. No PHP touched, so the
 PHP `tests/mintcart/` suite doesn't apply.
+
+`McProgress` verified: `npm install` (0 vulnerabilities), `npm run build`
+(minified) clean; `grep` against the built `admin.min.js` confirms
+`initProgressBars`/`setProgress` are present; `grep` against the built
+`index.min.css` confirms `.mc-progress`/`--indeterminate` are present. No
+PHP touched, so the PHP `tests/mintcart/` suite doesn't apply.
 
 ## Phase 12 — Entity Picker
 
@@ -1037,18 +1058,16 @@ Not started.
 
 ## Next step for the next routine run
 
-**PR backlog status (updated 2026-08-24, human merge pass):** the
-nine-PR `claude/charming-rubin-*` backlog both blocks above described has
-been resolved by direct human review rather than left for a routine run —
-#14, #15, #16, #17, #23 and #24 are merged to `master` (in that order,
-with manual conflict reconciliation each time, documented in this file's
-Phase 7/9/10/11 sections and each PR's own comments); #21 and #22 were
-closed as superseded (duplicate `ProductCardListRenderer` and duplicate
-Presets implementations respectively — see the Phase 6/9 write-ups
-above). **Still open as of this entry:** #18 (McSortable), #19 (McTabs),
-#20 (McProgress) — being reconciled in the same pass. Re-check
-`gh pr list --state open` before starting new work rather than trusting
-this snapshot, since it will go stale the moment any of those three merge.
+**PR backlog status (resolved 2026-08-24, human merge pass):** the
+original nine-PR `claude/charming-rubin-*` backlog is fully resolved.
+#14, #15, #16, #17, #18, #19, #20, #23 and #24 are all merged to `master`
+(in that order, with manual conflict reconciliation each time —
+documented in this file's Phase 7/9/10/11 sections and each PR's own
+comments); #21 and #22 were closed as superseded (duplicate
+`ProductCardListRenderer` and duplicate Presets implementations
+respectively — see the Phase 6/9 write-ups above). No open PRs remain as
+of this entry. Re-check `gh pr list --state open` before starting new
+work rather than trusting this snapshot.
 
 The root cause of the original nine-PR pileup — each Claude Code Remote
 session being bound to its own fixed `claude/charming-rubin-*` branch,
@@ -1349,6 +1368,26 @@ Re-read the relevant section above (and `docs/developer/theme-api/product-card-l
 `docs/developer/components/footer.md` for the established patterns to
 mirror) in full before starting, per `CLAUDE.md` §10/§84 — don't start
 from this summary alone.
+
+**Update (2026-08-24, merge of PR #20): all nine Phase 11 admin
+primitives are now done** (`McDrawer`/`McModal`/`McToast`/`McConfirm`/
+`McSortable`/`McTabs`/`McProgress`/`McEntityPicker`/`McMediaPicker` — see
+the Phase 11 section above). With the PR backlog fully resolved (see the
+"PR backlog status" note near the top of this section) and Phase 6/8's
+listing pipeline, Phase 7's Header/Footer, Phase 9's Presets, and Phase 11
+all complete, the natural next candidates are:
+
+- **Phase 10 — Block Provider/Renderer/Template** (Products block first,
+  reusing the already-shipped `ProductViewProvider`): now fully unblocked
+  — `mc_page`/`mc_block` storage (PR #16) is on `master`.
+- **Phase 12 — Entity Picker**: `McEntityPicker`'s list primitive already
+  shipped; this phase is about wiring real `fetchItems` backends per
+  entity type (products first) and a real admin-screen consumer — scope
+  the first increment to one entity type, per `CLAUDE.md` §17/§20.
+- **Enqueue MintCart's own asset bundle** on a live page (Phase 7's
+  carried-forward gap — see that section above) — the single most
+  important remaining piece of plumbing, since no `mc-*` CSS/JS has any
+  visible effect on a real page yet.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks) stay intentionally deferred — no real consumer yet. CI is
