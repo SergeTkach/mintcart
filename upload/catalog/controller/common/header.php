@@ -77,6 +77,83 @@ class ControllerCommonHeader extends Controller {
 		$data['cart'] = $this->load->controller('common/cart');
 		$data['menu'] = $this->load->controller('common/menu');
 
+		// MintCart\Design\ComponentRenderer / MintCart\Design\HeaderViewProvider
+		// wiring (MINTCART_TECHNICAL_PLAN.md §14, Phase 7), via the shared
+		// MintCart\Design\ActiveTheme resolver every other listing/common
+		// controller (footer.php/category.php/search.php/special.php/
+		// manufacturer.php) already uses - only built when the active theme
+		// ships a theme.json manifest (i.e. it is Mint-API-aware). Neither
+		// the legacy 'default' theme nor an unrelated third-party theme has
+		// one, and neither of their templates read $data['mc_header'], so
+		// stores on either kind of theme pay no extra cost. Every field
+		// above this point is left completely untouched - this only
+		// regroups it, it does not change what it resolves to.
+		$mint_theme = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
+		$mint_render_header = \MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme);
+
+		if ($mint_render_header) {
+			try {
+				$header_view_provider = new \MintCart\Design\HeaderViewProvider();
+				$component_renderer = new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme);
+
+				$header_view = $header_view_provider->build(
+					array(
+						'name' => $data['name'],
+						'logo' => $data['logo'] ?: null,
+						'home' => $data['home']
+					),
+					array(
+						'logged' => $data['logged'],
+						'first_name' => $data['logged'] ? $this->customer->getFirstName() : null,
+						'wishlist_count' => $this->customer->isLogged() ? $this->model_account_wishlist->getTotalWishlist() : (isset($this->session->data['wishlist']) ? count($this->session->data['wishlist']) : 0)
+					),
+					array(
+						'phone' => $data['telephone'] ?: null
+					),
+					array(
+						'account' => $data['account'],
+						'login' => $data['login'],
+						'register' => $data['register'],
+						'order' => $data['order'],
+						'transaction' => $data['transaction'],
+						'download' => $data['download'],
+						'logout' => $data['logout'],
+						'wishlist' => $data['wishlist'],
+						'shopping_cart' => $data['shopping_cart'],
+						'checkout' => $data['checkout'],
+						'contact' => $data['contact']
+					),
+					array(
+						'menu' => $data['menu'],
+						'search' => $data['search'],
+						'cart' => $data['cart'],
+						'language' => $data['language'],
+						'currency' => $data['currency']
+					)
+				);
+
+				$data['mc_header'] = $component_renderer->render('header', $header_view + array(
+					'text_account' => $this->language->get('text_account'),
+					'text_register' => $this->language->get('text_register'),
+					'text_login' => $this->language->get('text_login'),
+					'text_order' => $this->language->get('text_order'),
+					'text_transaction' => $this->language->get('text_transaction'),
+					'text_download' => $this->language->get('text_download'),
+					'text_logout' => $this->language->get('text_logout'),
+					'text_wishlist' => $data['text_wishlist']
+				));
+			} catch (\Throwable $e) {
+				// Same rationale as ControllerCommonFooter's own catch: a
+				// broken/missing header.twig must not fatal every page on
+				// the site (header is common to all of them). Falls back
+				// to no mc_header - mint_default's own common/header.twig
+				// renders nothing in <body> rather than the legacy markup
+				// in that case, same "log and disable for this request"
+				// pattern already used by footer/category.
+				(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render header: ' . $e->getMessage());
+			}
+		}
+
 		return $this->load->view('common/header', $data);
 	}
 }
