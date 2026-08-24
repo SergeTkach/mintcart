@@ -42,8 +42,8 @@ class ControllerCommonFooter extends Controller {
 		// per-field data above (informations/contact/return/.../newsletter)
 		// is left completely untouched - this only regroups it, it does not
 		// change what it resolves to.
-		$mint_theme = $this->mintActiveThemeDirectory();
-		$mint_render_footer = is_file(DIR_TEMPLATE . $mint_theme . '/theme.json');
+		$mint_theme = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
+		$mint_render_footer = \MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme);
 
 		if ($mint_render_footer) {
 			$information_links = array();
@@ -154,16 +154,5 @@ class ControllerCommonFooter extends Controller {
 		$data['styles'] = $this->document->getStyles('footer');
 
 		return $this->load->view('common/footer', $data);
-	}
-
-	// Mirrors catalog/controller/event/theme.php's own active-theme
-	// resolution and catalog/controller/product/category.php's identically
-	// named private helper (MINTCART_TECHNICAL_PLAN.md §11, docs/upstream-diff.md).
-	private function mintActiveThemeDirectory() {
-		if ($this->config->get('config_theme') == 'default') {
-			return $this->config->get('theme_default_directory');
-		}
-
-		return $this->config->get('config_theme');
 	}
 }

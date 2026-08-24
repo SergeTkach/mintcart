@@ -32,3 +32,10 @@ $_['text_limit']        = 'Show:';
 // Entry
 $_['entry_search']      = 'Search Criteria';
 $_['entry_description'] = 'Search in product descriptions';
+
+// Mint Default product-card (docs/developer/components/product-card.md)
+$_['text_rated']              = 'Rated %s out of 5 stars';
+$_['text_quick_order']        = 'Quick Order';
+$_['text_badge_sale']         = 'Sale';
+$_['text_badge_out_of_stock'] = 'Out of Stock';
+$_['text_badge_new']          = 'New';

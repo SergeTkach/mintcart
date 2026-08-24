@@ -171,6 +171,36 @@ class ControllerProductSearch extends Controller {
 
 		$data['products'] = array();
 
+		// MintCart\Design\ProductCardListRenderer (which composes
+		// MintCart\Commerce\ProductViewProvider + ComponentRenderer) wiring
+		// (MINTCART_TECHNICAL_PLAN.md §11/§15C-D) - the second real listing
+		// consumer after Category (Phase 8), sharing the same pipeline
+		// rather than duplicating it (CLAUDE.md §8A). Only built when the
+		// active theme ships a theme.json manifest (i.e. it is
+		// Mint-API-aware), same gate category.php/footer.php already use -
+		// see docs/upstream-diff.md. The controller's original
+		// $data['products'] array above is completely unaffected either way.
+		$mint_theme = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
+		$mint_render_product_cards = \MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme);
+
+		if ($mint_render_product_cards) {
+			$product_card_list_renderer = new \MintCart\Design\ProductCardListRenderer(
+				new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme)
+			);
+
+			$text_badge = array(
+				'sale'         => $this->language->get('text_badge_sale'),
+				'out-of-stock' => $this->language->get('text_badge_out_of_stock'),
+				'new'          => $this->language->get('text_badge_new')
+			);
+
+			// OpenCart's own backorder flag - see category.php's identical
+			// comment and docs/developer/commerce/product-view-provider.md.
+			$allow_out_of_stock_purchase = (bool)$this->config->get('config_stock_checkout');
+
+			$data['product_cards'] = array();
+		}
+
 		if (isset($this->request->get['search']) || isset($this->request->get['tag'])) {
 			$filter_data = array(
 				'filter_name'         => $search,
@@ -221,6 +251,8 @@ class ControllerProductSearch extends Controller {
 					$rating = false;
 				}
 
+				$href = $this->url->link('product/product', 'product_id=' . $result['product_id'] . $url);
+
 				$data['products'][] = array(
 					'product_id'  => $result['product_id'],
 					'thumb'       => $image,
@@ -231,8 +263,51 @@ class ControllerProductSearch extends Controller {
 					'tax'         => $tax,
 					'minimum'     => $result['minimum'] > 0 ? $result['minimum'] : 1,
 					'rating'      => $result['rating'],
-					'href'        => $this->url->link('product/product', 'product_id=' . $result['product_id'] . $url)
+					'href'        => $href
 				);
+
+				if ($mint_render_product_cards) {
+					$product_card = $product_card_list_renderer->render(
+						array(
+							'id'                          => $result['product_id'],
+							'name'                        => $result['name'],
+							'url'                         => $href,
+							'image'                       => $image,
+							'price'                       => $price,
+							'special'                     => $special,
+							'tax'                         => $tax,
+							'rating'                      => $rating,
+							'quantity'                    => $result['quantity'],
+							'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
+							'minimum'                     => $result['minimum'],
+							'manufacturer'                => isset($result['manufacturer']) ? $result['manufacturer'] : null,
+							'allow_out_of_stock_purchase' => $allow_out_of_stock_purchase
+						),
+						array(),
+						array(
+							'listing_type' => 'search',
+							'position'     => count($data['products'])
+						),
+						array(
+							'text_badge'       => $text_badge,
+							'text_wishlist'    => $this->language->get('button_wishlist'),
+							'text_compare'     => $this->language->get('button_compare'),
+							'text_rated'       => $this->language->get('text_rated'),
+							'text_tax'         => $this->language->get('text_tax'),
+							'text_add_to_cart' => $this->language->get('button_cart'),
+							'text_quick_order' => $this->language->get('text_quick_order')
+						),
+						function (\Throwable $e, array $failed_product) {
+							(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render product-card for product_id ' . $failed_product['id'] . ': ' . $e->getMessage());
+						}
+					);
+
+					if ($product_card !== null) {
+						$data['product_cards'][] = $product_card;
+					}
+
+					$mint_render_product_cards = $product_card_list_renderer->isEnabled();
+				}
 			}
 
 			$url = '';
