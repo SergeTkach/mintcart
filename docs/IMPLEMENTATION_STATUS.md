@@ -680,12 +680,26 @@ Not started.
       backend or admin screen yet — that's Phase 12's job, once a real
       consumer exists (`CLAUDE.md` §85). Doc:
       `docs/developer/components/entity-picker.md`.
-- [ ] `McMediaPicker` — not started.
+- [x] `McMediaPicker` — `assets/src/js/components/media-picker.js`
+      (`createMediaPicker()`) + `assets/src/css/components/media-picker.css`
+      (Functional Scope §25, Media UX, priority P1). Sibling of
+      `McEntityPicker`: same data-source/no-dialog-chrome/WAI-ARIA-listbox
+      shape, but a thumbnail grid instead of a text list, plus an optional
+      folder `<select>` (hidden unless `fetchFolders` is supplied) and
+      optional upload/safe-delete affordances (hidden/disabled unless the
+      host supplies `uploadFiles`/`deleteItems` — never assumes a backend
+      exists). "Recent files" and "image metadata" (Functional Scope §25)
+      are covered without a dedicated concept: a host-supplied `recent`
+      folder entry and the optional `getMeta(item)` callback, respectively.
+      Not wired into any live backend or admin screen yet — same Phase 12
+      deferral as `McEntityPicker`. Doc:
+      `docs/developer/components/media-picker.md`.
 
-Mostly not started; `McDrawer`/`McModal`/`McToast` (via Phase 4) and now
-`McEntityPicker` are the exceptions. `McMediaPicker` remains, plus
-whichever of `McConfirm`/`McTabs`/`McSortable`/`McProgress` don't land
-from the open PRs referenced above.
+Mostly not started; `McDrawer`/`McModal`/`McToast` (via Phase 4),
+`McEntityPicker` and now `McMediaPicker` are the exceptions — both Phase
+11 picker primitives are done. `McConfirm`/`McTabs`/`McSortable`/
+`McProgress` remain, pending whichever land from the open PRs referenced
+above.
 
 ## Phase 12 — Entity Picker
 
@@ -989,6 +1003,40 @@ build-compiles + bundled-output grep + manual review against the
 Definition of Done checklist, same as every other JS-only primitive so
 far.
 
+**Update (a later run, same branch/PR #14): Phase 11 — `McMediaPicker`
+shipped.** `assets/src/js/components/media-picker.js`
+(`createMediaPicker()`) + `assets/src/css/components/media-picker.css` —
+the Media UX primitive (`MINTCART_FUNCTIONAL_SCOPE.md` §25, priority P1).
+Sibling of `McEntityPicker`: same caller-supplied-data-source/no-dialog-
+chrome/WAI-ARIA-listbox-keyboard shape, but a thumbnail **grid** instead
+of a text list (items are chosen visually), plus two things media
+specifically needs that a generic entity list does not — an optional
+folder `<select>` populated from `fetchFolders()` (hidden entirely when
+not supplied) and optional `uploadFiles(files)`/`deleteItems(items)`
+callbacks whose UI (upload control, delete button) is hidden/disabled
+unless the host actually supplies the callback, per `CLAUDE.md` §85 (no
+affordance offered without a real backend behind it). "Recent files" and
+"image metadata" (both named in Functional Scope §25) deliberately got no
+dedicated concept: a host-supplied `{ id: 'recent', label: 'Recent' }`
+folder entry and the optional `getMeta(item)` label callback cover them
+without inventing new component surface (`CLAUDE.md` §17). Not wired into
+any live backend or admin screen yet — same Phase 12/Product-Category-
+Blocks-image-field deferral `McEntityPicker` documents. Doc:
+`docs/developer/components/media-picker.md`. With this, **Phase 11's two
+picker primitives (`McEntityPicker`, `McMediaPicker`) are both done**;
+only `McConfirm`/`McTabs`/`McSortable`/`McProgress` remain, pending
+whichever land from the open (non-routine) PRs referenced above.
+Verified: `npm install` (0 vulnerabilities), `npm run build` and `npm run
+dev` both compile cleanly; `grep` confirms every `mc-media-picker__*`
+class lands in the bundled CSS, and that `createMediaPicker` is correctly
+**not** pulled into `admin.min.js`/`catalog.min.js` (no importer yet, by
+design — same as `McEntityPicker`). No PHP touched, so `tests/mintcart/`
+doesn't apply. No automated component/visual test harness exists yet in
+this repo (same gap noted throughout every Phase 4/6/7/9/11 entry) —
+verification here is build-compiles + bundled-output grep + manual review
+against the Definition of Done checklist, same as every other JS-only
+primitive so far.
+
 **Next run should pick, in order of preference:**
 
 1. **Reconcile the two `ProductCardListRenderer` implementations** if both
@@ -1035,17 +1083,11 @@ far.
    consumer per `CLAUDE.md` §85, so check whether a wizard step exists
    before building a standalone seeder with no caller — or check open PRs
    again for anything newly landed/merged before picking a fresh phase.
-6. **`McMediaPicker` (Phase 11's last unclaimed admin primitive)** —
-   check open PRs first (none covered it as of this run); if still free,
-   mirror `McEntityPicker`'s shape (this run): a `createMediaPicker()`
-   list/grid primitive (thumbnails, search, folders as a caller-supplied
-   `fetchItems`-equivalent data source) with no dialog chrome of its own
-   and no live upload/media backend wiring yet (Phase 25 — Media UX,
-   `MINTCART_FUNCTIONAL_SCOPE.md` §25 — is the real consumer, same
-   "no wiring ahead of a real consumer" reasoning). Once this and
-   `McMediaPicker` both land, Phase 11 is fully done except for whichever
-   of `McConfirm`/`McTabs`/`McSortable`/`McProgress` are still only on
-   open (unmerged) PRs.
+6. ~~`McMediaPicker` (Phase 11's last unclaimed admin primitive)~~ —
+   **done, this run.** See the Phase 11 update above. Both Phase 11 picker
+   primitives (`McEntityPicker`, `McMediaPicker`) are now shipped; only
+   `McConfirm`/`McTabs`/`McSortable`/`McProgress` remain, pending whichever
+   land from open (non-routine) PRs — check those first before redoing.
 
 Re-read the relevant section above (and `docs/developer/theme-api/product-card-list-renderer.md`/
 `docs/developer/components/footer.md` for the established patterns to
