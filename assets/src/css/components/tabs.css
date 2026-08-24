@@ -1,0 +1,59 @@
+/**
+ * mc-tabs
+ *
+ * MintCart-owned tabbed panel component. Reuses Bootstrap 5's `.nav-tabs`/
+ * `.nav-link`/`.tab-pane` CSS and `Tab` JS (active-state switching, fade
+ * transition, arrow-key/Home/End keyboard navigation) rather than
+ * reimplementing a tablist from scratch -
+ * `MINTCART_IMPLEMENTATION_GUIDE.md` §9 explicitly allows this for generic
+ * UI primitives. Bootstrap's own `.nav`/`.nav-tabs`/`.nav-link`/`.tab-pane`/
+ * `.tab-content`/`.active`/`.fade`/`.show` classes stay on the markup
+ * because `Tab`'s JS toggles some of them directly and its CSS (fade
+ * transition, active-state layout) lives on those classes - they are
+ * internal implementation, not part of MintCart's public Theme API
+ * contract. `.mc-tabs`/`.mc-tabs__*` and `data-mc-*` are the contract
+ * (`MINTCART_IMPLEMENTATION_GUIDE.md` §6/§9: Bootstrap classes are never
+ * the component contract itself).
+ *
+ * `.mc-tabs` retints Bootstrap's nav-tabs purely through its own documented
+ * `--bs-nav-link-*`/`--bs-nav-tabs-*` CSS custom properties, reading from
+ * MintCart's `--mc-*` tokens - no Bootstrap source recompilation needed
+ * (Implementation Guide §11).
+ *
+ * Tab switching is driven entirely by `data-mc-action="show-tab"`
+ * (`assets/src/js/components/tabs.js`), never Bootstrap's own
+ * `data-bs-toggle="tab"` attribute, so the only documented public hook
+ * surface is `data-mc-*` (CLAUDE.md §14). Bootstrap's own `data-bs-target`
+ * stays on the trigger markup as required internal wiring - `Tab`'s JS
+ * reads it directly to find the pane to activate, the same way `mc-modal`
+ * keeps `.modal-dialog` as internal plumbing.
+ *
+ * Contract: docs/developer/components/tabs.md
+ */
+
+.mc-tabs__list {
+    --bs-nav-link-color: var(--mc-muted);
+    --bs-nav-link-hover-color: var(--mc-text);
+    --bs-nav-tabs-border-width: var(--mc-border-width);
+    --bs-nav-tabs-border-color: var(--mc-border);
+    --bs-nav-tabs-border-radius: var(--mc-radius-sm);
+    --bs-nav-tabs-link-hover-border-color: transparent transparent var(--mc-border);
+    --bs-nav-tabs-link-active-color: var(--mc-text);
+    --bs-nav-tabs-link-active-bg: var(--mc-surface);
+    --bs-nav-tabs-link-active-border-color: var(--mc-border) var(--mc-border) var(--mc-surface);
+}
+
+.mc-tabs__tab {
+    font-weight: var(--mc-font-weight-medium);
+    transition: color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-tabs__tab:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+.mc-tabs__panels {
+    padding-top: var(--mc-space-4);
+}
