@@ -665,18 +665,43 @@ Not started.
 
 ## Phase 11 — Mint Admin primitives
 
-- [ ] `McDrawer`, `McModal`, `McToast`, `McConfirm`, `McTabs`, `McSortable`,
-      `McMediaPicker`, `McEntityPicker`, `McProgress` (vanilla JS)
+- [x] `McDrawer`, `McModal`, `McToast` — shipped as Phase 4 generic UI
+      components (`assets/src/js/components/{drawer,modal,toast}.js`),
+      already usable by admin screens (imported into `admin.js`).
+- [ ] `McConfirm`, `McTabs`, `McSortable`, `McProgress` — in progress on
+      other open (non-routine) PRs at the time of this entry; check open
+      PRs before redoing.
+- [x] `McEntityPicker` — `assets/src/js/components/entity-picker.js`
+      (`createEntityPicker()`) + `assets/src/css/components/entity-picker.css`.
+      Search/pagination/multi-select/keyboard-navigation (WAI-ARIA
+      listbox roving-tabindex pattern) against a caller-supplied
+      `fetchItems` data source; no dialog chrome of its own (host inside
+      an existing `mc-drawer`/`mc-modal`); not wired into any live
+      backend or admin screen yet — that's Phase 12's job, once a real
+      consumer exists (`CLAUDE.md` §85). Doc:
+      `docs/developer/components/entity-picker.md`.
+- [ ] `McMediaPicker` — not started.
 
-Not started.
+Mostly not started; `McDrawer`/`McModal`/`McToast` (via Phase 4) and now
+`McEntityPicker` are the exceptions. `McMediaPicker` remains, plus
+whichever of `McConfirm`/`McTabs`/`McSortable`/`McProgress` don't land
+from the open PRs referenced above.
 
 ## Phase 12 — Entity Picker
 
-- [ ] Unified picker for products, categories, manufacturers, attributes, options,
-      information pages, customers (search, filters, pagination, images,
-      multi-select, keyboard nav, selected state)
+- [x] List primitive shipped (Phase 11 — `McEntityPicker`, see above):
+      search, pagination, images, multi-select, keyboard nav, selected
+      state, all against a caller-supplied data source.
+- [ ] Filters (beyond search text) — not attempted; no real per-entity
+      filter requirement identified yet.
+- [ ] Real `fetchItems` backends per entity type (products, categories,
+      manufacturers, attributes, options, information pages, customers)
+      — none exist; each needs a normalized search/autocomplete endpoint.
+- [ ] Live wiring into an actual admin screen/field.
+- [ ] Create-new flow via drawer/modal — not attempted.
 
-Not started.
+List behavior is done (Phase 11); everything that turns it into a real,
+backend-connected picker on an actual screen is not started.
 
 ## Phase 13 — Setup Wizard
 
@@ -935,6 +960,35 @@ no-live-bootstrap gap noted throughout this file). A human should confirm
 on a real install that a search-results page's `<head>` now contains
 `<link rel="canonical">` (and `rel="prev"`/`rel="next"` where applicable).
 
+**Update (a later run, same branch/PR #14): Phase 11 — `McEntityPicker`
+shipped.** `assets/src/js/components/entity-picker.js`
+(`createEntityPicker()`) + `assets/src/css/components/entity-picker.css`
+— the unified entity picker's list behavior (search, pagination,
+multi-select, WAI-ARIA listbox keyboard navigation) against a
+caller-supplied `fetchItems` data source, Functional Scope §8's P0
+requirement. No dialog chrome of its own (documented: host it inside an
+existing `mc-drawer`/`mc-modal`, call `refresh()` on that dialog's
+`shown` event) and not wired into any live backend/admin screen yet —
+that's Phase 12's remaining scope, once a real consumer (a product/
+category/etc. field on an actual admin screen) exists, per `CLAUDE.md`
+§85. Picked because Phase 11's other four primitives
+(`McConfirm`/`McTabs`/`McSortable`/`McProgress`) were already covered by
+open non-routine PRs at the time this run started (see "Coordination
+note" above), and `McDrawer`/`McModal`/`McToast` already shipped via
+Phase 4 — `McEntityPicker` and `McMediaPicker` were the only two Phase 11
+items with no open PR. Doc: `docs/developer/components/entity-picker.md`.
+Verified: `npm install` (0 vulnerabilities, fresh install this run),
+`npm run build` and `npm run dev` both compile cleanly; `grep` confirms
+every `mc-entity-picker__*` class lands in the bundled CSS, and that
+`entity-picker.js` is correctly **not** pulled into `admin.min.js`/
+`catalog.min.js` (no importer yet, by design — same as `mcConfirm` on the
+`McConfirm` PR). No PHP touched, so `tests/mintcart/` doesn't apply. No
+automated component/visual test harness exists yet in this repo (same
+gap noted throughout every Phase 4/6/7/9/11 entry) — verification here is
+build-compiles + bundled-output grep + manual review against the
+Definition of Done checklist, same as every other JS-only primitive so
+far.
+
 **Next run should pick, in order of preference:**
 
 1. **Reconcile the two `ProductCardListRenderer` implementations** if both
@@ -981,6 +1035,17 @@ on a real install that a search-results page's `<head>` now contains
    consumer per `CLAUDE.md` §85, so check whether a wizard step exists
    before building a standalone seeder with no caller — or check open PRs
    again for anything newly landed/merged before picking a fresh phase.
+6. **`McMediaPicker` (Phase 11's last unclaimed admin primitive)** —
+   check open PRs first (none covered it as of this run); if still free,
+   mirror `McEntityPicker`'s shape (this run): a `createMediaPicker()`
+   list/grid primitive (thumbnails, search, folders as a caller-supplied
+   `fetchItems`-equivalent data source) with no dialog chrome of its own
+   and no live upload/media backend wiring yet (Phase 25 — Media UX,
+   `MINTCART_FUNCTIONAL_SCOPE.md` §25 — is the real consumer, same
+   "no wiring ahead of a real consumer" reasoning). Once this and
+   `McMediaPicker` both land, Phase 11 is fully done except for whichever
+   of `McConfirm`/`McTabs`/`McSortable`/`McProgress` are still only on
+   open (unmerged) PRs.
 
 Re-read the relevant section above (and `docs/developer/theme-api/product-card-list-renderer.md`/
 `docs/developer/components/footer.md` for the established patterns to
