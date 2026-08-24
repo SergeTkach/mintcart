@@ -134,6 +134,30 @@ the refactor — still passing, no regressions. A human should still
 smoke-test a real category page on a configured install before this
 reaches production.
 
+**Update (this run — bugfix, `docs/fixes/registry.md` MC-0001):**
+`category.twig` (both the stock `default` theme and `mint_default`) reads
+`text_refine`/`text_sort`/`text_limit`/`text_empty`/`button_continue`, but
+`index()`'s success branch never assigned any of those five keys to
+`$data` — a pre-existing OpenCart 3.0.5.1 stock bug, present on both
+themes, silently rendering blank via Twig's non-strict-variables mode
+(first noticed while wiring `search.php` on this branch — see that
+controller's entry below, which already assigns the equivalent keys for
+its own new template). Fixed by adding the same five
+`$data[...] = $this->language->get(...)` assignments `search.php`/
+`special.php` already use, placed next to the existing
+`$data['continue']` assignment. All five language keys already existed in
+`catalog/language/en-gb/product/category.php` (`text_refine`, `text_sort`,
+`text_limit`, `text_empty`) and the global `en-gb.php`
+(`button_continue`) — no new language strings needed. Zero behavioral
+change beyond making the already-referenced template variables non-blank;
+the `$data['products']`/`$data['product_cards']` arrays are untouched.
+**Compatibility impact:** fixes the same silent blank on the legacy
+`default` theme too (same unassigned keys, same template gap) — this is a
+strict improvement, not a Mint-only change, and carries no risk of
+behavior change for stores that don't notice the labels were blank.
+**Tests:** `php -l` clean. See `docs/fixes/registry.md` MC-0001 for the
+full fix-policy writeup (reproduction, upstream status, resolution).
+
 ---
 
 ## `upload/catalog/language/en-gb/product/category.php`
@@ -302,8 +326,8 @@ un-modified `default/template/product/category.twig`). Out of scope for
 this run — `category.twig` is unrelated to Search — but `search.php`
 deliberately does assign every one of the equivalent keys its own new
 template reads, rather than repeating the same gap in a brand-new file.
-Worth a dedicated small fix (and a `docs/fixes/registry.md` entry per
-`CLAUDE.md` §13) for `category.php`/`category.twig` in a future run.
+**Fixed in a later run on this branch** — see `category.php`'s own entry
+above and `docs/fixes/registry.md` MC-0001.
 
 **Tests:** `php -l` (clean) on `search.php` and the new
 `en-gb/product/search.php` strings. `tests/mintcart/design/
