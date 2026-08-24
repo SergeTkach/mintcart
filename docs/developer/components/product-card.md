@@ -25,11 +25,18 @@ and a `mint_default` theme directory now exist, so this component has a real
 matching the markup contract below exactly.
 
 `ControllerProductCategory` (`upload/catalog/controller/product/category.php`,
-see `docs/upstream-diff.md`) is the first controller wired to it: for each
-product row it builds a `ProductViewProvider` result and renders it via
-`ComponentRenderer` into `$data['product_cards']`, consumed by the new
-`mint_default/template/product/category.twig` page. Search/Manufacturer/
-Special aren't wired yet — same pattern, different controller, still to do.
+see `docs/upstream-diff.md`) was the first controller wired to it. Once
+`ControllerProductSearch` needed the exact same per-product build/render/
+degrade-on-failure loop, that shared shape was extracted into
+`MintCart\Design\ProductCardListRenderer` (composes `ProductViewProvider` +
+`ComponentRenderer`, plus `MintCart\Design\ActiveTheme` for the
+`config_theme`/manifest lookup both controllers also duplicated) — see
+`docs/developer/theme-api/product-card-list-renderer.md`. Category and Search
+both call it for each product row, rendering into `$data['product_cards']`,
+consumed by `mint_default/template/product/category.twig` and the new
+`mint_default/template/product/search.twig` respectively.
+Manufacturer/Special aren't wired yet — same shared renderer, different
+controller, still to do.
 
 A second theme, `catalog/view/theme/test_theme/`, overrides only
 `product-card.twig` with a genuinely different DOM (single badge, no
