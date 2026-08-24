@@ -830,9 +830,23 @@ surface before a first real consumer proves the Provider/Renderer split).
       — no screen calls it yet (Bulk Editor mass-delete, Phase 16, is the
       likely first consumer); exported for direct import when one exists,
       per `CLAUDE.md` §85. Doc: `docs/developer/components/confirm.md`
-- [ ] `McTabs`, `McSortable`, `McProgress` — in progress on other open
-      (non-routine) PRs at the time of this entry; check open PRs before
-      redoing.
+- [x] `McSortable` — `mc-sortable`
+      (`assets/src/js/components/sortable.js` + `assets/src/css/components/sortable.css`),
+      wraps SortableJS 1.15.7 (already an npm dependency since Phase 2) for
+      drag reordering, plus `data-mc-action="sortable-move-up"`/
+      `"sortable-move-down"` buttons as the required non-mouse alternative
+      (`MINTCART_IMPLEMENTATION_GUIDE.md` §68). Fires a bubbling
+      `mc:sortable:reorder` CustomEvent (`detail.order`) on either a
+      completed drag or a keyboard move, so a future consumer only needs
+      one listener. Wired into `admin.js` only (every Functional Scope §6
+      drag-and-drop scenario is admin-side). Doc:
+      `docs/developer/components/sortable.md`. No live admin-screen
+      consumer yet — same "ships ahead of its first consumer" pattern as
+      every Phase 4 component (CLAUDE.md §85); most likely first caller is
+      Homepage Builder's block list (Phase 10) or Categories
+      drag-and-drop (Phase 17).
+- [ ] `McTabs`, `McProgress` — in progress on other open (non-routine) PRs
+      at the time of this entry; check open PRs before redoing.
 - [x] `McEntityPicker` — `assets/src/js/components/entity-picker.js`
       (`createEntityPicker()`) + `assets/src/css/components/entity-picker.css`.
       Search/pagination/multi-select/keyboard-navigation (WAI-ARIA
@@ -857,9 +871,9 @@ surface before a first real consumer proves the Provider/Renderer split).
       deferral as `McEntityPicker`. Doc:
       `docs/developer/components/media-picker.md`.
 
-`McDrawer`/`McModal`/`McToast` (via Phase 4), `McConfirm`, `McEntityPicker`
-and `McMediaPicker` are done. `McTabs`/`McSortable`/`McProgress` remain,
-pending whichever land from the open PRs referenced above.
+`McDrawer`/`McModal`/`McToast` (via Phase 4), `McConfirm`, `McSortable`,
+`McEntityPicker` and `McMediaPicker` are done. `McTabs`/`McProgress`
+remain, pending whichever land from the open PRs referenced above.
 
 `McConfirm` verified: `npm install` (0 vulnerabilities), `npm run build`
 (minified) and `npm run dev` (sourcemapped) both compile cleanly;
@@ -871,6 +885,15 @@ tree-shaken — nothing imports the module yet, as intended). No PHP/Twig
 files touched, so the PHP `tests/mintcart/` suite and the `.twig`
 tag-balance check don't apply. No automated component/visual test harness
 exists yet in this repo (same gap noted in every previous Phase 4/11 run).
+
+`McSortable` verified: `npm install` (0 vulnerabilities), `npm run build`
+(minified) clean; `grep` against the built `admin.min.js` confirms
+`sortable-move-up`/`mc:sortable:reorder` are present, and confirms they
+are **absent** from `catalog.min.js` (admin-only, as designed); `grep`
+against the built `index.min.css` confirms `.mc-sortable`/
+`.mc-sortable__item`/`.mc-sortable__handle`/`.mc-sortable__label`/
+`.mc-sortable__controls`/`.mc-sortable__move` are all present. No PHP
+touched, so the PHP `tests/mintcart/` suite doesn't apply.
 
 ## Phase 12 — Entity Picker
 
@@ -999,37 +1022,28 @@ Not started.
 
 ## Next step for the next routine run
 
-**PR backlog warning (as of 2026-08-24):** nine `claude/charming-rubin-*`
-routine PRs are open against `master` and unmerged — #14 (Footer + Presets),
-#15 (Header), #16 (Phase 10 Block API storage), #17–#20 (Phase 11
-McConfirm/McSortable/McTabs/McProgress), #21 (Phase 6/8
-ProductCardListRenderer + Manufacturer wiring), #22 (Phase 9 Presets,
-duplicates #14's Presets work). Every "Next step" candidate this file has
-recommended in the last several runs is now claimed by one of these PRs.
-Each of those sessions was bound to its own fixed `claude/charming-rubin-*`
-branch name (a Claude Code Remote constraint, not a choice — see each PR's
-"bound to a fixed branch name" note) and could not continue or consolidate
-onto a sibling's branch, so they piled up as separate PRs instead of one
-growing branch, the way this routine's step 0 protocol assumes is possible.
-**Before starting new feature work, the next run should first re-check
-`gh pr list --state open` — if a human has since merged some of these, treat
-their content as landed and skip re-doing it; if the pile has grown further
-with no merges, that is worth surfacing to the project owner explicitly
-(per `CLAUDE.md` §20) rather than adding an eleventh speculative PR, since
-several of these PRs independently edit this same file's shared checklist
-and will need manual conflict reconciliation on merge regardless of order.**
+**PR backlog status (updated 2026-08-24, human merge pass):** the
+nine-PR `claude/charming-rubin-*` backlog both blocks above described has
+been resolved by direct human review rather than left for a routine run —
+#14, #15, #16, #17, #23 and #24 are merged to `master` (in that order,
+with manual conflict reconciliation each time, documented in this file's
+Phase 7/9/10/11 sections and each PR's own comments); #21 and #22 were
+closed as superseded (duplicate `ProductCardListRenderer` and duplicate
+Presets implementations respectively — see the Phase 6/9 write-ups
+above). **Still open as of this entry:** #18 (McSortable), #19 (McTabs),
+#20 (McProgress) — being reconciled in the same pass. Re-check
+`gh pr list --state open` before starting new work rather than trusting
+this snapshot, since it will go stale the moment any of those three merge.
 
-This run (branch `claude/charming-rubin-bq7kl6`) deliberately did **not**
-pick a Phase 7/9/10/11 item already claimed above. Instead it filled a gap
-none of the nine open PRs touch: **CI** (`.github/workflows/ci.yml`,
-Phase 1's last unchecked non-deferred item) — `php -l` across `upload/` +
-`tests/`, running every `tests/mintcart/**/*-test.php` smoke test, and
-`npm ci && npm run build`, on every push/PR against `master`. Every open PR
-above self-reports "no automated test harness exists yet" / "human should
-verify" as a caveat; this closes that gap for what already exists, so the
-backlog gets a real pass/fail signal once any of those nine PRs' branches
-are rebased onto `master` or merged. This PR's own file (`.github/`) has
-zero overlap with any of the nine open PRs' changed files.
+The root cause of the original nine-PR pileup — each Claude Code Remote
+session being bound to its own fixed `claude/charming-rubin-*` branch,
+unable to continue a sibling's branch, combined with this routine's
+dedup check (step 0) originally only searching for `routine/*`-prefixed
+branches — has been fixed in the routine's own prompt (see the routine
+configuration itself, updated 2026-08-24): step 0 now checks every open
+PR regardless of branch name, and step 3's now-impossible "create a
+`routine/*` branch" instruction was removed. Future routine runs should
+not reproduce this pileup.
 
 Phases 0–6 and 8 are now complete (see their sections above). **Phase 8 —
 Theme resolver has passed its critical architecture milestone**
