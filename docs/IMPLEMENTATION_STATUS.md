@@ -845,8 +845,18 @@ surface before a first real consumer proves the Provider/Renderer split).
       every Phase 4 component (CLAUDE.md §85); most likely first caller is
       Homepage Builder's block list (Phase 10) or Categories
       drag-and-drop (Phase 17).
-- [ ] `McTabs`, `McProgress` — in progress on other open (non-routine) PRs
-      at the time of this entry; check open PRs before redoing.
+- [x] `McTabs` — `assets/src/js/components/tabs.js`
+      (`initTabsTriggers`) + `assets/src/css/components/tabs.css`. Wraps
+      Bootstrap 5's `Tab` (active-pane switching, fade transition, arrow-
+      key/Home/End tablist navigation), driven only by
+      `data-mc-action="show-tab"` (`data-bs-target` stays as required
+      internal Bootstrap wiring, same pattern as `mc-modal`'s
+      `.modal-dialog`). Admin-only (`admin.js`, not `catalog.js`) — Phase 11
+      lists it as a Mint Admin primitive; entity edit forms (Product:
+      General/Data/Links/...) are its first expected consumer. Contract:
+      `docs/developer/components/tabs.md`.
+- [ ] `McProgress` — in progress on another open (non-routine) PR at the
+      time of this entry; check open PRs before redoing.
 - [x] `McEntityPicker` — `assets/src/js/components/entity-picker.js`
       (`createEntityPicker()`) + `assets/src/css/components/entity-picker.css`.
       Search/pagination/multi-select/keyboard-navigation (WAI-ARIA
@@ -872,8 +882,8 @@ surface before a first real consumer proves the Provider/Renderer split).
       `docs/developer/components/media-picker.md`.
 
 `McDrawer`/`McModal`/`McToast` (via Phase 4), `McConfirm`, `McSortable`,
-`McEntityPicker` and `McMediaPicker` are done. `McTabs`/`McProgress`
-remain, pending whichever land from the open PRs referenced above.
+`McTabs`, `McEntityPicker` and `McMediaPicker` are done. `McProgress`
+remains, pending whichever open PR lands it.
 
 `McConfirm` verified: `npm install` (0 vulnerabilities), `npm run build`
 (minified) and `npm run dev` (sourcemapped) both compile cleanly;
@@ -894,6 +904,11 @@ against the built `index.min.css` confirms `.mc-sortable`/
 `.mc-sortable__item`/`.mc-sortable__handle`/`.mc-sortable__label`/
 `.mc-sortable__controls`/`.mc-sortable__move` are all present. No PHP
 touched, so the PHP `tests/mintcart/` suite doesn't apply.
+
+`McTabs` verified: `npm install` (0 vulnerabilities), `npm run build`
+(minified) clean; `grep` against the built `admin.min.js` confirms
+`show-tab`/`data-mc-action` wiring is present. No PHP touched, so the
+PHP `tests/mintcart/` suite doesn't apply.
 
 ## Phase 12 — Entity Picker
 
