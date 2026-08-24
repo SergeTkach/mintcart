@@ -1,0 +1,113 @@
+/**
+ * mc-sortable
+ *
+ * MintCart-owned drag-and-drop reordering list (Functional Scope §6:
+ * Homepage Blocks, Categories, Menu, Banner items, Benefits, FAQ, Gallery,
+ * Footer columns). Presentation only - all behavior (SortableJS wiring,
+ * keyboard move buttons, the `mc:sortable:reorder` event) lives in
+ * `assets/src/js/components/sortable.js`; this component never determines
+ * its own hooks from a CSS class (CLAUDE.md §14).
+ *
+ * `is-dragging` / `is-chosen` are SortableJS's own `ghostClass`/
+ * `chosenClass` state classes (transient runtime state, not BEM modifiers -
+ * `MINTCART_IMPLEMENTATION_GUIDE.md` §13).
+ *
+ * Contract: docs/developer/components/sortable.md
+ */
+
+.mc-sortable {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-2);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.mc-sortable__item {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    padding: var(--mc-space-3) var(--mc-space-4);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    background-color: var(--mc-surface);
+}
+
+.mc-sortable__item.is-chosen {
+    border-color: var(--mc-accent);
+    box-shadow: var(--mc-shadow-md);
+}
+
+.mc-sortable__item.is-dragging {
+    opacity: 0.4;
+}
+
+.mc-sortable__handle {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--mc-radius-sm);
+    background-color: transparent;
+    color: var(--mc-muted);
+    cursor: grab;
+    appearance: none;
+    touch-action: none;
+}
+
+.mc-sortable__handle:hover {
+    background-color: var(--mc-surface-alt);
+    color: var(--mc-text);
+}
+
+.mc-sortable__handle:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+.mc-sortable__label {
+    flex: 1 1 auto;
+    color: var(--mc-text);
+    font-size: var(--mc-font-size-base);
+}
+
+.mc-sortable__controls {
+    flex: 0 0 auto;
+    display: inline-flex;
+    gap: var(--mc-space-1);
+}
+
+.mc-sortable__move {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-sm);
+    background-color: var(--mc-surface);
+    color: var(--mc-text);
+    cursor: pointer;
+    appearance: none;
+    transition: background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-sortable__move:hover {
+    background-color: var(--mc-surface-alt);
+}
+
+.mc-sortable__move:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+.mc-sortable__move:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
