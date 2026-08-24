@@ -80,10 +80,35 @@ import { showToast } from './components/toast.js';
 showToast(document.querySelector('#cartToast'));
 ```
 
-This is the integration point a future Phase 15 Cart client can use: after
+This is the integration point Phase 15's Cart client uses: after
 dispatching `mc:cart:updated`, call `showToast()` on the corresponding
 toast element instead of duplicating `Toast.getOrCreateInstance(...).show()`
 call sites.
+
+### Building a toast on the fly
+
+Most real callers don't have a pre-rendered toast element to reveal — the
+message is only known at the moment of the event (e.g. "Added to cart"
+after an AJAX add). `createToast()` builds one, matching the exact markup
+shape shown above (`.toast-header`/`.toast-body`,
+`mc-toast__title`/`__message`/`__close`, `role`/`aria-live` picked per
+variant the same way the static examples do), appends it to a lazily
+created `.toast-container`, and removes it from the DOM once it finishes
+hiding:
+
+```javascript
+import { createToast, showToast } from './components/toast.js';
+
+showToast(createToast({
+    title: 'Added to cart',
+    message: 'Added to cart',
+    variant: 'success', // 'success' | 'danger' | 'warning' | 'info', default 'info'
+}));
+```
+
+`mc-product-card`'s Add to Cart button (`assets/src/js/components/product-card.js`)
+is the first real caller — see `docs/developer/components/product-card.md`
+and `docs/developer/commerce/cart-client.md`.
 
 ### Declarative trigger
 
