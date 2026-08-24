@@ -1,20 +1,19 @@
 /**
- * "Clean" preset.
+ * "Clean" design preset.
  *
- * Phase 9 (docs/MINTCART_TECHNICAL_PLAN.md §12/§42, Implementation Guide
- * §24/§50): a preset changes only design tokens/settings values, never the
- * component DOM (Twig stays identical - see docs/developer/design/presets.md).
+ * docs/MINTCART_IMPLEMENTATION_GUIDE.md §24, §51 Phase 9: a preset changes
+ * only design token values, never component DOM/Twig.
  *
- * Clean is MintCart's neutral baseline look, already fully defined by
- * settings/tokens.css - crisp small radii, a flat bordered card, white
- * surfaces, the default mint/gray palette. This file intentionally
- * contains no property overrides: it exists only so `data-mc-preset` has
- * two explicit, listed values (`clean`, `warm`) instead of "unset = the
- * default", matching how a future preset picker (Phase 13 Setup
- * Wizard / Phase 31 theme settings, not built yet) will offer Clean as a
- * real, selectable option rather than an implicit fallback.
+ * Clean is the preset that matches MintCart's own base token values
+ * (settings/tokens.css) exactly, so this file intentionally declares no
+ * overrides - it exists so "clean" is a real, selectable preset (matching
+ * "warm.css") rather than an implicit "no preset selected" state, without
+ * duplicating every semantic token value a second time (CLAUDE.md §86).
  *
- * If Clean ever needs its own deltas (e.g. once a third preset makes the
- * bare default ambiguous), add `:root[data-mc-preset="clean"]` overrides
- * here the same way assets/src/css/presets/warm.css does.
+ * Activated via `data-mc-preset="clean"` on `<html>` (see
+ * docs/developer/theme-api/presets.md) - same attribute contract as
+ * warm.css, evaluates to a no-op against the base tokens.
  */
+
+:root[data-mc-preset='clean'] {
+}

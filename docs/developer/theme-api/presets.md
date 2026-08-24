@@ -1,146 +1,153 @@
-# Presets
+# Design presets
 
-Phase 9 (`MINTCART_TECHNICAL_PLAN.md` §12/§42, `MINTCART_IMPLEMENTATION_GUIDE.md`
-§24/§50, `MINTCART_FUNCTIONAL_SCOPE.md` §9): a **preset** changes only design
-tokens and settings values. It never changes component DOM.
-
-This is the other half of the Theme API, alongside `MintCart\Design\ComponentRenderer`
-(`docs/developer/theme-api/component-renderer.md`):
+A **preset** changes how MintCart looks without changing what it renders
+(`MINTCART_IMPLEMENTATION_GUIDE.md` §24, `MINTCART_TECHNICAL_PLAN.md` §12).
+It is the lighter of the Theme API's two customization mechanisms:
 
 ```text
-Preset  -> tokens/settings only, same Twig
-Theme   -> can also override component DOM (via ComponentRenderer)
+Preset      -> design token values only. Same DOM, same Twig, same contracts.
+Full Theme  -> may replace component DOM, via ComponentRenderer overrides
+               (see theme-api/component-renderer.md).
 ```
 
-CSS: `assets/src/css/presets/clean.css`, `assets/src/css/presets/warm.css`
-Bundled from: `assets/src/css/index.css`
+Presets shipped with Mint Default:
 
-## Mechanism
+| Preset  | File                                | Look |
+| ------- | ----------------------------------- | ---- |
+| `clean` | `assets/src/css/presets/clean.css`  | MintCart's own neutral default — mint-green primary, system sans, tight radii |
+| `warm`  | `assets/src/css/presets/warm.css`   | Terracotta/gold on cream, serif headings, rounder radii, roomier spacing, warm-tinted shadows |
 
-Each preset file scopes its overrides under an attribute selector on the
-document root:
+## Activation contract
+
+A preset is selected by an attribute on the document root:
+
+```html
+<html data-mc-preset="warm">
+```
+
+No attribute, or `data-mc-preset="clean"`, yields the base look — those are
+the same thing by design (see "Why `clean.css` is empty" below).
+
+`data-mc-preset` is the one `data-mc-*` attribute that is a *styling* hook
+rather than a behavior hook. `MINTCART_IMPLEMENTATION_GUIDE.md` §14's rule
+("CSS class = presentation contract, `data-mc-*` = behavior contract") is
+about not coupling JS to component class names; it does not apply here, and
+an attribute is the right shape for this because:
+
+- it is a single global mode, not a component variant, so a BEM modifier
+  class (`mc-theme--warm`) on `<html>` would be a modifier without a block;
+- it is exactly what a future theme-settings form or live preview
+  (Functional Scope §31) can flip with one `setAttribute` call, with no
+  class-list bookkeeping;
+- attribute-selector specificity (`:root[data-mc-preset='warm']`, 0-1-1)
+  always beats plain `:root` (0-0-1), so a preset wins over the base tokens
+  regardless of CSS import order.
+
+## What a preset may and may not touch
+
+A preset file contains exactly one rule block:
 
 ```css
-:root[data-mc-preset='warm'] {
-    --mc-primary: #c2410c;
-    /* ... */
+:root[data-mc-preset='<code>'] {
+    /* semantic-tier --mc-* tokens only */
 }
 ```
 
-Whichever preset is active is expressed by setting `data-mc-preset` on
-`<html>` (e.g. `<html data-mc-preset="warm">`). `CLAUDE.md` §5 frames
-`data-mc-*` as "JavaScript behavior hooks"; a preset attribute is read by
-CSS, not by a `data-mc-action` click handler, but it is the same kind of
-root-level configuration attribute Bootstrap itself already uses
-(`data-bs-theme`) and MintCart's `data-mc-*` namespace deliberately mirrors
-Bootstrap's `data-bs-*` (`CLAUDE.md` §5). A future preset picker will still
-set it from JS, so it is a legitimate `data-mc-*` attribute either way —
-just not a `data-mc-action` one.
+**May** redeclare any token already declared in
+`assets/src/css/settings/tokens.css` — semantic colors (`--mc-primary`,
+`--mc-surface`, `--mc-text`, ...), typography, spacing, radius, border,
+shadow, motion, z-index.
 
-No property is redefined on
-a bare `:root` — only on `:root[data-mc-preset="..."]` — so a preset file
-has zero effect unless that attribute is present. This is why import order
-in `assets/src/css/index.css` doesn't matter: an attribute-scoped selector
-always outranks a bare `:root`/class rule on specificity, regardless of
-where it appears in the bundle.
+**May** declare preset-local primitives, namespaced `--mc-preset-<code>-*`
+(e.g. `--mc-preset-warm-terracotta-600`), purely as intermediates that feed
+the semantic overrides above. Component CSS never reads these — the same
+primitive/semantic separation `tokens.css` itself uses.
 
-**No live picker sets `data-mc-preset` yet.** Choosing a preset is a Setup
-Wizard / Theme Settings concern (`MINTCART_TECHNICAL_PLAN.md` §21, §31 —
-Phase 13, Phase 31 in `docs/IMPLEMENTATION_STATUS.md`), neither of which is
-built. This phase's job was only to prove the token system itself can carry
-a genuinely different look with 0 Twig changes; wiring `data-mc-preset` from
-a real admin setting is later, standard-OpenCart-storage work per
-`CLAUDE.md` §39/§5A, not a new problem.
+**Must not**:
 
-## What a preset may override
+- introduce a token name that `tokens.css` does not already declare — that
+  would be new component-facing API arriving through a preset, which no
+  component reads and no other preset would define;
+- set a component-local token directly (`--mc-button-bg`,
+  `--mc-badge-bg`, ...). Those are each component's own tier and are already
+  derived from semantic tokens; overriding one from a preset would style one
+  component out of step with the rest;
+- contain any selector other than its own `:root[data-mc-preset='<code>']`
+  block — no component rules, no layout rules, no `@media` blocks beyond
+  what `tokens.css` already handles.
 
-Per the Implementation Guide, a preset may redefine:
+The last two rules are what keep the promise "presets differ in
+colors/fonts/radius/spacing/card look/button look only, not Twig". The
+card and button *look* changes on a preset switch precisely because
+`mc-card`/`mc-button` read semantic tokens — the preset never mentions them.
 
-- semantic color tokens (`--mc-primary`, `--mc-surface`, `--mc-text`, ...)
-- typography tokens (`--mc-font-family-*`)
-- spacing tokens (`--mc-space-*`)
-- radius/border/shadow tokens (`--mc-radius-*`, `--mc-shadow-*`)
-- a component's own local tokens directly (e.g. `--mc-product-card-radius`,
-  `--mc-button-radius`) for a distinctive "card look"/"button look" beyond
-  what redefining the semantic tokens alone produces
+## Why `clean.css` is empty
 
-A preset must **not**:
+Clean's values are `tokens.css`'s values. `clean.css` declares an empty
+`:root[data-mc-preset='clean']` block rather than restating all ~108 token
+declarations a second time.
 
-- add or remove markup, classes, or `data-mc-*` hooks (that's a theme
-  component override, not a preset — see `component-renderer.md`)
-- redefine the functional state colors (`--mc-success`/`--mc-danger`/
-  `--mc-warning`/`--mc-info`). Those carry meaning (stock status, form
-  errors, ...), not brand identity — a preset re-tuning them for aesthetics
-  risks a contrast/usability regression a preset has no business making.
+This is deliberate (`CLAUDE.md` §86 — the simpler solution wins when it
+creates no coupling). The alternative — a full copy of every token value —
+would mean every future token change has to be made in two files that must
+not drift, to produce a result identical to making it in one. What the file
+buys as-is: `clean` is a real, enumerable preset code that a theme manifest
+can list and a settings form can offer, and the "no preset selected" and
+"Clean selected" states are provably the same rather than accidentally the
+same.
 
-## The two shipped presets
+## Declaring presets in a theme
 
-### Clean (`presets/clean.css`)
+`theme.json` lists the preset codes a theme supports
+(`MINTCART_IMPLEMENTATION_GUIDE.md` §30):
 
-MintCart's neutral baseline, already fully defined by `settings/tokens.css`
-— crisp small radii, a flat bordered card, white surfaces, the default
-mint/gray palette. The file contains no overrides; it exists so
-`data-mc-preset` has two explicit, listed values instead of "unset = the
-default" (`mint_default/theme.json`'s `presets` array lists both).
-
-### Warm (`presets/warm.css`)
-
-Deliberately different, to prove the token system alone carries a distinct
-identity:
-
-| Token(s)                                   | Clean                    | Warm                              |
-| ------------------------------------------ | ------------------------ | ---------------------------------- |
-| `--mc-primary`                             | mint green (`#059669`)   | terracotta (`#c2410c`)             |
-| `--mc-surface` / `--mc-surface-alt`        | white / near-white gray  | warm off-white / warm sand         |
-| `--mc-text` / `--mc-muted` / `--mc-border` | near-black gray          | warm brown / taupe / tan           |
-| `--mc-font-family-heading`                 | system sans (base stack) | `Georgia, "Times New Roman", serif` |
-| `--mc-radius-sm/md/lg/xl`                  | 0.25–0.75rem (crisp)     | 0.5–1.75rem (soft)                 |
-| `--mc-shadow-sm/md/lg`                     | neutral black shadow     | warm-tinted, more diffused         |
-| `--mc-space-4/6`                           | 1rem / 1.5rem            | 1.125rem / 1.75rem (roomier)       |
-| `.mc-product-card`/`.mc-card` local tokens | flat bordered card       | borderless, larger radius/shadow/padding |
-| `.mc-button` local tokens                  | rounded rectangle        | pill-shaped, wider padding         |
-
-State colors (`--mc-success`/`--mc-danger`/`--mc-warning`/`--mc-info`) are
-unchanged, per the rule above.
-
-## Adding a new preset
-
-1. Create `assets/src/css/presets/<name>.css`, scoping every rule under
-   `:root[data-mc-preset='<name>']` (or a descendant of it for
-   component-local overrides) — never a bare `:root`.
-2. Add the `@import './presets/<name>.css';` line to `assets/src/css/index.css`.
-3. List `<name>` in the theme's `theme.json` `presets` array
-   (`MINTCART_IMPLEMENTATION_GUIDE.md` §30).
-4. Update the table above (or the equivalent for the new theme) documenting
-   what changed and why.
-
-## Verifying this without a live install
-
-This environment still has no MySQL / running storefront (the same gap
-noted for the Theme API milestone, `docs/adr/002-theme-api-milestone-proof.md`),
-so this phase's proof is at the source/compiled-CSS level rather than an
-observed browser render.
-
-`tests/mintcart/design/presets-test.php` (standalone, no PHPUnit, same
-pattern as every other MintCart smoke test) checks the preset source files
-directly: `warm.css` never declares a bare `:root` block, only
-`[data-mc-preset="warm"]`-scoped rules; it never redefines a state/functional
-color token; both `clean.css` and `warm.css` are imported by `index.css` and
-listed in `mint_default/theme.json`'s `presets` array; and the two
-component-local "card look"/"button look" overrides the Phase 9 checklist
-calls out are present. `clean.css` is checked to declare zero `--mc-*`
-tokens, since it must stay the unmodified baseline by design.
-
-To also confirm the built bundle:
-
-```sh
-npm install && npm run build:css
-grep -n "data-mc-preset" assets/dist/css/index.min.css
+```json
+{
+    "name": "Mint Default",
+    "code": "mint_default",
+    "version": "1.0.0",
+    "mint_api": "^1.0",
+    "parent": null,
+    "presets": ["clean", "warm"]
+}
 ```
 
-confirms all four `[data-mc-preset=warm]` rule blocks (root tokens,
-product-card/card, button) land in the bundle with the values from the
-table above. A human should still confirm the visual result on a real
-install by setting `<html data-mc-preset="warm">` by hand in the rendered
-page and reloading, before Phase 9 is considered fully closed end-to-end —
-same caveat pattern as the Theme API and Footer milestones before it.
+A full theme with its own component DOM can list these same presets, since
+a preset makes no assumption about DOM — only that components read semantic
+tokens.
+
+## Adding a preset
+
+1. Create `assets/src/css/presets/<code>.css` with a single
+   `:root[data-mc-preset='<code>']` block, following the rules above.
+2. Add the `@import` to `assets/src/css/index.css` (after `settings/tokens.css`).
+3. Add `<code>` to the `presets` array in each theme's `theme.json` that
+   supports it.
+4. Run `npm run build`.
+
+## Not yet wired
+
+No admin UI selects a preset yet, and nothing writes `data-mc-preset` onto
+`<html>` at runtime — Mint Default's page templates don't emit it. That
+belongs with theme settings (`MINTCART_FUNCTIONAL_SCOPE.md` §9) and its
+`settings.json` schema (Implementation Guide §31), which don't exist yet;
+building the writer ahead of the form that sets the value would be API
+ahead of a consumer (`CLAUDE.md` §85).
+
+To see a preset today, set the attribute by hand in the browser
+(`document.documentElement.dataset.mcPreset = 'warm'`) on any page loading
+the bundled `index.min.css`.
+
+## Definition of Done checklist (`MINTCART_IMPLEMENTATION_GUIDE.md` §79)
+
+- [x] Documented contract (this file)
+- [x] Presets touch token values only — no component CSS, no Twig, no
+      component-local tokens (script-verified, see
+      `docs/IMPLEMENTATION_STATUS.md` Phase 9)
+- [x] No JS dependency
+- [x] No Bootstrap 3 dependency
+- [x] No OCMOD required
+- [x] Works on any theme's DOM, including a full theme's own components
+- [ ] Live visual check across the two presets — needs a running install with
+      a rendered page; this environment has no MySQL/Twig vendor (same
+      pre-existing gap as Phases 3–8), tracked in `docs/MANUAL_VERIFICATION.md`

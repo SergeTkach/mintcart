@@ -611,47 +611,80 @@ for this pipeline.
 
 ## Phase 9 — Presets
 
-- [x] At least two radically different presets (e.g. Clean, Warm) on the same DOM
-- [x] Differ in colors/fonts/radius/spacing/card look/button look only, not Twig
+- [x] At least two radically different presets (e.g. Clean, Warm) on the same DOM —
+      `assets/src/css/presets/clean.css` and `assets/src/css/presets/warm.css`,
+      each scoped by `:root[data-mc-preset='<code>']`; both listed in
+      `mint_default`'s `theme.json` `presets` array (was `[]`). Contract:
+      `docs/developer/theme-api/presets.md`; decisions:
+      `docs/adr/004-design-token-presets.md`
+- [x] Differ in colors/fonts/radius/spacing/card look/button look only, not Twig —
+      `warm.css` redeclares 25 semantic-tier `--mc-*` tokens (terracotta/gold
+      palette, serif heading face, softer radius scale, roomier spacing,
+      warm-tinted shadows) plus 11 preset-local `--mc-preset-warm-*`
+      intermediates. Zero component CSS, zero Twig, zero component-local
+      tokens touched. The card and button *look* changes because
+      `mc-card`/`mc-button` read semantic tokens — the preset never names them
 
-Done. `assets/src/css/presets/clean.css` (documentation-only — Clean is the
-unmodified baseline already in `settings/tokens.css`) and
-`assets/src/css/presets/warm.css` (a terracotta/serif/soft-radius override)
-prove the token system alone carries a genuinely different visual identity
-with **0 Twig changes**: same `product-card.twig`/`footer.twig`/`card.twig`
-markup as Clean, only `--mc-*` custom properties differ. Both are imported
-from `assets/src/css/index.css` and listed in `mint_default/theme.json`'s
-`presets` array.
+**Phase 9 is complete.** `clean.css` is a deliberately empty block: Clean's
+values *are* `settings/tokens.css`'s values, so the file makes `clean` a real,
+enumerable preset code without duplicating ~108 declarations that would then
+have to never drift (`CLAUDE.md` §86). See ADR 004 decision 3.
 
-Mechanism: every Warm rule is scoped under `[data-mc-preset="warm"]` on
-`<html>` — never a bare `:root` — so import order in `index.css` doesn't
-matter (an attribute-scoped selector always outranks a bare `:root`/class
-rule on specificity) and the preset has zero effect unless that attribute
-is set. Clean/Warm differ on: semantic color tokens (mint green ->
-terracotta, white -> warm off-white, gray text -> warm brown), heading
-typography (system sans -> serif), the radius scale (crisp -> soft),
-shadow tokens (neutral -> warm-tinted), two spacing tokens (tighter ->
-roomier), and — the checklist's explicit "card look"/"button look" —
-direct component-local overrides on `.mc-product-card`/`.mc-card` (flat
-bordered -> borderless with a larger radius/shadow/padding) and `.mc-button`
-(rounded rectangle -> pill-shaped). State/functional colors
-(success/danger/warning/info) are deliberately left untouched — they carry
-meaning, not brand identity.
+The Preset/Theme boundary is now enforced rather than conventional:
+`tests/frontend/preset-tokens-test.js` (wired to `npm test`) requires each
+preset file to contain exactly one `:root[data-mc-preset='<code>']` block and
+to redeclare only tokens `tokens.css` already declares, plus its own
+`--mc-preset-<code>-*` intermediates. A preset that invents a token name is
+introducing component-facing API no component reads; one that sets a
+component-local token (`--mc-button-bg`) styles a single component out of step
+with the rest. Both are now build-breaking rather than review-catchable. (An
+earlier draft of this phase, superseded before merge, took the opposite
+approach — directly overriding component-local tokens like
+`--mc-product-card-radius`/`--mc-button-radius` with new component-scoped
+selectors inside the preset file, for a more dramatic borderless-card/
+pill-button look. That version is documented in ADR 004's alternatives if a
+future preset genuinely needs a component-local override; the guardrail test
+above will require an explicit, reviewed exception at that point rather than
+letting it in silently.)
+
+A consequence worth carrying forward: every MintCart component must read
+semantic tokens for presets to reach it. Phase 4's components already do — but
+as of ADR 004 that is a hard requirement, not a stylistic preference. A
+component with a hardcoded color silently ignores every preset.
 
 No `data-mc-preset` picker exists yet (that's Setup Wizard/Theme Settings
 work, Phase 13/31, not started) — this phase only had to prove the token
 mechanism itself, per `CLAUDE.md` §19/`MINTCART_TECHNICAL_PLAN.md` §45's
 "prove the architecture before scaling features" rule.
 
-Full write-up, token-by-token diff table, and the "adding a new preset"
-recipe: `docs/developer/theme-api/presets.md`. Verified via
-`tests/mintcart/design/presets-test.php` (new, standalone, no PHPUnit —
-same pattern as every other MintCart smoke test) plus `npm run build:css`
-+ inspecting the compiled bundle for all four `[data-mc-preset=warm]` rule
-blocks. Same caveat as the Theme API and Footer milestones: no
-MySQL/live-render environment here, so a human should still confirm the
-visual result on a real install (`<html data-mc-preset="warm">` set by
-hand) before this is considered *fully* closed end-to-end.
+Verified: `npm install` (0 vulnerabilities); `npm run build` (minified,
+`index.min.css` 255.8kb → 257.3kb) and `npm run dev:css` (sourcemapped) both
+compile cleanly; both `:root[data-mc-preset=clean]` and
+`:root[data-mc-preset=warm]` are present in the bundled output, with
+`--mc-primary` appearing twice (base `var(--mc-color-mint-600)`, warm
+`var(--mc-preset-warm-terracotta-600)`); `npm test` passes 7 checks. The test
+was **negative-tested** against three deliberate violations — an invented
+token name inside the block, a second rule block, and a `.mc-product-card`
+rule in a preset file — each of which failed the run with exit 1, so the
+checks are not passing vacuously. No PHP touched by this phase, so the
+`tests/mintcart/` suite doesn't apply.
+
+**Not verified, needs a human:** whether the two presets actually *look* like
+coherent, radically different designs — no check can assert that, and this
+environment still has no MySQL/`vendor/twig/twig` to render a real page (the
+same gap carried since Phase 3). Also unverified: text contrast under Warm
+against WCAG 2.2 AA, whether any component is still showing mint green (which
+would mean a hardcoded color, a component bug), and whether both presets apply
+cleanly to `test_theme`'s different DOM. All five items are listed in
+`docs/MANUAL_VERIFICATION.md`'s new Phase 9 section.
+
+**Not wired yet, by design:** nothing writes `data-mc-preset` onto `<html>` at
+runtime — Mint Default's page templates don't emit it and no admin UI selects
+it. That belongs with theme settings (`MINTCART_FUNCTIONAL_SCOPE.md` §9) and
+its declarative `settings.json` schema (Implementation Guide §31), neither of
+which exists; building the writer ahead of the form that sets the value would
+be API ahead of a consumer (`CLAUDE.md` §85). Until then a preset is inspected
+by setting the attribute by hand.
 
 ## Phase 10 — Homepage Blocks
 

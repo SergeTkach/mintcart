@@ -1,104 +1,96 @@
 /**
- * "Warm" preset.
+ * "Warm" design preset.
  *
- * Phase 9 (docs/MINTCART_TECHNICAL_PLAN.md §12/§42, Implementation Guide
- * §24/§50): a preset changes only design tokens/settings values, never the
- * component DOM. Full mechanism write-up: docs/developer/design/presets.md.
+ * docs/MINTCART_IMPLEMENTATION_GUIDE.md §24, §51 Phase 9: a preset changes
+ * only design token values, never component DOM/Twig. This file proves that
+ * by redefining ONLY semantic-tier `--mc-*` custom properties already
+ * declared in settings/tokens.css - it never introduces a token name a
+ * component doesn't already read, and it never touches a component-local
+ * token (e.g. `--mc-button-bg`) directly.
  *
- * Deliberately "radically different" from the Clean baseline
- * (settings/tokens.css) to prove the token system alone - no Twig change -
- * can carry a distinct visual identity: a terracotta/amber palette instead
- * of mint green, warm off-white surfaces instead of white, a serif heading
- * face instead of the system sans, much larger "soft" radii, warmer
- * diffused shadows, and roomier spacing/padding.
+ * Activated via `data-mc-preset="warm"` on `<html>` (see
+ * docs/developer/theme-api/presets.md). The attribute selector's higher
+ * specificity than plain `:root` means this wins over settings/tokens.css's
+ * defaults regardless of CSS import order.
  *
- * Everything here is scoped under `[data-mc-preset="warm"]` on `<html>` -
- * never a bare `:root` selector - so it has zero effect unless that
- * attribute is set (no live picker sets it yet; see the doc above). State
- * colors (success/danger/warning/info) are intentionally left alone: they
- * carry meaning (stock status, form errors, ...), not brand identity, and
- * re-tuning them for "warmth" risks a contrast/usability regression a
- * preset has no business making.
+ * Radically different from the "Clean" default (docs/adr/004-design-token-
+ * presets.md): warm terracotta/gold palette instead of mint green/blue,
+ * a serif heading face, a softer/rounder radius scale, roomier spacing and
+ * a warm-tinted shadow - on the exact same `mc-*` markup.
  */
 
 :root[data-mc-preset='warm'] {
     /* ---------------------------------------------------------------- */
-    /* Semantic: color                                                   */
+    /* Preset-local primitives (feed the semantic overrides below only -   */
+    /* never read directly by component CSS)                              */
     /* ---------------------------------------------------------------- */
 
-    --mc-primary: #c2410c;
-    --mc-primary-hover: #9a3412;
-    --mc-primary-active: #7c2d12;
+    --mc-preset-warm-terracotta-100: #fbe2d3;
+    --mc-preset-warm-terracotta-500: #d97444;
+    --mc-preset-warm-terracotta-600: #c1552c;
+    --mc-preset-warm-terracotta-700: #a8431f;
+    --mc-preset-warm-terracotta-800: #82331b;
+
+    --mc-preset-warm-gold-500: #d69e2e;
+    --mc-preset-warm-gold-600: #b7841f;
+
+    --mc-preset-warm-cream-50: #fdf8f0;
+    --mc-preset-warm-cream-100: #f8ede0;
+
+    --mc-preset-warm-brown-600: #6b4a34;
+    --mc-preset-warm-brown-900: #362013;
+
+    /* ---------------------------------------------------------------- */
+    /* Semantic: color                                                     */
+    /* ---------------------------------------------------------------- */
+
+    --mc-primary: var(--mc-preset-warm-terracotta-600);
+    --mc-primary-hover: var(--mc-preset-warm-terracotta-700);
+    --mc-primary-active: var(--mc-preset-warm-terracotta-800);
     --mc-on-primary: var(--mc-color-white);
 
-    --mc-accent: #b45309;
-    --mc-on-accent: var(--mc-color-white);
+    --mc-accent: var(--mc-preset-warm-gold-500);
+    --mc-on-accent: var(--mc-preset-warm-brown-900);
 
-    --mc-surface: #fdf6ec;
-    --mc-surface-alt: #f7ead9;
-    --mc-surface-inverse: #2b1c12;
+    --mc-surface: var(--mc-preset-warm-cream-50);
+    --mc-surface-alt: var(--mc-preset-warm-cream-100);
+    --mc-surface-inverse: var(--mc-preset-warm-brown-900);
 
-    --mc-text: #3a2a1d;
-    --mc-text-inverse: #fdf6ec;
-    --mc-muted: #8a6f5c;
-    --mc-border: #e4cdb2;
-    --mc-border-strong: #b8926a;
-
-    /* ---------------------------------------------------------------- */
-    /* Typography                                                        */
-    /* ---------------------------------------------------------------- */
-
-    --mc-font-family-heading: Georgia, 'Times New Roman', Times, serif;
+    --mc-text: var(--mc-preset-warm-brown-900);
+    --mc-text-inverse: var(--mc-preset-warm-cream-50);
+    --mc-muted: var(--mc-preset-warm-brown-600);
+    --mc-border: var(--mc-preset-warm-terracotta-100);
+    --mc-border-strong: var(--mc-preset-warm-terracotta-500);
 
     /* ---------------------------------------------------------------- */
-    /* Spacing                                                           */
+    /* Typography - warmer, rounder heading face; base stays legible      */
+    /* ---------------------------------------------------------------- */
+
+    --mc-font-family-heading: Georgia, 'Iowan Old Style', 'Palatino Linotype',
+        serif;
+
+    /* ---------------------------------------------------------------- */
+    /* Radius - softer, rounder "card look" per the Phase 9 checklist     */
+    /* ---------------------------------------------------------------- */
+
+    --mc-radius-sm: 0.375rem;
+    --mc-radius-md: 0.625rem;
+    --mc-radius-lg: 1rem;
+    --mc-radius-xl: 1.5rem;
+
+    /* ---------------------------------------------------------------- */
+    /* Spacing - roomier scale                                            */
     /* ---------------------------------------------------------------- */
 
     --mc-space-4: 1.125rem;
     --mc-space-6: 1.75rem;
+    --mc-space-8: 2.25rem;
 
     /* ---------------------------------------------------------------- */
-    /* Radius - larger, softer than Clean's crisper scale                */
+    /* Shadow - warm-tinted instead of neutral black                      */
     /* ---------------------------------------------------------------- */
 
-    --mc-radius-sm: 0.5rem;
-    --mc-radius-md: 0.75rem;
-    --mc-radius-lg: 1.25rem;
-    --mc-radius-xl: 1.75rem;
-
-    /* ---------------------------------------------------------------- */
-    /* Shadow - warm-tinted, more diffused                               */
-    /* ---------------------------------------------------------------- */
-
-    --mc-shadow-sm: 0 2px 6px rgba(120, 72, 32, 0.12);
-    --mc-shadow-md: 0 8px 20px rgba(120, 72, 32, 0.16);
-    --mc-shadow-lg: 0 16px 40px rgba(120, 72, 32, 0.2);
-}
-
-/* ---------------------------------------------------------------------- */
-/* Card look - borderless, larger radius/shadow/padding instead of a     */
-/* flat border (Phase 9 checklist explicitly calls out "card look").     */
-/* ---------------------------------------------------------------------- */
-
-:root[data-mc-preset='warm'] .mc-product-card,
-:root[data-mc-preset='warm'] .mc-card {
-    --mc-product-card-border-color: transparent;
-    --mc-product-card-radius: var(--mc-radius-xl);
-    --mc-product-card-shadow: var(--mc-shadow-lg);
-    --mc-product-card-padding: var(--mc-space-6);
-
-    --mc-card-border-color: transparent;
-    --mc-card-radius: var(--mc-radius-xl);
-    --mc-card-shadow: var(--mc-shadow-lg);
-    --mc-card-padding: var(--mc-space-6);
-}
-
-/* ---------------------------------------------------------------------- */
-/* Button look - pill-shaped instead of a rounded rectangle (Phase 9      */
-/* checklist explicitly calls out "button look").                        */
-/* ---------------------------------------------------------------------- */
-
-:root[data-mc-preset='warm'] .mc-button {
-    --mc-button-radius: var(--mc-radius-pill);
-    --mc-button-padding-x: var(--mc-space-6);
+    --mc-shadow-sm: 0 1px 2px rgba(130, 51, 27, 0.1);
+    --mc-shadow-md: 0 4px 12px rgba(130, 51, 27, 0.16);
+    --mc-shadow-lg: 0 12px 32px rgba(130, 51, 27, 0.22);
 }
