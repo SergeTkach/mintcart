@@ -52,6 +52,6 @@ return new class implements MigrationInterface {
 - Do not duplicate data OpenCart already stores (store name, contacts,
   currency, payment/shipping config, ...) — see `CLAUDE.md` §6/§39. This
   directory is for Mint-specific tables only.
-- This directory is currently empty: no MintCart-owned table exists yet.
-  The first real migration lands with whichever feature first needs one
-  (e.g. `mc_page`/`mc_block` for the Homepage Builder).
+- The first real migrations are `202608231405_create_mc_pages.php` and
+  `202608231406_create_mc_blocks.php` (Phase 10, Homepage Builder storage:
+  `mc_page`, `mc_page_description`, `mc_block`, `mc_block_description`).
