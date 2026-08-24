@@ -498,10 +498,67 @@ real install before treating the milestone as *fully* closed end-to-end.
 
 ## Phase 9 — Presets
 
-- [ ] At least two radically different presets (e.g. Clean, Warm) on the same DOM
-- [ ] Differ in colors/fonts/radius/spacing/card look/button look only, not Twig
+- [x] At least two radically different presets (e.g. Clean, Warm) on the same DOM —
+      `assets/src/css/presets/clean.css` and `assets/src/css/presets/warm.css`,
+      each scoped by `:root[data-mc-preset='<code>']`; both listed in
+      `mint_default`'s `theme.json` `presets` array (was `[]`). Contract:
+      `docs/developer/theme-api/presets.md`; decisions:
+      `docs/adr/004-design-token-presets.md`
+- [x] Differ in colors/fonts/radius/spacing/card look/button look only, not Twig —
+      `warm.css` redeclares 25 semantic-tier `--mc-*` tokens (terracotta/gold
+      palette, serif heading face, softer radius scale, roomier spacing,
+      warm-tinted shadows) plus 11 preset-local `--mc-preset-warm-*`
+      intermediates. Zero component CSS, zero Twig, zero component-local
+      tokens touched. The card and button *look* changes because
+      `mc-card`/`mc-button` read semantic tokens — the preset never names them
 
-Not started.
+**Phase 9 is complete.** `clean.css` is a deliberately empty block: Clean's
+values *are* `settings/tokens.css`'s values, so the file makes `clean` a real,
+enumerable preset code without duplicating ~108 declarations that would then
+have to never drift (`CLAUDE.md` §86). See ADR 004 decision 3.
+
+The Preset/Theme boundary is now enforced rather than conventional:
+`tests/frontend/preset-tokens-test.js` (wired to `npm test`) requires each
+preset file to contain exactly one `:root[data-mc-preset='<code>']` block and
+to redeclare only tokens `tokens.css` already declares, plus its own
+`--mc-preset-<code>-*` intermediates. A preset that invents a token name is
+introducing component-facing API no component reads; one that sets a
+component-local token (`--mc-button-bg`) styles a single component out of step
+with the rest. Both are now build-breaking rather than review-catchable.
+
+A consequence worth carrying forward: every MintCart component must read
+semantic tokens for presets to reach it. Phase 4's components already do — but
+as of ADR 004 that is a hard requirement, not a stylistic preference. A
+component with a hardcoded color silently ignores every preset.
+
+Verified: `npm install` (0 vulnerabilities, fresh install this run, no version
+drift from the committed lockfile); `npm run build` (minified, `index.min.css`
+255.8kb → 257.3kb) and `npm run dev:css` (sourcemapped) both compile cleanly;
+both `:root[data-mc-preset=clean]` and `:root[data-mc-preset=warm]` are present
+in the bundled output, with `--mc-primary` appearing twice (base
+`var(--mc-color-mint-600)`, warm `var(--mc-preset-warm-terracotta-600)`);
+`npm test` passes 7 checks. The test was **negative-tested** against three
+deliberate violations — an invented token name inside the block, a second rule
+block, and a `.mc-product-card` rule in a preset file — each of which failed the
+run with exit 1, so the checks are not passing vacuously. No PHP was touched,
+so the `tests/mintcart/` suite doesn't apply to this increment.
+
+**Not verified, needs a human:** whether the two presets actually *look* like
+coherent, radically different designs — no check can assert that, and this
+environment still has no MySQL/`vendor/twig/twig` to render a real page (the
+same gap carried since Phase 3). Also unverified: text contrast under Warm
+against WCAG 2.2 AA, whether any component is still showing mint green (which
+would mean a hardcoded color, a component bug), and whether both presets apply
+cleanly to `test_theme`'s different DOM. All five items are listed in
+`docs/MANUAL_VERIFICATION.md`'s new Phase 9 section.
+
+**Not wired yet, by design:** nothing writes `data-mc-preset` onto `<html>` at
+runtime — Mint Default's page templates don't emit it and no admin UI selects
+it. That belongs with theme settings (`MINTCART_FUNCTIONAL_SCOPE.md` §9) and
+its declarative `settings.json` schema (Implementation Guide §31), neither of
+which exists; building the writer ahead of the form that sets the value would
+be API ahead of a consumer (`CLAUDE.md` §85). Until then a preset is inspected
+by setting the attribute by hand.
 
 ## Phase 10 — Homepage Blocks
 
@@ -649,6 +706,11 @@ environment still has no MySQL/`vendor/twig/twig`, so the proof is at the
 human should still confirm `test_theme`'s override actually renders on a
 real install before the milestone is considered *fully* closed end-to-end.
 
+**Phase 9 — Presets is now complete too** (see its section above): `clean`
+and `warm` presets on identical DOM, the Preset/Theme boundary enforced by
+`npm test`, contract in `docs/developer/theme-api/presets.md`, decisions in
+`docs/adr/004-design-token-presets.md`.
+
 **Next run should pick one of:**
 
 - **Phase 7 — Header / Footer / Navigation** (deferred until Phase 8 passed,
@@ -657,15 +719,19 @@ real install before the milestone is considered *fully* closed end-to-end.
   `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
   provider → contract → Mint Default `.twig` pattern `product-card`
   established, with centralized business data (no per-theme contact
-  duplication, per `CLAUDE.md` §6/§39).
-- **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
-  on the same DOM, differing only in tokens/settings, validating the design
-  token system independently of the Theme API's component-override
-  mechanism just proven.
+  duplication, per `CLAUDE.md` §6/§39). **Check open PRs first** — Phase 7
+  Header and Footer each already have an open, unmerged PR (#14, #15) as of
+  this run; don't redo them.
+- **Phase 10 — Homepage Blocks**, whose storage layer also already has an
+  open PR (#16) — check before starting.
 
-Either is a reasonable next increment; re-read whichever section is picked
-in full before starting, per `CLAUDE.md` §10/§84 — don't start from this
-summary alone.
+Whatever is picked, re-read that section in full before starting, per
+`CLAUDE.md` §10/§84 — don't start from this summary alone. And re-check the
+open-PR list: as of this run, eight routine PRs (#14–#21) are open and
+unmerged, covering Phase 7 Header/Footer, Phase 10 Block storage, Phase 11
+admin primitives (McConfirm/McSortable/McTabs/McProgress) and a Phase 6/8
+shared `ProductCardListRenderer`. Those phases are *in flight*, not
+available.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
 health checks, CI) stay intentionally deferred — no real consumer yet.
