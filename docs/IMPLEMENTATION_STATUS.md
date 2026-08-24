@@ -582,6 +582,32 @@ needs a human), is in `docs/adr/002-theme-api-milestone-proof.md`.
 proceed. A human should still confirm the override actually renders on a
 real install before treating the milestone as *fully* closed end-to-end.
 
+**Update (this run): Search is now the second listing controller wired to
+`product-card`**, alongside Category. Rather than re-inline Category's own
+`try`/`catch`-and-disable loop and private `mintActiveThemeDirectory()`
+helper a second time, both were extracted into shared classes —
+`MintCart\Design\ActiveTheme` (active-theme + Mint-awareness resolution)
+and `MintCart\Design\ProductCardListRenderer` (the per-product
+build-via-`ProductViewProvider`/render-via-`ComponentRenderer`/
+degrade-on-failure step) — `docs/developer/theme-api/product-card-list-renderer.md`.
+`ControllerProductCategory` and `ControllerCommonFooter` were both
+refactored to call the shared classes instead of their own private copies,
+with no behavioral change (verified: full `tests/mintcart/` suite re-run
+end to end, still passing). `ControllerProductSearch` now builds
+`$data['product_cards']` the same way Category does, rendered into a new
+`mint_default/template/product/search.twig` (native `<form method="get">`
+refine-search, no jQuery — `CLAUDE.md` §3). New test:
+`tests/mintcart/design/product-card-list-renderer-test.php` (8 scenarios).
+Full writeup, including a **pre-existing, unrelated gap** discovered (not
+fixed) while writing the new template — `mint_default`'s (and stock
+`default`'s) own `category.twig` silently renders several language-string
+variables as blank because `category.php` never assigns them to `$data` —
+is in `docs/upstream-diff.md`'s `search.php` entry.
+
+Manufacturer and Special still aren't wired to `product-card` — same
+shared `ProductCardListRenderer`, different controller, next candidates
+for this pipeline.
+
 ## Phase 9 — Presets
 
 - [x] At least two radically different presets (e.g. Clean, Warm) on the same DOM
@@ -804,25 +830,59 @@ bundle for all four `[data-mc-preset=warm]` rule blocks. Same caveat as
 every other design-only milestone here: no live-render environment, so a
 human should still confirm the visual result on a real install.
 
-**Next run should pick:**
+**Update (this run): Search is wired to `product-card`, and the shared
+per-product rendering step is extracted.** See the note added above, just
+before the Phase 9 heading, and `docs/developer/theme-api/product-card-list-renderer.md`
+for the full writeup. `MintCart\Design\ActiveTheme` +
+`MintCart\Design\ProductCardListRenderer` are the two new shared classes;
+`ControllerProductCategory`/`ControllerCommonFooter` were refactored
+(no behavioral change) to use them instead of their own private copies;
+`ControllerProductSearch` is the new live consumer, with a new
+`mint_default/template/product/search.twig`.
 
-- **Phase 7, continued — Header component contract.** Define `Header`/
-  `Topbar`/`Logo`/`Search`/`Account`/`Cart`/`Navigation`/`Mobile Navigation`
-  per `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
-  provider → contract → Mint Default `.twig` → live controller wiring
-  pattern `footer` and `product-card` both established. This is the larger
-  remaining piece of Phase 7 — likely needs its own further split (e.g. a
-  `HeaderViewProvider` contract first, then CSS/Twig, then
-  `ControllerCommonHeader` wiring, same as Footer did across three runs).
-  This is now the **only** remaining piece of Phase 7 — Footer is fully
-  done including its theme-override proof. It is also now the only
-  unstarted item among Phases 0–9 — Phase 10 (Homepage Blocks) is the next
-  phase-level option after it, but per `CLAUDE.md` §21/§88's starting
-  sequence, Header/Footer/Navigation come before Homepage Blocks.
+**Coordination note for whoever picks up next:** this repo currently has
+several other open, unmerged PRs in flight from other (non-routine)
+sessions working the *same* `docs/IMPLEMENTATION_STATUS.md` checklist in
+parallel — at the time of this run, at least one already implements Phase
+7's Header component end-to-end (provider, CSS/Twig, live
+`ControllerCommonHeader` wiring, `test_theme` override), and others cover
+Phase 9 Presets (a second, independent implementation of what this branch
+already shipped), Phase 10's Block API storage, several Phase 11 admin
+primitives (`McConfirm`/`McSortable`/`McTabs`/`McProgress`), and a CI
+workflow. **Before starting Header (or any of the above) fresh, check
+open PRs first** (`gh pr list --state open` / repo host equivalent) —
+redoing already-open, tested work wastes a run and creates avoidable merge
+conflicts; a human will reconcile whichever PR(s) actually land. This is
+why *this* run picked Search wiring instead of Header: Header appeared
+already done elsewhere, but Category→Search product-listing reuse
+(`CLAUDE.md` §8A, `MINTCART_TECHNICAL_PLAN.md` §15C/§15D) did not.
 
-Re-read the Phase 7 section (and `docs/developer/components/footer.md` for
-the established pattern to mirror) in full before starting, per `CLAUDE.md`
-§10/§84 — don't start from this summary alone.
+**Next run should pick, in order of preference:**
+
+1. **If Header (Phase 7) has landed in master by then:** Manufacturer and/or
+   Special controller wiring to `product-card` via the now-shared
+   `MintCart\Design\ProductCardListRenderer` — same pattern Category/Search
+   just established, two more real consumers of the shared listing pipeline
+   (`CLAUDE.md` §8A). `ControllerProductManufacturer`/`ControllerProductSpecial`
+   are the files; mirror `search.php`'s changes in this run almost exactly.
+2. **If Header has *not* landed yet:** re-check whether any open PR already
+   covers it before starting from scratch. If genuinely nobody has it,
+   implement Phase 7's Header component contract (`Header`/`Topbar`/`Logo`/
+   `Search`/`Account`/`Cart`/`Navigation`/`Mobile Navigation` per
+   `MINTCART_IMPLEMENTATION_GUIDE.md` §48), following the same
+   provider → contract → Mint Default `.twig` → live controller wiring
+   pattern `footer` and `product-card` both established.
+3. Separately, unrelated to either of the above: the pre-existing
+   `category.twig`/`category.php` blank-language-string gap documented in
+   `docs/upstream-diff.md`'s `search.php` entry (this run) is a small,
+   self-contained, well-scoped fix worth its own tiny run if nothing above
+   is picked.
+
+Re-read the relevant section above (and `docs/developer/theme-api/product-card-list-renderer.md`/
+`docs/developer/components/footer.md` for the established patterns to
+mirror) in full before starting, per `CLAUDE.md` §10/§84 — don't start
+from this summary alone.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
-health checks, CI) stay intentionally deferred — no real consumer yet.
+health checks) stay intentionally deferred — no real consumer yet. CI may
+already be covered by an open PR — check before redoing it.
