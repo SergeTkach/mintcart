@@ -345,3 +345,78 @@ sub_category/description) instead of the `default` theme's jQuery `click`
 handler — `CLAUDE.md` §3 disallows jQuery in new MintCart code, and a plain
 GET form submitting the same field names to `index.php?route=product/search`
 needs no JS at all.
+
+---
+
+## `upload/catalog/controller/product/special.php`
+
+**Reason:** Wires Special as the third real listing consumer of the Theme
+API's `product-card` pipeline (`MINTCART_TECHNICAL_PLAN.md` §15C/§15D,
+`CLAUDE.md` §8A), mirroring `search.php`'s wiring almost exactly: for each
+product row, in addition to the controller's existing inline array
+building, also builds a `MintCart\Commerce\ProductViewProvider` result via
+the shared `MintCart\Design\ProductCardListRenderer` and renders it into a
+new `$data['product_cards']` array, same `MintCart\Design\ActiveTheme::isMintAware()`
+gate `category.php`/`search.php`/`footer.php` already use. Also exposes
+`text_sort`/`text_limit`/`text_empty`/`button_continue` to `$data` for the
+new `mint_default/template/product/special.twig` page to consume — the
+same pattern `search.php` already established, not new business logic.
+Unlike `search.php`, Special has no optional query gate (it always lists
+today's specials), so the whole listing loop runs unconditionally — no new
+`search_performed`-style flag was needed.
+
+**Why it can't live in the MintCart layer instead:** Same rationale as
+`category.php`/`search.php` — `ProductViewProvider`/`ComponentRenderer`/
+`ProductCardListRenderer` are deliberately OpenCart-agnostic, but something
+controller-specific has to call them with this controller's
+already-resolved product data (formatted price/special/tax, resized image,
+rating) once per row.
+
+**Compatibility impact:** None for the legacy `default` theme or any
+unrelated third-party theme — same manifest-gated pipeline as
+`category.php`/`search.php`, and the controller's original
+`$data['products']` array is completely unchanged either way: same keys,
+same values, same order, same computation. A failure inside the shared
+renderer is caught and logged via `MintCart\Core\Logger`, disabling the
+pipeline for the rest of the request rather than propagating — same
+degrade behaviour as `category.php`/`search.php`.
+
+**Tests:** `php -l` (clean) on `special.php` and the updated
+`en-gb/product/special.php` strings. `tests/mintcart/design/
+product-card-list-renderer-test.php` already covers the shared renderer
+this controller now calls (no controller-specific test needed — same
+class, same contract, already exercised by `search.php`'s wiring). No live
+end-to-end request test — same pre-existing gap as every earlier phase (no
+MySQL/`vendor/twig/twig` in this environment). A human should smoke-test a
+real special-offers page on a `mint_default`-configured install before this
+reaches production.
+
+---
+
+## `upload/catalog/language/en-gb/product/special.php`
+
+**Reason:** Adds the same five `product-card` language keys
+`product/category.php`/`product/search.php`'s language files already added
+(`text_rated`, `text_quick_order`, `text_badge_sale`, `text_badge_out_of_stock`,
+`text_badge_new`) — needed now that Special also renders `product-card`.
+
+**Why it can't live in the MintCart layer instead:** Same as
+`product/category.php`'s language file — OpenCart's language system is
+file-per-route.
+
+**Compatibility impact:** Purely additive — five new keys appended after
+the existing ones, nothing removed or renamed.
+
+**Tests:** `php -l` (clean).
+
+---
+
+## `upload/catalog/view/theme/mint_default/template/product/special.twig` (new file)
+
+Not an upstream diff — a new file `mint_default` ships. Noted here only
+because it is the page-level template `ControllerProductSpecial::index()`'s
+`$this->load->view('product/special', $data)` call resolves to once
+`mint_default` is active (via the `event/theme.php` three-tier fallback,
+`docs/adr/003-page-template-fallback-fix.md`). Simpler than `search.twig`
+— no refine-search form, since Special has no search-criteria UI in the
+stock `default` theme either.

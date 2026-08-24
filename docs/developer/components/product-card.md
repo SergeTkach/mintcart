@@ -31,12 +31,13 @@ degrade-on-failure loop, that shared shape was extracted into
 `MintCart\Design\ProductCardListRenderer` (composes `ProductViewProvider` +
 `ComponentRenderer`, plus `MintCart\Design\ActiveTheme` for the
 `config_theme`/manifest lookup both controllers also duplicated) — see
-`docs/developer/theme-api/product-card-list-renderer.md`. Category and Search
-both call it for each product row, rendering into `$data['product_cards']`,
-consumed by `mint_default/template/product/category.twig` and the new
-`mint_default/template/product/search.twig` respectively.
-Manufacturer/Special aren't wired yet — same shared renderer, different
-controller, still to do.
+`docs/developer/theme-api/product-card-list-renderer.md`. Category, Search
+and now Special all call it for each product row, rendering into
+`$data['product_cards']`, consumed by `mint_default/template/product/category.twig`,
+`mint_default/template/product/search.twig` and
+`mint_default/template/product/special.twig` respectively. Manufacturer
+isn't wired on this branch — an independent, unmerged PR implements it
+separately; check open PRs before wiring it here too.
 
 A second theme, `catalog/view/theme/test_theme/`, overrides only
 `product-card.twig` with a genuinely different DOM (single badge, no
@@ -225,5 +226,5 @@ padding via CSS only — same DOM/contract, no separate template.
 - [x] No Bootstrap 3 dependency
 - [x] No OCMOD required
 - [x] Ships a real Mint Default `.twig` file, resolvable via `ComponentRenderer`
-- [x] Live controller wiring — `ControllerProductCategory` renders it via `ProductViewProvider` + `ComponentRenderer` (Search/Manufacturer/Special still to do)
+- [x] Live controller wiring — `ControllerProductCategory`/`ControllerProductSearch`/`ControllerProductSpecial` all render it via `ProductViewProvider` + `ComponentRenderer` (Manufacturer wired independently in a separate unmerged PR)
 - [x] Theme override checked — `catalog/view/theme/test_theme/` overrides only `product-card.twig` with a genuinely different DOM; `ComponentRenderer` resolves it correctly in both directions (override active vs. Mint Default active), see `docs/adr/002-theme-api-milestone-proof.md`. Resolution is proven; a human still needs to confirm the override actually **renders** correctly on a real install (no MySQL/`vendor/twig/twig` in this environment — same gap as every earlier Phase 8 entry)

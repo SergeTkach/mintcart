@@ -107,6 +107,9 @@ request never affects the next.
 
 - `ControllerProductCategory` (`upload/catalog/controller/product/category.php`)
 - `ControllerProductSearch` (`upload/catalog/controller/product/search.php`)
+- `ControllerProductSpecial` (`upload/catalog/controller/product/special.php`)
 
-Manufacturer and Special aren't wired yet — same shared renderer, different
-controller, still to do (`docs/IMPLEMENTATION_STATUS.md`).
+Manufacturer isn't wired on this branch — an independent, unmerged PR
+implements it separately with its own copy of this class; check open PRs
+before wiring it here too, to avoid a second duplicate implementation
+(`docs/IMPLEMENTATION_STATUS.md`).
