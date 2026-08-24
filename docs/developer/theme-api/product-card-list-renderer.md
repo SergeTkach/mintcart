@@ -108,8 +108,8 @@ request never affects the next.
 - `ControllerProductCategory` (`upload/catalog/controller/product/category.php`)
 - `ControllerProductSearch` (`upload/catalog/controller/product/search.php`)
 - `ControllerProductSpecial` (`upload/catalog/controller/product/special.php`)
+- `ControllerProductManufacturer` (`upload/catalog/controller/product/manufacturer.php`)
 
-Manufacturer isn't wired on this branch — an independent, unmerged PR
-implements it separately with its own copy of this class; check open PRs
-before wiring it here too, to avoid a second duplicate implementation
-(`docs/IMPLEMENTATION_STATUS.md`).
+All four listing controllers now share this one class and `ActiveTheme` —
+Homepage Products blocks (Phase 10) is the next candidate consumer once
+that phase's Block Provider/Renderer exists.
