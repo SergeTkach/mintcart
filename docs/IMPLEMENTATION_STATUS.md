@@ -780,13 +780,38 @@ by setting the attribute by hand.
 
 ## Phase 10 — Homepage Blocks
 
-- [ ] Block API (`mc_page`, `mc_page_description`, `mc_block`, `mc_block_description`)
+- [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
+      `mc_block_description`) — see "Sub-step 1" below
 - [ ] Block Provider / Renderer / Template separation
 - [ ] First blocks: Hero, Products, Categories, Banner Grid, Benefits, Text/Image,
       Brands, Testimonials, FAQ (initial set per Implementation Guide §51)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-Not started.
+In progress (storage layer only). PR #16.
+
+**Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
+and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
+and `mc_block`/`mc_block_description` exactly as documented in
+`MINTCART_TECHNICAL_PLAN.md` §16 / `MINTCART_IMPLEMENTATION_GUIDE.md` §34 — one
+shared table per entity type (`type` distinguishes Hero/Products/Categories/...,
+not a table per block type), InnoDB/utf8mb4, composite `(entity_id, language_id)`
+description PKs and no `FOREIGN KEY` constraints, mirroring OpenCart's own
+`oc_category`/`oc_category_description` split. `settings_json`/`content_json`
+are `LONGTEXT`, not the MySQL `JSON` column type, for broad shared-hosting
+compatibility (`MINTCART_TECHNICAL_PLAN.md` §2). Verified via
+`tests/mintcart/core/mc-block-migrations-test.php`, which runs the real
+migration files through `MigrationManager` and asserts on the emitted
+`CREATE TABLE` statements (no live MySQL in this environment, same
+pre-existing gap as every earlier phase). No Block Provider/Renderer/Twig
+template exists yet — storage only, matching how every previous phase's
+first migration landed ahead of its consumer.
+
+**Next step:** Block Provider / Renderer / Template separation
+(`MintCart\Blocks\...`), starting with one block type end-to-end (Products
+is the natural first pick — it can reuse the existing `ProductViewProvider`
+from Phase 6 rather than inventing new product-shape logic) before adding
+the rest, per `CLAUDE.md` §85 (don't build the other block types' API
+surface before a first real consumer proves the Provider/Renderer split).
 
 ## Phase 11 — Mint Admin primitives
 
