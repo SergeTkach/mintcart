@@ -42,4 +42,5 @@
 @import './components/product-card.css';
 @import './components/footer.css';
 @import './components/entity-picker.css';
+@import './components/media-picker.css';
 @import './compatibility/bootstrap3-shim.css';

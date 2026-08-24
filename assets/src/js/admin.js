@@ -17,8 +17,8 @@ import { initModalTriggers } from './components/modal.js';
 import { initDrawerTriggers } from './components/drawer.js';
 import { initToastTriggers } from './components/toast.js';
 
-// MintCart admin primitives (McConfirm, McTabs, McSortable, McMediaPicker,
-// McProgress - Phase 11) are added here once implemented.
+// MintCart admin primitives (McConfirm, McTabs, McSortable, McProgress -
+// Phase 11) are added here once implemented.
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
 // a future McModal/McDrawer/McToast JS class (if a real consumer needs an
@@ -32,6 +32,12 @@ import { initToastTriggers } from './components/toast.js';
 // category/manufacturer/attribute/option/information-page/customer pickers)
 // renders one and calls it directly - no wiring ahead of a real consumer
 // (CLAUDE.md §85).
+//
+// mc-media-picker (McMediaPicker) shipped the same way in
+// `./components/media-picker.js` as `createMediaPicker(root, options)`: it
+// needs a caller-supplied `fetchItems`/`fetchFolders`/`uploadFiles`/
+// `deleteItems` data source and a real Media UX consumer (Functional Scope
+// §25 - Product/Category/Blocks image fields), neither of which exist yet.
 initAlertDismiss();
 initQuantityStepper();
 initModalTriggers();
