@@ -47,4 +47,5 @@
 @import './components/header.css';
 @import './components/entity-picker.css';
 @import './components/media-picker.css';
+@import './components/progress.css';
 @import './compatibility/bootstrap3-shim.css';

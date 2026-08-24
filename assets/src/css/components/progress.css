@@ -1,0 +1,86 @@
+/**
+ * mc-progress
+ *
+ * MintCart-owned progress bar primitive (`MINTCART_TECHNICAL_PLAN.md` §18 /
+ * `MINTCART_IMPLEMENTATION_GUIDE.md` §52 list `McProgress` among the Mint
+ * Admin primitives). Unlike `mc-modal`/`mc-drawer`/`mc-toast`, Bootstrap 5's
+ * progress bar has no JS class - `.progress`/`.progress-bar` are CSS-only,
+ * so there is nothing to wrap here beyond retinting Bootstrap's own
+ * `--bs-progress-*` custom properties, the same "no Bootstrap source
+ * recompilation" approach every other component in this directory uses
+ * (`MINTCART_IMPLEMENTATION_GUIDE.md` §11).
+ *
+ * `.progress`/`.progress-bar` stay on the markup as required internal
+ * implementation (Bootstrap's CSS targets those class names directly), the
+ * same way `.modal`/`.toast`/`.offcanvas` do for `mc-modal`/`mc-toast`/
+ * `mc-drawer` - `.mc-progress`/`.mc-progress__bar` are the public contract
+ * (`MINTCART_IMPLEMENTATION_GUIDE.md` §6/§9).
+ *
+ * Contract: docs/developer/components/progress.md
+ */
+
+.mc-progress {
+    --bs-progress-height: 0.5rem;
+    --bs-progress-font-size: var(--mc-font-size-xs);
+    --bs-progress-bg: var(--mc-surface-alt);
+    --bs-progress-border-radius: var(--mc-radius-pill);
+    --bs-progress-box-shadow: none;
+    --bs-progress-bar-color: var(--mc-on-primary);
+    --bs-progress-bar-bg: var(--mc-primary);
+    --bs-progress-bar-transition: width var(--mc-motion-duration-slow) var(--mc-motion-easing-standard);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Variants                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.mc-progress--success {
+    --bs-progress-bar-bg: var(--mc-success);
+    --bs-progress-bar-color: var(--mc-on-success);
+}
+
+.mc-progress--danger {
+    --bs-progress-bar-bg: var(--mc-danger);
+    --bs-progress-bar-color: var(--mc-on-danger);
+}
+
+.mc-progress--warning {
+    --bs-progress-bar-bg: var(--mc-warning);
+    --bs-progress-bar-color: var(--mc-on-warning);
+}
+
+.mc-progress--info {
+    --bs-progress-bar-bg: var(--mc-info);
+    --bs-progress-bar-color: var(--mc-on-info);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Indeterminate (unknown-duration operation, e.g. "Verifying backup")     */
+/* ---------------------------------------------------------------------- */
+
+.mc-progress--indeterminate .mc-progress__bar {
+    width: 30%;
+    animation: mc-progress-indeterminate 1.4s ease-in-out infinite;
+}
+
+@keyframes mc-progress-indeterminate {
+    0% {
+        margin-inline-start: -30%;
+    }
+
+    100% {
+        margin-inline-start: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-progress {
+        --bs-progress-bar-transition: none;
+    }
+
+    .mc-progress--indeterminate .mc-progress__bar {
+        animation: none;
+        width: 50%;
+        margin-inline-start: 25%;
+    }
+}
