@@ -133,6 +133,25 @@ class ControllerProductSearch extends Controller {
 
 		$data['compare'] = $this->url->link('product/compare');
 
+		// mint_default/template/product/search.twig's own refine-search form
+		// and empty/sort/limit labels (MINTCART_TECHNICAL_PLAN.md §14). Not
+		// business logic - just exposing already-loaded language strings the
+		// new Twig template reads, the same way $data['text_compare'] above
+		// already does.
+		$data['text_search'] = $this->language->get('text_search');
+		$data['entry_search'] = $this->language->get('entry_search');
+		$data['text_keyword'] = $this->language->get('text_keyword');
+		$data['text_category'] = $this->language->get('text_category');
+		$data['text_sub_category'] = $this->language->get('text_sub_category');
+		$data['entry_description'] = $this->language->get('entry_description');
+		$data['button_search'] = $this->language->get('button_search');
+		$data['text_sort'] = $this->language->get('text_sort');
+		$data['text_limit'] = $this->language->get('text_limit');
+		$data['text_empty'] = $this->language->get('text_empty');
+		$data['button_continue'] = $this->language->get('button_continue');
+		$data['continue'] = $this->url->link('common/home');
+		$data['search_performed'] = (isset($this->request->get['search']) || isset($this->request->get['tag']));
+
 		// 3 Level Category Search
 		$data['categories'] = array();
 

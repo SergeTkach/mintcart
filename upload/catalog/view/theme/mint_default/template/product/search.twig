@@ -1,0 +1,129 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item">
+                        <a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+                    </li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        {{ column_left }}
+
+        {% if column_left and column_right %}
+            {% set content_class = 'col-lg-6' %}
+        {% elseif column_left or column_right %}
+            {% set content_class = 'col-lg-9' %}
+        {% else %}
+            {% set content_class = 'col-12' %}
+        {% endif %}
+
+        <div class="{{ content_class }}">
+            {{ content_top }}
+
+            <h1 class="mb-4">{{ heading_title }}</h1>
+
+            {# Native GET form - no JS required, unlike default's jQuery-driven
+               #button-search click handler (CLAUDE.md §3: no jQuery in new
+               MintCart code). Submits straight to index.php?route=product/search
+               with the same field names ControllerProductSearch already reads. #}
+            <form method="get" action="index.php" class="mc-card p-3 mb-4">
+                <input type="hidden" name="route" value="product/search">
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label" for="input-search">{{ entry_search }}</label>
+                        <input type="text" name="search" value="{{ search }}" placeholder="{{ text_keyword }}" id="input-search" class="mc-field__control form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label" for="input-category">{{ text_category }}</label>
+                        <select name="category_id" id="input-category" class="mc-field__control form-select">
+                            <option value="0">{{ text_category }}</option>
+                            {% for category_1 in categories %}
+                                <option value="{{ category_1.category_id }}"{% if category_1.category_id == category_id %} selected{% endif %}>{{ category_1.name }}</option>
+                                {% for category_2 in category_1.children %}
+                                    <option value="{{ category_2.category_id }}"{% if category_2.category_id == category_id %} selected{% endif %}>&nbsp;&nbsp;{{ category_2.name }}</option>
+                                    {% for category_3 in category_2.children %}
+                                        <option value="{{ category_3.category_id }}"{% if category_3.category_id == category_id %} selected{% endif %}>&nbsp;&nbsp;&nbsp;&nbsp;{{ category_3.name }}</option>
+                                    {% endfor %}
+                                {% endfor %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="mc-checkbox">
+                            <input type="checkbox" name="sub_category" value="1" id="input-sub-category" class="mc-checkbox__input"{% if sub_category %} checked{% endif %}>
+                            <label class="mc-checkbox__label" for="input-sub-category">{{ text_sub_category }}</label>
+                        </div>
+                        <div class="mc-checkbox">
+                            <input type="checkbox" name="description" value="1" id="input-description" class="mc-checkbox__input"{% if description %} checked{% endif %}>
+                            <label class="mc-checkbox__label" for="input-description">{{ entry_description }}</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_search }}</button>
+                    </div>
+                </div>
+            </form>
+
+            {% if product_cards %}
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                    <a href="{{ compare }}" id="compare-total" class="mc-button mc-button--secondary mc-button--sm">{{ text_compare }}</a>
+
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-label mb-0" for="input-sort">{{ text_sort }}</label>
+                            <select id="input-sort" class="form-select form-select-sm" onchange="location = this.value;">
+                                {% for item in sorts %}
+                                    <option value="{{ item.href }}"{% if item.value == '%s-%s'|format(sort, order) %} selected{% endif %}>{{ item.text }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-label mb-0" for="input-limit">{{ text_limit }}</label>
+                            <select id="input-limit" class="form-select form-select-sm" onchange="location = this.value;">
+                                {% for item in limits %}
+                                    <option value="{{ item.href }}"{% if item.value == limit %} selected{% endif %}>{{ item.text }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    {% for product_card in product_cards %}
+                        <div class="col-6 col-lg-3">
+                            {{ product_card }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+                    <div>{{ pagination }}</div>
+                    <div>{{ results }}</div>
+                </div>
+            {% elseif search_performed %}
+                <p>{{ text_empty }}</p>
+                <div class="text-end">
+                    <a href="{{ continue }}" class="mc-button mc-button--primary">{{ button_continue }}</a>
+                </div>
+            {% endif %}
+
+            {{ content_bottom }}
+        </div>
+
+        {{ column_right }}
+    </div>
+</div>
+{{ footer }}
