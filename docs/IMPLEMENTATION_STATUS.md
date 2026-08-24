@@ -345,19 +345,41 @@ bundled-output grep + manual review against the Definition of Done checklist.
 
 ## Phase 7 — Header / Footer / Navigation
 
-- [ ] Header, Topbar, Logo, Search, Account, Cart, Navigation, Mobile Navigation
-      component contracts
+- [x] Header, Topbar, Logo, Search, Account, Cart component contracts —
+      `MintCart\Design\HeaderViewProvider`
+      (`upload/system/library/mintcart/design/headerviewprovider.php`),
+      documented in `docs/developer/components/header.md`. Live-wired:
+      `catalog/controller/common/header.php`
+      (`ControllerCommonHeader::index()`) builds it and renders via
+      `ComponentRenderer::render('header', ...)`, gated by the same
+      `theme.json`-manifest check other Mint components use.
+      `catalog/view/theme/mint_default/template/mint/components/header.twig`
+      + `catalog/view/theme/mint_default/template/common/header.twig`
+      (whole-page wrapper) + `assets/src/css/components/header.css`
+      (`mc-header`). Theme-override proof:
+      `catalog/view/theme/test_theme/template/mint/components/header.twig`
+      (genuinely different DOM, `component-renderer-test.php` scenario 13 —
+      renumbered during merge reconciliation, see the Footer entry's own
+      scenario 11-12 below). Navigation/Search/Cart/language/currency
+      **stay as pre-rendered legacy HTML fragments** inside the `widgets`
+      field — see `docs/developer/components/header.md` "Why widgets stay
+      legacy fragments" for the rationale (each has its own real Mint API
+      planned for Phase 15/Commerce API; no second real consumer yet for a
+      Mint-native Navigation component, `CLAUDE.md` §85). "Mobile
+      Navigation" specifically is **not** addressed — `mc-header` has no
+      responsive off-canvas/hamburger behavior yet, it relies on
+      `flex-wrap` only; a dedicated mobile nav pattern (likely composing
+      `mc-drawer`, Phase 4) is deferred to a future run.
 - [x] Footer, Footer Columns, Contacts, Social links, Payments, Newsletter —
       `MintCart\Design\FooterViewProvider`
       (`upload/system/library/mintcart/design/footerviewprovider.php`) +
       `assets/src/css/components/footer.css` +
       `catalog/view/theme/mint_default/template/mint/components/footer.twig`,
       documented in `docs/developer/components/footer.md`
-- [x] Centralized business data (no per-theme contact duplication) — for the
-      Footer contract specifically: contacts are documented to source from
-      OpenCart's existing `config_telephone`/`config_email`/`config_address`
-      settings (no Mint-owned duplicate storage). Header's own business-data
-      needs (if any) aren't determined yet since Header hasn't started.
+- [x] Centralized business data (no per-theme contact duplication) — both
+      Header (`contacts.phone` from `config_telephone`) and Footer
+      (`contacts.phone`/`email`/`address`, same OpenCart settings) source
+      from OpenCart's existing config storage, never a Mint-owned table.
 
 **Footer sub-step is complete, including live controller wiring** (this
 run). `FooterViewProvider` (contract + normalization rules), `mc-footer`
@@ -437,6 +459,70 @@ smoke test scenario 11 (real-repo `footer.twig` resolution); `footer.twig`'s
 `if`/`for` tag nesting checked balanced; `npm run build` compiles cleanly,
 `mc-footer__*` classes present in the bundled
 `assets/dist/css/index.min.css`.
+
+**Header sub-step is complete too** (PR #15, `claude/charming-rubin-ozhsi6`,
+merged 2026-08-24 — reconciled onto this file's Footer/Phase 6-9 state as a
+separate merge commit rather than the branch itself, since Phase 6-9 had
+already moved substantially by the time Header was ready to merge).
+`HeaderViewProvider` (contract + normalization rules), `mc-header` CSS,
+`mint_default`'s `mint/components/header.twig` +
+`common/header.twig` page wrapper, and live
+`ControllerCommonHeader::index()` wiring. During reconciliation,
+`header.php`'s own private `mintActiveThemeDirectory()` copy (which is
+what PR #15 shipped with) was swapped for the shared
+`MintCart\Design\ActiveTheme::directory()`/`isMintAware()` — by merge time
+every other controller in this pipeline (`footer.php`/`category.php`/
+`search.php`/`special.php`/`manufacturer.php`) had already been
+consolidated onto that shared class, so keeping Header's own copy would
+have reintroduced the exact duplication that consolidation removed. See
+`docs/upstream-diff.md`'s `header.php` entry.
+
+Theme-override proof: `catalog/view/theme/test_theme/template/mint/components/header.twig`
+— a genuinely different DOM (single stacked bar, no account dropdown, no
+topbar/currency/language/search widgets). `component-renderer-test.php`
+scenario 13 confirms both fallback directions (renumbered from PR #15's
+original scenario 11 during reconciliation, since scenarios 11-12 were
+already taken by the Footer coverage above).
+
+Navigation/Search/Cart/language/currency **stay as pre-rendered legacy
+HTML fragments** inside the `widgets` field — see
+`docs/developer/components/header.md` "Why widgets stay legacy fragments"
+for the rationale (each has its own real Mint API planned for Phase
+15/Commerce API; no second real consumer yet for a Mint-native Navigation
+component, `CLAUDE.md` §85). "Mobile Navigation" specifically is **not**
+addressed — `mc-header` has no responsive off-canvas/hamburger behavior
+yet, it relies on `flex-wrap` only; a dedicated mobile nav pattern (likely
+composing `mc-drawer`, Phase 4) is deferred to a future run.
+
+Verified (reconciliation): `php -l` clean on the modified `header.php`;
+full `tests/mintcart/` suite re-run end to end (migration manager,
+`ProductViewProvider` x8, `ComponentRenderer` x13, `FooterViewProvider` x7,
+`HeaderViewProvider` x7, presets, `ProductCardListRenderer` x8) — all
+pass. Same pre-existing gap as every earlier phase: no live
+`config_theme`-switch-and-load-a-page check was possible (no
+MySQL/`vendor/twig/twig` in this environment) — a human should confirm
+Header actually renders (both `mint_default`'s and `test_theme`'s distinct
+DOM) on a real install before this is considered fully closed end-to-end.
+
+**Phase 7 is functionally complete** for the component-contract/Theme-API
+story (both Header and Footer have a real `mint_default` implementation,
+live controller wiring, and a `test_theme` override proving a different
+DOM with 0 OCMOD). Two things remain, tracked as follow-ups rather than
+blocking Phase 7 itself:
+- **Mobile Navigation** — no dedicated pattern yet (see above).
+- **MintCart's own compiled asset bundle (`assets/dist/{css,js}`) is still
+  not enqueued on any live page** — `mint_default/template/common/header.twig`
+  deliberately keeps the exact same Bootstrap 3/jQuery/Font Awesome/
+  `common.js` stack `default`'s header.twig loads, because swapping it
+  safely needs a full call-site audit of every page/widget that depends on
+  jQuery/`common.js` (cart AJAX, form validation, account/checkout pages)
+  per `CLAUDE.md` §10/§84 — out of scope for a single component increment.
+  Practical effect: **no `mc-*` component CSS has any visible effect on a
+  real page yet**, since nothing links `index.min.css`. This is the single
+  most important next piece of plumbing before any component's live
+  rendering can be visually verified — see
+  `docs/developer/components/header.md` "Known gap" for detail. A natural
+  next-run candidate.
 
 ## Phase 8 — Theme resolver
 
@@ -1070,25 +1156,27 @@ verification here is build-compiles + bundled-output grep + manual review
 against the Definition of Done checklist, same as every other JS-only
 primitive so far.
 
+**Update (2026-08-24, merge of PR #15): Header is done too.** Merged
+separately from this branch (PR #15, `claude/charming-rubin-ozhsi6`) rather
+than reconciled onto it, since by merge time this branch's own Phase
+6-9-11 work had already landed on `master`. See the Phase 7 section above
+for the full writeup, including the `ActiveTheme` consolidation
+`header.php` needed during reconciliation (it originally shipped with its
+own private `mintActiveThemeDirectory()` copy, duplicating what
+`footer.php`/`category.php`/`search.php`/`special.php`/`manufacturer.php`
+had already consolidated onto the shared class by then).
+
 **Next run should pick, in order of preference:**
 
-1. **Reconcile the two `ProductCardListRenderer` implementations** if both
-   this PR (#14) and #21 have landed: they are the same class name/path with
-   incompatible signatures (this branch: `render($product, $display,
-   $context, $languageStrings, $onError)` + `isEnabled()`, language strings
-   per call, caller-supplied logging; #21: language strings + `Logger`
-   injected in the constructor, `render($product, $display, $context)`,
-   `hasFailed()`). Pick one shape, migrate all four consumers
-   (Category/Search/Special/Manufacturer) onto it, and keep a single test
-   file. This is a real (small) architectural fork — worth doing carefully
-   rather than letting whichever merged last silently win.
-2. **If Header (Phase 7) has *not* landed and no open PR covers it:**
-   implement Phase 7's Header component contract (`Header`/`Topbar`/`Logo`/
-   `Search`/`Account`/`Cart`/`Navigation`/`Mobile Navigation` per
-   `MINTCART_IMPLEMENTATION_GUIDE.md` §48), following the same
-   provider → contract → Mint Default `.twig` → live controller wiring
-   pattern `footer` and `product-card` both established. Check open PRs
-   first — at the time of writing #15 already implements it.
+1. **Reconcile the two `ProductCardListRenderer` implementations** — done
+   for Category/Search/Special (this branch's shape was kept) via human
+   review comparing #14 against #21; #21 was closed as superseded. The one
+   remaining piece — porting #21's non-overlapping Manufacturer wiring onto
+   this branch's actual `ProductCardListRenderer`/`ActiveTheme` API — is in
+   a separate open PR (#24, `feature/manufacturer-product-card-wiring`),
+   not yet merged as of this entry. Check whether it has landed before
+   touching `manufacturer.php` or `ProductCardListRenderer` again.
+2. ~~Header (Phase 7)~~ — **done**, see the update just above.
 3. ~~The pre-existing `category.twig`/`category.php` blank-language-string
    gap~~ — **done.** See the Phase 8 update above and
    `docs/fixes/registry.md` MC-0001.
@@ -1121,6 +1209,14 @@ primitive so far.
    primitives (`McEntityPicker`, `McMediaPicker`) are now shipped; only
    `McConfirm`/`McTabs`/`McSortable`/`McProgress` remain, pending whichever
    land from open (non-routine) PRs — check those first before redoing.
+7. **Enqueue MintCart's own asset bundle** (`assets/dist/{css,js}`) on a
+   live Mint page — the single most important remaining piece of plumbing
+   surfaced by the Header merge: no `mc-*` CSS currently has any visible
+   effect on a real page (nothing links `index.min.css` anywhere). Needs a
+   call-site audit of every page/widget depending on
+   jQuery/`common.js`/Bootstrap 3 first (`CLAUDE.md` §10/§84) — start with
+   `docs/developer/components/header.md` "Known gap" for the full
+   rationale and what's already been deliberately deferred.
 
 Re-read the relevant section above (and `docs/developer/theme-api/product-card-list-renderer.md`/
 `docs/developer/components/footer.md` for the established patterns to
