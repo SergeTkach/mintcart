@@ -876,6 +876,24 @@ search-criteria UI), the five `product-card` language keys appended to
 lists updated in `docs/developer/theme-api/product-card-list-renderer.md`
 and `docs/developer/components/product-card.md`.
 
+**Update (a later run, same branch/PR #14): the `category.php` blank-language-string
+gap (item 3 of "Next run should pick" below) is fixed.** `ControllerProductCategory::index()`'s
+success branch now assigns `text_refine`/`text_sort`/`text_limit`/
+`text_empty`/`button_continue` to `$data` — the same five-line pattern
+`search.php`/`special.php` already established — fixing a pre-existing
+OpenCart 3.0.5.1 stock bug (present on both the `default` theme and
+`mint_default`) where `category.twig` referenced these keys but the
+controller never assigned them, so Twig's non-strict mode silently
+rendered them blank. Tracked as `docs/fixes/registry.md` MC-0001 (this
+run created that registry file — it didn't exist before), full writeup in
+`docs/upstream-diff.md`'s `category.php` entry. `php -l` clean; full
+`tests/mintcart/` suite re-run end to end (migration manager,
+`ProductViewProvider` x8, `ComponentRenderer` x12, `FooterViewProvider`
+x7, presets, `ProductCardListRenderer` x8) — all pass, no regressions (the
+fix touches only `$data` assignments the test suite doesn't cover at the
+controller level — same pre-existing gap noted throughout this file, no
+live OpenCart bootstrap available in this environment).
+
 **Manufacturer was deliberately NOT wired on this branch**, even though it
 was the other half of this increment's obvious scope: open PR #21
 (`claude/charming-rubin-gx1pqm`, an independent non-routine session)
@@ -906,10 +924,15 @@ need to be collapsed into one (see "Next run" below).
    provider → contract → Mint Default `.twig` → live controller wiring
    pattern `footer` and `product-card` both established. Check open PRs
    first — at the time of writing #15 already implements it.
-3. Separately, unrelated to either of the above: the pre-existing
-   `category.twig`/`category.php` blank-language-string gap documented in
-   `docs/upstream-diff.md`'s `search.php` entry is a small, self-contained,
-   well-scoped fix worth its own tiny run if nothing above is picked.
+3. ~~The pre-existing `category.twig`/`category.php` blank-language-string
+   gap~~ — **done, this run.** See the Phase 8 update above and
+   `docs/fixes/registry.md` MC-0001.
+4. With items 1–3 either blocked on a human merge decision or already
+   covered elsewhere, consider **Phase 18's system-route-URL-alias gap**,
+   a **`docs/fixes/registry.md` Known Fix Research Queue candidate**
+   (`MINTCART_FUNCTIONAL_SCOPE.md` §18 — reproduce one candidate against
+   this baseline before fixing, same discipline as MC-0001), or check open
+   PRs again for anything newly landed/merged before picking a fresh phase.
 
 Re-read the relevant section above (and `docs/developer/theme-api/product-card-list-renderer.md`/
 `docs/developer/components/footer.md` for the established patterns to
