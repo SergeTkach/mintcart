@@ -15,6 +15,9 @@
  *
  * Values are a neutral MintCart default palette. No author-specific
  * branding (Livenza/Cartello) is carried over from references/ (CLAUDE.md §3).
+ * These are also the "Clean" design preset's values (Phase 9,
+ * docs/developer/theme-api/presets.md) - presets/clean.css is a deliberate
+ * no-op override file that documents this rather than duplicating values.
  *
  * Only technical/decorative values are tokenized here, per the categories
  * listed in the Implementation Guide: color, typography, spacing, radius,
