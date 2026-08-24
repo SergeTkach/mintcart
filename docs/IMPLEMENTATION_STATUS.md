@@ -42,12 +42,16 @@ Phase 0 is **complete**.
 - [x] Basic logging — `MintCart\Core\Logger` (wraps OpenCart's `\Log`, writes to a
       dedicated `mintcart.log`)
 - [ ] Health checks
-- [ ] CI (if in scope for this stage)
+- [x] CI — `.github/workflows/ci.yml`: `php-lint` (`php -l` over every `.php`
+      under `upload/` and `tests/`), `php-tests` (runs every
+      `tests/mintcart/**/*-test.php` smoke test, fails the job on any nonzero
+      exit), `frontend-build` (`npm ci && npm run build`). Runs on push/PR
+      against `master`.
 
 **In progress.** Remaining for a future run: `MintCart\Compatibility\OpenCart3\*`
 adapters (no consumer needs one yet — first candidate is likely `SettingsAdapter`
 when Business Settings/Setup Wizard starts, per `CLAUDE.md` §85 "API appears when
-there's a real consumer"), a health-check surface, and CI. `Bootstrap::boot()` has
+there's a real consumer") and a health-check surface. `Bootstrap::boot()` has
 no automatic call site yet by design (see ADR 001) — the first real caller wires it.
 
 ## Phase 2 — Frontend foundation
@@ -948,6 +952,38 @@ Not started.
 ---
 
 ## Next step for the next routine run
+
+**PR backlog warning (as of 2026-08-24):** nine `claude/charming-rubin-*`
+routine PRs are open against `master` and unmerged — #14 (Footer + Presets),
+#15 (Header), #16 (Phase 10 Block API storage), #17–#20 (Phase 11
+McConfirm/McSortable/McTabs/McProgress), #21 (Phase 6/8
+ProductCardListRenderer + Manufacturer wiring), #22 (Phase 9 Presets,
+duplicates #14's Presets work). Every "Next step" candidate this file has
+recommended in the last several runs is now claimed by one of these PRs.
+Each of those sessions was bound to its own fixed `claude/charming-rubin-*`
+branch name (a Claude Code Remote constraint, not a choice — see each PR's
+"bound to a fixed branch name" note) and could not continue or consolidate
+onto a sibling's branch, so they piled up as separate PRs instead of one
+growing branch, the way this routine's step 0 protocol assumes is possible.
+**Before starting new feature work, the next run should first re-check
+`gh pr list --state open` — if a human has since merged some of these, treat
+their content as landed and skip re-doing it; if the pile has grown further
+with no merges, that is worth surfacing to the project owner explicitly
+(per `CLAUDE.md` §20) rather than adding an eleventh speculative PR, since
+several of these PRs independently edit this same file's shared checklist
+and will need manual conflict reconciliation on merge regardless of order.**
+
+This run (branch `claude/charming-rubin-bq7kl6`) deliberately did **not**
+pick a Phase 7/9/10/11 item already claimed above. Instead it filled a gap
+none of the nine open PRs touch: **CI** (`.github/workflows/ci.yml`,
+Phase 1's last unchecked non-deferred item) — `php -l` across `upload/` +
+`tests/`, running every `tests/mintcart/**/*-test.php` smoke test, and
+`npm ci && npm run build`, on every push/PR against `master`. Every open PR
+above self-reports "no automated test harness exists yet" / "human should
+verify" as a caveat; this closes that gap for what already exists, so the
+backlog gets a real pass/fail signal once any of those nine PRs' branches
+are rebased onto `master` or merged. This PR's own file (`.github/`) has
+zero overlap with any of the nine open PRs' changed files.
 
 Phases 0–6 and 8 are now complete (see their sections above). **Phase 8 —
 Theme resolver has passed its critical architecture milestone**
