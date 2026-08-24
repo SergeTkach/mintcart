@@ -158,3 +158,68 @@ same pre-existing gap noted throughout `docs/upstream-diff.md`). A human
 should confirm on a real install that a search-results page's `<head>` now
 contains `<link rel="canonical" ...>` (and `rel="prev"`/`rel="next"` where
 applicable) with URLs matching this pattern.
+
+---
+
+## MC-0003 — `manufacturer.php` never assigns `text_sort`/`text_limit`/`text_empty`/`button_continue` to `$data`
+
+**Problem:** `catalog/view/theme/*/template/product/manufacturer_info.twig`
+(both the stock `default` theme and MintCart's `mint_default`) references
+four variables — `text_sort` ("Sort By:" label), `text_limit` ("Show:"
+label), `text_empty` (the no-products message), and `button_continue` (the
+empty-listing "Continue" button) — but `ControllerProductManufacturer::info()`'s
+success branch never assigns any of them to `$data`. Same class of bug as
+MC-0001 in `category.php`: Twig's default `strict_variables => false`
+renders an undefined variable as an empty string instead of throwing, so
+every affected page element is silently blank rather than erroring loudly.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1 (this
+repository's documented upstream baseline). Not independently checked
+against other 3.x point releases — same rationale as MC-0001/MC-0002 (no
+second checkout available to diff against, and the fix only adds `$data`
+keys the template already expects).
+
+**Source:** Discovered directly in this repository while wiring
+`ControllerProductManufacturer::info()` to the shared
+`ProductCardListRenderer` (`docs/upstream-diff.md`'s `manufacturer.php`
+entry) — not an imported historical community patch. Reproduced by
+grepping `catalog/view/theme/{default,mint_default}/template/product/manufacturer_info.twig`
+for the four keys and cross-referencing every `$data[...] =` assignment in
+`manufacturer.php`'s `info()` success branch: none of the four appear on
+the left-hand side anywhere in the file. Confirmed the stock `default`
+theme's own `manufacturer_info.twig` references the same four tags
+(`{{ text_sort }}`, `{{ text_limit }}`, `{{ text_empty }}`,
+`{{ button_continue }}`), so this is not Mint-specific.
+
+**Reproduced on MintCart baseline:** Yes — confirmed against both
+`upload/catalog/view/theme/default/template/product/manufacturer_info.twig`
+(stock, unmodified) and the controller's actual `$data[...] =` assignment
+list. All four underlying language keys already exist and load correctly:
+`text_sort`/`text_limit`/`text_empty` in
+`catalog/language/en-gb/product/manufacturer.php`, `button_continue` in the
+global `catalog/language/en-gb/en-gb.php` (auto-loaded on every page) — so
+this is purely a missing `$data[...] = $this->language->get(...)` call,
+not a missing translation. Unlike MC-0001, there is no `text_refine`
+equivalent here — a manufacturer page has no category tree/refine sidebar.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Added the four missing assignments to
+`ControllerProductManufacturer::info()`'s success branch, immediately
+before the existing `$data['continue'] = $this->url->link('common/home');`
+line — the same pattern `category.php`/`search.php`/`special.php` already
+established on their own branches. No new language strings, no
+`$data['products']`/`$data['product_cards']` change. Applies equally to
+the stock `default` theme and `mint_default`.
+
+**Tests:** `php -l` clean on the modified `manufacturer.php`. No dedicated
+regression test added — same rationale as MC-0001/MC-0002: the fix is four
+`$this->language->get()` calls already unit-proven correct by
+`category.php`'s identical MC-0001 fix and by every other call site in
+this same file. A human should confirm on a real install that the
+manufacturer page's sort/limit labels and empty-listing message/button are
+no longer blank, on both the stock `default` theme and `mint_default`.
