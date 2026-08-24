@@ -443,6 +443,11 @@ class ControllerProductCategory extends Controller {
 			$data['order'] = $order;
 			$data['limit'] = $limit;
 
+			$data['text_refine'] = $this->language->get('text_refine');
+			$data['text_sort'] = $this->language->get('text_sort');
+			$data['text_limit'] = $this->language->get('text_limit');
+			$data['text_empty'] = $this->language->get('text_empty');
+			$data['button_continue'] = $this->language->get('button_continue');
 			$data['continue'] = $this->url->link('common/home');
 
 			$data['column_left'] = $this->load->controller('common/column_left');
