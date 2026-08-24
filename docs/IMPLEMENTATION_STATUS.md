@@ -818,9 +818,21 @@ surface before a first real consumer proves the Provider/Renderer split).
 - [x] `McDrawer`, `McModal`, `McToast` — shipped as Phase 4 generic UI
       components (`assets/src/js/components/{drawer,modal,toast}.js`),
       already usable by admin screens (imported into `admin.js`).
-- [ ] `McConfirm`, `McTabs`, `McSortable`, `McProgress` — in progress on
-      other open (non-routine) PRs at the time of this entry; check open
-      PRs before redoing.
+- [x] `McConfirm` — `assets/src/css/components/confirm.css` +
+      `assets/src/js/components/confirm.js` (`mcConfirm()`), a
+      `window.confirm()` replacement returning `Promise<boolean>`.
+      Functional Scope §5 groups this with `mc-toast`/`mc-alert` as a P0
+      "Toast / Confirm / Alert primitive"; it's the one of the three that
+      hadn't shipped yet. Unlike the dialog components above, it has no
+      static markup — it builds its own single reusable dialog element on
+      first call, since a confirmation's title/message are always specific
+      to the calling action. Not imported into `catalog.js`/`admin.js` yet
+      — no screen calls it yet (Bulk Editor mass-delete, Phase 16, is the
+      likely first consumer); exported for direct import when one exists,
+      per `CLAUDE.md` §85. Doc: `docs/developer/components/confirm.md`
+- [ ] `McTabs`, `McSortable`, `McProgress` — in progress on other open
+      (non-routine) PRs at the time of this entry; check open PRs before
+      redoing.
 - [x] `McEntityPicker` — `assets/src/js/components/entity-picker.js`
       (`createEntityPicker()`) + `assets/src/css/components/entity-picker.css`.
       Search/pagination/multi-select/keyboard-navigation (WAI-ARIA
@@ -845,11 +857,20 @@ surface before a first real consumer proves the Provider/Renderer split).
       deferral as `McEntityPicker`. Doc:
       `docs/developer/components/media-picker.md`.
 
-Mostly not started; `McDrawer`/`McModal`/`McToast` (via Phase 4),
-`McEntityPicker` and now `McMediaPicker` are the exceptions — both Phase
-11 picker primitives are done. `McConfirm`/`McTabs`/`McSortable`/
-`McProgress` remain, pending whichever land from the open PRs referenced
-above.
+`McDrawer`/`McModal`/`McToast` (via Phase 4), `McConfirm`, `McEntityPicker`
+and `McMediaPicker` are done. `McTabs`/`McSortable`/`McProgress` remain,
+pending whichever land from the open PRs referenced above.
+
+`McConfirm` verified: `npm install` (0 vulnerabilities), `npm run build`
+(minified) and `npm run dev` (sourcemapped) both compile cleanly;
+`grep -o` against the built `assets/dist/css/index.min.css` confirms
+`.mc-confirm`/`.mc-confirm__title`/`.mc-confirm__message`/
+`.mc-confirm__actions` are present; confirmed `mcConfirm`/`confirm-accept`
+do **not** appear in either `catalog.min.js` or `admin.min.js` (correctly
+tree-shaken — nothing imports the module yet, as intended). No PHP/Twig
+files touched, so the PHP `tests/mintcart/` suite and the `.twig`
+tag-balance check don't apply. No automated component/visual test harness
+exists yet in this repo (same gap noted in every previous Phase 4/11 run).
 
 ## Phase 12 — Entity Picker
 
@@ -1301,5 +1322,5 @@ mirror) in full before starting, per `CLAUDE.md` §10/§84 — don't start
 from this summary alone.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
-health checks) stay intentionally deferred — no real consumer yet. CI may
-already be covered by an open PR — check before redoing it.
+health checks) stay intentionally deferred — no real consumer yet. CI is
+now covered (`.github/workflows/ci.yml`, merged via PR #23).

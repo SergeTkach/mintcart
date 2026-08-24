@@ -1,0 +1,51 @@
+/**
+ * mc-confirm
+ *
+ * MintCart-owned confirmation dialog - the `window.confirm()` replacement
+ * for destructive/critical actions (Functional Scope §5 P0). Built and
+ * shown entirely by `assets/src/js/components/confirm.js`'s `mcConfirm()`
+ * - there is no static markup for this component in a page's own Twig, so
+ * unlike `mc-modal` this file only ever styles an element the JS itself
+ * creates and appends to `<body>`.
+ *
+ * Reuses Bootstrap 5's `Modal` CSS/JS the same way `mc-modal` does
+ * (`MINTCART_IMPLEMENTATION_GUIDE.md` §9) - `.modal`/`.modal-dialog`/
+ * `.modal-content`/`.modal-header`/`.modal-body`/`.modal-footer` stay as
+ * internal implementation classes. `.mc-confirm`/`.mc-confirm__*` is the
+ * public contract.
+ *
+ * Contract: docs/developer/components/confirm.md
+ */
+
+.mc-confirm {
+    --bs-modal-zindex: var(--mc-z-modal);
+    --bs-modal-color: var(--mc-text);
+    --bs-modal-bg: var(--mc-surface);
+    --bs-modal-border-color: var(--mc-border);
+    --bs-modal-border-width: var(--mc-border-width);
+    --bs-modal-border-radius: var(--mc-radius-lg);
+    --bs-modal-box-shadow: var(--mc-shadow-lg);
+    --bs-modal-header-border-color: var(--mc-border);
+    --bs-modal-footer-border-color: var(--mc-border);
+}
+
+.mc-confirm .modal-dialog {
+    max-width: 24rem;
+}
+
+.mc-confirm__title {
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-heading);
+    font-size: var(--mc-font-size-lg);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-confirm__message {
+    margin: 0;
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-base);
+}
+
+.mc-confirm__actions {
+    gap: var(--mc-space-2);
+}
