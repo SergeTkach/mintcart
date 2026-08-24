@@ -294,9 +294,10 @@ belongs to Phase 8 once a theme exists to render.
       Pure transform, no OpenCart dependency (formatting/tax/URL resolution
       stays OpenCart's job upstream of it); computes `stock`/`badges`/
       `actions` consistently instead of each controller doing it ad hoc.
-      Actual controller wiring (Category/Search/Manufacturer/Special calling
-      this instead of their inline array-building) is intentionally deferred
-      to Phase 8 (Theme resolver) — see "Next step" below.
+      Actual controller wiring was deferred to Phase 8 (Theme resolver) and
+      has since landed for Category, Search and Special, all via the shared
+      `MintCart\Design\ProductCardListRenderer`; Manufacturer is wired on a
+      separate unmerged branch — see "Next step" below.
 - [x] `mc-product-card` Twig + CSS + JS — `assets/src/css/components/product-card.css`
       + `assets/src/js/components/product-card.js` (`initProductCardActions`,
       wired into `catalog.js` only — storefront component); documented
@@ -857,26 +858,58 @@ why *this* run picked Search wiring instead of Header: Header appeared
 already done elsewhere, but Category→Search product-listing reuse
 (`CLAUDE.md` §8A, `MINTCART_TECHNICAL_PLAN.md` §15C/§15D) did not.
 
+**Update (a later run, same branch/PR #14): Special is wired to
+`product-card` too.** `ControllerProductSpecial::index()`
+(`upload/catalog/controller/product/special.php`) now builds
+`$data['product_cards']` via the same
+`MintCart\Design\ActiveTheme` + `MintCart\Design\ProductCardListRenderer`
+pipeline Category and Search use — third real consumer of the shared
+listing render step (`CLAUDE.md` §8A, `MINTCART_TECHNICAL_PLAN.md`
+§15C/§15D), no new abstraction needed, the shared class absorbed it
+unchanged. Ships with a new `mint_default/template/product/special.twig`
+(same `product_cards`/sorts/limits/pagination contract as
+`search.twig`, minus the refine-search form — Special has no
+search-criteria UI), the five `product-card` language keys appended to
+`en-gb/product/special.php`, and `text_sort`/`text_limit`/`text_empty`/
+`button_continue` explicitly assigned to `$data` (the same gap-avoidance
+`search.php` applied). Documented in `docs/upstream-diff.md`; consumer
+lists updated in `docs/developer/theme-api/product-card-list-renderer.md`
+and `docs/developer/components/product-card.md`.
+
+**Manufacturer was deliberately NOT wired on this branch**, even though it
+was the other half of this increment's obvious scope: open PR #21
+(`claude/charming-rubin-gx1pqm`, an independent non-routine session)
+already implements Manufacturer wiring end to end, including its *own*
+separate copy of `MintCart\Design\ProductCardListRenderer` with a
+different constructor/`render()` signature. Adding a second Manufacturer
+implementation here would guarantee a hard conflict on both
+`manufacturer.php` and `productcardlistrenderer.php` for whoever merges.
+Once #21 and this PR are reconciled by a human, the two renderer variants
+need to be collapsed into one (see "Next run" below).
+
 **Next run should pick, in order of preference:**
 
-1. **If Header (Phase 7) has landed in master by then:** Manufacturer and/or
-   Special controller wiring to `product-card` via the now-shared
-   `MintCart\Design\ProductCardListRenderer` — same pattern Category/Search
-   just established, two more real consumers of the shared listing pipeline
-   (`CLAUDE.md` §8A). `ControllerProductManufacturer`/`ControllerProductSpecial`
-   are the files; mirror `search.php`'s changes in this run almost exactly.
-2. **If Header has *not* landed yet:** re-check whether any open PR already
-   covers it before starting from scratch. If genuinely nobody has it,
+1. **Reconcile the two `ProductCardListRenderer` implementations** if both
+   this PR (#14) and #21 have landed: they are the same class name/path with
+   incompatible signatures (this branch: `render($product, $display,
+   $context, $languageStrings, $onError)` + `isEnabled()`, language strings
+   per call, caller-supplied logging; #21: language strings + `Logger`
+   injected in the constructor, `render($product, $display, $context)`,
+   `hasFailed()`). Pick one shape, migrate all four consumers
+   (Category/Search/Special/Manufacturer) onto it, and keep a single test
+   file. This is a real (small) architectural fork — worth doing carefully
+   rather than letting whichever merged last silently win.
+2. **If Header (Phase 7) has *not* landed and no open PR covers it:**
    implement Phase 7's Header component contract (`Header`/`Topbar`/`Logo`/
    `Search`/`Account`/`Cart`/`Navigation`/`Mobile Navigation` per
    `MINTCART_IMPLEMENTATION_GUIDE.md` §48), following the same
    provider → contract → Mint Default `.twig` → live controller wiring
-   pattern `footer` and `product-card` both established.
+   pattern `footer` and `product-card` both established. Check open PRs
+   first — at the time of writing #15 already implements it.
 3. Separately, unrelated to either of the above: the pre-existing
    `category.twig`/`category.php` blank-language-string gap documented in
-   `docs/upstream-diff.md`'s `search.php` entry (this run) is a small,
-   self-contained, well-scoped fix worth its own tiny run if nothing above
-   is picked.
+   `docs/upstream-diff.md`'s `search.php` entry is a small, self-contained,
+   well-scoped fix worth its own tiny run if nothing above is picked.
 
 Re-read the relevant section above (and `docs/developer/theme-api/product-card-list-renderer.md`/
 `docs/developer/components/footer.md` for the established patterns to
