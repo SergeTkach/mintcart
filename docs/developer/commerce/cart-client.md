@@ -63,15 +63,23 @@ never hit this case.
 ## Current consumers
 
 - `mc-product-card`'s `[data-mc-action="add-to-cart"]` button
-  (`assets/src/js/components/product-card.js`) — the only wired consumer
-  so far.
+  (`assets/src/js/components/product-card.js`).
+- The legacy header cart widget (`assets/src/js/components/header-cart.js`,
+  `initHeaderCartRefresh()`) — listens for `mc:cart:updated` and re-fetches
+  the *existing*, unmodified `route=common/cart/info` endpoint to refresh
+  `#cart`'s markup. Deliberately does **not** render `event.detail` itself
+  client-side — the legacy widget's own PHP/Twig already produces correctly
+  translated, correctly formatted HTML, so re-fetching it is simpler and
+  more correct than duplicating that formatting in JS. This keeps the
+  legacy widget in sync with adds/removes/updates that go through the new
+  Cart client, which the widget's own jQuery auto-refresh (in stock
+  `common.js`) has no way to know about since those requests don't go
+  through the legacy `checkout/cart/*` routes it listens to.
 
 ## Deferred, not built yet
 
-- Header cart dropdown listening for `mc:cart:updated` to refresh itself
-  — the legacy `common/cart.php` widget is untouched; a future increment
-  can add a listener that re-fetches the *existing* `common/cart/info`
-  endpoint (no PHP change needed) rather than rendering the dropdown from
-  `event.detail` client-side.
-- A `mc-cart-drawer` component rendering `event.detail.items` itself.
+- A real Mint-native `mc-cart-drawer`/header cart component reading
+  `event.detail` directly instead of doing a second fetch — today's
+  `header-cart.js` is a bridge to the legacy widget, not a replacement for
+  it.
 - Product page Add to Cart with a real option picker.
