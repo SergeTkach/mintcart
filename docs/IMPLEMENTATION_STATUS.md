@@ -999,13 +999,26 @@ Not started.
       `data-mc-action="quick-order"` stays hook-only.
 - [ ] Modern checkout UI over existing shipping/payment extensions/totals/order model — not started.
 
-**Explicitly deferred, not forgotten, from the Cart increment above:**
-- Header's legacy cart dropdown (`common/cart.php`) reacting to
-  `mc:cart:updated` — untouched; a future increment can add a listener
-  that re-fetches the *existing* `common/cart/info` endpoint (zero PHP
-  change) to refresh the dropdown, rather than rendering
-  `event.detail.items` client-side.
-- A `mc-cart-drawer` component.
+**Update (this run): the header's legacy cart dropdown now reacts to
+`mc:cart:updated`.** `assets/src/js/components/header-cart.js`
+(`initHeaderCartRefresh()`, wired into `catalog.js` only) listens on
+`document` and re-fetches the *existing*, unmodified
+`route=common/cart/info` endpoint to refresh `#cart`'s markup — zero PHP
+touched, same "let the existing PHP/Twig produce correctly translated
+HTML, don't reimplement its formatting in JS" approach the rest of this
+phase followed. **Verified live**: added a product via
+`mintcart/cart/add`, confirmed `common/cart/info`'s own response (what
+`header-cart.js` fetches) correctly showed the updated count/total —
+confirms the two endpoints share the same session cart and stay in sync.
+The JS listener itself (DOM swap on the real `mc:cart:updated` event) is
+a browser-only behavior curl can't exercise — a human should confirm in
+a real browser that clicking Add to Cart visibly updates the header
+dropdown. Doc: `docs/developer/commerce/cart-client.md`.
+
+**Explicitly deferred, not forgotten:**
+- A real Mint-native `mc-cart-drawer`/header cart component reading
+  `event.detail` directly instead of doing a second fetch — today's
+  `header-cart.js` is a bridge to the legacy widget, not a replacement.
 - Product-page Add to Cart with a real option picker (today's redirect
   fallback sends the shopper there, but the page itself doesn't have a
   Mint-native Add to Cart yet — it renders through the legacy `default`

@@ -19,6 +19,7 @@ import { initModalTriggers } from './components/modal.js';
 import { initDrawerTriggers } from './components/drawer.js';
 import { initToastTriggers } from './components/toast.js';
 import { initProductCardActions } from './components/product-card.js';
+import { initHeaderCartRefresh } from './components/header-cart.js';
 
 // MintCart-owned catalog behavior modules are added here as components ship
 // (Phase 4 onward).
@@ -28,3 +29,4 @@ initModalTriggers();
 initDrawerTriggers();
 initToastTriggers();
 initProductCardActions();
+initHeaderCartRefresh();
