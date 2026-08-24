@@ -801,10 +801,21 @@ are `LONGTEXT`, not the MySQL `JSON` column type, for broad shared-hosting
 compatibility (`MINTCART_TECHNICAL_PLAN.md` §2). Verified via
 `tests/mintcart/core/mc-block-migrations-test.php`, which runs the real
 migration files through `MigrationManager` and asserts on the emitted
-`CREATE TABLE` statements (no live MySQL in this environment, same
-pre-existing gap as every earlier phase). No Block Provider/Renderer/Twig
-template exists yet — storage only, matching how every previous phase's
-first migration landed ahead of its consumer.
+`CREATE TABLE` statements.
+
+**Update (2026-08-24): run live against a real MySQL install** (Laragon,
+`mintcart` database, `oc_` prefix) — closing the "no live MySQL in this
+environment" gap this entry originally carried. Both migrations applied
+cleanly; all five tables (`mc_migration`, `mc_page`, `mc_page_description`,
+`mc_block`, `mc_block_description`) confirmed present via `SHOW TABLES`;
+`SHOW CREATE TABLE` on `mc_page`/`mc_block` confirmed the schema matches
+the migration source exactly (InnoDB, utf8mb4, `settings_json` as
+`LONGTEXT` not `JSON`, correct PK/unique/index definitions); a second
+`MigrationManager::run()` applied nothing, confirming idempotency against
+a real tracking table, not just the in-memory fake DB double the
+standalone test uses. No Block Provider/Renderer/Twig template exists
+yet — storage only, matching how every previous phase's first migration
+landed ahead of its consumer.
 
 **Next step:** Block Provider / Renderer / Template separation
 (`MintCart\Blocks\...`), starting with one block type end-to-end (Products
