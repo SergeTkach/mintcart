@@ -106,13 +106,27 @@ assertTrue(
     $failures
 );
 
-// 5. The two "card look" / "button look" component-local overrides called
-// out by the Phase 9 checklist must be present (not just the semantic
-// color/radius tokens they're derived from).
-foreach (['--mc-product-card-radius', '--mc-card-radius'] as $cardToken) {
-    assertContains($cardToken . ':', $warmCss, "presets/warm.css must override {$cardToken} (card look)", $failures);
+// 5. "Card look"/"button look" must come from the semantic radius/shadow
+// tier alone (--mc-radius-*/--mc-shadow-*), never from a component-local
+// token directly - component-local tokens like --mc-product-card-radius or
+// --mc-button-radius already default to var(--mc-radius-*) in each
+// component's own CSS (card.css/product-card.css/button.css), so a preset
+// only needs to override the semantic tier for the change to propagate.
+// Reaching into a component-local token from a preset file would require a
+// new component-scoped selector inside a "tokens only" file, blurring the
+// Preset/Theme boundary (CLAUDE.md §24-25) - tests/frontend/preset-tokens-
+// test.js enforces this mechanically at build time; this assertion is the
+// PHP-side guard against the same regression.
+foreach (['--mc-product-card-radius', '--mc-card-radius', '--mc-button-radius'] as $componentLocalToken) {
+    assertNotContains(
+        $componentLocalToken . ':',
+        $warmCss,
+        "presets/warm.css must not override the component-local token {$componentLocalToken} directly - only semantic tokens (e.g. --mc-radius-*)",
+        $failures
+    );
 }
-assertContains('--mc-button-radius:', $warmCss, 'presets/warm.css must override --mc-button-radius (button look)', $failures);
+assertContains('--mc-radius-lg:', $warmCss, 'presets/warm.css must override the semantic --mc-radius-lg token (card look propagates from here)', $failures);
+assertContains('--mc-radius-md:', $warmCss, 'presets/warm.css must override the semantic --mc-radius-md token (button look propagates from here)', $failures);
 
 if ($failures) {
     fwrite(STDERR, count($failures) . " failure(s):\n");

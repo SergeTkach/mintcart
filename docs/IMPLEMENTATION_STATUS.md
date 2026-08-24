@@ -295,9 +295,9 @@ belongs to Phase 8 once a theme exists to render.
       stays OpenCart's job upstream of it); computes `stock`/`badges`/
       `actions` consistently instead of each controller doing it ad hoc.
       Actual controller wiring was deferred to Phase 8 (Theme resolver) and
-      has since landed for Category, Search and Special, all via the shared
-      `MintCart\Design\ProductCardListRenderer`; Manufacturer is wired on a
-      separate unmerged branch — see "Next step" below.
+      has since landed for Category, Search, Special and Manufacturer — all
+      four now via the shared `MintCart\Design\ProductCardListRenderer`.
+      Phase 6's listing-controller wiring is complete.
 - [x] `mc-product-card` Twig + CSS + JS — `assets/src/css/components/product-card.css`
       + `assets/src/js/components/product-card.js` (`initProductCardActions`,
       wired into `catalog.js` only — storefront component); documented
@@ -605,9 +605,11 @@ fixed) while writing the new template — `mint_default`'s (and stock
 variables as blank because `category.php` never assigns them to `$data` —
 is in `docs/upstream-diff.md`'s `search.php` entry.
 
-Manufacturer and Special still aren't wired to `product-card` — same
-shared `ProductCardListRenderer`, different controller, next candidates
-for this pipeline.
+**Update (a later run): Manufacturer and Special are now wired too** — see
+further below for the full writeup of each. All four listing controllers
+(Category, Search, Special, Manufacturer) share one
+`MintCart\Design\ProductCardListRenderer`/`MintCart\Design\ActiveTheme`
+pair; Phase 6/8's product-card pipeline is complete.
 
 ## Phase 9 — Presets
 
@@ -969,16 +971,26 @@ fix touches only `$data` assignments the test suite doesn't cover at the
 controller level — same pre-existing gap noted throughout this file, no
 live OpenCart bootstrap available in this environment).
 
-**Manufacturer was deliberately NOT wired on this branch**, even though it
-was the other half of this increment's obvious scope: open PR #21
-(`claude/charming-rubin-gx1pqm`, an independent non-routine session)
-already implements Manufacturer wiring end to end, including its *own*
-separate copy of `MintCart\Design\ProductCardListRenderer` with a
-different constructor/`render()` signature. Adding a second Manufacturer
-implementation here would guarantee a hard conflict on both
-`manufacturer.php` and `productcardlistrenderer.php` for whoever merges.
-Once #21 and this PR are reconciled by a human, the two renderer variants
-need to be collapsed into one (see "Next run" below).
+**Resolved (human review, 2026-08-24): the PR #14/#21 renderer conflict
+this paragraph originally flagged was reconciled by comparing both
+implementations directly** — #14's `ProductCardListRenderer` (this branch)
+was kept: it already had three consumers (Category/Search/Special) wired,
+plus a shared `MintCart\Design\ActiveTheme` helper #21 lacked (#21 carried
+its own private, unshared copy of the active-theme lookup in
+`manufacturer.php`, reintroducing the exact duplication the shared
+renderer exists to remove). PR #21 was closed as superseded on the
+renderer/Category side, and its one genuinely non-overlapping contribution
+— Manufacturer wiring — was ported onto this branch's actual
+`ProductCardListRenderer`/`ActiveTheme` API (dropping #21's private
+`mintActiveThemeDirectory()` copy in favor of the shared class). See
+`upload/catalog/controller/product/manufacturer.php`'s entry in
+`docs/upstream-diff.md` for the full writeup, including **MC-0003**
+(`docs/fixes/registry.md`) — the same class of blank-`$data`-string bug as
+MC-0001, found in `manufacturer.php` while porting this wiring.
+
+PR #14's original Presets increment (Clean/Warm) was likewise replaced
+with PR #22's implementation for the same kind of reason — see Phase 9's
+section above for that writeup. PR #22 was closed as superseded.
 
 **Update (a later run, same branch/PR #14): MC-0002 fixed — `search.php`
 never emitted `canonical`/`prev`/`next` `<link>` tags at all**, unlike its
@@ -1072,16 +1084,15 @@ primitive so far.
 
 **Next run should pick, in order of preference:**
 
-1. **Reconcile the two `ProductCardListRenderer` implementations** if both
-   this PR (#14) and #21 have landed: they are the same class name/path with
-   incompatible signatures (this branch: `render($product, $display,
-   $context, $languageStrings, $onError)` + `isEnabled()`, language strings
-   per call, caller-supplied logging; #21: language strings + `Logger`
-   injected in the constructor, `render($product, $display, $context)`,
-   `hasFailed()`). Pick one shape, migrate all four consumers
-   (Category/Search/Special/Manufacturer) onto it, and keep a single test
-   file. This is a real (small) architectural fork — worth doing carefully
-   rather than letting whichever merged last silently win.
+1. ~~Reconcile the two `ProductCardListRenderer` implementations~~ —
+   **done** (human review, 2026-08-24). This branch's shape (`render($product,
+   $display, $context, $languageStrings, $onError)` + `isEnabled()`,
+   caller-supplied logging) was kept over #21's (constructor-injected
+   `Logger`/text, `hasFailed()`); all four consumers
+   (Category/Search/Special/Manufacturer) now share it. See the resolved
+   note above (where the "Manufacturer was deliberately NOT wired"
+   paragraph used to be) and `docs/upstream-diff.md`'s `manufacturer.php`
+   entry.
 2. **If Header (Phase 7) has *not* landed and no open PR covers it:**
    implement Phase 7's Header component contract (`Header`/`Topbar`/`Logo`/
    `Search`/`Account`/`Cart`/`Navigation`/`Mobile Navigation` per

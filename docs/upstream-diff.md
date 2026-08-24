@@ -456,3 +456,80 @@ because it is the page-level template `ControllerProductSpecial::index()`'s
 `docs/adr/003-page-template-fallback-fix.md`). Simpler than `search.twig`
 — no refine-search form, since Special has no search-criteria UI in the
 stock `default` theme either.
+
+---
+
+## `upload/catalog/controller/product/manufacturer.php`
+
+**Reason:** Wires `ControllerProductManufacturer::info()` as the fourth
+real listing consumer of the Theme API's `product-card` pipeline
+(`MINTCART_TECHNICAL_PLAN.md` §15C/§15D, `CLAUDE.md` §8A) — same
+`MintCart\Design\ActiveTheme`/`MintCart\Design\ProductCardListRenderer`
+pipeline `category.php`/`search.php`/`special.php` already use, same
+manifest gate, same degrade-on-first-failure behaviour. Also fixes
+**MC-0003** (`docs/fixes/registry.md`): `text_sort`/`text_limit`/
+`text_empty`/`button_continue` were never assigned to `$data` in this
+method — the same class of bug as MC-0001 in `category.php` — found here
+while wiring the new template.
+
+**Why it can't live in the MintCart layer instead:** Same rationale as
+`category.php`/`search.php`/`special.php` — `ProductViewProvider`/
+`ComponentRenderer`/`ProductCardListRenderer` are deliberately
+OpenCart-agnostic, but something controller-specific has to call them with
+this controller's already-resolved product data (formatted price/special/
+tax, resized image, rating) once per row.
+
+**Compatibility impact:** None for the legacy `default` theme or any
+unrelated third-party theme — same manifest-gated pipeline as the three
+sibling controllers, and the controller's original `$data['products']`
+array is completely unchanged: same keys, same values, same order, same
+computation. MC-0003's fix is purely additive (`$data[...] =` assignments
+using strings the language file already declares) and applies to every
+theme, not just Mint-aware ones — the stock `default` theme's own
+`manufacturer_info.twig` references the same four variables and was
+equally silently blank before this fix.
+
+**Tests:** `php -l` (clean) on `manufacturer.php` and the updated
+`en-gb/product/manufacturer.php` strings; `manufacturer_info.twig`'s
+`if`/`for`/`endif`/`endfor` tags checked for balanced nesting (same
+technique used for every earlier `.twig` file in this repo).
+`tests/mintcart/design/product-card-list-renderer-test.php` already covers
+the shared renderer this controller now calls (no controller-specific test
+needed — same class, same contract, already exercised by three sibling
+controllers' wiring). No live end-to-end request test — same pre-existing
+gap as every earlier phase (no MySQL/`vendor/twig/twig` in this
+environment). A human should smoke-test a real manufacturer page on a
+`mint_default`-configured install before this reaches production —
+including confirming MC-0003's sort/limit labels and empty-state message
+are no longer blank on both `default` and `mint_default`.
+
+---
+
+## `upload/catalog/language/en-gb/product/manufacturer.php`
+
+**Reason:** Adds the same five `product-card` language keys
+`product/category.php`/`product/search.php`/`product/special.php`'s
+language files already added (`text_rated`, `text_quick_order`,
+`text_badge_sale`, `text_badge_out_of_stock`, `text_badge_new`) — needed
+now that Manufacturer also renders `product-card`.
+
+**Why it can't live in the MintCart layer instead:** Same as the three
+sibling language files — OpenCart's language system is file-per-route.
+
+**Compatibility impact:** Purely additive — five new keys appended after
+the existing ones, nothing removed or renamed.
+
+**Tests:** `php -l` (clean).
+
+---
+
+## `upload/catalog/view/theme/mint_default/template/product/manufacturer_info.twig` (new file)
+
+Not an upstream diff — a new file `mint_default` ships. Noted here only
+because it is the page-level template `ControllerProductManufacturer::info()`'s
+`$this->load->view('product/manufacturer_info', $data)` call resolves to
+once `mint_default` is active (via the `event/theme.php` three-tier
+fallback, `docs/adr/003-page-template-fallback-fix.md`). Mirrors
+`category.twig`'s structure minus the categories/refine section (not
+applicable — a manufacturer page lists one brand's products, not a
+category tree).
