@@ -152,5 +152,49 @@ Source PRs: #9 (`ComponentRenderer` + `mint_default`'s `product-card.twig`),
 
 ---
 
+## Phase 9 — Design presets
+
+Source PR: #22 (`presets/clean.css`, `presets/warm.css`,
+`docs/developer/theme-api/presets.md`, `docs/adr/004-design-token-presets.md`).
+
+The preset *contract* is machine-checked (`npm test` — each preset file has
+exactly one `:root[data-mc-preset='<code>']` block and redeclares only
+tokens `settings/tokens.css` already declares). What no check can confirm is
+whether the result actually **looks** like a coherent, radically different
+design, which is the whole point of Phase 9. Nothing writes
+`data-mc-preset` at runtime yet, so set it by hand:
+
+```js
+document.documentElement.dataset.mcPreset = 'warm';   // or 'clean'
+```
+
+On a real install with `config_theme` = `mint_default` and a category page
+of demo products loaded:
+
+- [ ] **Warm preset renders as a coherent design.** With
+      `data-mc-preset="warm"` set, confirm the page reads as one deliberate
+      look, not a half-applied palette: terracotta primary buttons, cream
+      surfaces, serif headings, visibly rounder corners, roomier spacing,
+      warm-tinted shadows.
+- [ ] **Nothing is left behind on the mint palette.** Look specifically for
+      any element still showing mint green or the neutral gray borders —
+      each one is a component with a hardcoded color instead of a semantic
+      token (ADR 004 makes reading semantic tokens a hard requirement, so
+      any hit here is a component bug to fix, not a preset bug).
+- [ ] **Text contrast holds in Warm.** Body text, muted text, and text on
+      primary/accent backgrounds should still meet WCAG 2.2 AA
+      (`MINTCART_FUNCTIONAL_SCOPE.md` §27). The warm palette was picked for
+      contrast on paper but has never been measured against real rendered
+      output.
+- [ ] **Removing the attribute returns the Clean look**, identical to
+      setting `data-mc-preset="clean"` — the two are meant to be the same
+      state by design (see ADR 004 decision 3).
+- [ ] **The same two presets applied to `test_theme`** (different component
+      DOM, same semantic tokens) also both render coherently. This is the
+      property that makes presets and full themes orthogonal; it has only
+      been reasoned about, never seen.
+
+---
+
 Add new sections above as later phases land more unverified-in-this-sandbox
 work — don't let this file go stale once it exists.
