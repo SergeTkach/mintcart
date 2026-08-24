@@ -70,9 +70,16 @@ correctly resolving it in isolation; after the fix, the same request returns
 to the controller's existing inline array building, also builds a
 `MintCart\Commerce\ProductViewProvider` result and renders it through
 `MintCart\Design\ComponentRenderer::render('product-card', ...)` into a new
-`$data['product_cards']` array. Adds a small private
-`mintActiveThemeDirectory()` helper mirroring
-`catalog/controller/event/theme.php`'s own active-theme resolution.
+`$data['product_cards']` array.
+
+**Update (this run):** refactored to call the newly-extracted
+`MintCart\Design\ActiveTheme::directory()`/`isMintAware()` and
+`MintCart\Design\ProductCardListRenderer::render()` instead of this
+controller's own private `mintActiveThemeDirectory()` helper and inline
+`try`/`catch`-and-disable loop — see
+`docs/developer/theme-api/product-card-list-renderer.md`. No behavioral
+change: same inputs, same outputs, same per-product degrade-on-failure
+semantics, same `$data['products']` array untouched either way.
 
 **Why it can't live in the MintCart layer instead:** `ProductViewProvider`
 and `ComponentRenderer` are deliberately OpenCart-agnostic (no `\Registry`
@@ -81,14 +88,12 @@ isolation — but *something* still has to call them with this controller's
 already-resolved product data (formatted price/special/tax, resized image,
 rating) once per row. That call site is inherently controller-specific:
 OpenCart's own `Loader`/routing has no generic "run this for every listing
-controller" hook, and Technical Plan §15C's reusable listing pipeline
-(`ProductListingService`) doesn't exist yet — building it now, ahead of a
-second real consumer (Search/Manufacturer/Special), would be exactly the
-premature abstraction `CLAUDE.md` §85 warns against. This wiring is the
-first of several near-identical call sites; extracting the shared shape
-into a real `ProductListingService` is expected once Search/Manufacturer/
-Special need the same thing (`docs/IMPLEMENTATION_STATUS.md`'s Phase 8
-notes call this out explicitly).
+controller" hook. `MintCart\Design\ProductCardListRenderer` (this run) now
+carries the shared *shape* of that call (build + render + degrade), but a
+controller still has to invoke it once per row with its own already-resolved
+product data — Technical Plan §15C's fuller `ProductListingService`
+(covering the *query*/pagination side too) remains future work, not
+attempted here.
 
 **Compatibility impact:** None for stores on the legacy `default` OpenCart
 theme, or on any unrelated third-party OpenCart theme. The new code only
@@ -121,8 +126,37 @@ every earlier MintCart PR. Verified instead: `php -l` (clean);
 passes (`docs/developer/components/product-card.md`'s documented contract);
 scenario 8 confirms `ComponentRenderer` resolves the real, shipped
 `mint_default/template/mint/components/product-card.twig` file at its real
-repository path, not just a fixture. A human should still smoke-test a real
-category page on a configured install before this reaches production.
+repository path, not just a fixture. **This run's refactor** additionally
+verified: `tests/mintcart/design/product-card-list-renderer-test.php`
+(8 scenarios, new) exercises `ProductCardListRenderer`'s degrade-on-failure
+behaviour directly; full `tests/mintcart/` suite re-run end to end after
+the refactor — still passing, no regressions. A human should still
+smoke-test a real category page on a configured install before this
+reaches production.
+
+**Update (this run — bugfix, `docs/fixes/registry.md` MC-0001):**
+`category.twig` (both the stock `default` theme and `mint_default`) reads
+`text_refine`/`text_sort`/`text_limit`/`text_empty`/`button_continue`, but
+`index()`'s success branch never assigned any of those five keys to
+`$data` — a pre-existing OpenCart 3.0.5.1 stock bug, present on both
+themes, silently rendering blank via Twig's non-strict-variables mode
+(first noticed while wiring `search.php` on this branch — see that
+controller's entry below, which already assigns the equivalent keys for
+its own new template). Fixed by adding the same five
+`$data[...] = $this->language->get(...)` assignments `search.php`/
+`special.php` already use, placed next to the existing
+`$data['continue']` assignment. All five language keys already existed in
+`catalog/language/en-gb/product/category.php` (`text_refine`, `text_sort`,
+`text_limit`, `text_empty`) and the global `en-gb.php`
+(`button_continue`) — no new language strings needed. Zero behavioral
+change beyond making the already-referenced template variables non-blank;
+the `$data['products']`/`$data['product_cards']` arrays are untouched.
+**Compatibility impact:** fixes the same silent blank on the legacy
+`default` theme too (same unassigned keys, same template gap) — this is a
+strict improvement, not a Mint-only change, and carries no risk of
+behavior change for stores that don't notice the labels were blank.
+**Tests:** `php -l` clean. See `docs/fixes/registry.md` MC-0001 for the
+full fix-policy writeup (reproduction, upstream status, resolution).
 
 ---
 
@@ -148,3 +182,277 @@ repo today (no other locale directories to keep in sync).
 
 **Tests:** `php -l` (clean). No automated i18n-completeness check exists in
 this repo yet for any language file.
+
+---
+
+## `upload/catalog/controller/common/footer.php`
+
+**Reason:** Wires Phase 7's Footer component (`MINTCART_TECHNICAL_PLAN.md`
+§14, `MINTCART_IMPLEMENTATION_GUIDE.md` §48) — the second real page-level
+consumer of the Theme API pattern `ControllerProductCategory` established
+in Phase 8. In addition to the controller's existing per-field data
+building (`$data['informations']`/`contact`/`return`/.../`newsletter`,
+completely untouched), also regroups that same already-resolved data into
+`MintCart\Design\FooterViewProvider` columns, reads contacts from
+OpenCart's own `config_telephone`/`config_email`/`config_address` settings
+(never a duplicate Mint-owned table — `CLAUDE.md` §39), and renders the
+result through `MintCart\Design\ComponentRenderer::render('footer', ...)`
+into a new `$data['mc_footer']` string.
+
+**Update (this run):** refactored to call the newly-extracted
+`MintCart\Design\ActiveTheme::directory()`/`isMintAware()` instead of this
+controller's own private `mintActiveThemeDirectory()` helper — see
+`docs/developer/theme-api/product-card-list-renderer.md`. `CLAUDE.md`
+§85/§86 had this entry deliberately keep its own small copy rather than
+extract a shared helper for just two call sites; `ControllerProductSearch`
+(also this run) is the third, so the duplication is now extracted. No
+behavioral change.
+
+**Why it can't live in the MintCart layer instead:** Same rationale as
+`ControllerProductCategory` — `FooterViewProvider` and `ComponentRenderer`
+are deliberately OpenCart-agnostic, but something has to call them with
+this controller's already-resolved footer data (links, contacts, "Powered
+by" text) once per request. OpenCart's `Loader`/routing has no generic
+"run this for every common controller" hook.
+
+**Compatibility impact:** None for the legacy `default` theme or any
+unrelated third-party theme — the new code only runs when the active theme
+ships a `theme.json` manifest (same gate as `category.php`), and neither
+`default`'s nor a third-party theme's own `common/footer.twig` reads
+`$data['mc_footer']`. The controller's original per-field `$data` (still
+what `default`'s `common/footer.twig` renders) is completely unchanged:
+same keys, same values, same computation. A failure inside
+`ComponentRenderer::render()` (e.g. a missing/unreadable `footer.twig`) is
+caught and logged via `MintCart\Core\Logger` rather than propagating — a
+broken Mint footer component degrades to an empty `{{ mc_footer }}` on
+`mint_default`'s own `common/footer.twig`, it does not fatal every page on
+the site (footer is common to all of them).
+
+**Tests:** `php -l` (clean). No new PHP-level test added — `FooterViewProvider`
+and `ComponentRenderer` themselves (the two classes this wiring calls) are
+already covered by their own smoke tests (`tests/mintcart/design/
+footer-view-provider-test.php`, 7 scenarios; `tests/mintcart/design/
+component-renderer-test.php` scenario 11 resolves the real `footer.twig`),
+neither of which changed in this run. Full `tests/mintcart/` suite
+re-run end to end after this change — still passing (migration manager,
+`ProductViewProvider` x8, `ComponentRenderer` x11, `FooterViewProvider` x7).
+Same pre-existing gap as every earlier phase: no MySQL/`vendor/twig/twig`
+in this environment, so no live end-to-end request was exercised. A human
+should smoke-test a real page footer on a `mint_default`-configured install
+(and confirm the legacy `default` theme's footer is pixel-identical to
+before) before this reaches production.
+
+---
+
+## `upload/catalog/view/theme/mint_default/template/common/footer.twig` (new file)
+
+Not an upstream diff — this is a new file `mint_default` ships, not a
+modification to an OpenCart-shipped file. Noted here only because it is
+the page-level template `ControllerCommonFooter::index()`'s
+`$this->load->view('common/footer', $data)` call resolves to once
+`mint_default` is active (via the `event/theme.php` three-tier fallback
+from `docs/adr/003-page-template-fallback-fix.md`): it outputs
+`{{ mc_footer }}` in place of `default`'s own inline footer markup, then
+the same `styles`/`scripts`/`</body></html>` closing OpenCart's page
+assembly needs on every theme.
+
+---
+
+## `upload/catalog/language/en-gb/common/footer.php`
+
+**Reason:** Adds three new language strings the `footer` component's
+documented contract needs and that didn't already exist under any name:
+`text_contact_us`, `text_newsletter_email`, `text_newsletter_submit`.
+(`text_newsletter` itself already existed — reused as-is for both the
+existing "Newsletter" account-link label and the component's newsletter
+section heading, same value either way, same reuse pattern
+`text_wishlist`/`text_compare`/`text_add_to_cart` followed in Phase 8's
+product-card wiring.)
+
+**Why it can't live in the MintCart layer instead:** Same as
+`product/category.php`'s language file — OpenCart's language system is
+file-per-route, loaded by `$this->load->language('common/footer')` in the
+controller above.
+
+**Compatibility impact:** Purely additive — three new keys appended after
+the existing ones, nothing removed or renamed. Only `en-gb` exists in this
+repo today.
+
+**Tests:** `php -l` (clean).
+
+---
+
+## `upload/catalog/controller/product/search.php`
+
+**Reason:** Wires Search as the second real listing consumer of the Theme
+API's `product-card` pipeline (`MINTCART_TECHNICAL_PLAN.md` §15C/§15D,
+`CLAUDE.md` §8A) — for each product row, in addition to the controller's
+existing inline array building, also builds a `MintCart\Commerce\ProductViewProvider`
+result via the shared `MintCart\Design\ProductCardListRenderer` and renders
+it into a new `$data['product_cards']` array, same gate
+(`MintCart\Design\ActiveTheme::isMintAware()`) `category.php`/`footer.php`
+already use. Also exposes several already-loaded language strings
+(`text_search`, `entry_search`, `text_keyword`, `text_category`,
+`text_sub_category`, `entry_description`, `button_search`, `text_sort`,
+`text_limit`, `text_empty`, `button_continue`, `continue`, and a new
+`search_performed` boolean) to `$data` for the new
+`mint_default/template/product/search.twig` page to consume — the same
+`$data['text_compare']` pattern this controller already followed, not new
+business logic.
+
+**Why it can't live in the MintCart layer instead:** Same rationale as
+`category.php` — `ProductViewProvider`/`ComponentRenderer`/`ProductCardListRenderer`
+are deliberately OpenCart-agnostic, but something controller-specific has
+to call them with this controller's already-resolved product data
+(formatted price/special/tax, resized image, rating) once per row.
+
+**Compatibility impact:** None for the legacy `default` theme or any
+unrelated third-party theme — same manifest-gated pipeline as
+`category.php`, and the controller's original `$data['products']` array is
+completely unchanged either way: same keys, same values, same order, same
+computation. A failure inside the shared renderer is caught and logged via
+`MintCart\Core\Logger`, disabling the pipeline for the rest of the request
+rather than propagating — same degrade behaviour as `category.php`.
+
+One pre-existing gap noticed while writing the new template, **not**
+introduced or fixed by this change: `mint_default/template/product/category.twig`
+references `text_refine`/`text_sort`/`text_limit`/`text_empty`/`button_continue`
+without `category.php` ever assigning those keys to `$data` — Twig's
+default `strict_variables => false` renders them as empty strings rather
+than erroring, so this has been silently blank on that (already live and
+verified) page since Phase 8, on both `mint_default` and the stock
+`default` theme (the same unassigned keys, same gap, checked against the
+un-modified `default/template/product/category.twig`). Out of scope for
+this run — `category.twig` is unrelated to Search — but `search.php`
+deliberately does assign every one of the equivalent keys its own new
+template reads, rather than repeating the same gap in a brand-new file.
+**Fixed in a later run on this branch** — see `category.php`'s own entry
+above and `docs/fixes/registry.md` MC-0001.
+
+**Tests:** `php -l` (clean) on `search.php` and the new
+`en-gb/product/search.php` strings. `tests/mintcart/design/
+product-card-list-renderer-test.php` (new, 8 scenarios) covers the shared
+renderer this controller now calls. No live end-to-end request test — same
+pre-existing gap as every earlier phase (no MySQL/`vendor/twig/twig` in
+this environment). A human should smoke-test a real search results page
+on a `mint_default`-configured install before this reaches production.
+
+**Update (a later run, same branch/PR): a second pre-existing gap fixed —
+`index()` never emitted `canonical`/`prev`/`next` `<link>` tags at all**
+(unlike the sibling `category.php`/`manufacturer.php`/`special.php`
+controllers, which all do). See `docs/fixes/registry.md` MC-0002. Adds a
+`$canonical_url` block mirroring the exact pattern those three sibling
+controllers already use (result-defining params only — `search`, `tag`,
+`description`, `category_id`, `sub_category` — deliberately excluding
+display-only params like `sort`/`order`/`limit` from the canonical URL,
+same as `category.php`'s `path`-only canonical). No template change, no
+new language strings, `$data['products']`/`$data['product_cards']`
+untouched. `php -l` clean.
+
+---
+
+## `upload/catalog/language/en-gb/product/search.php`
+
+**Reason:** Adds the same five `product-card` language keys
+`product/category.php`'s language file already added
+(`text_rated`, `text_quick_order`, `text_badge_sale`, `text_badge_out_of_stock`,
+`text_badge_new`) — needed now that Search also renders `product-card`.
+
+**Why it can't live in the MintCart layer instead:** Same as
+`product/category.php`'s language file — OpenCart's language system is
+file-per-route.
+
+**Compatibility impact:** Purely additive — five new keys appended after
+the existing ones, nothing removed or renamed.
+
+**Tests:** `php -l` (clean).
+
+---
+
+## `upload/catalog/view/theme/mint_default/template/product/search.twig` (new file)
+
+Not an upstream diff — a new file `mint_default` ships. Noted here only
+because it is the page-level template `ControllerProductSearch::index()`'s
+`$this->load->view('product/search', $data)` call resolves to once
+`mint_default` is active (via the `event/theme.php` three-tier fallback,
+`docs/adr/003-page-template-fallback-fix.md`). Uses a native
+`<form method="get">` for the refine-search controls (search/category/
+sub_category/description) instead of the `default` theme's jQuery `click`
+handler — `CLAUDE.md` §3 disallows jQuery in new MintCart code, and a plain
+GET form submitting the same field names to `index.php?route=product/search`
+needs no JS at all.
+
+---
+
+## `upload/catalog/controller/product/special.php`
+
+**Reason:** Wires Special as the third real listing consumer of the Theme
+API's `product-card` pipeline (`MINTCART_TECHNICAL_PLAN.md` §15C/§15D,
+`CLAUDE.md` §8A), mirroring `search.php`'s wiring almost exactly: for each
+product row, in addition to the controller's existing inline array
+building, also builds a `MintCart\Commerce\ProductViewProvider` result via
+the shared `MintCart\Design\ProductCardListRenderer` and renders it into a
+new `$data['product_cards']` array, same `MintCart\Design\ActiveTheme::isMintAware()`
+gate `category.php`/`search.php`/`footer.php` already use. Also exposes
+`text_sort`/`text_limit`/`text_empty`/`button_continue` to `$data` for the
+new `mint_default/template/product/special.twig` page to consume — the
+same pattern `search.php` already established, not new business logic.
+Unlike `search.php`, Special has no optional query gate (it always lists
+today's specials), so the whole listing loop runs unconditionally — no new
+`search_performed`-style flag was needed.
+
+**Why it can't live in the MintCart layer instead:** Same rationale as
+`category.php`/`search.php` — `ProductViewProvider`/`ComponentRenderer`/
+`ProductCardListRenderer` are deliberately OpenCart-agnostic, but something
+controller-specific has to call them with this controller's
+already-resolved product data (formatted price/special/tax, resized image,
+rating) once per row.
+
+**Compatibility impact:** None for the legacy `default` theme or any
+unrelated third-party theme — same manifest-gated pipeline as
+`category.php`/`search.php`, and the controller's original
+`$data['products']` array is completely unchanged either way: same keys,
+same values, same order, same computation. A failure inside the shared
+renderer is caught and logged via `MintCart\Core\Logger`, disabling the
+pipeline for the rest of the request rather than propagating — same
+degrade behaviour as `category.php`/`search.php`.
+
+**Tests:** `php -l` (clean) on `special.php` and the updated
+`en-gb/product/special.php` strings. `tests/mintcart/design/
+product-card-list-renderer-test.php` already covers the shared renderer
+this controller now calls (no controller-specific test needed — same
+class, same contract, already exercised by `search.php`'s wiring). No live
+end-to-end request test — same pre-existing gap as every earlier phase (no
+MySQL/`vendor/twig/twig` in this environment). A human should smoke-test a
+real special-offers page on a `mint_default`-configured install before this
+reaches production.
+
+---
+
+## `upload/catalog/language/en-gb/product/special.php`
+
+**Reason:** Adds the same five `product-card` language keys
+`product/category.php`/`product/search.php`'s language files already added
+(`text_rated`, `text_quick_order`, `text_badge_sale`, `text_badge_out_of_stock`,
+`text_badge_new`) — needed now that Special also renders `product-card`.
+
+**Why it can't live in the MintCart layer instead:** Same as
+`product/category.php`'s language file — OpenCart's language system is
+file-per-route.
+
+**Compatibility impact:** Purely additive — five new keys appended after
+the existing ones, nothing removed or renamed.
+
+**Tests:** `php -l` (clean).
+
+---
+
+## `upload/catalog/view/theme/mint_default/template/product/special.twig` (new file)
+
+Not an upstream diff — a new file `mint_default` ships. Noted here only
+because it is the page-level template `ControllerProductSpecial::index()`'s
+`$this->load->view('product/special', $data)` call resolves to once
+`mint_default` is active (via the `event/theme.php` three-tier fallback,
+`docs/adr/003-page-template-fallback-fix.md`). Simpler than `search.twig`
+— no refine-search form, since Special has no search-criteria UI in the
+stock `default` theme either.

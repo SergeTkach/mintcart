@@ -15,3 +15,8 @@ $_['text_order']        = 'Order History';
 $_['text_wishlist']     = 'Wish List';
 $_['text_newsletter']   = 'Newsletter';
 $_['text_powered']      = 'Powered By <a href="http://www.opencart.com">OpenCart</a><br /> %s &copy; %s';
+
+// Text (MintCart mc-footer component - docs/developer/components/footer.md)
+$_['text_contact_us']        = 'Contact Us';
+$_['text_newsletter_email']  = 'Email';
+$_['text_newsletter_submit'] = 'Subscribe';

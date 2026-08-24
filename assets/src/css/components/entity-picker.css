@@ -1,0 +1,122 @@
+/**
+ * mc-entity-picker
+ *
+ * The unified entity picker's list chrome (`MINTCART_FUNCTIONAL_SCOPE.md`
+ * §8) - search input, result rows, pager and selection footer. Pure
+ * layout/visual styling; all interaction lives in
+ * `assets/src/js/components/entity-picker.js`, which owns the
+ * `data-mc-entity-picker-*` hooks this file styles by attribute/child
+ * selector rather than a JS-added state class where a semantic attribute
+ * already exists (CLAUDE.md §13) - selection uses `[aria-selected="true"]`,
+ * loading uses the `is-loading` transient-state class (`root`, not a row,
+ * carries it, so there is no ARIA equivalent to key off).
+ *
+ * Contract: docs/developer/components/entity-picker.md
+ */
+
+.mc-entity-picker {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-3);
+    min-height: 0;
+}
+
+.mc-entity-picker.is-loading {
+    opacity: 0.6;
+}
+
+.mc-entity-picker__list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    max-height: 20rem;
+    overflow-y: auto;
+}
+
+.mc-entity-picker__item {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    padding: var(--mc-space-2) var(--mc-space-3);
+    border-bottom: var(--mc-border-width) solid var(--mc-border);
+    cursor: pointer;
+    color: var(--mc-text);
+    transition: background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-entity-picker__item:last-child {
+    border-bottom: none;
+}
+
+.mc-entity-picker__item:hover {
+    background-color: var(--mc-surface-alt);
+}
+
+.mc-entity-picker__item:focus-visible {
+    outline: 2px solid var(--mc-primary);
+    outline-offset: -2px;
+}
+
+.mc-entity-picker__item[aria-selected="true"] {
+    background-color: var(--mc-primary);
+    color: var(--mc-on-primary);
+}
+
+.mc-entity-picker__item-image {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--mc-radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.mc-entity-picker__item-label {
+    font-size: var(--mc-font-size-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-entity-picker__empty {
+    margin: 0;
+    padding: var(--mc-space-4);
+    text-align: center;
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-entity-picker__pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-2);
+}
+
+.mc-entity-picker__page-info {
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-entity-picker__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-3);
+    padding-top: var(--mc-space-3);
+    border-top: var(--mc-border-width) solid var(--mc-border);
+}
+
+.mc-entity-picker__selected-count {
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-entity-picker__item {
+        transition: none;
+    }
+}

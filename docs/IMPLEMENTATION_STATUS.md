@@ -294,9 +294,10 @@ belongs to Phase 8 once a theme exists to render.
       Pure transform, no OpenCart dependency (formatting/tax/URL resolution
       stays OpenCart's job upstream of it); computes `stock`/`badges`/
       `actions` consistently instead of each controller doing it ad hoc.
-      Actual controller wiring (Category/Search/Manufacturer/Special calling
-      this instead of their inline array-building) is intentionally deferred
-      to Phase 8 (Theme resolver) — see "Next step" below.
+      Actual controller wiring was deferred to Phase 8 (Theme resolver) and
+      has since landed for Category, Search and Special, all via the shared
+      `MintCart\Design\ProductCardListRenderer`; Manufacturer is wired on a
+      separate unmerged branch — see "Next step" below.
 - [x] `mc-product-card` Twig + CSS + JS — `assets/src/css/components/product-card.css`
       + `assets/src/js/components/product-card.js` (`initProductCardActions`,
       wired into `catalog.js` only — storefront component); documented
@@ -346,10 +347,96 @@ bundled-output grep + manual review against the Definition of Done checklist.
 
 - [ ] Header, Topbar, Logo, Search, Account, Cart, Navigation, Mobile Navigation
       component contracts
-- [ ] Footer, Footer Columns, Contacts, Social links, Payments, Newsletter
-- [ ] Centralized business data (no per-theme contact duplication)
+- [x] Footer, Footer Columns, Contacts, Social links, Payments, Newsletter —
+      `MintCart\Design\FooterViewProvider`
+      (`upload/system/library/mintcart/design/footerviewprovider.php`) +
+      `assets/src/css/components/footer.css` +
+      `catalog/view/theme/mint_default/template/mint/components/footer.twig`,
+      documented in `docs/developer/components/footer.md`
+- [x] Centralized business data (no per-theme contact duplication) — for the
+      Footer contract specifically: contacts are documented to source from
+      OpenCart's existing `config_telephone`/`config_email`/`config_address`
+      settings (no Mint-owned duplicate storage). Header's own business-data
+      needs (if any) aren't determined yet since Header hasn't started.
 
-Not started.
+**Footer sub-step is complete, including live controller wiring** (this
+run). `FooterViewProvider` (contract + normalization rules), `mc-footer`
+CSS, `mint_default`'s `mint/components/footer.twig`, and now
+`ControllerCommonFooter::index()` actually building a `FooterViewProvider`
+result and rendering it via `ComponentRenderer::render('footer', ...)` into
+`$data['mc_footer']`, consumed by a new
+`mint_default/template/common/footer.twig` page-level template — gated by
+the same `theme.json`-manifest check `ControllerProductCategory` uses for
+`product-card` (`docs/upstream-diff.md`). The controller's original
+per-field `$data` is untouched, so the legacy `default` theme's footer is
+unaffected. Three new language strings were added
+(`text_contact_us`, `text_newsletter_email`, `text_newsletter_submit`);
+`text_newsletter` itself already existed and is reused as-is. Social links,
+payment badges and the newsletter subscribe action still default to
+empty/disabled — no storage for the first two exists yet (Business
+Settings, Phase 14) and no subscribe endpoint exists for the third
+(Commerce API, Phase 15) — so `FooterViewProvider` never invents a data
+source ahead of a real consumer (`CLAUDE.md` §85); see
+`docs/developer/components/footer.md` for the full rationale.
+
+**Theme override proof for `footer.twig` is now done too** (this run).
+`catalog/view/theme/test_theme/` (already overriding `product-card.twig`
+since Phase 8's milestone proof) now also overrides `footer.twig` with a
+genuinely different DOM — a single stacked link list, an optional one-line
+phone/email row, and the powered-by text, marked `mc-footer--test` instead
+of `mint_default`'s grid-based `mc-footer` (no social/payments/newsletter
+sections). `test_theme`'s `theme.json` still declares `"parent": null`.
+`tests/mintcart/design/component-renderer-test.php` scenario 12 confirms
+`resolve('footer')` returns `test_theme`'s own file when it's active and
+still falls back to Mint Default's file otherwise — both directions,
+against the real shipped repo files. This proves the Theme API's
+component-override fallback works independently per component name (a
+theme can override some components and inherit the rest), not just for the
+one component (`product-card`) the original milestone proof used. Full
+writeup in `docs/developer/components/footer.md`.
+
+**Not done, by design, deferred to a future run:**
+- Header, Topbar, Logo, Search, Account, Cart, Navigation, Mobile
+  Navigation component contracts — not started at all yet.
+- A live end-to-end request test confirming `mint_default`'s footer
+  (and now `test_theme`'s override) actually renders on a real running
+  install (this environment still has no MySQL/`vendor/twig/twig`) — same
+  pre-existing gap noted in every earlier phase.
+
+Verified (this run — theme override proof): `test_theme/footer.twig`'s
+`if`/`for` tag nesting checked balanced (same script-based technique used
+for every earlier `.twig` file in this repo); full `tests/mintcart/` suite
+re-run end to end (migration manager, `ProductViewProvider` x8,
+`ComponentRenderer` x12 — up from 11, new scenario 12,
+`FooterViewProvider` x7) — all pass. No PHP files were touched this run
+(only a new `.twig` fixture file and the test file), so no `php -l` beyond
+the test file itself was needed. Same pre-existing gap as every earlier
+phase: no live `config_theme=test_theme`-and-load-a-page check was possible
+(no MySQL/`vendor/twig/twig` in this environment) — a human should confirm
+`test_theme`'s footer actually renders with its distinct DOM before this is
+considered fully closed end-to-end.
+
+Increment 2's verification (`ControllerCommonFooter` wiring, unaffected by
+this run): `php -l` on the modified controller and language file (clean);
+full `tests/mintcart/` suite re-run end to end (migration manager,
+`ProductViewProvider` x8, `ComponentRenderer` x11, `FooterViewProvider` x7)
+— all pass, none affected by that change since neither `FooterViewProvider`
+nor `ComponentRenderer` themselves were modified. No new PHP test was added
+for the controller wiring itself — same approach `ControllerProductCategory`'s
+wiring took (Phase 8 sub-step 2): `php -l` + manual review, since
+OpenCart's `Registry`/`Config`/`Loader` aren't mockable in this environment
+without a full framework bootstrap. A human should smoke-test a real page
+footer on a `mint_default`-configured install (and confirm the legacy
+`default` theme's footer is pixel-identical to before) before this reaches
+production — see `docs/upstream-diff.md`'s new entries for the full
+writeup.
+
+Increment 1's verification (Footer provider/CSS/Twig, unaffected by this
+run): `FooterViewProvider` smoke test, 7 scenarios; `ComponentRenderer`
+smoke test scenario 11 (real-repo `footer.twig` resolution); `footer.twig`'s
+`if`/`for` tag nesting checked balanced; `npm run build` compiles cleanly,
+`mc-footer__*` classes present in the bundled
+`assets/dist/css/index.min.css`.
 
 ## Phase 8 — Theme resolver
 
@@ -496,12 +583,108 @@ needs a human), is in `docs/adr/002-theme-api-milestone-proof.md`.
 proceed. A human should still confirm the override actually renders on a
 real install before treating the milestone as *fully* closed end-to-end.
 
+**Update (this run): Search is now the second listing controller wired to
+`product-card`**, alongside Category. Rather than re-inline Category's own
+`try`/`catch`-and-disable loop and private `mintActiveThemeDirectory()`
+helper a second time, both were extracted into shared classes —
+`MintCart\Design\ActiveTheme` (active-theme + Mint-awareness resolution)
+and `MintCart\Design\ProductCardListRenderer` (the per-product
+build-via-`ProductViewProvider`/render-via-`ComponentRenderer`/
+degrade-on-failure step) — `docs/developer/theme-api/product-card-list-renderer.md`.
+`ControllerProductCategory` and `ControllerCommonFooter` were both
+refactored to call the shared classes instead of their own private copies,
+with no behavioral change (verified: full `tests/mintcart/` suite re-run
+end to end, still passing). `ControllerProductSearch` now builds
+`$data['product_cards']` the same way Category does, rendered into a new
+`mint_default/template/product/search.twig` (native `<form method="get">`
+refine-search, no jQuery — `CLAUDE.md` §3). New test:
+`tests/mintcart/design/product-card-list-renderer-test.php` (8 scenarios).
+Full writeup, including a **pre-existing, unrelated gap** discovered (not
+fixed) while writing the new template — `mint_default`'s (and stock
+`default`'s) own `category.twig` silently renders several language-string
+variables as blank because `category.php` never assigns them to `$data` —
+is in `docs/upstream-diff.md`'s `search.php` entry.
+
+Manufacturer and Special still aren't wired to `product-card` — same
+shared `ProductCardListRenderer`, different controller, next candidates
+for this pipeline.
+
 ## Phase 9 — Presets
 
-- [ ] At least two radically different presets (e.g. Clean, Warm) on the same DOM
-- [ ] Differ in colors/fonts/radius/spacing/card look/button look only, not Twig
+- [x] At least two radically different presets (e.g. Clean, Warm) on the same DOM —
+      `assets/src/css/presets/clean.css` and `assets/src/css/presets/warm.css`,
+      each scoped by `:root[data-mc-preset='<code>']`; both listed in
+      `mint_default`'s `theme.json` `presets` array (was `[]`). Contract:
+      `docs/developer/theme-api/presets.md`; decisions:
+      `docs/adr/004-design-token-presets.md`
+- [x] Differ in colors/fonts/radius/spacing/card look/button look only, not Twig —
+      `warm.css` redeclares 25 semantic-tier `--mc-*` tokens (terracotta/gold
+      palette, serif heading face, softer radius scale, roomier spacing,
+      warm-tinted shadows) plus 11 preset-local `--mc-preset-warm-*`
+      intermediates. Zero component CSS, zero Twig, zero component-local
+      tokens touched. The card and button *look* changes because
+      `mc-card`/`mc-button` read semantic tokens — the preset never names them
 
-Not started.
+**Phase 9 is complete.** `clean.css` is a deliberately empty block: Clean's
+values *are* `settings/tokens.css`'s values, so the file makes `clean` a real,
+enumerable preset code without duplicating ~108 declarations that would then
+have to never drift (`CLAUDE.md` §86). See ADR 004 decision 3.
+
+The Preset/Theme boundary is now enforced rather than conventional:
+`tests/frontend/preset-tokens-test.js` (wired to `npm test`) requires each
+preset file to contain exactly one `:root[data-mc-preset='<code>']` block and
+to redeclare only tokens `tokens.css` already declares, plus its own
+`--mc-preset-<code>-*` intermediates. A preset that invents a token name is
+introducing component-facing API no component reads; one that sets a
+component-local token (`--mc-button-bg`) styles a single component out of step
+with the rest. Both are now build-breaking rather than review-catchable. (An
+earlier draft of this phase, superseded before merge, took the opposite
+approach — directly overriding component-local tokens like
+`--mc-product-card-radius`/`--mc-button-radius` with new component-scoped
+selectors inside the preset file, for a more dramatic borderless-card/
+pill-button look. That version is documented in ADR 004's alternatives if a
+future preset genuinely needs a component-local override; the guardrail test
+above will require an explicit, reviewed exception at that point rather than
+letting it in silently.)
+
+A consequence worth carrying forward: every MintCart component must read
+semantic tokens for presets to reach it. Phase 4's components already do — but
+as of ADR 004 that is a hard requirement, not a stylistic preference. A
+component with a hardcoded color silently ignores every preset.
+
+No `data-mc-preset` picker exists yet (that's Setup Wizard/Theme Settings
+work, Phase 13/31, not started) — this phase only had to prove the token
+mechanism itself, per `CLAUDE.md` §19/`MINTCART_TECHNICAL_PLAN.md` §45's
+"prove the architecture before scaling features" rule.
+
+Verified: `npm install` (0 vulnerabilities); `npm run build` (minified,
+`index.min.css` 255.8kb → 257.3kb) and `npm run dev:css` (sourcemapped) both
+compile cleanly; both `:root[data-mc-preset=clean]` and
+`:root[data-mc-preset=warm]` are present in the bundled output, with
+`--mc-primary` appearing twice (base `var(--mc-color-mint-600)`, warm
+`var(--mc-preset-warm-terracotta-600)`); `npm test` passes 7 checks. The test
+was **negative-tested** against three deliberate violations — an invented
+token name inside the block, a second rule block, and a `.mc-product-card`
+rule in a preset file — each of which failed the run with exit 1, so the
+checks are not passing vacuously. No PHP touched by this phase, so the
+`tests/mintcart/` suite doesn't apply.
+
+**Not verified, needs a human:** whether the two presets actually *look* like
+coherent, radically different designs — no check can assert that, and this
+environment still has no MySQL/`vendor/twig/twig` to render a real page (the
+same gap carried since Phase 3). Also unverified: text contrast under Warm
+against WCAG 2.2 AA, whether any component is still showing mint green (which
+would mean a hardcoded color, a component bug), and whether both presets apply
+cleanly to `test_theme`'s different DOM. All five items are listed in
+`docs/MANUAL_VERIFICATION.md`'s new Phase 9 section.
+
+**Not wired yet, by design:** nothing writes `data-mc-preset` onto `<html>` at
+runtime — Mint Default's page templates don't emit it and no admin UI selects
+it. That belongs with theme settings (`MINTCART_FUNCTIONAL_SCOPE.md` §9) and
+its declarative `settings.json` schema (Implementation Guide §31), neither of
+which exists; building the writer ahead of the form that sets the value would
+be API ahead of a consumer (`CLAUDE.md` §85). Until then a preset is inspected
+by setting the attribute by hand.
 
 ## Phase 10 — Homepage Blocks
 
@@ -515,18 +698,57 @@ Not started.
 
 ## Phase 11 — Mint Admin primitives
 
-- [ ] `McDrawer`, `McModal`, `McToast`, `McConfirm`, `McTabs`, `McSortable`,
-      `McMediaPicker`, `McEntityPicker`, `McProgress` (vanilla JS)
+- [x] `McDrawer`, `McModal`, `McToast` — shipped as Phase 4 generic UI
+      components (`assets/src/js/components/{drawer,modal,toast}.js`),
+      already usable by admin screens (imported into `admin.js`).
+- [ ] `McConfirm`, `McTabs`, `McSortable`, `McProgress` — in progress on
+      other open (non-routine) PRs at the time of this entry; check open
+      PRs before redoing.
+- [x] `McEntityPicker` — `assets/src/js/components/entity-picker.js`
+      (`createEntityPicker()`) + `assets/src/css/components/entity-picker.css`.
+      Search/pagination/multi-select/keyboard-navigation (WAI-ARIA
+      listbox roving-tabindex pattern) against a caller-supplied
+      `fetchItems` data source; no dialog chrome of its own (host inside
+      an existing `mc-drawer`/`mc-modal`); not wired into any live
+      backend or admin screen yet — that's Phase 12's job, once a real
+      consumer exists (`CLAUDE.md` §85). Doc:
+      `docs/developer/components/entity-picker.md`.
+- [x] `McMediaPicker` — `assets/src/js/components/media-picker.js`
+      (`createMediaPicker()`) + `assets/src/css/components/media-picker.css`
+      (Functional Scope §25, Media UX, priority P1). Sibling of
+      `McEntityPicker`: same data-source/no-dialog-chrome/WAI-ARIA-listbox
+      shape, but a thumbnail grid instead of a text list, plus an optional
+      folder `<select>` (hidden unless `fetchFolders` is supplied) and
+      optional upload/safe-delete affordances (hidden/disabled unless the
+      host supplies `uploadFiles`/`deleteItems` — never assumes a backend
+      exists). "Recent files" and "image metadata" (Functional Scope §25)
+      are covered without a dedicated concept: a host-supplied `recent`
+      folder entry and the optional `getMeta(item)` callback, respectively.
+      Not wired into any live backend or admin screen yet — same Phase 12
+      deferral as `McEntityPicker`. Doc:
+      `docs/developer/components/media-picker.md`.
 
-Not started.
+Mostly not started; `McDrawer`/`McModal`/`McToast` (via Phase 4),
+`McEntityPicker` and now `McMediaPicker` are the exceptions — both Phase
+11 picker primitives are done. `McConfirm`/`McTabs`/`McSortable`/
+`McProgress` remain, pending whichever land from the open PRs referenced
+above.
 
 ## Phase 12 — Entity Picker
 
-- [ ] Unified picker for products, categories, manufacturers, attributes, options,
-      information pages, customers (search, filters, pagination, images,
-      multi-select, keyboard nav, selected state)
+- [x] List primitive shipped (Phase 11 — `McEntityPicker`, see above):
+      search, pagination, images, multi-select, keyboard nav, selected
+      state, all against a caller-supplied data source.
+- [ ] Filters (beyond search text) — not attempted; no real per-entity
+      filter requirement identified yet.
+- [ ] Real `fetchItems` backends per entity type (products, categories,
+      manufacturers, attributes, options, information pages, customers)
+      — none exist; each needs a normalized search/autocomplete endpoint.
+- [ ] Live wiring into an actual admin screen/field.
+- [ ] Create-new flow via drawer/modal — not attempted.
 
-Not started.
+List behavior is done (Phase 11); everything that turns it into a real,
+backend-connected picker on an actual screen is not started.
 
 ## Phase 13 — Setup Wizard
 
@@ -591,13 +813,16 @@ tracked once each.)*
 ## Phase 10 (Technical Plan) — SEO / Fixes / Performance
 
 - [ ] SEO Core (tracked above as Phase 18)
-- [ ] `docs/fixes/registry.md` Fix Registry established, entries added only after
-      reproduction on the MintCart baseline (per `CLAUDE.md` §13)
+- [x] `docs/fixes/registry.md` Fix Registry established, entries added only after
+      reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
+      (`category.php` blank language strings) and MC-0002 (`search.php`
+      missing canonical/prev/next links, this run)
 - [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
-Not started.
+Fix Registry mechanism is established and has two real entries; the rest of
+this phase (diagnostics, measured performance work) is not started.
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
@@ -649,23 +874,259 @@ environment still has no MySQL/`vendor/twig/twig`, so the proof is at the
 human should still confirm `test_theme`'s override actually renders on a
 real install before the milestone is considered *fully* closed end-to-end.
 
-**Next run should pick one of:**
+**Update (this run): Phase 7's Footer sub-step is now fully wired end to
+end** — see the Phase 7 section above for the full writeup.
+`MintCart\Design\FooterViewProvider`, `mc-footer` CSS, `mint_default`'s
+`mint/components/footer.twig`, and now live `ControllerCommonFooter` wiring
+(reads `config_telephone`/`config_email`/`config_address`, regroups the
+controller's existing links into columns, renders via `ComponentRenderer`
+into `$data['mc_footer']`, consumed by a new
+`mint_default/template/common/footer.twig`) are all done and verified
+(full `tests/mintcart/` suite passing, `php -l` clean on the touched PHP
+files). Header/Topbar/Navigation are still not started at all.
 
-- **Phase 7 — Header / Footer / Navigation** (deferred until Phase 8 passed,
-  per `CLAUDE.md` §21's ordering: ComponentRenderer before Header/Footer/
-  Blocks). Define the `Header`/`Footer` component contracts per
-  `MINTCART_IMPLEMENTATION_GUIDE.md` §48, following the same
-  provider → contract → Mint Default `.twig` pattern `product-card`
-  established, with centralized business data (no per-theme contact
-  duplication, per `CLAUDE.md` §6/§39).
-- **Phase 9 — Presets**: two radically different presets (e.g. Clean, Warm)
-  on the same DOM, differing only in tokens/settings, validating the design
-  token system independently of the Theme API's component-override
-  mechanism just proven.
+**Update (this run): theme override proof for `footer.twig` is done.**
+`catalog/view/theme/test_theme/` now overrides both `product-card.twig`
+(since Phase 8's milestone) and `footer.twig` (this run), each with its own
+genuinely different DOM, still declaring `"parent": null` in `theme.json`.
+`ComponentRenderer` scenario 12 confirms both fallback directions for
+`footer` against the real shipped repo files. Full writeup in the Phase 7
+section above and `docs/developer/components/footer.md`.
 
-Either is a reasonable next increment; re-read whichever section is picked
-in full before starting, per `CLAUDE.md` §10/§84 — don't start from this
-summary alone.
+**Update (this run): Phase 9 — Presets is done.** `assets/src/css/presets/clean.css`
+(documentation-only, the unmodified baseline) and `assets/src/css/presets/warm.css`
+(a terracotta/serif/soft-radius override scoped under `[data-mc-preset="warm"]`)
+prove the token system alone can carry a radically different look with 0
+Twig changes — same `product-card.twig`/`footer.twig`/`card.twig` markup as
+Clean. See the Phase 9 section above and `docs/developer/theme-api/presets.md`
+for the full write-up, token diff table, and "adding a new preset" recipe.
+Verified via the new `tests/mintcart/design/presets-test.php` (standalone,
+no PHPUnit) and by inspecting the compiled `assets/dist/css/index.min.css`
+bundle for all four `[data-mc-preset=warm]` rule blocks. Same caveat as
+every other design-only milestone here: no live-render environment, so a
+human should still confirm the visual result on a real install.
+
+**Update (this run): Search is wired to `product-card`, and the shared
+per-product rendering step is extracted.** See the note added above, just
+before the Phase 9 heading, and `docs/developer/theme-api/product-card-list-renderer.md`
+for the full writeup. `MintCart\Design\ActiveTheme` +
+`MintCart\Design\ProductCardListRenderer` are the two new shared classes;
+`ControllerProductCategory`/`ControllerCommonFooter` were refactored
+(no behavioral change) to use them instead of their own private copies;
+`ControllerProductSearch` is the new live consumer, with a new
+`mint_default/template/product/search.twig`.
+
+**Coordination note for whoever picks up next:** this repo currently has
+several other open, unmerged PRs in flight from other (non-routine)
+sessions working the *same* `docs/IMPLEMENTATION_STATUS.md` checklist in
+parallel — at the time of this run, at least one already implements Phase
+7's Header component end-to-end (provider, CSS/Twig, live
+`ControllerCommonHeader` wiring, `test_theme` override), and others cover
+Phase 9 Presets (a second, independent implementation of what this branch
+already shipped), Phase 10's Block API storage, several Phase 11 admin
+primitives (`McConfirm`/`McSortable`/`McTabs`/`McProgress`), and a CI
+workflow. **Before starting Header (or any of the above) fresh, check
+open PRs first** (`gh pr list --state open` / repo host equivalent) —
+redoing already-open, tested work wastes a run and creates avoidable merge
+conflicts; a human will reconcile whichever PR(s) actually land. This is
+why *this* run picked Search wiring instead of Header: Header appeared
+already done elsewhere, but Category→Search product-listing reuse
+(`CLAUDE.md` §8A, `MINTCART_TECHNICAL_PLAN.md` §15C/§15D) did not.
+
+**Update (a later run, same branch/PR #14): Special is wired to
+`product-card` too.** `ControllerProductSpecial::index()`
+(`upload/catalog/controller/product/special.php`) now builds
+`$data['product_cards']` via the same
+`MintCart\Design\ActiveTheme` + `MintCart\Design\ProductCardListRenderer`
+pipeline Category and Search use — third real consumer of the shared
+listing render step (`CLAUDE.md` §8A, `MINTCART_TECHNICAL_PLAN.md`
+§15C/§15D), no new abstraction needed, the shared class absorbed it
+unchanged. Ships with a new `mint_default/template/product/special.twig`
+(same `product_cards`/sorts/limits/pagination contract as
+`search.twig`, minus the refine-search form — Special has no
+search-criteria UI), the five `product-card` language keys appended to
+`en-gb/product/special.php`, and `text_sort`/`text_limit`/`text_empty`/
+`button_continue` explicitly assigned to `$data` (the same gap-avoidance
+`search.php` applied). Documented in `docs/upstream-diff.md`; consumer
+lists updated in `docs/developer/theme-api/product-card-list-renderer.md`
+and `docs/developer/components/product-card.md`.
+
+**Update (a later run, same branch/PR #14): the `category.php` blank-language-string
+gap (item 3 of "Next run should pick" below) is fixed.** `ControllerProductCategory::index()`'s
+success branch now assigns `text_refine`/`text_sort`/`text_limit`/
+`text_empty`/`button_continue` to `$data` — the same five-line pattern
+`search.php`/`special.php` already established — fixing a pre-existing
+OpenCart 3.0.5.1 stock bug (present on both the `default` theme and
+`mint_default`) where `category.twig` referenced these keys but the
+controller never assigned them, so Twig's non-strict mode silently
+rendered them blank. Tracked as `docs/fixes/registry.md` MC-0001 (this
+run created that registry file — it didn't exist before), full writeup in
+`docs/upstream-diff.md`'s `category.php` entry. `php -l` clean; full
+`tests/mintcart/` suite re-run end to end (migration manager,
+`ProductViewProvider` x8, `ComponentRenderer` x12, `FooterViewProvider`
+x7, presets, `ProductCardListRenderer` x8) — all pass, no regressions (the
+fix touches only `$data` assignments the test suite doesn't cover at the
+controller level — same pre-existing gap noted throughout this file, no
+live OpenCart bootstrap available in this environment).
+
+**Manufacturer was deliberately NOT wired on this branch**, even though it
+was the other half of this increment's obvious scope: open PR #21
+(`claude/charming-rubin-gx1pqm`, an independent non-routine session)
+already implements Manufacturer wiring end to end, including its *own*
+separate copy of `MintCart\Design\ProductCardListRenderer` with a
+different constructor/`render()` signature. Adding a second Manufacturer
+implementation here would guarantee a hard conflict on both
+`manufacturer.php` and `productcardlistrenderer.php` for whoever merges.
+Once #21 and this PR are reconciled by a human, the two renderer variants
+need to be collapsed into one (see "Next run" below).
+
+**Update (a later run, same branch/PR #14): MC-0002 fixed — `search.php`
+never emitted `canonical`/`prev`/`next` `<link>` tags at all**, unlike its
+three sibling listing controllers (`category.php`/`manufacturer.php`/
+`special.php`, which all have this). This was investigated as a "check
+open PRs / consider a Fix Registry candidate" item (option 4 of the
+previous "Next run should pick" list below) — the two higher-priority
+items (renderer reconciliation, Header) were both still blocked/covered by
+open non-routine PRs at the time this run started (see below), and a
+Known Fix Research Queue candidate was a genuinely reproducible, safely
+scoped, non-conflicting increment. `ControllerProductSearch::index()` now
+builds a `$canonical_url` from only the result-defining query params
+(`search`/`tag`/`description`/`category_id`/`sub_category`, deliberately
+excluding display-only `sort`/`order`/`limit`) and emits `canonical` always
+plus `prev`/`next` at pagination boundaries — the exact pattern already
+proven in the three sibling controllers, placed at the same relative spot
+(`category.php`'s). No template change, no new language strings,
+`$data['products']`/`$data['product_cards']` untouched. Full writeup:
+`docs/fixes/registry.md` MC-0002, `docs/upstream-diff.md`'s `search.php`
+entry. `php -l` clean; full `tests/mintcart/` suite re-run end to end
+(migration manager, `ProductViewProvider` x8, `ComponentRenderer` x12,
+`FooterViewProvider` x7, presets, `ProductCardListRenderer` x8) — all
+pass, no regressions (this fix touches only `<head>` link tags the suite
+doesn't exercise at the controller level — same pre-existing
+no-live-bootstrap gap noted throughout this file). A human should confirm
+on a real install that a search-results page's `<head>` now contains
+`<link rel="canonical">` (and `rel="prev"`/`rel="next"` where applicable).
+
+**Update (a later run, same branch/PR #14): Phase 11 — `McEntityPicker`
+shipped.** `assets/src/js/components/entity-picker.js`
+(`createEntityPicker()`) + `assets/src/css/components/entity-picker.css`
+— the unified entity picker's list behavior (search, pagination,
+multi-select, WAI-ARIA listbox keyboard navigation) against a
+caller-supplied `fetchItems` data source, Functional Scope §8's P0
+requirement. No dialog chrome of its own (documented: host it inside an
+existing `mc-drawer`/`mc-modal`, call `refresh()` on that dialog's
+`shown` event) and not wired into any live backend/admin screen yet —
+that's Phase 12's remaining scope, once a real consumer (a product/
+category/etc. field on an actual admin screen) exists, per `CLAUDE.md`
+§85. Picked because Phase 11's other four primitives
+(`McConfirm`/`McTabs`/`McSortable`/`McProgress`) were already covered by
+open non-routine PRs at the time this run started (see "Coordination
+note" above), and `McDrawer`/`McModal`/`McToast` already shipped via
+Phase 4 — `McEntityPicker` and `McMediaPicker` were the only two Phase 11
+items with no open PR. Doc: `docs/developer/components/entity-picker.md`.
+Verified: `npm install` (0 vulnerabilities, fresh install this run),
+`npm run build` and `npm run dev` both compile cleanly; `grep` confirms
+every `mc-entity-picker__*` class lands in the bundled CSS, and that
+`entity-picker.js` is correctly **not** pulled into `admin.min.js`/
+`catalog.min.js` (no importer yet, by design — same as `mcConfirm` on the
+`McConfirm` PR). No PHP touched, so `tests/mintcart/` doesn't apply. No
+automated component/visual test harness exists yet in this repo (same
+gap noted throughout every Phase 4/6/7/9/11 entry) — verification here is
+build-compiles + bundled-output grep + manual review against the
+Definition of Done checklist, same as every other JS-only primitive so
+far.
+
+**Update (a later run, same branch/PR #14): Phase 11 — `McMediaPicker`
+shipped.** `assets/src/js/components/media-picker.js`
+(`createMediaPicker()`) + `assets/src/css/components/media-picker.css` —
+the Media UX primitive (`MINTCART_FUNCTIONAL_SCOPE.md` §25, priority P1).
+Sibling of `McEntityPicker`: same caller-supplied-data-source/no-dialog-
+chrome/WAI-ARIA-listbox-keyboard shape, but a thumbnail **grid** instead
+of a text list (items are chosen visually), plus two things media
+specifically needs that a generic entity list does not — an optional
+folder `<select>` populated from `fetchFolders()` (hidden entirely when
+not supplied) and optional `uploadFiles(files)`/`deleteItems(items)`
+callbacks whose UI (upload control, delete button) is hidden/disabled
+unless the host actually supplies the callback, per `CLAUDE.md` §85 (no
+affordance offered without a real backend behind it). "Recent files" and
+"image metadata" (both named in Functional Scope §25) deliberately got no
+dedicated concept: a host-supplied `{ id: 'recent', label: 'Recent' }`
+folder entry and the optional `getMeta(item)` label callback cover them
+without inventing new component surface (`CLAUDE.md` §17). Not wired into
+any live backend or admin screen yet — same Phase 12/Product-Category-
+Blocks-image-field deferral `McEntityPicker` documents. Doc:
+`docs/developer/components/media-picker.md`. With this, **Phase 11's two
+picker primitives (`McEntityPicker`, `McMediaPicker`) are both done**;
+only `McConfirm`/`McTabs`/`McSortable`/`McProgress` remain, pending
+whichever land from the open (non-routine) PRs referenced above.
+Verified: `npm install` (0 vulnerabilities), `npm run build` and `npm run
+dev` both compile cleanly; `grep` confirms every `mc-media-picker__*`
+class lands in the bundled CSS, and that `createMediaPicker` is correctly
+**not** pulled into `admin.min.js`/`catalog.min.js` (no importer yet, by
+design — same as `McEntityPicker`). No PHP touched, so `tests/mintcart/`
+doesn't apply. No automated component/visual test harness exists yet in
+this repo (same gap noted throughout every Phase 4/6/7/9/11 entry) —
+verification here is build-compiles + bundled-output grep + manual review
+against the Definition of Done checklist, same as every other JS-only
+primitive so far.
+
+**Next run should pick, in order of preference:**
+
+1. **Reconcile the two `ProductCardListRenderer` implementations** if both
+   this PR (#14) and #21 have landed: they are the same class name/path with
+   incompatible signatures (this branch: `render($product, $display,
+   $context, $languageStrings, $onError)` + `isEnabled()`, language strings
+   per call, caller-supplied logging; #21: language strings + `Logger`
+   injected in the constructor, `render($product, $display, $context)`,
+   `hasFailed()`). Pick one shape, migrate all four consumers
+   (Category/Search/Special/Manufacturer) onto it, and keep a single test
+   file. This is a real (small) architectural fork — worth doing carefully
+   rather than letting whichever merged last silently win.
+2. **If Header (Phase 7) has *not* landed and no open PR covers it:**
+   implement Phase 7's Header component contract (`Header`/`Topbar`/`Logo`/
+   `Search`/`Account`/`Cart`/`Navigation`/`Mobile Navigation` per
+   `MINTCART_IMPLEMENTATION_GUIDE.md` §48), following the same
+   provider → contract → Mint Default `.twig` → live controller wiring
+   pattern `footer` and `product-card` both established. Check open PRs
+   first — at the time of writing #15 already implements it.
+3. ~~The pre-existing `category.twig`/`category.php` blank-language-string
+   gap~~ — **done.** See the Phase 8 update above and
+   `docs/fixes/registry.md` MC-0001.
+4. ~~A `docs/fixes/registry.md` Known Fix Research Queue candidate~~ —
+   **done, this run.** `search.php`'s missing canonical/prev/next links,
+   see MC-0002 above. Other Known Fix Research Queue candidates from
+   `MINTCART_FUNCTIONAL_SCOPE.md` §18 remain uninvestigated (database
+   reconnect, multilingual SEO URL issues, category path/update issues,
+   cache race conditions, extra session/cart writes, installer edge cases)
+   — a future run could pick one, following the same reproduce-first
+   discipline as MC-0001/MC-0002. A grep for other historically-known PHP
+   8.x incompatibilities (`each()`, `create_function`, curly-brace string
+   offsets, `FILTER_SANITIZE_STRING`, PHP4-style constructors, mysqli
+   strict-report-mode exceptions) found none present in this baseline —
+   `mysqli_report(MYSQLI_REPORT_ERROR)` is already set correctly in
+   `system/library/db/mysqli.php`, and no scalar-typed `= null` parameters
+   exist anywhere in this codebase (so PHP 8.4's "implicitly nullable
+   parameter" deprecation doesn't fire either) — so that specific
+   Known-Fix-Research-Queue candidate is provisionally clear on this
+   baseline, not a live gap to fix.
+5. With 1–4 either blocked on a human merge decision or already covered,
+   consider **Phase 18's system-route-URL-alias gap**
+   (`MINTCART_FUNCTIONAL_SCOPE.md` §4) — note this is data-seeding/UI work
+   more naturally gated on Phase 13 (Setup Wizard) existing as a real
+   consumer per `CLAUDE.md` §85, so check whether a wizard step exists
+   before building a standalone seeder with no caller — or check open PRs
+   again for anything newly landed/merged before picking a fresh phase.
+6. ~~`McMediaPicker` (Phase 11's last unclaimed admin primitive)~~ —
+   **done, this run.** See the Phase 11 update above. Both Phase 11 picker
+   primitives (`McEntityPicker`, `McMediaPicker`) are now shipped; only
+   `McConfirm`/`McTabs`/`McSortable`/`McProgress` remain, pending whichever
+   land from open (non-routine) PRs — check those first before redoing.
+
+Re-read the relevant section above (and `docs/developer/theme-api/product-card-list-renderer.md`/
+`docs/developer/components/footer.md` for the established patterns to
+mirror) in full before starting, per `CLAUDE.md` §10/§84 — don't start
+from this summary alone.
 
 Phase 1's remaining items (`MintCart\Compatibility\OpenCart3\*` adapters,
-health checks, CI) stay intentionally deferred — no real consumer yet.
+health checks) stay intentionally deferred — no real consumer yet. CI may
+already be covered by an open PR — check before redoing it.

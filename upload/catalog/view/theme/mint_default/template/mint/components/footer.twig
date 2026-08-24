@@ -1,0 +1,80 @@
+<footer class="mc-footer">
+    <div class="container">
+        <div class="row g-4">
+            {% for column in columns %}
+                <div class="col-6 col-lg-3">
+                    <h5 class="mc-footer__column-title">{{ column.title }}</h5>
+                    <ul class="mc-footer__links">
+                        {% for link in column.links %}
+                            <li><a href="{{ link.href }}">{{ link.label }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+
+            <div class="col-6 col-lg-3">
+                <h5 class="mc-footer__column-title">{{ text_contact_us }}</h5>
+
+                {% if contacts.phone or contacts.email or contacts.address %}
+                    <ul class="mc-footer__contacts">
+                        {% if contacts.phone %}
+                            <li><a href="tel:{{ contacts.phone }}">{{ contacts.phone }}</a></li>
+                        {% endif %}
+                        {% if contacts.email %}
+                            <li><a href="mailto:{{ contacts.email }}">{{ contacts.email }}</a></li>
+                        {% endif %}
+                        {% if contacts.address %}
+                            <li>{{ contacts.address }}</li>
+                        {% endif %}
+                    </ul>
+                {% endif %}
+
+                {% if social %}
+                    <ul class="mc-footer__social">
+                        {% for link in social %}
+                            <li>
+                                <a class="mc-footer__social-link" href="{{ link.href }}" aria-label="{{ link.label }}" target="_blank" rel="noopener noreferrer">
+                                    {# swap for {{ mc_icon(link.network) }} once the Bootstrap Icons SVG renderer exists (Implementation Guide §21) #}
+                                    {{ link.label|slice(0, 1)|upper }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            {% if newsletter.enabled or payments %}
+                <div class="col-6 col-lg-3">
+                    {% if newsletter.enabled %}
+                        <h5 class="mc-footer__column-title">{{ text_newsletter }}</h5>
+                        <form class="mc-footer__newsletter-form" action="{{ newsletter.action }}" method="post">
+                            <div class="mc-field">
+                                <label class="mc-field__label" for="mc-footer-newsletter-email">{{ text_newsletter_email }}</label>
+                                <input type="email" id="mc-footer-newsletter-email" name="email" class="mc-field__control" required>
+                            </div>
+                            <button type="submit" class="mc-button mc-button--primary">{{ text_newsletter_submit }}</button>
+                        </form>
+                    {% endif %}
+
+                    {% if payments %}
+                        <ul class="mc-footer__payments">
+                            {% for payment in payments %}
+                                <li class="mc-footer__payment">
+                                    {% if payment.icon %}
+                                        <img class="mc-footer__payment-icon" src="{{ payment.icon }}" alt="{{ payment.name }}" loading="lazy">
+                                    {% else %}
+                                        {{ payment.name }}
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="mc-footer__bottom">
+            <p>{{ powered }}</p>
+        </div>
+    </div>
+</footer>

@@ -1,0 +1,141 @@
+/**
+ * mc-media-picker
+ *
+ * The Media UX primitive's chrome (`MINTCART_FUNCTIONAL_SCOPE.md` §25) -
+ * toolbar (search/folder/upload), thumbnail grid, pager and selection
+ * footer. Pure layout/visual styling; all interaction lives in
+ * `assets/src/js/components/media-picker.js`, which owns the
+ * `data-mc-media-picker-*` hooks this file styles by attribute/child
+ * selector rather than a JS-added state class where a semantic attribute
+ * already exists (CLAUDE.md §13) - selection uses `[aria-selected="true"]`,
+ * loading uses the `is-loading` transient-state class (`root`, not a cell,
+ * carries it, so there is no ARIA equivalent to key off).
+ *
+ * Contract: docs/developer/components/media-picker.md
+ */
+
+.mc-media-picker {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-3);
+    min-height: 0;
+}
+
+.mc-media-picker.is-loading {
+    opacity: 0.6;
+}
+
+.mc-media-picker__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mc-space-2);
+}
+
+.mc-media-picker__toolbar .mc-field__control {
+    flex: 1 1 12rem;
+}
+
+.mc-media-picker__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+    gap: var(--mc-space-3);
+    margin: 0;
+    padding: var(--mc-space-3);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    max-height: 26rem;
+    overflow-y: auto;
+}
+
+.mc-media-picker__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--mc-space-1);
+    padding: var(--mc-space-2);
+    border: var(--mc-border-width) solid transparent;
+    border-radius: var(--mc-radius-sm);
+    background: none;
+    cursor: pointer;
+    color: var(--mc-text);
+    text-align: center;
+    transition: background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-media-picker__item:hover {
+    background-color: var(--mc-surface-alt);
+}
+
+.mc-media-picker__item:focus-visible {
+    outline: 2px solid var(--mc-primary);
+    outline-offset: 2px;
+}
+
+.mc-media-picker__item[aria-selected="true"] {
+    background-color: var(--mc-surface-alt);
+    border-color: var(--mc-primary);
+}
+
+.mc-media-picker__item-thumbnail {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: var(--mc-radius-sm);
+    background-color: var(--mc-surface-alt);
+}
+
+.mc-media-picker__item-label {
+    width: 100%;
+    font-size: var(--mc-font-size-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-media-picker__item-meta {
+    font-size: var(--mc-font-size-xs);
+    color: var(--mc-muted);
+}
+
+.mc-media-picker__empty {
+    margin: 0;
+    padding: var(--mc-space-4);
+    text-align: center;
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-media-picker__pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-2);
+}
+
+.mc-media-picker__page-info {
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-media-picker__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-3);
+    padding-top: var(--mc-space-3);
+    border-top: var(--mc-border-width) solid var(--mc-border);
+}
+
+.mc-media-picker__selected-count {
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-media-picker__item {
+        transition: none;
+    }
+}

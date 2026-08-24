@@ -1,0 +1,96 @@
+/**
+ * "Warm" design preset.
+ *
+ * docs/MINTCART_IMPLEMENTATION_GUIDE.md §24, §51 Phase 9: a preset changes
+ * only design token values, never component DOM/Twig. This file proves that
+ * by redefining ONLY semantic-tier `--mc-*` custom properties already
+ * declared in settings/tokens.css - it never introduces a token name a
+ * component doesn't already read, and it never touches a component-local
+ * token (e.g. `--mc-button-bg`) directly.
+ *
+ * Activated via `data-mc-preset="warm"` on `<html>` (see
+ * docs/developer/theme-api/presets.md). The attribute selector's higher
+ * specificity than plain `:root` means this wins over settings/tokens.css's
+ * defaults regardless of CSS import order.
+ *
+ * Radically different from the "Clean" default (docs/adr/004-design-token-
+ * presets.md): warm terracotta/gold palette instead of mint green/blue,
+ * a serif heading face, a softer/rounder radius scale, roomier spacing and
+ * a warm-tinted shadow - on the exact same `mc-*` markup.
+ */
+
+:root[data-mc-preset='warm'] {
+    /* ---------------------------------------------------------------- */
+    /* Preset-local primitives (feed the semantic overrides below only -   */
+    /* never read directly by component CSS)                              */
+    /* ---------------------------------------------------------------- */
+
+    --mc-preset-warm-terracotta-100: #fbe2d3;
+    --mc-preset-warm-terracotta-500: #d97444;
+    --mc-preset-warm-terracotta-600: #c1552c;
+    --mc-preset-warm-terracotta-700: #a8431f;
+    --mc-preset-warm-terracotta-800: #82331b;
+
+    --mc-preset-warm-gold-500: #d69e2e;
+    --mc-preset-warm-gold-600: #b7841f;
+
+    --mc-preset-warm-cream-50: #fdf8f0;
+    --mc-preset-warm-cream-100: #f8ede0;
+
+    --mc-preset-warm-brown-600: #6b4a34;
+    --mc-preset-warm-brown-900: #362013;
+
+    /* ---------------------------------------------------------------- */
+    /* Semantic: color                                                     */
+    /* ---------------------------------------------------------------- */
+
+    --mc-primary: var(--mc-preset-warm-terracotta-600);
+    --mc-primary-hover: var(--mc-preset-warm-terracotta-700);
+    --mc-primary-active: var(--mc-preset-warm-terracotta-800);
+    --mc-on-primary: var(--mc-color-white);
+
+    --mc-accent: var(--mc-preset-warm-gold-500);
+    --mc-on-accent: var(--mc-preset-warm-brown-900);
+
+    --mc-surface: var(--mc-preset-warm-cream-50);
+    --mc-surface-alt: var(--mc-preset-warm-cream-100);
+    --mc-surface-inverse: var(--mc-preset-warm-brown-900);
+
+    --mc-text: var(--mc-preset-warm-brown-900);
+    --mc-text-inverse: var(--mc-preset-warm-cream-50);
+    --mc-muted: var(--mc-preset-warm-brown-600);
+    --mc-border: var(--mc-preset-warm-terracotta-100);
+    --mc-border-strong: var(--mc-preset-warm-terracotta-500);
+
+    /* ---------------------------------------------------------------- */
+    /* Typography - warmer, rounder heading face; base stays legible      */
+    /* ---------------------------------------------------------------- */
+
+    --mc-font-family-heading: Georgia, 'Iowan Old Style', 'Palatino Linotype',
+        serif;
+
+    /* ---------------------------------------------------------------- */
+    /* Radius - softer, rounder "card look" per the Phase 9 checklist     */
+    /* ---------------------------------------------------------------- */
+
+    --mc-radius-sm: 0.375rem;
+    --mc-radius-md: 0.625rem;
+    --mc-radius-lg: 1rem;
+    --mc-radius-xl: 1.5rem;
+
+    /* ---------------------------------------------------------------- */
+    /* Spacing - roomier scale                                            */
+    /* ---------------------------------------------------------------- */
+
+    --mc-space-4: 1.125rem;
+    --mc-space-6: 1.75rem;
+    --mc-space-8: 2.25rem;
+
+    /* ---------------------------------------------------------------- */
+    /* Shadow - warm-tinted instead of neutral black                      */
+    /* ---------------------------------------------------------------- */
+
+    --mc-shadow-sm: 0 1px 2px rgba(130, 51, 27, 0.1);
+    --mc-shadow-md: 0 4px 12px rgba(130, 51, 27, 0.16);
+    --mc-shadow-lg: 0 12px 32px rgba(130, 51, 27, 0.22);
+}

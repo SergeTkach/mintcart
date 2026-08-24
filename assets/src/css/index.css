@@ -12,11 +12,18 @@
  * yet - see docs/IMPLEMENTATION_STATUS.md Phase 4). Phase 3 added the
  * `--mc-*` design token tiers (settings/tokens.css). Phase 2 wired the
  * build pipeline and the Bootstrap 3 compatibility shim required so legacy
- * OpenCart 3 markup keeps working.
+ * OpenCart 3 markup keeps working. Phase 9 added the preset overrides
+ * below (docs/developer/design/presets.md) - each one only redefines
+ * tokens under `[data-mc-preset="..."]`, so import position relative to
+ * the component files doesn't affect the cascade (an attribute-scoped
+ * selector always outranks a bare `:root`/class rule regardless of source
+ * order).
  */
 
 @import 'bootstrap/dist/css/bootstrap.css';
 @import './settings/tokens.css';
+@import './presets/clean.css';
+@import './presets/warm.css';
 @import './components/button.css';
 @import './components/alert.css';
 @import './components/field.css';
@@ -33,4 +40,7 @@
 @import './components/drawer.css';
 @import './components/toast.css';
 @import './components/product-card.css';
+@import './components/footer.css';
+@import './components/entity-picker.css';
+@import './components/media-picker.css';
 @import './compatibility/bootstrap3-shim.css';

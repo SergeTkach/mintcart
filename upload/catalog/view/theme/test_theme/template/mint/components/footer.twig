@@ -1,0 +1,21 @@
+<footer class="mc-footer mc-footer--test">
+    <div class="container">
+        <ul class="mc-footer__links">
+            {% for column in columns %}
+                {% for link in column.links %}
+                    <li><a href="{{ link.href }}">{{ link.label }}</a></li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+
+        {% if contacts.phone or contacts.email %}
+            <p class="mc-footer__contacts">
+                {% if contacts.phone %}<a href="tel:{{ contacts.phone }}">{{ contacts.phone }}</a>{% endif %}
+                {% if contacts.phone and contacts.email %} &middot; {% endif %}
+                {% if contacts.email %}<a href="mailto:{{ contacts.email }}">{{ contacts.email }}</a>{% endif %}
+            </p>
+        {% endif %}
+
+        <p class="mc-footer__bottom">{{ powered }}</p>
+    </div>
+</footer>
