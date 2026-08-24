@@ -741,13 +741,16 @@ tracked once each.)*
 ## Phase 10 (Technical Plan) — SEO / Fixes / Performance
 
 - [ ] SEO Core (tracked above as Phase 18)
-- [ ] `docs/fixes/registry.md` Fix Registry established, entries added only after
-      reproduction on the MintCart baseline (per `CLAUDE.md` §13)
+- [x] `docs/fixes/registry.md` Fix Registry established, entries added only after
+      reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
+      (`category.php` blank language strings) and MC-0002 (`search.php`
+      missing canonical/prev/next links, this run)
 - [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
-Not started.
+Fix Registry mechanism is established and has two real entries; the rest of
+this phase (diagnostics, measured performance work) is not started.
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
@@ -905,6 +908,33 @@ implementation here would guarantee a hard conflict on both
 Once #21 and this PR are reconciled by a human, the two renderer variants
 need to be collapsed into one (see "Next run" below).
 
+**Update (a later run, same branch/PR #14): MC-0002 fixed — `search.php`
+never emitted `canonical`/`prev`/`next` `<link>` tags at all**, unlike its
+three sibling listing controllers (`category.php`/`manufacturer.php`/
+`special.php`, which all have this). This was investigated as a "check
+open PRs / consider a Fix Registry candidate" item (option 4 of the
+previous "Next run should pick" list below) — the two higher-priority
+items (renderer reconciliation, Header) were both still blocked/covered by
+open non-routine PRs at the time this run started (see below), and a
+Known Fix Research Queue candidate was a genuinely reproducible, safely
+scoped, non-conflicting increment. `ControllerProductSearch::index()` now
+builds a `$canonical_url` from only the result-defining query params
+(`search`/`tag`/`description`/`category_id`/`sub_category`, deliberately
+excluding display-only `sort`/`order`/`limit`) and emits `canonical` always
+plus `prev`/`next` at pagination boundaries — the exact pattern already
+proven in the three sibling controllers, placed at the same relative spot
+(`category.php`'s). No template change, no new language strings,
+`$data['products']`/`$data['product_cards']` untouched. Full writeup:
+`docs/fixes/registry.md` MC-0002, `docs/upstream-diff.md`'s `search.php`
+entry. `php -l` clean; full `tests/mintcart/` suite re-run end to end
+(migration manager, `ProductViewProvider` x8, `ComponentRenderer` x12,
+`FooterViewProvider` x7, presets, `ProductCardListRenderer` x8) — all
+pass, no regressions (this fix touches only `<head>` link tags the suite
+doesn't exercise at the controller level — same pre-existing
+no-live-bootstrap gap noted throughout this file). A human should confirm
+on a real install that a search-results page's `<head>` now contains
+`<link rel="canonical">` (and `rel="prev"`/`rel="next"` where applicable).
+
 **Next run should pick, in order of preference:**
 
 1. **Reconcile the two `ProductCardListRenderer` implementations** if both
@@ -925,14 +955,32 @@ need to be collapsed into one (see "Next run" below).
    pattern `footer` and `product-card` both established. Check open PRs
    first — at the time of writing #15 already implements it.
 3. ~~The pre-existing `category.twig`/`category.php` blank-language-string
-   gap~~ — **done, this run.** See the Phase 8 update above and
+   gap~~ — **done.** See the Phase 8 update above and
    `docs/fixes/registry.md` MC-0001.
-4. With items 1–3 either blocked on a human merge decision or already
-   covered elsewhere, consider **Phase 18's system-route-URL-alias gap**,
-   a **`docs/fixes/registry.md` Known Fix Research Queue candidate**
-   (`MINTCART_FUNCTIONAL_SCOPE.md` §18 — reproduce one candidate against
-   this baseline before fixing, same discipline as MC-0001), or check open
-   PRs again for anything newly landed/merged before picking a fresh phase.
+4. ~~A `docs/fixes/registry.md` Known Fix Research Queue candidate~~ —
+   **done, this run.** `search.php`'s missing canonical/prev/next links,
+   see MC-0002 above. Other Known Fix Research Queue candidates from
+   `MINTCART_FUNCTIONAL_SCOPE.md` §18 remain uninvestigated (database
+   reconnect, multilingual SEO URL issues, category path/update issues,
+   cache race conditions, extra session/cart writes, installer edge cases)
+   — a future run could pick one, following the same reproduce-first
+   discipline as MC-0001/MC-0002. A grep for other historically-known PHP
+   8.x incompatibilities (`each()`, `create_function`, curly-brace string
+   offsets, `FILTER_SANITIZE_STRING`, PHP4-style constructors, mysqli
+   strict-report-mode exceptions) found none present in this baseline —
+   `mysqli_report(MYSQLI_REPORT_ERROR)` is already set correctly in
+   `system/library/db/mysqli.php`, and no scalar-typed `= null` parameters
+   exist anywhere in this codebase (so PHP 8.4's "implicitly nullable
+   parameter" deprecation doesn't fire either) — so that specific
+   Known-Fix-Research-Queue candidate is provisionally clear on this
+   baseline, not a live gap to fix.
+5. With 1–4 either blocked on a human merge decision or already covered,
+   consider **Phase 18's system-route-URL-alias gap**
+   (`MINTCART_FUNCTIONAL_SCOPE.md` §4) — note this is data-seeding/UI work
+   more naturally gated on Phase 13 (Setup Wizard) existing as a real
+   consumer per `CLAUDE.md` §85, so check whether a wizard step exists
+   before building a standalone seeder with no caller — or check open PRs
+   again for anything newly landed/merged before picking a fresh phase.
 
 Re-read the relevant section above (and `docs/developer/theme-api/product-card-list-renderer.md`/
 `docs/developer/components/footer.md` for the established patterns to

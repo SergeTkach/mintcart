@@ -89,3 +89,72 @@ human should confirm on a real install that the category page's "Refine
 Search" heading, sort/limit labels, empty-category message and
 empty-category "Continue" button are no longer blank, on both the stock
 `default` theme and `mint_default`.
+
+---
+
+## MC-0002 — `search.php` never emits `canonical`/`prev`/`next` `<link>` tags
+
+**Problem:** `ControllerProductSearch::index()` never calls
+`$this->document->addLink(..., 'canonical'|'prev'|'next')` anywhere in the
+file — the search-results page (`route=product/search`) ships with no
+canonical URL and no pagination `rel="prev"`/`rel="next"` hints at all.
+Its three sibling listing controllers — `product/category.php`,
+`product/manufacturer.php`, and `product/special.php` — all implement this
+(same `googlewebmastercentral.blogspot.com` "Pagination with rel=next and
+rel=prev" comment, same shape: canonical always present, `prev`/`next`
+only at the boundaries). Search is squarely a "Known Fix Research Queue"
+candidate (`MINTCART_FUNCTIONAL_SCOPE.md` §18's "pagination issue" family)
+and directly blocks Functional Scope §16's SEO Core canonical requirement
+— a search page is exactly the kind of thin/duplicate-content-prone page
+(same results reachable via many `sort`/`order`/`limit`/`page`
+combinations) that most needs a canonical tag, and it's the one listing
+controller stock OpenCart left without one.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1 (this
+repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale as
+MC-0001 (no second checkout available to diff against, and the fix only
+adds behavior already proven correct by three sibling controllers in this
+exact codebase).
+
+**Source:** Discovered directly in this repository while auditing the
+Known Fix Research Queue candidates in `MINTCART_FUNCTIONAL_SCOPE.md` §18
+— not an imported historical community patch. Reproduced by grepping all
+four `product/*` listing controllers for `addLink` /
+`'canonical'`/`'prev'`/`'next'`: `category.php`, `manufacturer.php`, and
+`special.php` each have three matches; `search.php` has zero.
+
+**Reproduced on MintCart baseline:** Yes — `grep -n "addLink" upload/catalog/controller/product/search.php`
+returns no results prior to this fix, confirmed against the unmodified
+stock file.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Added a `$canonical_url` block to
+`ControllerProductSearch::index()`, placed immediately after the existing
+`$data['results'] = sprintf(...)` line (the same relative position
+`category.php` uses for its own canonical block). Mirrors the sibling
+controllers' established pattern exactly: for `$page == 1` the canonical
+URL omits `page`, otherwise it appends `&page=N`; `prev`/`next` links only
+appear at the applicable pagination boundary. Deliberately builds the
+canonical URL from only the *result-defining* query params — `search`,
+`tag`, `description`, `category_id`, `sub_category` — excluding
+*display-only* params (`sort`, `order`, `limit`), the same choice
+`category.php`'s `path`-only canonical already makes (different sort
+orders of the same result set canonicalize to one URL, matching the whole
+point of a canonical tag). No template change, no new language strings,
+`$data['products']`/`$data['product_cards']` completely unaffected.
+
+**Tests:** `php -l` clean on the modified `search.php`. No dedicated
+regression test added — same rationale as MC-0001: the fix is a direct,
+minimal port of a pattern already proven correct by three sibling
+controllers in this same file tree; a controller-level test would need a
+live OpenCart bootstrap this environment can't provide (no MySQL server,
+same pre-existing gap noted throughout `docs/upstream-diff.md`). A human
+should confirm on a real install that a search-results page's `<head>` now
+contains `<link rel="canonical" ...>` (and `rel="prev"`/`rel="next"` where
+applicable) with URLs matching this pattern.

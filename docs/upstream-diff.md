@@ -337,6 +337,18 @@ pre-existing gap as every earlier phase (no MySQL/`vendor/twig/twig` in
 this environment). A human should smoke-test a real search results page
 on a `mint_default`-configured install before this reaches production.
 
+**Update (a later run, same branch/PR): a second pre-existing gap fixed —
+`index()` never emitted `canonical`/`prev`/`next` `<link>` tags at all**
+(unlike the sibling `category.php`/`manufacturer.php`/`special.php`
+controllers, which all do). See `docs/fixes/registry.md` MC-0002. Adds a
+`$canonical_url` block mirroring the exact pattern those three sibling
+controllers already use (result-defining params only — `search`, `tag`,
+`description`, `category_id`, `sub_category` — deliberately excluding
+display-only params like `sort`/`order`/`limit` from the canonical URL,
+same as `category.php`'s `path`-only canonical). No template change, no
+new language strings, `$data['products']`/`$data['product_cards']`
+untouched. `php -l` clean.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/search.php`

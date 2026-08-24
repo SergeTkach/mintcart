@@ -501,6 +501,51 @@ class ControllerProductSearch extends Controller {
 
 			$data['results'] = sprintf($this->language->get('text_pagination'), ($product_total) ? (($page - 1) * $limit) + 1 : 0, ((($page - 1) * $limit) > ($product_total - $limit)) ? $product_total : ((($page - 1) * $limit) + $limit), $product_total, ceil($product_total / $limit));
 
+			// MC-0002: search results have no canonical/prev/next <link> tags
+			// in stock OpenCart 3.0.5.1 (category.php/manufacturer.php/
+			// special.php all have this, search.php never did) - see
+			// docs/fixes/registry.md. Mirrors those controllers' identical
+			// pattern: only the result-defining params (search/tag/
+			// description/category_id/sub_category) go into the canonical
+			// URL, not display-only params (sort/order/limit), so different
+			// sort orders of the same search canonicalize to one URL.
+			$canonical_url = '';
+
+			if (isset($this->request->get['search'])) {
+				$canonical_url .= '&search=' . urlencode(html_entity_decode($this->request->get['search'], ENT_QUOTES, 'UTF-8'));
+			}
+
+			if (isset($this->request->get['tag'])) {
+				$canonical_url .= '&tag=' . urlencode(html_entity_decode($this->request->get['tag'], ENT_QUOTES, 'UTF-8'));
+			}
+
+			if (isset($this->request->get['description'])) {
+				$canonical_url .= '&description=' . $this->request->get['description'];
+			}
+
+			if (isset($this->request->get['category_id'])) {
+				$canonical_url .= '&category_id=' . $this->request->get['category_id'];
+			}
+
+			if (isset($this->request->get['sub_category'])) {
+				$canonical_url .= '&sub_category=' . $this->request->get['sub_category'];
+			}
+
+			// http://googlewebmastercentral.blogspot.com/2011/09/pagination-with-relnext-and-relprev.html
+			if ($page == 1) {
+				$this->document->addLink($this->url->link('product/search', $canonical_url), 'canonical');
+			} else {
+				$this->document->addLink($this->url->link('product/search', $canonical_url . '&page=' . $page), 'canonical');
+			}
+
+			if ($page > 1) {
+				$this->document->addLink($this->url->link('product/search', $canonical_url . (($page - 2) ? '&page=' . ($page - 1) : '')), 'prev');
+			}
+
+			if ($limit && ceil($product_total / $limit) > $page) {
+				$this->document->addLink($this->url->link('product/search', $canonical_url . '&page=' . ($page + 1)), 'next');
+			}
+
 			if (isset($this->request->get['search']) && $this->config->get('config_customer_search')) {
 				$this->load->model('account/search');
 
