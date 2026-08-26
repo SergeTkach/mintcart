@@ -68,6 +68,18 @@ has been run against `upload/composer.json`), which is a pre-existing gap
 affecting every Twig-rendered OpenCart page in this repo when run outside
 the full web request lifecycle, not something introduced by this class.
 
+## `$kind` (Phase 10): resolving something other than `template/mint/components/`
+
+The constructor takes an optional 3rd `string $kind = 'components'`
+parameter — it's what `componentPath()`/`render()` interpolate into
+`template/mint/<kind>/<name>.twig` instead of the hardcoded
+`components`. `MintCart\Blocks\BlockRenderer`
+(`docs/developer/blocks/products.md`) is the one real consumer, passing
+`'blocks'` so `template/mint/blocks/<type>.twig` reuses this class's
+already-tested fallback walk instead of a second copy of it. Every
+existing 2-argument call site is unaffected (`$kind` defaults to
+`'components'`, unchanged behavior).
+
 ## Usage
 
 ```php

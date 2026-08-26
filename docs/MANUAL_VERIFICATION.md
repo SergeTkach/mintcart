@@ -79,3 +79,16 @@ add made through `mintcart/cart/add` (both endpoints share the same
 session cart). The actual JS behavior — does clicking product-card's Add
 to Cart visibly swap `#cart`'s markup in the header — is browser-only;
 `curl` can't click a button. A human should confirm in a real browser.
+
+## Phase 10 — Homepage Products block, never rendered end to end
+
+`MintCart\Blocks\BlockRenderer`/`ProductsBlockProvider`/`ModelMintcartBlock`
+are covered by standalone tests, but no live MySQL/`vendor/twig/twig` in
+this environment means the actual homepage render was never observed. On
+a real install: insert a row into `mc_page` (`code = 'home'`,
+`status = 1`) and a row into `mc_block` (`page_id` = that page's id,
+`type = 'products'`, `sort_order = 0`, `status = 1`,
+`settings_json = '{}'`), then load the homepage while `mint_default` is
+the active theme. Expect a "Products" section (latest 8 products,
+storewide) above the existing content_top/content_bottom modules; confirm
+the legacy `default` theme's homepage is unaffected either way.

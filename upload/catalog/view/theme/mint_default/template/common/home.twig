@@ -1,0 +1,28 @@
+{{ header }}
+
+{% for mc_block in mc_blocks %}
+    {{ mc_block }}
+{% endfor %}
+
+<div class="container py-4">
+    <div class="row g-4">
+        {{ column_left }}
+
+        {% if column_left and column_right %}
+            {% set content_class = 'col-lg-6' %}
+        {% elseif column_left or column_right %}
+            {% set content_class = 'col-lg-9' %}
+        {% else %}
+            {% set content_class = 'col-12' %}
+        {% endif %}
+
+        <div class="{{ content_class }}">
+            {{ content_top }}
+            {{ content_bottom }}
+        </div>
+
+        {{ column_right }}
+    </div>
+</div>
+
+{{ footer }}

@@ -45,6 +45,7 @@
 @import './components/product-card.css';
 @import './components/footer.css';
 @import './components/header.css';
+@import './components/block.css';
 @import './components/entity-picker.css';
 @import './components/media-picker.css';
 @import './components/progress.css';

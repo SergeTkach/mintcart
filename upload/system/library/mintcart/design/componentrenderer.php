@@ -24,6 +24,16 @@ namespace MintCart\Design;
  * actually render Twig markup - reusing it rather than re-implementing
  * Twig rendering here (MINTCART_IMPLEMENTATION_GUIDE.md §9 allowance for
  * wrapping an existing OpenCart mechanism).
+ *
+ * `$kind` (constructor's 3rd argument, default 'components') selects which
+ * `template/mint/<kind>/` subtree is resolved against — the exact same
+ * active-theme -> parent-chain -> Mint Default walk, just rooted at a
+ * different directory. MintCart\Blocks\BlockRenderer (Phase 10) is the
+ * second real consumer, passing 'blocks' so `mint/blocks/<type>.twig`
+ * reuses this class's already-tested resolution algorithm instead of a
+ * second copy of it (MINTCART_TECHNICAL_PLAN.md §16's "Block Renderer" is
+ * a distinct architectural element from "Component Renderer", but nothing
+ * about the underlying fallback-chain walk actually differs between them).
  */
 final class ComponentRenderer
 {
@@ -33,10 +43,13 @@ final class ComponentRenderer
 
     private string $activeTheme;
 
-    public function __construct(string $themesDirectory, string $activeTheme)
+    private string $kind;
+
+    public function __construct(string $themesDirectory, string $activeTheme, string $kind = 'components')
     {
         $this->themesDirectory = rtrim($themesDirectory, '/') . '/';
         $this->activeTheme = $activeTheme;
+        $this->kind = $kind;
     }
 
     /**
@@ -115,12 +128,12 @@ final class ComponentRenderer
             $template->set($key, $value);
         }
 
-        return $template->render('mint/components/' . $component, $code);
+        return $template->render('mint/' . $this->kind . '/' . $component, $code);
     }
 
     private function componentPath(string $theme, string $component): string
     {
-        return $this->themesDirectory . $theme . '/template/mint/components/' . $component . '.twig';
+        return $this->themesDirectory . $theme . '/template/mint/' . $this->kind . '/' . $component . '.twig';
     }
 
     /**

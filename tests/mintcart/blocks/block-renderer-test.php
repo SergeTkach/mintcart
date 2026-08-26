@@ -1,0 +1,105 @@
+<?php
+/**
+ * Standalone smoke test for MintCart\Blocks\BlockRenderer.
+ *
+ * Same style/rationale as tests/mintcart/design/component-renderer-test.php:
+ * no PHPUnit/Composer test runner in this repo yet, no vendor/twig/twig
+ * installed, so render()'s actual Twig output isn't exercised - only
+ * resolve()'s fallback-chain behaviour (delegated to
+ * MintCart\Design\ComponentRenderer with kind='blocks') and the real
+ * shipped mint_default/template/mint/blocks/products.twig file.
+ *
+ * Run: php tests/mintcart/blocks/block-renderer-test.php
+ * Exit code 0 = pass, 1 = fail.
+ */
+
+declare(strict_types=1);
+
+require __DIR__ . '/../../../upload/system/library/mintcart/design/componentrenderer.php';
+require __DIR__ . '/../../../upload/system/library/mintcart/blocks/blockrenderer.php';
+
+use MintCart\Blocks\BlockRenderer;
+
+/** @var string[] $failures */
+$failures = [];
+
+function assertSame__($expected, $actual, string $message, array &$failures): void
+{
+    if ($expected !== $actual) {
+        $failures[] = $message . ' (expected ' . var_export($expected, true) . ', got ' . var_export($actual, true) . ')';
+    }
+}
+
+// 1. BlockRenderer resolves under template/mint/blocks/, not
+//    template/mint/components/ - proves the 'blocks' kind is actually
+//    wired through to ComponentRenderer, not defaulting to 'components'.
+$root = sys_get_temp_dir() . '/mintcart-block-renderer-test-' . bin2hex(random_bytes(8));
+mkdir($root . '/mint_default/template/mint/blocks', 0777, true);
+file_put_contents($root . '/mint_default/theme.json', json_encode([
+    'name' => 'Mint Default',
+    'code' => 'mint_default',
+    'version' => '1.0.0',
+    'mint_api' => '^1.0',
+    'parent' => null,
+    'presets' => [],
+]));
+file_put_contents($root . '/mint_default/template/mint/blocks/products.twig', '<!-- products block -->');
+
+$renderer = new BlockRenderer($root, 'mint_default');
+
+assertSame__(
+    $root . '/mint_default/template/mint/blocks/products.twig',
+    $renderer->resolve('products'),
+    'Scenario 1: BlockRenderer::resolve() should look under template/mint/blocks/, not template/mint/components/',
+    $failures
+);
+
+// Same fixture has no components/ directory at all - resolving a
+// component name must NOT accidentally find the blocks file (kind
+// isolation, not just a different subdirectory name coincidence).
+$componentRenderer = new \MintCart\Design\ComponentRenderer($root, 'mint_default');
+$threw = false;
+
+try {
+    $componentRenderer->resolve('products');
+} catch (\RuntimeException $e) {
+    $threw = true;
+}
+
+assertSame__(true, $threw, 'Scenario 1: a component-kind ComponentRenderer must not resolve a blocks-only template', $failures);
+
+// 2. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/products.twig must resolve at its
+//    real path - guards against the theme directory layout
+//    (catalog/view/theme/<code>/template/mint/blocks/) drifting out of
+//    sync with what BlockRenderer/ComponentRenderer actually build.
+$realThemesRoot = __DIR__ . '/../../../upload/catalog/view/theme';
+$realRenderer = new BlockRenderer($realThemesRoot, 'mint_default');
+$realPath = $realRenderer->resolve('products');
+
+assertSame__(
+    true,
+    is_file($realPath),
+    'Scenario 2: resolve() should find the real mint_default blocks/products.twig file on disk',
+    $failures
+);
+
+$realMarkup = (string) file_get_contents($realPath);
+
+assertSame__(
+    true,
+    str_contains($realMarkup, 'mc-block--products') && str_contains($realMarkup, 'product_cards'),
+    'Scenario 2: the resolved real products.twig should contain the documented mc-block--products markup and loop over product_cards',
+    $failures
+);
+
+if ($failures) {
+    fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
+    foreach ($failures as $failure) {
+        fwrite(STDERR, " - {$failure}\n");
+    }
+    exit(1);
+}
+
+echo "PASS: BlockRenderer smoke test (2 scenarios)\n";
+exit(0);

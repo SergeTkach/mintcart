@@ -782,12 +782,13 @@ by setting the attribute by hand.
 
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
-- [ ] Block Provider / Renderer / Template separation
-- [ ] First blocks: Hero, Products, Categories, Banner Grid, Benefits, Text/Image,
-      Brands, Testimonials, FAQ (initial set per Implementation Guide §51)
+- [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
+- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
+      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
+      (initial set per Implementation Guide §51)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-In progress (storage layer only). PR #16.
+In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -817,12 +818,48 @@ standalone test uses. No Block Provider/Renderer/Twig template exists
 yet — storage only, matching how every previous phase's first migration
 landed ahead of its consumer.
 
-**Next step:** Block Provider / Renderer / Template separation
-(`MintCart\Blocks\...`), starting with one block type end-to-end (Products
-is the natural first pick — it can reuse the existing `ProductViewProvider`
-from Phase 6 rather than inventing new product-shape logic) before adding
-the rest, per `CLAUDE.md` §85 (don't build the other block types' API
-surface before a first real consumer proves the Provider/Renderer split).
+**Sub-step 2 (this run): Block Provider / Renderer / Template separation,
+Products block end-to-end.** `MintCart\Blocks\BlockRenderer`
+(`upload/system/library/mintcart/blocks/blockrenderer.php`) is a thin
+wrapper around `MintCart\Design\ComponentRenderer` — that class's
+constructor gained an optional 3rd `$kind` parameter (default
+`'components'`, fully backward compatible) so Blocks reuses the exact same
+tested active-theme → `theme.json` parent chain → Mint Default fallback
+walk instead of a second copy of it. `MintCart\Blocks\ProductsBlockProvider`
+normalizes a raw `mc_block` row's settings (`category_id`/`limit`/`sort`/
+`order`, with safe defaults); it does not query products itself, same
+"no OpenCart dependency" shape as `ProductViewProvider`/`FooterViewProvider`.
+`ModelMintcartBlock` (`upload/catalog/model/mintcart/block.php`, a plain
+OpenCart model) reads `mc_page`/`mc_block`/`mc_block_description`.
+`ControllerCommonHome` (`upload/catalog/controller/common/home.php`) is the
+real consumer — a new `buildMintBlocks()` stage, gated by the same
+Mint-aware-theme check every other pipeline uses, loads the `'home'`
+`mc_page`, renders each `type='products'` block by querying products and
+reusing `ProductCardListRenderer` (same pipeline Category/Search/Special/
+Manufacturer already share), and passes the result to the view as
+`$data['mc_blocks']`. `mint_default/template/common/home.twig` is a new
+file (the theme previously had no home template override at all, falling
+through to `default`'s) that loops `mc_blocks` full-width above the
+existing column/content-position layout, which is otherwise unchanged.
+Full writeup: `docs/developer/blocks/products.md`; upstream diff entries
+for `home.php`/`home.twig`/the new `common/home` language file in
+`docs/upstream-diff.md`. Verified: `php -l` clean on every touched/added
+PHP file; full `tests/mintcart/` suite (11 files, including the 2 new
+`tests/mintcart/blocks/*-test.php`) passing; `npm run build:css` compiles
+cleanly with the new `mc-block`/`mc-block--products` CSS
+(`assets/src/css/components/block.css`). Same pre-existing gap as every
+earlier phase: no MySQL/`vendor/twig/twig` in this environment, so no live
+end-to-end request was exercised — a human should insert a `mc_page` row
+(`code='home'`) and an `mc_block` row (`type='products'`,
+`settings_json='{}'`) on a real install and confirm the homepage renders a
+Products block.
+
+**Next step:** the remaining first-wave block types (Hero, Categories,
+Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
+their own Provider + `blocks/<type>.twig` following the same shape this
+run established for Products, or the Homepage drag-and-drop editor
+(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
+that exists, a block instance has to be inserted by hand to be visible).
 
 ## Phase 11 — Mint Admin primitives
 
@@ -1513,3 +1550,13 @@ note Search has no dormant markup/hook waiting for it the way Cart did
 would need both the endpoint and a new Mint-native search UI, a larger
 scope than Cart was; consider scoping the first increment to the endpoint
 alone if picked.
+
+**Update (this run, no MySQL access used — see the memory-recorded rule
+against touching local shared infra without asking first): Phase 10's
+Block Provider/Renderer is done, Products block end-to-end.** See the
+Phase 10 section above ("Sub-step 2") for the full writeup. Next
+candidates: the remaining first-wave block types (Hero, Categories,
+Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ), the
+Homepage drag-and-drop editor/admin UI (no way yet to create an
+`mc_block` row without inserting it by hand), Phase 12's Entity Picker
+real backends, or continuing Phase 15 with `SearchService`.

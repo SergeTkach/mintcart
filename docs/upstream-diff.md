@@ -590,3 +590,95 @@ fallback, `docs/adr/003-page-template-fallback-fix.md`). Mirrors
 `category.twig`'s structure minus the categories/refine section (not
 applicable — a manufacturer page lists one brand's products, not a
 category tree).
+
+---
+
+## `upload/catalog/controller/common/home.php`
+
+**Reason:** Wires Phase 10's Homepage Builder Block API
+(`MINTCART_TECHNICAL_PLAN.md` §16-17, `MINTCART_IMPLEMENTATION_GUIDE.md`
+§32-33) — the first real consumer of `MintCart\Blocks\BlockRenderer` and
+`MintCart\Blocks\ProductsBlockProvider`. Added a `buildMintBlocks()` stage
+that (when the active theme is Mint-API-aware) loads the `'home'` `mc_page`
+row and its enabled `mc_block` rows via the new `ModelMintcartBlock`, and
+for each `type = 'products'` block queries products and renders it through
+the same `ProductViewProvider`/`ProductCardListRenderer` pipeline
+Category/Search/Special/Manufacturer already use. Result is passed to the
+view as a new `$data['mc_blocks']` (list of already-rendered block HTML
+strings) — see `docs/developer/blocks/products.md` for the full writeup.
+The controller's original five `$this->load->controller(...)` calls
+(`column_left`/`column_right`/`content_top`/`content_bottom`/`footer`/`header`)
+are completely untouched.
+
+**Why it can't live in the MintCart layer instead:** Same rationale as
+every other page-controller wiring in this file — `BlockRenderer`,
+`ProductsBlockProvider` and `ModelMintcartBlock` are deliberately
+OpenCart-request-agnostic (or, for the model, a plain reusable OpenCart
+model), but something has to call them once per homepage request and pass
+OpenCart's own product query/currency/tax services into the per-product
+mapping. OpenCart's `Loader`/routing has no generic hook to inject that
+without touching this controller.
+
+**Compatibility impact:** None for the legacy `default` theme or any
+unrelated third-party theme — `buildMintBlocks()` returns an empty array
+immediately unless the active theme ships a `theme.json` manifest (same
+gate as every other Mint rendering pipeline), and neither `default`'s nor
+a third-party theme's own `common/home.twig` reads `$data['mc_blocks']`.
+On a Mint-aware theme with no `'home'` `mc_page` row yet (every install
+until Homepage Builder's admin UI exists) it also returns an empty array —
+the homepage renders exactly as before, just with an unused, empty
+`mc_blocks` variable passed to the view. A failure inside
+`ProductCardListRenderer::render()` for one product degrades that block's
+grid for the rest of the request (same behaviour as every other consumer)
+rather than fataling the homepage.
+
+**Tests:** `php -l` (clean). `tests/mintcart/blocks/block-renderer-test.php`
+(2 scenarios) and `tests/mintcart/blocks/products-block-provider-test.php`
+(3 scenarios) cover the two new classes this wiring calls. Full
+`tests/mintcart/` suite re-run end to end after this change — still
+passing (11 files). Same pre-existing gap as every earlier phase: no
+MySQL/`vendor/twig/twig` in this environment, so no live end-to-end
+request was exercised — a human should insert a `mc_page` row
+(`code = 'home'`) and an `mc_block` row (`type = 'products'`,
+`settings_json = '{}'`) on a real install and confirm the homepage renders
+a Products block, then confirm the legacy `default` theme's homepage is
+pixel-identical to before.
+
+---
+
+## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)
+
+Not an upstream diff — `mint_default` did not previously override
+`common/home.twig` at all (it fell through the `event/theme.php`
+fallback to the legacy `default` theme's copy, which does not know about
+`mc_blocks`). Noted here only because it is the page-level template
+`ControllerCommonHome::index()`'s `$this->load->view('common/home', $data)`
+call now resolves to once `mint_default` is active: loops `mc_blocks`
+full-width above the existing `column_left`/`content_top`/`content_bottom`/
+`column_right` layout, which is otherwise identical to `default`'s own
+`common/home.twig` (same `header`/`footer` calls, same column-width
+logic translated to Bootstrap 5 `col-lg-*` per
+`docs/developer/layout-conventions.md`).
+
+---
+
+## `upload/catalog/language/en-gb/common/home.php` (new file)
+
+**Reason:** Adds the same 8 `product-card` language keys
+`product/category.php`/`product/search.php`/`product/special.php`/
+`product/manufacturer.php`'s language files already each duplicate
+(`text_tax`, `text_rated`, `text_quick_order`, `text_badge_sale`,
+`text_badge_out_of_stock`, `text_badge_new`, `text_added_to_cart`,
+`text_add_to_cart_error`) — needed now that the Homepage Products block
+also renders `product-card`. No prior `common/home` language file existed
+(`ControllerCommonHome` loaded none before this change).
+
+**Why it can't live in the MintCart layer instead:** Same as the four
+sibling language files — OpenCart's language system is file-per-route.
+
+**Compatibility impact:** New file, purely additive. `button_wishlist`/
+`button_compare`/`button_cart` are not duplicated here — they already come
+from the base `catalog/language/en-gb/en-gb.php`, loaded for every
+request.
+
+**Tests:** `php -l` (clean).

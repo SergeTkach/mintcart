@@ -1,0 +1,27 @@
+/**
+ * mc-block
+ *
+ * Shared Homepage Builder block wrapper (docs/MINTCART_TECHNICAL_PLAN.md
+ * §16-17, docs/MINTCART_IMPLEMENTATION_GUIDE.md §32-33). Every block type
+ * renders inside `.mc-block`, with a type modifier
+ * (`.mc-block--products`, `.mc-block--hero`, ...) for per-type spacing/
+ * layout only - the block's own content (e.g. `mc-product-card`) keeps its
+ * existing component styling untouched.
+ *
+ * Bootstrap 5's `.container`/`.row`/`.col-*` provide the responsive grid
+ * inside a block (docs/developer/layout-conventions.md), same as every
+ * other MintCart listing surface - this file only styles the block
+ * wrapper itself.
+ */
+
+.mc-block {
+    padding-top: var(--mc-space-8);
+    padding-bottom: var(--mc-space-8);
+}
+
+.mc-block__title {
+    margin: 0 0 var(--mc-space-4);
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-heading);
+    font-weight: var(--mc-font-weight-semibold);
+}
