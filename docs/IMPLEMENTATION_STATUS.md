@@ -783,12 +783,13 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
+- [~] First blocks: Products and Hero done (see "Sub-step 2" and "Sub-step 3");
+      Categories, Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ
+      not started (initial set per Implementation Guide §51)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
+In progress. PR #16 (storage), a later run (Provider/Renderer + Products
+block), this run (Hero block).
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -854,12 +855,47 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
-**Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
+**Sub-step 3 (a later run): Hero block, end to end.**
+`MintCart\Blocks\HeroBlockProvider`
+(`upload/system/library/mintcart/blocks/heroblockprovider.php`) normalizes
+a `type='hero'` block row's settings/content (title, subtitle, cta_label,
+cta_url, image, image_width, image_height) — same "no OpenCart dependency"
+shape as `ProductsBlockProvider`. Unlike Products, Hero needs no product
+query, so `ControllerCommonHome::renderHeroBlock()` is much smaller: it
+only resolves an optional background `image` via OpenCart's `tool/image`
+model (guarded with `is_file(DIR_IMAGE . ...)`, mirroring the stock Banner
+module's own pattern) and renders `blocks/hero.twig` through the same
+`BlockRenderer` `renderProductsBlock()` already constructs.
+`buildMintBlocks()`'s per-block dispatch was reshaped from a single
+`if('products')` into `if`/`elseif`/`else` so a third block type is one more
+branch, not another copy of the append-if-non-empty check. New CSS
+(`.mc-block--hero` in `assets/src/css/components/block.css`) composes an
+inline `--mc-block-hero-image` custom property (data-driven, per
+`MINTCART_IMPLEMENTATION_GUIDE.md` §18) rather than baking a `background`
+shorthand into the Twig template, so a theme override can restyle the
+overlay without touching how the image URL is passed in. Full writeup:
+`docs/developer/blocks/hero.md`; upstream diff update in
+`docs/upstream-diff.md`'s `home.php` entry. Verified: `php -l` clean on
+every touched/added PHP file; the new
+`tests/mintcart/blocks/hero-block-provider-test.php` (3 scenarios); full
+`tests/mintcart/` suite re-run end to end (12 files) — all pass; `npm run
+build` compiles cleanly, `grep` confirms `mc-block--hero`/
+`mc-block__hero-subtitle` land in the bundled `index.min.css`; the new
+`hero.twig`'s `if`/`endif` tag nesting checked balanced (same script-based
+technique used for every earlier `.twig` file in this repo). Same
+pre-existing gap as every earlier phase: no MySQL/`vendor/twig/twig` in
+this environment, so no live end-to-end request was exercised — a human
+should insert an `mc_block` row (`type = 'hero'`) on a real install and
+confirm the homepage renders a Hero banner, both with and without a
+background `image` setting.
+
+**Next step:** the remaining first-wave block types (Categories, Banner
+Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
 their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible).
+and the previous run established for Products/Hero, or the Homepage
+drag-and-drop editor (admin UI to actually create/reorder `mc_page`/
+`mc_block` rows — until that exists, a block instance has to be inserted
+by hand to be visible).
 
 ## Phase 11 — Mint Admin primitives
 
@@ -1560,3 +1596,10 @@ Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ), the
 Homepage drag-and-drop editor/admin UI (no way yet to create an
 `mc_block` row without inserting it by hand), Phase 12's Entity Picker
 real backends, or continuing Phase 15 with `SearchService`.
+
+**Update (a later run): Phase 10's Hero block is done too** (see the
+Phase 10 section above, "Sub-step 3", and `docs/developer/blocks/hero.md`)
+— `HeroBlockProvider` + `ControllerCommonHome::renderHeroBlock()` +
+`blocks/hero.twig` + `.mc-block--hero` CSS. Remaining first-wave block
+types: Categories, Banner Grid, Benefits, Text/Image, Brands, Testimonials,
+FAQ — same candidates as before, minus Hero.

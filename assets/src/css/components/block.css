@@ -25,3 +25,49 @@
     font-family: var(--mc-font-family-heading);
     font-weight: var(--mc-font-weight-semibold);
 }
+
+/**
+ * mc-block--hero
+ *
+ * Full-bleed banner variant (title/subtitle/CTA over an optional
+ * background image), MINTCART_IMPLEMENTATION_GUIDE.md §51's first
+ * first-wave block type. `--mc-block-hero-image` is set inline per
+ * instance (a data-driven custom property, MINTCART_IMPLEMENTATION_GUIDE.md
+ * §18 — the image is content, not a theme style) rather than a `background`
+ * shorthand baked into the Twig template, so a theme override can still
+ * restyle the overlay/gradient without touching the image URL itself.
+ * `.mc-block__hero-content` reuses the shared `.mc-block__title` for its
+ * heading — no duplicate heading style needed.
+ */
+.mc-block--hero {
+    --mc-block-hero-image: none;
+    --mc-block-hero-overlay: rgba(0, 0, 0, 0.35);
+
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 320px;
+    padding-top: var(--mc-space-12);
+    padding-bottom: var(--mc-space-12);
+    background-color: var(--mc-surface-alt);
+    background-image: linear-gradient(var(--mc-block-hero-overlay), var(--mc-block-hero-overlay)), var(--mc-block-hero-image);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    color: var(--mc-on-primary);
+    text-align: center;
+}
+
+.mc-block--hero .mc-block__title {
+    color: inherit;
+}
+
+.mc-block__hero-content {
+    max-width: 40rem;
+    margin-inline: auto;
+}
+
+.mc-block__hero-subtitle {
+    margin: 0 0 var(--mc-space-6);
+    font-size: var(--mc-font-size-lg);
+}
