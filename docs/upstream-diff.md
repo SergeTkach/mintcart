@@ -644,6 +644,21 @@ request was exercised — a human should insert a `mc_page` row
 a Products block, then confirm the legacy `default` theme's homepage is
 pixel-identical to before.
 
+**Update (Categories block):** `buildMintBlocks()`'s per-block dispatch was
+reshaped from `if('products')` into `if`/`elseif`/`else` — for each
+`type = 'categories'` block, a new `renderCategoriesBlock()` method queries
+`ModelCatalogCategory::getCategories($parent_id)` (the same core model
+`common/menu`/`extension/module/category` already use) via the new
+`MintCart\Blocks\CategoriesBlockProvider`, and renders it through
+`blocks/categories.twig`. No change to the method's public shape or to the
+Products path. See `docs/developer/blocks/categories.md`. Verified: `php -l`
+clean; `tests/mintcart/blocks/categories-block-provider-test.php` (3
+scenarios, new) and `block-renderer-test.php`'s new Scenario 3 (real
+`categories.twig` resolves) both pass; full `tests/mintcart/` suite
+re-run end to end — still passing. Same live-MySQL gap as above — a human
+should also insert an `mc_block` row (`type = 'categories'`,
+`settings_json = '{}'`) and confirm the homepage renders a Categories grid.
+
 ---
 
 ## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)
