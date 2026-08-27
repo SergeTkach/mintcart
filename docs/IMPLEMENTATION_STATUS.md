@@ -783,12 +783,17 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
+- [~] First blocks: Products done (see "Sub-step 2"); Brands done (see
+      "Sub-step 3"); Hero, Categories, Banner Grid, Benefits, Text/Image,
+      Testimonials, FAQ each have an open, not-yet-merged PR as of this
+      writing (#30/#31/#32/#33/#34/#35 respectively) — check open PRs
+      before starting any of these (initial set per Implementation Guide §51)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
+In progress. PR #16 (storage), Products block (Sub-step 2), Brands block
+(Sub-step 3, this run) merged/landed on `master`; Hero/Categories/Banner
+Grid/Benefits/Testimonials/FAQ each sitting in their own open PR pending
+review/merge.
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -854,10 +859,41 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
-**Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
+**Sub-step 3 (this run): Brands block.** `MintCart\Blocks\BrandsBlockProvider`
+(`upload/system/library/mintcart/blocks/brandsblockprovider.php`)
+normalizes a `type='brands'` `mc_block` row into a list of logo items
+(`image`/`url`/`image_width`/`image_height` from `settings_json`, `alt`
+from `content_json`, matched by array position) — same split as
+`BannerGridBlockProvider`, but simpler (no `columns`, no `caption`; a
+Brands block renders as a wrapping logo strip, not a fixed grid).
+`ControllerCommonHome::renderBrandsBlock()` resolves each item's logo via
+`tool/image`, dropping any item whose file no longer exists.
+`buildMintBlocks()`'s dispatch gained an `elseif ($block['type'] === 'brands')`
+branch. `mint_default/template/mint/blocks/brands.twig` + new
+`.mc-brands`/`.mc-brand`/`.mc-brand__logo` CSS (colocated in the existing
+`assets/src/css/components/block.css`). Full writeup:
+`docs/developer/blocks/brands.md`; increment note in `docs/upstream-diff.md`'s
+`home.php` entry. Verified: `php -l` clean; full `tests/mintcart/` suite
+(12 files, including the new `brands-block-provider-test.php` and a 3rd
+`block-renderer-test.php` scenario) passing; `npm run build` compiles
+cleanly, `mc-brands`/`mc-brand`/`mc-brand__logo` confirmed present in the
+built `assets/dist/css/index.min.css`; `npm test` (preset-token contract)
+still passing. Same pre-existing gap as every earlier phase: no live
+MySQL/Twig render exercised in this sandbox — a human should insert an
+`mc_block` row (`type='brands'`) with a couple of items (with and without
+a `url`) on a real install and confirm the homepage renders a logo strip.
+
+**Next step:** the one remaining unclaimed first-wave block type is
+**Text/Image** — deliberately skipped this run since it likely needs the
+not-yet-built `mc-prose` rich-text rendering
+(`MINTCART_IMPLEMENTATION_GUIDE.md` §20). Hero, Categories, Banner Grid,
+Benefits, Testimonials, FAQ each already have an open PR (#30/#31/#32/#33/
+#35/#34) as of this writing — check open PRs before starting any of them,
+or before starting Text/Image in case it's also already claimed. Once
+those land, `buildMintBlocks()`'s dispatch `if`/`elseif` chain in
+`ControllerCommonHome` will need manual merge-order reconciliation across
+however many of them merge (each carries its own branch built from a
+slightly different base). Otherwise, the Homepage drag-and-drop editor
 (admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
 that exists, a block instance has to be inserted by hand to be visible).
 

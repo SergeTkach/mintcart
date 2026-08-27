@@ -93,6 +93,28 @@ assertSame__(
     $failures
 );
 
+// 3. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/brands.twig must also resolve at
+//    its real path (a second block type, proving resolve() isn't only
+//    coincidentally correct for 'products').
+$realBrandsPath = $realRenderer->resolve('brands');
+
+assertSame__(
+    true,
+    is_file($realBrandsPath),
+    'Scenario 3: resolve() should find the real mint_default blocks/brands.twig file on disk',
+    $failures
+);
+
+$realBrandsMarkup = (string) file_get_contents($realBrandsPath);
+
+assertSame__(
+    true,
+    str_contains($realBrandsMarkup, 'mc-block--brands') && str_contains($realBrandsMarkup, 'items'),
+    'Scenario 3: the resolved real brands.twig should contain the documented mc-block--brands markup and loop over items',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -101,5 +123,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BlockRenderer smoke test (2 scenarios)\n";
+echo "PASS: BlockRenderer smoke test (3 scenarios)\n";
 exit(0);
