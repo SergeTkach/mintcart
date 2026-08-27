@@ -783,12 +783,15 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
+- [~] First blocks: Products (see "Sub-step 2") and Testimonials (see
+      "Sub-step 3") done; Hero, Categories, Banner Grid, Benefits,
+      Text/Image, Brands, FAQ not started, or in flight on open PRs — see
+      the "PR backlog status" note at the top of this section before
+      picking one up (initial set per Implementation Guide §51)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
+In progress. PR #16 (storage), an earlier run (Provider/Renderer +
+Products block), this run (Testimonials block).
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -854,12 +857,61 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
-**Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible).
+**Sub-step 3 (this run): Testimonials block.** A pure content block (no
+product query) — `MintCart\Blocks\TestimonialsBlockProvider`
+(`upload/system/library/mintcart/blocks/testimonialsblockprovider.php`)
+normalizes a `type='testimonials'` row into `title` + a list of
+`{quote, author_name, author_role, avatar, avatar_width, avatar_height,
+rating}` items, matching structural per-item settings (`avatar`/`rating`)
+against localized per-item content (`quote`/`author_name`/`author_role`)
+by array position — same convention Banner-Grid/Benefits-style block
+providers use. An item with a blank quote or author is dropped rather
+than rendered empty; an out-of-range `rating` normalizes to `null`.
+`ControllerCommonHome::renderTestimonialsBlock()` resolves each item's
+optional avatar via `model_tool_image->resize()`, `is_file()`-guarded the
+same way the stock Banner module is, degrading a missing file to no
+avatar rather than a broken `<img>` or a dropped testimonial.
+`buildMintBlocks()`'s dispatch was reshaped from a single `if('products')`
+into `if`/`elseif`/`else` so a second block type is one more branch, not
+a duplicated append-check. New
+`template/mint/blocks/testimonials.twig` (Mint Default) reuses the exact
+`mc-rating` markup `product-card.twig` already has for its optional star
+rating — no new rating component introduced. New `.mc-testimonial`/
+`__quote`/`__author`/`__avatar`/`__author-name`/`__author-role` CSS
+colocated in the existing `assets/src/css/components/block.css` (single
+consumer so far, `CLAUDE.md` §17: no dedicated file before a real second
+consumer). Also fixed a `.gitignore` false positive along the way: the
+pre-existing `upload/**/test*` glob (meant for runtime/scratch test data)
+was silently swallowing these new source files because their names start
+with "test" — same false-positive class the `test_theme/` negation
+already fixed once; fixed with two more targeted `!` negations. Full
+writeup: `docs/developer/blocks/testimonials.md`; upstream diff increment
+in `docs/upstream-diff.md`'s existing `home.php` entry. Verified: `php -l`
+clean on every touched/added PHP file and on the full `upload/` + `tests/`
+tree; full `tests/mintcart/**/*-test.php` suite passes (12 files,
+including the new testimonials provider test and Scenario 3 added to
+`block-renderer-test.php`); `npm install` (0 vulnerabilities) +
+`npm run build` compile cleanly, `mc-testimonial*` confirmed present in
+the built `assets/dist/css/index.min.css`; `npm test` (preset-token
+contract check) still passes, unaffected; `testimonials.twig`'s
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag nesting checked
+balanced with the same script-based technique used for every earlier
+`.twig` file in this repo. Not verified: no live MySQL/`vendor/twig/twig`
+in this sandbox, so no live end-to-end homepage render was exercised —
+same pre-existing gap every earlier Twig-touching phase has carried. A
+human should insert an `mc_block` row (`type='testimonials'`) with a
+couple of items (with and without an `avatar`/`rating`) on a real install
+and confirm the homepage renders the grid correctly.
+
+**Next step:** at the start of this run, five open PRs (#30 Hero, #31
+Categories, #32 Banner Grid, #33 Benefits, #34 FAQ) already claimed those
+first-wave block types — check current open PRs again before picking one.
+Still fully unclaimed as of this run: Text/Image, Brands — each needs its
+own Provider + `blocks/<type>.twig` following the same shape this and the
+Products run established. The Homepage drag-and-drop editor (admin UI to
+actually create/reorder `mc_page`/`mc_block` rows — until it exists,
+every block instance has to be inserted by hand) is also still not
+started.
 
 ## Phase 11 — Mint Admin primitives
 

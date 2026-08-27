@@ -644,6 +644,19 @@ request was exercised — a human should insert a `mc_page` row
 a Products block, then confirm the legacy `default` theme's homepage is
 pixel-identical to before.
 
+**Increment (Testimonials block, this run):** `buildMintBlocks()`'s
+dispatch gained a `renderTestimonialsBlock()` branch for
+`type = 'testimonials'` blocks, reusing
+`MintCart\Blocks\TestimonialsBlockProvider` (pure content, no product
+query) and resizing each item's optional avatar via
+`model_tool_image->resize()` the same `is_file()`-guarded way the stock
+Banner module does. See `docs/developer/blocks/testimonials.md` for the
+full writeup. No change to the `'products'` branch or to any other
+existing behaviour. Tests: `tests/mintcart/blocks/testimonials-block-provider-test.php`
+(3 scenarios, new) and Scenario 3 added to `block-renderer-test.php`
+(confirms the real `testimonials.twig` resolves) — full
+`tests/mintcart/` suite re-run end to end, 12 files, all passing.
+
 ---
 
 ## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)
