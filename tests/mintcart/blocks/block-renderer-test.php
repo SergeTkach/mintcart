@@ -93,6 +93,28 @@ assertSame__(
     $failures
 );
 
+// 3. Same real-repo integration check for the Text/Image block
+//    (docs/developer/blocks/text-image.md) - guards its template against
+//    drifting out of sync with BlockRenderer's expected layout the same
+//    way Scenario 2 does for Products.
+$realTextImagePath = $realRenderer->resolve('text-image');
+
+assertSame__(
+    true,
+    is_file($realTextImagePath),
+    'Scenario 3: resolve() should find the real mint_default blocks/text-image.twig file on disk',
+    $failures
+);
+
+$realTextImageMarkup = (string) file_get_contents($realTextImagePath);
+
+assertSame__(
+    true,
+    str_contains($realTextImageMarkup, 'mc-block--text-image') && str_contains($realTextImageMarkup, 'mc-prose'),
+    'Scenario 3: the resolved real text-image.twig should contain the documented mc-block--text-image wrapper and mc-prose body',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -101,5 +123,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BlockRenderer smoke test (2 scenarios)\n";
+echo "PASS: BlockRenderer smoke test (3 scenarios)\n";
 exit(0);

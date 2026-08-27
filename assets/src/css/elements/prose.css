@@ -1,0 +1,74 @@
+/**
+ * mc-prose
+ *
+ * Rich-text wrapper (docs/MINTCART_IMPLEMENTATION_GUIDE.md §20) for HTML
+ * that comes from a rich text field (e.g. a future CKEditor-based admin
+ * field, or OpenCart's own `product`/`category`/`information` `description`)
+ * rather than MintCart-authored markup. Scoped to `.mc-prose` rather than
+ * applied globally so these rules never leak into unrelated components
+ * (Implementation Guide §20: "не використовувати правила rich text
+ * глобально там, де вони можуть поламати components").
+ *
+ * First real consumer: the Text/Image Homepage block's `body`
+ * (docs/developer/blocks/text-image.md) - this is the `elements/` layer's
+ * first file (docs/MINTCART_IMPLEMENTATION_GUIDE.md §11's CSS architecture
+ * lists `elements/typography.css` etc.; `mc-prose` is the first one with a
+ * real consumer, CLAUDE.md §85/§17).
+ */
+
+.mc-prose {
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-base);
+    line-height: var(--mc-line-height-relaxed);
+}
+
+.mc-prose > :first-child {
+    margin-top: 0;
+}
+
+.mc-prose > :last-child {
+    margin-bottom: 0;
+}
+
+.mc-prose h2,
+.mc-prose h3,
+.mc-prose h4 {
+    margin: var(--mc-space-6) 0 var(--mc-space-3);
+    font-family: var(--mc-font-family-heading);
+    font-weight: var(--mc-font-weight-semibold);
+    line-height: var(--mc-line-height-tight);
+}
+
+.mc-prose p,
+.mc-prose ul,
+.mc-prose ol,
+.mc-prose table {
+    margin: 0 0 var(--mc-space-4);
+}
+
+.mc-prose ul,
+.mc-prose ol {
+    padding-left: var(--mc-space-6);
+}
+
+.mc-prose a {
+    color: var(--mc-primary);
+}
+
+.mc-prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-prose table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mc-prose th,
+.mc-prose td {
+    padding: var(--mc-space-2) var(--mc-space-3);
+    border: var(--mc-border-width) solid var(--mc-border);
+    text-align: left;
+}

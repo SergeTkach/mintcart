@@ -25,3 +25,19 @@
     font-family: var(--mc-font-family-heading);
     font-weight: var(--mc-font-weight-semibold);
 }
+
+/**
+ * mc-block--text-image
+ *
+ * The Text/Image block's `<img>` (docs/developer/blocks/text-image.md).
+ * Bootstrap's `.row`/`.col-*`/`.order-md-first` provide the two-column
+ * layout and left/right image placement (docs/developer/layout-conventions.md)
+ * - this only styles the image itself, same "wrapper via Bootstrap,
+ * content via mc-*" split every other block uses.
+ */
+.mc-block__text-image-media {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--mc-radius-md);
+}
