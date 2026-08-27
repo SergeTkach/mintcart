@@ -783,12 +783,14 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
+- [~] First blocks: Products, Text/Image done (see "Sub-step 2"/"Sub-step 3");
+      Hero, Categories, Banner Grid, Benefits, Brands, Testimonials, FAQ each
+      claimed by a separate open PR as of this writing — not yet merged to
+      `master` (initial set per Implementation Guide §51)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
+In progress. PR #16 (storage), Products block (Provider/Renderer + wiring,
+merged), this run (Text/Image block).
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -854,12 +856,52 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
+**Sub-step 3 (this run): Text/Image block.**
+`MintCart\Blocks\TextImageBlockProvider`
+(`upload/system/library/mintcart/blocks/textimageblockprovider.php`)
+normalizes a `type='text-image'` `mc_block` row (structural `image`/
+`image_width`/`image_height`/`image_position` in `settings_json`, localized
+`title`/`body`/`image_alt` in `content_json`) — no OpenCart dependency at
+all, same shape as `ProductsBlockProvider`. Covers both the "Text" and
+"Text + Image" catalog entries (`MINTCART_IMPLEMENTATION_GUIDE.md` §33) as
+one block type, since the `image` setting is simply optional.
+`ControllerCommonHome::renderTextImageBlock()` resolves the optional image
+via `model_tool_image->resize()`, `is_file()`-guarded exactly like
+`renderHeroBlock()`; `buildMintBlocks()`'s dispatch gained an
+`elseif ($block['type'] === 'text-image')` branch.
+`template/mint/blocks/text-image.twig` (Mint Default) is a two-column
+Bootstrap layout (text always first in source order; `image_position:
+'left'` uses Bootstrap's `.order-md-first` utility rather than a second
+markup branch) that degrades to a full-width text-only column when there is
+no image. `body` is rendered inside a new `.mc-prose` class — the CSS
+architecture's `elements/` layer's first file
+(`assets/src/css/elements/prose.css`, `MINTCART_IMPLEMENTATION_GUIDE.md`
+§11/§20), since a rich-text block body is its first real consumer.
+New test: `tests/mintcart/blocks/text-image-block-provider-test.php` (3
+scenarios), plus a 3rd scenario added to
+`tests/mintcart/blocks/block-renderer-test.php`. Full writeup:
+`docs/developer/blocks/text-image.md`; increment note in
+`docs/upstream-diff.md`'s existing `home.php` entry. Verified: `php -l`
+clean on every touched/added PHP file; full `tests/mintcart/` suite (13
+files) passing; `npm install` + `npm run build` compile cleanly, confirmed
+`mc-prose`/`text-image-media` land in the bundled
+`assets/dist/css/index.min.css`; `npm test` (preset-token contract check)
+still passes. Same pre-existing gap as every earlier phase: no
+MySQL/`vendor/twig/twig` in this environment, so no live end-to-end
+homepage render was exercised — a human should insert an `mc_block` row
+(`type='text-image'`) with and without an `image` setting on a real install
+and confirm the homepage renders both a plain-text block and a two-column
+block, image on each side.
+
 **Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible).
+Banner Grid, Benefits, Brands, Testimonials, FAQ) are each already claimed
+by a separate open PR as of this writing — check open PRs before starting
+any of them. Beyond that "first-wave" set, `MINTCART_IMPLEMENTATION_GUIDE.md`
+§33's full block catalog also still needs CTA, Newsletter, Gallery, HTML and
+Spacer providers. The Homepage drag-and-drop editor (admin UI to actually
+create/reorder `mc_page`/`mc_block` rows — until that exists, a block
+instance has to be inserted by hand to be visible) is also still not
+started.
 
 ## Phase 11 — Mint Admin primitives
 
@@ -1560,3 +1602,11 @@ Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ), the
 Homepage drag-and-drop editor/admin UI (no way yet to create an
 `mc_block` row without inserting it by hand), Phase 12's Entity Picker
 real backends, or continuing Phase 15 with `SearchService`.
+
+**Update (this run): Text/Image block done.** See Phase 10 section above
+("Sub-step 3"). At session start, six other first-wave block types (Hero,
+Categories, Banner Grid, Benefits, FAQ, Testimonials, Brands) were each
+already claimed by a separate open PR — check open PRs before picking a
+Phase 10 block type. Beyond the "first-wave" set tracked above, CTA,
+Newsletter, Gallery, HTML and Spacer (`MINTCART_IMPLEMENTATION_GUIDE.md`
+§33's full block catalog) still have no provider.

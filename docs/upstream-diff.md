@@ -644,6 +644,18 @@ request was exercised — a human should insert a `mc_page` row
 a Products block, then confirm the legacy `default` theme's homepage is
 pixel-identical to before.
 
+**Update (Phase 10, Text/Image block):** `buildMintBlocks()`'s dispatch
+gained an `elseif ($block['type'] === 'text-image')` branch and a new
+`renderTextImageBlock()` private method, following the exact shape
+`renderHeroBlock()` (added by a sibling increment) established — no change
+to the `'products'` branch or to `buildMintBlocks()`'s Mint-aware-theme gate.
+See `docs/developer/blocks/text-image.md` for the full writeup. Verified the
+same way: `php -l` clean; full `tests/mintcart/` suite (13 files, including
+the new `tests/mintcart/blocks/text-image-block-provider-test.php` and a 3rd
+scenario in `block-renderer-test.php`) passing; `npm run build` confirms
+`mc-prose`/`text-image-media` land in the bundled CSS. Same live-render gap
+as above still applies.
+
 ---
 
 ## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)
