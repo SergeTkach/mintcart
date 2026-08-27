@@ -26,14 +26,13 @@ class ControllerCommonHome extends Controller {
 	/**
 	 * MintCart Homepage Builder (Phase 10, MINTCART_TECHNICAL_PLAN.md
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
-	 * sort_order, via MintCart\Blocks\BlockRenderer. Only the 'products'
-	 * block type has a query/provider implementation so far
+	 * sort_order, via MintCart\Blocks\BlockRenderer. Only the 'products' and
+	 * 'banner-grid' block types have a query/provider implementation so far
 	 * (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block types
-	 * - Hero, Categories, Banner Grid, Benefits, Text/Image, Brands,
-	 * Testimonials, FAQ - are separate, not-yet-started checklist items).
-	 * An unrecognized block type is skipped, not fatal, so a page mixing
-	 * implemented and not-yet-implemented block types still renders what
-	 * it can.
+	 * - Hero, Categories, Benefits, Text/Image, Brands, Testimonials, FAQ -
+	 * are separate, not-yet-started checklist items). An unrecognized block
+	 * type is skipped, not fatal, so a page mixing implemented and
+	 * not-yet-implemented block types still renders what it can.
 	 *
 	 * Same "is the active theme Mint-API-aware" gate every other Mint
 	 * rendering pipeline uses (MintCart\Design\ActiveTheme::isMintAware) -
@@ -73,10 +72,14 @@ class ControllerCommonHome extends Controller {
 		foreach ($blocks as $block) {
 			if ($block['type'] === 'products') {
 				$markup = $this->renderProductsBlock($block, $block_renderer, $mint_theme);
+			} elseif ($block['type'] === 'banner-grid') {
+				$markup = $this->renderBannerGridBlock($block, $block_renderer);
+			} else {
+				$markup = null;
+			}
 
-				if ($markup !== null && $markup !== '') {
-					$rendered[] = $markup;
-				}
+			if ($markup !== null && $markup !== '') {
+				$rendered[] = $markup;
 			}
 		}
 
@@ -231,6 +234,58 @@ class ControllerCommonHome extends Controller {
 		return $block_renderer->render('products', array(
 			'title'         => $settings['title'],
 			'product_cards' => $product_cards
+		));
+	}
+
+	/**
+	 * Renders one 'banner-grid' mc_block row: resolves each item's image via
+	 * OpenCart's tool/image model (same is_file-guarded resize() call the
+	 * stock Banner module uses), dropping any item whose image no longer
+	 * exists on disk rather than rendering a broken <img>. No product
+	 * query/ProductViewProvider involved - a banner item's data all comes
+	 * from the block's own settings/content, already normalized by
+	 * MintCart\Blocks\BannerGridBlockProvider.
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when every item's
+	 *         image failed to resolve.
+	 */
+	private function renderBannerGridBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$this->load->model('tool/image');
+
+		$settings = (new \MintCart\Blocks\BannerGridBlockProvider())->build($block['settings'], $block['content']);
+
+		$items = array();
+
+		foreach ($settings['items'] as $item) {
+			$width = $item['image_width'] ?: 600;
+			$height = $item['image_height'] ?: 400;
+
+			$image = $this->model_tool_image->resize($item['image'], $width, $height);
+
+			if (!$image) {
+				continue;
+			}
+
+			$items[] = array(
+				'image'        => $image,
+				'image_width'  => $width,
+				'image_height' => $height,
+				'url'          => $item['url'],
+				'alt'          => $item['alt'],
+				'caption'      => $item['caption']
+			);
+		}
+
+		if (!$items) {
+			return null;
+		}
+
+		return $block_renderer->render('banner-grid', array(
+			'title'     => $settings['title'],
+			'columns'   => $settings['columns'],
+			'col_width' => $settings['col_width'],
+			'items'     => $items
 		));
 	}
 }
