@@ -783,12 +783,15 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
+- [~] First blocks: Products (see "Sub-step 2") and Text (see "Sub-step 3")
+      done; Hero, Categories, Banner Grid, Benefits, Text/Image, Brands,
+      Testimonials, FAQ, Gallery, HTML, CTA, Newsletter, Spacer — check
+      open PRs before starting any of these (several were in flight as of
+      this entry, see "Next step for the next routine run" below)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
+In progress. PR #16 (storage), an earlier run (Provider/Renderer + Products
+block), this run (Text block + `mc-prose`).
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -854,12 +857,45 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
+**Sub-step 3 (a later run): Text block + `mc-prose` shipped.**
+`MintCart\Blocks\TextBlockProvider`
+(`upload/system/library/mintcart/blocks/textblockprovider.php`) normalizes
+a `type='text'` block's settings (`title`/`content`/`text_align`, no
+OpenCart dependency — same shape as `ProductsBlockProvider`).
+`ControllerCommonHome::buildMintBlocks()`'s per-block dispatch now handles
+`'text'` alongside `'products'`, via a new two-line `renderTextBlock()`
+(no product query at all — the simplest block type). New
+`mint_default/template/mint/blocks/text.twig` renders via the also-new
+`mc-prose` rich-text container
+(`assets/src/css/elements/prose.css`, `MINTCART_IMPLEMENTATION_GUIDE.md`
+§20 — documented since Phase 3 but built only now that a real consumer
+needed it, `CLAUDE.md` §85), wired into `index.css`'s `elements` import
+layer. Full writeup: `docs/developer/blocks/text.md`; upstream diff update
+in `docs/upstream-diff.md`'s `home.php` entry. Verified: `php -l` clean on
+every touched/added PHP file; full `tests/mintcart/` suite (12 files,
+including the new `tests/mintcart/blocks/text-block-provider-test.php`,
+4 scenarios, and `block-renderer-test.php`'s new scenario 3) passing;
+`npm install` (0 vulnerabilities) then `npm run build` — both
+`index.min.css` (271.6kb) and the JS bundles compile cleanly, `grep`
+confirms `mc-prose` lands in the bundled CSS; `npm test` (the Phase 9
+preset-contract guardrail) still passes, unaffected by this change. Same
+pre-existing gap as every earlier phase: no MySQL/`vendor/twig/twig` in
+this environment, so no live end-to-end request was exercised — a human
+should insert an `mc_block` row (`type='text'`) on the `'home'` page and
+confirm the homepage renders it with `mc-prose` styling.
+
 **Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible).
+Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) plus Gallery,
+HTML, CTA, Newsletter and Spacer from the full block list
+(`MINTCART_FUNCTIONAL_SCOPE.md` §9) each need their own Provider +
+`blocks/<type>.twig` following the same shape established for
+Products/Text — **check open PRs first**, several of these block types
+had PRs already in flight as of this entry (see "Next step for the next
+routine run" below for the exact list at that time; re-check
+`gh pr list --state open` rather than trusting a stale snapshot). Also
+still open: the Homepage drag-and-drop editor (admin UI to actually
+create/reorder `mc_page`/`mc_block` rows — until that exists, a block
+instance has to be inserted by hand to be visible).
 
 ## Phase 11 — Mint Admin primitives
 
@@ -1560,3 +1596,10 @@ Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ), the
 Homepage drag-and-drop editor/admin UI (no way yet to create an
 `mc_block` row without inserting it by hand), Phase 12's Entity Picker
 real backends, or continuing Phase 15 with `SearchService`.
+
+**Update (this run, PR #42): Text block + `mc-prose` shipped** — see
+Phase 10's "Sub-step 3" above and `docs/developer/blocks/text.md`. Step 0
+found 12 open PRs (#30-#41) already claiming every other Phase 10 block
+type plus a Phase 13 wizard-shell PR; Text (distinct from Text/Image) was
+the only unclaimed first-wave-adjacent block type with no open PR, so it
+was picked instead of piling onto an already-crowded set of block PRs.

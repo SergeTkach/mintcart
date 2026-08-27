@@ -93,6 +93,25 @@ assertSame__(
     $failures
 );
 
+// 3. Same real-repo check for the text block (mint/blocks/text.twig).
+$realTextPath = $realRenderer->resolve('text');
+
+assertSame__(
+    true,
+    is_file($realTextPath),
+    'Scenario 3: resolve() should find the real mint_default blocks/text.twig file on disk',
+    $failures
+);
+
+$realTextMarkup = (string) file_get_contents($realTextPath);
+
+assertSame__(
+    true,
+    str_contains($realTextMarkup, 'mc-block--text') && str_contains($realTextMarkup, 'mc-prose'),
+    'Scenario 3: the resolved real text.twig should contain the documented mc-block--text markup and use mc-prose',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -101,5 +120,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BlockRenderer smoke test (2 scenarios)\n";
+echo "PASS: BlockRenderer smoke test (3 scenarios)\n";
 exit(0);

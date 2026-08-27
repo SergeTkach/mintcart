@@ -1,0 +1,83 @@
+/**
+ * mc-prose
+ *
+ * Rich-text container (docs/MINTCART_IMPLEMENTATION_GUIDE.md §20) for HTML
+ * produced by an admin rich-text editor (Information pages, the Homepage
+ * Text block - docs/developer/blocks/text.md) or any other MintCart
+ * surface that renders trusted user-authored HTML. Scoped to `.mc-prose`
+ * only - never applied globally - so it can never fight a component's own
+ * heading/paragraph/list styling (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §20: "Do not use rich text rules globally where they might break
+ * components").
+ *
+ * First real consumer: the Homepage Text block
+ * (docs/developer/blocks/text.md). Every value reads a design token so
+ * presets (docs/developer/theme-api/presets.md) reach prose content the
+ * same way they reach every other MintCart component.
+ */
+
+.mc-prose {
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-base);
+    line-height: var(--mc-line-height-relaxed);
+}
+
+.mc-prose > :first-child {
+    margin-top: 0;
+}
+
+.mc-prose > :last-child {
+    margin-bottom: 0;
+}
+
+.mc-prose h2,
+.mc-prose h3,
+.mc-prose h4 {
+    margin: var(--mc-space-6) 0 var(--mc-space-3);
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-heading);
+    font-weight: var(--mc-font-weight-semibold);
+    line-height: 1.3;
+}
+
+.mc-prose p,
+.mc-prose ul,
+.mc-prose ol {
+    margin: 0 0 var(--mc-space-4);
+}
+
+.mc-prose ul,
+.mc-prose ol {
+    padding-inline-start: var(--mc-space-6);
+}
+
+.mc-prose a {
+    color: var(--mc-primary);
+    text-decoration: underline;
+}
+
+.mc-prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-prose table {
+    width: 100%;
+    margin: 0 0 var(--mc-space-4);
+    border-collapse: collapse;
+}
+
+.mc-prose th,
+.mc-prose td {
+    padding: var(--mc-space-2) var(--mc-space-3);
+    border: 1px solid var(--mc-border);
+    text-align: left;
+}
+
+.mc-prose blockquote {
+    margin: 0 0 var(--mc-space-4);
+    padding-inline-start: var(--mc-space-4);
+    border-inline-start: 3px solid var(--mc-border);
+    color: var(--mc-muted);
+}

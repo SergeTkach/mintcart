@@ -8,8 +8,10 @@
  *   Bootstrap 5 -> MintCart tokens -> elements -> components -> utilities
  *   -> compatibility -> theme overrides
  *
- * Elements/utilities layers are still empty (no component has needed them
- * yet - see docs/IMPLEMENTATION_STATUS.md Phase 4). Phase 3 added the
+ * The elements layer holds `mc-prose` (rich text - §20), added once the
+ * Homepage Text block needed it (docs/developer/blocks/text.md); the
+ * utilities layer is still empty (no component has needed it yet - see
+ * docs/IMPLEMENTATION_STATUS.md Phase 4). Phase 3 added the
  * `--mc-*` design token tiers (settings/tokens.css). Phase 2 wired the
  * build pipeline and the Bootstrap 3 compatibility shim required so legacy
  * OpenCart 3 markup keeps working. Phase 9 added the preset overrides
@@ -24,6 +26,7 @@
 @import './settings/tokens.css';
 @import './presets/clean.css';
 @import './presets/warm.css';
+@import './elements/prose.css';
 @import './components/button.css';
 @import './components/alert.css';
 @import './components/field.css';
