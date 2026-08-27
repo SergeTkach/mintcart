@@ -783,12 +783,16 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
+- [~] First blocks: Products done (see "Sub-step 2"); CTA done (see
+      "Sub-step 3"); Hero, Categories, Banner Grid, Benefits, Text/Image,
+      Brands, Testimonials, FAQ each have an open, not-yet-merged PR as of
+      this run — check open PRs before starting one. Newsletter, Gallery,
+      HTML, Spacer (Implementation Guide §51's remaining catalog entries)
+      still fully unclaimed.
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
+In progress. PR #16 (storage), Products block + Provider/Renderer, this
+run (CTA block).
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -854,12 +858,52 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
-**Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible).
+**Sub-step 3 (this run): CTA block.** `MintCart\Blocks\CtaBlockProvider`
+(`upload/system/library/mintcart/blocks/ctablockprovider.php`) normalizes a
+`type='cta'` `mc_block` row's `content_json` (`title`/`text`/`cta_label`/
+`cta_url` — pure content, no structural `settings_json` used, no OpenCart
+dependency, same shape as `ProductsBlockProvider`). A label with no URL (or
+vice versa) normalizes to "no button" rather than a dead/unlabeled link.
+`ControllerCommonHome::renderCtaBlock()` is the simplest render method yet
+— normalize, then render through the existing `BlockRenderer`, no
+query/model/image-resize at all — `buildMintBlocks()`'s dispatch gained an
+`elseif ($block['type'] === 'cta')` branch. New
+`upload/catalog/view/theme/mint_default/template/mint/blocks/cta.twig`
+(renders nothing when title/text/button are all empty) and
+`.mc-block--cta`/`.mc-block__cta-inner`/`.mc-block__cta-text` CSS,
+colocated in the existing `assets/src/css/components/block.css` (single
+consumer so far). Full writeup: `docs/developer/blocks/cta.md`; increment
+note in `docs/upstream-diff.md`'s existing `home.php` entry. Verified:
+`php -l` clean on every touched/added PHP file and the full `upload/` +
+`tests/` tree; full `tests/mintcart/` suite (12 files, including the new
+`cta-block-provider-test.php` and a 3rd `block-renderer-test.php`
+scenario) passing; `npm install` + `npm run build` compile cleanly,
+confirmed `mc-block--cta` present in the built
+`assets/dist/css/index.min.css`; `npm test` (preset-token contract check)
+still passes. `cta.twig`'s `{% if %}`/`{% endif %}` tag nesting checked
+balanced (4 opens, 4 closes). Not verified: no live MySQL/`vendor/twig/twig`
+in this sandbox, same pre-existing gap as every earlier Twig-touching
+phase — a human should insert an `mc_block` row (`type='cta'`) on a real
+install and confirm the homepage renders title/text/button correctly, and
+that a title-only block (no button) still renders.
+
+Dedup note: at the start of this run, `mcp__github__list_pull_requests`
+(state=open) returned eight open PRs (#30-#37), covering Hero, Categories,
+Banner Grid, Benefits, FAQ, Testimonials, Brands, and Text/Image — none
+touching CTA, `CtaBlockProvider`, `renderCtaBlock()`, `cta.twig`, or the
+`.mc-block--cta` CSS. Per the block catalog
+(`MINTCART_IMPLEMENTATION_GUIDE.md` §33), the only unclaimed first-wave
+type left after those eight was CTA (Newsletter/Gallery/HTML/Spacer are
+the catalog's remaining, still fully unclaimed entries beyond the
+"first-wave" set this phase has been tracking). Same `buildMintBlocks()`
+dispatch-chain manual-merge-order note every sibling PR already carries
+applies here too once more than one of #30-#37 plus this PR lands.
+
+**Next step:** Newsletter, Gallery, HTML, Spacer each need their own
+Provider + `blocks/<type>.twig` following this same shape — or the
+Homepage drag-and-drop editor (admin UI to actually create/reorder
+`mc_page`/`mc_block` rows — until that exists, a block instance has to be
+inserted by hand to be visible). Check open PRs first.
 
 ## Phase 11 — Mint Admin primitives
 
