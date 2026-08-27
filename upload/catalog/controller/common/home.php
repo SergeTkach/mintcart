@@ -27,10 +27,10 @@ class ControllerCommonHome extends Controller {
 	 * MintCart Homepage Builder (Phase 10, MINTCART_TECHNICAL_PLAN.md
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
 	 * sort_order, via MintCart\Blocks\BlockRenderer. Only the 'products'
-	 * block type has a query/provider implementation so far
+	 * and 'faq' block types have a provider/render implementation so far
 	 * (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block types
 	 * - Hero, Categories, Banner Grid, Benefits, Text/Image, Brands,
-	 * Testimonials, FAQ - are separate, not-yet-started checklist items).
+	 * Testimonials - are separate, not-yet-started checklist items).
 	 * An unrecognized block type is skipped, not fatal, so a page mixing
 	 * implemented and not-yet-implemented block types still renders what
 	 * it can.
@@ -73,10 +73,14 @@ class ControllerCommonHome extends Controller {
 		foreach ($blocks as $block) {
 			if ($block['type'] === 'products') {
 				$markup = $this->renderProductsBlock($block, $block_renderer, $mint_theme);
+			} elseif ($block['type'] === 'faq') {
+				$markup = $this->renderFaqBlock($block, $block_renderer);
+			} else {
+				$markup = null;
+			}
 
-				if ($markup !== null && $markup !== '') {
-					$rendered[] = $markup;
-				}
+			if ($markup !== null && $markup !== '') {
+				$rendered[] = $markup;
 			}
 		}
 
@@ -231,6 +235,29 @@ class ControllerCommonHome extends Controller {
 		return $block_renderer->render('products', array(
 			'title'         => $settings['title'],
 			'product_cards' => $product_cards
+		));
+	}
+
+	/**
+	 * Renders one 'faq' mc_block row - a pure content block, no product
+	 * query or image resize involved (MintCart\Blocks\FaqBlockProvider
+	 * only normalizes already-decoded settings/content), same shape as
+	 * renderProductsBlock() above but with no OpenCart model dependency.
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when the block
+	 *         has no valid question/answer items to show.
+	 */
+	private function renderFaqBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\FaqBlockProvider())->build($block['settings'], $block['content']);
+
+		if (!$settings['items']) {
+			return null;
+		}
+
+		return $block_renderer->render('faq', array(
+			'title' => $settings['title'],
+			'items' => $settings['items']
 		));
 	}
 }

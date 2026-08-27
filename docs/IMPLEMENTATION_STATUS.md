@@ -783,12 +783,17 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
+- [~] First blocks: Products (see "Sub-step 2") and FAQ (see "Sub-step 3")
+      done; Hero, Categories, Banner Grid, Benefits each claimed by their own
+      open PR as of this run (#30/#31/#32/#33 — not yet merged); Text/Image,
+      Brands, Testimonials not started (initial set per Implementation
+      Guide §51)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
+In progress. PR #16 (storage), an earlier run (Provider/Renderer + Products
+block), this run (FAQ block). Four more block types (Hero #30, Categories
+#31, Banner Grid #32, Benefits #33) are each in their own open, unmerged PR
+as of this run — see "Sub-step 3" below.
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -854,12 +859,72 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
-**Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible).
+**Sub-step 3 (this run): FAQ block.** `MintCart\Blocks\FaqBlockProvider`
+(`upload/system/library/mintcart/blocks/faqblockprovider.php`) normalizes a
+`type='faq'` `mc_block` row into `title` + a list of `{question, answer}`
+items — unlike Products/Banner Grid, an FAQ item has no structural
+(non-localized) data at all, so both fields live entirely in
+`content_json` and `settings_json` is accepted but currently unused.
+Invalid items (missing question or answer, or not an array) are dropped
+during normalization rather than reaching the template half-empty.
+`ControllerCommonHome::renderFaqBlock()` mirrors `renderProductsBlock()`'s
+shape with no product query/image resize involved — a `null` return
+(empty `items` after normalization) is skipped by `buildMintBlocks()`'s
+dispatch, reshaped from a single `if('products')` into
+`if`/`elseif`/`else` so a third block type is one more branch, not a
+duplicated append-check. `mint_default`'s new `blocks/faq.twig` renders
+each item as a native `<details>`/`<summary>` disclosure widget —
+deliberately not Bootstrap's Collapse JS, since a native element already
+provides expand/collapse and correct semantics with no per-instance ID
+scheme needed (`MINTCART_IMPLEMENTATION_GUIDE.md` §3/§5). New
+`.mc-faq`/`__item`/`__question`/`__answer` CSS colocated in the existing
+`assets/src/css/components/block.css` (single consumer so far, `CLAUDE.md`
+§17). Full writeup: `docs/developer/blocks/faq.md`; increment note added to
+`docs/upstream-diff.md`'s existing `home.php` entry.
+
+New test: `tests/mintcart/blocks/faq-block-provider-test.php` (3
+scenarios, standalone, no OpenCart dependency), plus a 3rd scenario added
+to `tests/mintcart/blocks/block-renderer-test.php` confirming the real
+`faq.twig` resolves. Verified: `php -l` clean on every touched/added PHP
+file, and on the full `upload/` + `tests/` tree; full
+`tests/mintcart/**/*-test.php` suite passes locally (12 files, including
+the new FAQ provider test); `npm install` + `npm run build` compile
+cleanly, `grep` confirms `mc-faq`/`__item`/`__question`/`__answer` land in
+the bundled `assets/dist/css/index.min.css`; `npm test` (preset-token
+contract check) still passes, unaffected; `faq.twig`'s
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag nesting checked
+balanced with the same script-based technique used for every earlier
+`.twig` file in this repo. Not verified (same pre-existing gap as every
+earlier phase): no live MySQL/`vendor/twig/twig` in this sandbox, so no
+live end-to-end homepage render was exercised — a human should insert an
+`mc_block` row (`type='faq'`) with a couple of `content_json` items on a
+real install, confirm the homepage renders it, and click a question to
+confirm the native disclosure toggle actually expands/collapses.
+
+**Dedup check for this run:** `mcp__github__list_pull_requests` (state=open)
+returned four open PRs at the start of this run, all against Phase 10's
+"first blocks" checklist item — **#30** Hero
+(`claude/mintcart-routine-1787781802`), **#31** Categories
+(`claude/routine-continue`), **#32** Banner Grid
+(`claude/mintcart-routine-banner-grid`), **#33** Benefits
+(`claude/routine-65d2f0bd`). None of the four touches FAQ,
+`FaqBlockProvider`, `renderFaqBlock()`, `faq.twig`, or the `.mc-faq` CSS —
+no scope overlap with this increment. Per Phase 10's checklist, the
+still-unclaimed first-wave block types after Products (merged)/Hero/
+Categories/Banner Grid/Benefits (all four now claimed by open PRs) were
+FAQ, Text/Image, Brands, Testimonials — this increment implements FAQ.
+Whoever merges these PRs will need a small manual merge-order
+reconciliation on `buildMintBlocks()`'s dispatch `if`/`elseif` chain in
+`ControllerCommonHome` once more than one lands — same note each of
+#30/#31/#32/#33's own descriptions already carries.
+
+**Next step:** Text/Image, Brands, Testimonials remain fully unclaimed as
+of this run — each needs its own Provider + `blocks/<type>.twig` following
+this same shape. The Homepage drag-and-drop editor (admin UI to actually
+create/reorder `mc_page`/`mc_block` rows — until it exists, every block
+instance has to be inserted by hand) is also still not started. Check open
+PRs first before picking a block type — #30/#31/#32/#33 were all still
+open as of this run.
 
 ## Phase 11 — Mint Admin primitives
 
@@ -1560,3 +1625,10 @@ Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ), the
 Homepage drag-and-drop editor/admin UI (no way yet to create an
 `mc_block` row without inserting it by hand), Phase 12's Entity Picker
 real backends, or continuing Phase 15 with `SearchService`.
+
+**Update (later run): Phase 10's FAQ block is done** — see the Phase 10
+section above ("Sub-step 3") for the full writeup. Hero/Categories/Banner
+Grid/Benefits were each already claimed by their own open PR (#30/#31/#32/
+#33) at the start of this run; Text/Image, Brands, Testimonials remain
+fully unclaimed. Check open PRs first before picking a fresh block type or
+phase.

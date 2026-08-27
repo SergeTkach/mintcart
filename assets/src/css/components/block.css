@@ -25,3 +25,39 @@
     font-family: var(--mc-font-family-heading);
     font-weight: var(--mc-font-weight-semibold);
 }
+
+/**
+ * mc-faq (FAQ block)
+ *
+ * Native <details>/<summary> disclosure widgets - no Bootstrap collapse
+ * JS, no data-bs-toggle/aria-expanded management, no per-instance ID
+ * scheme to avoid colliding with a second FAQ block on the same page.
+ * The browser already provides expand/collapse, keyboard toggling and
+ * correct semantics for free (MINTCART_IMPLEMENTATION_GUIDE.md §3: don't
+ * add a dependency where ~20 lines of native markup already does the job).
+ */
+.mc-faq {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-3);
+}
+
+.mc-faq__item {
+    padding: var(--mc-space-4);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-faq__question {
+    color: var(--mc-text);
+    font-weight: var(--mc-font-weight-semibold);
+    cursor: pointer;
+}
+
+.mc-faq__item[open] .mc-faq__question {
+    margin-bottom: var(--mc-space-2);
+}
+
+.mc-faq__answer {
+    color: var(--mc-muted);
+}

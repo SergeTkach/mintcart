@@ -644,6 +644,17 @@ request was exercised — a human should insert a `mc_page` row
 a Products block, then confirm the legacy `default` theme's homepage is
 pixel-identical to before.
 
+**Update (later run): `buildMintBlocks()`'s dispatch gained a `type = 'faq'`
+branch** (`renderFaqBlock()`), alongside the existing `'products'` one —
+see `docs/developer/blocks/faq.md` for the full writeup. Pure content
+block: no product query, no `tool/image` resize, no new language strings.
+Same compatibility posture as the Products branch — a legacy/third-party
+theme's `buildMintBlocks()` call still short-circuits before reaching
+either branch. Tests: `tests/mintcart/blocks/faq-block-provider-test.php`
+(3 scenarios), `tests/mintcart/blocks/block-renderer-test.php` scenario 3
+(real `faq.twig` resolution). Full `tests/mintcart/` suite re-run end to
+end — still passing (12 files).
+
 ---
 
 ## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)
