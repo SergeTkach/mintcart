@@ -632,17 +632,33 @@ the homepage renders exactly as before, just with an unused, empty
 grid for the rest of the request (same behaviour as every other consumer)
 rather than fataling the homepage.
 
+**Update (this run): added the Spacer block.** `buildMintBlocks()`'s
+per-block dispatch (previously a single `if ($block['type'] === 'products')`)
+is now an `if`/`elseif`/`else` also handling `type = 'spacer'` via a new
+`renderSpacerBlock()` method and `MintCart\Blocks\SpacerBlockProvider` — see
+`docs/developer/blocks/spacer.md` for the full writeup. No OpenCart query
+is made for a spacer (unlike products); it only normalizes a `size` setting
+and renders `blocks/spacer.twig`. Any other block `type` still falls
+through to `null` (skipped, not fatal), same as before this change.
+Compatibility impact is identical to the Products block's own: gated behind
+the same Mint-aware-theme check, and a store with no `'spacer'`-type
+`mc_block` row is completely unaffected.
+
 **Tests:** `php -l` (clean). `tests/mintcart/blocks/block-renderer-test.php`
-(2 scenarios) and `tests/mintcart/blocks/products-block-provider-test.php`
-(3 scenarios) cover the two new classes this wiring calls. Full
-`tests/mintcart/` suite re-run end to end after this change — still
-passing (11 files). Same pre-existing gap as every earlier phase: no
-MySQL/`vendor/twig/twig` in this environment, so no live end-to-end
-request was exercised — a human should insert a `mc_page` row
-(`code = 'home'`) and an `mc_block` row (`type = 'products'`,
-`settings_json = '{}'`) on a real install and confirm the homepage renders
-a Products block, then confirm the legacy `default` theme's homepage is
-pixel-identical to before.
+(3 scenarios, was 2 — added a real-repo `spacer.twig` resolution check) and
+`tests/mintcart/blocks/spacer-block-provider-test.php` (4 scenarios, new)
+and `tests/mintcart/blocks/products-block-provider-test.php` (3 scenarios)
+cover the classes this wiring calls. Full `tests/mintcart/` suite re-run
+end to end after this change — still passing (12 files). `npm run build`
+compiles cleanly; `mc-block--spacer`/`mc-block--spacer-sm|md|lg|xl` present
+in the bundled `assets/dist/css/index.min.css`. Same pre-existing gap as
+every earlier phase: no MySQL/`vendor/twig/twig` in this environment, so no
+live end-to-end request was exercised — a human should insert a `mc_page`
+row (`code = 'home'`) and an `mc_block` row (`type = 'products'` or
+`type = 'spacer'`, `settings_json = '{}'` or `'{"size":"lg"}'`) on a real
+install and confirm the homepage renders the corresponding block, then
+confirm the legacy `default` theme's homepage is pixel-identical to
+before.
 
 ---
 

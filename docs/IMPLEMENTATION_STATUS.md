@@ -783,9 +783,11 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
+- [~] First blocks: Products (see "Sub-step 2") and Spacer (see "Sub-step 3")
+      done; Hero, Categories, Banner Grid, Benefits, Text/Image, Brands,
+      Testimonials, CTA, Newsletter, FAQ each have a provider/template in a
+      separate, not-yet-merged PR as of this writing; Gallery and HTML are
+      unclaimed (full catalog per Implementation Guide §33)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
 In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
@@ -854,12 +856,40 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
-**Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible).
+**Sub-step 3 (this run): the Spacer block.** `MintCart\Blocks\SpacerBlockProvider`
+(`upload/system/library/mintcart/blocks/spacerblockprovider.php`) — the
+simplest block type, purely structural: it normalizes one setting (`size`,
+one of `sm`/`md`/`lg`/`xl`, default `md`), reads no localized content, and
+makes no OpenCart query at all. `ControllerCommonHome::buildMintBlocks()`'s
+dispatch (previously a single `if('products')`) is now
+`if`/`elseif`/`else` also handling `type='spacer'` via a new
+`renderSpacerBlock()` method. `blocks/spacer.twig` (Mint Default) is a
+single empty `<div class="mc-block mc-block--spacer mc-block--spacer-{{
+size }}" aria-hidden="true">` — no `.container`/`.row` wrapper (nothing to
+constrain) and, unlike every other block, `.mc-block`'s own top/bottom
+padding is zeroed for this modifier so the size *is* the space, not
+padding added on top of it. Full writeup: `docs/developer/blocks/spacer.md`;
+upstream diff increment note in `docs/upstream-diff.md`'s existing
+`home.php` entry. Verified: `php -l` clean on every touched/added PHP
+file; full `tests/mintcart/` suite (12 files, including the new
+`tests/mintcart/blocks/spacer-block-provider-test.php` and a 3rd scenario
+added to `block-renderer-test.php`) passing; `npm run build` compiles
+cleanly, `mc-block--spacer`/`mc-block--spacer-sm|md|lg|xl` present in the
+bundled `assets/dist/css/index.min.css`. Same pre-existing gap as every
+earlier phase: no MySQL/`vendor/twig/twig` in this environment, so no live
+end-to-end request was exercised — a human should insert an `mc_block` row
+(`type='spacer'`, `settings_json='{"size":"lg"}'`) on a real install and
+confirm the homepage renders it.
+
+**Next step:** Gallery and HTML are the only fully unclaimed first-wave
+block types as of this writing (check open PRs first — Hero, Categories,
+Banner Grid, Benefits, Text/Image, Brands, Testimonials, CTA, Newsletter,
+FAQ each already have one in flight or merged). Each needs its own
+Provider + `blocks/<type>.twig` following the same shape Products/Spacer
+established. The Homepage drag-and-drop editor (admin UI to actually
+create/reorder `mc_page`/`mc_block` rows — until it exists, a block
+instance has to be inserted by hand to be visible) is also still not
+started.
 
 ## Phase 11 — Mint Admin primitives
 
