@@ -644,6 +644,21 @@ request was exercised — a human should insert a `mc_page` row
 a Products block, then confirm the legacy `default` theme's homepage is
 pixel-identical to before.
 
+**Update: Benefits block added.** `buildMintBlocks()`'s per-block dispatch
+gained an `elseif ($block['type'] === 'benefits')` branch calling a new
+`renderBenefitsBlock()`, which normalizes settings via the new
+`MintCart\Blocks\BenefitsBlockProvider` and renders `blocks/benefits.twig`
+— no OpenCart query or model involved (pure content block; see
+`docs/developer/blocks/benefits.md`). Same Mint-aware-theme gate, same
+"skip when empty, never fatal" behaviour as the `'products'` branch.
+Verified: `tests/mintcart/blocks/benefits-block-provider-test.php` (3
+scenarios, new) and a third scenario added to
+`tests/mintcart/blocks/block-renderer-test.php` confirming the real
+`benefits.twig` resolves; full `tests/mintcart/` suite re-run end to end
+(12 files) — still passing. Same live-render gap as above — a human
+should also insert an `mc_block` row (`type = 'benefits'`) and confirm the
+homepage renders it.
+
 ---
 
 ## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)

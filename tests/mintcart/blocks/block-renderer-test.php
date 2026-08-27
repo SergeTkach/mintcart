@@ -93,6 +93,28 @@ assertSame__(
     $failures
 );
 
+// 3. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/benefits.twig must also resolve -
+//    guards the Benefits block against the same directory-layout drift
+//    Scenario 2 guards Products against.
+$realBenefitsPath = $realRenderer->resolve('benefits');
+
+assertSame__(
+    true,
+    is_file($realBenefitsPath),
+    'Scenario 3: resolve() should find the real mint_default blocks/benefits.twig file on disk',
+    $failures
+);
+
+$realBenefitsMarkup = (string) file_get_contents($realBenefitsPath);
+
+assertSame__(
+    true,
+    str_contains($realBenefitsMarkup, 'mc-block--benefits') && str_contains($realBenefitsMarkup, 'items'),
+    'Scenario 3: the resolved real benefits.twig should contain the documented mc-block--benefits markup and loop over items',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -101,5 +123,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BlockRenderer smoke test (2 scenarios)\n";
+echo "PASS: BlockRenderer smoke test (3 scenarios)\n";
 exit(0);

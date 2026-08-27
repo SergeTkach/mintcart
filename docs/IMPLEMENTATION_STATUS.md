@@ -783,8 +783,11 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
+- [~] First blocks: Products (see "Sub-step 2") and Benefits (see
+      "Sub-step 3") done on this branch; Hero, Categories, Banner Grid,
+      Text/Image, Brands, Testimonials, FAQ not started here (Hero,
+      Categories and Banner Grid may already be done on sibling PR
+      branches — check open PRs before starting one of these)
       (initial set per Implementation Guide §51)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
@@ -854,12 +857,47 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
-**Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible).
+**Sub-step 3 (this run): Benefits block.** `MintCart\Blocks\BenefitsBlockProvider`
+(`upload/system/library/mintcart/blocks/benefitsblockprovider.php`)
+normalizes a `type='benefits'` `mc_block` row into a `title` plus a list of
+`items` (`icon`/`title`/`description`), matching `settings_json`'s
+per-item `icon` (structural) against `content_json`'s per-item
+`title`/`description` (localized) by array position. Pure content block —
+no product query, no image resize, no OpenCart model of any kind, so
+`ControllerCommonHome::renderBenefitsBlock()` is the simplest render
+method yet: normalize, then render through the existing `BlockRenderer`.
+`buildMintBlocks()`'s dispatch gained an `elseif ($block['type'] ===
+'benefits')` branch alongside the existing `'products'` one.
+`mint_default/template/mint/blocks/benefits.twig` + `.mc-benefit`/
+`__icon`/`__title`/`__description` CSS (colocated in
+`assets/src/css/components/block.css`, single consumer so far). Icons are
+a placeholder `data-mc-icon` attribute pending the not-yet-built
+`mc_icon()` SVG renderer — same pattern `footer.twig`'s social links
+already use. Full writeup: `docs/developer/blocks/benefits.md`. Verified:
+`php -l` clean on every touched/added PHP file; full `tests/mintcart/`
+suite (12 files, including the new
+`tests/mintcart/blocks/benefits-block-provider-test.php` and a 3rd
+scenario added to `tests/mintcart/blocks/block-renderer-test.php`)
+passing; `npm run build` compiles cleanly, `mc-benefit`/`__icon`/`__title`/
+`__description` confirmed present in the built
+`assets/dist/css/index.min.css`; `benefits.twig`'s `{% if %}`/`{% for %}`
+tag nesting checked balanced. Same pre-existing gap as every earlier
+phase: no MySQL/`vendor/twig/twig` in this environment, so no live
+end-to-end request was exercised.
+
+**Next step:** three other first-wave block types (Hero, Categories,
+Banner Grid) had open, unmerged PRs against this same checklist item as of
+this run — check `gh pr list --state open` before starting one of those.
+The still-fully-unclaimed remaining types are Text/Image, Brands,
+Testimonials, FAQ — each needs its own Provider + `blocks/<type>.twig`
+following the same shape Products/Benefits established. The Homepage
+drag-and-drop editor (admin UI to actually create/reorder
+`mc_page`/`mc_block` rows) is also still not started — until it exists, a
+block instance has to be inserted by hand to be visible. Note: once the
+Hero/Categories/Banner Grid PRs merge, `buildMintBlocks()`'s dispatch
+`if`/`elseif` chain in `ControllerCommonHome` will need a small manual
+merge-order reconciliation across sibling branches (same note those PRs'
+own descriptions carry).
 
 ## Phase 11 — Mint Admin primitives
 
@@ -1560,3 +1598,10 @@ Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ), the
 Homepage drag-and-drop editor/admin UI (no way yet to create an
 `mc_block` row without inserting it by hand), Phase 12's Entity Picker
 real backends, or continuing Phase 15 with `SearchService`.
+
+**Update (this run): Phase 10's Benefits block is done** — see the Phase
+10 section above ("Sub-step 3"). Three other open PRs (#30 Hero, #31
+Categories, #32 Banner Grid) were in flight against this same checklist
+item at the start of this run — check `gh pr list --state open` before
+picking a first-wave block type to avoid re-doing one of those. Still
+fully unclaimed as of this run: Text/Image, Brands, Testimonials, FAQ.
