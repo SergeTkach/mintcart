@@ -27,13 +27,14 @@ class ControllerCommonHome extends Controller {
 	 * MintCart Homepage Builder (Phase 10, MINTCART_TECHNICAL_PLAN.md
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
 	 * sort_order, via MintCart\Blocks\BlockRenderer. Only the 'products'
-	 * block type has a query/provider implementation so far
-	 * (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block types
-	 * - Hero, Categories, Banner Grid, Benefits, Text/Image, Brands,
-	 * Testimonials, FAQ - are separate, not-yet-started checklist items).
-	 * An unrecognized block type is skipped, not fatal, so a page mixing
-	 * implemented and not-yet-implemented block types still renders what
-	 * it can.
+	 * and 'newsletter' block types have a provider implementation on this
+	 * branch so far (MINTCART_IMPLEMENTATION_GUIDE.md §51's other
+	 * first-wave block types - Hero, Categories, Banner Grid, Benefits,
+	 * Text/Image, Brands, Testimonials, FAQ, CTA - are separate,
+	 * not-yet-merged sibling PRs as of this writing; check open PRs before
+	 * starting one). An unrecognized block type is skipped, not fatal, so
+	 * a page mixing implemented and not-yet-implemented block types still
+	 * renders what it can.
 	 *
 	 * Same "is the active theme Mint-API-aware" gate every other Mint
 	 * rendering pipeline uses (MintCart\Design\ActiveTheme::isMintAware) -
@@ -73,10 +74,14 @@ class ControllerCommonHome extends Controller {
 		foreach ($blocks as $block) {
 			if ($block['type'] === 'products') {
 				$markup = $this->renderProductsBlock($block, $block_renderer, $mint_theme);
+			} elseif ($block['type'] === 'newsletter') {
+				$markup = $this->renderNewsletterBlock($block, $block_renderer);
+			} else {
+				$markup = null;
+			}
 
-				if ($markup !== null && $markup !== '') {
-					$rendered[] = $markup;
-				}
+			if ($markup !== null && $markup !== '') {
+				$rendered[] = $markup;
 			}
 		}
 
@@ -232,5 +237,25 @@ class ControllerCommonHome extends Controller {
 			'title'         => $settings['title'],
 			'product_cards' => $product_cards
 		));
+	}
+
+	/**
+	 * Renders one 'newsletter' mc_block row: a pure content block, no
+	 * OpenCart query or image resize involved at all - just normalizes via
+	 * MintCart\Blocks\NewsletterBlockProvider and renders through
+	 * BlockRenderer, same simplest-case shape as a text-only block.
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when title, text
+	 *         and the subscribe form are all empty (nothing to show).
+	 */
+	private function renderNewsletterBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\NewsletterBlockProvider())->build($block['settings'], $block['content']);
+
+		if ($settings['title'] === '' && $settings['text'] === '' && !$settings['enabled']) {
+			return null;
+		}
+
+		return $block_renderer->render('newsletter', $settings);
 	}
 }

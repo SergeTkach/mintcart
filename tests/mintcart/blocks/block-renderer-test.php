@@ -93,6 +93,28 @@ assertSame__(
     $failures
 );
 
+// 3. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/newsletter.twig must also resolve
+//    at its real path (a second block type, proving resolve() isn't only
+//    coincidentally correct for 'products').
+$realNewsletterPath = $realRenderer->resolve('newsletter');
+
+assertSame__(
+    true,
+    is_file($realNewsletterPath),
+    'Scenario 3: resolve() should find the real mint_default blocks/newsletter.twig file on disk',
+    $failures
+);
+
+$realNewsletterMarkup = (string) file_get_contents($realNewsletterPath);
+
+assertSame__(
+    true,
+    str_contains($realNewsletterMarkup, 'mc-block--newsletter') && str_contains($realNewsletterMarkup, 'enabled'),
+    'Scenario 3: the resolved real newsletter.twig should contain the documented mc-block--newsletter markup and check the enabled flag',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -101,5 +123,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BlockRenderer smoke test (2 scenarios)\n";
+echo "PASS: BlockRenderer smoke test (3 scenarios)\n";
 exit(0);

@@ -783,12 +783,16 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
+- [~] First blocks: Products (Sub-step 2) and Newsletter (Sub-step 3) merged
+      to this branch/`master`; Hero, Categories, Banner Grid, Benefits,
+      Text/Image, Brands, Testimonials, FAQ, CTA each have their own open,
+      not-yet-merged PR as of this writing (#30-#38) — check open PRs
+      before starting any of these (initial set per Implementation Guide §51,
+      Newsletter/Gallery/HTML/Spacer are the extended catalog beyond it)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
+In progress. PR #16 (storage), Products block (Sub-step 2), Newsletter
+block (Sub-step 3, this run).
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -854,12 +858,49 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
-**Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible).
+**Sub-step 3 (this run): Newsletter block.** `MintCart\Blocks\NewsletterBlockProvider`
+(`upload/system/library/mintcart/blocks/newsletterblockprovider.php`)
+normalizes a `type='newsletter'` `mc_block` row — the simplest block type
+implemented so far (no query, no image resize at all).
+`ControllerCommonHome::renderNewsletterBlock()` renders it through
+`BlockRenderer`; `buildMintBlocks()`'s dispatch gained an
+`elseif ($block['type'] === 'newsletter')` branch. Since stock OpenCart 3
+has no public "subscribe with just an email" endpoint (the closest
+built-in feature, `account/newsletter`, is a logged-in customer's opt-in
+checkbox, not a guest-submittable form), the block's subscribe form is
+only rendered when a real `action` URL is configured on the block — the
+same "no dead-end form" rule `FooterViewProvider::buildNewsletter()`
+already established; with no `action`, the block still renders as a
+plain title/text announcement. Full writeup, including the endpoint
+rationale: `docs/developer/blocks/newsletter.md`. New CSS
+(`.mc-block--newsletter`/`.mc-block__newsletter-*`) colocated in the
+existing `assets/src/css/components/block.css` (single consumer so far).
+New test: `tests/mintcart/blocks/newsletter-block-provider-test.php` (4
+scenarios), plus a 3rd scenario added to `block-renderer-test.php`
+confirming the real `newsletter.twig` resolves. Verified: `php -l` clean
+on every touched/added PHP file; full `tests/mintcart/` suite (12 files)
+passing; `npm run build` (`build:js` + `build:css`) compiles cleanly,
+`mc-block__newsletter-inner` confirmed present in the built
+`assets/dist/css/index.min.css`; `npm test` (preset-token contract) still
+passing. Same pre-existing gap as every earlier phase: no live
+MySQL/`vendor/twig/twig` in this sandbox — a human should insert an
+`mc_block` row (`type='newsletter'`) with and without an `action` setting
+on a real install and confirm both the announcement-only and
+with-form variants render.
+
+**Next step:** the still-unclaimed block types are **Gallery, HTML,
+Spacer** (Newsletter is now done, this run; Hero/Categories/Banner
+Grid/Benefits/Text-Image/Brands/Testimonials/FAQ/CTA each have an open PR
+as of this writing — check open PRs before starting any of these). Note
+for whoever tackles **Gallery**: as of this writing no merged or open PR
+has wired Swiper (`package.json` already pins `swiper@14.1.0`, but no
+`assets/src/js`/`assets/src/css` file imports it yet) — it would be the
+first real Swiper consumer, so check open PRs carefully before starting
+in case Hero (a slider) gets there first, to avoid two independent
+"first Swiper wiring" attempts landing in parallel. Otherwise, the
+Homepage drag-and-drop editor (admin UI to actually create/reorder
+`mc_page`/`mc_block` rows — until that exists, a block instance has to be
+inserted by hand to be visible) is also still not started.
 
 ## Phase 11 — Mint Admin primitives
 

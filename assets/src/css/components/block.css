@@ -25,3 +25,34 @@
     font-family: var(--mc-font-family-heading);
     font-weight: var(--mc-font-weight-semibold);
 }
+
+/**
+ * mc-block--newsletter
+ *
+ * Newsletter block (docs/developer/blocks/newsletter.md) - a centered
+ * content block, same "title/text, optional action" shape as
+ * mc-block--cta, but with an email input + submit button instead of a
+ * single link-style button.
+ */
+
+.mc-block__newsletter-inner {
+    max-width: 32rem;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.mc-block__newsletter-text {
+    margin: 0 0 var(--mc-space-4);
+    color: var(--mc-muted);
+}
+
+.mc-block__newsletter-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--mc-space-2);
+}
+
+.mc-block__newsletter-form .mc-field__control {
+    flex: 1 1 16rem;
+}
