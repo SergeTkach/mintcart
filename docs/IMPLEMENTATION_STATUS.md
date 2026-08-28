@@ -784,11 +784,87 @@ by setting the attribute by hand.
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
 - [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
-- [ ] Homepage drag-and-drop editor (SortableJS)
+      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ, CTA, Newsletter,
+      Spacer, Text, HTML, Gallery each have an open, in-progress pull request
+      as of this run's step-0 duplicate-work check (not yet merged to
+      `master`, so not checked off here — see "Sub-step 3" below for why this
+      run didn't add another one)
+- [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
+      `mc_block` rows) — see "Sub-step 3" below. Reordering uses a plain
+      per-row `sort_order` number input, **not** SortableJS/`McSortable` drag-
+      and-drop — see that sub-step for why, and the real architectural
+      question this run is flagging rather than guessing at.
 
-In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
+In progress. PR #16 (storage), a previous run (Provider/Renderer + Products
+block, merged to `master`), this run (Sub-step 3: the admin editor).
+
+**Sub-step 3 (this run): Homepage Builder admin editor.** Until this run,
+Phase 10's "Next step" was correct that a block instance had to be inserted
+into the database by hand to ever be visible — no admin screen existed for
+`mc_page`/`mc_block` at all. `ModelDesignHomepage`
+(`upload/admin/model/design/homepage.php`) and `ControllerDesignHomepage`
+(`upload/admin/controller/design/homepage.php`) add one: `Design > Homepage`
+(new menu entry in `upload/admin/controller/common/column_left.php`, gated
+by the `design/homepage` permission `user_permission.php` auto-discovers)
+lists/adds/edits/deletes blocks on the `home` page, created lazily on first
+visit.
+
+This run's step-0 duplicate-work check found all fourteen of Phase 10's
+remaining first-wave block types (Hero, Categories, Banner Grid, Benefits,
+Text/Image, Brands, Testimonials, FAQ, CTA, Newsletter, Spacer, Text, HTML,
+Gallery) already covered by open pull requests, each adding that type's own
+Provider + `blocks/<type>.twig` following the shape the Products block
+established — so this run picked the other unclaimed piece of Phase 10
+instead (the admin editor, explicitly named in the previous "Next step") to
+avoid redoing or colliding with any of that in-flight work.
+
+**Real architectural question this run is flagging, not guessing at**
+(`CLAUDE.md` §20): the new admin screen is built on the *legacy* OpenCart
+admin theme's Bootstrap 3 conventions (`.panel`/`.btn`/`form-horizontal` —
+the same shape `design/banner.php` and `extension/module/latest.php`
+already use), **not** MintCart's own `mc-*`/Bootstrap 5 admin primitives,
+even though Phase 11's `McSortable` (`docs/developer/components/sortable.md`)
+was explicitly built with "Homepage Builder's block list" named as its
+expected first consumer. Reason: MintCart's built asset bundle
+(`assets/dist/css/index.min.css` / `assets/dist/js/admin.min.js`) has never
+been enqueued into the admin theme's shared `header`/`column_left`/`footer`
+chrome anywhere in this repository — and that chrome wraps *every* admin
+screen, not just this one, so enqueuing it here would load MintCart's
+Bootstrap 5 CSS globally alongside the legacy admin theme's Bootstrap 3 CSS
+on every other admin screen too, which `CLAUDE.md` §10 explicitly forbids.
+Whether to migrate the whole admin shell to Bootstrap 5, scope MintCart's
+own screens some other CSS-isolated way, or keep new MintCart admin screens
+on the legacy theme until a dedicated "Mint Admin Shell" phase is a real
+product/architectural decision for the project owner — full writeup and the
+options considered in `docs/developer/blocks/homepage-admin.md`'s "Why this
+screen uses the legacy admin theme" section, plus this PR's description.
+Reordering therefore uses a plain per-row `sort_order` number input (same
+pattern `banner_image` rows already use) rather than `McSortable` drag-and-
+drop; `docs/developer/blocks/homepage-admin.md` documents this as a
+self-contained follow-up once the admin-shell question is resolved.
+
+The block type registry (`ControllerDesignHomepage::TYPES`) lists only
+`products` today — the one type with a real, merged provider. Deliberately
+does not add settings-form support for any of the fourteen in-flight PRs'
+block types ahead of knowing their merged shape (see above); extending it
+is a one-array-entry follow-up once each lands. The `category_id` settings
+field is a plain numeric input, not an `McEntityPicker`/category
+autocomplete, for the same reason Phase 12's category picker backend
+(`mintcart/entity/category`) was an open PR as of this run — avoiding a
+second, independent category-selection UI that duplicates that work.
+
+Verified: `php -l` clean on every touched/added PHP file; full
+`tests/mintcart/` suite (12 files, including the new
+`tests/mintcart/design/homepage-model-test.php`, a `FakeDb`-backed test
+covering `ModelDesignHomepage`'s page-creation, block CRUD, sort-order
+persistence — including its cross-page guard — and description round-trip)
+passing. No PHP formatting/style tool configured in this repo to run.
+`docs/upstream-diff.md` updated for the `column_left.php` menu-entry diff.
+Same pre-existing gap as every earlier phase: no MySQL/live OpenCart admin
+session in this environment, so no live end-to-end request was exercised —
+`docs/MANUAL_VERIFICATION.md`'s Phase 10 entry and
+`docs/developer/blocks/homepage-admin.md`'s "Manual verification" section
+are the checklist for a human to work through on a real install.
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -1689,3 +1765,20 @@ above); a future run could tackle that enqueue problem, add a second
 entity type's backend (product/manufacturer/customer), or check whether
 the 15 open block PRs have landed and pick up the Homepage drag-and-drop
 editor next.
+
+**Update (later run): the fourteen remaining first-wave block types above
+each got their own open pull request** (see step-0 of that run's
+duplicate-work check), so the Homepage Builder admin editor was picked
+instead — see Phase 10's "Sub-step 3" above. It confirms, independently,
+the same Bootstrap-3/5 admin-CSS conflict the note just above this one
+already found on the storefront side (`header.twig`'s reverted blanket
+enqueue) — the admin theme's shared chrome has the identical risk, never
+tested live, so the new admin screen deliberately stays on the legacy
+admin theme rather than repeating that experiment. Next candidates:
+Phase 12's Entity Picker real backends (category's is now an open PR;
+products/manufacturers/attributes/options/information/customers are not),
+Phase 13's remaining Setup Wizard steps (Welcome/Store are an open PR;
+Contacts through Ready are not), Phase 14 (Store Readiness/Business
+Settings, not started), or resolving the Bootstrap-3/5 admin-shell
+question itself (`docs/developer/blocks/homepage-admin.md`) if the project
+owner has a direction.
