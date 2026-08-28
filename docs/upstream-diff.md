@@ -716,3 +716,67 @@ exists in this repo (would need a live OpenCart `Registry`/session, same
 gap the whole `upload/admin/**` tree currently has) — verified by reading
 the diff against the existing Layouts/Theme/Banner/SEO URL entries it
 sits next to, which it mirrors exactly.
+
+---
+
+## `upload/admin/model/catalog/category.php` / `upload/admin/controller/catalog/category.php`
+
+**Reason:** Phase 17 (Categories drag & drop, `MINTCART_TECHNICAL_PLAN.md`
+§30, `MINTCART_IMPLEMENTATION_GUIDE.md` §64) needed a transactional "move
+this category to a new parent and/or new sibling position" write, following
+the documented flow exactly — "begin transaction, validate target, prevent
+cycle, change parent, rebuild affected category_path subtree, update sort
+order, commit". Two changes:
+
+1. **Model:** `editCategory()`'s inline `category_path` closure-table
+   rebuild block (the "MySQL Hierarchical Data Closure Table Pattern"
+   comment) was extracted, verbatim, into a new private
+   `rebuildCategoryPath($category_id, $parent_id)` method — same SQL, same
+   order of operations, no behavior change to `editCategory()` itself. A
+   new public `moveCategory($category_id, $parent_id, array $sort_order = [])`
+   method reuses it inside a `START TRANSACTION`/`COMMIT`/`ROLLBACK` block
+   (the same raw-SQL transaction pattern
+   `MintCart\Core\Migration\MigrationManager` already established), then
+   assigns sequential `sort_order` values to `$sort_order`'s list of sibling
+   category_ids. Unlike `editCategory()`, it touches only `category.parent_id`/
+   `category.sort_order` and `category_path` — never
+   `category_description`/`category_filter`/`category_to_store`/`seo_url`/
+   `category_to_layout`, since a drag & drop move changes structure, not
+   content.
+2. **Controller:** a new, fully-additive `move()` action (route
+   `catalog/category.move`) — permission check, `category_id`/`parent_id`
+   existence checks via the existing `getCategory()`, cycle-prevention via
+   the new `MintCart\Catalog\CategoryMoveValidator` fed by the existing
+   `getCategoryPath($parent_id)` (the *same* ancestor-chain lookup
+   `validateForm()` already uses for the single-category edit form's own
+   `error_parent` check — this reuses that proven rule rather than
+   re-deriving it), then `moveCategory()`. One new language key,
+   `error_category` (`en-gb/catalog/category.php`).
+
+**Why it can't live in the MintCart layer instead:** The `category`/
+`category_path` tables and their closure-table maintenance are OpenCart
+core storage (`CLAUDE.md` §39 — do not duplicate OpenCart DB). A new
+MintCart-owned table/service that re-implemented category hierarchy storage
+alongside the existing one would fork a single source of truth into two.
+Extending the existing model/controller — the same place `addCategory()`/
+`editCategory()`/`deleteCategory()` already live — keeps `category_path`
+consistency in one place.
+
+**Compatibility impact:** Purely additive from the legacy `default` theme's
+and every existing admin screen's perspective — no existing action, method
+signature, or return value changed; `editCategory()`'s own behavior is
+unchanged (verbatim extraction). Nothing calls the new `move()` action yet
+(no template wiring — see `docs/developer/catalog/category-drag-drop.md`
+"Not done yet").
+
+**Tests:** `php -l` clean on all four touched/added PHP files (both admin
+files, the new `MintCart\Catalog\CategoryMoveValidator`, and its test). New
+`tests/mintcart/catalog/category-move-validator-test.php` (6 scenarios —
+top-level move, unrelated-parent move, self-parent rejection, direct-child
+cycle rejection, indirect (grandchild) cycle rejection, numeric-string
+`path_id` values from a real DB row). Full `tests/mintcart/` suite re-run
+end to end (13 files, was 12) — all pass, no regressions. Same pre-existing
+gap as every earlier phase: no MySQL in this environment, so
+`moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
+never exercised against a real database — a human should confirm on a real
+install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).

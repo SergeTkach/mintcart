@@ -617,4 +617,75 @@ class ControllerCatalogCategory extends Controller {
 		$this->response->addHeader('Content-Type: application/json');
 		$this->response->setOutput(json_encode($json));
 	}
+
+	/**
+	 * Phase 17 (Categories drag & drop, MINTCART_TECHNICAL_PLAN.md §30,
+	 * MINTCART_IMPLEMENTATION_GUIDE.md §64) - AJAX endpoint a future
+	 * McSortable-driven category list will POST to. Fully additive: no
+	 * existing action here is touched, and category_list.twig does not
+	 * call this yet (see docs/developer/catalog/category-drag-drop.md
+	 * "Not done yet" for why the live UI wiring is a separate increment).
+	 *
+	 * POST category_id, parent_id, order[] (the full new sibling order
+	 * under parent_id, category_id included - each array position becomes
+	 * that category's new sort_order).
+	 *
+	 * Orchestration only, per CLAUDE.md §8A: existence/permission checks
+	 * and cycle-prevention happen here using the existing
+	 * getCategory()/getCategoryPath() model methods (the very same
+	 * ModelCatalogCategory::validateForm() already relies on for the
+	 * single-category edit form's own parent-picker), then
+	 * ModelCatalogCategory::moveCategory() does the actual transactional
+	 * write.
+	 */
+	public function move() {
+		$this->load->language('catalog/category');
+
+		$this->load->model('catalog/category');
+
+		$json = array();
+
+		if (!$this->user->hasPermission('modify', 'catalog/category')) {
+			$json['error'] = $this->language->get('error_permission');
+		}
+
+		if (!$json) {
+			$category_id = isset($this->request->post['category_id']) ? (int)$this->request->post['category_id'] : 0;
+			$parent_id = isset($this->request->post['parent_id']) ? (int)$this->request->post['parent_id'] : 0;
+			$order = (isset($this->request->post['order']) && is_array($this->request->post['order'])) ? array_map('intval', $this->request->post['order']) : array();
+
+			if (!$category_id || !$this->model_catalog_category->getCategory($category_id)) {
+				$json['error'] = $this->language->get('error_category');
+			} elseif ($parent_id && !$this->model_catalog_category->getCategory($parent_id)) {
+				$json['error'] = $this->language->get('error_category');
+			}
+		}
+
+		if (!$json) {
+			$ancestor_path_ids = array();
+
+			if ($parent_id) {
+				foreach ($this->model_catalog_category->getCategoryPath($parent_id) as $result) {
+					$ancestor_path_ids[] = $result['path_id'];
+				}
+			}
+
+			$validator = new \MintCart\Catalog\CategoryMoveValidator();
+
+			$error = $validator->validate($category_id, $parent_id, $ancestor_path_ids);
+
+			if ($error !== null) {
+				$json['error'] = $error;
+			}
+		}
+
+		if (!$json) {
+			$this->model_catalog_category->moveCategory($category_id, $parent_id, $order);
+
+			$json['success'] = $this->language->get('text_success');
+		}
+
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($json));
+	}
 }

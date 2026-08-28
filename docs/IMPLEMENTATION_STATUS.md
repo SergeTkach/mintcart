@@ -1331,10 +1331,65 @@ Not started.
 
 ## Phase 17 — Categories drag & drop
 
-- [ ] SortableJS-based category move (transaction, cycle prevention, category_path
-      rebuild, sort order update)
+- [x] SortableJS-based category move backend (transaction, cycle prevention,
+      category_path rebuild, sort order update) — see below
+- [ ] Live admin UI wiring (`McSortable` mounted on `category_list.twig`,
+      calling the new endpoint) — not attempted this run, see below
 
-Not started.
+**Move/reorder backend is done; live UI wiring is not.** Full writeup:
+`docs/developer/catalog/category-drag-drop.md`; upstream diff entry in
+`docs/upstream-diff.md`. `MintCart\Catalog\CategoryMoveValidator`
+(`upload/system/library/mintcart/catalog/categorymovevalidator.php`) is a
+pure, OpenCart-independent extraction of the exact cycle-prevention check
+`ControllerCatalogCategory::validateForm()` already performs for the
+existing add/edit form's parent picker (fed by the existing
+`getCategoryPath()` closure-table lookup — no new "descendants" query
+needed). `ModelCatalogCategory::rebuildCategoryPath()` is `editCategory()`'s
+own inline `category_path` closure-table rebuild block, extracted
+verbatim (no behavior change to `editCategory()`) so the new
+`moveCategory($category_id, $parent_id, $sort_order = [])` can reuse it
+inside a `START TRANSACTION`/`COMMIT`/`ROLLBACK` block (the same raw-SQL
+pattern `MintCart\Core\Migration\MigrationManager` established — OpenCart
+3's `\DB\MySQLi` has no transaction wrapper methods) — following Technical
+Plan §30's documented flow exactly ("begin transaction, validate target,
+prevent cycle, change parent, rebuild affected category_path subtree,
+update sort order, commit"). `ControllerCatalogCategory::move()` is a new,
+fully-additive action (route `catalog/category.move`) that orchestrates:
+permission check, existence checks via the existing `getCategory()`,
+cycle-prevention via the new validator, then `moveCategory()`. One new
+language key (`error_category`).
+
+**Live UI wiring deliberately not attempted this run** — same reasoning
+PR #45 (Phase 12, category `McEntityPicker` backend) already documented:
+wiring `McSortable` into `category_list.twig` needs MintCart's own
+compiled bundle (`assets/dist/{css,js}`) enqueued on an admin page, and
+nothing enqueues it on any admin screen yet (Phase 7's "Known gap",
+carried forward through Phase 12). Shipping unverifiable, possibly-broken
+drag markup would be worse than a tested, additive backend with the UI
+left for once that enqueue problem is solved.
+
+Verified: `php -l` clean on all four touched/added PHP files. New
+`tests/mintcart/catalog/category-move-validator-test.php` (6 scenarios —
+top-level move, unrelated-parent move, self-parent rejection, direct-child
+cycle rejection, indirect/grandchild cycle rejection, numeric-string
+`path_id` values from a real DB row shape), passing. Full `tests/mintcart/`
+suite re-run end to end (13 files, was 12) — all pass, no regressions
+(confirms the `rebuildCategoryPath()` extraction didn't silently change
+anything the existing tests would have caught — though note none of the
+existing suite actually exercises `ModelCatalogCategory` against a live
+DB; see the caveat below). Same pre-existing gap as every earlier phase:
+no MySQL server in this environment, so `moveCategory()`/
+`rebuildCategoryPath()` and the `move()` action itself were never
+exercised against a real database — see `docs/MANUAL_VERIFICATION.md`'s
+new Phase 17 section for what a human should confirm, including that
+`editCategory()` still behaves identically post-extraction.
+
+**Next step:** wire `McSortable` into `admin/view/template/catalog/category_list.twig`
+and POST to `catalog/category.move` on drop/keyboard-reorder — blocked on
+solving the admin asset-enqueue problem first (same blocker Phase 12's
+`product_form.twig`/Category-field wiring is waiting on), or tackle that
+enqueue problem itself as a standalone increment since at least two
+features (this one and Phase 12's Entity Picker) are now blocked on it.
 
 ## Phase 18 — SEO Core
 
@@ -1884,3 +1939,14 @@ endpoint only) — or continuing Phase 13 (remaining Wizard steps, with
 `ready` wired to this new endpoint once #40 lands), or Phase 12's
 remaining Entity Picker backends beyond category, or Phase 15's
 `QuickOrderService`/`CheckoutService`.
+
+**Update (this run): at the time of this run, PRs #30-#48 (19 open) already
+covered every first-wave Homepage Builder block, the Homepage drag-and-drop
+editor, a Setup Wizard shell, the category Entity Picker backend,
+`StoreReadiness`, and `SearchService` — so this run picked Phase 17
+(Categories drag & drop), genuinely unclaimed and untouched by any of them
+(confirmed via each open PR's changed-files list before starting). See the
+Phase 17 section above for the full writeup. Two features
+(Phase 12's `product_form.twig` wiring and this phase's `category_list.twig`
+wiring) are now both blocked on the same unsolved admin asset-enqueue
+problem — a good candidate for a future run to tackle on its own.

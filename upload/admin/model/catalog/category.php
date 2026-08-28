@@ -73,56 +73,7 @@ class ModelCatalogCategory extends Model {
 			$this->db->query("INSERT INTO " . DB_PREFIX . "category_description SET category_id = '" . (int)$category_id . "', language_id = '" . (int)$language_id . "', name = '" . $this->db->escape($value['name']) . "', description = '" . $this->db->escape($value['description']) . "', meta_title = '" . $this->db->escape($value['meta_title']) . "', meta_description = '" . $this->db->escape($value['meta_description']) . "', meta_keyword = '" . $this->db->escape($value['meta_keyword']) . "'");
 		}
 
-		// MySQL Hierarchical Data Closure Table Pattern
-		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "category_path` WHERE path_id = '" . (int)$category_id . "' ORDER BY level ASC");
-
-		if ($query->rows) {
-			foreach ($query->rows as $category_path) {
-				// Delete the path below the current one
-				$this->db->query("DELETE FROM `" . DB_PREFIX . "category_path` WHERE category_id = '" . (int)$category_path['category_id'] . "' AND level < '" . (int)$category_path['level'] . "'");
-
-				$path = array();
-
-				// Get the nodes new parents
-				$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "category_path` WHERE category_id = '" . (int)$data['parent_id'] . "' ORDER BY level ASC");
-
-				foreach ($query->rows as $result) {
-					$path[] = $result['path_id'];
-				}
-
-				// Get whats left of the nodes current path
-				$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "category_path` WHERE category_id = '" . (int)$category_path['category_id'] . "' ORDER BY level ASC");
-
-				foreach ($query->rows as $result) {
-					$path[] = $result['path_id'];
-				}
-
-				// Combine the paths with a new level
-				$level = 0;
-
-				foreach ($path as $path_id) {
-					$this->db->query("REPLACE INTO `" . DB_PREFIX . "category_path` SET category_id = '" . (int)$category_path['category_id'] . "', `path_id` = '" . (int)$path_id . "', level = '" . (int)$level . "'");
-
-					$level++;
-				}
-			}
-		} else {
-			// Delete the path below the current one
-			$this->db->query("DELETE FROM `" . DB_PREFIX . "category_path` WHERE category_id = '" . (int)$category_id . "'");
-
-			// Fix for records with no paths
-			$level = 0;
-
-			$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "category_path` WHERE category_id = '" . (int)$data['parent_id'] . "' ORDER BY level ASC");
-
-			foreach ($query->rows as $result) {
-				$this->db->query("INSERT INTO `" . DB_PREFIX . "category_path` SET category_id = '" . (int)$category_id . "', `path_id` = '" . (int)$result['path_id'] . "', level = '" . (int)$level . "'");
-
-				$level++;
-			}
-
-			$this->db->query("REPLACE INTO `" . DB_PREFIX . "category_path` SET category_id = '" . (int)$category_id . "', `path_id` = '" . (int)$category_id . "', level = '" . (int)$level . "'");
-		}
+		$this->rebuildCategoryPath($category_id, $data['parent_id']);
 
 		$this->db->query("DELETE FROM " . DB_PREFIX . "category_filter WHERE category_id = '" . (int)$category_id . "'");
 
@@ -159,6 +110,117 @@ class ModelCatalogCategory extends Model {
 			foreach ($data['category_layout'] as $store_id => $layout_id) {
 				$this->db->query("INSERT INTO " . DB_PREFIX . "category_to_layout SET category_id = '" . (int)$category_id . "', store_id = '" . (int)$store_id . "', layout_id = '" . (int)$layout_id . "'");
 			}
+		}
+
+		$this->cache->delete('category');
+	}
+
+	/**
+	 * MySQL Hierarchical Data Closure Table Pattern - rebuilds
+	 * `category_path` for $category_id (and, when it has children of its
+	 * own, every descendant already resting on its old path) against its
+	 * new $parent_id. Extracted from editCategory()'s own inline block
+	 * (behavior unchanged, still the exact algorithm addCategory()'s
+	 * sibling logic and editCategory() have always used) so
+	 * moveCategory() - MintCart Phase 17, MINTCART_TECHNICAL_PLAN.md §30 -
+	 * can reuse it for a drag & drop move without duplicating it.
+	 */
+	private function rebuildCategoryPath($category_id, $parent_id) {
+		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "category_path` WHERE path_id = '" . (int)$category_id . "' ORDER BY level ASC");
+
+		if ($query->rows) {
+			foreach ($query->rows as $category_path) {
+				// Delete the path below the current one
+				$this->db->query("DELETE FROM `" . DB_PREFIX . "category_path` WHERE category_id = '" . (int)$category_path['category_id'] . "' AND level < '" . (int)$category_path['level'] . "'");
+
+				$path = array();
+
+				// Get the nodes new parents
+				$parent_path_query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "category_path` WHERE category_id = '" . (int)$parent_id . "' ORDER BY level ASC");
+
+				foreach ($parent_path_query->rows as $result) {
+					$path[] = $result['path_id'];
+				}
+
+				// Get whats left of the nodes current path
+				$remaining_path_query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "category_path` WHERE category_id = '" . (int)$category_path['category_id'] . "' ORDER BY level ASC");
+
+				foreach ($remaining_path_query->rows as $result) {
+					$path[] = $result['path_id'];
+				}
+
+				// Combine the paths with a new level
+				$level = 0;
+
+				foreach ($path as $path_id) {
+					$this->db->query("REPLACE INTO `" . DB_PREFIX . "category_path` SET category_id = '" . (int)$category_path['category_id'] . "', `path_id` = '" . (int)$path_id . "', level = '" . (int)$level . "'");
+
+					$level++;
+				}
+			}
+		} else {
+			// Delete the path below the current one
+			$this->db->query("DELETE FROM `" . DB_PREFIX . "category_path` WHERE category_id = '" . (int)$category_id . "'");
+
+			// Fix for records with no paths
+			$level = 0;
+
+			$parent_path_query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "category_path` WHERE category_id = '" . (int)$parent_id . "' ORDER BY level ASC");
+
+			foreach ($parent_path_query->rows as $result) {
+				$this->db->query("INSERT INTO `" . DB_PREFIX . "category_path` SET category_id = '" . (int)$category_id . "', `path_id` = '" . (int)$result['path_id'] . "', level = '" . (int)$level . "'");
+
+				$level++;
+			}
+
+			$this->db->query("REPLACE INTO `" . DB_PREFIX . "category_path` SET category_id = '" . (int)$category_id . "', `path_id` = '" . (int)$category_id . "', level = '" . (int)$level . "'");
+		}
+	}
+
+	/**
+	 * Phase 17 (Categories drag & drop, MINTCART_TECHNICAL_PLAN.md §30,
+	 * MINTCART_IMPLEMENTATION_GUIDE.md §64): moves a category to a new
+	 * parent and/or reorders it among its new siblings, in one
+	 * transaction, following the documented flow exactly - "begin
+	 * transaction, validate target, prevent cycle, change parent, rebuild
+	 * affected category_path subtree, update sort order, commit".
+	 * Validation and cycle-prevention are the caller's job
+	 * (ControllerCatalogCategory::move() +
+	 * MintCart\Catalog\CategoryMoveValidator, upstream of this method) -
+	 * this method assumes $category_id/$parent_id have already been
+	 * checked and only performs the write.
+	 *
+	 * Unlike editCategory(), this deliberately touches only `parent_id`
+	 * and `category_path`/`sort_order` - it never rewrites
+	 * category_description/category_filter/category_to_store/seo_url/
+	 * category_to_layout, since a drag & drop move changes structure, not
+	 * content.
+	 *
+	 * @param int $category_id
+	 * @param int $parent_id New parent (0 = top-level).
+	 * @param array $sort_order Ordered list of category_id values - the
+	 *        full new sibling order under $parent_id, $category_id
+	 *        included. Each entry's array position becomes its new
+	 *        sort_order. Pass an empty array to change only the parent,
+	 *        leaving every sort_order untouched.
+	 */
+	public function moveCategory($category_id, $parent_id, array $sort_order = array()) {
+		$this->db->query("START TRANSACTION");
+
+		try {
+			$this->db->query("UPDATE " . DB_PREFIX . "category SET parent_id = '" . (int)$parent_id . "', date_modified = NOW() WHERE category_id = '" . (int)$category_id . "'");
+
+			$this->rebuildCategoryPath($category_id, $parent_id);
+
+			foreach ($sort_order as $index => $sibling_id) {
+				$this->db->query("UPDATE " . DB_PREFIX . "category SET sort_order = '" . (int)$index . "' WHERE category_id = '" . (int)$sibling_id . "'");
+			}
+
+			$this->db->query("COMMIT");
+		} catch (\Throwable $e) {
+			$this->db->query("ROLLBACK");
+
+			throw $e;
 		}
 
 		$this->cache->delete('category');

@@ -124,3 +124,31 @@ checklist as JSON, with each `complete` flag matching the store's real
 configuration. Then flip one signal (e.g. enable a payment extension via
 its own settings screen) and reload — confirm that check flips to `true`
 and `percent`/`ready_for_test_order` update accordingly.
+
+## Phase 17 — category move/reorder backend, never exercised against a real DB
+
+`ModelCatalogCategory::moveCategory()`/`rebuildCategoryPath()` and
+`ControllerCatalogCategory::move()` are new (see
+`docs/developer/catalog/category-drag-drop.md`), but no live MySQL in this
+environment means the transaction/closure-table rebuild was never run
+against a real `category_path` table — only `MintCart\Catalog\CategoryMoveValidator`'s
+cycle-prevention math is unit-tested. On a real install, with an admin
+user token, using an existing multi-level category tree:
+
+1. `POST index.php?route=catalog/category.move&user_token=<token>` with
+   `category_id`, `parent_id`, and `order[]` set to move a category under
+   a new, unrelated parent. Confirm `{"success": "..."}`, then check
+   **Catalog → Categories** shows the new parent and that the storefront
+   category page for both the old and new parent still resolves correctly
+   (breadcrumb, product listing).
+2. Attempt to move a category into one of its own children (`parent_id` =
+   a known child's `category_id`). Confirm `{"error": "The parent
+   category you have chosen is a child of the current one!"}` and that
+   nothing in the database changed.
+3. Reorder several siblings via `order[]` alone (same `parent_id` as
+   today's) and confirm **Catalog → Categories**' sort order updates to
+   match.
+4. Confirm `editCategory()` (the existing add/edit form) still works
+   exactly as before — `rebuildCategoryPath()` is an extraction of its
+   prior inline logic, not a rewrite, but this should still be re-checked
+   live once MySQL is available.
