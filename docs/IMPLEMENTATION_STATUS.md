@@ -986,14 +986,61 @@ PHP touched, so the PHP `tests/mintcart/` suite doesn't apply.
       state, all against a caller-supplied data source.
 - [ ] Filters (beyond search text) — not attempted; no real per-entity
       filter requirement identified yet.
-- [ ] Real `fetchItems` backends per entity type (products, categories,
-      manufacturers, attributes, options, information pages, customers)
-      — none exist; each needs a normalized search/autocomplete endpoint.
-- [ ] Live wiring into an actual admin screen/field.
+- [~] Real `fetchItems` backends per entity type (products, categories,
+      manufacturers, attributes, options, information pages, customers) —
+      **category is done** (this run), see below; the other six entity
+      types still need their own.
+- [ ] Live wiring into an actual admin screen/field — the category
+      backend exists but nothing calls it yet (see below for why, and the
+      identified first consumer).
 - [ ] Create-new flow via drawer/modal — not attempted.
 
-List behavior is done (Phase 11); everything that turns it into a real,
-backend-connected picker on an actual screen is not started.
+**Update (this run): the category `fetchItems` backend is done.**
+`upload/admin/controller/mintcart/entity.php`
+(`ControllerMintcartEntity::category()`, route `mintcart/entity/category`,
+fully additive — zero existing OpenCart file modified) wraps the existing
+`ModelCatalogCategory::getCategories()` call and normalizes its rows via
+`MintCart\Design\CategoryPickerProvider`
+(`upload/system/library/mintcart/design/categorypickerprovider.php`, no
+OpenCart dependency, unit-tested) into the `{items: [{id, name, image}],
+total}` shape `McEntityPicker`'s `fetchItems` contract expects. Full
+rationale — why a new route instead of reshaping
+`catalog/category/autocomplete` (which has five other admin-template
+consumers), why paging happens in PHP instead of adding a filtered
+total-count method to `ModelCatalogCategory`, and the ACL permission a
+human must grant before this endpoint answers anything — is in
+`docs/developer/components/entity-picker.md` "Admin backends".
+
+**Live wiring deliberately not attempted this run.** The identified first
+consumer is `product_form.twig`'s Category multi-select (search +
+multi-select + removable tags — already the right UI shape for
+`McEntityPicker`, so it's closer to a drop-in replacement than a new
+pattern). But wiring it needs MintCart's own compiled bundle
+(`assets/dist/{css,js}`) loaded on an admin page, and nothing enqueues it
+there yet — the one prior attempt to enqueue the shared `index.min.css` on
+a storefront page was reverted after it broke legacy Bootstrap 3 widgets
+(Phase 7's "Known gap"). Admin pages are equally Bootstrap-3-based, so the
+same conflict risk applies, and this environment still has no
+MySQL/`vendor/twig/twig` to verify a fix visually. Shipping unverifiable,
+possibly-broken markup on a real admin screen would be worse than not
+wiring it yet.
+
+Verified: `php -l` on both new PHP files (clean); new
+`tests/mintcart/design/category-picker-provider-test.php` (6 scenarios —
+empty set, single page, mid-list paging, last partial page, HTML-entity
+decoding, page/limit clamping), passing; full `tests/mintcart/` suite
+re-run end to end (12 files now, was 11) — all pass, no regressions (this
+increment added one new pure class and one new additive controller,
+touching nothing existing). No live end-to-end request was possible (same
+pre-existing no-MySQL/no-`vendor/twig/twig` gap noted throughout this
+file) — see the new Phase 12 section in `docs/MANUAL_VERIFICATION.md` for
+what a human should confirm (grant the `mintcart/entity` permission, then
+hit the endpoint directly).
+
+**Next step:** either wire this backend into `product_form.twig`'s
+Category field (blocked on solving the admin asset-enqueue problem
+first — see above), or pick a second entity type (product, manufacturer,
+customer, ...) and build its backend the same shape as this one.
 
 ## Phase 13 — Setup Wizard
 
@@ -1629,3 +1676,16 @@ and the `editSetting()` partial-write trap it avoided. Next candidates:
 the remaining 7 Wizard steps (`contacts` onward), Phase 12's Entity Picker
 real backends, or check `gh pr list --state open` again for what's landed
 from the Phase 10 block PRs before picking a fresh phase.
+
+**Update (this run): Phase 12's category `fetchItems` backend is done**
+(`mintcart/entity/category`, see the Phase 12 section above for the full
+writeup). At the time of this run, PRs #30-#44 (15 open) already covered
+every remaining first-wave Homepage Builder block type and a Setup Wizard
+shell, so this run picked Phase 12 — genuinely unclaimed, and the natural
+next Phase 12 item per the "Coordination note"/"Recommended next
+increments" above. Live wiring into `product_form.twig` was deliberately
+not attempted (blocked on the admin asset-enqueue problem — see Phase 12
+above); a future run could tackle that enqueue problem, add a second
+entity type's backend (product/manufacturer/customer), or check whether
+the 15 open block PRs have landed and pick up the Homepage drag-and-drop
+editor next.
