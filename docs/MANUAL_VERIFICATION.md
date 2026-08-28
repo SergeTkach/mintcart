@@ -92,3 +92,23 @@ a real install: insert a row into `mc_page` (`code = 'home'`,
 the active theme. Expect a "Products" section (latest 8 products,
 storewide) above the existing content_top/content_bottom modules; confirm
 the legacy `default` theme's homepage is unaffected either way.
+
+## Phase 12 — `mintcart/entity/category` endpoint, never hit end to end
+
+`MintCart\Design\CategoryPickerProvider` is covered by a standalone test,
+but no live MySQL in this environment means
+`ControllerMintcartEntity::category()` itself was never actually invoked
+against a real database. On a real install:
+
+1. Log in to Admin, go to **Users → User Groups**, edit the group you're
+   logged in as, and grant **Access** to `mintcart/entity` (a fresh
+   install won't have this yet — see
+   `docs/developer/components/entity-picker.md` "Admin backends" for why).
+2. Request `index.php?route=mintcart/entity/category&user_token=<your
+   token>&filter_name=&page=1&limit=20` and confirm a JSON
+   `{"items": [...], "total": N}` response with real category names,
+   matching what `catalog/category/autocomplete` returns for the same
+   store (same rows, different shape).
+3. Confirm a request with `filter_name` set to a substring of one
+   category's name returns only matching categories, and that `total`
+   reflects the filtered count, not the store's full category count.
