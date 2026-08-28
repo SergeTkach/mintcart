@@ -1253,8 +1253,28 @@ Not started.
       correctly returned `{error, redirect}` and added nothing — confirmed
       via a follow-up `refresh()` that the cart's item count matched only
       the five successful adds.
-- [ ] `SearchService`, `QuickOrderService`, `CheckoutService` — not started.
-- [ ] AJAX Search normalized endpoint — not started.
+- [x] `MintCart\Commerce\SearchService` + AJAX Search normalized endpoint —
+      `upload/system/library/mintcart/commerce/searchservice.php` +
+      `upload/catalog/controller/mintcart/search.php`
+      (`ControllerMintcartSearch`, route `mintcart/search/suggest`, fully
+      additive — zero existing OpenCart file modified, same pattern
+      `ControllerMintcartCart` established). Reuses `product/search.php`'s
+      own `model_catalog_product` `filter_name` query shape so the two
+      never drift on what counts as a match; `product/search.php` itself
+      (the full results page, with its own `product_cards` pipeline) is
+      completely untouched — this only serves a lightweight
+      typeahead/suggest JSON response, a deliberately smaller item shape
+      (`id, name, url, image, price, special`) than the full `ProductView`
+      contract, per `MINTCART_TECHNICAL_PLAN.md` §26. Doc:
+      `docs/developer/commerce/search-service.md`. Test:
+      `tests/mintcart/commerce/search-service-test.php` (10 scenarios).
+      **Not yet verified live** — this environment has no MySQL server
+      (same pre-existing gap noted throughout this file); a human should
+      confirm `mintcart/search/suggest?search=<term>` on a real install.
+      No Mint-native search-box UI component calls this endpoint yet
+      (`CLAUDE.md` §85 — ships ahead of its first consumer, same as every
+      other Phase 11/15 primitive) — that is the natural next increment.
+- [ ] `QuickOrderService`, `CheckoutService` — not started.
 - [ ] Quick Order component — not started; `mc-product-card`'s
       `data-mc-action="quick-order"` stays hook-only.
 - [ ] Modern checkout UI over existing shipping/payment extensions/totals/order model — not started.
@@ -1813,6 +1833,18 @@ Contacts through Ready are not), Phase 14 (Store Readiness/Business
 Settings, not started), or resolving the Bootstrap-3/5 admin-shell
 question itself (`docs/developer/blocks/homepage-admin.md`) if the project
 owner has a direction.
+
+**Update (this run): Phase 15 — `MintCart\Commerce\SearchService` + the
+`mintcart/search/suggest` AJAX endpoint are done.** All of the above
+candidates (every first-wave block type, the Homepage admin editor, and
+Phase 12's category Entity Picker backend) were already claimed by other
+open PRs at the time this run started (checked via `gh pr list --state
+open`, 17 open PRs at #30-#46), so this run picked the one remaining
+unclaimed candidate instead. See the Phase 15 section above and
+`docs/developer/commerce/search-service.md` for the full writeup. Next
+unclaimed candidates once those PRs land: a Mint-native search-box UI
+component calling this endpoint, `QuickOrderService`, or re-checking open
+PRs for whatever's newly unclaimed.
 
 **Update (later run): PR #46 (Homepage Builder admin editor) merged, and
 by then #40 (Wizard Welcome/Store) and #45 (category entity picker) had
