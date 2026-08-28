@@ -27,6 +27,7 @@ $_['text_information']          = 'Information';
 $_['text_installer']            = 'Installer';
 $_['text_language']             = 'Languages';
 $_['text_language_editor']      = 'Language Editor';
+$_['text_homepage']             = 'Homepage';
 $_['text_layout']               = 'Layouts';
 $_['text_localisation']         = 'Localisation';
 $_['text_location']             = 'Store Location';

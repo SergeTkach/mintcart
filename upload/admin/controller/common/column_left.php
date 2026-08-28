@@ -184,6 +184,14 @@ class ControllerCommonColumnLeft extends Controller {
 			// Design
 			$design = array();
 
+			if ($this->user->hasPermission('access', 'design/homepage')) {
+				$design[] = array(
+					'name'	   => $this->language->get('text_homepage'),
+					'href'     => $this->url->link('design/homepage', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			if ($this->user->hasPermission('access', 'design/layout')) {
 				$design[] = array(
 					'name'	   => $this->language->get('text_layout'),
