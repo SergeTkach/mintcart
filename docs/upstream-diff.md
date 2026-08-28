@@ -682,3 +682,37 @@ from the base `catalog/language/en-gb/en-gb.php`, loaded for every
 request.
 
 **Tests:** `php -l` (clean).
+
+---
+
+## `upload/admin/controller/common/column_left.php`
+
+**Reason:** Adds a "Homepage" entry to the admin `Design` menu, gated by
+`$this->user->hasPermission('access', 'design/homepage')` exactly like
+every sibling entry (Layouts/Theme/Language Editor/Banners/SEO URL) —
+the new Homepage Builder admin editor
+(`upload/admin/controller/design/homepage.php`, this run) otherwise has
+no menu entry pointing at it at all. Placed first in the `$design` array
+so it reads as the primary Design action, ahead of the lower-level
+Layouts/Theme screens, matching `MINTCART_PRODUCT_VISION.md` §8's target
+IA (`Design > Homepage` before `Design > Header/Footer/...`).
+
+**Why it can't live in the MintCart layer instead:** The admin left menu
+is built by one procedural controller with no plugin/extension point for
+a third party (or MintCart) to append a menu entry — same situation every
+other admin-menu-touching change in this codebase would face; there is no
+smaller diff available.
+
+**Compatibility impact:** Purely additive (one new `if` block before the
+existing Layouts check) — no existing menu entry, permission check, or
+route is touched. A user group without the new `design/homepage`
+permission simply never sees the entry (`user_permission.php` already
+discovers the new route automatically by scanning `controller/*`, per
+`docs/IMPLEMENTATION_STATUS.md`'s Phase 10 write-up — no separate
+permission registration file exists to update).
+
+**Tests:** `php -l` (clean). No automated test for admin menu rendering
+exists in this repo (would need a live OpenCart `Registry`/session, same
+gap the whole `upload/admin/**` tree currently has) — verified by reading
+the diff against the existing Layouts/Theme/Banner/SEO URL entries it
+sits next to, which it mirrors exactly.
