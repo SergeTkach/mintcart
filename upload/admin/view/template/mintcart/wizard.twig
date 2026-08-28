@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{ heading_title }}</title>
+<link rel="stylesheet" href="{{ asset_base }}assets/dist/css/index.min.css" />
+</head>
+<body class="bg-body-tertiary">
+<div class="container py-5" style="max-width: 640px;">
+  <div class="text-center mb-4">
+    <span class="mc-badge mc-badge--new">MintCart</span>
+    <h1 class="h3 mt-2">{{ heading_title }}</h1>
+  </div>
+
+  <ol class="d-flex flex-wrap justify-content-center gap-2 list-unstyled mb-4">
+    {% for nav_step in nav_steps %}
+    <li>
+      {% if nav_step.reachable %}
+      <a href="{{ action }}&amp;step={{ nav_step.code }}" class="mc-badge {% if nav_step.current %}mc-badge--sale{% elseif nav_step.completed %}mc-badge--success{% else %}mc-badge--new{% endif %}">{{ nav_step.label }}</a>
+      {% else %}
+      <span class="mc-badge" aria-disabled="true">{{ nav_step.label }}</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+
+  <div class="mc-card">
+    <div class="mc-card__body">
+
+      {% if error.warning %}
+      <div class="mc-alert mc-alert--danger mb-3" role="alert">
+        <div class="mc-alert__body">
+          <p class="mc-alert__message">{{ error.warning }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if step == 'welcome' %}
+      <h2 class="mc-card__title">{{ welcome_title }}</h2>
+      <p class="mc-card__text">{{ welcome_text }}</p>
+      <form action="{{ action }}" method="post">
+        <input type="hidden" name="step" value="welcome" />
+        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_get_started }}</button>
+      </form>
+      {% endif %}
+
+      {% if step == 'store' %}
+      <h2 class="mc-card__title">{{ store_title }}</h2>
+      <p class="mc-card__text">{{ store_text }}</p>
+      <form action="{{ action }}" method="post" novalidate>
+        <input type="hidden" name="step" value="store" />
+
+        <div class="mc-field mb-3 {% if error.name %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-config-name">{{ entry_name }}</label>
+          <input type="text" id="input-config-name" name="config_name" value="{{ config_name }}" class="mc-field__control" {% if error.name %}aria-invalid="true" aria-describedby="error-config-name"{% endif %} />
+          {% if error.name %}<p class="mc-field__error" id="error-config-name" role="alert">{{ error.name }}</p>{% endif %}
+        </div>
+
+        <div class="mc-field mb-3 {% if error.email %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-config-email">{{ entry_email }}</label>
+          <input type="email" id="input-config-email" name="config_email" value="{{ config_email }}" class="mc-field__control" {% if error.email %}aria-invalid="true" aria-describedby="error-config-email"{% endif %} />
+          {% if error.email %}<p class="mc-field__error" id="error-config-email" role="alert">{{ error.email }}</p>{% endif %}
+        </div>
+
+        <div class="mc-field mb-3 {% if error.telephone %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-config-telephone">{{ entry_telephone }}</label>
+          <input type="text" id="input-config-telephone" name="config_telephone" value="{{ config_telephone }}" class="mc-field__control" {% if error.telephone %}aria-invalid="true" aria-describedby="error-config-telephone"{% endif %} />
+          {% if error.telephone %}<p class="mc-field__error" id="error-config-telephone" role="alert">{{ error.telephone }}</p>{% endif %}
+        </div>
+
+        <div class="mc-field mb-4 {% if error.address %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-config-address">{{ entry_address }}</label>
+          <textarea id="input-config-address" name="config_address" class="mc-field__control" {% if error.address %}aria-invalid="true" aria-describedby="error-config-address"{% endif %}>{{ config_address }}</textarea>
+          {% if error.address %}<p class="mc-field__error" id="error-config-address" role="alert">{{ error.address }}</p>{% endif %}
+        </div>
+
+        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_continue }}</button>
+      </form>
+      {% endif %}
+
+      {% if is_ready %}
+      <h2 class="mc-card__title">{{ ready_title }}</h2>
+      <p class="mc-card__text">{{ ready_text }}</p>
+      <a href="{{ dashboard }}" class="mc-button mc-button--primary w-100">{{ button_go_to_dashboard }}</a>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -997,12 +997,70 @@ backend-connected picker on an actual screen is not started.
 
 ## Phase 13 — Setup Wizard
 
-- [ ] Welcome → Store → Contacts → Language/Currency → Delivery → Payment → Design →
-      First Product → Ready
-- [ ] Progress saving, resume, skip optional steps, writes to standard OpenCart
-      settings storage
+- [~] Welcome → Store → Contacts → Language/Currency → Delivery → Payment → Design →
+      First Product → Ready — **Welcome and Store implemented**; the other
+      seven steps are listed in the step nav as a roadmap but have no real
+      content yet (see below)
+- [x] Progress saving, resume, writes to standard OpenCart settings storage —
+      done for the two implemented steps; "skip optional steps" doesn't
+      apply yet (neither implemented step is optional)
 
-Not started.
+**In progress.** `MintCart\Onboarding\WizardProgress` (pure step-sequencing
+logic, no OpenCart dependency — `upload/system/library/mintcart/onboarding/wizardprogress.php`,
+unit-tested standalone, `tests/mintcart/onboarding/wizard-progress-test.php`,
+8 scenarios) + `ControllerMintcartWizard` (route `mintcart/wizard`, fully
+additive, zero existing OpenCart file modified) + a standalone
+`mintcart/wizard.twig` page (no legacy admin chrome — see below) implement
+the **Welcome** and **Store** steps end to end: Welcome is purely
+informational with a "Get started" button; Store collects
+`config_name`/`config_email`/`config_telephone`/`config_address` (existing
+OpenCart `config` settings, merged in rather than overwritten — see the
+`editSetting()` partial-write trap below) with the same validation rules
+`Settings → Store` already uses. Progress (`mintcart_wizard_completed_steps`)
+is stored via the standard `oc_setting` table under a `mintcart_wizard`
+code — a Mint-specific concept, but a handful of flags, not a new entity, so
+no new `mc_*` table/migration was added for it (`CLAUDE.md` §17).
+Step-order is enforced server-side in both directions (GET `?step=` and POST
+`step`): a request can never view or submit a step ahead of the live resume
+point, though revisiting an already-completed step is allowed.
+
+**Design decision worth flagging:** `wizard.twig` is a complete, standalone
+HTML document — it does not include `common/header`/`common/column_left`/
+`common/footer`, so it never shares a page with the legacy Bootstrap 3
+chrome that broke when a plain `assets/dist/css/index.min.css` `<link>` was
+tried on a chrome-sharing page before (Phase 15's "human session" update,
+below). This makes it **the first live page in MintCart to actually enqueue
+`assets/dist/css/index.min.css`** — CSS only, no `<script>` tag, since
+neither implemented step needs client-side JS. Full rationale, the
+`editSetting()` partial-write trap this caught, and the no-`hasPermission()`-
+gate reasoning are all in `docs/developer/onboarding/setup-wizard.md`.
+
+Verified: `php -l` clean on every new PHP file; full `tests/mintcart/`
+suite re-run end to end (now 12 files, including the 2 new
+`tests/mintcart/onboarding/*`) — all pass; the new `.twig` file's
+`if`/`for`/`endif`/`endfor` tags checked balanced (same script-based
+technique used for every earlier `.twig` file in this repo). Same
+pre-existing gap as every other controller-wiring increment: no live
+request test (no MySQL/OpenCart bootstrap in this environment) — a human
+should confirm `mintcart/wizard` actually renders and saves on a real
+install, in particular that the `editSetting('config', $merged)` call
+really does preserve every other existing `config_*` setting rather than
+just the four fields this step writes.
+
+**Not done yet, by design — natural next-run candidates:**
+- The remaining seven steps (`contacts`, `language_currency`, `delivery`,
+  `payment`, `design`, `first_product`, `ready`), each needing its own real
+  form/save logic the way `store` established this run — `ready` in
+  particular should integrate with Phase 14's `StoreReadiness` once that
+  exists, rather than being a placeholder.
+- Store step's logo upload (Functional Scope §2) — needs `McMediaPicker`
+  (already shipped, Phase 11) wired to a real upload endpoint, which
+  doesn't exist yet.
+- No entry point links to `mintcart/wizard` anywhere in the admin UI yet
+  (no redirect-after-install, no dashboard link) — reaching it today means
+  navigating to the route directly.
+- `assets/dist/js/admin.min.js` is still not enqueued anywhere (this page
+  is CSS-only) — same pre-existing gap as the rest of the admin.
 
 ## Phase 14 — Store Readiness / Business Settings
 
@@ -1560,3 +1618,14 @@ Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ), the
 Homepage drag-and-drop editor/admin UI (no way yet to create an
 `mc_block` row without inserting it by hand), Phase 12's Entity Picker
 real backends, or continuing Phase 15 with `SearchService`.
+
+**Update (a later run): Phase 13 — Setup Wizard has a first increment
+(Welcome + Store steps, PR #40).** All nine Homepage Block types (Hero,
+Categories, Banner Grid, Benefits, FAQ, Testimonials, Brands, Text/Image,
+Newsletter) were already covered by open PRs (#30-#39) at the time this run
+started, so Phase 13 was picked instead — see its section above for the
+full writeup, including the standalone-page/asset-enqueue design decision
+and the `editSetting()` partial-write trap it avoided. Next candidates:
+the remaining 7 Wizard steps (`contacts` onward), Phase 12's Entity Picker
+real backends, or check `gh pr list --state open` again for what's landed
+from the Phase 10 block PRs before picking a fresh phase.
