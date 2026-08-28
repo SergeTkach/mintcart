@@ -1187,12 +1187,51 @@ just the four fields this step writes.
 
 ## Phase 14 — Store Readiness / Business Settings
 
-- [ ] `MintCart\Onboarding\StoreReadiness` service (computed, not hardcoded,
-      percentage + checklist)
+- [x] `MintCart\Onboarding\StoreReadiness` service (computed, not hardcoded,
+      percentage + checklist) — `upload/system/library/mintcart/onboarding/storereadiness.php`.
+      No OpenCart dependency (same shape as `CartService`/`ProductViewProvider`);
+      returns `{percent, checks[], ready_for_test_order}`. `percent` is derived
+      from complete/total, never a literal number. `ready_for_test_order` is a
+      narrower, separate signal — `true` only when `first_product && shipping
+      && payment` are all true, independent of the overall percentage (a store
+      can look 100% configured and still not be able to complete a checkout).
+      Checklist covers all 7 items Functional Scope §2/CLAUDE.md §22 list: logo,
+      contacts, language, currency, shipping, payment, first product.
+- [x] Real OpenCart signals wired — `ModelMintcartReadiness::getSignals()`
+      (`upload/admin/model/mintcart/readiness.php`) reads existing OpenCart
+      storage only (`config_logo`/`config_telephone`/`config_email`/
+      `config_address` settings, `oc_language`/`oc_currency` `status`, the
+      `extension` table + each extension's own `<type>_<code>_status` setting
+      — the exact key every stock shipping/payment extension controller already
+      saves under, e.g. `extension/shipping/flat.php`'s `shipping_flat_status`
+      — and `catalog/product`'s own `getTotalProducts()`). No new Mint-specific
+      table for any of this (CLAUDE.md §39/§6).
+- [x] `ControllerMintcartReadiness` (`upload/admin/controller/mintcart/readiness.php`,
+      route `mintcart/readiness`, GET, JSON) — first real consumer of the
+      service (CLAUDE.md §85); fully additive, zero existing OpenCart file
+      touched, zero upstream diff. Language file:
+      `upload/admin/language/en-gb/mintcart/readiness.php`.
 - [ ] `Business → Contacts`, `Business → Delivery`, `Business → Payments` UI façades
-      over standard OpenCart storage/extensions
+      over standard OpenCart storage/extensions — not started.
+- [ ] Dashboard widget rendering the checklist — not started; `mintcart/readiness`
+      is a JSON endpoint only, no admin menu entry or Twig template yet.
 
-Not started.
+**Sub-step (this run):** `StoreReadiness` service + `mintcart/readiness`
+JSON endpoint. Full writeup: `docs/developer/onboarding/store-readiness.md`.
+Verified: `php -l` clean on every new file and on the full `upload`/`tests`
+tree; full `tests/mintcart/` suite (13 files, including the new
+`tests/mintcart/onboarding/store-readiness-test.php`, 7 scenarios) passing.
+Not verified: no live MySQL/OpenCart admin session in this environment — a
+human should hit `mintcart/readiness` as a logged-in admin (the
+`mintcart/readiness` permission is auto-discovered by the existing
+`user_permission.php` controller-tree scan, same pattern as PR #46's
+`design/homepage`) and confirm each signal flips as expected on a real
+install.
+
+**Next step:** either the Business Settings UI façades (`Business →
+Contacts/Delivery/Payments`), or a dashboard widget/admin menu entry that
+renders this endpoint's checklist, or wiring Phase 13's still-unbuilt
+`ready` Wizard step to this same endpoint.
 
 ## Phase 15 — Commerce API
 
@@ -1814,3 +1853,34 @@ unclaimed candidate instead. See the Phase 15 section above and
 unclaimed candidates once those PRs land: a Mint-native search-box UI
 component calling this endpoint, `QuickOrderService`, or re-checking open
 PRs for whatever's newly unclaimed.
+
+---
+
+## Update (2026-08-28, routine run) — Phase 14 started
+
+Step 0 dedup check against all 18 open PRs at the time (`#30`–`#47`):
+15 are one Homepage Builder block type each (Phase 10), `#45` is the
+Phase 12 category `McEntityPicker` backend, `#46` is the Phase 10
+Homepage Builder admin editor, `#40` is the Phase 13 Setup Wizard shell
+(Welcome + Store), and `#47` is the Phase 15 `SearchService`. None touch
+Phase 14 (Store Readiness / Business Settings) — confirmed both by
+`gh`/GitHub MCP search across open PR bodies for "StoreReadiness",
+"Readiness", "Onboarding", and "Business Settings" (only #40/#46
+mention "Readiness"/"Business Settings" in passing, as their own
+*next-step* suggestions, not as work done) and by reading both PRs'
+bodies in full.
+
+Shipped this run: `MintCart\Onboarding\StoreReadiness` (pure, no
+OpenCart dependency) + `ModelMintcartReadiness` (real signal gathering)
++ `ControllerMintcartReadiness` (`mintcart/readiness`, GET, JSON) — see
+the Phase 14 section above and `docs/developer/onboarding/store-readiness.md`
+for full detail. This is a self-contained increment (service + its first
+real consumer); it does not touch any file the 18 PRs above touch.
+
+**Next step:** Phase 14's remaining items — `Business → Contacts/Delivery/Payments`
+UI façades, and a dashboard widget or admin menu entry surfacing
+`mintcart/readiness`'s checklist (no admin UI renders it yet, JSON
+endpoint only) — or continuing Phase 13 (remaining Wizard steps, with
+`ready` wired to this new endpoint once #40 lands), or Phase 12's
+remaining Entity Picker backends beyond category, or Phase 15's
+`QuickOrderService`/`CheckoutService`.

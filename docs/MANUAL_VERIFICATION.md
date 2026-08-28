@@ -110,3 +110,17 @@ against a real database. On a real install:
 3. Confirm a request with `filter_name` set to a substring of one
    category's name returns only matching categories, and that `total`
    reflects the filtered count, not the store's full category count.
+
+## Phase 14 — Store Readiness, never hit end to end
+
+`MintCart\Onboarding\StoreReadiness` is covered by a standalone unit test
+(pure logic, no OpenCart dependency), and `ModelMintcartReadiness`'s SQL
+was read carefully against the real `oc_language`/`oc_currency`/
+`extension`/`setting` schema, but no live MySQL/admin session in this
+environment means `mintcart/readiness` was never actually requested. On a
+real install, as a logged-in admin user: `GET admin/index.php?route=mintcart/readiness&...`
+(with the usual `token`/session params) and confirm it returns the 7-item
+checklist as JSON, with each `complete` flag matching the store's real
+configuration. Then flip one signal (e.g. enable a payment extension via
+its own settings screen) and reload — confirm that check flips to `true`
+and `percent`/`ready_for_test_order` update accordingly.
