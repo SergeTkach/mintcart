@@ -269,6 +269,59 @@ or wiring a screen to it.
 - Filters beyond search text, and the create-new-flow (add a category
   inline from the picker) — no requirement identified yet for this first
   consumer.
-- The other entity types (products, manufacturers, attributes, options,
-  information pages, customers) each need their own backend the same
-  shape as this one.
+- The other entity types (products, attributes, options, information
+  pages, customers) each need their own backend the same shape as this
+  one — **manufacturer** is now done too, see below.
+
+## Manufacturer backend
+
+```
+GET index.php?route=mintcart/entity/manufacturer&user_token=…&filter_name=…&page=…&limit=…
+```
+
+Same shape as the category backend above:
+`ControllerMintcartEntity::manufacturer()` wraps
+`ModelCatalogManufacturer::getManufacturers()` (never queries the database
+directly) and normalizes rows via
+`MintCart\Design\ManufacturerPickerProvider`
+(`upload/system/library/mintcart/design/manufacturerpickerprovider.php`,
+no OpenCart dependency, unit-tested in
+`tests/mintcart/design/manufacturer-picker-provider-test.php`) into the
+same `{items: [{id, name, image}], total}` shape. Same reasons for a new
+route instead of reshaping `catalog/manufacturer.php`'s own
+`autocomplete()` action (an existing `product_form.twig` consumer with no
+pagination), and for paging in PHP rather than SQL
+(`ModelCatalogManufacturer` has `getTotalManufacturers()`, unfiltered
+store-wide, but no *filtered* total-count method to pair with
+`getManufacturers()`'s own `start`/`limit` support).
+
+**Difference from the category backend: `image` is a real thumbnail, not
+always `null`.** `oc_manufacturer` has an `image` column (unlike
+`oc_category`'s query, which selects none) — `ControllerMintcartEntity`
+resolves each row's raw filename into a URL via `model_tool_image->resize()`
+(the same helper `manufacturer_form.twig` already uses for its own image
+preview) before handing rows to the provider, or `null` when the
+manufacturer has no image file on disk. This makes `manufacturer` the
+first entity backend to actually exercise `McEntityPicker`'s thumbnail
+rendering — `image` was untestable end-to-end via category alone.
+
+**Filter matching differs slightly from category's, inherited from the
+underlying models, not introduced here:** `ModelCatalogCategory::getCategories()`
+matches `filter_name` as a substring (`LIKE '%…%'`, so it matches
+anywhere in the name); `ModelCatalogManufacturer::getManufacturers()`
+matches it as a prefix (`LIKE '…%'`, so it only matches from the start of
+the name). Both endpoints just pass `filter_name` straight through to
+their respective existing model method — this is pre-existing OpenCart
+behavior, not a MintCart inconsistency to fix here.
+
+Same permission requirement as category (`mintcart/entity` **Access**
+must be granted to a user group first) and the same "not done yet, by
+design" live-wiring gap: no admin screen calls this endpoint yet, for the
+identical reason (MintCart's asset bundle still isn't enqueued on any
+admin page — see above). `product_form.twig`'s **Manufacturer**
+autocomplete field (`upload/admin/view/template/catalog/product_form.twig`,
+the jQuery UI `autocomplete()` block using `catalog/manufacturer/autocomplete`)
+is this backend's identified first real consumer, for the same reason
+Category was identified for that endpoint — already single-select
+search-as-you-type, so a future `McEntityPicker` swap is a shape match,
+not a new pattern.
