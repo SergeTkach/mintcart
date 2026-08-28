@@ -783,9 +783,10 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
+- [~] First blocks: Products, HTML done (see "Sub-step 2"/"Sub-step 3");
+      Hero, Categories, Banner Grid, Benefits, Text/Image, Brands,
+      Testimonials, FAQ, Text, CTA, Newsletter, Spacer in progress as open
+      PRs; Gallery not yet started (initial set per Implementation Guide §51)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
 In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
@@ -854,10 +855,37 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
-**Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
+**Sub-step 3 (this run): HTML block.** `MintCart\Blocks\HtmlBlockProvider`
+(`upload/system/library/mintcart/blocks/htmlblockprovider.php`) — the
+simplest Block Provider so far: no structural `settings_json` fields at
+all, just a per-language raw `html` string from `content_json`, normalized
+to always be a safe string (never `null`/an array). `ControllerCommonHome`
+gained `renderHtmlBlock()` and its per-block dispatch now recognizes
+`type = 'html'` alongside `'products'`. New template:
+`mint_default/template/mint/blocks/html.twig` (renders `html|raw` inside
+the shared `mc-block`/`mc-block--html` wrapper — deliberately unescaped,
+since block rows are only ever admin-authored; see
+`docs/developer/blocks/html.md` "Why `|raw` is safe here"). Full writeup:
+`docs/developer/blocks/html.md`; upstream-diff update in
+`docs/upstream-diff.md`'s `home.php` entry. Verified: `php -l` clean on
+every touched/added PHP file; full `tests/mintcart/` suite (12 files,
+including the new `tests/mintcart/blocks/html-block-provider-test.php`
+and a 3rd scenario added to `block-renderer-test.php`) passing. No
+CSS/JS changes needed (`.mc-block` already covers the wrapper; `--html`
+is a scoping modifier only, same as `--products`), so `npm run build` was
+not re-run this increment. Same pre-existing gap as every earlier phase:
+no MySQL/`vendor/twig/twig` in this environment — a human should insert
+an `mc_block` row (`type = 'html'`,
+`content_json = '{"html":"<p>Hello</p>"}'`) on a real install and confirm
+it renders on the homepage.
+
+**Next step:** at the time of this run, open PRs already cover Hero,
+Categories, Banner Grid, Benefits, FAQ, Testimonials, Brands, Text/Image,
+CTA, Newsletter, Spacer and Text — see each PR's own "Step 0" note for
+confirmation. **Gallery** is the only first-wave block type (per
+`MINTCART_IMPLEMENTATION_GUIDE.md` §33) with no open PR as of this run —
+natural next candidate, following the same Provider/Renderer/Template
+shape as Products/Text/HTML. After that: the Homepage drag-and-drop editor
 (admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
 that exists, a block instance has to be inserted by hand to be visible).
 

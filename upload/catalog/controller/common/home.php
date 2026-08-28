@@ -26,11 +26,13 @@ class ControllerCommonHome extends Controller {
 	/**
 	 * MintCart Homepage Builder (Phase 10, MINTCART_TECHNICAL_PLAN.md
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
-	 * sort_order, via MintCart\Blocks\BlockRenderer. Only the 'products'
-	 * block type has a query/provider implementation so far
+	 * sort_order, via MintCart\Blocks\BlockRenderer. Only 'products' and
+	 * 'html' block types have a provider implementation so far
 	 * (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block types
 	 * - Hero, Categories, Banner Grid, Benefits, Text/Image, Brands,
-	 * Testimonials, FAQ - are separate, not-yet-started checklist items).
+	 * Testimonials, FAQ, Text, CTA, Newsletter, Spacer, Gallery - are
+	 * separate, tracked checklist items; several are open pull requests at
+	 * the time this was written, see docs/IMPLEMENTATION_STATUS.md).
 	 * An unrecognized block type is skipped, not fatal, so a page mixing
 	 * implemented and not-yet-implemented block types still renders what
 	 * it can.
@@ -73,10 +75,14 @@ class ControllerCommonHome extends Controller {
 		foreach ($blocks as $block) {
 			if ($block['type'] === 'products') {
 				$markup = $this->renderProductsBlock($block, $block_renderer, $mint_theme);
+			} elseif ($block['type'] === 'html') {
+				$markup = $this->renderHtmlBlock($block, $block_renderer);
+			} else {
+				$markup = null;
+			}
 
-				if ($markup !== null && $markup !== '') {
-					$rendered[] = $markup;
-				}
+			if ($markup !== null && $markup !== '') {
+				$rendered[] = $markup;
 			}
 		}
 
@@ -231,6 +237,31 @@ class ControllerCommonHome extends Controller {
 		return $block_renderer->render('products', array(
 			'title'         => $settings['title'],
 			'product_cards' => $product_cards
+		));
+	}
+
+	/**
+	 * Renders one 'html' mc_block row - the simplest block type, no product
+	 * query and no OpenCart model dependency beyond the already-loaded
+	 * block row itself (MINTCART_IMPLEMENTATION_GUIDE.md §33's first-wave
+	 * block list includes "HTML" alongside Hero/Products/Categories/...).
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when the block's
+	 *         html content is empty (html.twig's own {% if html %} guard
+	 *         would render nothing anyway - returning null here lets the
+	 *         caller's "was anything actually rendered" check stay uniform
+	 *         across every block type).
+	 */
+	private function renderHtmlBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\HtmlBlockProvider())->build($block['settings'], $block['content']);
+
+		if ($settings['html'] === '') {
+			return null;
+		}
+
+		return $block_renderer->render('html', array(
+			'html' => $settings['html']
 		));
 	}
 }

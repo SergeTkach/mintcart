@@ -93,6 +93,28 @@ assertSame__(
     $failures
 );
 
+// 3. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/html.twig (added alongside
+//    products.twig) must resolve at its real path too - proves a second
+//    block type coexists cleanly under the same blocks/ subtree.
+$realHtmlPath = $realRenderer->resolve('html');
+
+assertSame__(
+    true,
+    is_file($realHtmlPath),
+    'Scenario 3: resolve() should find the real mint_default blocks/html.twig file on disk',
+    $failures
+);
+
+$realHtmlMarkup = (string) file_get_contents($realHtmlPath);
+
+assertSame__(
+    true,
+    str_contains($realHtmlMarkup, 'mc-block--html') && str_contains($realHtmlMarkup, 'html|raw'),
+    'Scenario 3: the resolved real html.twig should contain the documented mc-block--html markup and render html with the |raw filter',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -101,5 +123,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BlockRenderer smoke test (2 scenarios)\n";
+echo "PASS: BlockRenderer smoke test (3 scenarios)\n";
 exit(0);
