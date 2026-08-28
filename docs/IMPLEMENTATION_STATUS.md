@@ -783,12 +783,18 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ not started
-      (initial set per Implementation Guide §51)
+- [~] First blocks: Products (see "Sub-step 2") and Gallery (see
+      "Sub-step 3", this run) done; Hero, Categories, Banner Grid,
+      Benefits, Text/Image, Brands, Testimonials, FAQ, CTA, Newsletter,
+      Spacer, Text, HTML each have an open, not-yet-merged PR as of this
+      run — see the "Open PRs" note at the end of this file before
+      picking up any of them (initial set per Implementation Guide §51,
+      extended with CTA/Newsletter/Spacer/Text/HTML/Gallery per
+      Product Vision §9 / Functional Scope §10's full block list)
 - [ ] Homepage drag-and-drop editor (SortableJS)
 
-In progress. PR #16 (storage), this run (Provider/Renderer + Products block).
+In progress. PR #16 (storage), earlier run (Provider/Renderer + Products
+block), this run (Gallery block).
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -854,12 +860,50 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
+**Sub-step 3 (this run): Gallery block.** Follows the exact
+Provider/Renderer/Template split Sub-step 2 established, closest in shape
+to `BannerGridBlockProvider` (a list of settings/content items matched by
+array position, `columns`/`col_width` precomputed for the Bootstrap grid)
+but simpler: no `url` per item and no link wrapper, since a Gallery block
+is a plain, non-interactive photo grid, not a set of banner links —
+`blocks/gallery.twig` renders each item as a `<figure>`/`<figcaption>`,
+not Banner Grid's `<a>`. New: `MintCart\Blocks\GalleryBlockProvider`
+(`upload/system/library/mintcart/blocks/galleryblockprovider.php`,
+`columns` constrained to `{2, 3, 4, 6}`, default 4);
+`ControllerCommonHome::renderGalleryBlock()` (new `elseif` branch in
+`buildMintBlocks()`'s dispatch, `tool/image` resize with a 600×600
+fallback); `template/mint/blocks/gallery.twig`; new
+`assets/src/css/components/gallery.css`
+(`.mc-gallery__item`/`__image`/`__caption`), imported into
+`assets/src/css/index.css`. Full writeup: `docs/developer/blocks/gallery.md`;
+upstream diff entry added to `docs/upstream-diff.md`'s existing `home.php`
+entry. Verified: `php -l` clean on every touched/added PHP file and the
+full `upload/`+`tests/` tree; full `tests/mintcart/` suite (12 files,
+including the new `tests/mintcart/blocks/gallery-block-provider-test.php`
+and a 3rd scenario added to `block-renderer-test.php`) passing; `npm run
+build` (`build:js`+`build:css`) compiles cleanly, confirmed
+`mc-gallery__item`/`__image`/`__caption` present in the built
+`assets/dist/css/index.min.css`; `npm test` (preset-token contract check)
+still passes. Same pre-existing gap as every earlier phase: no live
+MySQL/`vendor/twig/twig` in this sandbox, so no live end-to-end request
+was exercised — a human should insert an `mc_block` row
+(`type = 'gallery'`) pointing at a real image on a real install and
+confirm the homepage renders it.
+
 **Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible).
+Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ, CTA,
+Newsletter, Spacer, Text, HTML) each already have an open PR as of this
+run — check `gh pr list --state open` before picking any of them up, per
+the dedup step every routine run starts with. The one first-wave/extended
+block type still unclaimed after this run is none — Gallery (this run)
+was the last unclaimed one; once the open PRs above merge, the remaining
+work is the Homepage drag-and-drop editor (admin UI to actually
+create/reorder `mc_page`/`mc_block` rows — until that exists, a block
+instance has to be inserted by hand to be visible), plus a manual
+merge-order reconciliation of `buildMintBlocks()`'s `if`/`elseif`
+dispatch chain in `ControllerCommonHome` once more than one of these PRs
+lands (each currently adds its own branch independently against the same
+base commit).
 
 ## Phase 11 — Mint Admin primitives
 

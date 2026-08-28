@@ -46,6 +46,7 @@
 @import './components/footer.css';
 @import './components/header.css';
 @import './components/block.css';
+@import './components/gallery.css';
 @import './components/entity-picker.css';
 @import './components/media-picker.css';
 @import './components/progress.css';
