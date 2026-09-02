@@ -783,12 +783,12 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products done (see "Sub-step 2"); Hero, Categories, Banner
-      Grid, Benefits, Text/Image, Brands, Testimonials, FAQ, CTA, Newsletter,
-      Spacer, Text, HTML, Gallery each have an open, in-progress pull request
-      as of this run's step-0 duplicate-work check (not yet merged to
-      `master`, so not checked off here — see "Sub-step 3" below for why this
-      run didn't add another one)
+- [x] First blocks: Products, Hero, Categories, Banner Grid, Benefits, FAQ,
+      Testimonials, Brands, Text/Image, CTA, Newsletter, Spacer, Text, HTML
+      and Gallery — the full first-wave block catalog
+      (`MINTCART_IMPLEMENTATION_GUIDE.md` §51) is now done (see "Sub-step 2",
+      `docs/developer/blocks/hero.md`, `docs/developer/blocks/categories.md`,
+      "Sub-step 3" below)
 - [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
       `mc_block` rows) — see "Sub-step 3" below. Reordering uses a plain
       per-row `sort_order` number input, **not** SortableJS/`McSortable` drag-
@@ -866,6 +866,89 @@ session in this environment, so no live end-to-end request was exercised —
 `docs/developer/blocks/homepage-admin.md`'s "Manual verification" section
 are the checklist for a human to work through on a real install.
 
+**Hero block (merged separately, reconciled here):** `MintCart\Blocks\HeroBlockProvider`
++ `ControllerCommonHome::renderHeroBlock()` + `blocks/hero.twig` +
+`.mc-block--hero` CSS — same Provider/Renderer/Template shape as Products.
+Full writeup: `docs/developer/blocks/hero.md`. Not yet wired into
+`ControllerDesignHomepage::TYPES` (see "Sub-step 3" above for why that's a
+deliberate, separate follow-up) — visible today only via a hand-inserted
+`mc_block` row with `type = 'hero'`.
+
+**FAQ block (merged separately, reconciled here):** `MintCart\Blocks\FaqBlockProvider`
++ `ControllerCommonHome::renderFaqBlock()` + `blocks/faq.twig` +
+`.mc-faq`/`__item`/`__question`/`__answer` CSS (native `<details>`/`<summary>`
+disclosure, no JS). Full writeup: `docs/developer/blocks/faq.md`. Also not
+yet wired into `ControllerDesignHomepage::TYPES`.
+
+**Testimonials block (merged separately, reconciled here):**
+`MintCart\Blocks\TestimonialsBlockProvider` + `ControllerCommonHome::renderTestimonialsBlock()`
++ `blocks/testimonials.twig` + `.mc-testimonial`/`__quote`/`__author`/
+`__avatar`/`__author-details`/`__author-name`/`__author-role` CSS. Each
+item's optional avatar is resized via `tool/image`, same `is_file()`-guarded
+pattern the stock Banner module uses. Full writeup:
+`docs/developer/blocks/testimonials.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
+**Brands block (merged separately, reconciled here):**
+`MintCart\Blocks\BrandsBlockProvider` + `ControllerCommonHome::renderBrandsBlock()`
++ `blocks/brands.twig` + `.mc-brands`/`.mc-brand`/`__logo` CSS — a wrapping
+strip of logo links (not a fixed-column grid like Banner Grid). Full
+writeup: `docs/developer/blocks/brands.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
+**Text/Image block (merged separately, reconciled here):**
+`MintCart\Blocks\TextImageBlockProvider` + `ControllerCommonHome::renderTextImageBlock()`
++ `blocks/text-image.twig` + `.mc-block__text-image-media` CSS — covers
+both the "Text" and "Text + Image" first-wave catalog entries (an optional
+`image` setting; a block with none renders as plain text). Body renders
+through `mc-prose`. Full writeup: `docs/developer/blocks/text-image.md`.
+Also not yet wired into `ControllerDesignHomepage::TYPES`.
+
+**CTA block (merged separately, reconciled here):**
+`MintCart\Blocks\CtaBlockProvider` + `ControllerCommonHome::renderCtaBlock()`
++ `blocks/cta.twig` + `.mc-block--cta`/`__cta-inner`/`__cta-text` CSS — pure
+content (title, supporting text, optional button), the simplest first-wave
+block type. Full writeup: `docs/developer/blocks/cta.md`. Also not yet
+wired into `ControllerDesignHomepage::TYPES`.
+
+**Newsletter block (merged separately, reconciled here):**
+`MintCart\Blocks\NewsletterBlockProvider` + `ControllerCommonHome::renderNewsletterBlock()`
++ `blocks/newsletter.twig` + `.mc-block__newsletter-inner`/`__text`/`__form`
+CSS — same "title/text, optional action" shape as CTA, but with an email
+input + submit button instead of a link-style button. Full writeup:
+`docs/developer/blocks/newsletter.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
+**Spacer block (merged separately, reconciled here):**
+`MintCart\Blocks\SpacerBlockProvider` + `ControllerCommonHome::renderSpacerBlock()`
++ `blocks/spacer.twig` + `.mc-block--spacer`/`-sm`/`-md`/`-lg`/`-xl` CSS —
+the simplest block type, purely structural, no localized content. Full
+writeup: `docs/developer/blocks/spacer.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
+**Text block (merged separately, reconciled here):**
+`MintCart\Blocks\TextBlockProvider` + `ControllerCommonHome::renderTextBlock()`
++ `blocks/text.twig`, rendering its content through the shared `mc-prose`
+rich-text container (`assets/src/css/elements/prose.css`, also used by
+Text/Image). No product/OpenCart data dependency at all. Full writeup:
+`docs/developer/blocks/text.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
+**HTML block (merged separately, reconciled here):**
+`MintCart\Blocks\HtmlBlockProvider` + `ControllerCommonHome::renderHtmlBlock()`
++ `blocks/html.twig` (renders the raw `html` content via the `|raw`
+filter) — the simplest block type, no product query, no CSS of its own.
+Full writeup: `docs/developer/blocks/html.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
+**Gallery block (merged separately, reconciled here):**
+`MintCart\Blocks\GalleryBlockProvider` + `ControllerCommonHome::renderGalleryBlock()`
++ `blocks/gallery.twig` + `.mc-block--gallery`/`.mc-gallery__item` CSS —
+same Provider/Renderer/Template shape as Banner Grid, but square-ish
+images (600×600 default) and no `url`/link per item. Full writeup:
+`docs/developer/blocks/gallery.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
 and `mc_block`/`mc_block_description` exactly as documented in
@@ -930,12 +1013,446 @@ end-to-end request was exercised — a human should insert a `mc_page` row
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Products block.
 
-**Next step:** the remaining first-wave block types (Hero, Categories,
-Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ) each need
-their own Provider + `blocks/<type>.twig` following the same shape this
-run established for Products, or the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible).
+**Sub-step 3 (a later run): Hero block, end to end.**
+`MintCart\Blocks\HeroBlockProvider`
+(`upload/system/library/mintcart/blocks/heroblockprovider.php`) normalizes
+a `type='hero'` block row's settings/content (title, subtitle, cta_label,
+cta_url, image, image_width, image_height) — same "no OpenCart dependency"
+shape as `ProductsBlockProvider`. Unlike Products, Hero needs no product
+query, so `ControllerCommonHome::renderHeroBlock()` is much smaller: it
+only resolves an optional background `image` via OpenCart's `tool/image`
+model (guarded with `is_file(DIR_IMAGE . ...)`, mirroring the stock Banner
+module's own pattern) and renders `blocks/hero.twig` through the same
+`BlockRenderer` `renderProductsBlock()` already constructs.
+`buildMintBlocks()`'s per-block dispatch was reshaped from a single
+`if('products')` into `if`/`elseif`/`else` so a third block type is one more
+branch, not another copy of the append-if-non-empty check. New CSS
+(`.mc-block--hero` in `assets/src/css/components/block.css`) composes an
+inline `--mc-block-hero-image` custom property (data-driven, per
+`MINTCART_IMPLEMENTATION_GUIDE.md` §18) rather than baking a `background`
+shorthand into the Twig template, so a theme override can restyle the
+overlay without touching how the image URL is passed in. Full writeup:
+`docs/developer/blocks/hero.md`; upstream diff update in
+`docs/upstream-diff.md`'s `home.php` entry. Verified: `php -l` clean on
+every touched/added PHP file; the new
+`tests/mintcart/blocks/hero-block-provider-test.php` (3 scenarios); full
+`tests/mintcart/` suite re-run end to end (12 files) — all pass; `npm run
+build` compiles cleanly, `grep` confirms `mc-block--hero`/
+`mc-block__hero-subtitle` land in the bundled `index.min.css`; the new
+`hero.twig`'s `if`/`endif` tag nesting checked balanced (same script-based
+technique used for every earlier `.twig` file in this repo). Same
+pre-existing gap as every earlier phase: no MySQL/`vendor/twig/twig` in
+this environment, so no live end-to-end request was exercised — a human
+should insert an `mc_block` row (`type = 'hero'`) on a real install and
+confirm the homepage renders a Hero banner, both with and without a
+background `image` setting.
+
+**Sub-step 3 (this run): Categories block.** `MintCart\Blocks\CategoriesBlockProvider`
+(`upload/system/library/mintcart/blocks/categoriesblockprovider.php`)
+normalizes a `type='categories'` `mc_block` row's settings (`parent_id`,
+`limit`), same "no OpenCart dependency" shape as `ProductsBlockProvider`.
+`ControllerCommonHome::renderCategoriesBlock()` queries
+`ModelCatalogCategory::getCategories($parent_id)` — the same core model
+`common/menu`/`extension/module/category` already use — builds each
+category's link path using that same controller's `<parent_id>_<category_id>`
+convention, resizes its image via the existing
+`theme_<theme>_image_category_width/height` config keys, and renders
+`blocks/categories.twig` through `BlockRenderer`. `buildMintBlocks()`'s
+per-block dispatch is now `if`/`elseif`/`else` (products/categories/other)
+instead of a single `if`. Full writeup: `docs/developer/blocks/categories.md`;
+increment note added to `docs/upstream-diff.md`'s existing `home.php` entry.
+Verified: `php -l` clean on every touched/added PHP file;
+`tests/mintcart/blocks/categories-block-provider-test.php` (3 scenarios,
+new) and a new Scenario 3 in `block-renderer-test.php` (real
+`categories.twig` resolves) both pass; full `tests/mintcart/` suite
+re-run end to end (13 files) — all pass; `npm run build` compiles cleanly,
+`grep` confirms `mc-category-card`/`mc-category-card__media`/
+`mc-category-card__name` land in `assets/dist/css/index.min.css`; `npm
+test` (preset-token contract check) still passes. Same pre-existing gap as
+every earlier phase: no MySQL/`vendor/twig/twig` in this environment — a
+human should insert an `mc_block` row (`type='categories'`,
+`settings_json='{}'`) on a real install and confirm the homepage renders a
+Categories grid.
+
+**Sub-step 3 (this run): Banner Grid block.** `MintCart\Blocks\BannerGridBlockProvider`
+(`upload/system/library/mintcart/blocks/bannergridblockprovider.php`)
+normalizes a `type='banner-grid'` `mc_block` row's settings/content — a
+list of items (each `image`/`url`/`image_width`/`image_height` in
+`settings_json`, `alt`/`caption` in `content_json`) matched up by array
+position, plus a `columns` setting (2-4, default 3) precomputed into a
+`col_width` (12/columns) so the Twig template does no grid arithmetic of
+its own. `ControllerCommonHome::renderBannerGridBlock()` resolves each
+item's image via `$this->model_tool_image->resize()` — same
+`is_file`-guarded call the stock Banner module uses — dropping any item
+whose file no longer exists rather than rendering a broken `<img>`; falls
+back to 600×400 when an item didn't set its own width/height. No product
+query or `ProductViewProvider` involved, unlike the Products block — a
+banner item's data all comes from the block's own settings. New CSS
+component `assets/src/css/components/banner-grid.css`
+(`.mc-banner-grid__item`/`__image`/`__caption`), imported into
+`assets/src/css/index.css` after `block.css`. Full writeup:
+`docs/developer/blocks/banner-grid.md`; upstream diff entry for
+`home.php` extended in `docs/upstream-diff.md`. Verified: `php -l` clean
+on every touched/added PHP file; full `tests/mintcart/` suite (12 files,
+including the new `tests/mintcart/blocks/banner-grid-block-provider-test.php`,
+3 scenarios) passing; `npm run build` (both `build:js` and `build:css`)
+compiles cleanly, with `mc-banner-grid__item`/`__image`/`__caption`
+present in the built `index.min.css`. Same pre-existing gap as Sub-step 2:
+no MySQL/`vendor/twig/twig` in this environment, so no live end-to-end
+request was exercised — a human should insert an `mc_block` row
+(`type='banner-grid'`, `settings_json` with at least one item pointing at
+a real file under `DIR_IMAGE`) on a real install and confirm the homepage
+renders a Banner Grid block.
+
+**Sub-step 3 (this run): Benefits block.** `MintCart\Blocks\BenefitsBlockProvider`
+(`upload/system/library/mintcart/blocks/benefitsblockprovider.php`)
+normalizes a `type='benefits'` `mc_block` row into a `title` plus a list of
+`items` (`icon`/`title`/`description`), matching `settings_json`'s
+per-item `icon` (structural) against `content_json`'s per-item
+`title`/`description` (localized) by array position. Pure content block —
+no product query, no image resize, no OpenCart model of any kind, so
+`ControllerCommonHome::renderBenefitsBlock()` is the simplest render
+method yet: normalize, then render through the existing `BlockRenderer`.
+`buildMintBlocks()`'s dispatch gained an `elseif ($block['type'] ===
+'benefits')` branch alongside the existing `'products'` one.
+`mint_default/template/mint/blocks/benefits.twig` + `.mc-benefit`/
+`__icon`/`__title`/`__description` CSS (colocated in
+`assets/src/css/components/block.css`, single consumer so far). Icons are
+a placeholder `data-mc-icon` attribute pending the not-yet-built
+`mc_icon()` SVG renderer — same pattern `footer.twig`'s social links
+already use. Full writeup: `docs/developer/blocks/benefits.md`. Verified:
+`php -l` clean on every touched/added PHP file; full `tests/mintcart/`
+suite (12 files, including the new
+`tests/mintcart/blocks/benefits-block-provider-test.php` and a 3rd
+scenario added to `tests/mintcart/blocks/block-renderer-test.php`)
+passing; `npm run build` compiles cleanly, `mc-benefit`/`__icon`/`__title`/
+`__description` confirmed present in the built
+`assets/dist/css/index.min.css`; `benefits.twig`'s `{% if %}`/`{% for %}`
+tag nesting checked balanced. Same pre-existing gap as every earlier
+phase: no MySQL/`vendor/twig/twig` in this environment, so no live
+end-to-end request was exercised.
+
+**Sub-step 3 (this run): FAQ block.** `MintCart\Blocks\FaqBlockProvider`
+(`upload/system/library/mintcart/blocks/faqblockprovider.php`) normalizes a
+`type='faq'` `mc_block` row into `title` + a list of `{question, answer}`
+items — unlike Products/Banner Grid, an FAQ item has no structural
+(non-localized) data at all, so both fields live entirely in
+`content_json` and `settings_json` is accepted but currently unused.
+Invalid items (missing question or answer, or not an array) are dropped
+during normalization rather than reaching the template half-empty.
+`ControllerCommonHome::renderFaqBlock()` mirrors `renderProductsBlock()`'s
+shape with no product query/image resize involved — a `null` return
+(empty `items` after normalization) is skipped by `buildMintBlocks()`'s
+dispatch, reshaped from a single `if('products')` into
+`if`/`elseif`/`else` so a third block type is one more branch, not a
+duplicated append-check. `mint_default`'s new `blocks/faq.twig` renders
+each item as a native `<details>`/`<summary>` disclosure widget —
+deliberately not Bootstrap's Collapse JS, since a native element already
+provides expand/collapse and correct semantics with no per-instance ID
+scheme needed (`MINTCART_IMPLEMENTATION_GUIDE.md` §3/§5). New
+`.mc-faq`/`__item`/`__question`/`__answer` CSS colocated in the existing
+`assets/src/css/components/block.css` (single consumer so far, `CLAUDE.md`
+§17). Full writeup: `docs/developer/blocks/faq.md`; increment note added to
+`docs/upstream-diff.md`'s existing `home.php` entry.
+
+New test: `tests/mintcart/blocks/faq-block-provider-test.php` (3
+scenarios, standalone, no OpenCart dependency), plus a 3rd scenario added
+to `tests/mintcart/blocks/block-renderer-test.php` confirming the real
+`faq.twig` resolves. Verified: `php -l` clean on every touched/added PHP
+file, and on the full `upload/` + `tests/` tree; full
+`tests/mintcart/**/*-test.php` suite passes locally (12 files, including
+the new FAQ provider test); `npm install` + `npm run build` compile
+cleanly, `grep` confirms `mc-faq`/`__item`/`__question`/`__answer` land in
+the bundled `assets/dist/css/index.min.css`; `npm test` (preset-token
+contract check) still passes, unaffected; `faq.twig`'s
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag nesting checked
+balanced with the same script-based technique used for every earlier
+`.twig` file in this repo. Not verified (same pre-existing gap as every
+earlier phase): no live MySQL/`vendor/twig/twig` in this sandbox, so no
+live end-to-end homepage render was exercised — a human should insert an
+`mc_block` row (`type='faq'`) with a couple of `content_json` items on a
+real install, confirm the homepage renders it, and click a question to
+confirm the native disclosure toggle actually expands/collapses.
+
+**Sub-step 3 (this run): Testimonials block.** A pure content block (no
+product query) — `MintCart\Blocks\TestimonialsBlockProvider`
+(`upload/system/library/mintcart/blocks/testimonialsblockprovider.php`)
+normalizes a `type='testimonials'` row into `title` + a list of
+`{quote, author_name, author_role, avatar, avatar_width, avatar_height,
+rating}` items, matching structural per-item settings (`avatar`/`rating`)
+against localized per-item content (`quote`/`author_name`/`author_role`)
+by array position — same convention Banner-Grid/Benefits-style block
+providers use. An item with a blank quote or author is dropped rather
+than rendered empty; an out-of-range `rating` normalizes to `null`.
+`ControllerCommonHome::renderTestimonialsBlock()` resolves each item's
+optional avatar via `model_tool_image->resize()`, `is_file()`-guarded the
+same way the stock Banner module is, degrading a missing file to no
+avatar rather than a broken `<img>` or a dropped testimonial.
+`buildMintBlocks()`'s dispatch was reshaped from a single `if('products')`
+into `if`/`elseif`/`else` so a second block type is one more branch, not
+a duplicated append-check. New
+`template/mint/blocks/testimonials.twig` (Mint Default) reuses the exact
+`mc-rating` markup `product-card.twig` already has for its optional star
+rating — no new rating component introduced. New `.mc-testimonial`/
+`__quote`/`__author`/`__avatar`/`__author-name`/`__author-role` CSS
+colocated in the existing `assets/src/css/components/block.css` (single
+consumer so far, `CLAUDE.md` §17: no dedicated file before a real second
+consumer). Also fixed a `.gitignore` false positive along the way: the
+pre-existing `upload/**/test*` glob (meant for runtime/scratch test data)
+was silently swallowing these new source files because their names start
+with "test" — same false-positive class the `test_theme/` negation
+already fixed once; fixed with two more targeted `!` negations. Full
+writeup: `docs/developer/blocks/testimonials.md`; upstream diff increment
+in `docs/upstream-diff.md`'s existing `home.php` entry. Verified: `php -l`
+clean on every touched/added PHP file and on the full `upload/` + `tests/`
+tree; full `tests/mintcart/**/*-test.php` suite passes (12 files,
+including the new testimonials provider test and Scenario 3 added to
+`block-renderer-test.php`); `npm install` (0 vulnerabilities) +
+`npm run build` compile cleanly, `mc-testimonial*` confirmed present in
+the built `assets/dist/css/index.min.css`; `npm test` (preset-token
+contract check) still passes, unaffected; `testimonials.twig`'s
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag nesting checked
+balanced with the same script-based technique used for every earlier
+`.twig` file in this repo. Not verified: no live MySQL/`vendor/twig/twig`
+in this sandbox, so no live end-to-end homepage render was exercised —
+same pre-existing gap every earlier Twig-touching phase has carried. A
+human should insert an `mc_block` row (`type='testimonials'`) with a
+couple of items (with and without an `avatar`/`rating`) on a real install
+and confirm the homepage renders the grid correctly.
+
+**Sub-step 3 (this run): Brands block.** `MintCart\Blocks\BrandsBlockProvider`
+(`upload/system/library/mintcart/blocks/brandsblockprovider.php`)
+normalizes a `type='brands'` `mc_block` row into a list of logo items
+(`image`/`url`/`image_width`/`image_height` from `settings_json`, `alt`
+from `content_json`, matched by array position) — same split as
+`BannerGridBlockProvider`, but simpler (no `columns`, no `caption`; a
+Brands block renders as a wrapping logo strip, not a fixed grid).
+`ControllerCommonHome::renderBrandsBlock()` resolves each item's logo via
+`tool/image`, dropping any item whose file no longer exists.
+`buildMintBlocks()`'s dispatch gained an `elseif ($block['type'] === 'brands')`
+branch. `mint_default/template/mint/blocks/brands.twig` + new
+`.mc-brands`/`.mc-brand`/`.mc-brand__logo` CSS (colocated in the existing
+`assets/src/css/components/block.css`). Full writeup:
+`docs/developer/blocks/brands.md`; increment note in `docs/upstream-diff.md`'s
+`home.php` entry. Verified: `php -l` clean; full `tests/mintcart/` suite
+(12 files, including the new `brands-block-provider-test.php` and a 3rd
+`block-renderer-test.php` scenario) passing; `npm run build` compiles
+cleanly, `mc-brands`/`mc-brand`/`mc-brand__logo` confirmed present in the
+built `assets/dist/css/index.min.css`; `npm test` (preset-token contract)
+still passing. Same pre-existing gap as every earlier phase: no live
+MySQL/Twig render exercised in this sandbox — a human should insert an
+`mc_block` row (`type='brands'`) with a couple of items (with and without
+a `url`) on a real install and confirm the homepage renders a logo strip.
+
+**Sub-step 3 (this run): Text/Image block.**
+`MintCart\Blocks\TextImageBlockProvider`
+(`upload/system/library/mintcart/blocks/textimageblockprovider.php`)
+normalizes a `type='text-image'` `mc_block` row (structural `image`/
+`image_width`/`image_height`/`image_position` in `settings_json`, localized
+`title`/`body`/`image_alt` in `content_json`) — no OpenCart dependency at
+all, same shape as `ProductsBlockProvider`. Covers both the "Text" and
+"Text + Image" catalog entries (`MINTCART_IMPLEMENTATION_GUIDE.md` §33) as
+one block type, since the `image` setting is simply optional.
+`ControllerCommonHome::renderTextImageBlock()` resolves the optional image
+via `model_tool_image->resize()`, `is_file()`-guarded exactly like
+`renderHeroBlock()`; `buildMintBlocks()`'s dispatch gained an
+`elseif ($block['type'] === 'text-image')` branch.
+`template/mint/blocks/text-image.twig` (Mint Default) is a two-column
+Bootstrap layout (text always first in source order; `image_position:
+'left'` uses Bootstrap's `.order-md-first` utility rather than a second
+markup branch) that degrades to a full-width text-only column when there is
+no image. `body` is rendered inside a new `.mc-prose` class — the CSS
+architecture's `elements/` layer's first file
+(`assets/src/css/elements/prose.css`, `MINTCART_IMPLEMENTATION_GUIDE.md`
+§11/§20), since a rich-text block body is its first real consumer.
+New test: `tests/mintcart/blocks/text-image-block-provider-test.php` (3
+scenarios), plus a 3rd scenario added to
+`tests/mintcart/blocks/block-renderer-test.php`. Full writeup:
+`docs/developer/blocks/text-image.md`; increment note in
+`docs/upstream-diff.md`'s existing `home.php` entry. Verified: `php -l`
+clean on every touched/added PHP file; full `tests/mintcart/` suite (13
+files) passing; `npm install` + `npm run build` compile cleanly, confirmed
+`mc-prose`/`text-image-media` land in the bundled
+`assets/dist/css/index.min.css`; `npm test` (preset-token contract check)
+still passes. Same pre-existing gap as every earlier phase: no
+MySQL/`vendor/twig/twig` in this environment, so no live end-to-end
+homepage render was exercised — a human should insert an `mc_block` row
+(`type='text-image'`) with and without an `image` setting on a real install
+and confirm the homepage renders both a plain-text block and a two-column
+block, image on each side.
+
+**Sub-step 3 (this run): CTA block.** `MintCart\Blocks\CtaBlockProvider`
+(`upload/system/library/mintcart/blocks/ctablockprovider.php`) normalizes a
+`type='cta'` `mc_block` row's `content_json` (`title`/`text`/`cta_label`/
+`cta_url` — pure content, no structural `settings_json` used, no OpenCart
+dependency, same shape as `ProductsBlockProvider`). A label with no URL (or
+vice versa) normalizes to "no button" rather than a dead/unlabeled link.
+`ControllerCommonHome::renderCtaBlock()` is the simplest render method yet
+— normalize, then render through the existing `BlockRenderer`, no
+query/model/image-resize at all — `buildMintBlocks()`'s dispatch gained an
+`elseif ($block['type'] === 'cta')` branch. New
+`upload/catalog/view/theme/mint_default/template/mint/blocks/cta.twig`
+(renders nothing when title/text/button are all empty) and
+`.mc-block--cta`/`.mc-block__cta-inner`/`.mc-block__cta-text` CSS,
+colocated in the existing `assets/src/css/components/block.css` (single
+consumer so far). Full writeup: `docs/developer/blocks/cta.md`; increment
+note in `docs/upstream-diff.md`'s existing `home.php` entry. Verified:
+`php -l` clean on every touched/added PHP file and the full `upload/` +
+`tests/` tree; full `tests/mintcart/` suite (12 files, including the new
+`cta-block-provider-test.php` and a 3rd `block-renderer-test.php`
+scenario) passing; `npm install` + `npm run build` compile cleanly,
+confirmed `mc-block--cta` present in the built
+`assets/dist/css/index.min.css`; `npm test` (preset-token contract check)
+still passes. `cta.twig`'s `{% if %}`/`{% endif %}` tag nesting checked
+balanced (4 opens, 4 closes). Not verified: no live MySQL/`vendor/twig/twig`
+in this sandbox, same pre-existing gap as every earlier Twig-touching
+phase — a human should insert an `mc_block` row (`type='cta'`) on a real
+install and confirm the homepage renders title/text/button correctly, and
+that a title-only block (no button) still renders.
+
+**Sub-step 3 (this run): Newsletter block.** `MintCart\Blocks\NewsletterBlockProvider`
+(`upload/system/library/mintcart/blocks/newsletterblockprovider.php`)
+normalizes a `type='newsletter'` `mc_block` row — the simplest block type
+implemented so far (no query, no image resize at all).
+`ControllerCommonHome::renderNewsletterBlock()` renders it through
+`BlockRenderer`; `buildMintBlocks()`'s dispatch gained an
+`elseif ($block['type'] === 'newsletter')` branch. Since stock OpenCart 3
+has no public "subscribe with just an email" endpoint (the closest
+built-in feature, `account/newsletter`, is a logged-in customer's opt-in
+checkbox, not a guest-submittable form), the block's subscribe form is
+only rendered when a real `action` URL is configured on the block — the
+same "no dead-end form" rule `FooterViewProvider::buildNewsletter()`
+already established; with no `action`, the block still renders as a
+plain title/text announcement. Full writeup, including the endpoint
+rationale: `docs/developer/blocks/newsletter.md`. New CSS
+(`.mc-block--newsletter`/`.mc-block__newsletter-*`) colocated in the
+existing `assets/src/css/components/block.css` (single consumer so far).
+New test: `tests/mintcart/blocks/newsletter-block-provider-test.php` (4
+scenarios), plus a 3rd scenario added to `block-renderer-test.php`
+confirming the real `newsletter.twig` resolves. Verified: `php -l` clean
+on every touched/added PHP file; full `tests/mintcart/` suite (12 files)
+passing; `npm run build` (`build:js` + `build:css`) compiles cleanly,
+`mc-block__newsletter-inner` confirmed present in the built
+`assets/dist/css/index.min.css`; `npm test` (preset-token contract) still
+passing. Same pre-existing gap as every earlier phase: no live
+MySQL/`vendor/twig/twig` in this sandbox — a human should insert an
+`mc_block` row (`type='newsletter'`) with and without an `action` setting
+on a real install and confirm both the announcement-only and
+with-form variants render.
+
+**Sub-step 3 (this run): the Spacer block.** `MintCart\Blocks\SpacerBlockProvider`
+(`upload/system/library/mintcart/blocks/spacerblockprovider.php`) — the
+simplest block type, purely structural: it normalizes one setting (`size`,
+one of `sm`/`md`/`lg`/`xl`, default `md`), reads no localized content, and
+makes no OpenCart query at all. `ControllerCommonHome::buildMintBlocks()`'s
+dispatch (previously a single `if('products')`) is now
+`if`/`elseif`/`else` also handling `type='spacer'` via a new
+`renderSpacerBlock()` method. `blocks/spacer.twig` (Mint Default) is a
+single empty `<div class="mc-block mc-block--spacer mc-block--spacer-{{
+size }}" aria-hidden="true">` — no `.container`/`.row` wrapper (nothing to
+constrain) and, unlike every other block, `.mc-block`'s own top/bottom
+padding is zeroed for this modifier so the size *is* the space, not
+padding added on top of it. Full writeup: `docs/developer/blocks/spacer.md`;
+upstream diff increment note in `docs/upstream-diff.md`'s existing
+`home.php` entry. Verified: `php -l` clean on every touched/added PHP
+file; full `tests/mintcart/` suite (12 files, including the new
+`tests/mintcart/blocks/spacer-block-provider-test.php` and a 3rd scenario
+added to `block-renderer-test.php`) passing; `npm run build` compiles
+cleanly, `mc-block--spacer`/`mc-block--spacer-sm|md|lg|xl` present in the
+bundled `assets/dist/css/index.min.css`. Same pre-existing gap as every
+earlier phase: no MySQL/`vendor/twig/twig` in this environment, so no live
+end-to-end request was exercised — a human should insert an `mc_block` row
+(`type='spacer'`, `settings_json='{"size":"lg"}'`) on a real install and
+confirm the homepage renders it.
+
+**Sub-step 3 (a later run): Text block + `mc-prose` shipped.**
+`MintCart\Blocks\TextBlockProvider`
+(`upload/system/library/mintcart/blocks/textblockprovider.php`) normalizes
+a `type='text'` block's settings (`title`/`content`/`text_align`, no
+OpenCart dependency — same shape as `ProductsBlockProvider`).
+`ControllerCommonHome::buildMintBlocks()`'s per-block dispatch now handles
+`'text'` alongside `'products'`, via a new two-line `renderTextBlock()`
+(no product query at all — the simplest block type). New
+`mint_default/template/mint/blocks/text.twig` renders via the also-new
+`mc-prose` rich-text container
+(`assets/src/css/elements/prose.css`, `MINTCART_IMPLEMENTATION_GUIDE.md`
+§20 — documented since Phase 3 but built only now that a real consumer
+needed it, `CLAUDE.md` §85), wired into `index.css`'s `elements` import
+layer. Full writeup: `docs/developer/blocks/text.md`; upstream diff update
+in `docs/upstream-diff.md`'s `home.php` entry. Verified: `php -l` clean on
+every touched/added PHP file; full `tests/mintcart/` suite (12 files,
+including the new `tests/mintcart/blocks/text-block-provider-test.php`,
+4 scenarios, and `block-renderer-test.php`'s new scenario 3) passing;
+`npm install` (0 vulnerabilities) then `npm run build` — both
+`index.min.css` (271.6kb) and the JS bundles compile cleanly, `grep`
+confirms `mc-prose` lands in the bundled CSS; `npm test` (the Phase 9
+preset-contract guardrail) still passes, unaffected by this change. Same
+pre-existing gap as every earlier phase: no MySQL/`vendor/twig/twig` in
+this environment, so no live end-to-end request was exercised — a human
+should insert an `mc_block` row (`type='text'`) on the `'home'` page and
+confirm the homepage renders it with `mc-prose` styling.
+
+**Sub-step 3 (this run): HTML block.** `MintCart\Blocks\HtmlBlockProvider`
+(`upload/system/library/mintcart/blocks/htmlblockprovider.php`) — the
+simplest Block Provider so far: no structural `settings_json` fields at
+all, just a per-language raw `html` string from `content_json`, normalized
+to always be a safe string (never `null`/an array). `ControllerCommonHome`
+gained `renderHtmlBlock()` and its per-block dispatch now recognizes
+`type = 'html'` alongside `'products'`. New template:
+`mint_default/template/mint/blocks/html.twig` (renders `html|raw` inside
+the shared `mc-block`/`mc-block--html` wrapper — deliberately unescaped,
+since block rows are only ever admin-authored; see
+`docs/developer/blocks/html.md` "Why `|raw` is safe here"). Full writeup:
+`docs/developer/blocks/html.md`; upstream-diff update in
+`docs/upstream-diff.md`'s `home.php` entry. Verified: `php -l` clean on
+every touched/added PHP file; full `tests/mintcart/` suite (12 files,
+including the new `tests/mintcart/blocks/html-block-provider-test.php`
+and a 3rd scenario added to `block-renderer-test.php`) passing. No
+CSS/JS changes needed (`.mc-block` already covers the wrapper; `--html`
+is a scoping modifier only, same as `--products`), so `npm run build` was
+not re-run this increment. Same pre-existing gap as every earlier phase:
+no MySQL/`vendor/twig/twig` in this environment — a human should insert
+an `mc_block` row (`type = 'html'`,
+`content_json = '{"html":"<p>Hello</p>"}'`) on a real install and confirm
+it renders on the homepage.
+
+**Sub-step 3 (this run): Gallery block.** Follows the exact
+Provider/Renderer/Template split Sub-step 2 established, closest in shape
+to `BannerGridBlockProvider` (a list of settings/content items matched by
+array position, `columns`/`col_width` precomputed for the Bootstrap grid)
+but simpler: no `url` per item and no link wrapper, since a Gallery block
+is a plain, non-interactive photo grid, not a set of banner links —
+`blocks/gallery.twig` renders each item as a `<figure>`/`<figcaption>`,
+not Banner Grid's `<a>`. New: `MintCart\Blocks\GalleryBlockProvider`
+(`upload/system/library/mintcart/blocks/galleryblockprovider.php`,
+`columns` constrained to `{2, 3, 4, 6}`, default 4);
+`ControllerCommonHome::renderGalleryBlock()` (new `elseif` branch in
+`buildMintBlocks()`'s dispatch, `tool/image` resize with a 600×600
+fallback); `template/mint/blocks/gallery.twig`; new
+`assets/src/css/components/gallery.css`
+(`.mc-gallery__item`/`__image`/`__caption`), imported into
+`assets/src/css/index.css`. Full writeup: `docs/developer/blocks/gallery.md`;
+upstream diff entry added to `docs/upstream-diff.md`'s existing `home.php`
+entry. Verified: `php -l` clean on every touched/added PHP file and the
+full `upload/`+`tests/` tree; full `tests/mintcart/` suite (12 files,
+including the new `tests/mintcart/blocks/gallery-block-provider-test.php`
+and a 3rd scenario added to `block-renderer-test.php`) passing; `npm run
+build` (`build:js`+`build:css`) compiles cleanly, confirmed
+`mc-gallery__item`/`__image`/`__caption` present in the built
+`assets/dist/css/index.min.css`; `npm test` (preset-token contract check)
+still passes. Same pre-existing gap as every earlier phase: no live
+MySQL/`vendor/twig/twig` in this sandbox, so no live end-to-end request
+was exercised — a human should insert an `mc_block` row
+(`type = 'gallery'`) pointing at a real image on a real install and
+confirm the homepage renders it.
+
+**Next step:** the full first-wave block catalog
+(`MINTCART_IMPLEMENTATION_GUIDE.md` §51) is now done and merged to
+`master`. Remaining Phase 10 work: wiring each block type into
+`ControllerDesignHomepage::TYPES` (settings-form support in the admin
+editor — currently only `products` has one), and the Homepage
+drag-and-drop editor (admin UI to actually reorder `mc_page`/`mc_block`
+rows via `McSortable` — currently a plain `sort_order` number input).
 
 ## Phase 11 — Mint Admin primitives
 
@@ -1064,10 +1581,10 @@ PHP touched, so the PHP `tests/mintcart/` suite doesn't apply.
       filter requirement identified yet.
 - [~] Real `fetchItems` backends per entity type (products, categories,
       manufacturers, attributes, options, information pages, customers) —
-      **category is done** (this run), see below; the other six entity
-      types still need their own.
-- [ ] Live wiring into an actual admin screen/field — the category
-      backend exists but nothing calls it yet (see below for why, and the
+      **category and manufacturer are done** (manufacturer this run), see
+      below; the other five entity types still need their own.
+- [ ] Live wiring into an actual admin screen/field — both backends exist
+      but nothing calls either yet (see below for why, and each one's
       identified first consumer).
 - [ ] Create-new flow via drawer/modal — not attempted.
 
@@ -1113,10 +1630,41 @@ file) — see the new Phase 12 section in `docs/MANUAL_VERIFICATION.md` for
 what a human should confirm (grant the `mintcart/entity` permission, then
 hit the endpoint directly).
 
-**Next step:** either wire this backend into `product_form.twig`'s
-Category field (blocked on solving the admin asset-enqueue problem
-first — see above), or pick a second entity type (product, manufacturer,
-customer, ...) and build its backend the same shape as this one.
+**Update (a later run): the manufacturer `fetchItems` backend is done
+too**, same shape as category —
+`ControllerMintcartEntity::manufacturer()` (route
+`mintcart/entity/manufacturer`) wraps `ModelCatalogManufacturer::getManufacturers()`
+and normalizes rows via the new
+`MintCart\Design\ManufacturerPickerProvider`
+(`upload/system/library/mintcart/design/manufacturerpickerprovider.php`,
+no OpenCart dependency, unit-tested — `tests/mintcart/design/manufacturer-picker-provider-test.php`,
+7 scenarios). Two differences worth knowing, both documented in
+`docs/developer/components/entity-picker.md`'s new "Manufacturer backend"
+section: `image` is a real `model_tool_image`-resolved thumbnail URL
+(not always `null` like category's, since `oc_manufacturer` has an image
+column category's query doesn't) — this is the first entity backend to
+actually exercise `McEntityPicker`'s thumbnail rendering; and
+`filter_name` prefix-matches (`LIKE '…%'`) rather than category's
+substring match (`LIKE '%…%'`), inherited unchanged from each model's
+existing behavior. Live wiring deliberately not attempted, same reason as
+category (MintCart's asset bundle still isn't enqueued on any admin
+page) — identified first consumer is `product_form.twig`'s Manufacturer
+autocomplete field. Verified: `php -l` clean on both touched/added PHP
+files; full `tests/mintcart/` suite re-run end to end (15 files now, was
+14) — all pass, no regressions (one new pure class, one new action on an
+already-additive controller, touching nothing existing). Same
+no-MySQL/no-`vendor/twig/twig` gap as every prior phase — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 12 entry for what a human
+should confirm, image resolution included.
+
+**Next step:** either wire the category or manufacturer backend into
+`product_form.twig`'s respective field (both blocked on solving the
+admin asset-enqueue problem first — see above; Phase 13's wizard found
+one way around it worth reading before attempting this: a standalone
+page with no legacy chrome, see that phase's "Design decision worth
+flagging"), or pick another entity type (product, attribute, option,
+information page, customer) and build its backend the same shape as
+these two.
 
 ## Phase 13 — Setup Wizard
 
@@ -1950,3 +2498,103 @@ Phase 17 section above for the full writeup. Two features
 (Phase 12's `product_form.twig` wiring and this phase's `category_list.twig`
 wiring) are now both blocked on the same unsolved admin asset-enqueue
 problem — a good candidate for a future run to tackle on its own.
+
+**Update (reconciliation): PRs #30-#44 (Hero, Categories, Banner Grid,
+Benefits, FAQ, Testimonials, Brands, Text/Image, CTA, Newsletter, Spacer,
+Text, HTML, Gallery blocks) merged.** All fourteen landed with their own
+Provider/Renderer/Twig/CSS, including the shared `mc-prose` rich-text
+container. The full first-wave block catalog is now on `master`; only
+PR #50 (manufacturer entity picker, Phase 12) remains in the backlog.
+
+**Update (later run): PR #46 (Homepage Builder admin editor) merged, and
+by then #40 (Wizard Welcome/Store) and #45 (category entity picker) had
+too.** This run picked Phase 12's second entity backend (manufacturer —
+see that phase's section above) after confirming, at step 0, that open
+PRs #47 (Phase 15 `SearchService`), #48 (Phase 14 `StoreReadiness`) and
+#49 (Phase 17 Categories drag & drop) plus the still-open block-type PRs
+(#30-44) didn't overlap it. Remaining unclaimed candidates for a future
+run: a third entity backend (product/attribute/option/information
+page/customer), Phase 13's Contacts-through-Ready wizard steps, Phase 16
+(Bulk Editor, not started), Phase 18 (SEO Core, not started), or checking
+whether #47/#48/#49/the block PRs have landed.
+
+**Update (reconciliation): PR #50 (manufacturer entity picker backend)
+merged.** The whole backlog of parallel routine-run PRs (#30-#50) is now
+reconciled onto this branch.
+
+**Update (reconciliation follow-up): `mc-block--<type>` replaced with
+`data-mc-block-type="<type>"` across all 15 Homepage Builder block
+templates.** A per-type BEM modifier on the shared `.mc-block` wrapper
+described "which type this is" (data), not a style variant of the same
+component — a stretch of BEM's own definition of "modifier." Block type is
+now a `data-mc-block-type` attribute (CLAUDE.md §14's `data-mc-*` hook
+convention); the two types with real CSS keyed on it (Hero, Spacer) now
+target `.mc-block[data-mc-block-type="..."]`. Spacer's `size` *is* a
+genuine style variant, so it kept a real BEM modifier — moved onto its own
+dedicated `mc-spacer`/`mc-spacer--{sm,md,lg,xl}` block instead of piggy-
+backing on the type-discriminator class. Updated: all 15
+`blocks/*.twig` templates, `assets/src/css/components/{block,banner-grid,gallery}.css`,
+`tests/mintcart/blocks/block-renderer-test.php` (all 14 scenarios re-verified
+passing), and the `docs/developer/blocks/*.md` reference docs. Historical
+entries above this line describe each block as it shipped at the time
+(`mc-block--<type>`) — left as-is; they're a changelog, not living
+documentation.
+
+**Update (reconciliation follow-up): `ControllerDesignHomepage::TYPES`
+extended to all 15 shipped block types, replacing the Products-only
+hardcoded settings form.** Full writeup: `docs/developer/blocks/homepage-admin.md`
+("Block type registry" / "Content vs. settings" sections). Summary: one
+declarative `fieldSchema()` (settings/content field list per type,
+matching each type's own `*BlockProvider::build()`) drives
+`getForm()`/`prepareBlockData()`/`validateForm()` generically instead of
+15 hardcoded near-duplicate blocks; `homepage_form.twig` renders whatever
+fields the current type declares. The type `<select>` reloads live via a
+plain `onchange` GET reload (no JS bundle needed — the admin
+asset-enqueue question above is still unresolved). Banner Grid, Benefits,
+Testimonials, Brands, and Gallery (the five `items`-repeater types) get a
+raw JSON textarea per items list rather than a real add/remove-row UI,
+since that also needs the same unresolved JS-bundle decision — a genuinely
+working escape hatch, not a placeholder, with inline help text showing
+the exact JSON shape and `error_json` validation on malformed input.
+Replacing it with a real repeater is follow-up work once the admin
+asset-enqueue question is resolved.
+
+New test: `tests/mintcart/design/homepage-admin-schema-test.php` (6
+scenarios — flat-type round-trip, JSON-items round-trip, default
+fallbacks incl. Products' `category_id: null`, a tampered `select` value
+falling back to its default, `validateForm()` rejecting malformed JSON
+while accepting blank, and every one of the 15 types' field schema having
+a resolvable language string for every `label_key`/`help_key`). Verified:
+`php -l` clean on every touched/added PHP file; full standalone test
+suite re-run end to end — all passing; Twig `{% if %}`/`{% endif %}`/
+`{% for %}`/`{% endfor %}` tag counts balanced in the rewritten
+`homepage_form.twig`. Same pre-existing gap as every earlier phase: no
+live MySQL/OpenCart admin session in this environment — a human should
+work through `docs/developer/blocks/homepage-admin.md`'s "Manual
+verification" steps 7-9 (added this run) on a real install.
+
+**Update (reconciliation follow-up): drag-to-reorder added to the block
+list, without `McSortable`.** The admin asset-enqueue question (no
+MintCart JS bundle enqueued on this screen — see
+`docs/developer/blocks/homepage-admin.md`'s "Why this screen uses the
+legacy admin theme" section) still blocks using `McSortable` itself, so
+this is a small self-contained inline `<script>` in `homepage_list.twig`
+using the browser's native HTML5 Drag and Drop API instead: dragging a
+row (`draggable="true"`, an `fa-bars` grip icon) reorders the table and
+renumbers the existing `sort_order` number inputs to match; "Save Order"
+submits exactly as before. The number inputs stay fully visible/editable
+either way — MintCart's own non-pointer-alternative requirement for
+sortable operations (`MINTCART_IMPLEMENTATION_GUIDE.md` §68) native HTML5
+drag doesn't satisfy on its own. Full writeup: "Reordering without
+`McSortable`" in `docs/developer/blocks/homepage-admin.md`. Verified: `node
+--check` on the extracted inline script (valid syntax); Twig tag counts
+re-balanced after the added grip-icon column; manual verification step 10
+added.
+
+**Next step:** the admin asset-enqueue question remains the real blocker
+for both a proper `McSortable`-based reorder and the five `items` JSON
+textareas becoming a real add/remove-row repeater — see
+`docs/developer/blocks/homepage-admin.md`'s "Why this screen uses the
+legacy admin theme" section. Swapping `category_id`/`parent_id` for a
+real `McEntityPicker` (Phase 12's category backend now exists) is a
+separate, self-contained follow-up untouched by that question.

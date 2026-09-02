@@ -88,8 +88,265 @@ $realMarkup = (string) file_get_contents($realPath);
 
 assertSame__(
     true,
-    str_contains($realMarkup, 'mc-block--products') && str_contains($realMarkup, 'product_cards'),
-    'Scenario 2: the resolved real products.twig should contain the documented mc-block--products markup and loop over product_cards',
+    str_contains($realMarkup, 'data-mc-block-type="products"') && str_contains($realMarkup, 'product_cards'),
+    'Scenario 2: the resolved real products.twig should contain the documented data-mc-block-type="products" markup and loop over product_cards',
+    $failures
+);
+
+// 3. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/categories.twig must also resolve
+//    at its real path - same guard as Scenario 2, for the Categories
+//    block added alongside Products.
+$realCategoriesPath = $realRenderer->resolve('categories');
+
+assertSame__(
+    true,
+    is_file($realCategoriesPath),
+    'Scenario 3: resolve() should find the real mint_default blocks/categories.twig file on disk',
+    $failures
+);
+
+$realCategoriesMarkup = (string) file_get_contents($realCategoriesPath);
+
+assertSame__(
+    true,
+    str_contains($realCategoriesMarkup, 'data-mc-block-type="categories"') && str_contains($realCategoriesMarkup, 'categories'),
+    'Scenario 3: the resolved real categories.twig should contain the documented data-mc-block-type="categories" markup and loop over categories',
+    $failures
+);
+
+// 4. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/benefits.twig must also resolve -
+//    guards the Benefits block against the same directory-layout drift
+//    Scenario 2 guards Products against.
+$realBenefitsPath = $realRenderer->resolve('benefits');
+
+assertSame__(
+    true,
+    is_file($realBenefitsPath),
+    'Scenario 4: resolve() should find the real mint_default blocks/benefits.twig file on disk',
+    $failures
+);
+
+$realBenefitsMarkup = (string) file_get_contents($realBenefitsPath);
+
+assertSame__(
+    true,
+    str_contains($realBenefitsMarkup, 'data-mc-block-type="benefits"') && str_contains($realBenefitsMarkup, 'items'),
+    'Scenario 4: the resolved real benefits.twig should contain the documented data-mc-block-type="benefits" markup and loop over items',
+    $failures
+);
+
+// 5. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/faq.twig must also resolve at its
+//    real path - proves a second block type shares the same 'blocks' kind
+//    resolution as Products, not something Products-specific.
+$realFaqPath = $realRenderer->resolve('faq');
+
+assertSame__(
+    true,
+    is_file($realFaqPath),
+    'Scenario 5: resolve() should find the real mint_default blocks/faq.twig file on disk',
+    $failures
+);
+
+$realFaqMarkup = (string) file_get_contents($realFaqPath);
+
+assertSame__(
+    true,
+    str_contains($realFaqMarkup, 'data-mc-block-type="faq"') && str_contains($realFaqMarkup, 'items'),
+    'Scenario 5: the resolved real faq.twig should contain the documented data-mc-block-type="faq" markup and loop over items',
+    $failures
+);
+
+// 6. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/testimonials.twig must also
+//    resolve - guards the second real block type's template against the
+//    same layout drift Scenario 2 guards for products.twig.
+$realTestimonialsPath = $realRenderer->resolve('testimonials');
+
+assertSame__(
+    true,
+    is_file($realTestimonialsPath),
+    'Scenario 6: resolve() should find the real mint_default blocks/testimonials.twig file on disk',
+    $failures
+);
+
+$realTestimonialsMarkup = (string) file_get_contents($realTestimonialsPath);
+
+assertSame__(
+    true,
+    str_contains($realTestimonialsMarkup, 'data-mc-block-type="testimonials"') && str_contains($realTestimonialsMarkup, 'mc-testimonial__quote'),
+    'Scenario 6: the resolved real testimonials.twig should contain the documented data-mc-block-type="testimonials"/mc-testimonial__quote markup',
+    $failures
+);
+
+// 7. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/brands.twig must also resolve at
+//    its real path (a second block type, proving resolve() isn't only
+//    coincidentally correct for 'products').
+$realBrandsPath = $realRenderer->resolve('brands');
+
+assertSame__(
+    true,
+    is_file($realBrandsPath),
+    'Scenario 7: resolve() should find the real mint_default blocks/brands.twig file on disk',
+    $failures
+);
+
+$realBrandsMarkup = (string) file_get_contents($realBrandsPath);
+
+assertSame__(
+    true,
+    str_contains($realBrandsMarkup, 'data-mc-block-type="brands"') && str_contains($realBrandsMarkup, 'items'),
+    'Scenario 7: the resolved real brands.twig should contain the documented data-mc-block-type="brands" markup and loop over items',
+    $failures
+);
+
+// 8. Same real-repo integration check for the Text/Image block
+//    (docs/developer/blocks/text-image.md) - guards its template against
+//    drifting out of sync with BlockRenderer's expected layout the same
+//    way Scenario 2 does for Products.
+$realTextImagePath = $realRenderer->resolve('text-image');
+
+assertSame__(
+    true,
+    is_file($realTextImagePath),
+    'Scenario 8: resolve() should find the real mint_default blocks/text-image.twig file on disk',
+    $failures
+);
+
+$realTextImageMarkup = (string) file_get_contents($realTextImagePath);
+
+assertSame__(
+    true,
+    str_contains($realTextImageMarkup, 'data-mc-block-type="text-image"') && str_contains($realTextImageMarkup, 'mc-prose'),
+    'Scenario 8: the resolved real text-image.twig should contain the documented data-mc-block-type="text-image" wrapper and mc-prose body',
+    $failures
+);
+
+// 9. Same real-repo integration check for the CTA block's template.
+$realCtaPath = $realRenderer->resolve('cta');
+
+assertSame__(
+    true,
+    is_file($realCtaPath),
+    'Scenario 9: resolve() should find the real mint_default blocks/cta.twig file on disk',
+    $failures
+);
+
+$realCtaMarkup = (string) file_get_contents($realCtaPath);
+
+assertSame__(
+    true,
+    str_contains($realCtaMarkup, 'data-mc-block-type="cta"') && str_contains($realCtaMarkup, 'cta_label') && str_contains($realCtaMarkup, 'cta_url'),
+    'Scenario 9: the resolved real cta.twig should contain the documented data-mc-block-type="cta" markup and reference cta_label/cta_url',
+    $failures
+);
+
+// 10. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/newsletter.twig must also resolve
+//    at its real path (a second block type, proving resolve() isn't only
+//    coincidentally correct for 'products').
+$realNewsletterPath = $realRenderer->resolve('newsletter');
+
+assertSame__(
+    true,
+    is_file($realNewsletterPath),
+    'Scenario 10: resolve() should find the real mint_default blocks/newsletter.twig file on disk',
+    $failures
+);
+
+$realNewsletterMarkup = (string) file_get_contents($realNewsletterPath);
+
+assertSame__(
+    true,
+    str_contains($realNewsletterMarkup, 'data-mc-block-type="newsletter"') && str_contains($realNewsletterMarkup, 'enabled'),
+    'Scenario 10: the resolved real newsletter.twig should contain the documented data-mc-block-type="newsletter" markup and check the enabled flag',
+    $failures
+);
+
+// 11. Same real-repo integration check for the shipped spacer.twig - a
+//    second block type to guard against the fallback chain only having
+//    ever been exercised against the first one.
+$realSpacerPath = $realRenderer->resolve('spacer');
+
+assertSame__(
+    true,
+    is_file($realSpacerPath),
+    'Scenario 11: resolve() should find the real mint_default blocks/spacer.twig file on disk',
+    $failures
+);
+
+$realSpacerMarkup = (string) file_get_contents($realSpacerPath);
+
+assertSame__(
+    true,
+    str_contains($realSpacerMarkup, 'data-mc-block-type="spacer"') && str_contains($realSpacerMarkup, 'mc-spacer--{{ size }}'),
+    'Scenario 11: the resolved real spacer.twig should contain the documented data-mc-block-type="spacer" markup and the size modifier variable',
+    $failures
+);
+
+// 12. Same real-repo check for the text block (mint/blocks/text.twig).
+$realTextPath = $realRenderer->resolve('text');
+
+assertSame__(
+    true,
+    is_file($realTextPath),
+    'Scenario 12: resolve() should find the real mint_default blocks/text.twig file on disk',
+    $failures
+);
+
+$realTextMarkup = (string) file_get_contents($realTextPath);
+
+assertSame__(
+    true,
+    str_contains($realTextMarkup, 'data-mc-block-type="text"') && str_contains($realTextMarkup, 'mc-prose'),
+    'Scenario 12: the resolved real text.twig should contain the documented data-mc-block-type="text" markup and use mc-prose',
+    $failures
+);
+
+// 13. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/html.twig (added alongside
+//    products.twig) must resolve at its real path too - proves a second
+//    block type coexists cleanly under the same blocks/ subtree.
+$realHtmlPath = $realRenderer->resolve('html');
+
+assertSame__(
+    true,
+    is_file($realHtmlPath),
+    'Scenario 13: resolve() should find the real mint_default blocks/html.twig file on disk',
+    $failures
+);
+
+$realHtmlMarkup = (string) file_get_contents($realHtmlPath);
+
+assertSame__(
+    true,
+    str_contains($realHtmlMarkup, 'data-mc-block-type="html"') && str_contains($realHtmlMarkup, 'html|raw'),
+    'Scenario 13: the resolved real html.twig should contain the documented data-mc-block-type="html" markup and render html with the |raw filter',
+    $failures
+);
+
+// 14. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/gallery.twig must also resolve -
+//    guards the second block type against the same drift Scenario 2
+//    guards products against.
+$realGalleryPath = $realRenderer->resolve('gallery');
+
+assertSame__(
+    true,
+    is_file($realGalleryPath),
+    'Scenario 14: resolve() should find the real mint_default blocks/gallery.twig file on disk',
+    $failures
+);
+
+$realGalleryMarkup = (string) file_get_contents($realGalleryPath);
+
+assertSame__(
+    true,
+    str_contains($realGalleryMarkup, 'data-mc-block-type="gallery"') && str_contains($realGalleryMarkup, 'mc-gallery__item'),
+    'Scenario 14: the resolved real gallery.twig should contain the documented data-mc-block-type="gallery"/mc-gallery__item markup',
     $failures
 );
 
@@ -101,5 +358,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BlockRenderer smoke test (2 scenarios)\n";
+echo "PASS: BlockRenderer smoke test (14 scenarios)\n";
 exit(0);

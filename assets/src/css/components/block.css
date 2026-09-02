@@ -3,10 +3,12 @@
  *
  * Shared Homepage Builder block wrapper (docs/MINTCART_TECHNICAL_PLAN.md
  * §16-17, docs/MINTCART_IMPLEMENTATION_GUIDE.md §32-33). Every block type
- * renders inside `.mc-block`, with a type modifier
- * (`.mc-block--products`, `.mc-block--hero`, ...) for per-type spacing/
- * layout only - the block's own content (e.g. `mc-product-card`) keeps its
- * existing component styling untouched.
+ * renders inside `.mc-block`, tagged with `data-mc-block-type="hero"` (etc.)
+ * - block "type" is data, not a style variant, so it's a data attribute
+ * rather than a BEM modifier (CLAUDE.md §14's data-mc-* hook convention);
+ * a type that genuinely needs its own CSS targets
+ * `.mc-block[data-mc-block-type="..."]`. The block's own content (e.g.
+ * `mc-product-card`) keeps its existing component styling untouched.
  *
  * Bootstrap 5's `.container`/`.row`/`.col-*` provide the responsive grid
  * inside a block (docs/developer/layout-conventions.md), same as every
@@ -24,4 +26,363 @@
     color: var(--mc-text);
     font-family: var(--mc-font-family-heading);
     font-weight: var(--mc-font-weight-semibold);
+}
+
+/**
+ * [data-mc-block-type="hero"]
+ *
+ * Full-bleed banner variant (title/subtitle/CTA over an optional
+ * background image), MINTCART_IMPLEMENTATION_GUIDE.md §51's first
+ * first-wave block type. `--mc-block-hero-image` is set inline per
+ * instance (a data-driven custom property, MINTCART_IMPLEMENTATION_GUIDE.md
+ * §18 — the image is content, not a theme style) rather than a `background`
+ * shorthand baked into the Twig template, so a theme override can still
+ * restyle the overlay/gradient without touching the image URL itself.
+ * `.mc-block__hero-content` reuses the shared `.mc-block__title` for its
+ * heading — no duplicate heading style needed.
+ */
+.mc-block[data-mc-block-type="hero"] {
+    --mc-block-hero-image: none;
+    --mc-block-hero-overlay: rgba(0, 0, 0, 0.35);
+
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 320px;
+    padding-top: var(--mc-space-12);
+    padding-bottom: var(--mc-space-12);
+    background-color: var(--mc-surface-alt);
+    background-image: linear-gradient(var(--mc-block-hero-overlay), var(--mc-block-hero-overlay)), var(--mc-block-hero-image);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    color: var(--mc-on-primary);
+    text-align: center;
+}
+
+.mc-block[data-mc-block-type="hero"] .mc-block__title {
+    color: inherit;
+}
+
+.mc-block__hero-content {
+    max-width: 40rem;
+    margin-inline: auto;
+}
+
+.mc-block__hero-subtitle {
+    margin: 0 0 var(--mc-space-6);
+    font-size: var(--mc-font-size-lg);
+}
+
+/**
+ * mc-category-card
+ *
+ * Homepage Builder Categories block (`blocks/categories.twig`) item -
+ * image + name linking to `product/category`. Single-consumer markup, not
+ * a general-purpose component (CLAUDE.md §85: an abstraction needs a real
+ * consumer before it exists) - styled here rather than in its own
+ * `components/*.css` file since the Categories block is the only place it
+ * appears so far.
+ */
+.mc-category-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--mc-space-2);
+    text-align: center;
+    color: var(--mc-text);
+    text-decoration: none;
+}
+
+.mc-category-card__media {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: var(--mc-radius-md);
+    background: var(--mc-surface);
+}
+
+.mc-category-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mc-category-card__name {
+    font-family: var(--mc-font-family-base);
+    font-weight: var(--mc-font-weight-medium);
+}
+
+/**
+ * mc-benefit
+ *
+ * A single "Free shipping" / "Secure payment" style trust-badge item
+ * inside a `[data-mc-block-type="benefits"]` grid. Single consumer so far (the
+ * Benefits block), so colocated here rather than its own
+ * `components/*.css` file (CLAUDE.md §17: no abstraction before a real
+ * second consumer).
+ */
+
+.mc-benefit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--mc-space-2);
+    text-align: center;
+}
+
+.mc-benefit__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--mc-space-10);
+    height: var(--mc-space-10);
+    border-radius: var(--mc-radius-pill);
+    background: var(--mc-surface-alt);
+    color: var(--mc-primary);
+}
+
+.mc-benefit__title {
+    margin: 0;
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-heading);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-benefit__description {
+    margin: 0;
+    color: var(--mc-muted);
+}
+
+/**
+ * mc-faq (FAQ block)
+ *
+ * Native <details>/<summary> disclosure widgets - no Bootstrap collapse
+ * JS, no data-bs-toggle/aria-expanded management, no per-instance ID
+ * scheme to avoid colliding with a second FAQ block on the same page.
+ * The browser already provides expand/collapse, keyboard toggling and
+ * correct semantics for free (MINTCART_IMPLEMENTATION_GUIDE.md §3: don't
+ * add a dependency where ~20 lines of native markup already does the job).
+ */
+.mc-faq {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-3);
+}
+
+.mc-faq__item {
+    padding: var(--mc-space-4);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-faq__question {
+    color: var(--mc-text);
+    font-weight: var(--mc-font-weight-semibold);
+    cursor: pointer;
+}
+
+.mc-faq__item[open] .mc-faq__question {
+    margin-bottom: var(--mc-space-2);
+}
+
+.mc-faq__answer {
+    color: var(--mc-muted);
+}
+
+/**
+ * mc-testimonial (Testimonials block, MINTCART_IMPLEMENTATION_GUIDE.md
+ * §51). Single consumer so far (blocks/testimonials.twig) - colocated here
+ * rather than its own components/testimonial.css file, same rationale as
+ * mc-category-card (CLAUDE.md §17: no abstraction before a real second
+ * consumer).
+ */
+.mc-testimonial {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-3);
+    height: 100%;
+    margin: 0;
+    padding: var(--mc-space-5);
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-testimonial__quote {
+    margin: 0;
+    color: var(--mc-text);
+    font-style: normal;
+}
+
+.mc-testimonial__author {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    margin-top: auto;
+}
+
+.mc-testimonial__avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.mc-testimonial__author-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.mc-testimonial__author-name {
+    color: var(--mc-text);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-testimonial__author-role {
+    color: var(--mc-muted);
+    font-size: 0.875em;
+}
+
+/**
+ * mc-brands / mc-brand
+ *
+ * Brands block (docs/developer/blocks/brands.md) - a wrapping strip of
+ * logo links, not a fixed-column grid like Banner Grid, since a brand
+ * logo strip is meant to keep adding items on one flowing row rather than
+ * being constrained to 2-4 columns.
+ */
+
+.mc-brands {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--mc-space-6);
+}
+
+.mc-brand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mc-brand__logo {
+    max-width: 100%;
+    height: auto;
+    filter: grayscale(1);
+    opacity: 0.7;
+    transition: opacity var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        filter var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-brand:hover .mc-brand__logo,
+.mc-brand:focus-visible .mc-brand__logo {
+    filter: none;
+    opacity: 1;
+}
+
+/**
+ * [data-mc-block-type="text-image"]
+ *
+ * The Text/Image block's `<img>` (docs/developer/blocks/text-image.md).
+ * Bootstrap's `.row`/`.col-*`/`.order-md-first` provide the two-column
+ * layout and left/right image placement (docs/developer/layout-conventions.md)
+ * - this only styles the image itself, same "wrapper via Bootstrap,
+ * content via mc-*" split every other block uses.
+ */
+.mc-block__text-image-media {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--mc-radius-md);
+}
+
+/**
+ * [data-mc-block-type="cta"]
+ *
+ * CTA block (title + supporting text + optional button), centered — the
+ * simplest first-wave block type, single consumer so far so it's colocated
+ * here rather than its own components/*.css file (CLAUDE.md §17: no
+ * abstraction before a real second consumer).
+ */
+
+.mc-block__cta-inner {
+    max-width: 640px;
+    margin-inline: auto;
+    text-align: center;
+}
+
+.mc-block__cta-text {
+    margin: 0 0 var(--mc-space-4);
+    color: var(--mc-muted);
+}
+
+/**
+ * [data-mc-block-type="newsletter"]
+ *
+ * Newsletter block (docs/developer/blocks/newsletter.md) - a centered
+ * content block, same "title/text, optional action" shape as the CTA
+ * block, but with an email input + submit button instead of a
+ * single link-style button.
+ */
+
+.mc-block__newsletter-inner {
+    max-width: 32rem;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.mc-block__newsletter-text {
+    margin: 0 0 var(--mc-space-4);
+    color: var(--mc-muted);
+}
+
+.mc-block__newsletter-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--mc-space-2);
+}
+
+.mc-block__newsletter-form .mc-field__control {
+    flex: 1 1 16rem;
+}
+
+/**
+ * mc-spacer
+ *
+ * The simplest block type: an empty full-width strip whose only job is
+ * vertical space between two other blocks. No .container/.row wrapper (it
+ * has no content to constrain) and no top/bottom mc-block padding of its
+ * own - the size modifier *is* the space, not additional padding around it.
+ * `size` is a genuine style variant (unlike block "type" elsewhere in this
+ * file), so it's a real BEM modifier on `mc-spacer`'s own dedicated block,
+ * not the `data-mc-block-type` type-discriminator attribute.
+ * `--mc-block-spacer-height` is the component-local override point (per
+ * MINTCART_IMPLEMENTATION_GUIDE.md §16) a theme could redeclare without
+ * touching this file.
+ */
+.mc-spacer {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: var(--mc-block-spacer-height, var(--mc-space-8));
+}
+
+.mc-spacer--sm {
+    --mc-block-spacer-height: var(--mc-space-4);
+}
+
+.mc-spacer--md {
+    --mc-block-spacer-height: var(--mc-space-8);
+}
+
+.mc-spacer--lg {
+    --mc-block-spacer-height: var(--mc-space-12);
+}
+
+.mc-spacer--xl {
+    --mc-block-spacer-height: var(--mc-space-16);
 }

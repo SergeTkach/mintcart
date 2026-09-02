@@ -1,0 +1,23 @@
+{% if title or body or image %}
+<section class="mc-block" data-mc-block-type="text-image">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-12{% if image %} col-md-6{% endif %}">
+                {% if title %}
+                    <h2 class="mc-block__title">{{ title }}</h2>
+                {% endif %}
+
+                {% if body %}
+                    <div class="mc-prose">{{ body }}</div>
+                {% endif %}
+            </div>
+
+            {% if image %}
+                <div class="col-12 col-md-6{% if image_position == 'left' %} order-md-first{% endif %}">
+                    <img src="{{ image }}" alt="{{ image_alt }}" class="mc-block__text-image-media">
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}

@@ -1,0 +1,30 @@
+{% if items %}
+<section class="mc-block" data-mc-block-type="banner-grid">
+    <div class="container">
+        {% if title %}
+            <h2 class="mc-block__title">{{ title }}</h2>
+        {% endif %}
+
+        <div class="row g-4">
+            {% for item in items %}
+                <div class="col-6 col-lg-{{ col_width }}">
+                    <a class="mc-banner-grid__item" href="{{ item.url ? item.url : '#' }}">
+                        <img
+                            src="{{ item.image }}"
+                            alt="{{ item.alt }}"
+                            class="mc-banner-grid__image"
+                            {% if item.image_width %}width="{{ item.image_width }}"{% endif %}
+                            {% if item.image_height %}height="{{ item.image_height }}"{% endif %}
+                            loading="lazy"
+                        >
+
+                        {% if item.caption %}
+                            <span class="mc-banner-grid__caption">{{ item.caption }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

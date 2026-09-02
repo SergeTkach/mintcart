@@ -1,0 +1,23 @@
+{% if items %}
+<section class="mc-block" data-mc-block-type="brands">
+    <div class="container">
+        {% if title %}
+            <h2 class="mc-block__title">{{ title }}</h2>
+        {% endif %}
+
+        <div class="mc-brands">
+            {% for item in items %}
+                {% if item.url %}
+                    <a class="mc-brand" href="{{ item.url }}">
+                        <img class="mc-brand__logo" src="{{ item.image }}" alt="{{ item.alt }}" width="{{ item.image_width }}" height="{{ item.image_height }}" loading="lazy">
+                    </a>
+                {% else %}
+                    <span class="mc-brand">
+                        <img class="mc-brand__logo" src="{{ item.image }}" alt="{{ item.alt }}" width="{{ item.image_width }}" height="{{ item.image_height }}" loading="lazy">
+                    </span>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

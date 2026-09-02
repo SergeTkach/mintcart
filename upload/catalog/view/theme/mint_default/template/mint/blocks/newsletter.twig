@@ -1,0 +1,30 @@
+{% if title or text or enabled %}
+<section class="mc-block" data-mc-block-type="newsletter">
+    <div class="container">
+        <div class="mc-block__newsletter-inner">
+            {% if title %}
+                <h2 class="mc-block__title">{{ title }}</h2>
+            {% endif %}
+
+            {% if text %}
+                <p class="mc-block__newsletter-text">{{ text }}</p>
+            {% endif %}
+
+            {% if enabled %}
+                <form class="mc-block__newsletter-form" action="{{ action }}" method="{{ method }}">
+                    <input
+                        type="email"
+                        name="email"
+                        class="mc-field__control"
+                        placeholder="{{ placeholder }}"
+                        required
+                    >
+                    <button type="submit" class="mc-button mc-button--primary">
+                        {{ submit_label }}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}

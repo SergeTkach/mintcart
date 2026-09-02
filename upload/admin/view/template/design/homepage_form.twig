@@ -19,6 +19,11 @@
       <button type="button" class="close" data-dismiss="alert">&times;</button>
     </div>
     {% endif %}
+    {% if error_json %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_json }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
     <div class="panel panel-default">
       <div class="panel-heading">
         <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_form }}</h3>
@@ -28,7 +33,7 @@
           <div class="form-group required">
             <label class="col-sm-2 control-label" for="input-type">{{ entry_type }}</label>
             <div class="col-sm-10">
-              <select name="type" id="input-type" class="form-control">
+              <select name="type" id="input-type" class="form-control" onchange="location.href='{{ action }}&amp;type=' + this.value">
                 {% for block_type in types %}
                 <option value="{{ block_type.code }}"{% if block_type.code == type %} selected="selected"{% endif %}>{{ block_type.name }}</option>
                 {% endfor %}
@@ -36,6 +41,7 @@
               {% if error_type %}
               <div class="text-danger">{{ error_type }}</div>
               {% endif %}
+              <div class="help-block">{{ help_type_change }}</div>
             </div>
           </div>
           <div class="form-group">
@@ -52,6 +58,7 @@
               </select>
             </div>
           </div>
+          {% if content_field_defs %}
           <ul class="nav nav-tabs" id="language">
             {% for language in languages %}
             <li{% if loop.first %} class="active"{% endif %}><a href="#language{{ language.language_id }}" data-toggle="tab"><img src="language/{{ language.code }}/{{ language.code }}.png" title="{{ language.name }}" /> {{ language.name }}</a></li>
@@ -60,51 +67,53 @@
           <div class="tab-content">
             {% for language in languages %}
             <div class="tab-pane{% if loop.first %} active{% endif %}" id="language{{ language.language_id }}">
+              {% for field in content_field_defs %}
               <div class="form-group">
-                <label class="col-sm-2 control-label" for="input-title{{ language.language_id }}">{{ entry_title }}</label>
+                <label class="col-sm-2 control-label" for="input-{{ field.name }}{{ language.language_id }}">{{ field.label }}</label>
                 <div class="col-sm-10">
-                  <input type="text" name="block_content[{{ language.language_id }}][title]" value="{{ block_content[language.language_id] ? block_content[language.language_id].title }}" placeholder="{{ entry_title }}" id="input-title{{ language.language_id }}" class="form-control" />
+                  {% if field.type == 'textarea' or field.type == 'json' %}
+                  <textarea name="block_content[{{ language.language_id }}][{{ field.name }}]" placeholder="{{ field.label }}" id="input-{{ field.name }}{{ language.language_id }}" class="form-control" rows="{% if field.type == 'json' %}6{% else %}4{% endif %}">{{ block_content[language.language_id][field.name] }}</textarea>
+                  {% else %}
+                  <input type="text" name="block_content[{{ language.language_id }}][{{ field.name }}]" value="{{ block_content[language.language_id][field.name] }}" placeholder="{{ field.label }}" id="input-{{ field.name }}{{ language.language_id }}" class="form-control" />
+                  {% endif %}
+                  {% if field.help %}
+                  <div class="help-block">{{ field.help }}</div>
+                  {% endif %}
                 </div>
               </div>
+              {% endfor %}
             </div>
             {% endfor %}
           </div>
+          {% endif %}
+          {% if settings_fields %}
           <fieldset>
-            <legend>{{ text_settings_products }}</legend>
+            <legend>{{ settings_legend }}</legend>
+            {% for field in settings_fields %}
             <div class="form-group">
-              <label class="col-sm-2 control-label" for="input-category-id">{{ entry_category_id }}</label>
+              <label class="col-sm-2 control-label" for="input-{{ field.name }}">{{ field.label }}</label>
               <div class="col-sm-10">
-                <input type="number" name="settings[category_id]" value="{{ category_id }}" placeholder="{{ entry_category_id }}" id="input-category-id" class="form-control" />
-                <div class="help-block">{{ help_category_id }}</div>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="col-sm-2 control-label" for="input-limit">{{ entry_limit }}</label>
-              <div class="col-sm-10">
-                <input type="number" name="settings[limit]" value="{{ limit }}" placeholder="{{ entry_limit }}" id="input-limit" class="form-control" min="1" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="col-sm-2 control-label" for="input-sort">{{ entry_sort }}</label>
-              <div class="col-sm-10">
-                <select name="settings[sort]" id="input-sort" class="form-control">
-                  <option value="p.date_added"{% if sort == 'p.date_added' %} selected="selected"{% endif %}>Date Added</option>
-                  <option value="p.viewed"{% if sort == 'p.viewed' %} selected="selected"{% endif %}>Viewed</option>
-                  <option value="p.price"{% if sort == 'p.price' %} selected="selected"{% endif %}>Price</option>
-                  <option value="pd.name"{% if sort == 'pd.name' %} selected="selected"{% endif %}>Name</option>
+                {% if field.type == 'select' %}
+                <select name="settings[{{ field.name }}]" id="input-{{ field.name }}" class="form-control">
+                  {% for value, label in field.options %}
+                  <option value="{{ value }}"{% if value == field.value %} selected="selected"{% endif %}>{{ label }}</option>
+                  {% endfor %}
                 </select>
+                {% elseif field.type == 'json' %}
+                <textarea name="settings[{{ field.name }}]" placeholder="{{ field.label }}" id="input-{{ field.name }}" class="form-control" rows="6">{{ field.value }}</textarea>
+                {% elseif field.type == 'number' %}
+                <input type="number" name="settings[{{ field.name }}]" value="{{ field.value }}" placeholder="{{ field.label }}" id="input-{{ field.name }}" class="form-control"{% if field.min is not null %} min="{{ field.min }}"{% endif %} />
+                {% else %}
+                <input type="text" name="settings[{{ field.name }}]" value="{{ field.value }}" placeholder="{{ field.label }}" id="input-{{ field.name }}" class="form-control" />
+                {% endif %}
+                {% if field.help %}
+                <div class="help-block">{{ field.help }}</div>
+                {% endif %}
               </div>
             </div>
-            <div class="form-group">
-              <label class="col-sm-2 control-label" for="input-order">{{ entry_order }}</label>
-              <div class="col-sm-10">
-                <select name="settings[order]" id="input-order" class="form-control">
-                  <option value="ASC"{% if order == 'ASC' %} selected="selected"{% endif %}>ASC</option>
-                  <option value="DESC"{% if order == 'DESC' %} selected="selected"{% endif %}>DESC</option>
-                </select>
-              </div>
-            </div>
+            {% endfor %}
           </fieldset>
+          {% endif %}
         </form>
       </div>
     </div>

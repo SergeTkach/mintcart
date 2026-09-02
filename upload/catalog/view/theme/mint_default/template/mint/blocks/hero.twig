@@ -1,0 +1,19 @@
+{% if title or subtitle or image %}
+<section class="mc-block" data-mc-block-type="hero"{% if image %} style="--mc-block-hero-image: url('{{ image }}');"{% endif %}>
+    <div class="container">
+        <div class="mc-block__hero-content">
+            {% if title %}
+                <h1 class="mc-block__title">{{ title }}</h1>
+            {% endif %}
+
+            {% if subtitle %}
+                <p class="mc-block__hero-subtitle">{{ subtitle }}</p>
+            {% endif %}
+
+            {% if cta_label and cta_url %}
+                <a href="{{ cta_url }}" class="mc-button mc-button--primary mc-button--lg">{{ cta_label }}</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}

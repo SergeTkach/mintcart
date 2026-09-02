@@ -1,0 +1,40 @@
+{% if items %}
+<section class="mc-block" data-mc-block-type="testimonials">
+    <div class="container">
+        {% if title %}
+            <h2 class="mc-block__title">{{ title }}</h2>
+        {% endif %}
+
+        <div class="row g-4">
+            {% for item in items %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <figure class="mc-testimonial">
+                        {% if item.rating %}
+                            <div class="mc-rating" style="--mc-rating-value: {{ (item.rating / 5 * 100)|round }}%" role="img" aria-label="{{ text_rated|format(item.rating) }}">
+                                <span class="mc-rating__stars" aria-hidden="true">
+                                    <span class="mc-rating__stars-empty">★★★★★</span>
+                                    <span class="mc-rating__stars-filled">★★★★★</span>
+                                </span>
+                            </div>
+                        {% endif %}
+
+                        <blockquote class="mc-testimonial__quote">{{ item.quote }}</blockquote>
+
+                        <figcaption class="mc-testimonial__author">
+                            {% if item.avatar %}
+                                <img class="mc-testimonial__avatar" src="{{ item.avatar }}" alt="" width="{{ item.avatar_width }}" height="{{ item.avatar_height }}" loading="lazy">
+                            {% endif %}
+                            <span class="mc-testimonial__author-details">
+                                <span class="mc-testimonial__author-name">{{ item.author_name }}</span>
+                                {% if item.author_role %}
+                                    <span class="mc-testimonial__author-role">{{ item.author_role }}</span>
+                                {% endif %}
+                            </span>
+                        </figcaption>
+                    </figure>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

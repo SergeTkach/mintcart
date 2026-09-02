@@ -1,0 +1,87 @@
+/**
+ * mc-prose
+ *
+ * Rich-text container (docs/MINTCART_IMPLEMENTATION_GUIDE.md §20) for HTML
+ * that comes from a rich text field (e.g. a future CKEditor-based admin
+ * field, OpenCart's own `product`/`category`/`information` `description`,
+ * or a MintCart Homepage block like Text/Text+Image) rather than
+ * MintCart-authored component markup. Scoped to `.mc-prose` rather than
+ * applied globally so these rules never leak into unrelated components
+ * (Implementation Guide §20: "не використовувати правила rich text
+ * глобально там, де вони можуть поламати components").
+ *
+ * First real consumers: the Text/Image Homepage block's `body`
+ * (docs/developer/blocks/text-image.md) and the Text Homepage block
+ * (docs/developer/blocks/text.md) - this is the `elements/` layer's first
+ * file (docs/MINTCART_IMPLEMENTATION_GUIDE.md §11's CSS architecture lists
+ * `elements/typography.css` etc.; `mc-prose` is the first one with a real
+ * consumer, CLAUDE.md §85/§17). Every value reads a design token so
+ * presets (docs/developer/theme-api/presets.md) reach prose content the
+ * same way they reach every other MintCart component.
+ */
+
+.mc-prose {
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-base);
+    line-height: var(--mc-line-height-relaxed);
+}
+
+.mc-prose > :first-child {
+    margin-top: 0;
+}
+
+.mc-prose > :last-child {
+    margin-bottom: 0;
+}
+
+.mc-prose h2,
+.mc-prose h3,
+.mc-prose h4 {
+    margin: var(--mc-space-6) 0 var(--mc-space-3);
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-heading);
+    font-weight: var(--mc-font-weight-semibold);
+    line-height: var(--mc-line-height-tight);
+}
+
+.mc-prose p,
+.mc-prose ul,
+.mc-prose ol,
+.mc-prose table {
+    margin: 0 0 var(--mc-space-4);
+}
+
+.mc-prose ul,
+.mc-prose ol {
+    padding-inline-start: var(--mc-space-6);
+}
+
+.mc-prose a {
+    color: var(--mc-primary);
+    text-decoration: underline;
+}
+
+.mc-prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-prose table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mc-prose th,
+.mc-prose td {
+    padding: var(--mc-space-2) var(--mc-space-3);
+    border: var(--mc-border-width) solid var(--mc-border);
+    text-align: left;
+}
+
+.mc-prose blockquote {
+    margin: 0 0 var(--mc-space-4);
+    padding-inline-start: var(--mc-space-4);
+    border-inline-start: 3px solid var(--mc-border);
+    color: var(--mc-muted);
+}

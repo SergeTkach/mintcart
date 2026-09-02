@@ -30,11 +30,15 @@
         <h3 class="panel-title"><i class="fa fa-list"></i> {{ text_list }}</h3>
       </div>
       <div class="panel-body">
+        {% if blocks %}
+        <p class="text-muted">{{ text_drag_hint }}</p>
+        {% endif %}
         <form method="post" id="form-homepage">
           <div class="table-responsive">
-            <table class="table table-bordered table-hover">
+            <table class="table table-bordered table-hover" id="homepage-block-table">
               <thead>
                 <tr>
+                  <td style="width: 1px;"></td>
                   <td style="width: 1px;" class="text-center"><input type="checkbox" onclick="$('input[name*=\'selected\']').prop('checked', this.checked);" /></td>
                   <td class="text-left">{{ column_type }}</td>
                   <td class="text-left">{{ column_title }}</td>
@@ -46,7 +50,8 @@
               <tbody>
                 {% if blocks %}
                 {% for block in blocks %}
-                <tr>
+                <tr draggable="true" data-block-row="1">
+                  <td class="text-center" style="cursor: move;" title="{{ text_drag_hint }}"><i class="fa fa-bars text-muted"></i></td>
                   <td class="text-center">{% if block.block_id in selected %}
                     <input type="checkbox" name="selected[]" value="{{ block.block_id }}" checked="checked" />
                     {% else %}
@@ -61,7 +66,7 @@
                 {% endfor %}
                 {% else %}
                 <tr>
-                  <td class="text-center" colspan="6">{{ text_no_results }}</td>
+                  <td class="text-center" colspan="7">{{ text_no_results }}</td>
                 </tr>
                 {% endif %}
               </tbody>
@@ -76,3 +81,100 @@
   </div>
 </div>
 {{ footer }}
+<style>
+  #homepage-block-table tbody tr.mc-block-dragging {
+    opacity: 0.4;
+  }
+  #homepage-block-table tbody tr[draggable="true"]:hover {
+    background-color: #f5f5f5;
+  }
+</style>
+<script>
+/**
+ * Plain HTML5 Drag and Drop for reordering the block list - deliberately
+ * not McSortable (assets/src/js/components/sortable.js): no MintCart JS
+ * bundle is enqueued on this legacy-themed admin screen at all yet, see
+ * docs/developer/blocks/homepage-admin.md's "Why this screen uses the
+ * legacy admin theme" section for why (Bootstrap 3/5 admin-shell question,
+ * CLAUDE.md §10/§20 - not something this increment guesses at). This is a
+ * small, self-contained enhancement instead: dragging a row reorders the
+ * table and renumbers the existing "Sort Order" <input type="number">
+ * fields to match - the same "Save Order" button/request this screen
+ * already had submits either way. The number inputs stay fully visible
+ * and directly editable, which is also this screen's non-pointer path for
+ * reordering (MINTCART_IMPLEMENTATION_GUIDE.md §68: "sortable operation
+ * needs a non-pointer alternative") - a keyboard-only admin can still
+ * retype sort_order values with no drag gesture involved.
+ */
+(function () {
+    'use strict';
+
+    var tbody = document.querySelector('#homepage-block-table tbody');
+
+    if (!tbody) {
+        return;
+    }
+
+    var draggedRow = null;
+
+    function renumberOrder() {
+        var rows = tbody.querySelectorAll('tr[data-block-row]');
+
+        rows.forEach(function (row, index) {
+            var input = row.querySelector('input[name^="order["]');
+
+            if (input) {
+                input.value = index;
+            }
+        });
+    }
+
+    tbody.addEventListener('dragstart', function (event) {
+        var row = event.target.closest('tr[data-block-row]');
+
+        if (!row) {
+            return;
+        }
+
+        draggedRow = row;
+
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+        }
+
+        row.classList.add('mc-block-dragging');
+    });
+
+    tbody.addEventListener('dragend', function () {
+        if (draggedRow) {
+            draggedRow.classList.remove('mc-block-dragging');
+        }
+
+        draggedRow = null;
+    });
+
+    tbody.addEventListener('dragover', function (event) {
+        if (!draggedRow) {
+            return;
+        }
+
+        event.preventDefault();
+
+        var targetRow = event.target.closest('tr[data-block-row]');
+
+        if (!targetRow || targetRow === draggedRow) {
+            return;
+        }
+
+        var rect = targetRow.getBoundingClientRect();
+        var insertAfter = (event.clientY - rect.top) > (rect.height / 2);
+
+        tbody.insertBefore(draggedRow, insertAfter ? targetRow.nextSibling : targetRow);
+    });
+
+    tbody.addEventListener('drop', function (event) {
+        event.preventDefault();
+        renumberOrder();
+    });
+})();
+</script>

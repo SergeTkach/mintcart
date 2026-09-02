@@ -606,9 +606,19 @@ the same `ProductViewProvider`/`ProductCardListRenderer` pipeline
 Category/Search/Special/Manufacturer already use. Result is passed to the
 view as a new `$data['mc_blocks']` (list of already-rendered block HTML
 strings) — see `docs/developer/blocks/products.md` for the full writeup.
+`buildMintBlocks()`'s dispatch now also handles `type = 'banner-grid'` via
+a sibling `renderBannerGridBlock()` method
+(`MintCart\Blocks\BannerGridBlockProvider` + `$this->model_tool_image`,
+no product query involved — see `docs/developer/blocks/banner-grid.md`).
 The controller's original five `$this->load->controller(...)` calls
 (`column_left`/`column_right`/`content_top`/`content_bottom`/`footer`/`header`)
 are completely untouched.
+
+**Update (Text block):** `buildMintBlocks()`'s per-block dispatch now also
+handles `type = 'text'`, calling a new `renderTextBlock()` (normalizes via
+`MintCart\Blocks\TextBlockProvider`, renders `blocks/text.twig`) — no
+product query, no additional OpenCart service touched. See
+`docs/developer/blocks/text.md` for the full writeup.
 
 **Why it can't live in the MintCart layer instead:** Same rationale as
 every other page-controller wiring in this file — `BlockRenderer`,
@@ -632,17 +642,163 @@ the homepage renders exactly as before, just with an unused, empty
 grid for the rest of the request (same behaviour as every other consumer)
 rather than fataling the homepage.
 
+**Update (this run): added the Spacer block.** `buildMintBlocks()`'s
+per-block dispatch (previously a single `if ($block['type'] === 'products')`)
+is now an `if`/`elseif`/`else` also handling `type = 'spacer'` via a new
+`renderSpacerBlock()` method and `MintCart\Blocks\SpacerBlockProvider` — see
+`docs/developer/blocks/spacer.md` for the full writeup. No OpenCart query
+is made for a spacer (unlike products); it only normalizes a `size` setting
+and renders `blocks/spacer.twig`. Any other block `type` still falls
+through to `null` (skipped, not fatal), same as before this change.
+Compatibility impact is identical to the Products block's own: gated behind
+the same Mint-aware-theme check, and a store with no `'spacer'`-type
+`mc_block` row is completely unaffected.
+
 **Tests:** `php -l` (clean). `tests/mintcart/blocks/block-renderer-test.php`
-(2 scenarios) and `tests/mintcart/blocks/products-block-provider-test.php`
-(3 scenarios) cover the two new classes this wiring calls. Full
-`tests/mintcart/` suite re-run end to end after this change — still
-passing (11 files). Same pre-existing gap as every earlier phase: no
-MySQL/`vendor/twig/twig` in this environment, so no live end-to-end
-request was exercised — a human should insert a `mc_page` row
-(`code = 'home'`) and an `mc_block` row (`type = 'products'`,
-`settings_json = '{}'`) on a real install and confirm the homepage renders
-a Products block, then confirm the legacy `default` theme's homepage is
-pixel-identical to before.
+(3 scenarios, was 2 — added a real-repo `spacer.twig` resolution check) and
+`tests/mintcart/blocks/spacer-block-provider-test.php` (4 scenarios, new)
+and `tests/mintcart/blocks/products-block-provider-test.php` (3 scenarios)
+cover the classes this wiring calls. Full `tests/mintcart/` suite re-run
+end to end after this change — still passing (12 files). `npm run build`
+compiles cleanly; `mc-block--spacer`/`mc-block--spacer-sm|md|lg|xl` present
+in the bundled `assets/dist/css/index.min.css`. Same pre-existing gap as
+every earlier phase: no MySQL/`vendor/twig/twig` in this environment, so no
+live end-to-end request was exercised — a human should insert a `mc_page`
+row (`code = 'home'`) and an `mc_block` row (`type = 'products'` or
+`type = 'spacer'`, `settings_json = '{}'` or `'{"size":"lg"}'`) on a real
+install and confirm the homepage renders the corresponding block, then
+confirm the legacy `default` theme's homepage is pixel-identical to
+before.
+
+**Update (a later run): `buildMintBlocks()`'s dispatch now also handles
+`type = 'hero'`**, via a new `renderHeroBlock()` private method calling the
+new `MintCart\Blocks\HeroBlockProvider` — a settings-only banner block (no
+product query), see `docs/developer/blocks/hero.md` for the full writeup.
+The `foreach` loop was reshaped from an `if`-with-inline-append into an
+`if`/`elseif`/`else` that assigns `$markup` then appends once, so adding a
+third block type later is a single new `elseif` branch rather than another
+copy of the append-if-non-empty check. No behavioural change for existing
+`'products'` blocks. **Tests:** `php -l` clean;
+`tests/mintcart/blocks/hero-block-provider-test.php` (3 scenarios, new);
+full `tests/mintcart/` suite re-run end to end — still passing (12 files).
+Same pre-existing gap: a human should insert an `mc_block` row
+(`type = 'hero'`) on a real install and confirm the homepage renders a
+Hero banner, both with and without a background `image` setting.
+
+**Update (Categories block):** `buildMintBlocks()`'s per-block dispatch was
+reshaped from `if('products')` into `if`/`elseif`/`else` — for each
+`type = 'categories'` block, a new `renderCategoriesBlock()` method queries
+`ModelCatalogCategory::getCategories($parent_id)` (the same core model
+`common/menu`/`extension/module/category` already use) via the new
+`MintCart\Blocks\CategoriesBlockProvider`, and renders it through
+`blocks/categories.twig`. No change to the method's public shape or to the
+Products path. See `docs/developer/blocks/categories.md`. Verified: `php -l`
+clean; `tests/mintcart/blocks/categories-block-provider-test.php` (3
+scenarios, new) and `block-renderer-test.php`'s new Scenario 3 (real
+`categories.twig` resolves) both pass; full `tests/mintcart/` suite
+re-run end to end — still passing. Same live-MySQL gap as above — a human
+should also insert an `mc_block` row (`type = 'categories'`,
+`settings_json = '{}'`) and confirm the homepage renders a Categories grid.
+
+**Update: Benefits block added.** `buildMintBlocks()`'s per-block dispatch
+gained an `elseif ($block['type'] === 'benefits')` branch calling a new
+`renderBenefitsBlock()`, which normalizes settings via the new
+`MintCart\Blocks\BenefitsBlockProvider` and renders `blocks/benefits.twig`
+— no OpenCart query or model involved (pure content block; see
+`docs/developer/blocks/benefits.md`). Same Mint-aware-theme gate, same
+"skip when empty, never fatal" behaviour as the `'products'` branch.
+Verified: `tests/mintcart/blocks/benefits-block-provider-test.php` (3
+scenarios, new) and a third scenario added to
+`tests/mintcart/blocks/block-renderer-test.php` confirming the real
+`benefits.twig` resolves; full `tests/mintcart/` suite re-run end to end
+(12 files) — still passing. Same live-render gap as above — a human
+should also insert an `mc_block` row (`type = 'benefits'`) and confirm the
+homepage renders it.
+
+**Update (later run): `buildMintBlocks()`'s dispatch gained a `type = 'faq'`
+branch** (`renderFaqBlock()`), alongside the existing `'products'` one —
+see `docs/developer/blocks/faq.md` for the full writeup. Pure content
+block: no product query, no `tool/image` resize, no new language strings.
+Same compatibility posture as the Products branch — a legacy/third-party
+theme's `buildMintBlocks()` call still short-circuits before reaching
+either branch. Tests: `tests/mintcart/blocks/faq-block-provider-test.php`
+(3 scenarios), `tests/mintcart/blocks/block-renderer-test.php` scenario 3
+(real `faq.twig` resolution). Full `tests/mintcart/` suite re-run end to
+end — still passing (12 files).
+
+**Increment (Testimonials block, this run):** `buildMintBlocks()`'s
+dispatch gained a `renderTestimonialsBlock()` branch for
+`type = 'testimonials'` blocks, reusing
+`MintCart\Blocks\TestimonialsBlockProvider` (pure content, no product
+query) and resizing each item's optional avatar via
+`model_tool_image->resize()` the same `is_file()`-guarded way the stock
+Banner module does. See `docs/developer/blocks/testimonials.md` for the
+full writeup. No change to the `'products'` branch or to any other
+existing behaviour. Tests: `tests/mintcart/blocks/testimonials-block-provider-test.php`
+(3 scenarios, new) and Scenario 3 added to `block-renderer-test.php`
+(confirms the real `testimonials.twig` resolves) — full
+`tests/mintcart/` suite re-run end to end, 12 files, all passing.
+
+**Update (Brands block increment):** `buildMintBlocks()`'s dispatch gained
+an `elseif ($block['type'] === 'brands')` branch calling a new
+`renderBrandsBlock()`, following the exact same shape as
+`renderProductsBlock()`. See `docs/developer/blocks/brands.md` for the
+full writeup. `tests/mintcart/blocks/brands-block-provider-test.php` (3
+scenarios) covers the new `MintCart\Blocks\BrandsBlockProvider`; a 3rd
+scenario was added to `block-renderer-test.php` confirming the real
+`brands.twig` resolves. Full `tests/mintcart/` suite re-run end to end —
+still passing (12 files). Same live-render verification gap as above —
+not yet exercised against a real MySQL/Twig install.
+
+**Update (Phase 10, Text/Image block):** `buildMintBlocks()`'s dispatch
+gained an `elseif ($block['type'] === 'text-image')` branch and a new
+`renderTextImageBlock()` private method, following the exact shape
+`renderHeroBlock()` (added by a sibling increment) established — no change
+to the `'products'` branch or to `buildMintBlocks()`'s Mint-aware-theme gate.
+See `docs/developer/blocks/text-image.md` for the full writeup. Verified the
+same way: `php -l` clean; full `tests/mintcart/` suite (13 files, including
+the new `tests/mintcart/blocks/text-image-block-provider-test.php` and a 3rd
+scenario in `block-renderer-test.php`) passing; `npm run build` confirms
+`mc-prose`/`text-image-media` land in the bundled CSS. Same live-render gap
+as above still applies.
+
+**Increment (this run):** `buildMintBlocks()`'s dispatch gained an
+`elseif ($block['type'] === 'cta')` branch calling a new
+`renderCtaBlock()`, which normalizes via the new
+`MintCart\Blocks\CtaBlockProvider` (pure content, no query/model involved)
+and renders through the existing `BlockRenderer` — see
+`docs/developer/blocks/cta.md`. `tests/mintcart/blocks/cta-block-provider-test.php`
+(3 scenarios) and a 3rd scenario in `block-renderer-test.php` cover it; full
+`tests/mintcart/` suite re-run end to end, still passing (12 files).
+
+**Update (HTML block):** `buildMintBlocks()`'s per-block dispatch now also
+recognizes `type = 'html'`, calling a new `renderHtmlBlock()` method that
+normalizes the block's raw markup via the new
+`MintCart\Blocks\HtmlBlockProvider` and renders it through the same
+`BlockRenderer` the Products block uses — see
+`docs/developer/blocks/html.md`. No change to the `'products'` path or
+the Mint-awareness gate. Verified: `php -l` (clean); full
+`tests/mintcart/` suite re-run end to end — still passing (12 files, plus
+the new `tests/mintcart/blocks/html-block-provider-test.php`); same
+pre-existing no-MySQL/no-Twig-vendor gap — a human should insert an
+`mc_block` row (`type = 'html'`, `content_json = '{"html":"<p>Hello</p>"}'`)
+on a real install and confirm it renders on the homepage.
+
+**Update:** the `buildMintBlocks()` dispatch gained an
+`elseif ($block['type'] === 'gallery')` branch calling a new
+`renderGalleryBlock()`, which normalizes settings via the new
+`MintCart\Blocks\GalleryBlockProvider` and resolves each item's image via
+`tool/image` (same `is_file`-guarded `resize()` call `renderProductsBlock()`
+already uses), rendering `blocks/gallery.twig`. See
+`docs/developer/blocks/gallery.md`. Same compatibility/testing shape as
+the `products` branch above — an unrecognized/not-yet-implemented block
+type is still skipped, not fatal. (Note for whoever merges: several other
+Homepage Builder block types — Hero, Categories, Banner Grid, Benefits,
+Brands, Testimonials, FAQ, Text/Image, CTA, Newsletter, Spacer, Text,
+HTML — have their own open PRs adding a similar `elseif` branch to this
+same dispatch chain as of this run; a small manual merge-order
+reconciliation of `buildMintBlocks()` will be needed once more than one
+lands.)
 
 ---
 
@@ -659,6 +815,20 @@ full-width above the existing `column_left`/`content_top`/`content_bottom`/
 `common/home.twig` (same `header`/`footer` calls, same column-width
 logic translated to Bootstrap 5 `col-lg-*` per
 `docs/developer/layout-conventions.md`).
+
+**Update (Newsletter block increment):** `buildMintBlocks()`'s dispatch
+gained an `elseif ($block['type'] === 'newsletter')` branch calling a new
+`renderNewsletterBlock()` — the simplest render method so far (no query,
+no model, no image resize): normalize via
+`MintCart\Blocks\NewsletterBlockProvider`, render through `BlockRenderer`.
+See `docs/developer/blocks/newsletter.md` for the full writeup, including
+why the block's subscribe form has no working endpoint yet.
+`tests/mintcart/blocks/newsletter-block-provider-test.php` (4 scenarios)
+covers the new provider; a 3rd scenario was added to
+`block-renderer-test.php` confirming the real `newsletter.twig` resolves.
+Full `tests/mintcart/` suite re-run end to end — still passing (12 files).
+Same live-render verification gap as above — not yet exercised against a
+real MySQL/Twig install.
 
 ---
 
