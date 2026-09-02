@@ -199,14 +199,26 @@ OpenCart's own `config_telephone`/`config_email`/`config_address` settings
 result through `MintCart\Design\ComponentRenderer::render('footer', ...)`
 into a new `$data['mc_footer']` string.
 
-**Update (this run):** refactored to call the newly-extracted
+**Update:** refactored to call the newly-extracted
 `MintCart\Design\ActiveTheme::directory()`/`isMintAware()` instead of this
 controller's own private `mintActiveThemeDirectory()` helper — see
 `docs/developer/theme-api/product-card-list-renderer.md`. `CLAUDE.md`
 §85/§86 had this entry deliberately keep its own small copy rather than
 extract a shared helper for just two call sites; `ControllerProductSearch`
-(also this run) is the third, so the duplication is now extracted. No
+(also that run) is the third, so the duplication is now extracted. No
 behavioral change.
+
+**Update (this run):** `$social` is no longer always a hardcoded empty
+array. Now reads the `mintcart_contacts` setting (`getSetting()`, via the
+existing `catalog/model/setting/setting.php` — same model class the admin
+side already uses, `$this->load->model('setting/setting')` newly added to
+this controller) and passes its `mintcart_contacts_social` value straight
+through to `FooterViewProvider::build()`. That setting is written by the
+Setup Wizard's new Contacts step (`docs/developer/onboarding/setup-wizard.md`)
+in the exact `{network, href}` shape `build()`'s `$social` parameter already
+expects — no reshaping in this controller. A store that hasn't run that
+Wizard step yet still gets `$social = []`, identical to the previous
+hardcoded behavior — this is purely additive for stores that have.
 
 **Why it can't live in the MintCart layer instead:** Same rationale as
 `ControllerProductCategory` — `FooterViewProvider` and `ComponentRenderer`
