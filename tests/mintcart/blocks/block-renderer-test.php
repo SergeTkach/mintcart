@@ -137,6 +137,28 @@ assertSame__(
     $failures
 );
 
+// 5. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/faq.twig must also resolve at its
+//    real path - proves a second block type shares the same 'blocks' kind
+//    resolution as Products, not something Products-specific.
+$realFaqPath = $realRenderer->resolve('faq');
+
+assertSame__(
+    true,
+    is_file($realFaqPath),
+    'Scenario 5: resolve() should find the real mint_default blocks/faq.twig file on disk',
+    $failures
+);
+
+$realFaqMarkup = (string) file_get_contents($realFaqPath);
+
+assertSame__(
+    true,
+    str_contains($realFaqMarkup, 'mc-block--faq') && str_contains($realFaqMarkup, 'items'),
+    'Scenario 5: the resolved real faq.twig should contain the documented mc-block--faq markup and loop over items',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {

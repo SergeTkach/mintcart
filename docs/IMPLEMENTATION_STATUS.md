@@ -783,10 +783,10 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products, Hero, Categories, Banner Grid and Benefits
-      done (see "Sub-step 2", `docs/developer/blocks/hero.md`,
+- [~] First blocks: Products, Hero, Categories, Banner Grid, Benefits and
+      FAQ done (see "Sub-step 2", `docs/developer/blocks/hero.md`,
       `docs/developer/blocks/categories.md`, "Sub-step 3" below);
-      Text/Image, Brands, Testimonials, FAQ, CTA, Newsletter, Spacer, Text,
+      Text/Image, Brands, Testimonials, CTA, Newsletter, Spacer, Text,
       HTML, Gallery each have an open, in-progress pull request being merged
       sequentially as this backlog gets reconciled
 - [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
@@ -873,6 +873,12 @@ Full writeup: `docs/developer/blocks/hero.md`. Not yet wired into
 `ControllerDesignHomepage::TYPES` (see "Sub-step 3" above for why that's a
 deliberate, separate follow-up) — visible today only via a hand-inserted
 `mc_block` row with `type = 'hero'`.
+
+**FAQ block (merged separately, reconciled here):** `MintCart\Blocks\FaqBlockProvider`
++ `ControllerCommonHome::renderFaqBlock()` + `blocks/faq.twig` +
+`.mc-faq`/`__item`/`__question`/`__answer` CSS (native `<details>`/`<summary>`
+disclosure, no JS). Full writeup: `docs/developer/blocks/faq.md`. Also not
+yet wired into `ControllerDesignHomepage::TYPES`.
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -1057,10 +1063,52 @@ tag nesting checked balanced. Same pre-existing gap as every earlier
 phase: no MySQL/`vendor/twig/twig` in this environment, so no live
 end-to-end request was exercised.
 
+**Sub-step 3 (this run): FAQ block.** `MintCart\Blocks\FaqBlockProvider`
+(`upload/system/library/mintcart/blocks/faqblockprovider.php`) normalizes a
+`type='faq'` `mc_block` row into `title` + a list of `{question, answer}`
+items — unlike Products/Banner Grid, an FAQ item has no structural
+(non-localized) data at all, so both fields live entirely in
+`content_json` and `settings_json` is accepted but currently unused.
+Invalid items (missing question or answer, or not an array) are dropped
+during normalization rather than reaching the template half-empty.
+`ControllerCommonHome::renderFaqBlock()` mirrors `renderProductsBlock()`'s
+shape with no product query/image resize involved — a `null` return
+(empty `items` after normalization) is skipped by `buildMintBlocks()`'s
+dispatch, reshaped from a single `if('products')` into
+`if`/`elseif`/`else` so a third block type is one more branch, not a
+duplicated append-check. `mint_default`'s new `blocks/faq.twig` renders
+each item as a native `<details>`/`<summary>` disclosure widget —
+deliberately not Bootstrap's Collapse JS, since a native element already
+provides expand/collapse and correct semantics with no per-instance ID
+scheme needed (`MINTCART_IMPLEMENTATION_GUIDE.md` §3/§5). New
+`.mc-faq`/`__item`/`__question`/`__answer` CSS colocated in the existing
+`assets/src/css/components/block.css` (single consumer so far, `CLAUDE.md`
+§17). Full writeup: `docs/developer/blocks/faq.md`; increment note added to
+`docs/upstream-diff.md`'s existing `home.php` entry.
+
+New test: `tests/mintcart/blocks/faq-block-provider-test.php` (3
+scenarios, standalone, no OpenCart dependency), plus a 3rd scenario added
+to `tests/mintcart/blocks/block-renderer-test.php` confirming the real
+`faq.twig` resolves. Verified: `php -l` clean on every touched/added PHP
+file, and on the full `upload/` + `tests/` tree; full
+`tests/mintcart/**/*-test.php` suite passes locally (12 files, including
+the new FAQ provider test); `npm install` + `npm run build` compile
+cleanly, `grep` confirms `mc-faq`/`__item`/`__question`/`__answer` land in
+the bundled `assets/dist/css/index.min.css`; `npm test` (preset-token
+contract check) still passes, unaffected; `faq.twig`'s
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag nesting checked
+balanced with the same script-based technique used for every earlier
+`.twig` file in this repo. Not verified (same pre-existing gap as every
+earlier phase): no live MySQL/`vendor/twig/twig` in this sandbox, so no
+live end-to-end homepage render was exercised — a human should insert an
+`mc_block` row (`type='faq'`) with a couple of `content_json` items on a
+real install, confirm the homepage renders it, and click a question to
+confirm the native disclosure toggle actually expands/collapses.
+
 **Next step:** the remaining first-wave block types (Text/Image, Brands,
-Testimonials, FAQ, CTA, Newsletter, Spacer, Text, HTML, Gallery) each need
+Testimonials, CTA, Newsletter, Spacer, Text, HTML, Gallery) each need
 their own Provider + `blocks/<type>.twig` following the same shape
-Products/Hero/Categories/Banner Grid/Benefits established, being merged
+Products/Hero/Categories/Banner Grid/Benefits/FAQ established, being merged
 sequentially from their open PRs, or the Homepage drag-and-drop editor
 (admin UI to actually create/reorder `mc_page`/`mc_block` rows — until that
 exists, a block instance has to be inserted by hand to be visible).
@@ -2079,8 +2127,9 @@ Phase 17 section above for the full writeup. Two features
 wiring) are now both blocked on the same unsolved admin asset-enqueue
 problem — a good candidate for a future run to tackle on its own.
 
-**Update (reconciliation): PRs #30-#33 (Hero, Categories, Banner Grid,
-Benefits blocks) merged.** All four landed with their own
+**Update (reconciliation): PRs #30-#34 (Hero, Categories, Banner Grid,
+Benefits, FAQ blocks) merged.** All five landed with their own
 Provider/Renderer/Twig/CSS. Remaining first-wave block-type PRs being
-reconciled in sequence: Text/Image, Brands, Testimonials, FAQ, CTA,
-Newsletter, Spacer, Text, HTML, Gallery.
+reconciled in sequence: Text/Image, Brands, Testimonials, CTA, Newsletter,
+Spacer, Text, HTML, Gallery.
+

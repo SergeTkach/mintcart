@@ -1,0 +1,18 @@
+{% if items %}
+<section class="mc-block mc-block--faq">
+    <div class="container">
+        {% if title %}
+            <h2 class="mc-block__title">{{ title }}</h2>
+        {% endif %}
+
+        <div class="mc-faq">
+            {% for item in items %}
+                <details class="mc-faq__item">
+                    <summary class="mc-faq__question">{{ item.question }}</summary>
+                    <div class="mc-faq__answer">{{ item.answer }}</div>
+                </details>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
