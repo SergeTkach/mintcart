@@ -165,15 +165,19 @@ class ControllerMintcartWizard extends Controller
      * a completely valid, finishable state (Functional Scope §2 lists
      * social profiles under Contacts, but nothing in the product vision
      * makes them mandatory to reach "ready"). A filled-in field must be a
-     * well-formed URL, though - this is what gets rendered as an `href` on
-     * the live storefront footer.
+     * well-formed http(s) URL - this is what gets rendered as an `href` on
+     * the live storefront footer, so a scheme is checked explicitly rather
+     * than trusting FILTER_VALIDATE_URL alone: it happily accepts
+     * `javascript:...`/`data:...` as "valid" URLs (it only checks syntax,
+     * not scheme), which would otherwise let a stored link execute script
+     * in a storefront visitor's browser when they click it.
      */
     private function validateContactsStep(): void
     {
         foreach (self::SOCIAL_NETWORKS as $network) {
             $url = trim((string)($this->request->post['social_' . $network] ?? ''));
 
-            if ($url !== '' && !filter_var($url, FILTER_VALIDATE_URL)) {
+            if ($url !== '' && (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', $url))) {
                 $this->error['social_' . $network] = sprintf($this->language->get('error_social'), $this->language->get('entry_social_' . $network));
             }
         }

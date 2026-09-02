@@ -103,7 +103,13 @@ from memory), not discovered after the fact.
 `Contacts` collects up to four optional social profile URLs (Facebook,
 Instagram, Twitter/X, YouTube). All four are optional — a store with no
 social presence yet is a completely valid, finishable state; a filled-in
-field must pass `filter_var(..., FILTER_VALIDATE_URL)`.
+field must pass `filter_var(..., FILTER_VALIDATE_URL)` **and** start with
+`http://`/`https://`. The scheme check is deliberate, not redundant:
+`FILTER_VALIDATE_URL` only checks syntax, so it happily accepts
+`javascript:...`/`data:...` as "valid" — without the extra check, a stored
+link like that would execute script in a storefront visitor's browser the
+moment they clicked it (this value is later rendered as a plain `href` on
+the live footer).
 
 Unlike Store, this data is genuinely Mint-specific — OpenCart has no
 built-in storage for social profile links — so it's saved under its own
