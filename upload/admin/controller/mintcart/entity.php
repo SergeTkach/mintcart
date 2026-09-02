@@ -4,7 +4,7 @@
  * `MINTCART_TECHNICAL_PLAN.md` §20) — real `fetchItems` backends for
  * `McEntityPicker` (Phase 11), one action per entity type. `category()` is
  * the first, `manufacturer()` the second, `product()` the third,
- * `information()` the fourth.
+ * `information()` the fourth, `attribute()` the fifth.
  *
  * Deliberately a new, fully-additive controller under `mintcart/entity/*`
  * rather than a change to `catalog/category.php`'s existing `autocomplete()`
@@ -160,5 +160,29 @@ class ControllerMintcartEntity extends Controller {
 		$provider = new \MintCart\Design\InformationPickerProvider();
 
 		$this->respond($provider->build($rows, $filter_name, $page, $limit));
+	}
+
+	// route=mintcart/entity/attribute - GET filter_name, page, limit
+	public function attribute() {
+		if (!$this->user->hasPermission('access', 'mintcart/entity')) {
+			$this->respond(array('error' => 'Permission denied'));
+			return;
+		}
+
+		$this->load->model('catalog/attribute');
+
+		$filter_name = isset($this->request->get['filter_name']) ? (string)$this->request->get['filter_name'] : '';
+		$page = isset($this->request->get['page']) ? (int)$this->request->get['page'] : 1;
+		$limit = isset($this->request->get['limit']) ? (int)$this->request->get['limit'] : 20;
+
+		$rows = $this->model_catalog_attribute->getAttributes(array(
+			'filter_name' => $filter_name,
+			'sort'        => 'ad.name',
+			'order'       => 'ASC'
+		));
+
+		$provider = new \MintCart\Design\AttributePickerProvider();
+
+		$this->respond($provider->build($rows, $page, $limit));
 	}
 }
