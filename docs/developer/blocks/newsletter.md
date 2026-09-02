@@ -12,7 +12,7 @@ PHP:
 
 Twig: `upload/catalog/view/theme/mint_default/template/mint/blocks/newsletter.twig`
 
-CSS: `.mc-block--newsletter`/`.mc-block__newsletter-inner`/
+CSS: `.mc-block[data-mc-block-type="newsletter"]`/`.mc-block__newsletter-inner`/
 `.mc-block__newsletter-text`/`.mc-block__newsletter-form` in
 `assets/src/css/components/block.css` (colocated — single consumer so far,
 `CLAUDE.md` §17: no dedicated file before a real second consumer).
@@ -88,7 +88,7 @@ still-not-merged sibling block-type PRs.
 
 ```twig
 {% if title or text or enabled %}
-<section class="mc-block mc-block--newsletter">
+<section class="mc-block" data-mc-block-type="newsletter">
     <div class="container">
         <div class="mc-block__newsletter-inner">
             {% if title %}<h2 class="mc-block__title">{{ title }}</h2>{% endif %}

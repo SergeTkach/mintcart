@@ -14,7 +14,7 @@ PHP:
 
 Twig: `upload/catalog/view/theme/mint_default/template/mint/blocks/spacer.twig`
 
-CSS: `.mc-block--spacer*` in `assets/src/css/components/block.css`
+CSS: `.mc-spacer`/`.mc-spacer--*` in `assets/src/css/components/block.css`
 
 Tests: `tests/mintcart/blocks/spacer-block-provider-test.php`,
 `tests/mintcart/blocks/block-renderer-test.php` (scenario 3)
@@ -52,7 +52,7 @@ size, defaulting to `md`), unlike the Products block which can return
 ## Template
 
 ```twig
-<div class="mc-block mc-block--spacer mc-block--spacer-{{ size }}" aria-hidden="true"></div>
+<div class="mc-block mc-spacer mc-spacer--{{ size }}" data-mc-block-type="spacer" aria-hidden="true"></div>
 ```
 
 A single empty `<div>` — `aria-hidden="true"` because a spacer is purely
@@ -65,21 +65,24 @@ top/bottom padding of its own — see the CSS note below.
 ## CSS
 
 ```css
-.mc-block--spacer {
+.mc-spacer {
     padding-top: 0;
     padding-bottom: 0;
     height: var(--mc-block-spacer-height, var(--mc-space-8));
 }
 
-.mc-block--spacer-sm { --mc-block-spacer-height: var(--mc-space-4); }  /* 1rem */
-.mc-block--spacer-md { --mc-block-spacer-height: var(--mc-space-8); }  /* 2rem, default */
-.mc-block--spacer-lg { --mc-block-spacer-height: var(--mc-space-12); } /* 3rem */
-.mc-block--spacer-xl { --mc-block-spacer-height: var(--mc-space-16); } /* 4rem */
+.mc-spacer--sm { --mc-block-spacer-height: var(--mc-space-4); }  /* 1rem */
+.mc-spacer--md { --mc-block-spacer-height: var(--mc-space-8); }  /* 2rem, default */
+.mc-spacer--lg { --mc-block-spacer-height: var(--mc-space-12); } /* 3rem */
+.mc-spacer--xl { --mc-block-spacer-height: var(--mc-space-16); } /* 4rem */
 ```
 
+`size` is a genuine style variant, so it's a real BEM modifier on
+`mc-spacer`'s own dedicated block — unlike block "type" elsewhere in this
+file, which is data (`data-mc-block-type`), not a style variant.
 `.mc-block`'s shared `padding-top`/`padding-bottom: var(--mc-space-8)`
 (`docs/developer/blocks/products.md`'s `.mc-block` base) is explicitly
-zeroed out for `.mc-block--spacer` — the modifier's `height` *is* the space
+zeroed out for `.mc-spacer` — the modifier's `height` *is* the space
 a merchant asked for; adding the base block's own padding on top of it
 would make every spacer size read larger than its label suggests.
 `--mc-block-spacer-height` is the component-local override point

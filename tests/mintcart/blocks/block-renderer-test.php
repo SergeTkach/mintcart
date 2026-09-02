@@ -88,8 +88,8 @@ $realMarkup = (string) file_get_contents($realPath);
 
 assertSame__(
     true,
-    str_contains($realMarkup, 'mc-block--products') && str_contains($realMarkup, 'product_cards'),
-    'Scenario 2: the resolved real products.twig should contain the documented mc-block--products markup and loop over product_cards',
+    str_contains($realMarkup, 'data-mc-block-type="products"') && str_contains($realMarkup, 'product_cards'),
+    'Scenario 2: the resolved real products.twig should contain the documented data-mc-block-type="products" markup and loop over product_cards',
     $failures
 );
 
@@ -110,8 +110,8 @@ $realCategoriesMarkup = (string) file_get_contents($realCategoriesPath);
 
 assertSame__(
     true,
-    str_contains($realCategoriesMarkup, 'mc-block--categories') && str_contains($realCategoriesMarkup, 'categories'),
-    'Scenario 3: the resolved real categories.twig should contain the documented mc-block--categories markup and loop over categories',
+    str_contains($realCategoriesMarkup, 'data-mc-block-type="categories"') && str_contains($realCategoriesMarkup, 'categories'),
+    'Scenario 3: the resolved real categories.twig should contain the documented data-mc-block-type="categories" markup and loop over categories',
     $failures
 );
 
@@ -132,8 +132,8 @@ $realBenefitsMarkup = (string) file_get_contents($realBenefitsPath);
 
 assertSame__(
     true,
-    str_contains($realBenefitsMarkup, 'mc-block--benefits') && str_contains($realBenefitsMarkup, 'items'),
-    'Scenario 4: the resolved real benefits.twig should contain the documented mc-block--benefits markup and loop over items',
+    str_contains($realBenefitsMarkup, 'data-mc-block-type="benefits"') && str_contains($realBenefitsMarkup, 'items'),
+    'Scenario 4: the resolved real benefits.twig should contain the documented data-mc-block-type="benefits" markup and loop over items',
     $failures
 );
 
@@ -154,8 +154,8 @@ $realFaqMarkup = (string) file_get_contents($realFaqPath);
 
 assertSame__(
     true,
-    str_contains($realFaqMarkup, 'mc-block--faq') && str_contains($realFaqMarkup, 'items'),
-    'Scenario 5: the resolved real faq.twig should contain the documented mc-block--faq markup and loop over items',
+    str_contains($realFaqMarkup, 'data-mc-block-type="faq"') && str_contains($realFaqMarkup, 'items'),
+    'Scenario 5: the resolved real faq.twig should contain the documented data-mc-block-type="faq" markup and loop over items',
     $failures
 );
 
@@ -176,8 +176,8 @@ $realTestimonialsMarkup = (string) file_get_contents($realTestimonialsPath);
 
 assertSame__(
     true,
-    str_contains($realTestimonialsMarkup, 'mc-block--testimonials') && str_contains($realTestimonialsMarkup, 'mc-testimonial__quote'),
-    'Scenario 6: the resolved real testimonials.twig should contain the documented mc-block--testimonials/mc-testimonial__quote markup',
+    str_contains($realTestimonialsMarkup, 'data-mc-block-type="testimonials"') && str_contains($realTestimonialsMarkup, 'mc-testimonial__quote'),
+    'Scenario 6: the resolved real testimonials.twig should contain the documented data-mc-block-type="testimonials"/mc-testimonial__quote markup',
     $failures
 );
 
@@ -198,8 +198,8 @@ $realBrandsMarkup = (string) file_get_contents($realBrandsPath);
 
 assertSame__(
     true,
-    str_contains($realBrandsMarkup, 'mc-block--brands') && str_contains($realBrandsMarkup, 'items'),
-    'Scenario 7: the resolved real brands.twig should contain the documented mc-block--brands markup and loop over items',
+    str_contains($realBrandsMarkup, 'data-mc-block-type="brands"') && str_contains($realBrandsMarkup, 'items'),
+    'Scenario 7: the resolved real brands.twig should contain the documented data-mc-block-type="brands" markup and loop over items',
     $failures
 );
 
@@ -220,8 +220,8 @@ $realTextImageMarkup = (string) file_get_contents($realTextImagePath);
 
 assertSame__(
     true,
-    str_contains($realTextImageMarkup, 'mc-block--text-image') && str_contains($realTextImageMarkup, 'mc-prose'),
-    'Scenario 8: the resolved real text-image.twig should contain the documented mc-block--text-image wrapper and mc-prose body',
+    str_contains($realTextImageMarkup, 'data-mc-block-type="text-image"') && str_contains($realTextImageMarkup, 'mc-prose'),
+    'Scenario 8: the resolved real text-image.twig should contain the documented data-mc-block-type="text-image" wrapper and mc-prose body',
     $failures
 );
 
@@ -239,8 +239,8 @@ $realCtaMarkup = (string) file_get_contents($realCtaPath);
 
 assertSame__(
     true,
-    str_contains($realCtaMarkup, 'mc-block--cta') && str_contains($realCtaMarkup, 'cta_label') && str_contains($realCtaMarkup, 'cta_url'),
-    'Scenario 9: the resolved real cta.twig should contain the documented mc-block--cta markup and reference cta_label/cta_url',
+    str_contains($realCtaMarkup, 'data-mc-block-type="cta"') && str_contains($realCtaMarkup, 'cta_label') && str_contains($realCtaMarkup, 'cta_url'),
+    'Scenario 9: the resolved real cta.twig should contain the documented data-mc-block-type="cta" markup and reference cta_label/cta_url',
     $failures
 );
 
@@ -261,8 +261,8 @@ $realNewsletterMarkup = (string) file_get_contents($realNewsletterPath);
 
 assertSame__(
     true,
-    str_contains($realNewsletterMarkup, 'mc-block--newsletter') && str_contains($realNewsletterMarkup, 'enabled'),
-    'Scenario 10: the resolved real newsletter.twig should contain the documented mc-block--newsletter markup and check the enabled flag',
+    str_contains($realNewsletterMarkup, 'data-mc-block-type="newsletter"') && str_contains($realNewsletterMarkup, 'enabled'),
+    'Scenario 10: the resolved real newsletter.twig should contain the documented data-mc-block-type="newsletter" markup and check the enabled flag',
     $failures
 );
 
@@ -282,8 +282,8 @@ $realSpacerMarkup = (string) file_get_contents($realSpacerPath);
 
 assertSame__(
     true,
-    str_contains($realSpacerMarkup, 'mc-block--spacer') && str_contains($realSpacerMarkup, '{{ size }}'),
-    'Scenario 11: the resolved real spacer.twig should contain the documented mc-block--spacer markup and the size variable',
+    str_contains($realSpacerMarkup, 'data-mc-block-type="spacer"') && str_contains($realSpacerMarkup, 'mc-spacer--{{ size }}'),
+    'Scenario 11: the resolved real spacer.twig should contain the documented data-mc-block-type="spacer" markup and the size modifier variable',
     $failures
 );
 
@@ -301,8 +301,8 @@ $realTextMarkup = (string) file_get_contents($realTextPath);
 
 assertSame__(
     true,
-    str_contains($realTextMarkup, 'mc-block--text') && str_contains($realTextMarkup, 'mc-prose'),
-    'Scenario 12: the resolved real text.twig should contain the documented mc-block--text markup and use mc-prose',
+    str_contains($realTextMarkup, 'data-mc-block-type="text"') && str_contains($realTextMarkup, 'mc-prose'),
+    'Scenario 12: the resolved real text.twig should contain the documented data-mc-block-type="text" markup and use mc-prose',
     $failures
 );
 
@@ -323,8 +323,8 @@ $realHtmlMarkup = (string) file_get_contents($realHtmlPath);
 
 assertSame__(
     true,
-    str_contains($realHtmlMarkup, 'mc-block--html') && str_contains($realHtmlMarkup, 'html|raw'),
-    'Scenario 13: the resolved real html.twig should contain the documented mc-block--html markup and render html with the |raw filter',
+    str_contains($realHtmlMarkup, 'data-mc-block-type="html"') && str_contains($realHtmlMarkup, 'html|raw'),
+    'Scenario 13: the resolved real html.twig should contain the documented data-mc-block-type="html" markup and render html with the |raw filter',
     $failures
 );
 
@@ -345,8 +345,8 @@ $realGalleryMarkup = (string) file_get_contents($realGalleryPath);
 
 assertSame__(
     true,
-    str_contains($realGalleryMarkup, 'mc-block--gallery') && str_contains($realGalleryMarkup, 'mc-gallery__item'),
-    'Scenario 14: the resolved real gallery.twig should contain the documented mc-block--gallery/mc-gallery__item markup',
+    str_contains($realGalleryMarkup, 'data-mc-block-type="gallery"') && str_contains($realGalleryMarkup, 'mc-gallery__item'),
+    'Scenario 14: the resolved real gallery.twig should contain the documented data-mc-block-type="gallery"/mc-gallery__item markup',
     $failures
 );
 
@@ -358,5 +358,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BlockRenderer smoke test (3 scenarios)\n";
+echo "PASS: BlockRenderer smoke test (14 scenarios)\n";
 exit(0);

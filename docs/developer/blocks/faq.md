@@ -74,7 +74,7 @@ the job with less code).
 
 ```twig
 {% if items %}
-<section class="mc-block mc-block--faq">
+<section class="mc-block" data-mc-block-type="faq">
     <div class="container">
         {% if title %}<h2 class="mc-block__title">{{ title }}</h2>{% endif %}
         <div class="mc-faq">

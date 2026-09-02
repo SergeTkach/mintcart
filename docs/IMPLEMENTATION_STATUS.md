@@ -2521,3 +2521,21 @@ whether #47/#48/#49/the block PRs have landed.
 **Update (reconciliation): PR #50 (manufacturer entity picker backend)
 merged.** The whole backlog of parallel routine-run PRs (#30-#50) is now
 reconciled onto this branch.
+
+**Update (reconciliation follow-up): `mc-block--<type>` replaced with
+`data-mc-block-type="<type>"` across all 15 Homepage Builder block
+templates.** A per-type BEM modifier on the shared `.mc-block` wrapper
+described "which type this is" (data), not a style variant of the same
+component — a stretch of BEM's own definition of "modifier." Block type is
+now a `data-mc-block-type` attribute (CLAUDE.md §14's `data-mc-*` hook
+convention); the two types with real CSS keyed on it (Hero, Spacer) now
+target `.mc-block[data-mc-block-type="..."]`. Spacer's `size` *is* a
+genuine style variant, so it kept a real BEM modifier — moved onto its own
+dedicated `mc-spacer`/`mc-spacer--{sm,md,lg,xl}` block instead of piggy-
+backing on the type-discriminator class. Updated: all 15
+`blocks/*.twig` templates, `assets/src/css/components/{block,banner-grid,gallery}.css`,
+`tests/mintcart/blocks/block-renderer-test.php` (all 14 scenarios re-verified
+passing), and the `docs/developer/blocks/*.md` reference docs. Historical
+entries above this line describe each block as it shipped at the time
+(`mc-block--<type>`) — left as-is; they're a changelog, not living
+documentation.

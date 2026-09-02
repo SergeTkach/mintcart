@@ -88,7 +88,7 @@ still-not-implemented first-wave block types.
 
 ```twig
 {% if items %}
-<section class="mc-block mc-block--brands">
+<section class="mc-block" data-mc-block-type="brands">
     <div class="container">
         {% if title %}
             <h2 class="mc-block__title">{{ title }}</h2>

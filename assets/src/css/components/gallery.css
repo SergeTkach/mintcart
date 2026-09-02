@@ -3,10 +3,11 @@
  *
  * Content of the Gallery Homepage Builder block (docs/MINTCART_TECHNICAL_PLAN.md
  * §16-17, docs/MINTCART_IMPLEMENTATION_GUIDE.md §51 - one of the first-wave
- * block types). Rendered inside the shared `.mc-block`/`.mc-block--gallery`
- * wrapper (components/block.css); this file only styles the grid item itself
- * (image + optional caption), same "wrapper vs content" split
- * `mc-banner-grid` has from `mc-block--banner-grid`.
+ * block types). Rendered inside the shared `.mc-block`
+ * (`data-mc-block-type="gallery"`) wrapper (components/block.css); this
+ * file only styles the grid item itself (image + optional caption), same
+ * "wrapper vs content" split `mc-banner-grid` has from the Banner Grid
+ * block.
  *
  * No JS, no lightbox - a gallery item is a plain, non-interactive <figure>,
  * unlike `mc-banner-grid__item` which is a link. A future increment can add

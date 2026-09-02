@@ -13,7 +13,7 @@ PHP:
 
 Twig: `upload/catalog/view/theme/mint_default/template/mint/blocks/hero.twig`
 
-CSS: `.mc-block--hero` in `assets/src/css/components/block.css`
+CSS: `.mc-block[data-mc-block-type="hero"]` in `assets/src/css/components/block.css`
 
 Test: `tests/mintcart/blocks/hero-block-provider-test.php`
 
@@ -64,7 +64,7 @@ same `buildMintBlocks()` loop by `$block['type']`:
 
 ```twig
 {% if title or subtitle or image %}
-<section class="mc-block mc-block--hero"{% if image %} style="--mc-block-hero-image: url('{{ image }}');"{% endif %}>
+<section class="mc-block" data-mc-block-type="hero"{% if image %} style="--mc-block-hero-image: url('{{ image }}');"{% endif %}>
     ...
 </section>
 {% endif %}
@@ -74,7 +74,7 @@ The background image is set as an inline `--mc-block-hero-image` custom
 property, not a `background` shorthand baked into the template —
 `MINTCART_IMPLEMENTATION_GUIDE.md` §18's documented exception for
 data-driven inline styles (the image is per-instance content, not a theme
-style). `.mc-block--hero`'s own CSS composes that variable with a
+style). `[data-mc-block-type="hero"]`'s own CSS composes that variable with a
 `--mc-block-hero-overlay` token into a `linear-gradient()` + `background-image`
 pair, so a theme override can restyle the overlay/text color without ever
 touching how the image URL itself is passed in. The CTA renders only when

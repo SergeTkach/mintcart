@@ -1,5 +1,5 @@
 {% if title or subtitle or image %}
-<section class="mc-block mc-block--hero"{% if image %} style="--mc-block-hero-image: url('{{ image }}');"{% endif %}>
+<section class="mc-block" data-mc-block-type="hero"{% if image %} style="--mc-block-hero-image: url('{{ image }}');"{% endif %}>
     <div class="container">
         <div class="mc-block__hero-content">
             {% if title %}

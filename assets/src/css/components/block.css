@@ -3,10 +3,12 @@
  *
  * Shared Homepage Builder block wrapper (docs/MINTCART_TECHNICAL_PLAN.md
  * §16-17, docs/MINTCART_IMPLEMENTATION_GUIDE.md §32-33). Every block type
- * renders inside `.mc-block`, with a type modifier
- * (`.mc-block--products`, `.mc-block--hero`, ...) for per-type spacing/
- * layout only - the block's own content (e.g. `mc-product-card`) keeps its
- * existing component styling untouched.
+ * renders inside `.mc-block`, tagged with `data-mc-block-type="hero"` (etc.)
+ * - block "type" is data, not a style variant, so it's a data attribute
+ * rather than a BEM modifier (CLAUDE.md §14's data-mc-* hook convention);
+ * a type that genuinely needs its own CSS targets
+ * `.mc-block[data-mc-block-type="..."]`. The block's own content (e.g.
+ * `mc-product-card`) keeps its existing component styling untouched.
  *
  * Bootstrap 5's `.container`/`.row`/`.col-*` provide the responsive grid
  * inside a block (docs/developer/layout-conventions.md), same as every
@@ -27,7 +29,7 @@
 }
 
 /**
- * mc-block--hero
+ * [data-mc-block-type="hero"]
  *
  * Full-bleed banner variant (title/subtitle/CTA over an optional
  * background image), MINTCART_IMPLEMENTATION_GUIDE.md §51's first
@@ -39,7 +41,7 @@
  * `.mc-block__hero-content` reuses the shared `.mc-block__title` for its
  * heading — no duplicate heading style needed.
  */
-.mc-block--hero {
+.mc-block[data-mc-block-type="hero"] {
     --mc-block-hero-image: none;
     --mc-block-hero-overlay: rgba(0, 0, 0, 0.35);
 
@@ -58,7 +60,7 @@
     text-align: center;
 }
 
-.mc-block--hero .mc-block__title {
+.mc-block[data-mc-block-type="hero"] .mc-block__title {
     color: inherit;
 }
 
@@ -116,7 +118,7 @@
  * mc-benefit
  *
  * A single "Free shipping" / "Secure payment" style trust-badge item
- * inside a `.mc-block--benefits` grid. Single consumer so far (the
+ * inside a `[data-mc-block-type="benefits"]` grid. Single consumer so far (the
  * Benefits block), so colocated here rather than its own
  * `components/*.css` file (CLAUDE.md §17: no abstraction before a real
  * second consumer).
@@ -283,7 +285,7 @@
 }
 
 /**
- * mc-block--text-image
+ * [data-mc-block-type="text-image"]
  *
  * The Text/Image block's `<img>` (docs/developer/blocks/text-image.md).
  * Bootstrap's `.row`/`.col-*`/`.order-md-first` provide the two-column
@@ -299,7 +301,7 @@
 }
 
 /**
- * mc-block--cta
+ * [data-mc-block-type="cta"]
  *
  * CTA block (title + supporting text + optional button), centered — the
  * simplest first-wave block type, single consumer so far so it's colocated
@@ -319,11 +321,11 @@
 }
 
 /**
- * mc-block--newsletter
+ * [data-mc-block-type="newsletter"]
  *
  * Newsletter block (docs/developer/blocks/newsletter.md) - a centered
- * content block, same "title/text, optional action" shape as
- * mc-block--cta, but with an email input + submit button instead of a
+ * content block, same "title/text, optional action" shape as the CTA
+ * block, but with an email input + submit button instead of a
  * single link-style button.
  */
 
@@ -350,34 +352,37 @@
 }
 
 /**
- * mc-block--spacer
+ * mc-spacer
  *
  * The simplest block type: an empty full-width strip whose only job is
  * vertical space between two other blocks. No .container/.row wrapper (it
  * has no content to constrain) and no top/bottom mc-block padding of its
  * own - the size modifier *is* the space, not additional padding around it.
+ * `size` is a genuine style variant (unlike block "type" elsewhere in this
+ * file), so it's a real BEM modifier on `mc-spacer`'s own dedicated block,
+ * not the `data-mc-block-type` type-discriminator attribute.
  * `--mc-block-spacer-height` is the component-local override point (per
  * MINTCART_IMPLEMENTATION_GUIDE.md §16) a theme could redeclare without
  * touching this file.
  */
-.mc-block--spacer {
+.mc-spacer {
     padding-top: 0;
     padding-bottom: 0;
     height: var(--mc-block-spacer-height, var(--mc-space-8));
 }
 
-.mc-block--spacer-sm {
+.mc-spacer--sm {
     --mc-block-spacer-height: var(--mc-space-4);
 }
 
-.mc-block--spacer-md {
+.mc-spacer--md {
     --mc-block-spacer-height: var(--mc-space-8);
 }
 
-.mc-block--spacer-lg {
+.mc-spacer--lg {
     --mc-block-spacer-height: var(--mc-space-12);
 }
 
-.mc-block--spacer-xl {
+.mc-spacer--xl {
     --mc-block-spacer-height: var(--mc-space-16);
 }

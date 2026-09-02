@@ -3,10 +3,11 @@
  *
  * Content of the Banner Grid Homepage Builder block (docs/MINTCART_TECHNICAL_PLAN.md
  * §16-17, docs/MINTCART_IMPLEMENTATION_GUIDE.md §51 - one of the first-wave
- * block types). Rendered inside the shared `.mc-block`/`.mc-block--banner-grid`
- * wrapper (components/block.css); this file only styles the grid item itself
- * (image + optional caption overlay), same "wrapper vs content" split
- * `mc-product-card` has from `mc-block--products`.
+ * block types). Rendered inside the shared `.mc-block`
+ * (`data-mc-block-type="banner-grid"`) wrapper (components/block.css); this
+ * file only styles the grid item itself (image + optional caption overlay),
+ * same "wrapper vs content" split `mc-product-card` has from the Products
+ * block.
  *
  * No JS - a banner item is a plain link (`<a>`), same as the rest of the
  * storefront's non-interactive imagery.

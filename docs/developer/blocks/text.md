@@ -84,7 +84,7 @@ renders nothing (`renderTextBlock()` returns `null`), same "never an empty
 
 ```twig
 {% if content %}
-<section class="mc-block mc-block--text">
+<section class="mc-block" data-mc-block-type="text">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-8{% if text_align == 'center' %} text-center{% endif %}">
@@ -103,7 +103,7 @@ renders nothing (`renderTextBlock()` returns `null`), same "never an empty
 ```
 
 Uses the shared `mc-block`/`mc-block__title` wrapper every block type uses
-(`assets/src/css/components/block.css`) — no `mc-block--text`-specific CSS
+(`assets/src/css/components/block.css`) — no type-specific CSS
 was needed, the generic wrapper's spacing/title styling is already
 sufficient. Centered alignment is a plain Bootstrap 5 utility class
 (`text-center`), not a new `mc-*` API — alignment is a layout concern, not
