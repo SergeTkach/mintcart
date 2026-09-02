@@ -152,3 +152,24 @@ user token, using an existing multi-level category tree:
    exactly as before — `rebuildCategoryPath()` is an extraction of its
    prior inline logic, not a rewrite, but this should still be re-checked
    live once MySQL is available.
+
+## Phase 12 — `mintcart/entity/manufacturer` endpoint, never hit end to end
+
+Same gap as the category endpoint above, plus one thing category couldn't
+exercise at all: `image` resolution. On a real install, with at least one
+manufacturer that has an image set and one that doesn't:
+
+1. Grant `mintcart/entity` **Access** if not already done for the category
+   endpoint above (same permission covers both routes).
+2. Request `index.php?route=mintcart/entity/manufacturer&user_token=<your
+   token>&filter_name=&page=1&limit=20` and confirm a JSON
+   `{"items": [...], "total": N}` response with real manufacturer names.
+3. Confirm the manufacturer with an image returns a real, loadable
+   `image` URL (not `null`, and the URL actually resolves to the same
+   100x100 thumbnail `Catalog → Manufacturers`' own list shows), and the
+   one without an image returns `image: null`.
+4. Confirm `filter_name` set to the *start* of one manufacturer's name
+   matches it, but a substring from the *middle* of that name does not
+   (prefix match, not substring — see
+   `docs/developer/components/entity-picker.md`'s manufacturer section for
+   why this differs from category's substring match).

@@ -1581,10 +1581,10 @@ PHP touched, so the PHP `tests/mintcart/` suite doesn't apply.
       filter requirement identified yet.
 - [~] Real `fetchItems` backends per entity type (products, categories,
       manufacturers, attributes, options, information pages, customers) —
-      **category is done** (this run), see below; the other six entity
-      types still need their own.
-- [ ] Live wiring into an actual admin screen/field — the category
-      backend exists but nothing calls it yet (see below for why, and the
+      **category and manufacturer are done** (manufacturer this run), see
+      below; the other five entity types still need their own.
+- [ ] Live wiring into an actual admin screen/field — both backends exist
+      but nothing calls either yet (see below for why, and each one's
       identified first consumer).
 - [ ] Create-new flow via drawer/modal — not attempted.
 
@@ -1630,10 +1630,41 @@ file) — see the new Phase 12 section in `docs/MANUAL_VERIFICATION.md` for
 what a human should confirm (grant the `mintcart/entity` permission, then
 hit the endpoint directly).
 
-**Next step:** either wire this backend into `product_form.twig`'s
-Category field (blocked on solving the admin asset-enqueue problem
-first — see above), or pick a second entity type (product, manufacturer,
-customer, ...) and build its backend the same shape as this one.
+**Update (a later run): the manufacturer `fetchItems` backend is done
+too**, same shape as category —
+`ControllerMintcartEntity::manufacturer()` (route
+`mintcart/entity/manufacturer`) wraps `ModelCatalogManufacturer::getManufacturers()`
+and normalizes rows via the new
+`MintCart\Design\ManufacturerPickerProvider`
+(`upload/system/library/mintcart/design/manufacturerpickerprovider.php`,
+no OpenCart dependency, unit-tested — `tests/mintcart/design/manufacturer-picker-provider-test.php`,
+7 scenarios). Two differences worth knowing, both documented in
+`docs/developer/components/entity-picker.md`'s new "Manufacturer backend"
+section: `image` is a real `model_tool_image`-resolved thumbnail URL
+(not always `null` like category's, since `oc_manufacturer` has an image
+column category's query doesn't) — this is the first entity backend to
+actually exercise `McEntityPicker`'s thumbnail rendering; and
+`filter_name` prefix-matches (`LIKE '…%'`) rather than category's
+substring match (`LIKE '%…%'`), inherited unchanged from each model's
+existing behavior. Live wiring deliberately not attempted, same reason as
+category (MintCart's asset bundle still isn't enqueued on any admin
+page) — identified first consumer is `product_form.twig`'s Manufacturer
+autocomplete field. Verified: `php -l` clean on both touched/added PHP
+files; full `tests/mintcart/` suite re-run end to end (15 files now, was
+14) — all pass, no regressions (one new pure class, one new action on an
+already-additive controller, touching nothing existing). Same
+no-MySQL/no-`vendor/twig/twig` gap as every prior phase — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 12 entry for what a human
+should confirm, image resolution included.
+
+**Next step:** either wire the category or manufacturer backend into
+`product_form.twig`'s respective field (both blocked on solving the
+admin asset-enqueue problem first — see above; Phase 13's wizard found
+one way around it worth reading before attempting this: a standalone
+page with no legacy chrome, see that phase's "Design decision worth
+flagging"), or pick another entity type (product, attribute, option,
+information page, customer) and build its backend the same shape as
+these two.
 
 ## Phase 13 — Setup Wizard
 
@@ -2474,3 +2505,19 @@ Text, HTML, Gallery blocks) merged.** All fourteen landed with their own
 Provider/Renderer/Twig/CSS, including the shared `mc-prose` rich-text
 container. The full first-wave block catalog is now on `master`; only
 PR #50 (manufacturer entity picker, Phase 12) remains in the backlog.
+
+**Update (later run): PR #46 (Homepage Builder admin editor) merged, and
+by then #40 (Wizard Welcome/Store) and #45 (category entity picker) had
+too.** This run picked Phase 12's second entity backend (manufacturer —
+see that phase's section above) after confirming, at step 0, that open
+PRs #47 (Phase 15 `SearchService`), #48 (Phase 14 `StoreReadiness`) and
+#49 (Phase 17 Categories drag & drop) plus the still-open block-type PRs
+(#30-44) didn't overlap it. Remaining unclaimed candidates for a future
+run: a third entity backend (product/attribute/option/information
+page/customer), Phase 13's Contacts-through-Ready wizard steps, Phase 16
+(Bulk Editor, not started), Phase 18 (SEO Core, not started), or checking
+whether #47/#48/#49/the block PRs have landed.
+
+**Update (reconciliation): PR #50 (manufacturer entity picker backend)
+merged.** The whole backlog of parallel routine-run PRs (#30-#50) is now
+reconciled onto this branch.
