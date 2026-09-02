@@ -38,6 +38,13 @@ upload/**/test*
 # (docs/IMPLEMENTATION_STATUS.md Phase 8) - not runtime/scratch test data.
 !upload/catalog/view/theme/test_theme/
 !upload/catalog/view/theme/test_theme/**
+# ...and except the real, source-controlled Testimonials block source files
+# (docs/IMPLEMENTATION_STATUS.md Phase 10) - the broad test* glob above
+# matches these only because their filename happens to start with "test",
+# same false-positive class the test_theme/ negation above already fixed
+# once (see that commit's message).
+!upload/system/library/mintcart/blocks/testimonialsblockprovider.php
+!upload/catalog/view/theme/mint_default/template/mint/blocks/testimonials.twig
 upload/shop/*
 upload/storage/*
 

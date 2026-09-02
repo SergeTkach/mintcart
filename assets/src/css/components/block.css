@@ -188,3 +188,58 @@
 .mc-faq__answer {
     color: var(--mc-muted);
 }
+
+/**
+ * mc-testimonial (Testimonials block, MINTCART_IMPLEMENTATION_GUIDE.md
+ * §51). Single consumer so far (blocks/testimonials.twig) - colocated here
+ * rather than its own components/testimonial.css file, same rationale as
+ * mc-category-card (CLAUDE.md §17: no abstraction before a real second
+ * consumer).
+ */
+.mc-testimonial {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-3);
+    height: 100%;
+    margin: 0;
+    padding: var(--mc-space-5);
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-testimonial__quote {
+    margin: 0;
+    color: var(--mc-text);
+    font-style: normal;
+}
+
+.mc-testimonial__author {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    margin-top: auto;
+}
+
+.mc-testimonial__avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.mc-testimonial__author-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.mc-testimonial__author-name {
+    color: var(--mc-text);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-testimonial__author-role {
+    color: var(--mc-muted);
+    font-size: 0.875em;
+}

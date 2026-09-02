@@ -159,6 +159,28 @@ assertSame__(
     $failures
 );
 
+// 6. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/testimonials.twig must also
+//    resolve - guards the second real block type's template against the
+//    same layout drift Scenario 2 guards for products.twig.
+$realTestimonialsPath = $realRenderer->resolve('testimonials');
+
+assertSame__(
+    true,
+    is_file($realTestimonialsPath),
+    'Scenario 6: resolve() should find the real mint_default blocks/testimonials.twig file on disk',
+    $failures
+);
+
+$realTestimonialsMarkup = (string) file_get_contents($realTestimonialsPath);
+
+assertSame__(
+    true,
+    str_contains($realTestimonialsMarkup, 'mc-block--testimonials') && str_contains($realTestimonialsMarkup, 'mc-testimonial__quote'),
+    'Scenario 6: the resolved real testimonials.twig should contain the documented mc-block--testimonials/mc-testimonial__quote markup',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {

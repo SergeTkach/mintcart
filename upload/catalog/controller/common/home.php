@@ -27,12 +27,13 @@ class ControllerCommonHome extends Controller {
 	 * MintCart Homepage Builder (Phase 10, MINTCART_TECHNICAL_PLAN.md
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
 	 * sort_order, via MintCart\Blocks\BlockRenderer. Only 'products',
-	 * 'hero', 'categories', 'banner-grid', 'benefits' and 'faq' have a
-	 * query/provider implementation so far (MINTCART_IMPLEMENTATION_GUIDE.md
-	 * §51's other first-wave block types - Text/Image, Brands, Testimonials
-	 * - are separate, not-yet-started checklist items). An unrecognized
-	 * block type is skipped, not fatal, so a page mixing implemented and
-	 * not-yet-implemented block types still renders what it can.
+	 * 'hero', 'categories', 'banner-grid', 'benefits', 'faq' and
+	 * 'testimonials' have a query/provider implementation so far
+	 * (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block types
+	 * - Text/Image, Brands - are separate, not-yet-started checklist
+	 * items). An unrecognized block type is skipped, not fatal, so a page
+	 * mixing implemented and not-yet-implemented block types still renders
+	 * what it can.
 	 *
 	 * Same "is the active theme Mint-API-aware" gate every other Mint
 	 * rendering pipeline uses (MintCart\Design\ActiveTheme::isMintAware) -
@@ -82,6 +83,8 @@ class ControllerCommonHome extends Controller {
 				$markup = $this->renderBenefitsBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'faq') {
 				$markup = $this->renderFaqBlock($block, $block_renderer);
+			} elseif ($block['type'] === 'testimonials') {
+				$markup = $this->renderTestimonialsBlock($block, $block_renderer);
 			} else {
 				$markup = null;
 			}
@@ -118,6 +121,46 @@ class ControllerCommonHome extends Controller {
 		}
 
 		return $block_renderer->render('benefits', $settings);
+	}
+
+	/**
+	 * Renders one 'testimonials' mc_block row - a pure content block (no
+	 * product query), following the same
+	 * TestimonialsBlockProvider::build() normalize -> BlockRenderer::render()
+	 * shape as renderProductsBlock(), minus the product-listing step.
+	 *
+	 * Each item's optional `avatar` is resized the same is_file()-guarded
+	 * way the stock Banner module resizes its images - a missing/deleted
+	 * file degrades to no avatar for that testimonial rather than a broken
+	 * <img>, the item itself is still rendered.
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when the block has
+	 *         no renderable items (missing quote/author dropped by the
+	 *         provider).
+	 */
+	private function renderTestimonialsBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\TestimonialsBlockProvider())->build($block['settings'], $block['content']);
+
+		if (!$settings['items']) {
+			return null;
+		}
+
+		$this->load->model('tool/image');
+
+		foreach ($settings['items'] as &$item) {
+			if ($item['avatar'] && is_file(DIR_IMAGE . $item['avatar'])) {
+				$item['avatar'] = $this->model_tool_image->resize($item['avatar'], $item['avatar_width'], $item['avatar_height']);
+			} else {
+				$item['avatar'] = null;
+			}
+		}
+		unset($item);
+
+		return $block_renderer->render('testimonials', array(
+			'title' => $settings['title'],
+			'items' => $settings['items']
+		));
 	}
 
 	/**
