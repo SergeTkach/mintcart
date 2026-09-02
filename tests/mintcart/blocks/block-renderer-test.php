@@ -225,6 +225,25 @@ assertSame__(
     $failures
 );
 
+// 9. Same real-repo integration check for the CTA block's template.
+$realCtaPath = $realRenderer->resolve('cta');
+
+assertSame__(
+    true,
+    is_file($realCtaPath),
+    'Scenario 9: resolve() should find the real mint_default blocks/cta.twig file on disk',
+    $failures
+);
+
+$realCtaMarkup = (string) file_get_contents($realCtaPath);
+
+assertSame__(
+    true,
+    str_contains($realCtaMarkup, 'mc-block--cta') && str_contains($realCtaMarkup, 'cta_label') && str_contains($realCtaMarkup, 'cta_url'),
+    'Scenario 9: the resolved real cta.twig should contain the documented mc-block--cta markup and reference cta_label/cta_url',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {

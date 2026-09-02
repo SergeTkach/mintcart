@@ -740,6 +740,15 @@ scenario in `block-renderer-test.php`) passing; `npm run build` confirms
 `mc-prose`/`text-image-media` land in the bundled CSS. Same live-render gap
 as above still applies.
 
+**Increment (this run):** `buildMintBlocks()`'s dispatch gained an
+`elseif ($block['type'] === 'cta')` branch calling a new
+`renderCtaBlock()`, which normalizes via the new
+`MintCart\Blocks\CtaBlockProvider` (pure content, no query/model involved)
+and renders through the existing `BlockRenderer` — see
+`docs/developer/blocks/cta.md`. `tests/mintcart/blocks/cta-block-provider-test.php`
+(3 scenarios) and a 3rd scenario in `block-renderer-test.php` cover it; full
+`tests/mintcart/` suite re-run end to end, still passing (12 files).
+
 ---
 
 ## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)

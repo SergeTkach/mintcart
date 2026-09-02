@@ -297,3 +297,23 @@
     height: auto;
     border-radius: var(--mc-radius-md);
 }
+
+/**
+ * mc-block--cta
+ *
+ * CTA block (title + supporting text + optional button), centered — the
+ * simplest first-wave block type, single consumer so far so it's colocated
+ * here rather than its own components/*.css file (CLAUDE.md §17: no
+ * abstraction before a real second consumer).
+ */
+
+.mc-block__cta-inner {
+    max-width: 640px;
+    margin-inline: auto;
+    text-align: center;
+}
+
+.mc-block__cta-text {
+    margin: 0 0 var(--mc-space-4);
+    color: var(--mc-muted);
+}

@@ -28,9 +28,9 @@ class ControllerCommonHome extends Controller {
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
 	 * sort_order, via MintCart\Blocks\BlockRenderer. 'products', 'hero',
 	 * 'categories', 'banner-grid', 'benefits', 'faq', 'testimonials',
-	 * 'brands' and 'text-image' have a query/provider implementation so far
-	 * (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block types
-	 * - CTA, Newsletter, Spacer, Text, HTML, Gallery - are separate,
+	 * 'brands', 'text-image' and 'cta' have a query/provider implementation
+	 * so far (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block
+	 * types - Newsletter, Spacer, Text, HTML, Gallery - are separate,
 	 * not-yet-started checklist items). An unrecognized block type is
 	 * skipped, not fatal, so a page mixing implemented and
 	 * not-yet-implemented block types still renders what it can.
@@ -89,6 +89,8 @@ class ControllerCommonHome extends Controller {
 				$markup = $this->renderBrandsBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'text-image') {
 				$markup = $this->renderTextImageBlock($block, $block_renderer);
+			} elseif ($block['type'] === 'cta') {
+				$markup = $this->renderCtaBlock($block, $block_renderer);
 			} else {
 				$markup = null;
 			}
@@ -571,5 +573,24 @@ class ControllerCommonHome extends Controller {
 			'image_alt'      => $settings['image_alt'],
 			'image_position' => $settings['image_position']
 		));
+	}
+
+	/**
+	 * Renders one 'cta' mc_block row. A CTA block is pure content (title,
+	 * supporting text, optional button) with no query/model involved at
+	 * all - MintCart\Blocks\CtaBlockProvider only normalizes the already-
+	 * decoded settings/content, so this method just does that and hands
+	 * the result to blocks/cta.twig via BlockRenderer.
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup. blocks/cta.twig itself
+	 *         renders nothing when title/text/button are all empty, so this
+	 *         can legitimately return an empty string, which the caller
+	 *         already treats the same as null.
+	 */
+	private function renderCtaBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\CtaBlockProvider())->build($block['settings'], $block['content']);
+
+		return $block_renderer->render('cta', $settings);
 	}
 }
