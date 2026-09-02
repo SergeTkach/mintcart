@@ -784,9 +784,9 @@ by setting the attribute by hand.
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
 - [~] First blocks: Products, Hero, Categories, Banner Grid, Benefits, FAQ,
-      Testimonials and Brands done (see "Sub-step 2",
+      Testimonials, Brands and Text/Image done (see "Sub-step 2",
       `docs/developer/blocks/hero.md`, `docs/developer/blocks/categories.md`,
-      "Sub-step 3" below); Text/Image, CTA, Newsletter, Spacer, Text,
+      "Sub-step 3" below); CTA, Newsletter, Spacer, Text,
       HTML, Gallery each have an open, in-progress pull request being merged
       sequentially as this backlog gets reconciled
 - [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
@@ -895,6 +895,14 @@ pattern the stock Banner module uses. Full writeup:
 strip of logo links (not a fixed-column grid like Banner Grid). Full
 writeup: `docs/developer/blocks/brands.md`. Also not yet wired into
 `ControllerDesignHomepage::TYPES`.
+
+**Text/Image block (merged separately, reconciled here):**
+`MintCart\Blocks\TextImageBlockProvider` + `ControllerCommonHome::renderTextImageBlock()`
++ `blocks/text-image.twig` + `.mc-block__text-image-media` CSS — covers
+both the "Text" and "Text + Image" first-wave catalog entries (an optional
+`image` setting; a block with none renders as plain text). Body renders
+through `mc-prose`. Full writeup: `docs/developer/blocks/text-image.md`.
+Also not yet wired into `ControllerDesignHomepage::TYPES`.
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -1191,10 +1199,46 @@ MySQL/Twig render exercised in this sandbox — a human should insert an
 `mc_block` row (`type='brands'`) with a couple of items (with and without
 a `url`) on a real install and confirm the homepage renders a logo strip.
 
-**Next step:** the remaining first-wave block types (Text/Image, CTA,
-Newsletter, Spacer, Text, HTML, Gallery) each need their own Provider +
-`blocks/<type>.twig` following the same shape
-Products/Hero/Categories/Banner Grid/Benefits/FAQ/Testimonials/Brands
+**Sub-step 3 (this run): Text/Image block.**
+`MintCart\Blocks\TextImageBlockProvider`
+(`upload/system/library/mintcart/blocks/textimageblockprovider.php`)
+normalizes a `type='text-image'` `mc_block` row (structural `image`/
+`image_width`/`image_height`/`image_position` in `settings_json`, localized
+`title`/`body`/`image_alt` in `content_json`) — no OpenCart dependency at
+all, same shape as `ProductsBlockProvider`. Covers both the "Text" and
+"Text + Image" catalog entries (`MINTCART_IMPLEMENTATION_GUIDE.md` §33) as
+one block type, since the `image` setting is simply optional.
+`ControllerCommonHome::renderTextImageBlock()` resolves the optional image
+via `model_tool_image->resize()`, `is_file()`-guarded exactly like
+`renderHeroBlock()`; `buildMintBlocks()`'s dispatch gained an
+`elseif ($block['type'] === 'text-image')` branch.
+`template/mint/blocks/text-image.twig` (Mint Default) is a two-column
+Bootstrap layout (text always first in source order; `image_position:
+'left'` uses Bootstrap's `.order-md-first` utility rather than a second
+markup branch) that degrades to a full-width text-only column when there is
+no image. `body` is rendered inside a new `.mc-prose` class — the CSS
+architecture's `elements/` layer's first file
+(`assets/src/css/elements/prose.css`, `MINTCART_IMPLEMENTATION_GUIDE.md`
+§11/§20), since a rich-text block body is its first real consumer.
+New test: `tests/mintcart/blocks/text-image-block-provider-test.php` (3
+scenarios), plus a 3rd scenario added to
+`tests/mintcart/blocks/block-renderer-test.php`. Full writeup:
+`docs/developer/blocks/text-image.md`; increment note in
+`docs/upstream-diff.md`'s existing `home.php` entry. Verified: `php -l`
+clean on every touched/added PHP file; full `tests/mintcart/` suite (13
+files) passing; `npm install` + `npm run build` compile cleanly, confirmed
+`mc-prose`/`text-image-media` land in the bundled
+`assets/dist/css/index.min.css`; `npm test` (preset-token contract check)
+still passes. Same pre-existing gap as every earlier phase: no
+MySQL/`vendor/twig/twig` in this environment, so no live end-to-end
+homepage render was exercised — a human should insert an `mc_block` row
+(`type='text-image'`) with and without an `image` setting on a real install
+and confirm the homepage renders both a plain-text block and a two-column
+block, image on each side.
+
+**Next step:** `MINTCART_IMPLEMENTATION_GUIDE.md` §33's remaining block
+catalog entries — CTA, Newsletter, Spacer, Text, HTML, Gallery — each need
+their own Provider + `blocks/<type>.twig` following the same shape
 established, being merged sequentially from their open PRs, or the
 Homepage drag-and-drop editor (admin UI to actually create/reorder
 `mc_page`/`mc_block` rows — until that exists, a block instance has to be
@@ -2214,9 +2258,9 @@ Phase 17 section above for the full writeup. Two features
 wiring) are now both blocked on the same unsolved admin asset-enqueue
 problem — a good candidate for a future run to tackle on its own.
 
-**Update (reconciliation): PRs #30-#34 (Hero, Categories, Banner Grid,
-Benefits, FAQ blocks) merged.** All five landed with their own
-Provider/Renderer/Twig/CSS. Remaining first-wave block-type PRs being
-reconciled in sequence: Text/Image, Brands, Testimonials, CTA, Newsletter,
-Spacer, Text, HTML, Gallery.
+**Update (reconciliation): PRs #30-#37 (Hero, Categories, Banner Grid,
+Benefits, FAQ, Testimonials, Brands, Text/Image blocks) merged.** All
+eight landed with their own Provider/Renderer/Twig/CSS. Remaining
+block-type PRs being reconciled in sequence: CTA, Newsletter, Spacer,
+Text, HTML, Gallery.
 

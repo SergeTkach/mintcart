@@ -26,14 +26,14 @@ class ControllerCommonHome extends Controller {
 	/**
 	 * MintCart Homepage Builder (Phase 10, MINTCART_TECHNICAL_PLAN.md
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
-	 * sort_order, via MintCart\Blocks\BlockRenderer. Only 'products',
-	 * 'hero', 'categories', 'banner-grid', 'benefits', 'faq',
-	 * 'testimonials' and 'brands' have a query/provider implementation so
-	 * far (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block
-	 * types - Text/Image - are separate, not-yet-started checklist items).
-	 * An unrecognized block type is skipped, not fatal, so a page mixing
-	 * implemented and not-yet-implemented block types still renders what
-	 * it can.
+	 * sort_order, via MintCart\Blocks\BlockRenderer. 'products', 'hero',
+	 * 'categories', 'banner-grid', 'benefits', 'faq', 'testimonials',
+	 * 'brands' and 'text-image' have a query/provider implementation so far
+	 * (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block types
+	 * - CTA, Newsletter, Spacer, Text, HTML, Gallery - are separate,
+	 * not-yet-started checklist items). An unrecognized block type is
+	 * skipped, not fatal, so a page mixing implemented and
+	 * not-yet-implemented block types still renders what it can.
 	 *
 	 * Same "is the active theme Mint-API-aware" gate every other Mint
 	 * rendering pipeline uses (MintCart\Design\ActiveTheme::isMintAware) -
@@ -87,6 +87,8 @@ class ControllerCommonHome extends Controller {
 				$markup = $this->renderTestimonialsBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'brands') {
 				$markup = $this->renderBrandsBlock($block, $block_renderer);
+			} elseif ($block['type'] === 'text-image') {
+				$markup = $this->renderTextImageBlock($block, $block_renderer);
 			} else {
 				$markup = null;
 			}
@@ -527,6 +529,47 @@ class ControllerCommonHome extends Controller {
 		return $block_renderer->render('brands', array(
 			'title' => $settings['title'],
 			'items' => $items
+		));
+	}
+
+	/**
+	 * Renders one 'text-image' mc_block row - a plain content block with no
+	 * OpenCart query at all, unlike Products/Hero. Covers both the "Text"
+	 * and "Text + Image" catalog entries
+	 * (MINTCART_IMPLEMENTATION_GUIDE.md §33): an `image` setting is
+	 * optional, so a block with none renders as plain text, exactly like a
+	 * "Text" block would (MintCart\Blocks\TextImageBlockProvider's own doc
+	 * comment).
+	 *
+	 * Image resolution mirrors renderHeroBlock() exactly - same
+	 * is_file()-guarded model_tool_image->resize() call, same
+	 * "degrade to no image rather than a broken <img>" behaviour.
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when the block has
+	 *         no title, no body and no resolvable image (nothing to show).
+	 */
+	private function renderTextImageBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\TextImageBlockProvider())->build($block['settings'], $block['content']);
+
+		$image = null;
+
+		if ($settings['image'] !== null && is_file(DIR_IMAGE . $settings['image'])) {
+			$this->load->model('tool/image');
+
+			$image = $this->model_tool_image->resize($settings['image'], $settings['image_width'], $settings['image_height']);
+		}
+
+		if ($settings['title'] === '' && $settings['body'] === '' && $image === null) {
+			return null;
+		}
+
+		return $block_renderer->render('text-image', array(
+			'title'          => $settings['title'],
+			'body'           => $settings['body'],
+			'image'          => $image,
+			'image_alt'      => $settings['image_alt'],
+			'image_position' => $settings['image_position']
 		));
 	}
 }
