@@ -173,3 +173,25 @@ manufacturer that has an image set and one that doesn't:
    (prefix match, not substring — see
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
+
+## Phase 13 — Wizard Contacts step, never exercised end to end
+
+`ControllerMintcartWizard::validateContactsStep()`/`saveContactsStep()`
+are `php -l`-clean and manually reviewed, but no live MySQL/admin session
+in this environment means the form was never actually submitted. On a
+real install, at `mintcart/wizard` once Store is completed:
+
+1. Submit the Contacts step with all four fields blank — confirm it saves
+   (no validation error) and advances to the next step / "ready" state.
+2. Go back to Contacts (via the step nav), fill in one valid URL (e.g.
+   `https://facebook.com/example`) and one deliberately malformed value
+   (e.g. `not a url`) — confirm the malformed field shows a validation
+   error and the form is *not* saved (the valid field's value should still
+   be in the input on reload, not lost).
+3. Fill in all four with valid URLs, submit, then reload the Contacts step
+   — confirm all four fields re-populate from storage (not blank).
+4. Load a storefront page on a `mint_default`-themed store and confirm the
+   footer's social links section renders the saved URLs with working
+   `href`s (currently a plain first-letter glyph per link — icon rendering
+   is still a documented follow-up, see `footer.twig`'s own `mc_icon()`
+   comment, unrelated to this change).
