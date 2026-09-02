@@ -26,10 +26,10 @@ class ControllerCommonHome extends Controller {
 	/**
 	 * MintCart Homepage Builder (Phase 10, MINTCART_TECHNICAL_PLAN.md
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
-	 * sort_order, via MintCart\Blocks\BlockRenderer. Only 'products' and
-	 * 'hero' have a query/provider implementation so far
+	 * sort_order, via MintCart\Blocks\BlockRenderer. Only 'products',
+	 * 'hero' and 'categories' have a query/provider implementation so far
 	 * (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block types
-	 * - Categories, Banner Grid, Benefits, Text/Image, Brands, Testimonials,
+	 * - Banner Grid, Benefits, Text/Image, Brands, Testimonials,
 	 * FAQ - are separate, not-yet-started checklist items). An unrecognized
 	 * block type is skipped, not fatal, so a page mixing implemented and
 	 * not-yet-implemented block types still renders what it can.
@@ -74,6 +74,8 @@ class ControllerCommonHome extends Controller {
 				$markup = $this->renderProductsBlock($block, $block_renderer, $mint_theme);
 			} elseif ($block['type'] === 'hero') {
 				$markup = $this->renderHeroBlock($block, $block_renderer);
+			} elseif ($block['type'] === 'categories') {
+				$markup = $this->renderCategoriesBlock($block, $block_renderer);
 			} else {
 				$markup = null;
 			}
@@ -270,6 +272,63 @@ class ControllerCommonHome extends Controller {
 			'cta_label' => $settings['cta_label'],
 			'cta_url'   => $settings['cta_url'],
 			'image'     => $image
+		));
+	}
+
+	/**
+	 * Queries categories for one 'categories' mc_block row and renders it.
+	 * Uses the same `ModelCatalogCategory::getCategories()` +
+	 * `product/category` path-link convention every other core category
+	 * listing (common/menu, extension/module/category, product/category's
+	 * own breadcrumb) already relies on - a category's link path is just
+	 * its own category_id at the top level, or `<parent_id>_<category_id>`
+	 * one level down, per MintCart\Blocks\CategoriesBlockProvider's
+	 * `parent_id` setting.
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when the query
+	 *         returned no categories for the configured parent_id.
+	 */
+	private function renderCategoriesBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$this->load->model('catalog/category');
+		$this->load->model('tool/image');
+
+		$settings = (new \MintCart\Blocks\CategoriesBlockProvider())->build($block['settings'], $block['content']);
+
+		$results = $this->model_catalog_category->getCategories($settings['parent_id']);
+
+		if (!$results) {
+			return null;
+		}
+
+		$results = array_slice($results, 0, $settings['limit']);
+
+		$categories = array();
+
+		foreach ($results as $result) {
+			if ($result['image']) {
+				$image = $this->model_tool_image->resize($result['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_category_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_category_height'));
+			} else {
+				$image = '';
+			}
+
+			$path = $settings['parent_id'] ? $settings['parent_id'] . '_' . $result['category_id'] : $result['category_id'];
+
+			$categories[] = array(
+				'id'    => $result['category_id'],
+				'name'  => $result['name'],
+				'url'   => $this->url->link('product/category', 'path=' . $path),
+				'image' => $image
+			);
+		}
+
+		if (!$categories) {
+			return null;
+		}
+
+		return $block_renderer->render('categories', array(
+			'title'      => $settings['title'],
+			'categories' => $categories
 		));
 	}
 }

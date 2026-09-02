@@ -1,0 +1,24 @@
+{% if categories %}
+<section class="mc-block mc-block--categories">
+    <div class="container">
+        {% if title %}
+            <h2 class="mc-block__title">{{ title }}</h2>
+        {% endif %}
+
+        <div class="row g-4">
+            {% for category in categories %}
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a class="mc-category-card" href="{{ category.url }}">
+                        {% if category.image %}
+                            <span class="mc-category-card__media">
+                                <img src="{{ category.image }}" alt="{{ category.name }}" loading="lazy">
+                            </span>
+                        {% endif %}
+                        <span class="mc-category-card__name">{{ category.name }}</span>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

@@ -71,3 +71,43 @@
     margin: 0 0 var(--mc-space-6);
     font-size: var(--mc-font-size-lg);
 }
+
+/**
+ * mc-category-card
+ *
+ * Homepage Builder Categories block (`blocks/categories.twig`) item -
+ * image + name linking to `product/category`. Single-consumer markup, not
+ * a general-purpose component (CLAUDE.md §85: an abstraction needs a real
+ * consumer before it exists) - styled here rather than in its own
+ * `components/*.css` file since the Categories block is the only place it
+ * appears so far.
+ */
+.mc-category-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--mc-space-2);
+    text-align: center;
+    color: var(--mc-text);
+    text-decoration: none;
+}
+
+.mc-category-card__media {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: var(--mc-radius-md);
+    background: var(--mc-surface);
+}
+
+.mc-category-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mc-category-card__name {
+    font-family: var(--mc-font-family-base);
+    font-weight: var(--mc-font-weight-medium);
+}

@@ -93,6 +93,28 @@ assertSame__(
     $failures
 );
 
+// 3. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/categories.twig must also resolve
+//    at its real path - same guard as Scenario 2, for the Categories
+//    block added alongside Products.
+$realCategoriesPath = $realRenderer->resolve('categories');
+
+assertSame__(
+    true,
+    is_file($realCategoriesPath),
+    'Scenario 3: resolve() should find the real mint_default blocks/categories.twig file on disk',
+    $failures
+);
+
+$realCategoriesMarkup = (string) file_get_contents($realCategoriesPath);
+
+assertSame__(
+    true,
+    str_contains($realCategoriesMarkup, 'mc-block--categories') && str_contains($realCategoriesMarkup, 'categories'),
+    'Scenario 3: the resolved real categories.twig should contain the documented mc-block--categories markup and loop over categories',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -101,5 +123,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BlockRenderer smoke test (2 scenarios)\n";
+echo "PASS: BlockRenderer smoke test (3 scenarios)\n";
 exit(0);
