@@ -784,6 +784,22 @@ pre-existing no-MySQL/no-Twig-vendor gap — a human should insert an
 `mc_block` row (`type = 'html'`, `content_json = '{"html":"<p>Hello</p>"}'`)
 on a real install and confirm it renders on the homepage.
 
+**Update:** the `buildMintBlocks()` dispatch gained an
+`elseif ($block['type'] === 'gallery')` branch calling a new
+`renderGalleryBlock()`, which normalizes settings via the new
+`MintCart\Blocks\GalleryBlockProvider` and resolves each item's image via
+`tool/image` (same `is_file`-guarded `resize()` call `renderProductsBlock()`
+already uses), rendering `blocks/gallery.twig`. See
+`docs/developer/blocks/gallery.md`. Same compatibility/testing shape as
+the `products` branch above — an unrecognized/not-yet-implemented block
+type is still skipped, not fatal. (Note for whoever merges: several other
+Homepage Builder block types — Hero, Categories, Banner Grid, Benefits,
+Brands, Testimonials, FAQ, Text/Image, CTA, Newsletter, Spacer, Text,
+HTML — have their own open PRs adding a similar `elseif` branch to this
+same dispatch chain as of this run; a small manual merge-order
+reconciliation of `buildMintBlocks()` will be needed once more than one
+lands.)
+
 ---
 
 ## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)

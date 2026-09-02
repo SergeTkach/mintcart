@@ -1,0 +1,30 @@
+{% if items %}
+<section class="mc-block mc-block--gallery">
+    <div class="container">
+        {% if title %}
+            <h2 class="mc-block__title">{{ title }}</h2>
+        {% endif %}
+
+        <div class="row g-4">
+            {% for item in items %}
+                <div class="col-6 col-lg-{{ col_width }}">
+                    <figure class="mc-gallery__item">
+                        <img
+                            src="{{ item.image }}"
+                            alt="{{ item.alt }}"
+                            class="mc-gallery__image"
+                            {% if item.image_width %}width="{{ item.image_width }}"{% endif %}
+                            {% if item.image_height %}height="{{ item.image_height }}"{% endif %}
+                            loading="lazy"
+                        >
+
+                        {% if item.caption %}
+                            <figcaption class="mc-gallery__caption">{{ item.caption }}</figcaption>
+                        {% endif %}
+                    </figure>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

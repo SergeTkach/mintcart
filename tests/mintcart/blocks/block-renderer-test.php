@@ -328,6 +328,28 @@ assertSame__(
     $failures
 );
 
+// 14. Real-repo integration: the shipped
+//    mint_default/template/mint/blocks/gallery.twig must also resolve -
+//    guards the second block type against the same drift Scenario 2
+//    guards products against.
+$realGalleryPath = $realRenderer->resolve('gallery');
+
+assertSame__(
+    true,
+    is_file($realGalleryPath),
+    'Scenario 14: resolve() should find the real mint_default blocks/gallery.twig file on disk',
+    $failures
+);
+
+$realGalleryMarkup = (string) file_get_contents($realGalleryPath);
+
+assertSame__(
+    true,
+    str_contains($realGalleryMarkup, 'mc-block--gallery') && str_contains($realGalleryMarkup, 'mc-gallery__item'),
+    'Scenario 14: the resolved real gallery.twig should contain the documented mc-block--gallery/mc-gallery__item markup',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {

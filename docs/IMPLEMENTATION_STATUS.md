@@ -783,12 +783,12 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products, Hero, Categories, Banner Grid, Benefits, FAQ,
-      Testimonials, Brands, Text/Image, CTA, Newsletter, Spacer, Text and
-      HTML done (see "Sub-step 2", `docs/developer/blocks/hero.md`,
-      `docs/developer/blocks/categories.md`, "Sub-step 3" below); Gallery
-      has an open, in-progress pull request being merged as this backlog
-      gets reconciled
+- [x] First blocks: Products, Hero, Categories, Banner Grid, Benefits, FAQ,
+      Testimonials, Brands, Text/Image, CTA, Newsletter, Spacer, Text, HTML
+      and Gallery — the full first-wave block catalog
+      (`MINTCART_IMPLEMENTATION_GUIDE.md` §51) is now done (see "Sub-step 2",
+      `docs/developer/blocks/hero.md`, `docs/developer/blocks/categories.md`,
+      "Sub-step 3" below)
 - [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
       `mc_block` rows) — see "Sub-step 3" below. Reordering uses a plain
       per-row `sort_order` number input, **not** SortableJS/`McSortable` drag-
@@ -939,6 +939,14 @@ Text/Image). No product/OpenCart data dependency at all. Full writeup:
 + `blocks/html.twig` (renders the raw `html` content via the `|raw`
 filter) — the simplest block type, no product query, no CSS of its own.
 Full writeup: `docs/developer/blocks/html.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
+**Gallery block (merged separately, reconciled here):**
+`MintCart\Blocks\GalleryBlockProvider` + `ControllerCommonHome::renderGalleryBlock()`
++ `blocks/gallery.twig` + `.mc-block--gallery`/`.mc-gallery__item` CSS —
+same Provider/Renderer/Template shape as Banner Grid, but square-ish
+images (600×600 default) and no `url`/link per item. Full writeup:
+`docs/developer/blocks/gallery.md`. Also not yet wired into
 `ControllerDesignHomepage::TYPES`.
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
@@ -1408,14 +1416,43 @@ an `mc_block` row (`type = 'html'`,
 `content_json = '{"html":"<p>Hello</p>"}'`) on a real install and confirm
 it renders on the homepage.
 
-**Next step:** **Gallery** is the only first-wave block type (per
-`MINTCART_IMPLEMENTATION_GUIDE.md` §33) left, following the same
-Provider/Renderer/Template shape as Products/Text/HTML — it would be the
-first real Swiper consumer (`package.json` already pins `swiper@14.1.0`,
-but no `assets/src/js`/`assets/src/css` file imports it yet). After that:
-the Homepage drag-and-drop editor (admin UI to actually create/reorder
-`mc_page`/`mc_block` rows — until that exists, a block instance has to be
-inserted by hand to be visible).
+**Sub-step 3 (this run): Gallery block.** Follows the exact
+Provider/Renderer/Template split Sub-step 2 established, closest in shape
+to `BannerGridBlockProvider` (a list of settings/content items matched by
+array position, `columns`/`col_width` precomputed for the Bootstrap grid)
+but simpler: no `url` per item and no link wrapper, since a Gallery block
+is a plain, non-interactive photo grid, not a set of banner links —
+`blocks/gallery.twig` renders each item as a `<figure>`/`<figcaption>`,
+not Banner Grid's `<a>`. New: `MintCart\Blocks\GalleryBlockProvider`
+(`upload/system/library/mintcart/blocks/galleryblockprovider.php`,
+`columns` constrained to `{2, 3, 4, 6}`, default 4);
+`ControllerCommonHome::renderGalleryBlock()` (new `elseif` branch in
+`buildMintBlocks()`'s dispatch, `tool/image` resize with a 600×600
+fallback); `template/mint/blocks/gallery.twig`; new
+`assets/src/css/components/gallery.css`
+(`.mc-gallery__item`/`__image`/`__caption`), imported into
+`assets/src/css/index.css`. Full writeup: `docs/developer/blocks/gallery.md`;
+upstream diff entry added to `docs/upstream-diff.md`'s existing `home.php`
+entry. Verified: `php -l` clean on every touched/added PHP file and the
+full `upload/`+`tests/` tree; full `tests/mintcart/` suite (12 files,
+including the new `tests/mintcart/blocks/gallery-block-provider-test.php`
+and a 3rd scenario added to `block-renderer-test.php`) passing; `npm run
+build` (`build:js`+`build:css`) compiles cleanly, confirmed
+`mc-gallery__item`/`__image`/`__caption` present in the built
+`assets/dist/css/index.min.css`; `npm test` (preset-token contract check)
+still passes. Same pre-existing gap as every earlier phase: no live
+MySQL/`vendor/twig/twig` in this sandbox, so no live end-to-end request
+was exercised — a human should insert an `mc_block` row
+(`type = 'gallery'`) pointing at a real image on a real install and
+confirm the homepage renders it.
+
+**Next step:** the full first-wave block catalog
+(`MINTCART_IMPLEMENTATION_GUIDE.md` §51) is now done and merged to
+`master`. Remaining Phase 10 work: wiring each block type into
+`ControllerDesignHomepage::TYPES` (settings-form support in the admin
+editor — currently only `products` has one), and the Homepage
+drag-and-drop editor (admin UI to actually reorder `mc_page`/`mc_block`
+rows via `McSortable` — currently a plain `sort_order` number input).
 
 ## Phase 11 — Mint Admin primitives
 
@@ -2431,9 +2468,9 @@ Phase 17 section above for the full writeup. Two features
 wiring) are now both blocked on the same unsolved admin asset-enqueue
 problem — a good candidate for a future run to tackle on its own.
 
-**Update (reconciliation): PRs #30-#42 (Hero, Categories, Banner Grid,
+**Update (reconciliation): PRs #30-#44 (Hero, Categories, Banner Grid,
 Benefits, FAQ, Testimonials, Brands, Text/Image, CTA, Newsletter, Spacer,
-Text blocks) merged.** All twelve landed with their own
+Text, HTML, Gallery blocks) merged.** All fourteen landed with their own
 Provider/Renderer/Twig/CSS, including the shared `mc-prose` rich-text
-container. Remaining block-type PRs being reconciled in sequence: HTML,
-Gallery.
+container. The full first-wave block catalog is now on `master`; only
+PR #50 (manufacturer entity picker, Phase 12) remains in the backlog.
