@@ -28,11 +28,11 @@ class ControllerCommonHome extends Controller {
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
 	 * sort_order, via MintCart\Blocks\BlockRenderer. 'products', 'hero',
 	 * 'categories', 'banner-grid', 'benefits', 'faq', 'testimonials',
-	 * 'brands', 'text-image', 'cta', 'newsletter' and 'spacer' have a
-	 * query/provider implementation so far (MINTCART_IMPLEMENTATION_GUIDE.md
-	 * §51's other first-wave block types - Text, HTML, Gallery - are
-	 * separate, not-yet-started checklist items). An unrecognized block
-	 * type is skipped, not fatal, so a page mixing implemented and
+	 * 'brands', 'text-image', 'cta', 'newsletter', 'spacer' and 'text' have
+	 * a query/provider implementation so far (MINTCART_IMPLEMENTATION_GUIDE.md
+	 * §51's other first-wave block types - HTML, Gallery - are separate,
+	 * not-yet-started checklist items). An unrecognized block type is
+	 * skipped, not fatal, so a page mixing implemented and
 	 * not-yet-implemented block types still renders what it can.
 	 *
 	 * Same "is the active theme Mint-API-aware" gate every other Mint
@@ -95,6 +95,8 @@ class ControllerCommonHome extends Controller {
 				$markup = $this->renderNewsletterBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'spacer') {
 				$markup = $this->renderSpacerBlock($block, $block_renderer);
+			} elseif ($block['type'] === 'text') {
+				$markup = $this->renderTextBlock($block, $block_renderer);
 			} else {
 				$markup = null;
 			}
@@ -634,5 +636,27 @@ class ControllerCommonHome extends Controller {
 		return $block_renderer->render('spacer', array(
 			'size' => $settings['size']
 		));
+	}
+
+	/**
+	 * Renders one 'text' mc_block row - the simplest block type, no
+	 * product/OpenCart data dependency at all: MintCart\Blocks\TextBlockProvider
+	 * only normalizes the block's own settings/content, and
+	 * blocks/text.twig renders it directly via `mc-prose`
+	 * (MINTCART_IMPLEMENTATION_GUIDE.md §20).
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when the block
+	 *         has no content (an empty text block renders nothing, same
+	 *         "never an empty section" rule renderProductsBlock() follows).
+	 */
+	private function renderTextBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\TextBlockProvider())->build($block['settings'], $block['content']);
+
+		if ($settings['content'] === '') {
+			return null;
+		}
+
+		return $block_renderer->render('text', $settings);
 	}
 }

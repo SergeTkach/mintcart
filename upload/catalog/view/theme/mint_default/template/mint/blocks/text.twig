@@ -1,0 +1,17 @@
+{% if content %}
+<section class="mc-block mc-block--text">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8{% if text_align == 'center' %} text-center{% endif %}">
+                {% if title %}
+                    <h2 class="mc-block__title">{{ title }}</h2>
+                {% endif %}
+
+                <div class="mc-block__content mc-prose">
+                    {{ content|raw }}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}

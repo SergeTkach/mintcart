@@ -784,11 +784,11 @@ by setting the attribute by hand.
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
 - [~] First blocks: Products, Hero, Categories, Banner Grid, Benefits, FAQ,
-      Testimonials, Brands, Text/Image, CTA, Newsletter and Spacer done (see
-      "Sub-step 2", `docs/developer/blocks/hero.md`,
-      `docs/developer/blocks/categories.md`, "Sub-step 3" below); Text,
-      HTML, Gallery each have an open, in-progress pull request being
-      merged sequentially as this backlog gets reconciled
+      Testimonials, Brands, Text/Image, CTA, Newsletter, Spacer and Text
+      done (see "Sub-step 2", `docs/developer/blocks/hero.md`,
+      `docs/developer/blocks/categories.md`, "Sub-step 3" below); HTML,
+      Gallery each have an open, in-progress pull request being merged
+      sequentially as this backlog gets reconciled
 - [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
       `mc_block` rows) — see "Sub-step 3" below. Reordering uses a plain
       per-row `sort_order` number input, **not** SortableJS/`McSortable` drag-
@@ -924,6 +924,14 @@ input + submit button instead of a link-style button. Full writeup:
 + `blocks/spacer.twig` + `.mc-block--spacer`/`-sm`/`-md`/`-lg`/`-xl` CSS —
 the simplest block type, purely structural, no localized content. Full
 writeup: `docs/developer/blocks/spacer.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
+**Text block (merged separately, reconciled here):**
+`MintCart\Blocks\TextBlockProvider` + `ControllerCommonHome::renderTextBlock()`
++ `blocks/text.twig`, rendering its content through the shared `mc-prose`
+rich-text container (`assets/src/css/elements/prose.css`, also used by
+Text/Image). No product/OpenCart data dependency at all. Full writeup:
+`docs/developer/blocks/text.md`. Also not yet wired into
 `ControllerDesignHomepage::TYPES`.
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
@@ -1342,15 +1350,42 @@ end-to-end request was exercised — a human should insert an `mc_block` row
 (`type='spacer'`, `settings_json='{"size":"lg"}'`) on a real install and
 confirm the homepage renders it.
 
-**Next step:** Text, HTML and Gallery each need their own Provider +
-`blocks/<type>.twig` following the same shape established, being merged
-sequentially from their open PRs. Note for whoever tackles **Gallery**: as
-of this writing no merged PR has wired Swiper (`package.json` already
-pins `swiper@14.1.0`, but no `assets/src/js`/`assets/src/css` file imports
-it yet) — it would be the first real Swiper consumer. The Homepage
-drag-and-drop editor (admin UI to actually create/reorder `mc_page`/`mc_block`
-rows — until it exists, a block instance has to be inserted by hand to be
-visible) is also still not started.
+**Sub-step 3 (a later run): Text block + `mc-prose` shipped.**
+`MintCart\Blocks\TextBlockProvider`
+(`upload/system/library/mintcart/blocks/textblockprovider.php`) normalizes
+a `type='text'` block's settings (`title`/`content`/`text_align`, no
+OpenCart dependency — same shape as `ProductsBlockProvider`).
+`ControllerCommonHome::buildMintBlocks()`'s per-block dispatch now handles
+`'text'` alongside `'products'`, via a new two-line `renderTextBlock()`
+(no product query at all — the simplest block type). New
+`mint_default/template/mint/blocks/text.twig` renders via the also-new
+`mc-prose` rich-text container
+(`assets/src/css/elements/prose.css`, `MINTCART_IMPLEMENTATION_GUIDE.md`
+§20 — documented since Phase 3 but built only now that a real consumer
+needed it, `CLAUDE.md` §85), wired into `index.css`'s `elements` import
+layer. Full writeup: `docs/developer/blocks/text.md`; upstream diff update
+in `docs/upstream-diff.md`'s `home.php` entry. Verified: `php -l` clean on
+every touched/added PHP file; full `tests/mintcart/` suite (12 files,
+including the new `tests/mintcart/blocks/text-block-provider-test.php`,
+4 scenarios, and `block-renderer-test.php`'s new scenario 3) passing;
+`npm install` (0 vulnerabilities) then `npm run build` — both
+`index.min.css` (271.6kb) and the JS bundles compile cleanly, `grep`
+confirms `mc-prose` lands in the bundled CSS; `npm test` (the Phase 9
+preset-contract guardrail) still passes, unaffected by this change. Same
+pre-existing gap as every earlier phase: no MySQL/`vendor/twig/twig` in
+this environment, so no live end-to-end request was exercised — a human
+should insert an `mc_block` row (`type='text'`) on the `'home'` page and
+confirm the homepage renders it with `mc-prose` styling.
+
+**Next step:** HTML and Gallery each need their own Provider +
+`blocks/<type>.twig` following the same shape established. Note for
+whoever tackles **Gallery**: as of this writing no merged PR has wired
+Swiper (`package.json` already pins `swiper@14.1.0`, but no
+`assets/src/js`/`assets/src/css` file imports it yet) — it would be the
+first real Swiper consumer. Also still open: the Homepage drag-and-drop
+editor (admin UI to actually create/reorder `mc_page`/`mc_block` rows —
+until that exists, a block instance has to be inserted by hand to be
+visible).
 
 ## Phase 11 — Mint Admin primitives
 
@@ -2366,9 +2401,9 @@ Phase 17 section above for the full writeup. Two features
 wiring) are now both blocked on the same unsolved admin asset-enqueue
 problem — a good candidate for a future run to tackle on its own.
 
-**Update (reconciliation): PRs #30-#37 (Hero, Categories, Banner Grid,
-Benefits, FAQ, Testimonials, Brands, Text/Image blocks) merged.** All
-eight landed with their own Provider/Renderer/Twig/CSS. Remaining
-block-type PRs being reconciled in sequence: CTA, Newsletter, Spacer,
-Text, HTML, Gallery.
-
+**Update (reconciliation): PRs #30-#42 (Hero, Categories, Banner Grid,
+Benefits, FAQ, Testimonials, Brands, Text/Image, CTA, Newsletter, Spacer,
+Text blocks) merged.** All twelve landed with their own
+Provider/Renderer/Twig/CSS, including the shared `mc-prose` rich-text
+container. Remaining block-type PRs being reconciled in sequence: HTML,
+Gallery.

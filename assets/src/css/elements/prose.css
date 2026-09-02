@@ -1,19 +1,23 @@
 /**
  * mc-prose
  *
- * Rich-text wrapper (docs/MINTCART_IMPLEMENTATION_GUIDE.md §20) for HTML
+ * Rich-text container (docs/MINTCART_IMPLEMENTATION_GUIDE.md §20) for HTML
  * that comes from a rich text field (e.g. a future CKEditor-based admin
- * field, or OpenCart's own `product`/`category`/`information` `description`)
- * rather than MintCart-authored markup. Scoped to `.mc-prose` rather than
+ * field, OpenCart's own `product`/`category`/`information` `description`,
+ * or a MintCart Homepage block like Text/Text+Image) rather than
+ * MintCart-authored component markup. Scoped to `.mc-prose` rather than
  * applied globally so these rules never leak into unrelated components
  * (Implementation Guide §20: "не використовувати правила rich text
  * глобально там, де вони можуть поламати components").
  *
- * First real consumer: the Text/Image Homepage block's `body`
- * (docs/developer/blocks/text-image.md) - this is the `elements/` layer's
- * first file (docs/MINTCART_IMPLEMENTATION_GUIDE.md §11's CSS architecture
- * lists `elements/typography.css` etc.; `mc-prose` is the first one with a
- * real consumer, CLAUDE.md §85/§17).
+ * First real consumers: the Text/Image Homepage block's `body`
+ * (docs/developer/blocks/text-image.md) and the Text Homepage block
+ * (docs/developer/blocks/text.md) - this is the `elements/` layer's first
+ * file (docs/MINTCART_IMPLEMENTATION_GUIDE.md §11's CSS architecture lists
+ * `elements/typography.css` etc.; `mc-prose` is the first one with a real
+ * consumer, CLAUDE.md §85/§17). Every value reads a design token so
+ * presets (docs/developer/theme-api/presets.md) reach prose content the
+ * same way they reach every other MintCart component.
  */
 
 .mc-prose {
@@ -34,6 +38,7 @@
 .mc-prose h3,
 .mc-prose h4 {
     margin: var(--mc-space-6) 0 var(--mc-space-3);
+    color: var(--mc-text);
     font-family: var(--mc-font-family-heading);
     font-weight: var(--mc-font-weight-semibold);
     line-height: var(--mc-line-height-tight);
@@ -48,11 +53,12 @@
 
 .mc-prose ul,
 .mc-prose ol {
-    padding-left: var(--mc-space-6);
+    padding-inline-start: var(--mc-space-6);
 }
 
 .mc-prose a {
     color: var(--mc-primary);
+    text-decoration: underline;
 }
 
 .mc-prose img {
@@ -71,4 +77,11 @@
     padding: var(--mc-space-2) var(--mc-space-3);
     border: var(--mc-border-width) solid var(--mc-border);
     text-align: left;
+}
+
+.mc-prose blockquote {
+    margin: 0 0 var(--mc-space-4);
+    padding-inline-start: var(--mc-space-4);
+    border-inline-start: 3px solid var(--mc-border);
+    color: var(--mc-muted);
 }

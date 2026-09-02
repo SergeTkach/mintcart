@@ -614,6 +614,12 @@ The controller's original five `$this->load->controller(...)` calls
 (`column_left`/`column_right`/`content_top`/`content_bottom`/`footer`/`header`)
 are completely untouched.
 
+**Update (Text block):** `buildMintBlocks()`'s per-block dispatch now also
+handles `type = 'text'`, calling a new `renderTextBlock()` (normalizes via
+`MintCart\Blocks\TextBlockProvider`, renders `blocks/text.twig`) — no
+product query, no additional OpenCart service touched. See
+`docs/developer/blocks/text.md` for the full writeup.
+
 **Why it can't live in the MintCart layer instead:** Same rationale as
 every other page-controller wiring in this file — `BlockRenderer`,
 `ProductsBlockProvider` and `ModelMintcartBlock` are deliberately
