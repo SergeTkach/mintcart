@@ -243,3 +243,41 @@
     color: var(--mc-muted);
     font-size: 0.875em;
 }
+
+/**
+ * mc-brands / mc-brand
+ *
+ * Brands block (docs/developer/blocks/brands.md) - a wrapping strip of
+ * logo links, not a fixed-column grid like Banner Grid, since a brand
+ * logo strip is meant to keep adding items on one flowing row rather than
+ * being constrained to 2-4 columns.
+ */
+
+.mc-brands {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--mc-space-6);
+}
+
+.mc-brand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mc-brand__logo {
+    max-width: 100%;
+    height: auto;
+    filter: grayscale(1);
+    opacity: 0.7;
+    transition: opacity var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        filter var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-brand:hover .mc-brand__logo,
+.mc-brand:focus-visible .mc-brand__logo {
+    filter: none;
+    opacity: 1;
+}

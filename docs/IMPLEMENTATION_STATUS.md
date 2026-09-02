@@ -783,10 +783,10 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products, Hero, Categories, Banner Grid, Benefits, FAQ
-      and Testimonials done (see "Sub-step 2", `docs/developer/blocks/hero.md`,
-      `docs/developer/blocks/categories.md`, "Sub-step 3" below);
-      Text/Image, Brands, CTA, Newsletter, Spacer, Text,
+- [~] First blocks: Products, Hero, Categories, Banner Grid, Benefits, FAQ,
+      Testimonials and Brands done (see "Sub-step 2",
+      `docs/developer/blocks/hero.md`, `docs/developer/blocks/categories.md`,
+      "Sub-step 3" below); Text/Image, CTA, Newsletter, Spacer, Text,
       HTML, Gallery each have an open, in-progress pull request being merged
       sequentially as this backlog gets reconciled
 - [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
@@ -887,6 +887,13 @@ yet wired into `ControllerDesignHomepage::TYPES`.
 item's optional avatar is resized via `tool/image`, same `is_file()`-guarded
 pattern the stock Banner module uses. Full writeup:
 `docs/developer/blocks/testimonials.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
+**Brands block (merged separately, reconciled here):**
+`MintCart\Blocks\BrandsBlockProvider` + `ControllerCommonHome::renderBrandsBlock()`
++ `blocks/brands.twig` + `.mc-brands`/`.mc-brand`/`__logo` CSS — a wrapping
+strip of logo links (not a fixed-column grid like Banner Grid). Full
+writeup: `docs/developer/blocks/brands.md`. Also not yet wired into
 `ControllerDesignHomepage::TYPES`.
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
@@ -1160,14 +1167,38 @@ human should insert an `mc_block` row (`type='testimonials'`) with a
 couple of items (with and without an `avatar`/`rating`) on a real install
 and confirm the homepage renders the grid correctly.
 
-**Next step:** the remaining first-wave block types (Text/Image, Brands,
-CTA, Newsletter, Spacer, Text, HTML, Gallery) each need their own Provider
-+ `blocks/<type>.twig` following the same shape
-Products/Hero/Categories/Banner Grid/Benefits/FAQ/Testimonials established,
-being merged sequentially from their open PRs, or the Homepage
-drag-and-drop editor (admin UI to actually create/reorder `mc_page`/`mc_block`
-rows — until that exists, a block instance has to be inserted by hand to
-be visible).
+**Sub-step 3 (this run): Brands block.** `MintCart\Blocks\BrandsBlockProvider`
+(`upload/system/library/mintcart/blocks/brandsblockprovider.php`)
+normalizes a `type='brands'` `mc_block` row into a list of logo items
+(`image`/`url`/`image_width`/`image_height` from `settings_json`, `alt`
+from `content_json`, matched by array position) — same split as
+`BannerGridBlockProvider`, but simpler (no `columns`, no `caption`; a
+Brands block renders as a wrapping logo strip, not a fixed grid).
+`ControllerCommonHome::renderBrandsBlock()` resolves each item's logo via
+`tool/image`, dropping any item whose file no longer exists.
+`buildMintBlocks()`'s dispatch gained an `elseif ($block['type'] === 'brands')`
+branch. `mint_default/template/mint/blocks/brands.twig` + new
+`.mc-brands`/`.mc-brand`/`.mc-brand__logo` CSS (colocated in the existing
+`assets/src/css/components/block.css`). Full writeup:
+`docs/developer/blocks/brands.md`; increment note in `docs/upstream-diff.md`'s
+`home.php` entry. Verified: `php -l` clean; full `tests/mintcart/` suite
+(12 files, including the new `brands-block-provider-test.php` and a 3rd
+`block-renderer-test.php` scenario) passing; `npm run build` compiles
+cleanly, `mc-brands`/`mc-brand`/`mc-brand__logo` confirmed present in the
+built `assets/dist/css/index.min.css`; `npm test` (preset-token contract)
+still passing. Same pre-existing gap as every earlier phase: no live
+MySQL/Twig render exercised in this sandbox — a human should insert an
+`mc_block` row (`type='brands'`) with a couple of items (with and without
+a `url`) on a real install and confirm the homepage renders a logo strip.
+
+**Next step:** the remaining first-wave block types (Text/Image, CTA,
+Newsletter, Spacer, Text, HTML, Gallery) each need their own Provider +
+`blocks/<type>.twig` following the same shape
+Products/Hero/Categories/Banner Grid/Benefits/FAQ/Testimonials/Brands
+established, being merged sequentially from their open PRs, or the
+Homepage drag-and-drop editor (admin UI to actually create/reorder
+`mc_page`/`mc_block` rows — until that exists, a block instance has to be
+inserted by hand to be visible).
 
 ## Phase 11 — Mint Admin primitives
 

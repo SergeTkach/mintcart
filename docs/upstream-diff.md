@@ -717,6 +717,17 @@ existing behaviour. Tests: `tests/mintcart/blocks/testimonials-block-provider-te
 (confirms the real `testimonials.twig` resolves) — full
 `tests/mintcart/` suite re-run end to end, 12 files, all passing.
 
+**Update (Brands block increment):** `buildMintBlocks()`'s dispatch gained
+an `elseif ($block['type'] === 'brands')` branch calling a new
+`renderBrandsBlock()`, following the exact same shape as
+`renderProductsBlock()`. See `docs/developer/blocks/brands.md` for the
+full writeup. `tests/mintcart/blocks/brands-block-provider-test.php` (3
+scenarios) covers the new `MintCart\Blocks\BrandsBlockProvider`; a 3rd
+scenario was added to `block-renderer-test.php` confirming the real
+`brands.twig` resolves. Full `tests/mintcart/` suite re-run end to end —
+still passing (12 files). Same live-render verification gap as above —
+not yet exercised against a real MySQL/Twig install.
+
 ---
 
 ## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)
