@@ -1581,8 +1581,8 @@ PHP touched, so the PHP `tests/mintcart/` suite doesn't apply.
       filter requirement identified yet.
 - [~] Real `fetchItems` backends per entity type (products, categories,
       manufacturers, attributes, options, information pages, customers) —
-      **category, manufacturer and product are done** (product this run),
-      see below; the other four entity types still need their own.
+      **category, manufacturer, product and information pages are done**,
+      see below; attributes, options and customers still need their own.
 - [ ] Live wiring into an actual admin screen/field — both backends exist
       but nothing calls either yet (see below for why, and each one's
       identified first consumer).
@@ -1657,7 +1657,7 @@ no-MySQL/no-`vendor/twig/twig` gap as every prior phase — see
 `docs/MANUAL_VERIFICATION.md`'s new Phase 12 entry for what a human
 should confirm, image resolution included.
 
-**Update (this run): the product `fetchItems` backend is done too**, and is
+**Update (a later run): the product `fetchItems` backend is done too**, and is
 the first of the three to page at the SQL level rather than in PHP.
 `ControllerMintcartEntity::product()` (route `mintcart/entity/product`)
 wraps `ModelCatalogProduct::getProducts()`/`getTotalProducts()` (both
@@ -1691,13 +1691,42 @@ entry, including the SQL-pagination-specific check (page 2 must return the
 *next* page, not repeat or skip rows) that category/manufacturer's
 PHP-side paging never had to verify against a live database.
 
-**Next step:** either wire the category, manufacturer or product backend
-into `product_form.twig`'s respective field (all three blocked on solving
-the admin asset-enqueue problem first — see above; Phase 13's wizard found
-one way around it worth reading before attempting this: a standalone page
-with no legacy chrome, see that phase's "Design decision worth flagging"),
-or pick another entity type (attribute, option, information page,
-customer) and build its backend the same shape as these three.
+**Update (a later run): the information page `fetchItems` backend is done
+too**, same shape as category/manufacturer —
+`ControllerMintcartEntity::information()` (route
+`mintcart/entity/information`) wraps
+`ModelCatalogInformation::getInformations()` and normalizes rows via the new
+`MintCart\Design\InformationPickerProvider`
+(`upload/system/library/mintcart/design/informationpickerprovider.php`, no
+OpenCart dependency, unit-tested — `tests/mintcart/design/information-picker-provider-test.php`,
+7 scenarios). One real difference from the other two, documented in
+`docs/developer/components/entity-picker.md`'s new "Information page
+backend" section: `ModelCatalogInformation::getInformations()` has no
+`filter_name` support at all (unlike `getCategories()`/`getManufacturers()`,
+which at least filter in SQL), so `InformationPickerProvider` does the name
+filtering itself, in PHP, on top of the PHP-side paging category and
+manufacturer already established — case-insensitive substring match. `image`
+is always `null` (information pages have no image concept). Live wiring
+deliberately not attempted, same reason as category/manufacturer (MintCart's
+asset bundle still isn't enqueued on any admin page); unlike the other two,
+this backend has no single obvious first consumer yet (see the doc section
+for why) rather than one specific field to swap out. Verified: `php -l`
+clean on both touched/added PHP files, and re-swept across the full
+`upload/`/`tests/` tree; full `tests/mintcart/` suite re-run end to end (34
+files now, was 33) — all pass, no regressions (one new pure class, one new
+action on an already-additive controller, touching nothing existing). Same
+no-MySQL/no-`vendor/twig/twig` gap as every prior phase — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 12 entry for what a human should
+confirm, including the filter-then-page ordering that has no unit-test
+equivalent against a live cache.
+
+**Next step:** either wire the category, manufacturer, product or
+information backend into a live admin screen (blocked on the admin
+asset-enqueue problem first — see above; Phase 13's wizard found one way
+around it worth reading before attempting this: a standalone page with no
+legacy chrome, see that phase's "Design decision worth flagging"), or pick
+another entity type (attribute, option, customer) and build its backend
+the same shape as these four.
 
 ## Phase 13 — Setup Wizard
 
@@ -2730,3 +2759,12 @@ collision. This run added the **product** `fetchItems` backend
 unchanged from that section's own "Next step": wire a picker backend into a
 live screen (blocked on the admin asset-enqueue problem), or build the
 attribute/option/information-page/customer backends the same shape.
+
+**Update (this run): Phase 12's information page `fetchItems` backend is
+done** (`mintcart/entity/information`, see the Phase 12 section above for
+the full writeup). At the time of this run, two other open PRs existed
+(#52 — Wizard Contacts step; #53 — Phase 12's product backend), neither
+overlapping this increment. Next candidates per Phase 12's own "Next step"
+above: attribute/option/customer entity-picker backends, or tackling the
+admin asset-enqueue problem itself now that three backends (category,
+manufacturer, information) are waiting on it.

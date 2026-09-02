@@ -271,7 +271,8 @@ or wiring a screen to it.
   consumer.
 - The other entity types (products, attributes, options, information
   pages, customers) each need their own backend the same shape as this
-  one — **manufacturer** and **product** are now done too, see below.
+  one — **manufacturer**, **product** and **information pages** are now
+  done too, see below.
 
 ## Manufacturer backend
 
@@ -386,3 +387,47 @@ consumer is `product_form.twig`'s **Related Products** field
 `autocomplete()` against `catalog/product.autocomplete`) — already
 multi-select with removable tags, the same shape match reasoning
 category/manufacturer's identified consumers follow.
+
+## Information page backend
+
+```
+GET index.php?route=mintcart/entity/information&user_token=…&filter_name=…&page=…&limit=…
+```
+
+Fourth entity backend, same overall shape:
+`ControllerMintcartEntity::information()` wraps
+`ModelCatalogInformation::getInformations()` (never queries the database
+directly) and normalizes rows via `MintCart\Design\InformationPickerProvider`
+(`upload/system/library/mintcart/design/informationpickerprovider.php`, no
+OpenCart dependency, unit-tested in
+`tests/mintcart/design/information-picker-provider-test.php`) into the same
+`{items: [{id, name, image}], total}` shape. `image` is always `null` —
+information pages have no image concept in OpenCart, the same reason
+category's is always `null`.
+
+**Difference from category/manufacturer: filtering also happens in PHP, not
+just paging.** `ModelCatalogInformation::getInformations()`'s `$data`-driven
+query path only understands `sort`/`order`/`start`/`limit` — there is no
+`filter_name` support to pass through at all (unlike `getCategories()`/
+`getManufacturers()`, which at least support filtering in SQL even without a
+matching filtered-count method). Adding one to `ModelCatalogInformation` for
+a single new consumer would be a genuine OpenCart-core-file modification
+(`CLAUDE.md` §10), so the controller instead calls `getInformations()` with
+no arguments (all rows, via the model's own cache) and
+`InformationPickerProvider` does both the `filter_name` substring match
+(case-insensitive, matches anywhere in the title — the more permissive of
+category's and manufacturer's two matching styles) and the paging itself, in
+PHP. Information page counts are small (a handful to a few dozen even for a
+large store), so this isn't a real cost today — same reasoning that already
+justified PHP-side paging alone for category and manufacturer.
+
+Same permission requirement (`mintcart/entity` **Access** must be granted to
+a user group first) and the same "not done yet, by design" live-wiring gap:
+no admin screen calls this endpoint yet, blocked on the same admin
+asset-enqueue problem as category and manufacturer (see above). There is no
+single obvious first consumer the way `product_form.twig`'s Category/
+Manufacturer fields are for the other two — information pages are picked in
+several places (`information_form.twig`'s own layout/link settings and any
+future "related pages" style field), so the first real consumer should be
+identified when one of those screens is actually being migrated to
+`McEntityPicker`, not guessed at here.

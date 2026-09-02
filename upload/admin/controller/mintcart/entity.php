@@ -3,7 +3,8 @@
  * Phase 12 (Entity Picker, `MINTCART_FUNCTIONAL_SCOPE.md` §8,
  * `MINTCART_TECHNICAL_PLAN.md` §20) — real `fetchItems` backends for
  * `McEntityPicker` (Phase 11), one action per entity type. `category()` is
- * the first, `manufacturer()` the second, `product()` the third.
+ * the first, `manufacturer()` the second, `product()` the third,
+ * `information()` the fourth.
  *
  * Deliberately a new, fully-additive controller under `mintcart/entity/*`
  * rather than a change to `catalog/category.php`'s existing `autocomplete()`
@@ -16,7 +17,8 @@
  * contract would be a breaking change to their existing consumers
  * (`CLAUDE.md` §10). Every action here instead wraps the *same* underlying
  * model call (`ModelCatalogCategory::getCategories()` /
- * `ModelCatalogManufacturer::getManufacturers()`), never queries the
+ * `ModelCatalogManufacturer::getManufacturers()` /
+ * `ModelCatalogInformation::getInformations()`), never queries the
  * database directly, so every pair of endpoints stays in sync with the
  * same source of truth.
  *
@@ -134,5 +136,29 @@ class ControllerMintcartEntity extends Controller {
 		$provider = new \MintCart\Design\ProductPickerProvider();
 
 		$this->respond($provider->build($rows, $total));
+	}
+
+	// route=mintcart/entity/information - GET filter_name, page, limit
+	public function information() {
+		if (!$this->user->hasPermission('access', 'mintcart/entity')) {
+			$this->respond(array('error' => 'Permission denied'));
+			return;
+		}
+
+		$this->load->model('catalog/information');
+
+		$filter_name = isset($this->request->get['filter_name']) ? (string)$this->request->get['filter_name'] : '';
+		$page = isset($this->request->get['page']) ? (int)$this->request->get['page'] : 1;
+		$limit = isset($this->request->get['limit']) ? (int)$this->request->get['limit'] : 20;
+
+		// getInformations() called with no args intentionally - it has no
+		// filter_name support (see InformationPickerProvider's own docblock),
+		// so this fetches every information page (via the model's own cache)
+		// and lets the provider filter/paginate in PHP.
+		$rows = $this->model_catalog_information->getInformations();
+
+		$provider = new \MintCart\Design\InformationPickerProvider();
+
+		$this->respond($provider->build($rows, $filter_name, $page, $limit));
 	}
 }
