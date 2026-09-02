@@ -1669,21 +1669,24 @@ these two.
 ## Phase 13 — Setup Wizard
 
 - [~] Welcome → Store → Contacts → Language/Currency → Delivery → Payment → Design →
-      First Product → Ready — **Welcome and Store implemented**; the other
-      seven steps are listed in the step nav as a roadmap but have no real
-      content yet (see below)
+      First Product → Ready — **Welcome, Store and Contacts implemented**
+      (Contacts this run); the other six steps are listed in the step nav
+      as a roadmap but have no real content yet (see below)
 - [x] Progress saving, resume, writes to standard OpenCart settings storage —
-      done for the two implemented steps; "skip optional steps" doesn't
-      apply yet (neither implemented step is optional)
+      done for all three implemented steps; "skip optional steps" doesn't
+      apply to step *sequencing* yet (no implemented step can be skipped
+      ahead of), but Contacts' own fields are each individually optional
+      (see below)
 
 **In progress.** `MintCart\Onboarding\WizardProgress` (pure step-sequencing
 logic, no OpenCart dependency — `upload/system/library/mintcart/onboarding/wizardprogress.php`,
 unit-tested standalone, `tests/mintcart/onboarding/wizard-progress-test.php`,
-8 scenarios) + `ControllerMintcartWizard` (route `mintcart/wizard`, fully
+9 scenarios) + `ControllerMintcartWizard` (route `mintcart/wizard`, fully
 additive, zero existing OpenCart file modified) + a standalone
 `mintcart/wizard.twig` page (no legacy admin chrome — see below) implement
-the **Welcome** and **Store** steps end to end: Welcome is purely
-informational with a "Get started" button; Store collects
+the **Welcome** and **Store** steps end to end (Contacts is written up
+separately below): Welcome is purely informational with a "Get started"
+button; Store collects
 `config_name`/`config_email`/`config_telephone`/`config_address` (existing
 OpenCart `config` settings, merged in rather than overwritten — see the
 `editSetting()` partial-write trap below) with the same validation rules
@@ -1718,10 +1721,45 @@ install, in particular that the `editSetting('config', $merged)` call
 really does preserve every other existing `config_*` setting rather than
 just the four fields this step writes.
 
+**Update (this run): the Contacts step is done.** `WizardProgress::IMPLEMENTED_STEPS`
+now includes `contacts`. `ControllerMintcartWizard::validateContactsStep()`/
+`saveContactsStep()` collect up to four optional social profile URLs
+(Facebook/Instagram/Twitter/YouTube — each individually optional, a blank
+store-with-no-socials-yet is a completely valid finished state; a filled
+field must be `filter_var(..., FILTER_VALIDATE_URL)`-valid). Saved under a
+dedicated `mintcart_contacts` setting code (`mintcart_contacts_social`,
+JSON-serialized `{network, href}` list) rather than merged into `config` —
+social links have no standard OpenCart storage to reuse, and unlike
+`config` this code has exactly one key MintCart itself owns end to end, so
+there's no `editSetting()` partial-write trap to guard against here.
+
+Written in the exact shape `MintCart\Design\FooterViewProvider::build()`'s
+`$social` parameter already expects (Phase 7) — so
+`ControllerCommonFooter::index()` (this run, second file touched) now reads
+`mintcart_contacts` and passes real social links into the live storefront
+footer, replacing the hardcoded empty array Phase 7 shipped with. This
+closes Phase 7's "no storage yet" gap for `$social` specifically —
+`$payments`/`$newsletter` remain unimplemented, unrelated to this change
+(no Business Settings/Commerce API consumer for either yet). Full writeup:
+`docs/developer/onboarding/setup-wizard.md`'s new "Contacts step" section,
+`docs/developer/components/footer.md`'s updated "Social links" section,
+`docs/upstream-diff.md`'s `footer.php` entry.
+
+Verified: `php -l` clean on every touched PHP file; full `tests/mintcart/`
+suite re-run end to end — all pass, no regressions;
+`tests/mintcart/onboarding/wizard-progress-test.php` updated for the new
+3-implemented-step sequencing (9 scenarios, was 8); `wizard.twig`'s
+`{% if %}`/`{% for %}`/`{% endif %}`/`{% endfor %}` tag counts re-checked
+balanced (32/32) after the new Contacts form block. Same pre-existing gap
+as every earlier phase: no live MySQL/OpenCart request test in this
+environment — a human should confirm the Contacts form saves/re-populates
+correctly and that a filled-in social link actually renders on a real
+`mint_default`-themed storefront footer.
+
 **Not done yet, by design — natural next-run candidates:**
-- The remaining seven steps (`contacts`, `language_currency`, `delivery`,
-  `payment`, `design`, `first_product`, `ready`), each needing its own real
-  form/save logic the way `store` established this run — `ready` in
+- The remaining six steps (`language_currency`, `delivery`, `payment`,
+  `design`, `first_product`, `ready`), each needing its own real
+  form/save logic the way `store`/`contacts` established — `ready` in
   particular should integrate with Phase 14's `StoreReadiness` once that
   exists, rather than being a placeholder.
 - Store step's logo upload (Functional Scope §2) — needs `McMediaPicker`
@@ -2598,3 +2636,17 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, PR #52): Phase 13's Contacts step is done** — see that
+phase's section above for the full writeup (social profile links, stored
+under a new `mintcart_contacts` setting, now also wired live into
+`ControllerCommonFooter`'s `$social`). Step 0 found zero open PRs at the
+start of this run, so no dedup/collision check against sibling PRs was
+needed. Untouched by the admin asset-enqueue blocker above (Wizard already
+uses its own standalone-page workaround; `footer.php` is a storefront
+controller). Next candidates: Phase 13's remaining six steps
+(`language_currency` onward), Phase 12's remaining entity-picker backends
+(product/attribute/option/information page/customer), Phase 14's Business
+Settings UI façades or a Store Readiness dashboard widget, Phase 15's
+`QuickOrderService`, or re-checking `gh pr list --state open` for what a
+parallel run may have picked up first.
