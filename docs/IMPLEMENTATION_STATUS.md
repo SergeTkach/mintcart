@@ -2573,11 +2573,28 @@ live MySQL/OpenCart admin session in this environment — a human should
 work through `docs/developer/blocks/homepage-admin.md`'s "Manual
 verification" steps 7-9 (added this run) on a real install.
 
-**Next step:** the Homepage drag-and-drop editor (`McSortable`, still a
-plain `sort_order` number input) and the admin asset-enqueue question
-both remain open — see `docs/developer/blocks/homepage-admin.md`'s "Why
-this screen uses the legacy admin theme" section. Swapping `category_id`/
-`parent_id` for a real `McEntityPicker` (Phase 12's category backend now
-exists) is a separate, self-contained follow-up. Replacing the five
-`items` JSON textareas with a real repeater is blocked on the same
-asset-enqueue decision as `McSortable`.
+**Update (reconciliation follow-up): drag-to-reorder added to the block
+list, without `McSortable`.** The admin asset-enqueue question (no
+MintCart JS bundle enqueued on this screen — see
+`docs/developer/blocks/homepage-admin.md`'s "Why this screen uses the
+legacy admin theme" section) still blocks using `McSortable` itself, so
+this is a small self-contained inline `<script>` in `homepage_list.twig`
+using the browser's native HTML5 Drag and Drop API instead: dragging a
+row (`draggable="true"`, an `fa-bars` grip icon) reorders the table and
+renumbers the existing `sort_order` number inputs to match; "Save Order"
+submits exactly as before. The number inputs stay fully visible/editable
+either way — MintCart's own non-pointer-alternative requirement for
+sortable operations (`MINTCART_IMPLEMENTATION_GUIDE.md` §68) native HTML5
+drag doesn't satisfy on its own. Full writeup: "Reordering without
+`McSortable`" in `docs/developer/blocks/homepage-admin.md`. Verified: `node
+--check` on the extracted inline script (valid syntax); Twig tag counts
+re-balanced after the added grip-icon column; manual verification step 10
+added.
+
+**Next step:** the admin asset-enqueue question remains the real blocker
+for both a proper `McSortable`-based reorder and the five `items` JSON
+textareas becoming a real add/remove-row repeater — see
+`docs/developer/blocks/homepage-admin.md`'s "Why this screen uses the
+legacy admin theme" section. Swapping `category_id`/`parent_id` for a
+real `McEntityPicker` (Phase 12's category backend now exists) is a
+separate, self-contained follow-up untouched by that question.

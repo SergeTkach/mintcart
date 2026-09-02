@@ -70,12 +70,12 @@ templates) — including how it solves reordering:
 The blocks list (`homepage_list.twig`) shows one `<input type="number"
 name="order[<block_id>]">` per row (the exact same pattern
 `design/banner_form.twig` already uses for `banner_image` rows'
-`sort_order` fields) instead of a drag handle. A "Save Order" button
-(`formaction="{{ save_order }}"`, sharing the same `<form>` the bulk-select
-checkboxes and "Delete" button already use, via HTML5's `formaction`
-attribute — no JavaScript involved) submits every row's value in one
-request to `ControllerDesignHomepage::saveOrder()`, which persists them
-via `ModelDesignHomepage::updateSortOrder()`.
+`sort_order` fields) — the base mechanism, always present, always
+directly editable. A "Save Order" button (`formaction="{{ save_order }}"`,
+sharing the same `<form>` the bulk-select checkboxes and "Delete" button
+already use, via HTML5's `formaction` attribute) submits every row's
+value in one request to `ControllerDesignHomepage::saveOrder()`, which
+persists them via `ModelDesignHomepage::updateSortOrder()`.
 
 `updateSortOrder()` guards each `UPDATE` with `block_id AND page_id`, so a
 crafted `order[<block_id>]` for a block on a different page (there is
@@ -83,12 +83,27 @@ only ever one page — `home` — today, but the guard costs nothing and
 matches `mc_block`'s already page-scoped shape) is silently ignored
 rather than reassigning that block's order.
 
+**Drag-to-reorder is layered on top**, as a small inline `<script>` in
+`homepage_list.twig` using the browser's native HTML5 Drag and Drop API —
+deliberately not `McSortable`: no MintCart JS bundle is enqueued on this
+screen at all yet (same asset-enqueue question as above), so pulling in
+`assets/src/js/components/sortable.js` here isn't available without
+first resolving that. Dragging a row (`draggable="true"` on each `<tr>`,
+a `fa-bars` grip icon as the visual affordance) reorders the table in the
+DOM and renumbers the existing number inputs to match; "Save Order"
+submits exactly as before either way. Native HTML5 drag has no built-in
+keyboard path, so the always-visible, always-editable number inputs are
+this screen's non-pointer alternative (`MINTCART_IMPLEMENTATION_GUIDE.md`
+§68: a sortable operation needs one) — a keyboard-only admin reorders by
+retyping numbers, no drag gesture required.
+
 Once the Bootstrap-5-admin-shell decision above is resolved, replacing
-this number-input column with `data-mc-sortable`/`data-mc-sortable-item`
-markup and a small listener for `McSortable`'s `mc:sortable:reorder`
-event (POSTing `detail.order` to `saveOrder()` instead of relying on a
-full-page form submit) is a self-contained follow-up — `saveOrder()`'s
-contract (accept an `order` array, persist it, guarded by `page_id`)
+both the number-input column and this inline script with
+`data-mc-sortable`/`data-mc-sortable-item` markup and a listener for
+`McSortable`'s `mc:sortable:reorder` event (POSTing `detail.order` to
+`saveOrder()` instead of relying on a full-page form submit) is a
+self-contained follow-up — `saveOrder()`'s contract (accept an `order`
+array, persist it, guarded by `page_id`)
 does not need to change for that upgrade.
 
 ## Block type registry
@@ -198,3 +213,9 @@ install:
    (e.g. a trailing comma) and confirm the form re-shows with an
    `error_json` message and the exact text you typed still in the
    textarea, rather than silently clearing it.
+10. With at least three blocks on the list, drag a row to a new position
+    (grip icon on the left) and confirm the "Sort Order" numbers renumber
+    to match without a page reload, then click "Save Order" and confirm
+    the storefront homepage reflects the new order. Also try reordering
+    by editing the number inputs directly (no drag) to confirm that path
+    still works unchanged.

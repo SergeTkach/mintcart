@@ -9,6 +9,7 @@ $_['text_add']            = 'Add Block';
 $_['text_edit']           = 'Edit Block';
 $_['text_home_page_name'] = 'Homepage';
 $_['text_no_results']     = 'No blocks yet — add one to start building the homepage.';
+$_['text_drag_hint']      = 'Drag a row to reorder, or edit the Sort Order number directly, then click Save Order.';
 $_['text_confirm']        = 'Are you sure you want to delete the selected block(s)?';
 $_['text_settings_suffix'] = 'settings';
 
