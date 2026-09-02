@@ -783,9 +783,9 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products, Hero, Categories and Banner Grid done (see
-      "Sub-step 2", `docs/developer/blocks/hero.md`,
-      `docs/developer/blocks/categories.md`, "Sub-step 3" below); Benefits,
+- [~] First blocks: Products, Hero, Categories, Banner Grid and Benefits
+      done (see "Sub-step 2", `docs/developer/blocks/hero.md`,
+      `docs/developer/blocks/categories.md`, "Sub-step 3" below);
       Text/Image, Brands, Testimonials, FAQ, CTA, Newsletter, Spacer, Text,
       HTML, Gallery each have an open, in-progress pull request being merged
       sequentially as this backlog gets reconciled
@@ -1029,10 +1029,38 @@ request was exercised — a human should insert an `mc_block` row
 a real file under `DIR_IMAGE`) on a real install and confirm the homepage
 renders a Banner Grid block.
 
-**Next step:** the remaining first-wave block types (Benefits, Text/Image,
-Brands, Testimonials, FAQ, CTA, Newsletter, Spacer, Text, HTML, Gallery)
-each need their own Provider + `blocks/<type>.twig` following the same
-shape Products/Hero/Categories/Banner Grid established, being merged
+**Sub-step 3 (this run): Benefits block.** `MintCart\Blocks\BenefitsBlockProvider`
+(`upload/system/library/mintcart/blocks/benefitsblockprovider.php`)
+normalizes a `type='benefits'` `mc_block` row into a `title` plus a list of
+`items` (`icon`/`title`/`description`), matching `settings_json`'s
+per-item `icon` (structural) against `content_json`'s per-item
+`title`/`description` (localized) by array position. Pure content block —
+no product query, no image resize, no OpenCart model of any kind, so
+`ControllerCommonHome::renderBenefitsBlock()` is the simplest render
+method yet: normalize, then render through the existing `BlockRenderer`.
+`buildMintBlocks()`'s dispatch gained an `elseif ($block['type'] ===
+'benefits')` branch alongside the existing `'products'` one.
+`mint_default/template/mint/blocks/benefits.twig` + `.mc-benefit`/
+`__icon`/`__title`/`__description` CSS (colocated in
+`assets/src/css/components/block.css`, single consumer so far). Icons are
+a placeholder `data-mc-icon` attribute pending the not-yet-built
+`mc_icon()` SVG renderer — same pattern `footer.twig`'s social links
+already use. Full writeup: `docs/developer/blocks/benefits.md`. Verified:
+`php -l` clean on every touched/added PHP file; full `tests/mintcart/`
+suite (12 files, including the new
+`tests/mintcart/blocks/benefits-block-provider-test.php` and a 3rd
+scenario added to `tests/mintcart/blocks/block-renderer-test.php`)
+passing; `npm run build` compiles cleanly, `mc-benefit`/`__icon`/`__title`/
+`__description` confirmed present in the built
+`assets/dist/css/index.min.css`; `benefits.twig`'s `{% if %}`/`{% for %}`
+tag nesting checked balanced. Same pre-existing gap as every earlier
+phase: no MySQL/`vendor/twig/twig` in this environment, so no live
+end-to-end request was exercised.
+
+**Next step:** the remaining first-wave block types (Text/Image, Brands,
+Testimonials, FAQ, CTA, Newsletter, Spacer, Text, HTML, Gallery) each need
+their own Provider + `blocks/<type>.twig` following the same shape
+Products/Hero/Categories/Banner Grid/Benefits established, being merged
 sequentially from their open PRs, or the Homepage drag-and-drop editor
 (admin UI to actually create/reorder `mc_page`/`mc_block` rows — until that
 exists, a block instance has to be inserted by hand to be visible).
@@ -2051,8 +2079,8 @@ Phase 17 section above for the full writeup. Two features
 wiring) are now both blocked on the same unsolved admin asset-enqueue
 problem — a good candidate for a future run to tackle on its own.
 
-**Update (reconciliation): PR #30 (Hero block) merged.** `HeroBlockProvider`
-+ `ControllerCommonHome::renderHeroBlock()` + `blocks/hero.twig` +
-`.mc-block--hero` CSS landed. Remaining first-wave block-type PRs being
-reconciled in sequence: Categories, Banner Grid, Benefits, Text/Image,
-Brands, Testimonials, FAQ, CTA, Newsletter, Spacer, Text, HTML, Gallery.
+**Update (reconciliation): PRs #30-#33 (Hero, Categories, Banner Grid,
+Benefits blocks) merged.** All four landed with their own
+Provider/Renderer/Twig/CSS. Remaining first-wave block-type PRs being
+reconciled in sequence: Text/Image, Brands, Testimonials, FAQ, CTA,
+Newsletter, Spacer, Text, HTML, Gallery.

@@ -27,9 +27,9 @@ class ControllerCommonHome extends Controller {
 	 * MintCart Homepage Builder (Phase 10, MINTCART_TECHNICAL_PLAN.md
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
 	 * sort_order, via MintCart\Blocks\BlockRenderer. Only 'products',
-	 * 'hero', 'categories' and 'banner-grid' have a query/provider
-	 * implementation so far (MINTCART_IMPLEMENTATION_GUIDE.md §51's other
-	 * first-wave block types - Benefits, Text/Image, Brands, Testimonials,
+	 * 'hero', 'categories', 'banner-grid' and 'benefits' have a
+	 * query/provider implementation so far (MINTCART_IMPLEMENTATION_GUIDE.md
+	 * §51's other first-wave block types - Text/Image, Brands, Testimonials,
 	 * FAQ - are separate, not-yet-started checklist items). An unrecognized
 	 * block type is skipped, not fatal, so a page mixing implemented and
 	 * not-yet-implemented block types still renders what it can.
@@ -78,6 +78,8 @@ class ControllerCommonHome extends Controller {
 				$markup = $this->renderCategoriesBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'banner-grid') {
 				$markup = $this->renderBannerGridBlock($block, $block_renderer);
+			} elseif ($block['type'] === 'benefits') {
+				$markup = $this->renderBenefitsBlock($block, $block_renderer);
 			} else {
 				$markup = null;
 			}
@@ -88,6 +90,32 @@ class ControllerCommonHome extends Controller {
 		}
 
 		return $rendered;
+	}
+
+	/**
+	 * Renders one 'benefits' mc_block row - a pure content block (icon +
+	 * title + optional description per item, e.g. "Free shipping",
+	 * "Secure payment"). No query, no image resize, no OpenCart model:
+	 * MintCart\Blocks\BenefitsBlockProvider does all the normalization,
+	 * so this method only calls it and hands the result to BlockRenderer,
+	 * same "controller orchestrates, provider/renderer do the work"
+	 * shape as renderProductsBlock() but without any of that method's
+	 * OpenCart querying since Benefits has none.
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when the block
+	 *         has no items (e.g. a freshly-created row with no content
+	 *         filled in yet) - matches renderProductsBlock()'s "skip
+	 *         empty blocks rather than render an empty section" contract.
+	 */
+	private function renderBenefitsBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\BenefitsBlockProvider())->build($block['settings'], $block['content']);
+
+		if (!$settings['items']) {
+			return null;
+		}
+
+		return $block_renderer->render('benefits', $settings);
 	}
 
 	/**
