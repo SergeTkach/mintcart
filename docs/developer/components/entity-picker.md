@@ -269,9 +269,10 @@ or wiring a screen to it.
 - Filters beyond search text, and the create-new-flow (add a category
   inline from the picker) — no requirement identified yet for this first
   consumer.
-- The other entity types (attributes, options, customers) each need their
-  own backend the same shape as this one — **manufacturer**, **product**,
-  **information pages** and **attributes** are now done too, see below.
+- The other entity types (options, customers) each need their own backend
+  the same shape as this one — **manufacturer**, **product**,
+  **information pages**, **attributes** and **options** are now done too,
+  see below.
 
 ## Manufacturer backend
 
@@ -482,3 +483,41 @@ manufacturer, there is no existing single-select attribute autocomplete
 field on `product_form.twig` to swap out; a future consumer would be a
 *new* UI affordance (e.g. searching attributes by name when adding one to
 a product), not a drop-in replacement of something that already exists.
+
+## Option backend
+
+```
+GET index.php?route=mintcart/entity/option&user_token=…&filter_name=…&page=…&limit=…
+```
+
+Same shape as category/manufacturer: `ControllerMintcartEntity::option()`
+wraps `ModelCatalogOption::getOptions()` (never queries the database
+directly) and normalizes rows via `MintCart\Design\OptionPickerProvider`
+(`upload/system/library/mintcart/design/optionpickerprovider.php`, no
+OpenCart dependency, unit-tested in
+`tests/mintcart/design/option-picker-provider-test.php`) into the same
+`{items: [{id, name, image}], total}` shape. Same reason for a new route
+instead of reshaping `catalog/option.php`'s own `autocomplete()` action
+(an existing `product_form.twig` consumer with no pagination), and for
+paging in PHP rather than SQL (`ModelCatalogOption` has
+`getTotalOptions()`, unfiltered store-wide, but no *filtered*
+total-count method to pair with `getOptions()`'s own `start`/`limit`
+support).
+
+`image` is always `null` — `oc_option` has no image column of its own
+(individual `oc_option_value` rows can carry one, but an *option* — the
+group, e.g. "Size" — cannot), same reasoning as category.
+
+`filter_name` prefix-matches (`LIKE '…%'`), same as manufacturer, not
+category's substring match — inherited unchanged from
+`ModelCatalogOption::getOptions()`.
+
+Same permission requirement (`mintcart/entity` **Access**) and the same
+"not done yet, by design" live-wiring gap as category/manufacturer: no
+admin screen calls this endpoint yet, for the identical reason
+(MintCart's asset bundle still isn't enqueued on any admin page — see
+above). `product_form.twig`'s **Option** tab (`#input-option`, the
+jQuery UI `autocomplete()` block using `catalog/option/autocomplete`) is
+this backend's identified first real consumer — already
+search-as-you-type, so a future `McEntityPicker` swap is a shape match,
+not a new pattern.

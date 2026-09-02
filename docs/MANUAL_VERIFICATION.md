@@ -274,3 +274,19 @@ a name pattern where one match is at the start and one only in the middle:
    `docs/developer/components/entity-picker.md`'s attribute section).
 4. Confirm paging (`page=2`) returns the next slice of the same
    alphabetically-sorted list, not a repeat or a skip.
+
+## Phase 12 — `mintcart/entity/option` endpoint, never hit end to end
+
+Same gap as category/manufacturer above. On a real install, with at least
+one product option configured (`Catalog → Options`):
+
+1. Grant `mintcart/entity` **Access** if not already done for the
+   category/manufacturer endpoints above (same permission covers all
+   three routes).
+2. Request `index.php?route=mintcart/entity/option&user_token=<your
+   token>&filter_name=&page=1&limit=20` and confirm a JSON
+   `{"items": [...], "total": N}` response with real option names, and
+   `image` always `null`.
+3. Confirm `filter_name` set to the *start* of one option's name matches
+   it, but a substring from the *middle* of that name does not (prefix
+   match, same as manufacturer, not category's substring match).

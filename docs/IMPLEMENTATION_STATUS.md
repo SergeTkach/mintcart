@@ -1581,8 +1581,8 @@ PHP touched, so the PHP `tests/mintcart/` suite doesn't apply.
       filter requirement identified yet.
 - [~] Real `fetchItems` backends per entity type (products, categories,
       manufacturers, attributes, options, information pages, customers) —
-      **category, manufacturer, product, information pages and attributes
-      are done**, see below; options and customers still need their own.
+      **category, manufacturer, product, information pages, attributes and
+      options are done**, see below; customers still need their own.
 - [ ] Live wiring into an actual admin screen/field — both backends exist
       but nothing calls either yet (see below for why, and each one's
       identified first consumer).
@@ -1762,6 +1762,32 @@ wizard found one way around it worth reading before attempting this: a
 standalone page with no legacy chrome, see that phase's "Design decision
 worth flagging"), or pick another entity type (option, customer) and
 build its backend the same shape as these five.
+
+**Update (a later run): the option `fetchItems` backend is done**, same shape
+as category/manufacturer — `ControllerMintcartEntity::option()` (route
+`mintcart/entity/option`) wraps `ModelCatalogOption::getOptions()` and
+normalizes rows via the new `MintCart\Design\OptionPickerProvider`
+(`upload/system/library/mintcart/design/optionpickerprovider.php`, no
+OpenCart dependency, unit-tested — `tests/mintcart/design/option-picker-provider-test.php`,
+6 scenarios). `image` is always `null` (options have no image of their
+own); `filter_name` prefix-matches, same as manufacturer. Full rationale
+in `docs/developer/components/entity-picker.md`'s new "Option backend"
+section. Live wiring deliberately not attempted, same reason as
+category/manufacturer (MintCart's asset bundle still isn't enqueued on
+any admin page) — identified first consumer is `product_form.twig`'s
+Option tab (`#input-option`, currently a jQuery UI autocomplete against
+`catalog/option/autocomplete`). Verified: `php -l` clean across the full
+`upload`/`tests` tree; full `tests/mintcart/` suite re-run end to end (34
+files now) — all pass, no regressions (one new pure class, one new action
+on an already-additive controller, touching nothing existing).
+
+**Next step:** either wire the category, manufacturer, product,
+information, attribute or option backend into a live admin screen (all
+blocked on solving the admin asset-enqueue problem first — see above;
+Phase 13's wizard found one way around it worth reading before attempting
+this: a standalone page with no legacy chrome, see that phase's "Design
+decision worth flagging"), or build the customer entity-picker backend,
+the last remaining entity type.
 
 ## Phase 13 — Setup Wizard
 
