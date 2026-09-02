@@ -28,11 +28,11 @@ class ControllerCommonHome extends Controller {
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
 	 * sort_order, via MintCart\Blocks\BlockRenderer. 'products', 'hero',
 	 * 'categories', 'banner-grid', 'benefits', 'faq', 'testimonials',
-	 * 'brands', 'text-image', 'cta' and 'newsletter' have a query/provider
-	 * implementation so far (MINTCART_IMPLEMENTATION_GUIDE.md §51's other
-	 * first-wave block types - Spacer, Text, HTML, Gallery - are separate,
-	 * not-yet-started checklist items). An unrecognized block type is
-	 * skipped, not fatal, so a page mixing implemented and
+	 * 'brands', 'text-image', 'cta', 'newsletter' and 'spacer' have a
+	 * query/provider implementation so far (MINTCART_IMPLEMENTATION_GUIDE.md
+	 * §51's other first-wave block types - Text, HTML, Gallery - are
+	 * separate, not-yet-started checklist items). An unrecognized block
+	 * type is skipped, not fatal, so a page mixing implemented and
 	 * not-yet-implemented block types still renders what it can.
 	 *
 	 * Same "is the active theme Mint-API-aware" gate every other Mint
@@ -93,6 +93,8 @@ class ControllerCommonHome extends Controller {
 				$markup = $this->renderCtaBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'newsletter') {
 				$markup = $this->renderNewsletterBlock($block, $block_renderer);
+			} elseif ($block['type'] === 'spacer') {
+				$markup = $this->renderSpacerBlock($block, $block_renderer);
 			} else {
 				$markup = null;
 			}
@@ -614,5 +616,23 @@ class ControllerCommonHome extends Controller {
 		}
 
 		return $block_renderer->render('newsletter', $settings);
+	}
+
+	/**
+	 * Renders one 'spacer' mc_block row - the simplest block type, purely
+	 * structural (MintCart\Blocks\SpacerBlockProvider has no localized
+	 * content and this method makes no OpenCart query at all), unlike
+	 * renderProductsBlock() above.
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string Rendered block markup. Never null/empty - a spacer
+	 *         always has something to render (a size, defaulting to 'md').
+	 */
+	private function renderSpacerBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\SpacerBlockProvider())->build($block['settings']);
+
+		return $block_renderer->render('spacer', array(
+			'size' => $settings['size']
+		));
 	}
 }

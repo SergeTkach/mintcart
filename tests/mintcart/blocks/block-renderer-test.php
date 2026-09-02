@@ -266,6 +266,27 @@ assertSame__(
     $failures
 );
 
+// 11. Same real-repo integration check for the shipped spacer.twig - a
+//    second block type to guard against the fallback chain only having
+//    ever been exercised against the first one.
+$realSpacerPath = $realRenderer->resolve('spacer');
+
+assertSame__(
+    true,
+    is_file($realSpacerPath),
+    'Scenario 11: resolve() should find the real mint_default blocks/spacer.twig file on disk',
+    $failures
+);
+
+$realSpacerMarkup = (string) file_get_contents($realSpacerPath);
+
+assertSame__(
+    true,
+    str_contains($realSpacerMarkup, 'mc-block--spacer') && str_contains($realSpacerMarkup, '{{ size }}'),
+    'Scenario 11: the resolved real spacer.twig should contain the documented mc-block--spacer markup and the size variable',
+    $failures
+);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {

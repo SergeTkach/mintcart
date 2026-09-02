@@ -784,10 +784,10 @@ by setting the attribute by hand.
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
 - [~] First blocks: Products, Hero, Categories, Banner Grid, Benefits, FAQ,
-      Testimonials, Brands, Text/Image, CTA and Newsletter done (see
+      Testimonials, Brands, Text/Image, CTA, Newsletter and Spacer done (see
       "Sub-step 2", `docs/developer/blocks/hero.md`,
-      `docs/developer/blocks/categories.md`, "Sub-step 3" below); Spacer,
-      Text, HTML, Gallery each have an open, in-progress pull request being
+      `docs/developer/blocks/categories.md`, "Sub-step 3" below); Text,
+      HTML, Gallery each have an open, in-progress pull request being
       merged sequentially as this backlog gets reconciled
 - [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
       `mc_block` rows) — see "Sub-step 3" below. Reordering uses a plain
@@ -917,6 +917,13 @@ wired into `ControllerDesignHomepage::TYPES`.
 CSS — same "title/text, optional action" shape as CTA, but with an email
 input + submit button instead of a link-style button. Full writeup:
 `docs/developer/blocks/newsletter.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
+**Spacer block (merged separately, reconciled here):**
+`MintCart\Blocks\SpacerBlockProvider` + `ControllerCommonHome::renderSpacerBlock()`
++ `blocks/spacer.twig` + `.mc-block--spacer`/`-sm`/`-md`/`-lg`/`-xl` CSS —
+the simplest block type, purely structural, no localized content. Full
+writeup: `docs/developer/blocks/spacer.md`. Also not yet wired into
 `ControllerDesignHomepage::TYPES`.
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
@@ -1310,16 +1317,40 @@ MySQL/`vendor/twig/twig` in this sandbox — a human should insert an
 on a real install and confirm both the announcement-only and
 with-form variants render.
 
-**Next step:** the still-unclaimed block types are **Spacer, Text, HTML,
-Gallery**, each need their own Provider + `blocks/<type>.twig` following
-the same shape established, being merged sequentially from their open PRs.
-Note for whoever tackles **Gallery**: as of this writing no merged PR has
-wired Swiper (`package.json` already pins `swiper@14.1.0`, but no
-`assets/src/js`/`assets/src/css` file imports it yet) — it would be the
-first real Swiper consumer. Otherwise, the Homepage drag-and-drop editor
-(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
-that exists, a block instance has to be inserted by hand to be visible)
-is also still not started.
+**Sub-step 3 (this run): the Spacer block.** `MintCart\Blocks\SpacerBlockProvider`
+(`upload/system/library/mintcart/blocks/spacerblockprovider.php`) — the
+simplest block type, purely structural: it normalizes one setting (`size`,
+one of `sm`/`md`/`lg`/`xl`, default `md`), reads no localized content, and
+makes no OpenCart query at all. `ControllerCommonHome::buildMintBlocks()`'s
+dispatch (previously a single `if('products')`) is now
+`if`/`elseif`/`else` also handling `type='spacer'` via a new
+`renderSpacerBlock()` method. `blocks/spacer.twig` (Mint Default) is a
+single empty `<div class="mc-block mc-block--spacer mc-block--spacer-{{
+size }}" aria-hidden="true">` — no `.container`/`.row` wrapper (nothing to
+constrain) and, unlike every other block, `.mc-block`'s own top/bottom
+padding is zeroed for this modifier so the size *is* the space, not
+padding added on top of it. Full writeup: `docs/developer/blocks/spacer.md`;
+upstream diff increment note in `docs/upstream-diff.md`'s existing
+`home.php` entry. Verified: `php -l` clean on every touched/added PHP
+file; full `tests/mintcart/` suite (12 files, including the new
+`tests/mintcart/blocks/spacer-block-provider-test.php` and a 3rd scenario
+added to `block-renderer-test.php`) passing; `npm run build` compiles
+cleanly, `mc-block--spacer`/`mc-block--spacer-sm|md|lg|xl` present in the
+bundled `assets/dist/css/index.min.css`. Same pre-existing gap as every
+earlier phase: no MySQL/`vendor/twig/twig` in this environment, so no live
+end-to-end request was exercised — a human should insert an `mc_block` row
+(`type='spacer'`, `settings_json='{"size":"lg"}'`) on a real install and
+confirm the homepage renders it.
+
+**Next step:** Text, HTML and Gallery each need their own Provider +
+`blocks/<type>.twig` following the same shape established, being merged
+sequentially from their open PRs. Note for whoever tackles **Gallery**: as
+of this writing no merged PR has wired Swiper (`package.json` already
+pins `swiper@14.1.0`, but no `assets/src/js`/`assets/src/css` file imports
+it yet) — it would be the first real Swiper consumer. The Homepage
+drag-and-drop editor (admin UI to actually create/reorder `mc_page`/`mc_block`
+rows — until it exists, a block instance has to be inserted by hand to be
+visible) is also still not started.
 
 ## Phase 11 — Mint Admin primitives
 

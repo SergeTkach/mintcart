@@ -348,3 +348,36 @@
 .mc-block__newsletter-form .mc-field__control {
     flex: 1 1 16rem;
 }
+
+/**
+ * mc-block--spacer
+ *
+ * The simplest block type: an empty full-width strip whose only job is
+ * vertical space between two other blocks. No .container/.row wrapper (it
+ * has no content to constrain) and no top/bottom mc-block padding of its
+ * own - the size modifier *is* the space, not additional padding around it.
+ * `--mc-block-spacer-height` is the component-local override point (per
+ * MINTCART_IMPLEMENTATION_GUIDE.md §16) a theme could redeclare without
+ * touching this file.
+ */
+.mc-block--spacer {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: var(--mc-block-spacer-height, var(--mc-space-8));
+}
+
+.mc-block--spacer-sm {
+    --mc-block-spacer-height: var(--mc-space-4);
+}
+
+.mc-block--spacer-md {
+    --mc-block-spacer-height: var(--mc-space-8);
+}
+
+.mc-block--spacer-lg {
+    --mc-block-spacer-height: var(--mc-space-12);
+}
+
+.mc-block--spacer-xl {
+    --mc-block-spacer-height: var(--mc-space-16);
+}
