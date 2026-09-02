@@ -783,12 +783,12 @@ by setting the attribute by hand.
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
-- [~] First blocks: Products, Hero and Categories done (see "Sub-step 2",
-      `docs/developer/blocks/hero.md`, `docs/developer/blocks/categories.md`);
-      Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ, CTA,
-      Newsletter, Spacer, Text, HTML, Gallery each have an open, in-progress
-      pull request being merged sequentially as this backlog gets reconciled
-      (see "Sub-step 3" below)
+- [~] First blocks: Products, Hero, Categories and Banner Grid done (see
+      "Sub-step 2", `docs/developer/blocks/hero.md`,
+      `docs/developer/blocks/categories.md`, "Sub-step 3" below); Benefits,
+      Text/Image, Brands, Testimonials, FAQ, CTA, Newsletter, Spacer, Text,
+      HTML, Gallery each have an open, in-progress pull request being merged
+      sequentially as this backlog gets reconciled
 - [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
       `mc_block` rows) — see "Sub-step 3" below. Reordering uses a plain
       per-row `sort_order` number input, **not** SortableJS/`McSortable` drag-
@@ -999,13 +999,43 @@ human should insert an `mc_block` row (`type='categories'`,
 `settings_json='{}'`) on a real install and confirm the homepage renders a
 Categories grid.
 
-**Next step:** the remaining first-wave block types (Banner Grid, Benefits,
-Text/Image, Brands, Testimonials, FAQ, CTA, Newsletter, Spacer, Text, HTML,
-Gallery) each need their own Provider + `blocks/<type>.twig` following the
-same shape Products/Hero/Categories established, being merged sequentially
-from their open PRs, or the Homepage drag-and-drop editor (admin UI to
-actually create/reorder `mc_page`/`mc_block` rows — until that exists, a
-block instance has to be inserted by hand to be visible).
+**Sub-step 3 (this run): Banner Grid block.** `MintCart\Blocks\BannerGridBlockProvider`
+(`upload/system/library/mintcart/blocks/bannergridblockprovider.php`)
+normalizes a `type='banner-grid'` `mc_block` row's settings/content — a
+list of items (each `image`/`url`/`image_width`/`image_height` in
+`settings_json`, `alt`/`caption` in `content_json`) matched up by array
+position, plus a `columns` setting (2-4, default 3) precomputed into a
+`col_width` (12/columns) so the Twig template does no grid arithmetic of
+its own. `ControllerCommonHome::renderBannerGridBlock()` resolves each
+item's image via `$this->model_tool_image->resize()` — same
+`is_file`-guarded call the stock Banner module uses — dropping any item
+whose file no longer exists rather than rendering a broken `<img>`; falls
+back to 600×400 when an item didn't set its own width/height. No product
+query or `ProductViewProvider` involved, unlike the Products block — a
+banner item's data all comes from the block's own settings. New CSS
+component `assets/src/css/components/banner-grid.css`
+(`.mc-banner-grid__item`/`__image`/`__caption`), imported into
+`assets/src/css/index.css` after `block.css`. Full writeup:
+`docs/developer/blocks/banner-grid.md`; upstream diff entry for
+`home.php` extended in `docs/upstream-diff.md`. Verified: `php -l` clean
+on every touched/added PHP file; full `tests/mintcart/` suite (12 files,
+including the new `tests/mintcart/blocks/banner-grid-block-provider-test.php`,
+3 scenarios) passing; `npm run build` (both `build:js` and `build:css`)
+compiles cleanly, with `mc-banner-grid__item`/`__image`/`__caption`
+present in the built `index.min.css`. Same pre-existing gap as Sub-step 2:
+no MySQL/`vendor/twig/twig` in this environment, so no live end-to-end
+request was exercised — a human should insert an `mc_block` row
+(`type='banner-grid'`, `settings_json` with at least one item pointing at
+a real file under `DIR_IMAGE`) on a real install and confirm the homepage
+renders a Banner Grid block.
+
+**Next step:** the remaining first-wave block types (Benefits, Text/Image,
+Brands, Testimonials, FAQ, CTA, Newsletter, Spacer, Text, HTML, Gallery)
+each need their own Provider + `blocks/<type>.twig` following the same
+shape Products/Hero/Categories/Banner Grid established, being merged
+sequentially from their open PRs, or the Homepage drag-and-drop editor
+(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until that
+exists, a block instance has to be inserted by hand to be visible).
 
 ## Phase 11 — Mint Admin primitives
 

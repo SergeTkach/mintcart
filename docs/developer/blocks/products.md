@@ -109,9 +109,10 @@ gained a `buildMintBlocks()` stage:
    `MINTCART_TECHNICAL_PLAN.md` §15C, is still not built — no abstraction
    before enough real consumers justify it, `CLAUDE.md` §85).
 5. Any other block `type` is skipped, not fatal — the other first-wave
-   block types (Hero, Categories, Banner Grid, Benefits, Text/Image,
-   Brands, Testimonials, FAQ — `MINTCART_IMPLEMENTATION_GUIDE.md` §51) are
-   separate, not-yet-started checklist items.
+   block types (Hero, Categories, Benefits, Text/Image, Brands,
+   Testimonials, FAQ — `MINTCART_IMPLEMENTATION_GUIDE.md` §51) are
+   separate, not-yet-started checklist items. `banner-grid` is now
+   implemented too — see `docs/developer/blocks/banner-grid.md`.
 6. Rendered block markup is passed to the view as `mc_blocks` (a plain
    list of already-rendered HTML strings, same shape as `product_cards`).
 
@@ -134,8 +135,9 @@ never an empty `<section>`.
   §17's last unchecked item) — a `'home'` page with a `'products'` block
   currently has to be inserted by hand (or a future migration/seed) to be
   visible at all.
-- Hero, Categories, Banner Grid, Benefits, Text/Image, Brands,
-  Testimonials, FAQ block types have no provider/template yet.
+- Hero, Categories, Benefits, Text/Image, Brands, Testimonials, FAQ block
+  types have no provider/template yet (`banner-grid` is done — see
+  `docs/developer/blocks/banner-grid.md`).
 - No live-render verification in this sandbox (no `vendor/twig/twig`,
   same pre-existing gap as every other Twig-touching MintCart test) — a
   human should confirm on a real install: insert a `mc_page` row

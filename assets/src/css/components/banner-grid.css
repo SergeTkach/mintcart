@@ -1,0 +1,43 @@
+/**
+ * mc-banner-grid
+ *
+ * Content of the Banner Grid Homepage Builder block (docs/MINTCART_TECHNICAL_PLAN.md
+ * §16-17, docs/MINTCART_IMPLEMENTATION_GUIDE.md §51 - one of the first-wave
+ * block types). Rendered inside the shared `.mc-block`/`.mc-block--banner-grid`
+ * wrapper (components/block.css); this file only styles the grid item itself
+ * (image + optional caption overlay), same "wrapper vs content" split
+ * `mc-product-card` has from `mc-block--products`.
+ *
+ * No JS - a banner item is a plain link (`<a>`), same as the rest of the
+ * storefront's non-interactive imagery.
+ */
+
+.mc-banner-grid__item {
+    --mc-banner-grid-radius: var(--mc-radius-lg);
+
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: var(--mc-banner-grid-radius);
+}
+
+.mc-banner-grid__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform var(--mc-motion-duration-base) var(--mc-motion-easing-standard);
+}
+
+.mc-banner-grid__item:hover .mc-banner-grid__image {
+    transform: scale(1.03);
+}
+
+.mc-banner-grid__caption {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-end: 0;
+    padding: var(--mc-space-3) var(--mc-space-4);
+    color: var(--mc-on-primary);
+    background: linear-gradient(to top, rgb(0 0 0 / 55%), rgb(0 0 0 / 0%));
+    font-weight: var(--mc-font-weight-semibold);
+}

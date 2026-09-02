@@ -606,6 +606,10 @@ the same `ProductViewProvider`/`ProductCardListRenderer` pipeline
 Category/Search/Special/Manufacturer already use. Result is passed to the
 view as a new `$data['mc_blocks']` (list of already-rendered block HTML
 strings) — see `docs/developer/blocks/products.md` for the full writeup.
+`buildMintBlocks()`'s dispatch now also handles `type = 'banner-grid'` via
+a sibling `renderBannerGridBlock()` method
+(`MintCart\Blocks\BannerGridBlockProvider` + `$this->model_tool_image`,
+no product query involved — see `docs/developer/blocks/banner-grid.md`).
 The controller's original five `$this->load->controller(...)` calls
 (`column_left`/`column_right`/`content_top`/`content_bottom`/`footer`/`header`)
 are completely untouched.
