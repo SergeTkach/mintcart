@@ -784,11 +784,11 @@ by setting the attribute by hand.
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
 - [~] First blocks: Products, Hero, Categories, Banner Grid, Benefits, FAQ,
-      Testimonials, Brands, Text/Image, CTA, Newsletter, Spacer and Text
-      done (see "Sub-step 2", `docs/developer/blocks/hero.md`,
-      `docs/developer/blocks/categories.md`, "Sub-step 3" below); HTML,
-      Gallery each have an open, in-progress pull request being merged
-      sequentially as this backlog gets reconciled
+      Testimonials, Brands, Text/Image, CTA, Newsletter, Spacer, Text and
+      HTML done (see "Sub-step 2", `docs/developer/blocks/hero.md`,
+      `docs/developer/blocks/categories.md`, "Sub-step 3" below); Gallery
+      has an open, in-progress pull request being merged as this backlog
+      gets reconciled
 - [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
       `mc_block` rows) — see "Sub-step 3" below. Reordering uses a plain
       per-row `sort_order` number input, **not** SortableJS/`McSortable` drag-
@@ -932,6 +932,13 @@ writeup: `docs/developer/blocks/spacer.md`. Also not yet wired into
 rich-text container (`assets/src/css/elements/prose.css`, also used by
 Text/Image). No product/OpenCart data dependency at all. Full writeup:
 `docs/developer/blocks/text.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
+
+**HTML block (merged separately, reconciled here):**
+`MintCart\Blocks\HtmlBlockProvider` + `ControllerCommonHome::renderHtmlBlock()`
++ `blocks/html.twig` (renders the raw `html` content via the `|raw`
+filter) — the simplest block type, no product query, no CSS of its own.
+Full writeup: `docs/developer/blocks/html.md`. Also not yet wired into
 `ControllerDesignHomepage::TYPES`.
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
@@ -1377,15 +1384,38 @@ this environment, so no live end-to-end request was exercised — a human
 should insert an `mc_block` row (`type='text'`) on the `'home'` page and
 confirm the homepage renders it with `mc-prose` styling.
 
-**Next step:** HTML and Gallery each need their own Provider +
-`blocks/<type>.twig` following the same shape established. Note for
-whoever tackles **Gallery**: as of this writing no merged PR has wired
-Swiper (`package.json` already pins `swiper@14.1.0`, but no
-`assets/src/js`/`assets/src/css` file imports it yet) — it would be the
-first real Swiper consumer. Also still open: the Homepage drag-and-drop
-editor (admin UI to actually create/reorder `mc_page`/`mc_block` rows —
-until that exists, a block instance has to be inserted by hand to be
-visible).
+**Sub-step 3 (this run): HTML block.** `MintCart\Blocks\HtmlBlockProvider`
+(`upload/system/library/mintcart/blocks/htmlblockprovider.php`) — the
+simplest Block Provider so far: no structural `settings_json` fields at
+all, just a per-language raw `html` string from `content_json`, normalized
+to always be a safe string (never `null`/an array). `ControllerCommonHome`
+gained `renderHtmlBlock()` and its per-block dispatch now recognizes
+`type = 'html'` alongside `'products'`. New template:
+`mint_default/template/mint/blocks/html.twig` (renders `html|raw` inside
+the shared `mc-block`/`mc-block--html` wrapper — deliberately unescaped,
+since block rows are only ever admin-authored; see
+`docs/developer/blocks/html.md` "Why `|raw` is safe here"). Full writeup:
+`docs/developer/blocks/html.md`; upstream-diff update in
+`docs/upstream-diff.md`'s `home.php` entry. Verified: `php -l` clean on
+every touched/added PHP file; full `tests/mintcart/` suite (12 files,
+including the new `tests/mintcart/blocks/html-block-provider-test.php`
+and a 3rd scenario added to `block-renderer-test.php`) passing. No
+CSS/JS changes needed (`.mc-block` already covers the wrapper; `--html`
+is a scoping modifier only, same as `--products`), so `npm run build` was
+not re-run this increment. Same pre-existing gap as every earlier phase:
+no MySQL/`vendor/twig/twig` in this environment — a human should insert
+an `mc_block` row (`type = 'html'`,
+`content_json = '{"html":"<p>Hello</p>"}'`) on a real install and confirm
+it renders on the homepage.
+
+**Next step:** **Gallery** is the only first-wave block type (per
+`MINTCART_IMPLEMENTATION_GUIDE.md` §33) left, following the same
+Provider/Renderer/Template shape as Products/Text/HTML — it would be the
+first real Swiper consumer (`package.json` already pins `swiper@14.1.0`,
+but no `assets/src/js`/`assets/src/css` file imports it yet). After that:
+the Homepage drag-and-drop editor (admin UI to actually create/reorder
+`mc_page`/`mc_block` rows — until that exists, a block instance has to be
+inserted by hand to be visible).
 
 ## Phase 11 — Mint Admin primitives
 

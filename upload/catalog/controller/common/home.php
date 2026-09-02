@@ -28,12 +28,13 @@ class ControllerCommonHome extends Controller {
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
 	 * sort_order, via MintCart\Blocks\BlockRenderer. 'products', 'hero',
 	 * 'categories', 'banner-grid', 'benefits', 'faq', 'testimonials',
-	 * 'brands', 'text-image', 'cta', 'newsletter', 'spacer' and 'text' have
-	 * a query/provider implementation so far (MINTCART_IMPLEMENTATION_GUIDE.md
-	 * §51's other first-wave block types - HTML, Gallery - are separate,
-	 * not-yet-started checklist items). An unrecognized block type is
-	 * skipped, not fatal, so a page mixing implemented and
-	 * not-yet-implemented block types still renders what it can.
+	 * 'brands', 'text-image', 'cta', 'newsletter', 'spacer', 'text' and
+	 * 'html' have a query/provider implementation so far
+	 * (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block types
+	 * - Gallery - is the only separate, not-yet-started checklist item). An
+	 * unrecognized block type is skipped, not fatal, so a page mixing
+	 * implemented and not-yet-implemented block types still renders what
+	 * it can.
 	 *
 	 * Same "is the active theme Mint-API-aware" gate every other Mint
 	 * rendering pipeline uses (MintCart\Design\ActiveTheme::isMintAware) -
@@ -97,6 +98,8 @@ class ControllerCommonHome extends Controller {
 				$markup = $this->renderSpacerBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'text') {
 				$markup = $this->renderTextBlock($block, $block_renderer);
+			} elseif ($block['type'] === 'html') {
+				$markup = $this->renderHtmlBlock($block, $block_renderer);
 			} else {
 				$markup = null;
 			}
@@ -658,5 +661,30 @@ class ControllerCommonHome extends Controller {
 		}
 
 		return $block_renderer->render('text', $settings);
+	}
+
+	/**
+	 * Renders one 'html' mc_block row - the simplest block type, no product
+	 * query and no OpenCart model dependency beyond the already-loaded
+	 * block row itself (MINTCART_IMPLEMENTATION_GUIDE.md §33's first-wave
+	 * block list includes "HTML" alongside Hero/Products/Categories/...).
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when the block's
+	 *         html content is empty (html.twig's own {% if html %} guard
+	 *         would render nothing anyway - returning null here lets the
+	 *         caller's "was anything actually rendered" check stay uniform
+	 *         across every block type).
+	 */
+	private function renderHtmlBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\HtmlBlockProvider())->build($block['settings'], $block['content']);
+
+		if ($settings['html'] === '') {
+			return null;
+		}
+
+		return $block_renderer->render('html', array(
+			'html' => $settings['html']
+		));
 	}
 }

@@ -771,6 +771,19 @@ and renders through the existing `BlockRenderer` — see
 (3 scenarios) and a 3rd scenario in `block-renderer-test.php` cover it; full
 `tests/mintcart/` suite re-run end to end, still passing (12 files).
 
+**Update (HTML block):** `buildMintBlocks()`'s per-block dispatch now also
+recognizes `type = 'html'`, calling a new `renderHtmlBlock()` method that
+normalizes the block's raw markup via the new
+`MintCart\Blocks\HtmlBlockProvider` and renders it through the same
+`BlockRenderer` the Products block uses — see
+`docs/developer/blocks/html.md`. No change to the `'products'` path or
+the Mint-awareness gate. Verified: `php -l` (clean); full
+`tests/mintcart/` suite re-run end to end — still passing (12 files, plus
+the new `tests/mintcart/blocks/html-block-provider-test.php`); same
+pre-existing no-MySQL/no-Twig-vendor gap — a human should insert an
+`mc_block` row (`type = 'html'`, `content_json = '{"html":"<p>Hello</p>"}'`)
+on a real install and confirm it renders on the homepage.
+
 ---
 
 ## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)
