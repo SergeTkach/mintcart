@@ -644,6 +644,21 @@ request was exercised — a human should insert a `mc_page` row
 a Products block, then confirm the legacy `default` theme's homepage is
 pixel-identical to before.
 
+**Update (a later run): `buildMintBlocks()`'s dispatch now also handles
+`type = 'hero'`**, via a new `renderHeroBlock()` private method calling the
+new `MintCart\Blocks\HeroBlockProvider` — a settings-only banner block (no
+product query), see `docs/developer/blocks/hero.md` for the full writeup.
+The `foreach` loop was reshaped from an `if`-with-inline-append into an
+`if`/`elseif`/`else` that assigns `$markup` then appends once, so adding a
+third block type later is a single new `elseif` branch rather than another
+copy of the append-if-non-empty check. No behavioural change for existing
+`'products'` blocks. **Tests:** `php -l` clean;
+`tests/mintcart/blocks/hero-block-provider-test.php` (3 scenarios, new);
+full `tests/mintcart/` suite re-run end to end — still passing (12 files).
+Same pre-existing gap: a human should insert an `mc_block` row
+(`type = 'hero'`) on a real install and confirm the homepage renders a
+Hero banner, both with and without a background `image` setting.
+
 ---
 
 ## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)

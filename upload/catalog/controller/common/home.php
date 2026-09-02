@@ -26,14 +26,13 @@ class ControllerCommonHome extends Controller {
 	/**
 	 * MintCart Homepage Builder (Phase 10, MINTCART_TECHNICAL_PLAN.md
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
-	 * sort_order, via MintCart\Blocks\BlockRenderer. Only the 'products'
-	 * block type has a query/provider implementation so far
+	 * sort_order, via MintCart\Blocks\BlockRenderer. Only 'products' and
+	 * 'hero' have a query/provider implementation so far
 	 * (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block types
-	 * - Hero, Categories, Banner Grid, Benefits, Text/Image, Brands,
-	 * Testimonials, FAQ - are separate, not-yet-started checklist items).
-	 * An unrecognized block type is skipped, not fatal, so a page mixing
-	 * implemented and not-yet-implemented block types still renders what
-	 * it can.
+	 * - Categories, Banner Grid, Benefits, Text/Image, Brands, Testimonials,
+	 * FAQ - are separate, not-yet-started checklist items). An unrecognized
+	 * block type is skipped, not fatal, so a page mixing implemented and
+	 * not-yet-implemented block types still renders what it can.
 	 *
 	 * Same "is the active theme Mint-API-aware" gate every other Mint
 	 * rendering pipeline uses (MintCart\Design\ActiveTheme::isMintAware) -
@@ -73,10 +72,14 @@ class ControllerCommonHome extends Controller {
 		foreach ($blocks as $block) {
 			if ($block['type'] === 'products') {
 				$markup = $this->renderProductsBlock($block, $block_renderer, $mint_theme);
+			} elseif ($block['type'] === 'hero') {
+				$markup = $this->renderHeroBlock($block, $block_renderer);
+			} else {
+				$markup = null;
+			}
 
-				if ($markup !== null && $markup !== '') {
-					$rendered[] = $markup;
-				}
+			if ($markup !== null && $markup !== '') {
+				$rendered[] = $markup;
 			}
 		}
 
@@ -231,6 +234,42 @@ class ControllerCommonHome extends Controller {
 		return $block_renderer->render('products', array(
 			'title'         => $settings['title'],
 			'product_cards' => $product_cards
+		));
+	}
+
+	/**
+	 * Renders one 'hero' mc_block row - a settings-only banner (title,
+	 * subtitle, optional CTA, optional background image), no product query
+	 * needed. Image resizing mirrors the stock Banner module's own pattern
+	 * (extension/module/banner.php): guard with is_file(DIR_IMAGE . ...)
+	 * before resizing, since a configured image path can point at a file
+	 * that was since deleted from the filesystem.
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when the block has
+	 *         no title, subtitle or resolvable image (nothing to show).
+	 */
+	private function renderHeroBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\HeroBlockProvider())->build($block['settings'], $block['content']);
+
+		$image = null;
+
+		if ($settings['image'] !== null && is_file(DIR_IMAGE . $settings['image'])) {
+			$this->load->model('tool/image');
+
+			$image = $this->model_tool_image->resize($settings['image'], $settings['image_width'], $settings['image_height']);
+		}
+
+		if ($settings['title'] === '' && $settings['subtitle'] === '' && $image === null) {
+			return null;
+		}
+
+		return $block_renderer->render('hero', array(
+			'title'     => $settings['title'],
+			'subtitle'  => $settings['subtitle'],
+			'cta_label' => $settings['cta_label'],
+			'cta_url'   => $settings['cta_url'],
+			'image'     => $image
 		));
 	}
 }
