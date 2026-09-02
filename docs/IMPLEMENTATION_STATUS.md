@@ -2539,3 +2539,45 @@ passing), and the `docs/developer/blocks/*.md` reference docs. Historical
 entries above this line describe each block as it shipped at the time
 (`mc-block--<type>`) — left as-is; they're a changelog, not living
 documentation.
+
+**Update (reconciliation follow-up): `ControllerDesignHomepage::TYPES`
+extended to all 15 shipped block types, replacing the Products-only
+hardcoded settings form.** Full writeup: `docs/developer/blocks/homepage-admin.md`
+("Block type registry" / "Content vs. settings" sections). Summary: one
+declarative `fieldSchema()` (settings/content field list per type,
+matching each type's own `*BlockProvider::build()`) drives
+`getForm()`/`prepareBlockData()`/`validateForm()` generically instead of
+15 hardcoded near-duplicate blocks; `homepage_form.twig` renders whatever
+fields the current type declares. The type `<select>` reloads live via a
+plain `onchange` GET reload (no JS bundle needed — the admin
+asset-enqueue question above is still unresolved). Banner Grid, Benefits,
+Testimonials, Brands, and Gallery (the five `items`-repeater types) get a
+raw JSON textarea per items list rather than a real add/remove-row UI,
+since that also needs the same unresolved JS-bundle decision — a genuinely
+working escape hatch, not a placeholder, with inline help text showing
+the exact JSON shape and `error_json` validation on malformed input.
+Replacing it with a real repeater is follow-up work once the admin
+asset-enqueue question is resolved.
+
+New test: `tests/mintcart/design/homepage-admin-schema-test.php` (6
+scenarios — flat-type round-trip, JSON-items round-trip, default
+fallbacks incl. Products' `category_id: null`, a tampered `select` value
+falling back to its default, `validateForm()` rejecting malformed JSON
+while accepting blank, and every one of the 15 types' field schema having
+a resolvable language string for every `label_key`/`help_key`). Verified:
+`php -l` clean on every touched/added PHP file; full standalone test
+suite re-run end to end — all passing; Twig `{% if %}`/`{% endif %}`/
+`{% for %}`/`{% endfor %}` tag counts balanced in the rewritten
+`homepage_form.twig`. Same pre-existing gap as every earlier phase: no
+live MySQL/OpenCart admin session in this environment — a human should
+work through `docs/developer/blocks/homepage-admin.md`'s "Manual
+verification" steps 7-9 (added this run) on a real install.
+
+**Next step:** the Homepage drag-and-drop editor (`McSortable`, still a
+plain `sort_order` number input) and the admin asset-enqueue question
+both remain open — see `docs/developer/blocks/homepage-admin.md`'s "Why
+this screen uses the legacy admin theme" section. Swapping `category_id`/
+`parent_id` for a real `McEntityPicker` (Phase 12's category backend now
+exists) is a separate, self-contained follow-up. Replacing the five
+`items` JSON textareas with a real repeater is blocked on the same
+asset-enqueue decision as `McSortable`.

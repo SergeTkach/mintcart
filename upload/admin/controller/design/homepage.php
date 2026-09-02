@@ -3,15 +3,6 @@
  * Homepage Builder admin editor (MINTCART_FUNCTIONAL_SCOPE.md §10,
  * MINTCART_TECHNICAL_PLAN.md §17, MINTCART_IMPLEMENTATION_GUIDE.md §33).
  *
- * Phase 10's storage (`mc_page`/`mc_block`) and its first real block type
- * (`MintCart\Blocks\ProductsBlockProvider`, wired end-to-end through
- * `ControllerCommonHome::buildMintBlocks()`) already existed on `master`;
- * this is the missing other half — until now a block instance had to be
- * inserted into the database by hand to ever be visible (see
- * `docs/developer/blocks/products.md` and `docs/IMPLEMENTATION_STATUS.md`'s
- * Phase 10 "Next step"). This screen lets an admin add/edit/reorder/
- * enable-disable/delete blocks on the `home` page.
- *
  * Deliberately built on the existing legacy OpenCart admin theme
  * (Bootstrap 3 markup — `.panel`/`.btn`/`form-horizontal`, the same shape
  * `design/banner.php` and `extension/module/latest.php` already use), not
@@ -23,39 +14,229 @@
  * `assets/dist/js/admin.min.js`) enqueued into it anywhere in this repo.
  * Enqueuing that bundle's Bootstrap 5 CSS here would load it globally
  * across every other (Bootstrap-3-based) admin screen too, which
- * `CLAUDE.md` §10 explicitly forbids ("Do not globally load Bootstrap 3
- * and Bootstrap 5 together" — `.btn`/`.container`/`.modal`/`.dropdown`/
- * `.alert` all collide). Whether to migrate the whole admin shell to
- * Bootstrap 5, scope MintCart's own screens some other isolated way, or
- * keep new MintCart admin screens on the legacy theme until a dedicated
- * Mint Admin Shell phase is a real architectural decision this run does
- * not guess at (`CLAUDE.md` §20) — flagged for the project owner in this
- * change's pull request description. Reordering therefore uses a plain
- * per-row `sort_order` number input (the same pattern `banner_image` rows
- * already use in `design/banner_form.twig`), not McSortable drag-and-drop.
+ * `CLAUDE.md` §10 explicitly forbids. Whether to migrate the whole admin
+ * shell to Bootstrap 5, scope MintCart's own screens some other isolated
+ * way, or keep new MintCart admin screens on the legacy theme until a
+ * dedicated Mint Admin Shell phase is a real architectural decision this
+ * run does not guess at (`CLAUDE.md` §20) — still flagged for the project
+ * owner. Reordering therefore uses a plain per-row `sort_order` number
+ * input (the same pattern `banner_image` rows already use in
+ * `design/banner_form.twig`), not McSortable drag-and-drop.
  *
- * `TYPES` currently lists only `products` — the sole block type with a
- * real Provider/Renderer/template merged to `master`. The other first-wave
- * types (Hero, Categories, Banner Grid, Benefits, Text, Text/Image,
- * Brands, Testimonials, CTA, Newsletter, FAQ, Gallery, HTML, Spacer) each
- * have their own open pull request in progress as of this run's step-0
- * duplicate-work check; adding a typed settings form for any of them here
- * ahead of knowing its merged provider's real settings shape would risk
- * guessing at (and conflicting with) that work. `mc_block` storage stays
- * type-agnostic (`type` + `settings_json`, MINTCART_TECHNICAL_PLAN.md
- * §16), so extending `TYPES` by one array entry — plus that type's own
- * settings fields in `getForm()`/`prepareBlockData()` — is all a future
- * run needs once each of those PRs lands.
+ * `TYPES` now lists all fifteen shipped block types (Products through
+ * Gallery, MINTCART_IMPLEMENTATION_GUIDE.md §51's full first-wave catalog)
+ * — each has a real Provider/Renderer/template merged to `master`
+ * (`upload/system/library/mintcart/blocks/*.php`,
+ * `ControllerCommonHome::render*Block()`). `FIELD_SCHEMA` is what makes
+ * that tractable without 15 near-identical hardcoded forms: one
+ * declarative field list per type (structural `settings_json` fields vs
+ * localized `content_json` fields, mirroring exactly what that type's own
+ * BlockProvider::build() reads), and `getForm()`/`prepareBlockData()` walk
+ * it generically instead of switching on `type`.
+ *
+ * Five types (Banner Grid, Benefits, Testimonials, Brands, Gallery) have a
+ * repeatable `items` list — each item's own structural fields (image path,
+ * url, ...) and localized fields (alt, caption, ...). Building a real
+ * dynamic add/remove-row JS UI for that needs the same admin asset-enqueue
+ * fix the class docblock above flags as still-undecided (no JS bundle is
+ * loaded on this screen at all yet), so `items` is deliberately a single
+ * raw-JSON textarea per list for now — a real, working escape hatch (an
+ * admin can configure any of these blocks today) rather than a half-built
+ * repeater. Each such field's `help_key` shows the exact JSON shape.
+ * Replacing it with a proper repeater is flagged in
+ * `docs/IMPLEMENTATION_STATUS.md` as follow-up work once the asset-enqueue
+ * question is resolved.
  */
 class ControllerDesignHomepage extends Controller {
 	private $error = array();
 
-	/** Block types with a real, merged Provider/Renderer/template. */
+	/** Every block type with a real, merged Provider/Renderer/template. */
 	const TYPES = array(
-		'products' => 'text_type_products'
+		'products'     => 'text_type_products',
+		'hero'         => 'text_type_hero',
+		'categories'   => 'text_type_categories',
+		'banner-grid'  => 'text_type_banner_grid',
+		'benefits'     => 'text_type_benefits',
+		'faq'          => 'text_type_faq',
+		'testimonials' => 'text_type_testimonials',
+		'brands'       => 'text_type_brands',
+		'text-image'   => 'text_type_text_image',
+		'cta'          => 'text_type_cta',
+		'newsletter'   => 'text_type_newsletter',
+		'spacer'       => 'text_type_spacer',
+		'text'         => 'text_type_text',
+		'html'         => 'text_type_html',
+		'gallery'      => 'text_type_gallery'
 	);
 
 	const PAGE_CODE = 'home';
+
+	/**
+	 * Declarative settings/content field list per block type, matching
+	 * each type's own BlockProvider::build() exactly (field names, which
+	 * side of settings_json/content_json each lives on, and defaults).
+	 *
+	 * Field shape: array{
+	 *     name: string, type: 'text'|'number'|'select'|'textarea'|'json',
+	 *     default: mixed, label_key: string, help_key?: string,
+	 *     options?: array<string, string>, min?: int
+	 * }
+	 *
+	 * @return array<string, array{settings: list<array>, content: list<array>}>
+	 */
+	private static function fieldSchema() {
+		$title = array('name' => 'title', 'type' => 'text', 'default' => '', 'label_key' => 'entry_title');
+
+		return array(
+			'products' => array(
+				'settings' => array(
+					array('name' => 'category_id', 'type' => 'number', 'default' => null, 'label_key' => 'entry_category_id', 'help_key' => 'help_category_id'),
+					array('name' => 'limit', 'type' => 'number', 'default' => 8, 'min' => 1, 'label_key' => 'entry_limit'),
+					array('name' => 'sort', 'type' => 'select', 'default' => 'p.date_added', 'label_key' => 'entry_sort', 'options' => array(
+						'p.date_added' => 'Date Added', 'p.viewed' => 'Viewed', 'p.price' => 'Price', 'pd.name' => 'Name'
+					)),
+					array('name' => 'order', 'type' => 'select', 'default' => 'DESC', 'label_key' => 'entry_order', 'options' => array('ASC' => 'ASC', 'DESC' => 'DESC'))
+				),
+				'content' => array($title)
+			),
+			'hero' => array(
+				'settings' => array(
+					array('name' => 'image', 'type' => 'text', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
+					array('name' => 'image_width', 'type' => 'number', 'default' => 1920, 'min' => 1, 'label_key' => 'entry_image_width'),
+					array('name' => 'image_height', 'type' => 'number', 'default' => 600, 'min' => 1, 'label_key' => 'entry_image_height'),
+					array('name' => 'cta_url', 'type' => 'text', 'default' => '', 'label_key' => 'entry_cta_url')
+				),
+				'content' => array(
+					$title,
+					array('name' => 'subtitle', 'type' => 'text', 'default' => '', 'label_key' => 'entry_subtitle'),
+					array('name' => 'cta_label', 'type' => 'text', 'default' => '', 'label_key' => 'entry_cta_label')
+				)
+			),
+			'categories' => array(
+				'settings' => array(
+					array('name' => 'parent_id', 'type' => 'number', 'default' => 0, 'min' => 0, 'label_key' => 'entry_parent_id', 'help_key' => 'help_parent_id'),
+					array('name' => 'limit', 'type' => 'number', 'default' => 6, 'min' => 1, 'label_key' => 'entry_limit')
+				),
+				'content' => array($title)
+			),
+			'banner-grid' => array(
+				'settings' => array(
+					array('name' => 'columns', 'type' => 'select', 'default' => '3', 'label_key' => 'entry_columns', 'options' => array('2' => '2', '3' => '3', '4' => '4')),
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_banner_items', 'help_key' => 'help_banner_items_settings')
+				),
+				'content' => array(
+					$title,
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_banner_items', 'help_key' => 'help_banner_items_content')
+				)
+			),
+			'benefits' => array(
+				'settings' => array(
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_benefit_items', 'help_key' => 'help_benefit_items_settings')
+				),
+				'content' => array(
+					$title,
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_benefit_items', 'help_key' => 'help_benefit_items_content')
+				)
+			),
+			'faq' => array(
+				'settings' => array(),
+				'content' => array(
+					$title,
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_faq_items', 'help_key' => 'help_faq_items')
+				)
+			),
+			'testimonials' => array(
+				'settings' => array(
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_testimonial_items', 'help_key' => 'help_testimonial_items_settings')
+				),
+				'content' => array(
+					$title,
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_testimonial_items', 'help_key' => 'help_testimonial_items_content')
+				)
+			),
+			'brands' => array(
+				'settings' => array(
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_brand_items', 'help_key' => 'help_brand_items_settings')
+				),
+				'content' => array(
+					$title,
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_brand_items', 'help_key' => 'help_brand_items_content')
+				)
+			),
+			'text-image' => array(
+				'settings' => array(
+					array('name' => 'image', 'type' => 'text', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
+					array('name' => 'image_width', 'type' => 'number', 'default' => 800, 'min' => 1, 'label_key' => 'entry_image_width'),
+					array('name' => 'image_height', 'type' => 'number', 'default' => 600, 'min' => 1, 'label_key' => 'entry_image_height'),
+					array('name' => 'image_position', 'type' => 'select', 'default' => 'right', 'label_key' => 'entry_image_position', 'options' => array('left' => 'Left', 'right' => 'Right'))
+				),
+				'content' => array(
+					$title,
+					array('name' => 'body', 'type' => 'textarea', 'default' => '', 'label_key' => 'entry_body', 'help_key' => 'help_body'),
+					array('name' => 'image_alt', 'type' => 'text', 'default' => '', 'label_key' => 'entry_image_alt')
+				)
+			),
+			'cta' => array(
+				'settings' => array(),
+				'content' => array(
+					$title,
+					array('name' => 'text', 'type' => 'textarea', 'default' => '', 'label_key' => 'entry_text'),
+					array('name' => 'cta_label', 'type' => 'text', 'default' => '', 'label_key' => 'entry_cta_label'),
+					array('name' => 'cta_url', 'type' => 'text', 'default' => '', 'label_key' => 'entry_cta_url')
+				)
+			),
+			'newsletter' => array(
+				'settings' => array(
+					array('name' => 'action', 'type' => 'text', 'default' => '', 'label_key' => 'entry_action', 'help_key' => 'help_action'),
+					array('name' => 'method', 'type' => 'select', 'default' => 'post', 'label_key' => 'entry_method', 'options' => array('post' => 'POST', 'get' => 'GET'))
+				),
+				'content' => array(
+					$title,
+					array('name' => 'text', 'type' => 'textarea', 'default' => '', 'label_key' => 'entry_text'),
+					array('name' => 'placeholder', 'type' => 'text', 'default' => '', 'label_key' => 'entry_placeholder'),
+					array('name' => 'submit_label', 'type' => 'text', 'default' => '', 'label_key' => 'entry_submit_label')
+				)
+			),
+			'spacer' => array(
+				'settings' => array(
+					array('name' => 'size', 'type' => 'select', 'default' => 'md', 'label_key' => 'entry_size', 'options' => array('sm' => 'Small', 'md' => 'Medium', 'lg' => 'Large', 'xl' => 'Extra Large'))
+				),
+				'content' => array()
+			),
+			'text' => array(
+				'settings' => array(
+					array('name' => 'text_align', 'type' => 'select', 'default' => 'left', 'label_key' => 'entry_text_align', 'options' => array('left' => 'Left', 'center' => 'Center'))
+				),
+				'content' => array(
+					$title,
+					array('name' => 'content', 'type' => 'textarea', 'default' => '', 'label_key' => 'entry_content_html', 'help_key' => 'help_body')
+				)
+			),
+			'html' => array(
+				'settings' => array(),
+				'content' => array(
+					array('name' => 'html', 'type' => 'textarea', 'default' => '', 'label_key' => 'entry_html', 'help_key' => 'help_html')
+				)
+			),
+			'gallery' => array(
+				'settings' => array(
+					array('name' => 'columns', 'type' => 'select', 'default' => '4', 'label_key' => 'entry_columns', 'options' => array('2' => '2', '3' => '3', '4' => '4', '6' => '6')),
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_gallery_items', 'help_key' => 'help_gallery_items_settings')
+				),
+				'content' => array(
+					$title,
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_gallery_items', 'help_key' => 'help_gallery_items_content')
+				)
+			)
+		);
+	}
+
+	/** @return array{settings: list<array>, content: list<array>} */
+	private static function fieldsForType($type) {
+		$schema = self::fieldSchema();
+
+		return isset($schema[$type]) ? $schema[$type] : array('settings' => array(), 'content' => array());
+	}
 
 	public function index() {
 		$this->load->language('design/homepage');
@@ -222,6 +403,7 @@ class ControllerDesignHomepage extends Controller {
 
 		$data['error_warning'] = isset($this->error['warning']) ? $this->error['warning'] : '';
 		$data['error_type'] = isset($this->error['type']) ? $this->error['type'] : '';
+		$data['error_json'] = isset($this->error['json']) ? $this->error['json'] : '';
 
 		$data['breadcrumbs'] = array();
 
@@ -260,9 +442,16 @@ class ControllerDesignHomepage extends Controller {
 			);
 		}
 
-		if (isset($this->request->post['type'])) {
+		if (isset($this->request->post['type']) && array_key_exists($this->request->post['type'], self::TYPES)) {
 			$data['type'] = $this->request->post['type'];
-		} elseif (!empty($block_info)) {
+		} elseif (isset($this->request->get['type']) && array_key_exists($this->request->get['type'], self::TYPES)) {
+			// A plain GET reload from the type <select>'s onchange handler
+			// (see homepage_form.twig) - lets the settings/content fields
+			// switch to match the newly chosen type with no JS bundle
+			// needed (see this file's header comment on why one isn't
+			// enqueued here yet).
+			$data['type'] = $this->request->get['type'];
+		} elseif (!empty($block_info) && array_key_exists($block_info['type'], self::TYPES)) {
 			$data['type'] = $block_info['type'];
 		} else {
 			$data['type'] = 'products';
@@ -276,27 +465,75 @@ class ControllerDesignHomepage extends Controller {
 			$data['status'] = true;
 		}
 
-		if (isset($this->request->post['settings'])) {
-			$settings = $this->request->post['settings'];
+		$fields = self::fieldsForType($data['type']);
+
+		$data['settings_legend'] = $this->language->get(self::TYPES[$data['type']]) . ' ' . $this->language->get('text_settings_suffix');
+
+		if (isset($this->request->post['settings']) && is_array($this->request->post['settings'])) {
+			$settings_source = 'post';
+			$raw_settings = $this->request->post['settings'];
 		} elseif (!empty($block_info)) {
-			$settings = $block_info['settings'];
+			$settings_source = 'db';
+			$raw_settings = $block_info['settings'];
 		} else {
-			$settings = array();
+			$settings_source = 'default';
+			$raw_settings = array();
 		}
 
-		$data['category_id'] = isset($settings['category_id']) ? $settings['category_id'] : '';
-		$data['limit'] = isset($settings['limit']) ? $settings['limit'] : 8;
-		$data['sort'] = isset($settings['sort']) ? $settings['sort'] : 'p.date_added';
-		$data['order'] = isset($settings['order']) ? $settings['order'] : 'DESC';
+		$data['settings_fields'] = array();
+
+		foreach ($fields['settings'] as $field) {
+			$raw = isset($raw_settings[$field['name']]) ? $raw_settings[$field['name']] : null;
+
+			$data['settings_fields'][] = array(
+				'name'    => $field['name'],
+				'type'    => $field['type'],
+				'label'   => $this->language->get($field['label_key']),
+				'help'    => isset($field['help_key']) ? $this->language->get($field['help_key']) : '',
+				'min'     => isset($field['min']) ? $field['min'] : null,
+				'options' => isset($field['options']) ? $field['options'] : array(),
+				'value'   => $this->fieldDisplayValue($field, $raw, $settings_source === 'post')
+			);
+		}
 
 		$this->load->model('localisation/language');
 
 		$data['languages'] = $this->model_localisation_language->getLanguages();
 
-		if (isset($this->request->post['block_content'])) {
-			$data['block_content'] = $this->request->post['block_content'];
+		$data['content_field_defs'] = array();
+
+		foreach ($fields['content'] as $field) {
+			$data['content_field_defs'][] = array(
+				'name'  => $field['name'],
+				'type'  => $field['type'],
+				'label' => $this->language->get($field['label_key']),
+				'help'  => isset($field['help_key']) ? $this->language->get($field['help_key']) : ''
+			);
+		}
+
+		if (isset($this->request->post['block_content']) && is_array($this->request->post['block_content'])) {
+			$content_source = 'post';
+			$raw_content_by_language = $this->request->post['block_content'];
 		} else {
-			$data['block_content'] = $block_descriptions;
+			$content_source = 'db';
+			$raw_content_by_language = $block_descriptions;
+		}
+
+		$data['block_content'] = array();
+
+		foreach ($data['languages'] as $language) {
+			$language_id = (int)$language['language_id'];
+			$raw = isset($raw_content_by_language[$language_id]) ? $raw_content_by_language[$language_id] : array();
+
+			$language_values = array();
+
+			foreach ($fields['content'] as $field) {
+				$field_raw = isset($raw[$field['name']]) ? $raw[$field['name']] : null;
+
+				$language_values[$field['name']] = $this->fieldDisplayValue($field, $field_raw, $content_source === 'post');
+			}
+
+			$data['block_content'][$language_id] = $language_values;
 		}
 
 		$data['user_token'] = $this->session->data['user_token'];
@@ -309,32 +546,93 @@ class ControllerDesignHomepage extends Controller {
 	}
 
 	/**
+	 * Renders one field's value for the form: a `json` field shows the raw
+	 * text the admin just typed when it came back from a failed POST (so a
+	 * typo doesn't wipe out what they wrote), otherwise a pretty-printed
+	 * re-encode of the stored array; every other field type is a plain
+	 * string, falling back to the field's own default when unset.
+	 */
+	private function fieldDisplayValue(array $field, $raw, $from_post) {
+		if ($field['type'] === 'json') {
+			if ($from_post) {
+				return is_string($raw) ? $raw : '';
+			}
+
+			return $raw ? json_encode($raw, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : '';
+		}
+
+		if ($field['type'] === 'select') {
+			return ($raw !== null && array_key_exists($raw, $field['options'])) ? $raw : $field['default'];
+		}
+
+		if ($raw !== null && $raw !== '') {
+			return $raw;
+		}
+
+		return $field['default'] === null ? '' : $field['default'];
+	}
+
+	/**
 	 * @return array{type: string, status: bool, settings: array<string, mixed>, content: array<int, array<string, mixed>>}
 	 */
 	private function prepareBlockData() {
-		$content = array();
+		$type = isset($this->request->post['type']) ? $this->request->post['type'] : '';
 
-		if (isset($this->request->post['block_content']) && is_array($this->request->post['block_content'])) {
-			foreach ($this->request->post['block_content'] as $language_id => $value) {
-				$content[(int)$language_id] = array(
-					'title' => isset($value['title']) ? $value['title'] : ''
-				);
-			}
+		$fields = self::fieldsForType($type);
+
+		$posted_settings = isset($this->request->post['settings']) && is_array($this->request->post['settings']) ? $this->request->post['settings'] : array();
+
+		$settings = array();
+
+		foreach ($fields['settings'] as $field) {
+			$settings[$field['name']] = $this->normalizeFieldValue($field, isset($posted_settings[$field['name']]) ? $posted_settings[$field['name']] : null);
 		}
 
-		$posted_settings = isset($this->request->post['settings']) ? $this->request->post['settings'] : array();
+		$posted_content = isset($this->request->post['block_content']) && is_array($this->request->post['block_content']) ? $this->request->post['block_content'] : array();
+
+		$content = array();
+
+		foreach ($posted_content as $language_id => $value) {
+			$language_content = array();
+
+			foreach ($fields['content'] as $field) {
+				$language_content[$field['name']] = $this->normalizeFieldValue($field, is_array($value) && isset($value[$field['name']]) ? $value[$field['name']] : null);
+			}
+
+			$content[(int)$language_id] = $language_content;
+		}
 
 		return array(
-			'type'     => $this->request->post['type'],
+			'type'     => $type,
 			'status'   => !empty($this->request->post['status']),
-			'settings' => array(
-				'category_id' => !empty($posted_settings['category_id']) ? (int)$posted_settings['category_id'] : null,
-				'limit'       => !empty($posted_settings['limit']) ? (int)$posted_settings['limit'] : 8,
-				'sort'        => !empty($posted_settings['sort']) ? $posted_settings['sort'] : 'p.date_added',
-				'order'       => !empty($posted_settings['order']) ? $posted_settings['order'] : 'DESC'
-			),
+			'settings' => $settings,
 			'content'  => $content
 		);
+	}
+
+	/** Casts one posted field value per its schema type, ready for storage. */
+	private function normalizeFieldValue(array $field, $value) {
+		switch ($field['type']) {
+			case 'number':
+				return ($value !== null && $value !== '') ? (int)$value : $field['default'];
+
+			case 'select':
+				return (is_string($value) && array_key_exists($value, $field['options'])) ? $value : $field['default'];
+
+			case 'json':
+				if (!is_string($value) || trim($value) === '') {
+					return array();
+				}
+
+				$decoded = json_decode($value, true);
+
+				return is_array($decoded) ? $decoded : array();
+
+			case 'text':
+			case 'textarea':
+			default:
+				return is_string($value) ? $value : (string)$field['default'];
+		}
 	}
 
 	protected function validateForm() {
@@ -342,11 +640,54 @@ class ControllerDesignHomepage extends Controller {
 			$this->error['warning'] = $this->language->get('error_permission');
 		}
 
-		if (!isset($this->request->post['type']) || !array_key_exists($this->request->post['type'], self::TYPES)) {
+		$type = isset($this->request->post['type']) ? $this->request->post['type'] : '';
+
+		if (!array_key_exists($type, self::TYPES)) {
 			$this->error['type'] = $this->language->get('error_type');
+
+			return !$this->error;
+		}
+
+		$fields = self::fieldsForType($type);
+
+		$posted_settings = isset($this->request->post['settings']) && is_array($this->request->post['settings']) ? $this->request->post['settings'] : array();
+
+		foreach ($fields['settings'] as $field) {
+			if ($field['type'] === 'json' && $this->hasInvalidJson(isset($posted_settings[$field['name']]) ? $posted_settings[$field['name']] : null)) {
+				$this->error['json'] = $this->language->get('error_json');
+
+				return !$this->error;
+			}
+		}
+
+		$posted_content = isset($this->request->post['block_content']) && is_array($this->request->post['block_content']) ? $this->request->post['block_content'] : array();
+
+		foreach ($posted_content as $language_values) {
+			if (!is_array($language_values)) {
+				continue;
+			}
+
+			foreach ($fields['content'] as $field) {
+				if ($field['type'] === 'json' && $this->hasInvalidJson(isset($language_values[$field['name']]) ? $language_values[$field['name']] : null)) {
+					$this->error['json'] = $this->language->get('error_json');
+
+					return !$this->error;
+				}
+			}
 		}
 
 		return !$this->error;
+	}
+
+	/** A blank field is valid (normalizes to an empty list) - only non-blank, malformed JSON is an error. */
+	private function hasInvalidJson($value) {
+		if (!is_string($value) || trim($value) === '') {
+			return false;
+		}
+
+		json_decode($value, true);
+
+		return json_last_error() !== JSON_ERROR_NONE;
 	}
 
 	protected function validateDelete() {
