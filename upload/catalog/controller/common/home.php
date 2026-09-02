@@ -28,9 +28,9 @@ class ControllerCommonHome extends Controller {
 	 * §16-17): renders every enabled block on the 'home' mc_page, in
 	 * sort_order, via MintCart\Blocks\BlockRenderer. 'products', 'hero',
 	 * 'categories', 'banner-grid', 'benefits', 'faq', 'testimonials',
-	 * 'brands', 'text-image' and 'cta' have a query/provider implementation
-	 * so far (MINTCART_IMPLEMENTATION_GUIDE.md §51's other first-wave block
-	 * types - Newsletter, Spacer, Text, HTML, Gallery - are separate,
+	 * 'brands', 'text-image', 'cta' and 'newsletter' have a query/provider
+	 * implementation so far (MINTCART_IMPLEMENTATION_GUIDE.md §51's other
+	 * first-wave block types - Spacer, Text, HTML, Gallery - are separate,
 	 * not-yet-started checklist items). An unrecognized block type is
 	 * skipped, not fatal, so a page mixing implemented and
 	 * not-yet-implemented block types still renders what it can.
@@ -91,6 +91,8 @@ class ControllerCommonHome extends Controller {
 				$markup = $this->renderTextImageBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'cta') {
 				$markup = $this->renderCtaBlock($block, $block_renderer);
+			} elseif ($block['type'] === 'newsletter') {
+				$markup = $this->renderNewsletterBlock($block, $block_renderer);
 			} else {
 				$markup = null;
 			}
@@ -592,5 +594,25 @@ class ControllerCommonHome extends Controller {
 		$settings = (new \MintCart\Blocks\CtaBlockProvider())->build($block['settings'], $block['content']);
 
 		return $block_renderer->render('cta', $settings);
+	}
+
+	/**
+	 * Renders one 'newsletter' mc_block row: a pure content block, no
+	 * OpenCart query or image resize involved at all - just normalizes via
+	 * MintCart\Blocks\NewsletterBlockProvider and renders through
+	 * BlockRenderer, same simplest-case shape as a text-only block.
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Rendered block markup, or null when title, text
+	 *         and the subscribe form are all empty (nothing to show).
+	 */
+	private function renderNewsletterBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\NewsletterBlockProvider())->build($block['settings'], $block['content']);
+
+		if ($settings['title'] === '' && $settings['text'] === '' && !$settings['enabled']) {
+			return null;
+		}
+
+		return $block_renderer->render('newsletter', $settings);
 	}
 }

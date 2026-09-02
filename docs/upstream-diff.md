@@ -765,6 +765,20 @@ full-width above the existing `column_left`/`content_top`/`content_bottom`/
 logic translated to Bootstrap 5 `col-lg-*` per
 `docs/developer/layout-conventions.md`).
 
+**Update (Newsletter block increment):** `buildMintBlocks()`'s dispatch
+gained an `elseif ($block['type'] === 'newsletter')` branch calling a new
+`renderNewsletterBlock()` — the simplest render method so far (no query,
+no model, no image resize): normalize via
+`MintCart\Blocks\NewsletterBlockProvider`, render through `BlockRenderer`.
+See `docs/developer/blocks/newsletter.md` for the full writeup, including
+why the block's subscribe form has no working endpoint yet.
+`tests/mintcart/blocks/newsletter-block-provider-test.php` (4 scenarios)
+covers the new provider; a 3rd scenario was added to
+`block-renderer-test.php` confirming the real `newsletter.twig` resolves.
+Full `tests/mintcart/` suite re-run end to end — still passing (12 files).
+Same live-render verification gap as above — not yet exercised against a
+real MySQL/Twig install.
+
 ---
 
 ## `upload/catalog/language/en-gb/common/home.php` (new file)

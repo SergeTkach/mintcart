@@ -784,11 +784,11 @@ by setting the attribute by hand.
       `mc_block_description`) — see "Sub-step 1" below
 - [x] Block Provider / Renderer / Template separation — see "Sub-step 2" below
 - [~] First blocks: Products, Hero, Categories, Banner Grid, Benefits, FAQ,
-      Testimonials, Brands, Text/Image and CTA done (see "Sub-step 2",
-      `docs/developer/blocks/hero.md`, `docs/developer/blocks/categories.md`,
-      "Sub-step 3" below); Newsletter, Spacer, Text, HTML, Gallery each have
-      an open, in-progress pull request being merged sequentially as this
-      backlog gets reconciled
+      Testimonials, Brands, Text/Image, CTA and Newsletter done (see
+      "Sub-step 2", `docs/developer/blocks/hero.md`,
+      `docs/developer/blocks/categories.md`, "Sub-step 3" below); Spacer,
+      Text, HTML, Gallery each have an open, in-progress pull request being
+      merged sequentially as this backlog gets reconciled
 - [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
       `mc_block` rows) — see "Sub-step 3" below. Reordering uses a plain
       per-row `sort_order` number input, **not** SortableJS/`McSortable` drag-
@@ -910,6 +910,14 @@ Also not yet wired into `ControllerDesignHomepage::TYPES`.
 content (title, supporting text, optional button), the simplest first-wave
 block type. Full writeup: `docs/developer/blocks/cta.md`. Also not yet
 wired into `ControllerDesignHomepage::TYPES`.
+
+**Newsletter block (merged separately, reconciled here):**
+`MintCart\Blocks\NewsletterBlockProvider` + `ControllerCommonHome::renderNewsletterBlock()`
++ `blocks/newsletter.twig` + `.mc-block__newsletter-inner`/`__text`/`__form`
+CSS — same "title/text, optional action" shape as CTA, but with an email
+input + submit button instead of a link-style button. Full writeup:
+`docs/developer/blocks/newsletter.md`. Also not yet wired into
+`ControllerDesignHomepage::TYPES`.
 
 **Sub-step 1:** `upload/system/mintcart/migrations/202608231405_create_mc_pages.php`
 and `202608231406_create_mc_blocks.php` create `mc_page`/`mc_page_description`
@@ -1272,12 +1280,46 @@ phase — a human should insert an `mc_block` row (`type='cta'`) on a real
 install and confirm the homepage renders title/text/button correctly, and
 that a title-only block (no button) still renders.
 
-**Next step:** Newsletter, Spacer, Text, HTML, Gallery each need their own
-Provider + `blocks/<type>.twig` following the same shape established, being
-merged sequentially from their open PRs, or the Homepage drag-and-drop
-editor (admin UI to actually create/reorder `mc_page`/`mc_block` rows —
-until that exists, a block instance has to be inserted by hand to be
-visible).
+**Sub-step 3 (this run): Newsletter block.** `MintCart\Blocks\NewsletterBlockProvider`
+(`upload/system/library/mintcart/blocks/newsletterblockprovider.php`)
+normalizes a `type='newsletter'` `mc_block` row — the simplest block type
+implemented so far (no query, no image resize at all).
+`ControllerCommonHome::renderNewsletterBlock()` renders it through
+`BlockRenderer`; `buildMintBlocks()`'s dispatch gained an
+`elseif ($block['type'] === 'newsletter')` branch. Since stock OpenCart 3
+has no public "subscribe with just an email" endpoint (the closest
+built-in feature, `account/newsletter`, is a logged-in customer's opt-in
+checkbox, not a guest-submittable form), the block's subscribe form is
+only rendered when a real `action` URL is configured on the block — the
+same "no dead-end form" rule `FooterViewProvider::buildNewsletter()`
+already established; with no `action`, the block still renders as a
+plain title/text announcement. Full writeup, including the endpoint
+rationale: `docs/developer/blocks/newsletter.md`. New CSS
+(`.mc-block--newsletter`/`.mc-block__newsletter-*`) colocated in the
+existing `assets/src/css/components/block.css` (single consumer so far).
+New test: `tests/mintcart/blocks/newsletter-block-provider-test.php` (4
+scenarios), plus a 3rd scenario added to `block-renderer-test.php`
+confirming the real `newsletter.twig` resolves. Verified: `php -l` clean
+on every touched/added PHP file; full `tests/mintcart/` suite (12 files)
+passing; `npm run build` (`build:js` + `build:css`) compiles cleanly,
+`mc-block__newsletter-inner` confirmed present in the built
+`assets/dist/css/index.min.css`; `npm test` (preset-token contract) still
+passing. Same pre-existing gap as every earlier phase: no live
+MySQL/`vendor/twig/twig` in this sandbox — a human should insert an
+`mc_block` row (`type='newsletter'`) with and without an `action` setting
+on a real install and confirm both the announcement-only and
+with-form variants render.
+
+**Next step:** the still-unclaimed block types are **Spacer, Text, HTML,
+Gallery**, each need their own Provider + `blocks/<type>.twig` following
+the same shape established, being merged sequentially from their open PRs.
+Note for whoever tackles **Gallery**: as of this writing no merged PR has
+wired Swiper (`package.json` already pins `swiper@14.1.0`, but no
+`assets/src/js`/`assets/src/css` file imports it yet) — it would be the
+first real Swiper consumer. Otherwise, the Homepage drag-and-drop editor
+(admin UI to actually create/reorder `mc_page`/`mc_block` rows — until
+that exists, a block instance has to be inserted by hand to be visible)
+is also still not started.
 
 ## Phase 11 — Mint Admin primitives
 
