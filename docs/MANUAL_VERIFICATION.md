@@ -344,3 +344,29 @@ installed or rendered. On a real install:
    JSON response exactly, since both read the same computation.
 6. Click the tile's "Continue setup..." link and confirm it lands on
    `mintcart/wizard`.
+
+## Phase 14 — Business → Contacts facade, never exercised end to end
+
+`ControllerMintcartBusinessContacts` is `php -l` clean and reuses the
+already-tested `MintCart\Onboarding\SocialProfileLinks` helper, but no
+live MySQL/admin session in this environment means the form was never
+actually submitted. On a real install:
+
+1. Grant `mintcart/business/contacts` **Access** + **Modify** to your user
+   group under **System → Users → User Groups**, then confirm a new
+   "Business" menu group with a "Contacts" entry appears in the left nav.
+2. Open **Business → Contacts** and confirm the Telephone/E-Mail/Address
+   fields are pre-filled from the store's existing `config_*` settings
+   (e.g. whatever the Setup Wizard's Store step already saved), and the
+   four social fields are pre-filled from whatever the Wizard's Contacts
+   step saved (blank if that step was never run).
+3. Submit with a deliberately malformed email and a `javascript:` social
+   URL — confirm both show a validation error and nothing saves (reload
+   the page and confirm the bad values are gone, not persisted).
+4. Submit valid values for all fields, confirm the success message, reload
+   the page, and confirm every field re-populates from storage.
+5. Confirm the storefront footer (`mint_default` theme) reflects the new
+   social links, and that `mintcart/readiness`'s `contacts` signal / the
+   Setup Wizard's Store/Contacts steps show the same telephone/email/address
+   values — all four should be reading the exact same `config`/
+   `mintcart_contacts` storage, not a second copy.
