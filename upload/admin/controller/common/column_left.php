@@ -232,6 +232,18 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			// MintCart\Seo\SystemRoutes facade (MINTCART_FUNCTIONAL_SCOPE.md
+			// §4) - a friendlier alias picker for the fixed system-page
+			// list, over the exact same seo_url storage 'SEO / Url' above
+			// already edits.
+			if ($this->user->hasPermission('access', 'mintcart/seo/system_pages')) {
+				$design[] = array(
+					'name'	   => $this->language->get('text_mintcart_seo_system_pages'),
+					'href'     => $this->url->link('mintcart/seo/system_pages', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			if ($design) {
 				$data['menus'][] = array(
 					'id'       => 'menu-design',
