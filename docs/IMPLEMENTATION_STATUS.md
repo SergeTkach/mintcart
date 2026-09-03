@@ -1041,8 +1041,9 @@ Not started.
       correctly returned `{error, redirect}` and added nothing — confirmed
       via a follow-up `refresh()` that the cart's item count matched only
       the five successful adds.
-- [ ] `SearchService`, `QuickOrderService`, `CheckoutService` — not started.
-- [ ] AJAX Search normalized endpoint — not started.
+- [x] `SearchService` + AJAX Search normalized endpoint — first
+      increment done this run (endpoint only, no UI yet — see below).
+- [ ] `QuickOrderService`, `CheckoutService` — not started.
 - [ ] Quick Order component — not started; `mc-product-card`'s
       `data-mc-action="quick-order"` stays hook-only.
 - [ ] Modern checkout UI over existing shipping/payment extensions/totals/order model — not started.
@@ -1078,6 +1079,46 @@ dropdown. Doc: `docs/developer/commerce/cart-client.md`.
   correct (real AJAX, real cart mutation, correct event) but not yet
   *styled* on a live page. Verification above was functional
   (curl + JSON), not visual.
+
+**Update (this run): `MintCart\Commerce\SearchService` + the AJAX Search
+endpoint are done (first increment — endpoint only, no UI).**
+`ControllerMintcartSearch` (route `mintcart/search`, fully additive, zero
+existing OpenCart file modified) wraps the same
+`ModelCatalogProduct::getProducts()`/`getTotalProducts()` calls
+`product/search.php` already uses, and normalizes rows via the new
+`MintCart\Commerce\SearchService`
+(`upload/system/library/mintcart/commerce/searchservice.php`, no OpenCart
+dependency, unit-tested — `tests/mintcart/commerce/search-service-test.php`,
+5 scenarios) into `{items: [{id, name, url, image, price, special}],
+total}` — the exact minimum shape Functional Scope §14/Technical Plan §26
+specify, deliberately smaller than `ProductViewProvider`'s full
+`product`/`display`/`context` contract (no badges/stock/rating — a
+quick-suggestions dropdown has no use for them). `search` is clamped to a
+blank-returns-immediately fast path; `limit` clamped 1–20 (default 10),
+well below `product/search.php`'s own page-size ceiling. Thumbnail size
+reuses the cart snapshot's existing `theme_*_image_cart_width/height`
+config keys rather than introducing a new one for a single consumer
+(`CLAUDE.md` §85). Full rationale — why a new controller instead of
+reshaping `product/search.php`, why the response shape is smaller than
+`ProductViewProvider`'s — in `docs/developer/commerce/search-service.md`.
+
+**Deliberately not attempted this run** (see that doc's "What this
+increment deliberately does not include"): any storefront JS/UI —
+no search-as-you-type dropdown, no wiring into `common/search.php`'s
+header search box. Search had no dormant hook waiting for it the way Cart
+did (product-card's Add to Cart button already existed from Phase 6), so
+both the endpoint and a new Mint-native UI are needed — this run is only
+the endpoint half, per `docs/IMPLEMENTATION_STATUS.md`'s own earlier
+"consider scoping the first increment to the endpoint alone" note on this
+exact phase. Also not attempted: search-history logging (a
+full-results-page concern, not a per-keystroke one).
+
+**Verified:** `php -l` clean on every touched/added PHP file, re-swept
+across the full `upload/`/`tests/` tree; full `tests/mintcart/**/*-test.php`
+suite re-run end to end (one new file) — all pass, no regressions (one new
+pure class, one new fully-additive controller, touching nothing existing).
+Same no-MySQL/no-`vendor/twig/twig` gap as every prior phase — see the new
+Phase 15 entry in `docs/MANUAL_VERIFICATION.md`.
 
 In progress.
 
@@ -1560,3 +1601,15 @@ Banner Grid, Benefits, Text/Image, Brands, Testimonials, FAQ), the
 Homepage drag-and-drop editor/admin UI (no way yet to create an
 `mc_block` row without inserting it by hand), Phase 12's Entity Picker
 real backends, or continuing Phase 15 with `SearchService`.
+
+**Update (2026-09-03, routine run) — Phase 15 `SearchService`/AJAX Search
+endpoint (first increment, endpoint only).** Step 0 found six other open
+PRs (#52 Wizard Contacts; #53–#57 Phase 12 entity-picker backends for
+product/information/attribute/option/customer) — all Phase 12/13 scope,
+none overlapping this run's Phase 15 files. See the Phase 15 section above
+for the full writeup. Next candidates: wiring a search-as-you-type UI onto
+this endpoint, Phase 12's Homepage Builder block types are NOT next (14
+PRs already collided there historically — see this routine's own root
+cause notes), Phase 14's Business Settings/Store Readiness, or once the
+open entity-picker PRs land, live-wiring one into an admin screen (still
+blocked on the admin asset-enqueue problem).

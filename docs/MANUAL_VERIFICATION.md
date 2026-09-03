@@ -92,3 +92,32 @@ a real install: insert a row into `mc_page` (`code = 'home'`,
 the active theme. Expect a "Products" section (latest 8 products,
 storewide) above the existing content_top/content_bottom modules; confirm
 the legacy `default` theme's homepage is unaffected either way.
+
+## Phase 15 — `mintcart/search` endpoint, never hit end to end
+
+`SearchService::results()` is unit-tested (5 scenarios), and
+`ControllerMintcartSearch::index()` is `php -l` clean and manually
+reviewed against `product/search.php`'s established price/special/image
+patterns, but no live MySQL/OpenCart request in this environment means it
+was never actually queried. On a real install, with a catalog of more
+than 20 products (so total > the endpoint's returned page):
+
+1. Request `index.php?route=mintcart/search&search=&limit=10` (blank
+   search) and confirm an immediate `{"items": [], "total": 0}` response
+   with no visible database query in the debug log.
+2. Request `index.php?route=mintcart/search&search=<part of a real
+   product name>&limit=10` and confirm a JSON `{"items": [...], "total":
+   N}` response where `items` has at most 10 entries but `total` is the
+   real store-wide filtered match count (may be larger than 10).
+3. Confirm each returned item's `image` is a real, loadable thumbnail URL
+   at the cart-widget's thumbnail size (not the larger product-card
+   size), and a product with no image resolves to a placeholder image
+   URL, not `null` (matches `product/search.php`'s own placeholder
+   fallback).
+4. While logged out with `config_customer_price` enabled, confirm
+   `price`/`special` are `false` on every item, not a formatted string —
+   same customer-group price hiding `product/search.php`'s own listing
+   uses.
+5. Confirm `product/search.php`'s own full-results page (searching the
+   same term via the header search form) is completely unaffected — same
+   result set, same URL, same behavior as before this endpoint existed.
