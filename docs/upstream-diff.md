@@ -158,6 +158,20 @@ behavior change for stores that don't notice the labels were blank.
 **Tests:** `php -l` clean. See `docs/fixes/registry.md` MC-0001 for the
 full fix-policy writeup (reproduction, upstream status, resolution).
 
+**Update (this run — Phase 18, SEO Core):** right before rendering, inside
+a fresh `ActiveTheme::isMintAware()` check (not `$mint_render_product_cards`,
+which by this point in the method may have been flipped to `false` by an
+unrelated per-product `ProductCardListRenderer` failure), builds
+`$data['mc_schema_breadcrumb']` via
+`MintCart\Seo\SchemaOrgBuilder::breadcrumbList($data['breadcrumbs'])` — the
+same breadcrumb array `category.twig`'s visible nav already renders, now
+also emitted as `BreadcrumbList` JSON-LD. Same caught-and-logged failure
+handling as every other `SchemaOrgBuilder`/`ComponentRenderer` call site.
+Full design rationale: `docs/developer/seo/schema-org.md`. **Tests:**
+`php -l` clean; `tests/mintcart/seo/schema-org-builder-test.php` (16
+scenarios) covers `breadcrumbList()` directly; full `tests/mintcart/` suite
+re-run end to end — all passing, no regressions.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/category.php`
@@ -361,6 +375,18 @@ same as `category.php`'s `path`-only canonical). No template change, no
 new language strings, `$data['products']`/`$data['product_cards']`
 untouched. `php -l` clean.
 
+**Update (this run — Phase 18, SEO Core):** right before rendering, inside
+a fresh `ActiveTheme::isMintAware()` check (same reasoning as `category.php`'s
+own entry above — not `$mint_render_product_cards`, which may have been
+flipped `false` by an unrelated per-product render failure by this point),
+builds `$data['mc_schema_breadcrumb']` via
+`MintCart\Seo\SchemaOrgBuilder::breadcrumbList($data['breadcrumbs'])`. Same
+caught-and-logged failure handling as every other `SchemaOrgBuilder` call
+site. Full design rationale: `docs/developer/seo/schema-org.md`. **Tests:**
+`php -l` clean; `tests/mintcart/seo/schema-org-builder-test.php` (16
+scenarios) covers `breadcrumbList()` directly; full `tests/mintcart/` suite
+re-run end to end — all passing, no regressions.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/search.php`
@@ -525,6 +551,21 @@ smoke-test a real page on a configured install before this reaches
 production — see `docs/developer/components/header.md`'s "Known gap"
 section for the one deliberately-deferred piece (MintCart's own compiled
 asset bundle is still not enqueued on any live page).
+
+**Update (this run — Phase 18, SEO Core):** inside the same
+`isMintAware()`-gated block, also builds `$data['mc_schema_organization']`
+via the new `MintCart\Seo\SchemaOrgBuilder::organization()` — one
+Organization JSON-LD payload per request, reusing the same config values
+(`config_name`/`config_logo`/`config_telephone`) plus `config_address`
+already read for `HeaderViewProvider`. Same failure handling as `mc_header`
+above: caught, logged via `MintCart\Core\Logger`, never fatals the page.
+Rendered in `mint_default/template/common/header.twig`'s `<head>`. Full
+design rationale: `docs/developer/seo/schema-org.md`. **Tests:** `php -l`
+clean; `tests/mintcart/seo/schema-org-builder-test.php` (16 scenarios)
+covers `organization()`/`toJsonLd()` directly; full `tests/mintcart/`
+suite re-run end to end — all passing. Same pre-existing no-live-request
+gap as every earlier phase — see `docs/MANUAL_VERIFICATION.md`'s new
+Phase 18 entry.
 
 ---
 

@@ -399,3 +399,34 @@ the legacy search fragment):
    search for a term matching 8 or fewer and confirm it does not appear.
 6. Click outside the dropdown and confirm it closes without clearing the
    typed query.
+
+## Phase 18 — Schema.org JSON-LD, never validated against a real page
+
+`SchemaOrgBuilder` is unit-tested in isolation (16 scenarios), and its
+output shape was checked against the
+[Schema.org Organization](https://schema.org/Organization)/
+[BreadcrumbList](https://schema.org/BreadcrumbList) specs by hand, but
+never rendered on a real page or run through an actual validator. On a
+`config_theme=mint_default` install:
+
+1. Load the homepage (or any page — the header wraps every page) and
+   confirm a `<script type="application/ld+json">` block with
+   `"@type": "Organization"` appears in `<head>`, with `name`/`url`
+   matching **Settings → Store**, and `logo`/`contactPoint`/`address`
+   present only when a logo/telephone/address is actually configured.
+2. Load a category page and a search-results page; confirm a second
+   `<script type="application/ld+json">` block with
+   `"@type": "BreadcrumbList"` appears, `itemListElement` matching the
+   visible breadcrumb trail exactly (same labels, same order, position
+   starting at 1).
+3. Paste both blocks into
+   [Google's Rich Results Test](https://search.google.com/test/rich-results)
+   (or the [Schema.org validator](https://validator.schema.org/)) and
+   confirm no errors.
+4. Confirm neither block appears on the legacy `default` theme (the
+   `ActiveTheme::isMintAware()` gate should make this a no-op there, same
+   as every other Mint-only controller addition).
+5. `SchemaOrgBuilder::product()` has no live consumer yet (no
+   `mint_default/template/product/product.twig` exists — Phase 6/8 never
+   wired the product *detail* page itself, only listing pages) — nothing
+   to verify live until that page exists.
