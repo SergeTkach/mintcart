@@ -2182,11 +2182,65 @@ In progress.
 
 ## Phase 16 — Bulk Editor
 
-- [ ] Inline edit + multi-select bulk actions for Products (status, quantity, price,
-      special, manufacturer, category, stock, SEO fields)
-- [ ] Chunked/resumable AJAX batch jobs (no background daemon)
+- [~] Multi-select bulk actions for Products (status, quantity, price,
+      special, manufacturer, category, stock, SEO fields) — **status,
+      quantity and price are done this run**, see below; the remaining
+      fields (special, manufacturer, category, stock status, SEO) are
+      natural follow-ups over the same shape.
+- [ ] True inline edit (editing a value directly in the product list
+      table, no separate bulk-toolbar step) — not attempted.
+- [ ] Chunked/resumable AJAX batch jobs (no background daemon) — today's
+      `bulkUpdate()` is a synchronous PHP loop over the selected ids, the
+      same (also synchronous) shape the existing Delete/Copy actions
+      already use — not a new risk this increment introduces, but no
+      progress reporting for a very large selection either.
 
-Not started.
+**This run:** `MintCart\Catalog\BulkProductUpdateValidator` (pure, unit-
+tested — `tests/mintcart/catalog/bulk-product-update-validator-test.php`,
+25 scenarios) + `ModelCatalogProduct::updateProductField()` (new,
+additive, single-column partial update — deliberately **not**
+`editProduct()`, which deletes and reinserts descriptions/attributes/
+options/discounts/specials wholesale and would silently wipe them on a
+partial call) + `ControllerCatalogProduct::bulkUpdate()`/
+`validateBulkUpdate()` (route `catalog/product.bulkupdate`, reusing the
+exact `selected[]` multi-select checkboxes `delete()`/`copy()` already
+provide, same form-POST-then-redirect shape — no new AJAX/JSON endpoint,
+no new admin asset bundle). `product_list.twig`'s toolbar gained a
+field `<select>` (Status/Quantity/Price) + value `<input>` + submit
+button. Full writeup, including why the new button deliberately uses
+`type="submit"`+`onclick="return confirm(...)"` rather than copying the
+existing Delete button's `type="button"`+manual-`.submit()` pattern (which
+would have been unsafe for a button whose `formaction` differs from the
+form's default `action`): `docs/developer/catalog/bulk-editor.md`.
+
+Step 0 dedup check found 10 other open PRs (#52, #53–#57, #59, #60, #61,
+#62 — Wizard Contacts, five Phase 12 entity-picker backends, the Store
+Readiness dashboard widget, the Business Contacts facade, the search-box
+component, and SEO Core Schema.org). None touch Phase 16 or any file this
+run touches (`upload/admin/controller/catalog/product.php`,
+`upload/admin/model/catalog/product.php`,
+`upload/admin/view/template/catalog/product_list.twig`) — confirmed via
+each PR's changed-files list, not just its title/body. The historical hot
+files (Homepage Builder block-type registry, `homepage_list.twig`,
+`block.css`) are untouched by this run and by all 10 open PRs.
+
+Verified: `php -l` clean on every touched/added PHP file; full
+`tests/mintcart/**/*-test.php` suite re-run end to end — all passing, no
+regressions; `product_list.twig`'s Twig tag counts checked balanced
+before and after the toolbar addition. **Not verified:** no live
+MySQL/admin session in this environment — a human should confirm the
+toolbar renders, the confirm dialog and redirect work, each field updates
+only its own column, and — most importantly — that a bulk update leaves
+every other relation (descriptions, options, discounts, specials)
+completely untouched. See `docs/MANUAL_VERIFICATION.md`'s new Phase 16
+entry and `docs/upstream-diff.md`'s new
+`admin/model|controller/catalog/product.php` entry.
+
+**Next step:** the remaining bulk-editable fields (special, manufacturer,
+category, stock status, SEO), a friendlier per-field value control (a
+`<select>` for Status instead of a generic text input), or true inline
+edit directly in the product list table (likely blocked on the same
+admin asset-enqueue problem Phase 12/17 already flagged).
 
 ## Phase 17 — Categories drag & drop
 
