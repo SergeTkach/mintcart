@@ -269,9 +269,8 @@ or wiring a screen to it.
 - Filters beyond search text, and the create-new-flow (add a category
   inline from the picker) — no requirement identified yet for this first
   consumer.
-- The other entity types (options, customers) each need their own backend
-  the same shape as this one — **manufacturer**, **product**,
-  **information pages**, **attributes** and **options** are now done too,
+- Every other entity type is now done — **manufacturer**, **product**,
+  **information pages**, **attributes**, **options** and **customers**,
   see below.
 
 ## Manufacturer backend
@@ -521,3 +520,48 @@ jQuery UI `autocomplete()` block using `catalog/option/autocomplete`) is
 this backend's identified first real consumer — already
 search-as-you-type, so a future `McEntityPicker` swap is a shape match,
 not a new pattern.
+
+## Customer backend
+
+```
+GET index.php?route=mintcart/entity/customer&user_token=…&filter_name=…&page=…&limit=…
+```
+
+`ControllerMintcartEntity::customer()` wraps `ModelCustomerCustomer::getCustomers()`
+(never queries the database directly) and normalizes rows via the new
+`MintCart\Design\CustomerPickerProvider`
+(`upload/system/library/mintcart/design/customerpickerprovider.php`, no
+OpenCart dependency, unit-tested in
+`tests/mintcart/design/customer-picker-provider-test.php`) into the same
+`{items: [{id, name, image}], total}` shape.
+
+**Deliberate design difference from category/manufacturer: paging happens
+at the SQL level, not in PHP.** Unlike `ModelCatalogCategory`/
+`ModelCatalogManufacturer`, `ModelCustomerCustomer::getTotalCustomers($data)`
+accepts the same `filter_name` the list query does and returns a real
+*filtered* count — so `getCustomers()`'s own `start`/`limit` SQL support is
+used directly, and `CustomerPickerProvider::build(array $rows, int $total)`
+takes an already-paged row set plus the real filtered total, instead of
+`build(array $rows, int $page, int $limit)` slicing a full result set in
+PHP. This is the same shape `ProductPickerProvider` uses for the same
+reason — customer tables, like product catalogs, are realistically large
+enough (potentially thousands of rows) for PHP-side slicing of the *entire*
+filtered set to be a real cost, unlike category/manufacturer/attribute
+lists which stay small.
+
+`name` is `CONCAT(firstname, ' ', lastname)`, matched by `filter_name` as a
+substring (`LIKE '%…%'`) — inherited unchanged from
+`ModelCustomerCustomer::getCustomers()`'s existing behavior, same matching
+style as category (not manufacturer's prefix match).
+
+`image` is always `null` — customers have no image concept in OpenCart.
+
+Live wiring **not** attempted — same reason category/manufacturer left it
+undone: MintCart's asset bundle still isn't enqueued on any admin page. No
+single obvious first live consumer has been identified yet for this one
+either (there is no existing customer-autocomplete field on any admin
+template to replace, unlike category/manufacturer/product) — documented
+here rather than guessed at, per `CLAUDE.md` §85.
+
+Same permission requirement as every other backend above (`mintcart/entity`
+**Access** must be granted to a user group first).

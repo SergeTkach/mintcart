@@ -1579,10 +1579,9 @@ PHP touched, so the PHP `tests/mintcart/` suite doesn't apply.
       state, all against a caller-supplied data source.
 - [ ] Filters (beyond search text) — not attempted; no real per-entity
       filter requirement identified yet.
-- [~] Real `fetchItems` backends per entity type (products, categories,
+- [x] Real `fetchItems` backends per entity type (products, categories,
       manufacturers, attributes, options, information pages, customers) —
-      **category, manufacturer, product, information pages, attributes and
-      options are done**, see below; customers still need their own.
+      **all seven entity types are done**, see below.
 - [ ] Live wiring into an actual admin screen/field — both backends exist
       but nothing calls either yet (see below for why, and each one's
       identified first consumer).
@@ -1788,6 +1787,34 @@ Phase 13's wizard found one way around it worth reading before attempting
 this: a standalone page with no legacy chrome, see that phase's "Design
 decision worth flagging"), or build the customer entity-picker backend,
 the last remaining entity type.
+
+**Update (a later run): the customer `fetchItems` backend is done too.**
+`ControllerMintcartEntity::customer()` (route `mintcart/entity/customer`)
+wraps `ModelCustomerCustomer::getCustomers()`/`getTotalCustomers()` and
+normalizes rows via the new `MintCart\Design\CustomerPickerProvider`
+(`upload/system/library/mintcart/design/customerpickerprovider.php`, no
+OpenCart dependency, unit-tested — `tests/mintcart/design/customer-picker-provider-test.php`,
+5 scenarios). Unlike category/manufacturer, this one pages at the SQL
+level (`ModelCustomerCustomer::getTotalCustomers()` accepts `filter_name`
+and returns a real filtered count, unlike the category/manufacturer
+models) — same design `ProductPickerProvider` uses on its own open PR
+(#53), for the same reason (customer tables can be large). Full rationale
+in `docs/developer/components/entity-picker.md`'s new "Customer backend"
+section. Live wiring deliberately not attempted, same reason as every
+other backend (admin asset-enqueue problem unsolved) — no single obvious
+first consumer identified for this one (documented, not guessed at).
+Verified: `php -l` clean on both touched/added PHP files; full
+`tests/mintcart/**/*-test.php` suite re-run end to end (34 files, up from
+33 on `master`) — all pass, no regressions. Same no-MySQL/no-live-request
+gap as every prior phase — see `docs/MANUAL_VERIFICATION.md`'s new Phase
+12 entry (SQL-paging-specific checks included, same shape as the product
+backend's own entry on its open PR).
+
+**Next step:** all seven entity-picker backends now exist (category,
+manufacturer, product, information page, attribute, option, customer).
+The remaining Phase 12 work is either wiring one into a live admin screen
+(blocked on the admin asset-enqueue problem — see above) or
+Filters/create-new-flow (neither has a real requirement yet).
 
 ## Phase 13 — Setup Wizard
 
