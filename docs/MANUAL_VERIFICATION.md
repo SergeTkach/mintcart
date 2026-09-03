@@ -13,6 +13,16 @@ than silently fixing and forgetting to update this file.
 
 ---
 
+## Phase 13 — Wizard Language & currency step never rendered live
+
+No MySQL/OpenCart admin session in this environment. Confirm on a real
+install: `mintcart/wizard?step=language_currency` renders the real
+`oc_language`/`oc_currency` rows as `<select>` options; submitting it
+saves `config_language`/`config_currency` and leaves every other
+`config_*` setting (name, email, telephone, address, tax, checkout, ...)
+untouched; and submitting an invalid/tampered language or currency code
+shows the expected validation error instead of silently saving garbage.
+
 ## Phase 8 — rating stars never actually seen rendered
 
 No product in the demo dataset has a non-zero rating (no approved reviews

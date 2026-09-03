@@ -1819,11 +1819,12 @@ Filters/create-new-flow (neither has a real requirement yet).
 ## Phase 13 — Setup Wizard
 
 - [~] Welcome → Store → Contacts → Language/Currency → Delivery → Payment → Design →
-      First Product → Ready — **Welcome, Store and Contacts implemented**
-      (Contacts this run); the other six steps are listed in the step nav
-      as a roadmap but have no real content yet (see below)
+      First Product → Ready — **Welcome, Store, Contacts and Language &
+      currency implemented**; the remaining steps (`delivery`, `payment`,
+      `design`, `first_product`, `ready`) are listed in the step nav as a
+      roadmap but have no real content yet (see below)
 - [x] Progress saving, resume, writes to standard OpenCart settings storage —
-      done for all three implemented steps; "skip optional steps" doesn't
+      done for all four implemented steps; "skip optional steps" doesn't
       apply to step *sequencing* yet (no implemented step can be skipped
       ahead of), but Contacts' own fields are each individually optional
       (see below)
@@ -1871,7 +1872,7 @@ install, in particular that the `editSetting('config', $merged)` call
 really does preserve every other existing `config_*` setting rather than
 just the four fields this step writes.
 
-**Update (this run): the Contacts step is done.** `WizardProgress::IMPLEMENTED_STEPS`
+**Update (a later run): the Contacts step is done.** `WizardProgress::IMPLEMENTED_STEPS`
 now includes `contacts`. `ControllerMintcartWizard::validateContactsStep()`/
 `saveContactsStep()` collect up to four optional social profile URLs
 (Facebook/Instagram/Twitter/YouTube — each individually optional, a blank
@@ -1906,12 +1907,62 @@ environment — a human should confirm the Contacts form saves/re-populates
 correctly and that a filled-in social link actually renders on a real
 `mint_default`-themed storefront footer.
 
+**Update (a later run): Language & currency step.** Step 0 dedup check at the
+start of this run found 11 open PRs (#52-#63); only #52 (Wizard Contacts
+step) touches `wizard.php`/`wizardprogress.php`/`wizard.twig`/the wizard
+language file, and its own body confirms its scope is the `contacts` step
+only. `language_currency` (the third step in `WizardProgress::STEPS`, right
+after `store`) was unclaimed, so this run implemented it, following the
+exact shape `store` established: `WizardProgress::IMPLEMENTED_STEPS` gained
+`'language_currency'`; `ControllerMintcartWizard` gained
+`validateLanguageCurrencyStep()` (checks the submitted `config_language`/
+`config_currency` codes actually exist via
+`ModelLocalisationLanguage::getLanguageByCode()`/
+`ModelLocalisationCurrency::getCurrencyByCode()`) and
+`saveLanguageCurrencyStep()` (same read-existing-`config`-then-merge shape
+`saveStoreStep()` uses, into the same `config` setting row —
+`config_language`/`config_currency` are two more keys `Settings → Store`'s
+own General tab already manages, checked against the real controller before
+writing this per `CLAUDE.md` §84/§10, not a new Mint-owned duplicate).
+`wizard.twig` gained the step's two `<select>` fields, populated from the
+same `getLanguages()`/`getCurrencies()` calls that screen uses. Full
+writeup: `docs/developer/onboarding/setup-wizard.md`'s new "Language &
+currency step" section.
+
+Note: this run branched from a stale local `origin/master` ref (fixed with
+a fresh `git fetch`/`reset --hard` before starting) — worth a future run
+double-checking its own branch base is actually current before relying on
+"file doesn't exist" errors meaning anything other than a stale checkout.
+
+`contacts` (PR #52) and this step were developed in parallel against
+diverging bases; reconciling both onto `master` restored canonical order —
+`IMPLEMENTED_STEPS` is `['welcome', 'store', 'contacts', 'language_currency']`.
+This mirrors how every earlier out-of-order Wizard/Blocks increment in this
+project has been reconciled.
+
+Verified: `php -l` clean on every touched PHP file and the full `upload/` +
+`tests/` tree; `wizard-progress-test.php` updated for the new implemented
+step (9 scenarios, was 8 — scenario 3 split into 3/3b to cover the new
+three-step resume chain, scenario 6's out-of-order-storage case updated
+since `['store','welcome']` is no longer "ready" with a third pending
+step, scenario 7 gained an `isImplemented('language_currency')` check);
+full `tests/mintcart/` suite re-run end to end (33 files) — all pass, no
+regressions. `wizard.twig`'s `{% if %}`/`{% endif %}`/`{% for %}`/
+`{% endfor %}` tag counts re-balanced (27/27, 3/3) after the new step
+block. Same pre-existing gap as every earlier controller-wiring increment:
+no live MySQL/OpenCart admin session in this environment — a human should
+confirm `mintcart/wizard?step=language_currency` renders the real
+language/currency lists and that `saveLanguageCurrencyStep()` preserves
+every other `config_*` setting, the same way the Store step's own caveat
+already asks for its four fields.
+
 **Not done yet, by design — natural next-run candidates:**
-- The remaining six steps (`language_currency`, `delivery`, `payment`,
-  `design`, `first_product`, `ready`), each needing its own real
-  form/save logic the way `store`/`contacts` established — `ready` in
-  particular should integrate with Phase 14's `StoreReadiness` once that
-  exists, rather than being a placeholder.
+- The remaining steps (`delivery`, `payment`, `design`, `first_product`,
+  `ready`), each needing its own real form/save logic the way
+  `store`/`contacts`/`language_currency` established — `ready` in
+  particular should integrate with Phase 14's `StoreReadiness`
+  (`mintcart/readiness`, already shipped) once wired, rather than being a
+  placeholder.
 - Store step's logo upload (Functional Scope §2) — needs `McMediaPicker`
   (already shipped, Phase 11) wired to a real upload endpoint, which
   doesn't exist yet.

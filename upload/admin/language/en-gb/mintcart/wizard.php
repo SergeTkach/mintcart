@@ -41,6 +41,13 @@ $_['entry_social_instagram']  = 'Instagram';
 $_['entry_social_twitter']    = 'Twitter / X';
 $_['entry_social_youtube']    = 'YouTube';
 
+// Language & currency step
+
+$_['language_currency_title'] = 'Language & currency';
+$_['language_currency_text']  = 'Choose the default language and currency shoppers see on your storefront. You can add more of either later in Settings.';
+$_['entry_language']          = 'Default language';
+$_['entry_currency']          = 'Default currency';
+
 // Ready / more-steps-coming state
 
 $_['ready_title'] = 'You\'re off to a great start';
@@ -55,3 +62,5 @@ $_['error_email']     = 'E-Mail Address does not appear to be valid!';
 $_['error_telephone'] = 'Telephone must be between 3 and 32 characters!';
 $_['error_address']   = 'Address must be between 3 and 256 characters!';
 $_['error_social']    = '%s must be a valid URL!';
+$_['error_language']  = 'Please choose a valid language!';
+$_['error_currency']  = 'Please choose a valid currency!';

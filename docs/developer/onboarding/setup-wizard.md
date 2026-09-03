@@ -1,12 +1,12 @@
 # Setup Wizard (Phase 13)
 
 `MINTCART_FUNCTIONAL_SCOPE.md` §2, `MINTCART_IMPLEMENTATION_GUIDE.md` §54.
-Three working steps so far — **Welcome**, **Store** and **Contacts**. The
-rest of the flow (`language_currency` → `delivery` → `payment` → `design` →
-`first_product` → `ready`) is listed in the step nav as a roadmap but has no
-real content yet — visiting or submitting any of those steps falls back to
-the live resume point (`CLAUDE.md` §85: no UI ahead of a real, working
-consumer).
+Four working steps so far — **Welcome**, **Store**, **Contacts** and
+**Language & currency**. The rest of the flow (`delivery` → `payment` →
+`design` → `first_product` → `ready`) is listed in the step nav as a
+roadmap but has no real content yet — visiting or submitting any of those
+steps falls back to the live resume point (`CLAUDE.md` §85: no UI ahead of
+a real, working consumer).
 
 PHP:
 - `upload/system/library/mintcart/onboarding/wizardprogress.php` —
@@ -18,7 +18,7 @@ Language: `upload/admin/language/en-gb/mintcart/wizard.php`
 
 Twig: `upload/admin/view/template/mintcart/wizard.twig`
 
-Test: `tests/mintcart/onboarding/wizard-progress-test.php` (8 scenarios)
+Test: `tests/mintcart/onboarding/wizard-progress-test.php` (10 scenarios)
 
 Fully additive — no existing OpenCart controller, model or template is
 modified. Same "0 controller patches" shape as `ControllerMintcartCart`
@@ -130,6 +130,31 @@ Phase 7's Footer sub-step originally left for `$social` (payments and
 newsletter remain unimplemented — no Business Settings/Commerce API
 consumer for either yet).
 
+## Language & currency step
+
+`config_language`/`config_currency` are two more keys in the same standard
+`config` setting row `saveStoreStep()` already merges into — exactly the
+fields `Settings → Store`'s own General tab manages
+(`upload/admin/controller/setting/store.php`, checked before writing this
+step per `CLAUDE.md` §84/§10), not a new Mint-owned duplicate
+(`CLAUDE.md` §6/§39). `saveLanguageCurrencyStep()` reuses the same
+merge-then-save shape `saveStoreStep()` established, for the same reason:
+`editSetting()` deletes every existing row for a code first, so a bare
+two-field write would wipe out every other `config_*` setting.
+
+Validation (`validateLanguageCurrencyStep()`) checks the submitted code
+against `ModelLocalisationLanguage::getLanguageByCode()`/
+`ModelLocalisationCurrency::getCurrencyByCode()` — it must be a code that
+actually exists in `oc_language`/`oc_currency`. It deliberately does **not**
+also require `status = 1` (enabled): `Settings → Store`'s own language/
+currency dropdowns (`getLanguages()`/`getCurrencies()` with no arguments)
+list every row regardless of status, so this step mirrors that screen's
+existing permissiveness rather than inventing a stricter rule that screen
+doesn't itself enforce.
+
+The step's `<select>` options come from the same `getLanguages()`/
+`getCurrencies()` calls `Settings → Store` uses, keyed by `code`.
+
 ## Why a standalone page, not the usual admin chrome
 
 `upload/admin/view/template/mintcart/wizard.twig` is a complete, self-
@@ -186,10 +211,11 @@ done) is allowed, for review; skipping ahead is not.
 
 ## What's explicitly not done yet, by design
 
-- The `language_currency`/`delivery`/`payment`/`design`/`first_product`/
-  `ready` steps — each needs its own real form + save logic, following the
-  same shape `store`/`contacts` established (or, for `ready`, real
-  `Store Readiness` integration — Phase 14, not started).
+- The `delivery`/`payment`/`design`/`first_product`/`ready` steps — each
+  needs its own real form + save logic, following the same shape
+  `store`/`contacts`/`language_currency` established (or, for `ready`, real
+  `Store Readiness` integration — Phase 14's service already exists,
+  `mintcart/readiness`, just not wired into this step yet).
 - Store step's **logo** upload (Functional Scope §2 lists it under Store) —
   deferred; needs `McMediaPicker` (Phase 11, already shipped) wired to a
   real upload endpoint, which doesn't exist yet.
