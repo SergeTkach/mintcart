@@ -2078,6 +2078,8 @@ already share.
       No Mint-native search-box UI component calls this endpoint yet
       (`CLAUDE.md` §85 — ships ahead of its first consumer, same as every
       other Phase 11/15 primitive) — that is the natural next increment.
+- [x] Mint-native search-box UI component (`mc-search-box`) calling
+      `mintcart/search/suggest` — see "Update (this run)" below.
 - [ ] `QuickOrderService`, `CheckoutService` — not started.
 - [ ] Quick Order component — not started; `mc-product-card`'s
       `data-mc-action="quick-order"` stays hook-only.
@@ -2114,6 +2116,67 @@ dropdown. Doc: `docs/developer/commerce/cart-client.md`.
   correct (real AJAX, real cart mutation, correct event) but not yet
   *styled* on a live page. Verification above was functional
   (curl + JSON), not visual.
+
+**Update (this run): `mc-search-box` — a Mint-native search-as-you-type
+component calling `mintcart/search/suggest`.**
+`assets/src/js/components/search-box.js` (`createSearchBox()`,
+`initSearchBoxes()`) + `assets/src/css/components/search-box.css`, wired
+into `catalog.js` only (storefront). Full contract, behavior and
+Definition-of-Done in `docs/developer/components/search-box.md`. This was
+the explicitly documented "natural next increment" both
+`docs/developer/commerce/search-service.md` and this file's own Phase 15
+notes above named once `SearchService`/the suggest endpoint shipped with
+no UI consumer. Debounced (250ms) input, a client-side 2-character minimum
+mirroring `SearchService::isQueryValid()`, `AbortController` request
+cancellation (same technique `entity-picker.js` already uses), WAI-ARIA
+listbox roving-tabindex keyboard navigation, a "View all results" link to
+the full `product/search` page when the server's `count` exceeds the
+returned items, and an `mc:search-box:results` event. Reuses `mc-price`/
+`mc-price--special` for each result's price rather than a second
+price-formatting look.
+
+**Not wired into any live template yet, by design** — `mint_default`'s
+header still renders the legacy jQuery-autocomplete search fragment
+(`docs/developer/components/header.md` "Why widgets stay legacy
+fragments"). `initSearchBoxes()` is nonetheless already called from
+`catalog.js`: it only activates against a `[data-mc-search-box]` root,
+which no shipped template has yet, so this is inert until a future header
+increment adds that markup — the same "ship the component behind a real
+Twig contract, wire the template later" approach `mc-quantity`/`mc-modal`
+took in Phase 4. Deliberately did **not** attempt to touch
+`mint_default/template/common/header.twig` or `test_theme`'s header
+override this run — doing so risks the exact Bootstrap-3/5 CSS conflict
+Phase 7's reverted enqueue attempt already hit once, and this component's
+own fetch/render/keyboard logic is independently verifiable without that
+risk (see below).
+
+Verified: `npm install` (0 vulnerabilities), `npm run build` (minified)
+and `npm run dev` (sourcemapped) both compile cleanly; `mc-search-box`/
+`mc-search-box__item`/etc. confirmed present in the bundled
+`catalog.min.js`/`index.min.css` and **absent** from `admin.min.js`
+(storefront-only, spot-checked with `grep -o`, same scoping
+`product-card.js` uses); `npm test` (preset-token contract checks,
+unaffected) still passing; full `tests/mintcart/**/*-test.php` suite
+re-run end to end (no PHP touched by this increment) — still passing, no
+regressions. **Not verified:** no live browser/MySQL session in this
+environment — a human should confirm keyboard navigation, the
+debounce/abort behavior under fast typing, and the "View all results"
+link once this component's markup lands in a real template; see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 15 entry.
+
+**Next step:** wire `mc-search-box`'s markup contract into
+`mint_default/template/common/header.twig` (and `test_theme`'s header
+override, to prove the same Theme-API story Product Card/Header/Footer
+already proved), `QuickOrderService`/`CheckoutService` (a genuinely large
+increment — real order creation needs `checkout/order.php`'s full
+payment/shipping/totals data shape, not something to guess at in one
+run — see `upload/catalog/model/checkout/order.php::addOrder()`'s field
+list before scoping that as a future increment), or Phase 14's
+`Business → Delivery`/`Business → Payments` facades (check
+`list_pull_requests --state open` first — PR #60 was still open with the
+Business menu group / Contacts facade at the time of this run, so a
+Delivery/Payments facade risks a `column_left.php` collision until it
+lands).
 
 In progress.
 
