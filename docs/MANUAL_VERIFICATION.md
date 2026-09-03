@@ -173,3 +173,34 @@ manufacturer that has an image set and one that doesn't:
    (prefix match, not substring — see
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
+
+## Phase 14 — `Business → Delivery`/`Payments` facades, never exercised end to end
+
+`ControllerMintcartBusinessDelivery`/`...Payments` are `php -l` clean and
+reuse already-existing `ModelSettingExtension`/`ModelSettingSetting`
+calls, but no live MySQL/admin session in this environment means neither
+screen was ever actually loaded. On a real install, with at least one
+shipping extension and one payment extension installed
+(`Extensions → Shipping Methods`/`Payment Methods`):
+
+1. Grant `mintcart/business/delivery` and `mintcart/business/payments`
+   **Access** + **Modify** to your user group under **System → Users →
+   User Groups**, then confirm a new "Business" menu group with
+   "Delivery"/"Payments" entries appears in the left nav.
+2. Open **Business → Delivery** and confirm it lists every installed
+   shipping method with its real name and current enabled/disabled state
+   (matching what `Extensions → Shipping Methods` itself shows).
+3. Click the toggle button on one method, confirm the redirect lands back
+   on the same screen with a success message and the status flipped, then
+   open that method's own settings form (the "Configure"/pencil icon) and
+   confirm every other setting (cost, tax class, geo zone, ...) is
+   completely unchanged — the entire point of merge-then-save instead of
+   a bare status write.
+4. Repeat steps 2-3 for **Business → Payments** with an installed payment
+   extension.
+5. Confirm `mintcart/readiness`'s `shipping`/`payment` signals (Phase 14,
+   `docs/developer/onboarding/store-readiness.md`) flip in lockstep with
+   the toggle here — both read the exact same `<type>_<code>_status`
+   setting keys.
+6. Confirm the "Manage" link on each screen opens the real, unmodified
+   `Extensions → Shipping Methods`/`Payment Methods` screen.
