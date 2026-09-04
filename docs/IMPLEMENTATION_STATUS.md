@@ -1941,11 +1941,32 @@ features (this one and Phase 12's Entity Picker) are now blocked on it.
 
 ## Phase 18 — SEO Core
 
-- [ ] SEO URL, canonical, hreflang, meta title/description, robots controls, XML
+- [ ] SEO URL, canonical, meta title/description, robots controls, XML
       sitemap, Schema.org Product/Breadcrumb/Organization
+- [~] hreflang — `MintCart\Seo\HreflangBuilder` (pure contract + tests only,
+      no live wiring yet) — see below
 - [ ] System route URL aliases (cart, checkout, search, contact, account, etc.)
 
-Not started.
+**In progress.** `MintCart\Seo\HreflangBuilder`
+(`upload/system/library/mintcart/seo/hreflangbuilder.php`) assembles a
+page's `rel="alternate" hreflang="..."` link set from caller-supplied
+`{hreflang, href}` pairs — validates, de-duplicates, and synthesizes an
+`x-default` entry when a default language is given. No OpenCart
+dependency, unit-tested in isolation (`tests/mintcart/seo/hreflang-builder-test.php`,
+10 scenarios). Full writeup, including why there's no live controller
+wiring yet: `docs/developer/seo/hreflang.md`. Deliberately does not touch
+`ControllerCommonHeader`/`header.twig` (the natural wiring point) since
+those files are already being edited by an in-flight PR adding Schema.org
+JSON-LD — this increment stays additive-only (three new files, zero
+existing files touched) to avoid a same-file collision. Verified: `php -l`
+clean; full `tests/mintcart/**/*-test.php` suite re-run end to end, all
+passing, no regressions.
+
+**Next step:** a per-language route/URL resolver (needed before
+`HreflangBuilder` can be wired anywhere — see the doc's "Why no live
+wiring yet"), then wiring it + `HreflangBuilder` into
+`ControllerCommonHeader`; or the still-unclaimed robots-controls item; or
+re-check `gh pr list --state open` for what else has landed/opened since.
 
 ## Phase 9 (Technical Plan §42 numbering) — Productivity
 
