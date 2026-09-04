@@ -41,7 +41,19 @@ Phase 0 is **complete**.
 - [x] Version information — `MintCart\Core\Version`
 - [x] Basic logging — `MintCart\Core\Logger` (wraps OpenCart's `\Log`, writes to a
       dedicated `mintcart.log`)
-- [ ] Health checks
+- [x] Health checks — `MintCart\Core\HealthCheck`
+      (`upload/system/library/mintcart/core/healthcheck.php`), pure
+      evaluator mirroring OpenCart's own installer requirements (PHP
+      version, required extensions, writable paths) plus a pending-
+      migrations signal and MintCart version info; wired via
+      `ModelMintcartHealth` + `ControllerMintcartHealth`
+      (route `mintcart/health`, GET JSON), same shape as `StoreReadiness`/
+      `ControllerMintcartReadiness`. Also fixed a latent
+      `MigrationManager::applied()` bug this surfaced (SELECT against a
+      never-`CREATE`d tracking table on a fresh install) — see
+      `docs/developer/core/health-check.md` for the full writeup, including
+      why a missing signal here reports `'unknown'` rather than `StoreReadiness`'s
+      "missing = not ready" convention.
 - [x] CI — `.github/workflows/ci.yml`: `php-lint` (`php -l` over every `.php`
       under `upload/` and `tests/`), `php-tests` (runs every
       `tests/mintcart/**/*-test.php` smoke test, fails the job on any nonzero
@@ -49,10 +61,13 @@ Phase 0 is **complete**.
       against `master`.
 
 **In progress.** Remaining for a future run: `MintCart\Compatibility\OpenCart3\*`
-adapters (no consumer needs one yet — first candidate is likely `SettingsAdapter`
-when Business Settings/Setup Wizard starts, per `CLAUDE.md` §85 "API appears when
-there's a real consumer") and a health-check surface. `Bootstrap::boot()` has
-no automatic call site yet by design (see ADR 001) — the first real caller wires it.
+adapters — no consumer needs one yet; the natural first candidate
+(`SettingsAdapter` for Business Settings/Setup Wizard, per `CLAUDE.md` §85)
+has open PRs building those facades directly against OpenCart's settings
+model without one, so introducing the adapter now would ship it without an
+actual caller in `master` — reassess once those land. `Bootstrap::boot()`
+has no automatic call site yet by design (see ADR 001) — the first real
+caller wires it.
 
 ## Phase 2 — Frontend foundation
 
@@ -2598,3 +2613,44 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+---
+
+## Update (2026-09-04, routine run) — Phase 1's Health checks item done
+
+Step 0 dedup check against all 14 open PRs at the time (`#52`-`#66`,
+excluding `#58`/gaps which don't exist): entity-picker backends for
+product/information/attribute/option/customer (Phase 12), Setup Wizard
+Contacts and Language/Currency steps (Phase 13), Business Contacts/
+Delivery/Payments facades and a Store Readiness dashboard widget (Phase
+14), `mc-search-box` (Phase 15), Bulk Editor (Phase 16), and SEO Core
+Schema.org + system route URL aliases (Phase 18). None touch Phase 1,
+`MintCart\Core\HealthCheck`, `MigrationManager`, or any `mintcart/health*`
+path (confirmed via each PR's body text). `QuickOrderService`/
+`CheckoutService` were deliberately **not** picked despite being unclaimed:
+PR #61's own body already flagged them as too large/risky to attempt
+without live MySQL verification (financial-correctness risk from
+`checkout/order.php::addOrder()`'s field list) — that reasoning still
+holds in this sandbox, so this run picked Phase 1's still-unstarted
+"Health checks" item instead, genuinely unclaimed and low-risk (pure
+evaluator + thin resolver, same shape already proven safe by
+`StoreReadiness`).
+
+Shipped: `MintCart\Core\HealthCheck` + `ModelMintcartHealth` +
+`ControllerMintcartHealth` (`mintcart/health`, GET, JSON) — see the Phase 1
+section above and `docs/developer/core/health-check.md` for full detail,
+including a latent `MigrationManager::applied()` bug this surfaced and
+fixed (safe to call `pending()`/`applied()` before any `run()`, now
+memoized so it doesn't add a duplicate query). This is additive/self-
+contained: new files plus one small, well-tested fix to a MintCart-owned
+(not OpenCart core) file nothing else in the open-PR backlog touches.
+
+**Next step:** a Diagnostics admin screen or the Update Manager's own
+health-check step (both listed as `HealthCheck`'s expected next consumers)
+are natural follow-ups once a real UI exists for either; `MintCart\Compatibility\OpenCart3\*`
+adapters remain deferred (see the Phase 1 section's own note on why, given
+the in-flight Business Settings PRs); or check `gh pr list --state open`
+again for anything newly landed before picking a fresh phase — `QuickOrderService`/
+`CheckoutService` remain unclaimed but should stay deferred until this
+environment (or the picking session's) has live MySQL to verify order
+creation against, per PR #61's reasoning above.
