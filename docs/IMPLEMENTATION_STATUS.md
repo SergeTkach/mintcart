@@ -1830,9 +1830,35 @@ renders this endpoint's checklist, or wiring Phase 13's still-unbuilt
       No Mint-native search-box UI component calls this endpoint yet
       (`CLAUDE.md` §85 — ships ahead of its first consumer, same as every
       other Phase 11/15 primitive) — that is the natural next increment.
-- [ ] `QuickOrderService`, `CheckoutService` — not started.
-- [ ] Quick Order component — not started; `mc-product-card`'s
-      `data-mc-action="quick-order"` stays hook-only.
+- [x] `MintCart\Commerce\QuickOrderService` + Quick Order component (this
+      run) — `upload/system/library/mintcart/commerce/quickorderservice.php`
+      + `upload/catalog/controller/mintcart/quickorder.php`
+      (`ControllerMintcartQuickorder`, route `mintcart/quickorder/submit`,
+      fully additive) + `assets/src/js/components/quick-order.js`
+      (`initQuickOrderActions()`, wired into `catalog.js`) +
+      `assets/src/js/commerce/quick-order-client.js`. A Quick Order request
+      is a lightweight lead (product/quantity/name/phone/email, no
+      address/payment) recorded in a new, genuinely Mint-specific
+      `mc_quick_order` table (migration
+      `202609041200_create_mc_quick_order.php`) — deliberately **not**
+      `checkout/order.php::addOrder()`/`oc_order`, sidestepping the exact
+      `addOrder()` field-list risk PR #61 flagged as too large without live
+      MySQL verification. Same required-option/recurring-plan → redirect
+      fallback `ControllerMintcartCart::add()` already uses (reuses
+      `CartService::validateOptions()`, not re-derived). Doc:
+      `docs/developer/commerce/quick-order-service.md`. Tests:
+      `tests/mintcart/commerce/quick-order-service-test.php` (10
+      scenarios), `tests/mintcart/commerce/quick-order-migration-test.php`
+      (schema). **Not yet verified live** — no MySQL in this environment;
+      see `docs/MANUAL_VERIFICATION.md`'s new Phase 15 section. **Not
+      built**: an admin "Quick Order requests" list to surface these leads
+      (natural next consumer of `mc_quick_order`), and lead → order
+      conversion — both deliberately deferred, see the doc's "Not done
+      yet".
+- [ ] `CheckoutService` — not started; still genuinely large/risky without
+      live MySQL to verify `addOrder()`'s full field list against (same
+      reasoning `QuickOrderService` above sidestepped by not touching
+      order creation at all).
 - [ ] Modern checkout UI over existing shipping/payment extensions/totals/order model — not started.
 
 **Update (this run): the header's legacy cart dropdown now reacts to
@@ -2598,3 +2624,11 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, PR #72): Phase 15 — `QuickOrderService` built.** See
+the Phase 15 section above for the full writeup — a Quick Order request
+is recorded as a lead in a new `mc_quick_order` table, deliberately never
+touching `checkout/order.php::addOrder()`. **Next step:** an admin "Quick
+Order requests" list (the new table's first real consumer), or
+`CheckoutService`/modern checkout UI if a future run is prepared to scope
+the `addOrder()` field-list risk PR #61 already flagged.
