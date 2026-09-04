@@ -1975,18 +1975,28 @@ this phase (diagnostics, measured performance work) is not started.
       maintenance → files → migrations → cache clear → health check → done)
 - [ ] Theme/extension rollback (RESEARCH item per Functional Scope §21)
 - [ ] Compatibility Checker (`install.xml` analysis, heuristic warnings only)
-- [ ] **Release packaging script (TODO, not started).** Node/npm (`npm install`
-      && `npm run build`) and the PHP vendor libraries already committed
-      under `upload/system/**/vendor/` are dev/release-time tooling only —
-      the end user installing MintCart must never need Node or Composer.
-      Need a documented/scripted step that runs the frontend build and
-      packages `upload/` (with `assets/dist/` already generated and
-      included) into an installable zip, the same way OpenCart itself ships
-      a pre-built `upload/`. Natural home: alongside Update Manager package
-      manifest work (Technical Plan §33), or a standalone `docs/release.md`
-      if it's needed before Update Manager exists.
+- [x] **Release packaging script** — `scripts/release.js` (`npm run
+      release`), documented in `docs/release.md`. Builds the frontend
+      (`npm run build`), stages the *committed* `upload/` tree via
+      `git archive HEAD` (so everything `.gitignore` already excludes from
+      a real install — `config.php`, live `.htaccess`, `install.lock`,
+      `storage/`/`image/cache/` contents — is excluded automatically, no
+      separate list to maintain), copies the freshly built
+      `assets/dist/{css,js}` into `upload/assets/{css,js}` inside that
+      staged copy (mirroring the local-dev convention `.gitignore` already
+      documented for the same reason — `assets/` lives outside `upload/`,
+      which is what a webserver serves), then zips the result into
+      `release/mintcart-<version>.zip`. Version is read from
+      `MintCart\Core\Version::VERSION`, never re-typed. This is a
+      standalone script, not the full Update Manager — see
+      `docs/release.md`'s "What it deliberately does not do (yet)" for the
+      boundary (no version bump, no compatibility check, no
+      checksum/signature — those stay Update Manager's job once that phase
+      starts, and this script's staging logic is the natural first
+      building block for it, not something to redo).
 
-Not started.
+Update Manager and Compatibility Checker are not started. Release
+packaging (the concrete TODO this file had been flagging) is done.
 
 ## Phase 12 — Early Access
 
@@ -2598,3 +2608,22 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run): the release packaging script is done** (see
+"Phase 11 (Technical Plan) — Update / Compatibility" above,
+`scripts/release.js`/`docs/release.md`). At the time of this run, 16 open
+PRs (#52-#68) already covered Phase 12's remaining entity-picker backends,
+Phase 13's Wizard Contacts/Language-currency steps, Phase 14's
+Contacts/Delivery/Payments facades and dashboard widget, Phase 15's
+search-box component, Phase 16's Bulk Editor, and Phase 18 (SEO Core) was
+already a three-way contested area (#62 Schema.org, #66 system route
+aliases, #68 hreflang, each deliberately avoiding the others' files) — so
+this run picked the standalone, previously-flagged release-packaging TODO
+instead: genuinely unclaimed, touches zero files any open PR touches
+(build/release tooling only, no PHP/Twig/JS product code). Next
+candidates: `QuickOrderService`/`CheckoutService` (Phase 15 — PR #61's own
+body already flagged this as large enough to scope carefully, e.g. the
+service contract alone before wiring a real order-creation flow), Phase
+19 (Diagnostics/Performance, not started), or re-check
+`gh pr list --state open` for what's newly landed/unclaimed once the
+current 16-PR backlog starts merging.

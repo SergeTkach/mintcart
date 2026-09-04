@@ -10,7 +10,8 @@
     "dev": "npm run dev:js && npm run dev:css",
     "dev:js": "esbuild assets/src/js/catalog.js --bundle --sourcemap --outfile=assets/dist/js/catalog.js && esbuild assets/src/js/admin.js --bundle --sourcemap --outfile=assets/dist/js/admin.js",
     "dev:css": "esbuild assets/src/css/index.css --bundle --sourcemap --outfile=assets/dist/css/index.css",
-    "test": "node tests/frontend/preset-tokens-test.js"
+    "test": "node tests/frontend/preset-tokens-test.js",
+    "release": "node scripts/release.js"
   },
   "devDependencies": {
     "esbuild": "0.28.2"

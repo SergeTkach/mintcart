@@ -29,6 +29,9 @@ upload/assets/
 # Scratch
 /temp/
 
+# Release packaging output (scripts/release.js — npm run release)
+/release/
+
 # MintCart / OpenCart runtime (upload/)
 upload/**/.htaccess
 upload/**/config.php
