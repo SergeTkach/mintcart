@@ -55,7 +55,11 @@ final class CompatibilityChecker
         'catalog/controller/product/special.php',
         'catalog/controller/common/header.php',
         'catalog/controller/common/footer.php',
+        'catalog/controller/common/home.php',
         'catalog/controller/event/theme.php',
+        'admin/controller/common/column_left.php',
+        'admin/controller/catalog/category.php',
+        'admin/model/catalog/category.php',
     ];
 
     /**
