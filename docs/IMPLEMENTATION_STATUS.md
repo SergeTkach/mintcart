@@ -1962,12 +1962,38 @@ tracked once each.)*
       reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
       (`category.php` blank language strings) and MC-0002 (`search.php`
       missing canonical/prev/next links, this run)
-- [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
+- [~] Diagnostics dev mode (query count, DB time, render time, cache status) —
+      `MintCart\Core\Diagnostics` (`upload/system/library/mintcart/core/diagnostics.php`),
+      documented in `docs/developer/core/diagnostics.md`. Pure collector (no
+      OpenCart dependency, same shape as `StoreReadiness`/`ProductViewProvider`):
+      named checkpoints (`mark()`), counters (`increment()`/`counter()`), and
+      accumulated per-bucket timings (`time()`/`duration()`), summarized via
+      `summary()`. A cheap no-op when disabled — `time()` still always runs the
+      wrapped work and returns its result either way, only the measurement
+      itself is skipped. Deliberately does **not** attempt real query counting
+      (would mean hooking OpenCart's `\DB\MySQLi`, a real upstream-diff
+      decision — `CLAUDE.md` §10/§75) or real render-time wiring around
+      `ComponentRenderer`, and has no "dev mode" setting or visible surface
+      (admin toolbar/JSON endpoint) yet — see the doc's "Next step" for what a
+      future run should decide/build once a real consumer is ready
+      (`CLAUDE.md` §85).
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
-Fix Registry mechanism is established and has two real entries; the rest of
-this phase (diagnostics, measured performance work) is not started.
+Fix Registry mechanism is established and has two real entries; the
+diagnostics collector contract is shipped and unit-tested (not yet wired to
+any real request); measured performance work is not started.
+
+Verified (Diagnostics): `php -l` clean on both new PHP files, re-swept
+across the full `upload/`/`tests/` tree; new
+`tests/mintcart/core/diagnostics-test.php` (10 scenarios — enabled/disabled
+behavior, mark ordering against an injected deterministic clock, counter/
+duration independence, `time()`'s always-runs-the-work contract); full
+`tests/mintcart/**/*-test.php` suite re-run end to end — all passing, no
+regressions. No JS/CSS touched, so `npm run build`/`npm test` were not
+re-run. No live-wiring gap to flag in `docs/MANUAL_VERIFICATION.md` — there
+is no live request path yet for a human to exercise (see the doc's
+Definition of Done checklist for exactly what's still open).
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
@@ -2598,3 +2624,25 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (routine run): Phase 10 (Technical Plan) Diagnostics collector
+shipped.** At the time of this run, `list_pull_requests --state open`
+found 22 open PRs (`#52`-`#74`, minus `#58`) covering, among others: the
+Wizard's remaining Contacts/Language&currency steps (`#52`/`#64` — both
+touching `wizard.php`/`wizard.twig`/`wizardprogress.php`, already flagged
+by `#65` as contended hot files, so this run avoided that area
+entirely); all five Phase 12 entity-picker backends and the Business
+Contacts/Delivery/Payments facades (`#53`-`#57`, `#60`, `#65` — all
+touching `column_left.php`, also treated as a hot/contended file this
+run); Phase 16 Bulk Editor (`#63`, already touching
+`product.php`/`product_list.twig`); Phase 18's hreflang/robots/sitemap/
+Schema.org/system-route-alias builders (`#68`, `#70`, `#71`, `#62`,
+`#66`); Phase 1's HealthCheck (`#67`); Phase 11's Compatibility Checker
+and release packaging script (`#73`, `#69`); Phase 6/8's product detail
+page (`#74`). None of these touch `upload/system/library/mintcart/core/`,
+`tests/mintcart/core/`, or `docs/developer/core/` — this run's only new
+files — so Diagnostics was picked as genuinely unclaimed and
+file-collision-free. Full writeup in the Phase 10 (Technical Plan)
+section above and `docs/developer/core/diagnostics.md`. Real query/
+render-time instrumentation, a dev-mode setting, and a visible surface
+are all explicitly deferred next steps, not guessed at this run.
