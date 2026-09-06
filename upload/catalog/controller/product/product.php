@@ -246,6 +246,49 @@ class ControllerProductProduct extends Controller {
 			$data['text_minimum'] = sprintf($this->language->get('text_minimum'), $product_info['minimum']);
 			$data['text_login'] = sprintf($this->language->get('text_login'), $this->url->link('account/login', '', true), $this->url->link('account/register', '', true));
 
+			// mint_default/template/product/product.twig's own hero section
+			// (wishlist/compare/add-to-cart/tax label) reads these directly -
+			// the related-products grid further down needs the exact same
+			// strings but passes its own copy straight into
+			// ProductCardListRenderer::render() rather than $data (that
+			// array feeds ComponentRenderer, not this page template).
+			$data['text_tax'] = $this->language->get('text_tax');
+			$data['text_wishlist'] = $this->language->get('button_wishlist');
+			$data['text_compare'] = $this->language->get('button_compare');
+			$data['text_add_to_cart'] = $this->language->get('button_cart');
+			$data['text_rated'] = $this->language->get('text_rated');
+			$data['text_badge_sale'] = $this->language->get('text_badge_sale');
+			$data['text_badge_out_of_stock'] = $this->language->get('text_badge_out_of_stock');
+			$data['text_added_to_cart'] = $this->language->get('text_added_to_cart');
+			$data['text_add_to_cart_error'] = $this->language->get('text_add_to_cart_error');
+
+			// Plain field labels product/product.php's own language file
+			// already defines but this controller never assigned to $data
+			// for any theme - the same pre-existing gap
+			// docs/upstream-diff.md's search.php entry already documented
+			// for category.twig/search.twig ("silently renders several
+			// language-string variables as blank because the controller
+			// never assigns them"). mint_default/product.twig is a brand
+			// new template with no prior broken behavior to preserve, so
+			// this run supplies the missing values it needs rather than
+			// repeating the same blank-label gap in a template being
+			// written from scratch. Purely additive $data keys - the
+			// legacy default theme's own template is completely unaffected
+			// either way.
+			$data['text_manufacturer'] = $this->language->get('text_manufacturer');
+			$data['text_model'] = $this->language->get('text_model');
+			$data['text_reward'] = $this->language->get('text_reward');
+			$data['text_stock'] = $this->language->get('text_stock');
+			$data['text_points'] = $this->language->get('text_points');
+			$data['text_discount'] = $this->language->get('text_discount');
+			$data['text_option'] = $this->language->get('text_option');
+			$data['text_related'] = $this->language->get('text_related');
+			$data['text_tags'] = $this->language->get('text_tags');
+			$data['tab_description'] = $this->language->get('tab_description');
+			$data['tab_attribute'] = $this->language->get('tab_attribute');
+			$data['text_no_reviews'] = $this->language->get('text_no_reviews');
+			$data['entry_qty'] = $this->language->get('entry_qty');
+
 			$this->load->model('catalog/review');
 
 			$data['tab_review'] = sprintf($this->language->get('tab_review'), $product_info['reviews']);

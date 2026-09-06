@@ -950,3 +950,113 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/catalog/controller/product/product.php` / `upload/catalog/language/en-gb/product/product.php`
+
+**Reason:** Phase 6/8 (Product Card / Theme resolver, `MINTCART_TECHNICAL_PLAN.md`
+§15C-D/§45). Every listing controller (Category, Search, Manufacturer,
+Special) was already wired to `MintCart\Design\ProductCardListRenderer` —
+the product *detail* page was the one page in this whole pipeline that
+never was. `mint_default` had no `template/product/product.twig` at all
+before this change: a shopper on a Mint-aware theme could browse every
+listing page but the product page itself rendered nothing Mint-specific.
+
+Three changes:
+
+1. **Controller:** the existing "Related Products" loop (already computing
+   `$data['products']` for the legacy `default` theme) now also builds
+   `$data['product_cards']` via the same `ProductCardListRenderer`/
+   `ActiveTheme`/`ComponentRenderer` trio Category/Search/Manufacturer/
+   Special already use — same Mint-aware gate, same per-product try/catch-
+   and-degrade-for-the-rest-of-the-list behavior, same shared
+   `text_badge`/`text_wishlist`/`text_compare`/etc. language strings built
+   inline (not stored on `$data`, since they only feed `ComponentRenderer`,
+   never this page's own template). A handful of plain field labels the
+   language file already defined but no prior version of this controller
+   ever assigned to `$data` for *any* theme (`text_manufacturer`/
+   `text_model`/`text_reward`/`text_stock`/`text_points`/`text_discount`/
+   `text_option`/`text_related`/`text_tags`/`tab_description`/
+   `tab_attribute`/`text_no_reviews`/`entry_qty`) are now assigned too —
+   purely additive `$data` keys the legacy `default` theme's own template
+   never reads, needed by the brand-new `mint_default` template being
+   written from scratch (see `docs/developer/components/product-card.md`
+   for why this differs from `search.php`'s own entry, which found the
+   *same* class of gap on an *existing* template and left it undocumented
+   rather than fixed).
+2. **View:** `catalog/view/theme/mint_default/template/product/product.twig`
+   (new file) — gallery (`mc-product-gallery`, new component), title/
+   manufacturer/model/rating/price/special/tax/stock/discounts, an option
+   picker covering every OpenCart option type (select/radio/checkbox/text/
+   textarea/date/time/datetime/file), quantity (`mc-quantity`) + Add to
+   Cart (`mc-button`, reusing `product-card.js`'s `add-to-cart` handler),
+   `mc-tabs` Description/Specification/Reviews (Reviews is a read-only
+   placeholder this run — see "Not done yet" below), tags, and the Related
+   Products grid via `mc-product-card`.
+3. **JS:** `product-card.js`'s `add-to-cart` handler learns to read a
+   linked `mc-quantity` input (`data-quantity-input`) and
+   `[data-mc-option-id]` fields inside a `[data-mc-product-form]` ancestor
+   — a grid card sets neither attribute, so its own behavior is completely
+   unchanged; this is additive, not a rewrite. See
+   `docs/developer/components/product-card.md`'s "Extended for the product
+   detail page" section for the exact contract and its known gaps
+   (multi-value checkbox options, file-type options).
+
+**Why it can't live in the MintCart layer instead:** Same rationale as
+every other listing-controller entry above — `ProductViewProvider`/
+`ProductCardListRenderer`/`ComponentRenderer` are deliberately OpenCart-
+agnostic, but something has to call them with real resolved product rows,
+and `catalog/controller/product/product.php` is the one file OpenCart
+already routes a product-page request to.
+
+**Compatibility impact:** The controller's original `$data['products']`
+array (the one the legacy `default` theme's own `product.twig` reads) is
+completely untouched — same keys, same values, same computation, same
+order. The new `$data['product_cards']`/label keys are purely additive and
+only ever populated when the active theme ships a `theme.json` manifest
+(`ActiveTheme::isMintAware()`), so a store on `default` or an unrelated
+third-party theme pays no extra cost and sees zero behavior change.
+`product-card.js`'s `add-to-cart` change is backward compatible: a card
+with no `data-quantity-input`/no `[data-mc-product-form]` ancestor behaves
+exactly as before (verified by re-running the full frontend build and
+confirming the existing `catalog.min.js`/`admin.min.js` bundling still
+produces the expected storefront-only scoping).
+
+**Not done yet, by design:**
+- **Reviews tab is a read-only placeholder** (`text_no_reviews` only,
+  Reviews are loaded via a separate `product/product.review` AJAX endpoint
+  and a write-review form in the legacy theme, both jQuery-driven) — a
+  real Mint-native reviews UI (list + write form) is a separate, self-
+  contained increment, not attempted here to keep this one focused on the
+  page's core "browse and buy" path.
+- **Recurring/subscription payment profiles** (`$data['recurrings']`) have
+  no picker on this page yet — a product that requires selecting one still
+  redirects back to itself on Add to Cart via the existing
+  `mintcart/cart/add` "missing required option/recurring" fallback
+  (`ControllerMintcartCart::add()`, Phase 15), the same way an unanswered
+  required product option does; not a regression, since no Mint-native
+  product page existed to pick one before this change either.
+- **Multi-value checkbox options and file-upload options** — see the
+  "Known gap" paragraph in `docs/developer/components/product-card.md`'s
+  "Extended for the product detail page" section.
+
+**Tests:** `php -l` clean on both touched PHP files, re-swept across the
+full `upload`/`tests` tree; full `tests/mintcart/**/*-test.php` suite
+re-run end to end — all passing, no regressions (no existing pure-logic
+class was modified by this increment, only controller/language/JS wiring
+around already-tested classes). `product.twig`'s Twig `if`/`elseif`/`else`/
+`endif`/`for`/`endfor` tag counts checked balanced (29/29, 11/11) with the
+same script-based technique used for every earlier `.twig` file in this
+repo. `npm install` (0 vulnerabilities) + `npm run build` (minified) both
+compile cleanly; `mc-product-gallery`/`gallery-thumb` confirmed present in
+`catalog.min.js`/`index.min.css` and **absent** from `admin.min.js`
+(storefront-only, same scoping technique every other Phase 6/7/15
+component doc uses); `npm test` (preset-token contract checks, unaffected)
+still passing. **Not verified:** no live MySQL/`vendor/twig/twig` session
+in this environment (same pre-existing gap as every earlier phase) — a
+human should load a real product page on a `mint_default`-themed install
+and confirm the gallery/options/add-to-cart/tabs/related-products all
+render and behave correctly, and that the legacy `default` theme's own
+product page is pixel-identical to before this change. See
+`docs/MANUAL_VERIFICATION.md`'s new entry for the exact steps.
