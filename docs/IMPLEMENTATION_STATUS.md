@@ -1960,14 +1960,31 @@ tracked once each.)*
 - [ ] SEO Core (tracked above as Phase 18)
 - [x] `docs/fixes/registry.md` Fix Registry established, entries added only after
       reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
-      (`category.php` blank language strings) and MC-0002 (`search.php`
-      missing canonical/prev/next links, this run)
+      (`category.php` blank language strings), MC-0002 (`search.php`
+      missing canonical/prev/next links), MC-0003 (`manufacturer.php` blank
+      language strings) on `master`; MC-0006 (this run — `DB::connected()`
+      called a method (`connected()`) no adaptor implements, all three
+      implement `isConnected()`) in `upload/system/library/db.php` +
+      `tests/mintcart/fixes/mc-0006-db-connected-adaptor-mismatch-test.php`.
+      **Numbering note:** this run started from `master` (MC-0001–0003
+      only); two other open PRs at the time (#76 "MC-0004", #78 "MC-0005")
+      each independently claim the next ID from their own branch's view of
+      `master` — this run deliberately used **MC-0006** to avoid a third
+      collision on MC-0004, but registry entries will still need
+      human/reconciliation renumbering once all three merge (whichever
+      lands first keeps its number; the other two get renumbered on top of
+      it, same pattern already used for other parallel-PR series in this
+      file, e.g. the Homepage Builder block PRs).
 - [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
-Fix Registry mechanism is established and has two real entries; the rest of
-this phase (diagnostics, measured performance work) is not started.
+Fix Registry mechanism is established and has four real entries on this
+branch (MC-0001, MC-0002, MC-0003, MC-0006); the rest of this phase
+(diagnostics, measured performance work) is not started here — PR #75
+(diagnostics) and PR #77 (cache invalidation) are open and cover part of
+the "measured performance" bullet, unconfirmed merged at the time of this
+run.
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
@@ -2633,3 +2650,21 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, 2026-09-08): MC-0006 fix registry entry** —
+`DB::connected()` (`upload/system/library/db.php`) called
+`$this->adaptor->connected()`, a method none of `DB\MySQLi`/`DB\PDO`/
+`DB\PgSQL` implement (all three implement `isConnected()`), so the method
+fatals instead of returning a bool. Picked from
+`MINTCART_FUNCTIONAL_SCOPE.md` §18's "database connection / reconnect
+issues" Known Fix Research Queue item. Step 0 checked all 26 PRs open at
+the time (`#52`–`#78`): none touch `system/library/db.php` or
+`system/library/db/*.php`. See the Phase 10 (Technical Plan) section above
+and `docs/fixes/registry.md`'s MC-0006 entry for the full writeup,
+including the deliberate ID choice (MC-0006, not MC-0004) to avoid
+colliding with PRs #76/#78's own in-flight registry entries. **Next
+step:** the remaining Known Fix Research Queue items (multilingual SEO URL
+issues, category path/update issues beyond what Phase 17 already covers,
+cache race conditions, extra session/cart records, remaining installer
+edge cases) are still unattempted — or re-check `gh pr list --state open`
+first, since this backlog changes size on nearly every run.

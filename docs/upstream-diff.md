@@ -950,3 +950,36 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/system/library/db.php`
+
+**Reason:** MC-0006 (`docs/fixes/registry.md`) — `DB::connected()` called
+`$this->adaptor->connected()`, but every real adaptor
+(`DB\MySQLi`/`DB\PDO`/`DB\PgSQL`) implements `isConnected()`, never
+`connected()`. Calling `DB::connected()` against a real adaptor fatals
+instead of returning a bool. Fixed the one call site to dispatch to
+`isConnected()` instead.
+
+**Why it can't live in the MintCart layer instead:** `db.php` *is* the
+core file whose own public method is broken — there's no MintCart-owned
+equivalent to route around it, and adding a MintCart-side wrapper just to
+work around one core method's internal typo would be an odd indirection
+for a one-line fix to the file that already owns this responsibility.
+
+**Compatibility impact:** None. `DB::connected()`'s public signature
+(name, visibility, no parameters, returns whatever the adaptor reports) is
+unchanged; only its internal delegation target changed, from a method
+name no adaptor has ever implemented to the one all three actually do.
+Nothing in this repository calls `DB::connected()` today (`grep -rn
+"->connected(" upload/` — zero matches), so this has no observable effect
+on any existing code path; it only makes the method usable for the first
+time.
+
+**Tests:** `php -l` clean. New
+`tests/mintcart/fixes/mc-0006-db-connected-adaptor-mismatch-test.php` — see
+the MC-0006 registry entry for full detail, including manual confirmation
+that the test fatals against the pre-fix code and passes after the fix.
+Full `tests/mintcart/` suite re-run end to end (35 files) — all pass, no
+regressions.
