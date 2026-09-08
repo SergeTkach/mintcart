@@ -1962,12 +1962,33 @@ tracked once each.)*
       reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
       (`category.php` blank language strings) and MC-0002 (`search.php`
       missing canonical/prev/next links, this run)
-- [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
+- [ ] Diagnostics dev mode (query count, DB time, render time, cache status) —
+      an open PR (#75) covers this; not yet on `master`
+- [x] Cache invalidation API — `MintCart\Core\Cache\CacheInvalidator`
+      (`upload/system/library/mintcart/core/cache/cacheinvalidator.php`), a
+      domain → cache-key-prefix registry (`catalog`/`localization`/
+      `checkout`/`content`/`store`) on top of OpenCart's stock `\Cache`
+      class, injected as a callable so it needs no `\Registry`/adapter
+      bootstrap to unit-test. No live write-path caller yet (`CLAUDE.md`
+      §85 — ships ahead of its first consumer, same as several other
+      Phase 1/11/18 primitives in this file); a bulk product/category edit
+      is the natural first one, once Phase 16/17's write paths land on
+      `master`. Verified, code-inspected (not assumed) backend caveat:
+      OpenCart's own `\Cache::delete($key)` only does prefix/wildcard
+      matching on the `file`/`apc`/`apcu` adapters — on `mem`/`memcached`/
+      `redis` it only deletes an exact key, so `delete('*')` (what stock
+      `admin/controller/tool/backup.php`'s own "clear cache" step calls)
+      is a silent no-op there too. Documented, not fixed this run (touching
+      `tool/backup.php` would collide with an in-flight PR fixing an
+      unrelated bug in that same file). Full writeup:
+      `docs/developer/core/cache-invalidation.md`. Test:
+      `tests/mintcart/core/cache-invalidator-test.php` (8 scenarios).
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
-      minification, cache invalidation API — no mandatory Redis)
+      minification — no mandatory Redis)
 
-Fix Registry mechanism is established and has two real entries; the rest of
-this phase (diagnostics, measured performance work) is not started.
+Fix Registry mechanism is established and has two real entries; the cache
+invalidation API primitive is done (see above); diagnostics (open PR #75)
+and measured performance work are not started on `master` yet.
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
@@ -2633,3 +2654,22 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, 2026-09-08): Phase 10 (Technical Plan §36)'s "cache
+invalidation API" is done** — `MintCart\Core\Cache\CacheInvalidator`, a
+pure, injectable-callback domain registry over OpenCart's stock `\Cache`
+class, plus a verified (code-inspected, not assumed) writeup of a real
+`delete('*')` no-op gap on the `mem`/`memcached`/`redis` cache adapters
+that stock OpenCart's own `tool/backup.php` "clear cache" step already
+silently inherits. See the Phase 10 (Technical Plan) section above and
+`docs/developer/core/cache-invalidation.md`. At the time this run started
+there were 24 open PRs (#52–#76); this increment's new files
+(`upload/system/library/mintcart/core/cache/`, `tests/mintcart/core/cache-invalidator-test.php`,
+`docs/developer/core/cache-invalidation.md`) don't collide with any of
+them, and it deliberately does not touch `tool/backup.php` (already
+touched by open PR #76) despite documenting a real gap in that file.
+**Next step:** wire a real caller once a bulk-write path (Phase 16 Bulk
+Editor or Phase 17 category move, both currently only open PRs) lands on
+`master`; or re-check `gh pr list --state open` — this backlog is
+unusually large and several sessions have now flagged it as needing human
+merge attention rather than more parallel increments.
