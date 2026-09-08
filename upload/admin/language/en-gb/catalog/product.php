@@ -17,6 +17,14 @@ $_['text_percent']           = 'Percentage';
 $_['text_amount']            = 'Fixed Amount';
 $_['text_keyword']           = 'Do not use spaces, instead replace spaces with - and make sure the SEO URL is globally unique.';
 
+// Text - Category picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
+$_['text_category_picker_browse']  = 'Browse categories';
+$_['text_category_picker_search']  = 'Search categories';
+$_['text_category_picker_empty']   = 'No categories found.';
+$_['text_category_picker_prev']    = 'Previous';
+$_['text_category_picker_next']    = 'Next';
+$_['text_category_picker_confirm'] = 'Add selected';
+
 // Column
 $_['column_name']            = 'Product Name';
 $_['column_model']           = 'Model';
