@@ -1963,11 +1963,51 @@ tracked once each.)*
       (`category.php` blank language strings) and MC-0002 (`search.php`
       missing canonical/prev/next links, this run)
 - [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
-- [ ] Measured performance improvements (lazy loading, responsive images, asset
+- [~] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
-Fix Registry mechanism is established and has two real entries; the rest of
-this phase (diagnostics, measured performance work) is not started.
+Fix Registry mechanism is established and has two real entries. Diagnostics
+and most of "measured performance improvements" remain not started, except
+for one small piece (this run, 2026-09-08): `product.image_width`/
+`image_height` now flow from `MintCart\Commerce\ProductViewProvider` into
+`mc-product-card`'s `<img width height>` attributes, since every listing
+controller (Category, Search, Manufacturer, Special, Homepage Products
+block) already resizes to a fixed theme-configured size before calling the
+provider — this only threads that already-known value through, no new
+OpenCart calls. `loading="lazy"` was already present on both `<img>` tags
+from Phase 6. See `docs/developer/commerce/product-view-provider.md`'s
+"Image dimensions" section and `docs/developer/components/product-card.md`'s
+new "Image dimensions (layout-shift prevention)" section for the full
+writeup. Verified: `php -l` clean on all 6 touched PHP files; 2 new
+`ProductViewProvider` smoke-test scenarios (now 10) covering pass-through
+and the null-default case; full `tests/mintcart/**/*-test.php` suite
+re-run end to end (34 files) — all passing, no regressions; both edited
+`.twig` files' `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag
+counts checked balanced. **Not verified:** no live MySQL/`vendor/twig/twig`
+in this environment (same pre-existing gap noted throughout this file) — a
+human should confirm the rendered `<img>` tags carry the expected
+`width`/`height` on a real category/search/manufacturer/special/homepage
+page. Responsive images (`srcset`), WebP/modern formats and asset
+minification-beyond-esbuild's-defaults remain untouched.
+
+Step 0 dedup check for this run: `gh`/GitHub MCP `list_pull_requests
+--state open` showed 30 open PRs (`#52`–`#82`) at the start of this run,
+covering nearly every other unstarted phase in this file (SEO Core's five
+sub-pieces, Update Manager's first two increments, Compatibility Checker,
+Diagnostics, `CacheInvalidator`, `HealthCheck`, a `SettingsAdapter`, the
+admin asset-enqueue fix + a live `McEntityPicker` consumer, `QuickOrderService`,
+a Mint Default product detail page, four historical-fix registry entries,
+release packaging, and the remaining Phase 12/13/14 items) — none touch
+`ProductViewProvider`, `product-card.twig`, or any of the five controller
+call sites this run edited. Step 0f hot-file check: `wizard.php`/
+`wizard.twig`, `admin/controller/mintcart/entity.php` and
+`column_left.php` are each contended by 2+ open PRs per those PRs' own
+write-ups — untouched by this run. `category.php`/`search.php` are each
+touched by exactly one open PR (`#62`, adding Schema.org BreadcrumbList
+JSON-LD near the end of each `index()` method, well after the `foreach`
+loop this run edited) — confirmed via `git diff` against `#62`'s branch
+that the two changes don't share a line, so this was treated as
+low-risk-but-not-blocked rather than a 2+-PR hot file.
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
@@ -2633,3 +2673,14 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, 2026-09-08): Phase 10 (Technical Plan)'s Performance
+item has a first small increment — `product.image_width`/`image_height`
+now flow through `ProductViewProvider` into `mc-product-card`'s `<img
+width height>` attributes.** See that phase's section above for the full
+writeup. 30 open PRs (`#52`–`#82`) were checked at step 0 and none overlap
+this increment's five touched controllers/provider/templates. **Next
+step:** responsive `srcset`, WebP/modern formats, Diagnostics dev mode, or
+re-check `gh pr list --state open` — this backlog is unusually large right
+now and several of those 30 PRs are marked DONE and ready for human
+review/merge.
