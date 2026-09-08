@@ -1973,11 +1973,15 @@ this phase (diagnostics, measured performance work) is not started.
 
 - [~] Update Manager (check → compatibility → backup → download → verify →
       maintenance → files → migrations → cache clear → health check → done) —
-      **first increment done:** `MintCart\Update\PackageManifest`
+      **two increments done:** `MintCart\Update\PackageManifest`
       (`upload/system/library/mintcart/update/packagemanifest.php`), a pure
       manifest parser/validator/compatibility-constraint checker (name,
-      version, requirements, files, migrations, checksum), following the
-      same "primitive first, wire the flow around it once a real caller
+      version, requirements, files, migrations, checksum); and
+      `MintCart\Update\UpdateChecker`
+      (`upload/system/library/mintcart/update/updatechecker.php`), the
+      flow's `check` step — given a manifest plus installed versions,
+      returns `update_available`/`compatible`/`should_apply`. Both follow
+      the same "primitive first, wire the flow around it once a real caller
       exists" pattern `MigrationManager` (Phase 1) and `WizardProgress`
       (Phase 13) already used. See
       `docs/developer/update/package-manifest.md` for the full contract and
@@ -1997,10 +2001,11 @@ this phase (diagnostics, measured performance work) is not started.
       if it's needed before Update Manager exists.
 
 In progress. Verified: `php -l` clean; new
-`tests/mintcart/update/package-manifest-test.php` (11 scenarios) passing;
-full `tests/mintcart/` suite re-run end to end — no regressions (pure
-addition, no existing file modified). No OpenCart dependency, so no live-
-install verification gap applies to this specific increment.
+`tests/mintcart/update/package-manifest-test.php` (11 scenarios) and
+`tests/mintcart/update/update-checker-test.php` (7 scenarios) passing;
+full `tests/mintcart/` suite re-run end to end (35 files) — no regressions
+(pure addition, no existing file modified). No OpenCart dependency, so no
+live-install verification gap applies to either increment.
 
 ## Phase 12 — Early Access
 
@@ -2625,6 +2630,26 @@ files/migrations/cache-clear/health-check in later increments once
 `HealthCheck`, per PR #67, has landed) — or re-check `gh pr list --state
 open` for whatever the current backlog has newly merged/unclaimed before
 picking the next phase.
+
+**Update (this run, 2026-09-08): `MintCart\Update\UpdateChecker` — the
+`check` step.** Second Update Manager increment: given a `PackageManifest`
+plus installed versions, returns `update_available`/`compatible`/
+`should_apply` (`upload/system/library/mintcart/update/updatechecker.php`,
+`tests/mintcart/update/update-checker-test.php`, 7 scenarios). Full
+writeup in `docs/developer/update/package-manifest.md`'s new "The `check`
+step" section. At the time this run started, 28 PRs were open (`#52`–`#81`)
+and none touched `upload/system/library/mintcart/update/` (confirmed via
+`list_pull_requests` + a manual read of PR #76, whose branch name
+`claude/update-manager-package-manifest` is misleading — its actual content
+is an unrelated fix, MC-0004). Verified: `php -l` clean; both
+`update/*-test.php` files plus the full `tests/mintcart/` suite (35 files)
+passing, no regressions. **Next step:** still no caller — the `backup`
+step (reading a manifest's `files()` to snapshot what an update would
+overwrite) is the next natural increment, or a `download`/`verify` step
+once there's a concrete transport to fetch a manifest+package from. The
+`health-check` step should still wait for `MintCart\Core\HealthCheck`
+(PR #67) to land. Re-check the open-PR list before picking, as always —
+the backlog is large and grows with every parallel run.
 
 **Next step:** the admin asset-enqueue question remains the real blocker
 for both a proper `McSortable`-based reorder and the five `items` JSON
