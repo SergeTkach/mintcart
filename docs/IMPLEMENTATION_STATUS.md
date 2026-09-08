@@ -1971,8 +1971,18 @@ this phase (diagnostics, measured performance work) is not started.
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
-- [ ] Update Manager (check → compatibility → backup → download → verify →
-      maintenance → files → migrations → cache clear → health check → done)
+- [~] Update Manager (check → compatibility → backup → download → verify →
+      maintenance → files → migrations → cache clear → health check → done) —
+      **first increment done:** `MintCart\Update\PackageManifest`
+      (`upload/system/library/mintcart/update/packagemanifest.php`), a pure
+      manifest parser/validator/compatibility-constraint checker (name,
+      version, requirements, files, migrations, checksum), following the
+      same "primitive first, wire the flow around it once a real caller
+      exists" pattern `MigrationManager` (Phase 1) and `WizardProgress`
+      (Phase 13) already used. See
+      `docs/developer/update/package-manifest.md` for the full contract and
+      what's still not done (no caller/downloader/backup/verify/maintenance-
+      mode/file-copy/migration-runner/cache-clear/health-check steps yet).
 - [ ] Theme/extension rollback (RESEARCH item per Functional Scope §21)
 - [ ] Compatibility Checker (`install.xml` analysis, heuristic warnings only)
 - [ ] **Release packaging script (TODO, not started).** Node/npm (`npm install`
@@ -1986,7 +1996,11 @@ this phase (diagnostics, measured performance work) is not started.
       manifest work (Technical Plan §33), or a standalone `docs/release.md`
       if it's needed before Update Manager exists.
 
-Not started.
+In progress. Verified: `php -l` clean; new
+`tests/mintcart/update/package-manifest-test.php` (11 scenarios) passing;
+full `tests/mintcart/` suite re-run end to end — no regressions (pure
+addition, no existing file modified). No OpenCart dependency, so no live-
+install verification gap applies to this specific increment.
 
 ## Phase 12 — Early Access
 
@@ -2590,6 +2604,27 @@ drag doesn't satisfy on its own. Full writeup: "Reordering without
 --check` on the extracted inline script (valid syntax); Twig tag counts
 re-balanced after the added grip-icon column; manual verification step 10
 added.
+
+**Update (this run, 2026-09-08): Phase 11 (Technical Plan)'s Update Manager
+has a first increment — `MintCart\Update\PackageManifest`.** At the time
+this run started there were 23 open PRs covering nearly every phase with
+unclaimed, unstarted work in this file (Diagnostics, Compatibility
+Checker, QuickOrderService, SEO Core's four sub-pieces, HealthCheck,
+System route URL aliases, Business Settings' three façades, two more
+Wizard steps, Bulk Editor, the search-box component, the Store Readiness
+dashboard widget, and five of the six remaining Entity Picker backends —
+see each PR's own title), and `column_left.php` (the admin menu file) was
+already touched by ten of them, so a new admin-menu-adding increment was
+avoided this run. Update Manager was the one phase with real scope and no
+open PR anywhere near it — see the Phase 11 (Technical Plan) section above
+and `docs/developer/update/package-manifest.md` for the full writeup.
+**Next step:** the rest of the Update Manager flow (a `check` step that
+fetches a real manifest and calls `PackageManifest::isCompatible()`
+against `MintCart\Core\Version`, then backup/download/verify/maintenance/
+files/migrations/cache-clear/health-check in later increments once
+`HealthCheck`, per PR #67, has landed) — or re-check `gh pr list --state
+open` for whatever the current backlog has newly merged/unclaimed before
+picking the next phase.
 
 **Next step:** the admin asset-enqueue question remains the real blocker
 for both a proper `McSortable`-based reorder and the five `items` JSON
