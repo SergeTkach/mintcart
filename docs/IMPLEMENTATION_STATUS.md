@@ -1960,14 +1960,48 @@ tracked once each.)*
 - [ ] SEO Core (tracked above as Phase 18)
 - [x] `docs/fixes/registry.md` Fix Registry established, entries added only after
       reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
-      (`category.php` blank language strings) and MC-0002 (`search.php`
-      missing canonical/prev/next links, this run)
+      (`category.php` blank language strings), MC-0002 (`search.php` missing
+      canonical/prev/next links), MC-0003 (`manufacturer.php` blank language
+      strings), and MC-0005 (install-time PHP version pre-flight checks
+      stale/fragile, this run — see below). MC-0004 (`tool/backup` restore
+      safety-stop hardcoded byte-length) is a real entry too but lives in
+      still-open PR #76 as of this run, not yet on this branch's base.
 - [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
-Fix Registry mechanism is established and has two real entries; the rest of
-this phase (diagnostics, measured performance work) is not started.
+**This run: MC-0005.** Picked from `MINTCART_FUNCTIONAL_SCOPE.md` §18's
+Known Fix Research Queue ("PHP 8.x compatibility problems" / "installer
+edge cases") — reproduced directly against this repo (per `CLAUDE.md`
+§84): `install/cli_install.php`'s `check_requirements()` warned only below
+PHP 7.3, but `system/startup.php` — required unconditionally a few lines
+above in the same file, before `check_requirements()` can ever run —
+already hard-exits below PHP 8.1.0, making the 7.3+ message dead,
+unreachable code that was also factually wrong. Both `cli_install.php` and
+`install/controller/install/step_2.php`'s companion check also used a raw
+string `'<'` comparison instead of `version_compare()`, unlike ~90 other
+PHP-version gates already in this codebase. Fixed: `cli_install.php`'s
+threshold/message now matches `system/startup.php` exactly (8.1.0,
+`version_compare()`); `step_2.php` keeps its already-correct "8.1"
+threshold but now uses `version_compare()` too. New, fully isolated
+regression test (no OpenCart dependency, same pattern as MC-0004's):
+`tests/mintcart/fixes/mc-0005-install-php-version-check-test.php`. Full
+writeup: `docs/fixes/registry.md`'s MC-0005 entry and `docs/upstream-diff.md`'s
+new `cli_install.php`/`step_2.php` entries. Verified: `php -l` clean on
+both modified files; full `tests/mintcart/**/*-test.php` suite re-run end
+to end (35 files, was 34) — all passing, no regressions. Checked against
+every PR open at the start of this run (`#52`–`#77`, see this file's final
+"Next step" trailer for the full list and hot-shared-file reasoning) —
+none touch `install/cli_install.php`, `install/controller/install/step_2.php`,
+or `docs/fixes/registry.md`/`docs/upstream-diff.md` beyond simple
+end-of-file appends, so no collision. **Not verified:** actually running
+`cli_install.php` under a real PHP 7.x binary (none available in this
+environment) — see the registry entry's own note on this gap.
+
+Fix Registry mechanism is established and has five real entries (four on
+this branch: MC-0001, MC-0002, MC-0003, MC-0005; MC-0004 pending in PR
+#76); the rest of this phase (diagnostics, measured performance work) is
+not started.
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
@@ -2633,3 +2667,21 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, 2026-09-08): MC-0005 Fix Registry entry** (install-time
+PHP version pre-flight checks — see Phase 10 (Technical Plan) section
+above). Picked after `gh pr list --state open` showed 24 open PRs (`#52`–
+`#77`) covering nearly every phase with unclaimed scope, and checking each
+one's changed-files list (`gh pr diff <n> --name-only`) confirmed none
+touch `install/cli_install.php`, `install/controller/install/step_2.php`,
+or the fixes/upstream-diff docs beyond appends. Also confirmed this run's
+detached-HEAD start commit (`MintCart\Update\PackageManifest`, "Phase 11:
+add MintCart\Update\PackageManifest") had already landed directly on
+`origin/master` outside the normal branch/PR flow before this session
+began — flagging it here for a human to notice, not something this run
+attempted to undo. Next candidates for a future run: re-check `gh pr list
+--state open` for what's newly merged/unclaimed; other untried Known Fix
+Research Queue items (database reconnect issues, multilingual SEO URL
+issues, category path/update issues beyond Phase 17, cache race
+conditions, redundant session/cart writes); or Phase 10 (Technical Plan)'s
+still-unclaimed Diagnostics/performance work once PR #75/#77 land.

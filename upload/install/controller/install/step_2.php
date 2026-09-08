@@ -175,7 +175,11 @@ class ControllerInstallStep2 extends Controller {
 	}
 
 	private function validate() {
-		if (phpversion() < '8.1') {
+		// MintCart fix MC-0005 (docs/fixes/registry.md): naive string '<'
+		// comparison replaced with version_compare(), matching
+		// system/startup.php's own check and every other PHP-version gate
+		// in this codebase (~90 call sites already use version_compare()).
+		if (version_compare(phpversion(), '8.1.0', '<') === true) {
 			$this->error['warning'] = $this->language->get('error_version');
 		}
 

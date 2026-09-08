@@ -223,3 +223,114 @@ regression test added — same rationale as MC-0001/MC-0002: the fix is four
 this same file. A human should confirm on a real install that the
 manufacturer page's sort/limit labels and empty-listing message/button are
 no longer blank, on both the stock `default` theme and `mint_default`.
+
+---
+
+## MC-0005 — Install-time PHP version pre-flight checks are stale/fragile and disagree with the real requirement
+
+**Problem:** MintCart has two separate PHP version pre-flight checks that
+run before installation actually starts:
+
+- `install/cli_install.php`'s `check_requirements()` warned only below
+  **PHP 7.3**, using a naive string comparison: `phpversion() < '7.3'`.
+- `install/controller/install/step_2.php`'s `validate()` (the web
+  installer's requirements step) warned only below **PHP 8.1**, also with
+  a naive string comparison: `phpversion() < '8.1'`.
+
+Neither matches the actual enforced requirement: `system/startup.php` —
+loaded unconditionally on *every* request path (catalog, admin, and, for
+the CLI tool, `cli_install.php` itself via
+`require_once(DIR_SYSTEM . 'startup.php');` a few lines above
+`check_requirements()`) — hard-exits with `PHP8.1+ Required` below PHP
+8.1.0. Two concrete consequences:
+
+1. `cli_install.php`'s own "PHP7.3+" message can never actually be shown
+   to a user. On PHP 7.3–8.0, `startup.php`'s stricter guard already kills
+   the process at `require_once` time, before `check_requirements()` is
+   ever reached (it's only called later, from inside `install()`, itself
+   only reached after CLI argument parsing succeeds). The 7.3+ message is
+   dead code that also happens to be factually wrong about what the tool
+   actually requires.
+2. Both checks used a raw string `'<'` comparison instead of
+   `version_compare()`, unlike every other PHP-version gate already in
+   this codebase (`system/startup.php` itself, and ~90 payment/shipping
+   extension call sites) — fragile by construction even where it happens
+   not to misfire for typical version strings today.
+
+This is exactly the "PHP 8.x compatibility problems" / "installer edge
+cases" pairing `MINTCART_FUNCTIONAL_SCOPE.md` §18's Known Fix Research
+Queue names.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1 (this
+repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale as
+MC-0001–MC-0004 (no second checkout available to diff against; the fix is
+a self-contained, version-agnostic correction).
+
+**Source:** Discovered directly in this repository while auditing the
+Known Fix Research Queue candidates in `MINTCART_FUNCTIONAL_SCOPE.md` §18
+— not an imported historical community patch. Reproduced by reading
+`cli_install.php` top to bottom (`CLAUDE.md` §84 — verified against the
+actual file, not assumed from memory): `require_once(DIR_SYSTEM .
+'startup.php')` executes unconditionally at line 40, and
+`check_requirements()`'s `'7.3'` check is defined at line 144 and only
+ever invoked (from `install()`) after that `require_once` has already run
+— so any PHP version between 7.3 and 8.0 that would make the old check
+raise its warning can never reach that line at all. Cross-checked
+`system/startup.php`'s own threshold (`'8.1.0'`, via `version_compare()`)
+and confirmed `step_2.php`'s companion "PHP 8.1" message
+(`install/language/en-gb/install/step_2.php`) already agreed with the
+right number — only its comparison *operator* was fragile, not its
+threshold.
+
+**Reproduced on MintCart baseline:** Yes — via direct code reading and
+execution ordering, as described above (a real PHP < 8.1 binary isn't
+available in this environment to demonstrate the process exiting live,
+but the ordering of `require_once` vs. the `check_requirements()`
+call site is unambiguous from the file itself). The regression test
+below additionally proves, for a representative set of version strings,
+that the fixed logic's verdict now matches `system/startup.php`'s own
+verdict exactly, and that a distro-packaged version string (e.g. Debian/
+Ubuntu's `8.1.2-1ubuntu2.14`) — which a raw string comparison is more
+exposed to than a two-segment threshold against a plain `X.Y.Z` string —
+is still handled correctly by `version_compare()`.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** `cli_install.php`'s `check_requirements()` now
+checks `version_compare(phpversion(), '8.1.0', '<') === true` (matching
+`system/startup.php`'s own threshold and comparison exactly) and its
+message now reads "PHP 8.1+" instead of the stale, unreachable "PHP7.3+".
+`step_2.php`'s `validate()` keeps its already-correct "8.1" threshold but
+now also uses `version_compare(phpversion(), '8.1.0', '<') === true`
+instead of a raw string `'<'`, for the same robustness every other
+PHP-version gate in this codebase already has. No behavior change for any
+version string these two checks are actually exercised against today
+(2-segment `'8.1'` was already a safe strict-prefix comparison against any
+real `8.1.x` patch string); the fix is about correctness-by-construction
+and, for `cli_install.php`, an accurate message rather than a dead,
+misleading one. No template change, no schema change, no change to either
+function's other checks (`file_uploads`, `session.auto_start`, extension
+checks).
+
+**Tests:** `php -l` clean on both modified files. New
+`tests/mintcart/fixes/mc-0005-install-php-version-check-test.php` (pure
+logic, no OpenCart runtime dependency, like MC-0004's test) — proves the
+old `cli_install.php` threshold accepted three versions (`7.3.0`,
+`7.4.33`, `8.0.30`) that `system/startup.php`'s own gate already rejects
+(the unreachable-dead-code claim above, made concrete), that the fixed
+logic's verdict matches `system/startup.php`'s verdict exactly across nine
+representative version strings, and that a distro-suffixed version string
+is handled correctly on both sides of the 8.1.0 boundary. Full
+`tests/mintcart/**/*-test.php` suite re-run end to end (35 files, was 34
+at the start of this run) — all passing, no regressions. **Not verified:**
+actually invoking `cli_install.php` under a real PHP 7.x binary (none
+available in this environment) — a human with access to one could confirm
+the process now prints the corrected message instead of dying silently at
+`startup.php`'s `require_once`, though the more useful confirmation is
+simply that the two messages agree with each other and with
+`startup.php`, which this fix guarantees structurally.

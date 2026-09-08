@@ -950,3 +950,75 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/install/cli_install.php`
+
+**Reason:** MC-0005 (`docs/fixes/registry.md`) — `check_requirements()`'s
+PHP version pre-flight check warned only below PHP 7.3, using a raw string
+`'<'` comparison. Both were wrong: `system/startup.php` — required
+unconditionally a few lines above, before `check_requirements()` is ever
+reached — already hard-exits below PHP 8.1.0, so the 7.3+ message was
+stale, unreachable dead code as well as factually incorrect about what the
+tool actually requires. Full reproduction and rationale: `docs/fixes/registry.md`'s
+MC-0005 entry.
+
+**Why it can't live in the MintCart layer instead:** This is a one-function
+correction inside OpenCart's own CLI installer script, tightly coupled to
+its own top-of-file `require_once(DIR_SYSTEM . 'startup.php')` ordering.
+There is no separate MintCart-owned CLI install path to move this into —
+MintCart's Setup Wizard (Functional Scope §2/`MINTCART_TECHNICAL_PLAN.md`
+§21) is a post-install, browser-based onboarding flow, not a replacement
+for this stock command-line installer. Fixing the threshold/comparison in
+place is the smaller, safer diff.
+
+**Compatibility impact:** None for anyone already on PHP 8.1+ (the only
+PHP version range this tool can actually run under in practice, per the
+`require_once` ordering explained above) — the fixed check's verdict for
+8.1+ versions is unchanged (still "OK"). The only behavior change is the
+displayed warning text for PHP < 8.1, which was previously stale/wrong and
+is now accurate and matches `system/startup.php`'s own message. No change
+to `install()`, `setup_db()`, `write_config_files()`, or any other function
+in the file.
+
+**Tests:** `php -l` clean on the modified file. New
+`tests/mintcart/fixes/mc-0005-install-php-version-check-test.php` — pure
+version-string logic, no OpenCart runtime dependency; see the registry
+entry for what it covers. Full `tests/mintcart/**/*-test.php` suite re-run
+end to end — all passing, no regressions. **Not verified:** actually
+running `cli_install.php` under a real PHP 7.x binary (none available in
+this environment) — see the registry entry's own note on this gap.
+
+---
+
+## `upload/install/controller/install/step_2.php`
+
+**Reason:** MC-0005 (`docs/fixes/registry.md`) — `validate()`'s PHP
+version pre-flight check already used the correct threshold ("8.1", which
+agrees with `install/language/en-gb/install/step_2.php`'s `error_version`
+message text and with `system/startup.php`'s own gate), but compared it
+with a raw string `'<'` instead of `version_compare()`, unlike every other
+PHP-version gate already in this codebase (`system/startup.php` itself,
+and ~90 payment/shipping extension call sites). Full reproduction and
+rationale: `docs/fixes/registry.md`'s MC-0005 entry.
+
+**Why it can't live in the MintCart layer instead:** A one-line
+comparison-operator correction inside OpenCart's own web installer
+requirements-check controller. There is no separate MintCart-owned
+requirements-check step to move this into.
+
+**Compatibility impact:** None — `version_compare($v, '8.1.0', '<')`
+produces the identical verdict to the old `$v < '8.1'` for every version
+string this check is actually exercised against (the old two-segment
+threshold was already a safe strict-prefix comparison against any real
+`8.1.x` patch string, including distro-suffixed ones); the fix is
+correctness-by-construction, not a behavior change. No template change, no
+change to any of this method's other checks.
+
+**Tests:** `php -l` clean on the modified file. Covered by the same new
+`tests/mintcart/fixes/mc-0005-install-php-version-check-test.php` as the
+`cli_install.php` entry above (both checks now share the identical
+`version_compare(..., '8.1.0', '<')` logic, tested once). Full
+`tests/mintcart/**/*-test.php` suite re-run end to end — all passing, no
+regressions.
