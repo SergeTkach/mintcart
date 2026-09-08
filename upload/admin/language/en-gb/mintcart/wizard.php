@@ -32,7 +32,15 @@ $_['entry_telephone']   = 'Telephone';
 $_['entry_address']     = 'Address';
 $_['button_continue']   = 'Continue';
 
-// Ready / more-steps-coming state
+// Ready step (Store Readiness checklist)
+
+$_['readiness_title']       = 'How ready is your store?';
+$_['readiness_text']        = 'Here\'s where things stand today, based on your real store settings. You can finish setup and come back to this checklist any time.';
+$_['text_check_done']       = 'Done';
+$_['text_check_pending']    = 'Not yet';
+$_['button_finish_setup']   = 'Finish setup';
+
+// Ready / more-steps-coming state (shown once every implemented step, ready included, is completed)
 
 $_['ready_title'] = 'You\'re off to a great start';
 $_['ready_text']  = 'The rest of the Setup Wizard (contacts, delivery, payment, design and your first product) is coming in a future update. For now, head to your dashboard to keep setting up your store.';

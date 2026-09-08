@@ -200,6 +200,39 @@ class ControllerMintcartWizard extends Controller
             $data['config_address'] = $this->request->post['config_address'] ?? $this->config->get('config_address');
         }
 
+        if ($step === 'ready') {
+            $data['readiness'] = $this->loadReadiness();
+        }
+
         $this->response->setOutput($this->load->view('mintcart/wizard', $data));
+    }
+
+    /**
+     * Reuses MintCart\Onboarding\StoreReadiness (Phase 14) rather than a
+     * second copy of the computation - same evaluate() call and same
+     * mintcart/readiness signal source ControllerMintcartReadiness's JSON
+     * endpoint already uses, just rendered into this page instead of JSON.
+     * Loading the model directly (not the mintcart/readiness route) means
+     * this deliberately does not go through that controller's own
+     * hasPermission('access', 'mintcart/readiness') gate - consistent with
+     * the rest of this controller having no hasPermission() gate of its own
+     * (see the class docblock).
+     */
+    private function loadReadiness(): array
+    {
+        $this->load->language('mintcart/readiness');
+        $this->load->model('mintcart/readiness');
+
+        $readiness = new \MintCart\Onboarding\StoreReadiness();
+
+        return $readiness->evaluate($this->model_mintcart_readiness->getSignals(), [
+            'logo'          => $this->language->get('text_check_logo'),
+            'contacts'      => $this->language->get('text_check_contacts'),
+            'language'      => $this->language->get('text_check_language'),
+            'currency'      => $this->language->get('text_check_currency'),
+            'shipping'      => $this->language->get('text_check_shipping'),
+            'payment'       => $this->language->get('text_check_payment'),
+            'first_product' => $this->language->get('text_check_first_product'),
+        ]);
     }
 }
