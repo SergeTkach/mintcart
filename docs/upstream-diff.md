@@ -950,3 +950,71 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/admin/controller/catalog/product.php` / `upload/admin/view/template/catalog/product_form.twig` / `upload/admin/language/en-gb/catalog/product.php`
+
+**Reason:** solving the "admin asset-enqueue problem" that #53/#63 (and
+every Phase 12/16/17 increment before them) hit and deliberately punted on
+— see `docs/developer/admin/asset-enqueue.md` for the full root-cause
+writeup. This is the first admin screen where MintCart's own compiled
+bundle is actually enqueued, and the Category field is the previously-
+identified (never-attempted) first live `McEntityPicker` consumer
+(`docs/developer/components/entity-picker.md` "Admin backends").
+
+1. **Controller:** new `enqueueMintAssets()` method, called at the top of
+   the existing `getForm()` (shared by both `add()`/`edit()`) —
+   `$this->document->addStyle()`/`addScript()` with
+   `assets/dist/css/components.min.css`/`assets/dist/js/admin.min.js`,
+   `HTTP_CATALOG`-relative (the same base
+   `admin/controller/mintcart/wizard.php` already uses for this path).
+   Nothing else in `getForm()` changed.
+2. **View:** `product_form.twig`'s Category `form-group` gained a "Browse
+   categories" button + a hidden `.mc-entity-picker` panel, additive
+   alongside the existing jQuery-autocomplete input/well (not a
+   replacement). A new inline `<script>` block (plain vanilla JS, not
+   jQuery, per `CLAUDE.md` §7) calls
+   `window.MintCart.createEntityPicker()` against the existing
+   `mintcart/entity/category` backend and appends confirmed selections
+   into the *same* `#product-category{id}`/`product_category[]`
+   hidden-input markup the autocomplete's own `select` handler already
+   produces.
+3. **Language:** six new `text_category_picker_*` keys, same file/pattern
+   as the template's existing `entry_category`/`help_category` keys.
+
+**Why it can't live in the MintCart layer instead:** `product_form.twig`
+and `ControllerCatalogProduct` are the one true owner of the product
+edit screen's form/save logic (`CLAUDE.md` §39 — don't duplicate OpenCart
+storage or fork a second product-editing UI). The picker is additive
+markup/script inside the existing form, not a new page.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, or `$data` key changed; `validateForm()`/`addProduct()`/
+`editProduct()`'s handling of `product_category[]` is completely
+unchanged (the new UI writes the identical hidden-input shape the old one
+already did). The existing jQuery autocomplete still works exactly as
+before — nothing about it was touched.
+
+**Tests:** `php -l` clean on `product.php` and the language file. Twig
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts checked
+balanced before and after (38/38, 37/37). The new inline script was
+extracted and checked with `node --check` (valid syntax) since there is no
+live browser in this environment to exercise it. Full `tests/mintcart/`
+suite re-run end to end — no PHP library code changed here, so no new
+regressions expected or found. **Not verified:** no live MySQL/admin
+session in this environment — a human should confirm the picker opens,
+searches, paginates, and that confirming a selection adds the expected
+row to the well and duplicate-frees an already-added category (see
+`docs/MANUAL_VERIFICATION.md`'s new entry). Separately and pre-existing
+(not introduced by this change, not fixed by it either): this trimmed
+repository's `ControllerCatalogProduct::getForm()` never assigns any
+`entry_*`/`help_*`/`button_*`/`tab_*` label key (`entry_category`
+included) into `$data` — `admin/engine/loader.php`'s `Loader::view()` only
+passes the controller's own `$data` array to Twig, with no separate
+language-object merge, so every such label (this run's new
+`text_category_picker_*` keys included) renders blank in this specific
+environment today. Confirmed this is not new: `entry_category` itself,
+already in this exact template before this change, has the same gap.
+Out of scope to fix here (a much larger, unrelated pass over the whole
+file); flagging so it isn't mistaken for something this change broke.

@@ -1583,9 +1583,10 @@ PHP touched, so the PHP `tests/mintcart/` suite doesn't apply.
       manufacturers, attributes, options, information pages, customers) —
       **category and manufacturer are done** (manufacturer this run), see
       below; the other five entity types still need their own.
-- [ ] Live wiring into an actual admin screen/field — both backends exist
-      but nothing calls either yet (see below for why, and each one's
-      identified first consumer).
+- [~] Live wiring into an actual admin screen/field — **category is done**
+      (`product_form.twig`'s Category field, this run, see the "Admin
+      asset-enqueue problem solved" update below); manufacturer/product
+      backends still have no live consumer.
 - [ ] Create-new flow via drawer/modal — not attempted.
 
 **Update (this run): the category `fetchItems` backend is done.**
@@ -1665,6 +1666,28 @@ page with no legacy chrome, see that phase's "Design decision worth
 flagging"), or pick another entity type (product, attribute, option,
 information page, customer) and build its backend the same shape as
 these two.
+
+**Update (this run): the admin asset-enqueue problem is solved, and
+category is wired live.** New `assets/dist/css/components.min.css`
+(`index.css` minus the Bootstrap 5 import — safe alongside the admin
+theme's existing Bootstrap 3, unlike `index.min.css`) +
+`window.MintCart.createEntityPicker` (admin.js bridge for legacy
+non-module inline `<script>` templates) +
+`ControllerCatalogProduct::enqueueMintAssets()` (`$this->document->
+addStyle()`/`addScript()`, OpenCart's own per-page asset mechanism — no
+template change needed for `header.twig` itself). `product_form.twig`'s
+Category field now mounts a real `McEntityPicker`, additive alongside the
+existing jQuery autocomplete. Full writeup:
+`docs/developer/admin/asset-enqueue.md` (new),
+`docs/developer/components/entity-picker.md`'s updated "Admin backends"
+section, `docs/upstream-diff.md`'s new `product.php`/`product_form.twig`
+entry, `docs/MANUAL_VERIFICATION.md`'s new entry. This unblocks the
+manufacturer/product backends' own live wiring, Phase 17's `McSortable`
+category-reorder, and Phase 11's Homepage Builder JSON-textarea-to-
+real-repeater follow-up — all can now reuse the same `components.min.css`
++ `admin.min.js` enqueue pattern (call `$this->document->addStyle()`/
+`addScript()` with `HTTP_CATALOG . 'assets/dist/...'` on the specific
+action that needs it) rather than re-solving this.
 
 ## Phase 13 — Setup Wizard
 
@@ -2633,3 +2656,22 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, 2026-09-08): the admin asset-enqueue problem referenced
+by both "Next step" notes above is now solved** —
+`docs/developer/admin/asset-enqueue.md` (new), see Phase 12's section
+above for the full writeup. `product_form.twig`'s Category field is now
+live-wired to `McEntityPicker`. The `McSortable` category-reorder and
+Homepage Builder JSON-textarea-to-repeater follow-ups these two notes
+describe can now reuse the same `components.min.css`/`admin.min.js`
+enqueue pattern (`$this->document->addStyle()`/`addScript()` with
+`HTTP_CATALOG . 'assets/dist/...'`) rather than re-solving the blocker —
+neither was attempted this run (kept to one screen for a focused,
+verifiable diff); both are natural next increments. Also unclaimed at
+the time this run started (checked all 27 open PRs, #52–#79): Phase 12's
+remaining entity-picker live-wiring (manufacturer/product backends into
+their own fields), Phase 16's remaining Bulk Editor fields, Phase 18's
+SEO Core (canonical/meta title-description beyond what #62/#66/#68/#70/#71
+already claim), and Phase 1's `MintCart\Compatibility\OpenCart3\*` adapter
+interfaces (still not started — deferred this run pending a clearer real
+consumer than what exists today; see Phase 1's own checklist item).
