@@ -29,7 +29,14 @@ Phase 0 is **complete**.
       (`upload/system/library/mintcart/core/bootstrap.php`); see `docs/adr/001-mintcart-core-foundation.md`
 - [x] Service container / service registry bridge into OpenCart's existing registry —
       `MintCart\Core\Bootstrap` wraps `\Registry`, no parallel DI container
-- [ ] OpenCart adapter interfaces (`MintCart\Compatibility\OpenCart3\*`)
+- [~] OpenCart adapter interfaces (`MintCart\Compatibility\OpenCart3\*`) — first
+      adapter done: `MintCart\Compatibility\OpenCart3\SettingsAdapter`
+      (`upload/system/library/mintcart/compatibility/opencart3/settingsadapter.php`),
+      wrapping `ModelSettingSetting`'s `getSetting()`/`editSetting()` with a
+      merge-then-save `merge()` method — see "Sub-step" below and
+      `docs/developer/compatibility/settings-adapter.md`. Not wired into any
+      controller yet; `ProductAdapter`/`CategoryAdapter`/`OrderAdapter`/
+      `CustomerAdapter`/`ExtensionAdapter` remain unstarted (no consumer yet).
 - [x] Migration manager (`mc_migration` table, ordered/logged/apply-once migrations) —
       `MintCart\Core\Migration\MigrationManager` +
       `MintCart\Core\Migration\MigrationInterface`; naming convention and file shape
@@ -48,11 +55,25 @@ Phase 0 is **complete**.
       exit), `frontend-build` (`npm ci && npm run build`). Runs on push/PR
       against `master`.
 
-**In progress.** Remaining for a future run: `MintCart\Compatibility\OpenCart3\*`
-adapters (no consumer needs one yet — first candidate is likely `SettingsAdapter`
-when Business Settings/Setup Wizard starts, per `CLAUDE.md` §85 "API appears when
-there's a real consumer") and a health-check surface. `Bootstrap::boot()` has
-no automatic call site yet by design (see ADR 001) — the first real caller wires it.
+**In progress.** Remaining for a future run: wiring `SettingsAdapter` into the
+three real call sites identified in its own doc (`ControllerMintcartWizard::saveStoreStep()`,
+the Contacts step, the Business Delivery/Payments toggle actions — all three
+in files contended by other open PRs as of this run, see the doc's "Not done
+yet"), the remaining `MintCart\Compatibility\OpenCart3\*` adapters (no
+consumer yet for any of them — `CLAUDE.md` §85), and a health-check surface.
+`Bootstrap::boot()` has no automatic call site yet by design (see ADR 001) —
+the first real caller wires it.
+
+**Sub-step (this run): `SettingsAdapter`.** Step 0 dedup check against 28
+open PRs (`#52`–`#80`) found none touching `MintCart\Compatibility` (PR #73
+adds `InstallManifestParser`/`CompatibilityChecker` under the same
+top-level namespace but a different subdirectory/file — no overlap) —
+genuinely unclaimed, implementable as new files only. Full writeup:
+`docs/developer/compatibility/settings-adapter.md`. Verified: `php -l`
+clean on the new class/test and the full `upload`/`tests` tree; new
+7-scenario test (`tests/mintcart/compatibility/opencart3/settings-adapter-test.php`);
+full `tests/mintcart/**/*-test.php` suite re-run end to end (36 files, was
+35) — all passing, no regressions (no existing PHP file touched).
 
 ## Phase 2 — Frontend foundation
 
@@ -2625,6 +2646,22 @@ files/migrations/cache-clear/health-check in later increments once
 `HealthCheck`, per PR #67, has landed) — or re-check `gh pr list --state
 open` for whatever the current backlog has newly merged/unclaimed before
 picking the next phase.
+
+**Update (this run, 2026-09-08): Phase 1's `SettingsAdapter` shipped.** At
+the time of this run there were 28 open PRs (`#52`–`#80`). `wizard.php`/
+`wizardprogress.php` (2 PRs: `#52`, `#64`), `admin/controller/mintcart/entity.php`
+(5 PRs: `#53`–`#57`), and `column_left.php` (multiple PRs adding menu
+groups) were all treated as blocked hot files per this file's own §0f
+rule and avoided entirely. `MintCart\Compatibility\OpenCart3\SettingsAdapter`
+(Phase 1's own remaining checklist item) was genuinely unclaimed and
+implementable as new files only — see the Phase 1 section above and
+`docs/developer/compatibility/settings-adapter.md`. **Next step:** wire
+`SettingsAdapter` into `ControllerMintcartWizard::saveStoreStep()` once
+`wizard.php` stops being contended by `#52`/`#64`; a second adapter
+(`ProductAdapter`/`CategoryAdapter`/...) once one has a real consumer; a
+`MintCart\Core\HealthCheck` surface (Phase 1's other remaining item,
+already claimed by open PR `#67` as of this writing — check first); or
+re-run `gh pr list --state open` for whatever has newly merged/unclaimed.
 
 **Next step:** the admin asset-enqueue question remains the real blocker
 for both a proper `McSortable`-based reorder and the five `items` JSON
