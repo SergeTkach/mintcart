@@ -57,9 +57,9 @@ template is:
 <article class="mc-product-card{% if display.action_variant == 'compact' %} mc-product-card--compact{% endif %}">
     <div class="mc-product-card__media">
         <a class="mc-product-card__media-link" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
-            <img class="mc-product-card__image" src="{{ product.image }}" alt="{{ product.image_alt }}" loading="lazy">
+            <img class="mc-product-card__image" src="{{ product.image }}" alt="{{ product.image_alt }}" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
             {% if display.show_secondary_image and product.secondary_image %}
-                <img class="mc-product-card__image mc-product-card__image--secondary" src="{{ product.secondary_image }}" alt="" loading="lazy">
+                <img class="mc-product-card__image mc-product-card__image--secondary" src="{{ product.secondary_image }}" alt="" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
             {% endif %}
         </a>
 
@@ -185,6 +185,20 @@ end-to-end against a live install. The button shows `is-loading`
 `quick-order` stays intentionally **not** wired — separate
 `QuickOrderService`, not built in this increment
 (`CLAUDE.md` §85: no wiring ahead of a real consumer).
+
+## Image dimensions (layout-shift prevention)
+
+Both `<img>` tags render `width`/`height` from `product.image_width`/
+`product.image_height` when the provider supplies them — every listing
+controller already knows this size (it's the same value passed to
+`model_tool_image->resize()`), so the template only threads it through
+rather than deriving anything. The browser can then reserve the image's
+box before it loads, avoiding a layout shift (`MINTCART_FUNCTIONAL_SCOPE.md`
+§19 Performance). Guarded with `{% if %}` rather than always rendering the
+attribute, since a `null` value (a caller that doesn't supply one) would
+otherwise emit an invalid `width=""`. See
+`docs/developer/commerce/product-view-provider.md`'s "Image dimensions"
+section for the full contract.
 
 ## Clickable title, not clickable card
 
