@@ -1567,8 +1567,8 @@ also left untouched. Verified: `php -l` clean across the full
 scenarios, pure) and the new `tests/mintcart/design/media-model-test.php`
 (9 scenarios — real filesystem I/O against a temp fixture tree, including
 an actual file delete and three traversal-safety rejections) both pass;
-full `tests/mintcart/**/*-test.php` suite re-run end to end (37 files, was
-35) — all passing, no regressions. Along the way, found and fixed a
+full `tests/mintcart/**/*-test.php` suite re-run end to end (35 files, was
+33) — all passing, no regressions. Along the way, found and fixed a
 same-prefix-sibling false positive in the path-containment check this
 class extracts from `common/filemanager.php` (that legacy file's own
 `substr()`-prefix comparison would treat `image/catalog-evil/` as
