@@ -950,3 +950,67 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/system/library/cache/file.php`
+
+**Reason:** MC-0007 (`docs/fixes/registry.md`) — the file-cache backend's
+`set($key, $value)` truncated the final cache filename directly via
+`fopen($file, 'w')` *before* taking any lock, and that filename only has
+second-granularity (`cache.<key>.<time()+expire>`). Two concurrent
+`set()` calls for the same key within the same wall-clock second (a real
+scenario: several PHP-FPM workers regenerating the same just-expired
+catalog/localization/checkout cache entry at once — exactly the domains
+`MintCart\Core\Cache\CacheInvalidator`, once wired, will invalidate in
+bulk) collide on the identical filename: one writer's in-progress file
+gets unlinked-and-recreated by the other's own `delete()`-then-`fopen('w')`
+sequence, silently losing whichever write happened first, and a `get()`
+racing in between can observe a 0-byte or partially-written file
+(`json_decode('')` returns `null`, not the expected `false`/data). Fixed
+by writing to a uniquely-named temp file, then `rename()`-ing it into
+place — atomic on the same filesystem, so a reader only ever sees the
+previous complete file or the new one, never a torn one. While fixing
+this, `get()` was also hardened against a related, pre-existing TOCTOU:
+the file `glob()` just matched can be deleted by a concurrent `set()`'s
+own `delete($key)` before `get()`'s `fopen()` runs, which previously
+passed a `false` handle straight to `flock()`/`fread()` and fataled the
+request instead of returning a clean cache miss; `filesize($files[0])`'s
+separate stat-by-path call (subject to the same race) was replaced with
+`stream_get_contents($handle)`, reading through the already-open handle.
+
+**Why it can't live in the MintCart layer instead:** This is OpenCart's
+own stock file-cache adapter (`\Cache\File`, selected by default —
+`cache_engine` defaults to `file`), instantiated directly by OpenCart's
+`\Cache` facade with no MintCart-owned equivalent or wrapper point
+upstream of it. A parallel MintCart-owned cache backend would fork the
+one cache every controller/model in this codebase already reads/writes
+through (`CLAUDE.md` §39 — don't duplicate what OpenCart already
+provides), and every consumer would need to be repointed at it. Fixing
+the existing adapter in place is the smaller, safer diff.
+
+**Compatibility impact:** Purely internal to the write/read mechanics —
+`set($key, $value)`/`get($key)`/`delete($key)`'s public signatures,
+return types and cache-file naming convention (`cache.<key>.<expire>`)
+are all unchanged, so every existing caller (OpenCart core and any
+third-party extension) keeps working identically for the non-concurrent
+case. The only observable behavior change is the two bugs described above
+no longer happening: a `get()` that could previously fatal on a
+concurrently-deleted file now returns `false`, and a `set()` that could
+previously lose a concurrent write or hand back a torn read no longer
+does either.
+
+**Tests:** `php -l` clean on the modified file.
+`tests/mintcart/fixes/mc-0007-cache-file-atomic-write-test.php` (7
+scenarios: basic set/get round-trip, unset-key miss, no stray `.tmp` file
+left behind, exactly one cache file per key after `set()`/after an
+overwrite, `delete()` correctness, and a real multi-process concurrency
+check — spawns 150 real child PHP processes via `proc_open()` writing the
+same key while the parent races `get()` against them, asserting `get()`
+never returns `null`/a torn value, only `false` or fully-valid decoded
+data). **Verified the test is not vacuous**: re-ran the identical test
+against the pre-fix code in isolation — it reliably reproduces the exact
+fatal error (`flock(): Argument #1 ($stream) must be of type resource,
+false given`) this fix removes. Full `tests/mintcart/**/*-test.php` suite
+re-run end to end (all files, including the new one) — all pass, no
+regressions.
