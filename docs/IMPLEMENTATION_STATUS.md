@@ -1960,14 +1960,57 @@ tracked once each.)*
 - [ ] SEO Core (tracked above as Phase 18)
 - [x] `docs/fixes/registry.md` Fix Registry established, entries added only after
       reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
-      (`category.php` blank language strings) and MC-0002 (`search.php`
-      missing canonical/prev/next links, this run)
+      (`category.php` blank language strings), MC-0002 (`search.php`
+      missing canonical/prev/next links) on `master`; MC-0007 (`Cache\File`
+      atomic write / concurrent-read fatal, this run) — see below. MC-0004
+      through MC-0006 exist as open, unmerged PRs at the time of this run
+      (`docs/fixes/registry.md`'s own numbering gap reflects that — see
+      that file for detail).
 - [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
-Fix Registry mechanism is established and has two real entries; the rest of
-this phase (diagnostics, measured performance work) is not started.
+Fix Registry mechanism is established. This run added **MC-0007**:
+`upload/system/library/cache/file.php` (OpenCart's stock, default file
+cache backend) had two real concurrency bugs — `set()` truncated the
+target filename directly before taking any lock (so two same-second
+writers for the same key could stomp each other, and a racing `get()`
+could observe a torn/0-byte file), and `get()` fataled instead of
+returning a clean miss when a concurrent writer deleted the matched file
+between `glob()` and `fopen()`. Fixed with a temp-file-then-atomic-`rename()`
+write and a hardened `get()`. Reproduced and verified with a real
+multi-process concurrency test
+(`tests/mintcart/fixes/mc-0007-cache-file-atomic-write-test.php`, 150
+child processes via `proc_open()`), confirmed non-vacuous by re-running
+the same test against the pre-fix code in isolation (it reliably
+reproduces the exact fatal error the fix removes). Full writeup:
+`docs/fixes/registry.md`'s MC-0007 entry and `docs/upstream-diff.md`'s
+`cache/file.php` entry. Verified: `php -l` clean across the whole
+`upload`/`tests` tree; full `tests/mintcart/**/*-test.php` suite re-run
+end to end (including the new file) — all passing, no regressions.
+Diagnostics dev mode and the rest of "measured performance improvements"
+remain not started on `master` (open PRs #75/#77/#83 cover pieces of this
+phase as of this run — see `docs/IMPLEMENTATION_STATUS.md`'s own "Next
+step for the next routine run" trailer and re-check `gh pr list --state
+open` before picking up more of this phase).
+
+Step 0/0f dedup check for this run: 35 open PRs (`#52`–`#88`) were listed
+at the start of this run. None touch `upload/system/library/cache/file.php`
+or any file under `upload/system/library/mintcart/core/cache/` (that
+directory is PR #77's own `CacheInvalidator`, a different, additive
+class layered on top of OpenCart's stock `\Cache` facade — it does not
+touch the `file` adapter itself). Several other candidates were
+considered and ruled out first: `MintCart\Compatibility\OpenCart3\*`
+adapters beyond `SettingsAdapter`/`ExtensionAdapter` (both #81 and #87
+explicitly flag `ProductAdapter`/`CategoryAdapter`/etc. as premature
+without a real consumer, per `CLAUDE.md` §85); a `CanonicalBuilder` for
+Phase 18 (already ruled out by PR #71's own writeup — canonical is stock
+OpenCart behavior, nothing left to add); any Setup Wizard step
+(`wizard.php`/`wizard.twig` contended by 3 open PRs — #52/#64/#84); and
+any Homepage Builder/admin-menu change (`column_left.php` contended by
+multiple open PRs). The Known Fix Research Queue's "cache race
+conditions" item (`MINTCART_FUNCTIONAL_SCOPE.md` §18) was genuinely
+unclaimed and led to this file.
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
@@ -2633,3 +2676,14 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, 2026-09-09): MC-0007 shipped — `Cache\File` atomic
+write / concurrent-read fatal fix.** See the Phase 10 (Technical Plan)
+section above and `docs/fixes/registry.md` for the full writeup. This
+repo had 35 open PRs (`#52`–`#88`) at the start of this run — re-check
+`gh pr list --state open` before picking the next increment; the
+remaining unattempted Known Fix Research Queue items (multilingual SEO
+URL issues, category path/update issues beyond Phase 17, extra
+session/cart records, remaining installer edge cases) are still
+candidates, as is Diagnostics dev mode or re-checking which of the 35
+open PRs have since merged.
