@@ -950,3 +950,54 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/system/library/cart/cart.php`
+
+**Reason:** MC-0008 (`docs/fixes/registry.md`) — `Cart::__construct()` ran
+an unconditional stale-cart-cleanup `DELETE` query on every single request
+(the class is instantiated once per page load by both
+`catalog/controller/startup/startup.php` and
+`admin/controller/startup/startup.php`), the "excessive session/cart
+writes" class of issue `MINTCART_FUNCTIONAL_SCOPE.md` §18 names explicitly.
+Wrapped the existing query in
+`if ((new \MintCart\Commerce\CartGarbageCollector())->shouldRun()) { ... }`
+— a probability gate (default 5% of requests), same shape as PHP's own
+`session.gc_probability`/`session.gc_divisor`. Full write-up, including why
+this is a strict behavior subset rather than a divergent reimplementation,
+is in the MC-0008 registry entry.
+
+**Why it can't live in the MintCart layer instead:** `Cart` is a core
+OpenCart library class instantiated directly by both front controllers'
+startup sequence, not resolved through any MintCart-owned factory or event
+hook — there is no extension point around "which class gets constructed as
+`registry->get('cart')`" to intercept from outside this file. The gating
+*decision* itself does live in the Mint layer
+(`MintCart\Commerce\CartGarbageCollector`, pure, no OpenCart dependency,
+independently unit-tested); only the two-line `if` wrapping the existing
+query had to land in the core file, which is the smallest possible diff
+for this fix.
+
+**Compatibility impact:** The query's own logic (which rows are eligible,
+what gets deleted) is completely unchanged — only how often the check runs.
+No behavior visible to a legitimate cart owner: their own cart rows are
+never touched by this query regardless (it only targets `api_id > '0' OR
+customer_id = '0'` rows past the 1-hour mark). The only observable
+difference is that an abandoned anonymous cart may now take up to
+~20 requests longer, on average, to actually get swept — still bounded,
+still eventual, and immaterial next to the 1-hour age threshold itself.
+Every other `Cart\Cart` method (`add`/`update`/`remove`/`getProducts`/...)
+is untouched.
+
+**Tests:** `php -l` clean on both the modified `cart.php` and the new
+`MintCart\Commerce\CartGarbageCollector`.
+`tests/mintcart/commerce/cart-garbage-collector-test.php` (7 scenarios,
+see the MC-0008 registry entry for what's asserted and why a full
+statistical test wasn't attempted). Full `tests/mintcart/` suite re-run
+end to end — no regressions (pure addition of one new class plus a
+two-line wrap around an existing query in an unrelated file). Same
+pre-existing gap as every earlier phase: no MySQL server in this
+environment, so the gated query itself was never exercised against a real
+database — a human should confirm on a real install per the registry
+entry's "Tests" section.
