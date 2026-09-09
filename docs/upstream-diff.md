@@ -950,3 +950,97 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/catalog/controller/checkout/payment_method.php`
+
+**Reason:** This file inlined a ~20-line loop — load every installed
+`total` extension, sort by `total_<code>_sort_order`, call each enabled
+one's `getTotal($total_data)` by reference — **identical** to the same
+loop `checkout/confirm.php` also inlined. Extracted into
+`MintCart\Compatibility\OpenCart3\TotalsAdapter`
+(`docs/developer/compatibility/totals-adapter.md`) once a third real
+consumer (`ControllerMintcartCheckout::totals()`, a new fully-additive
+`mintcart/checkout/totals` AJAX endpoint) needed the exact same
+computation — the same "extract on the third call site" threshold this
+repo already established for `ActiveTheme`/`ProductCardListRenderer`
+(`CLAUDE.md` §85/§86). `index()` now builds `$totals_adapter = new
+\MintCart\Compatibility\OpenCart3\TotalsAdapter($this->config, $this->load,
+$this->registry)` and calls `$totals_adapter->calculate($this->cart->getTaxes())`,
+keeping only the scalar `$total` this file actually uses afterward (it
+never renders the `totals` list itself — only `checkout/confirm.php`
+does).
+
+**Why it can't live in the MintCart layer instead:** The loop dynamically
+loads whichever `extension/total/<code>` models are installed via
+`Loader::model()` and reads them back through `Registry::get()` — both are
+OpenCart engine mechanics this controller already has access to via
+`$this->load`/`$this->registry`. `TotalsAdapter` *is* the MintCart-layer
+home for this logic; what remains in this file is only the call site,
+which has to live here because this is where OpenCart's own checkout flow
+needs the computed `$total` (to pass into each payment extension's
+`getMethod($address, $total)`).
+
+**Compatibility impact:** None — same installed extensions, same
+`total_<code>_status`/`total_<code>_sort_order` config values, same
+`getTotal($total_data)` by-reference call, same final `$total` value.
+Nothing about this controller's own behavior (which payment methods it
+shows, in what order) changes; only the totals-computation implementation
+moved.
+
+**Tests:** `php -l` clean. `tests/mintcart/compatibility/totals-adapter-test.php`
+(5 scenarios — nothing installed, installed-but-disabled,
+installed-and-enabled, sorted by `sort_order` regardless of installation
+order, a seeded `taxes` array visible to and summed by a total extension).
+Full `tests/mintcart/` suite re-run end to end (35 files, was 33) — all
+pass, no regressions. Same pre-existing gap as every earlier
+controller-wiring increment: no MySQL/OpenCart bootstrap in this
+environment — a human should confirm a real checkout still shows the same
+payment methods/total after this refactor (see
+`docs/MANUAL_VERIFICATION.md`).
+
+---
+
+## `upload/catalog/controller/checkout/confirm.php`
+
+**Reason:** Same duplicated totals-computation loop as
+`checkout/payment_method.php` above, refactored the same way to use
+`MintCart\Compatibility\OpenCart3\TotalsAdapter`. This file additionally
+re-sorted its local `$totals` array by `sort_order` a second time after
+the loop (`payment_method.php` never needed to, since it only reads the
+scalar `$total`) — `TotalsAdapter::calculate()` now always returns
+`totals` pre-sorted, so that second sort was simply removed rather than
+kept as a redundant no-op; this is not a behavior change (identical input,
+identical `array_multisort` call, run once instead of twice).
+
+**Bug found and fixed while refactoring:** `$order_data['total'] =
+$total_data['total'];` (further down `index()`, in the order-insert block)
+read the removed by-reference wrapper array `$total_data` — a leftover
+alias for the exact same value the plain `$total` variable already holds.
+Removing the totals loop without also updating this line would have left
+`$order_data['total']` reading an undefined variable's array offset (a
+warning plus `null`) on every order placed. Repointed at `$total` directly
+— same value, no behavior change, but this line would have quietly broken
+order totals had it not been caught here.
+
+**Why it can't live in the MintCart layer instead:** Same rationale as
+`payment_method.php` above — `TotalsAdapter` already is the MintCart-layer
+home for the computation; what remains here is the call site, needed
+because this is where OpenCart's own checkout flow builds the `$order_data`
+array passed to `model_checkout_order->addOrder()`.
+
+**Compatibility impact:** None for the computed totals/total (see above).
+The `$order_data['total']` fix corrects what would otherwise have been a
+newly-introduced regression from this very refactor, not a pre-existing
+bug — order totals were correct before this change and remain correct
+after it.
+
+**Tests:** `php -l` clean. Same `tests/mintcart/compatibility/totals-adapter-test.php`
+suite as `payment_method.php` above (one shared adapter, one shared test).
+Full `tests/mintcart/` suite re-run end to end (35 files, was 33) — all
+pass, no regressions. Same pre-existing gap as every earlier
+controller-wiring increment: no MySQL/OpenCart bootstrap in this
+environment — a human should confirm a real order placed through checkout
+still records the correct `total` in `oc_order` after this refactor (see
+`docs/MANUAL_VERIFICATION.md`).
