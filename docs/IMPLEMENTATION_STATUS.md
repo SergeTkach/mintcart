@@ -1533,13 +1533,55 @@ rows via `McSortable` — currently a plain `sort_order` number input).
       exists). "Recent files" and "image metadata" (Functional Scope §25)
       are covered without a dedicated concept: a host-supplied `recent`
       folder entry and the optional `getMeta(item)` callback, respectively.
-      Not wired into any live backend or admin screen yet — same Phase 12
-      deferral as `McEntityPicker`. Doc:
-      `docs/developer/components/media-picker.md`.
+      **Update (this run): a real backend now exists** —
+      `ModelDesignMedia`/`ControllerDesignMedia` (`design/media/list`,
+      `/folders`, `/upload`, `/delete`) implement exactly the
+      `fetchItems`/`fetchFolders`/`uploadFiles`/`deleteItems` shape this
+      component's own usage example was already written against,
+      browsing/uploading/deleting inside OpenCart's existing
+      `image/catalog/` directory via the new
+      `MintCart\Design\MediaPath` path-safety primitive (matching
+      `common/filemanager.php`'s own proven rules exactly, that legacy
+      screen untouched). No admin screen mounts `mc-media-picker`
+      itself yet — still blocked on the same admin asset-enqueue
+      question as `McEntityPicker`. Docs:
+      `docs/developer/components/media-picker.md`,
+      `docs/developer/design/media-library.md`.
 
 **All nine Phase 11 primitives are now done:** `McDrawer`/`McModal`/
 `McToast` (via Phase 4), `McConfirm`, `McSortable`, `McTabs`, `McProgress`,
 `McEntityPicker` and `McMediaPicker`.
+
+**`McMediaPicker`'s backend, this run:** step 0 dedup check (`gh pr list
+--state open`, 44 open PRs at the time, `#52`-`#95`) found no PR touching
+Media UX, `design/media`, `ModelDesignMedia`/`ControllerDesignMedia`, or
+`MintCart\Design\MediaPath` — and none of the four "hot" contended files
+this run identified (`admin/controller/mintcart/wizard.php` +
+`wizard.twig` + `wizardprogress.php`, each touched by 3 open PRs — #52,
+#64, #84 — and `admin/controller/mintcart/entity.php` +
+`column_left.php`, per PR #83's own step-0 writeup) were touched, since
+this increment is fully additive new files. `ProductViewProvider`/
+`product-card.twig` (contended by PR #83, image `width`/`height`) were
+also left untouched. Verified: `php -l` clean across the full
+`upload`/`tests` tree; `tests/mintcart/design/media-path-test.php` (7
+scenarios, pure) and the new `tests/mintcart/design/media-model-test.php`
+(9 scenarios — real filesystem I/O against a temp fixture tree, including
+an actual file delete and three traversal-safety rejections) both pass;
+full `tests/mintcart/**/*-test.php` suite re-run end to end (37 files, was
+35) — all passing, no regressions. Along the way, found and fixed a
+same-prefix-sibling false positive in the path-containment check this
+class extracts from `common/filemanager.php` (that legacy file's own
+`substr()`-prefix comparison would treat `image/catalog-evil/` as
+"within" `image/catalog/`) and a route-syntax bug in this component's own
+prior-run usage example (`design/media.list`'s dot form is silently
+mangled by OpenCart 3's `Action::__construct()`, never reaching the
+intended controller/method) — both documented in
+`docs/developer/design/media-library.md`. **Not verified:** no live
+MySQL/OpenCart admin session in this environment — a human should confirm
+a real multipart upload via `design/media/upload` (the one code path
+`move_uploaded_file()` prevents from being exercised under the CLI SAPI)
+and the `hasPermission()` gate on all four routes against a real admin
+session.
 
 `McConfirm` verified: `npm install` (0 vulnerabilities), `npm run build`
 (minified) and `npm run dev` (sourcemapped) both compile cleanly;
@@ -2598,3 +2640,17 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, 2026-09-09): Phase 11's `McMediaPicker` primitive got
+its real backend** (`design/media/list`/`/folders`/`/upload`/`/delete` —
+see that phase's section above and `docs/developer/design/media-library.md`).
+44 open PRs (`#52`-`#95`) were checked at step 0; none touch Media UX or
+this run's new files, and the four contended "hot" files identified
+(`mintcart/wizard.php`+`wizard.twig`+`wizardprogress.php`, 3 PRs;
+`mintcart/entity.php`+`column_left.php`, 2+ PRs per PR #83's own writeup)
+were left untouched. **Next step:** the same admin asset-enqueue question
+blocking Homepage Builder's `McSortable`/repeater work above also blocks
+mounting `mc-media-picker` itself on any real screen — resolving it
+(tracked as an open question since Phase 10's admin editor) would unblock
+both `McEntityPicker` and `McMediaPicker` at once. Otherwise: re-check
+`gh pr list --state open` first, this backlog is unusually large.
