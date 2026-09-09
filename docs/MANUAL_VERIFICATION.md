@@ -173,3 +173,26 @@ manufacturer that has an image set and one that doesn't:
    (prefix match, not substring — see
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
+
+## Fix MC-0009 — `seo_url.php` incoming decode language filter, never exercised end to end
+
+No live MySQL/multi-language storefront in this environment. On a real
+multi-language install (`Localisation → Languages` has at least two
+enabled languages):
+
+1. With SEO URLs enabled (`Settings → Store → Server → Use SEO URL: Yes`)
+   and only one language's products/categories given custom SEO keywords,
+   browse the storefront in every enabled language and confirm every
+   existing pretty URL still resolves to the same page as before this
+   change (the fallback path — no behavior change expected here).
+2. Create two different products (or a product and a category), each in a
+   different language, and give both the *exact same* SEO keyword text
+   (`Design → SEO URL`, or each entity's own SEO tab).
+3. Switch the storefront to the first product's language (language
+   switcher, or clear the `language` cookie and let Accept-Language/
+   session detection pick it) and request that keyword's URL directly —
+   confirm it resolves to the product/category belonging to *that*
+   language, not the other one.
+4. Repeat step 3 switched to the second entity's language and confirm the
+   opposite resolution — proving the fix actually disambiguates by
+   language rather than being coincidentally correct in one direction.

@@ -223,3 +223,116 @@ regression test added — same rationale as MC-0001/MC-0002: the fix is four
 this same file. A human should confirm on a real install that the
 manufacturer page's sort/limit labels and empty-listing message/button are
 no longer blank, on both the stock `default` theme and `mint_default`.
+
+---
+
+## MC-0009 — `seo_url.php`'s incoming URL decode ignores `language_id`, can resolve the wrong entity on a multi-language store
+
+**Problem:** `ControllerStartupSeoUrl::index()` (the pre-action that
+decodes an incoming pretty-URL request back into `route`/`product_id`/
+`path`/`manufacturer_id`/`information_id`) looks up each URL segment's
+`seo_url` row with:
+
+```php
+"SELECT * FROM " . DB_PREFIX . "seo_url WHERE keyword = '...' AND store_id = '...'"
+```
+
+— no `language_id` filter. `oc_seo_url` has no uniqueness constraint
+beyond a plain (non-unique) `KEY` on `keyword` (`install/opencart.sql`
+line 3699-3708: `PRIMARY KEY (seo_url_id)`, `KEY query`, `KEY keyword` —
+nothing enforcing a keyword is unique even within one store). Nothing
+stops two different rows — for two entirely different entities — from
+sharing the exact same `keyword` text across two different `language_id`s
+on the same store: an admin filling in SEO keywords per-language commonly
+leaves a keyword untranslated/reused, or two unrelated products in two
+languages happen to get the same auto-suggested slug. When that happens,
+this query returns whichever row the database happens to return first —
+not necessarily the row for the request's actual language — so a visitor
+can silently land on a completely different product/category page than
+the URL implies, with no error and no indication anything is wrong.
+
+This is asymmetric with the same class's own `rewrite()` method (outgoing
+link generation), which already filters by `store_id` **and**
+`language_id` on every one of its lookups (`product_id`/
+`manufacturer_id`/`path`/`information_id`, and category path segments) —
+the incoming decode side was simply missing the filter the outgoing side
+already established as correct.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline). Not independently
+checked against other 3.x point releases — no second checkout available
+in this environment to diff against (same rationale as MC-0001–MC-0003);
+this exact asymmetry (decode side missing `language_id`, rewrite side
+having it) has also been an openly discussed OpenCart community issue for
+multi-language stores across the 2.x/3.x line, though that history wasn't
+relied on here — the bug was independently reproduced by reading this
+repository's own code (`CLAUDE.md` §10/§84), not assumed from memory.
+
+**Source:** Discovered directly in this repository while auditing
+`MINTCART_FUNCTIONAL_SCOPE.md` §18's "Known Fix Research Queue"
+("multilingual SEO URL issues" candidate) against the current MintCart
+baseline — not an imported historical community patch. Reproduced by
+reading `index()`'s query (missing `language_id`) side by side with
+`rewrite()`'s three lookups in the same file (all three include it), and
+confirming `oc_seo_url`'s schema has no constraint that would make two
+different-language rows sharing one `keyword` impossible.
+
+**Reproduced on MintCart baseline:** Yes — confirmed against
+`upload/catalog/controller/startup/seo_url.php` (stock, unmodified prior
+to this fix) and `upload/install/opencart.sql`'s `oc_seo_url` table
+definition. Also confirmed `config_language_id` is already set to the
+request's actual resolved language (from session/cookie/browser
+Accept-Language detection) by `ControllerStartupStartup::index()`, which
+runs as an earlier pre-action than `startup/seo_url` in
+`system/config/catalog.php`'s `action_pre_action` list — so the value
+this fix filters on is genuinely "this request's language," not just the
+store's configured default.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Added `AND language_id = '<config_language_id>'`
+to `index()`'s per-segment lookup, mirroring `rewrite()`'s own filtering.
+To avoid a behavior regression on a store that has only ever set up SEO
+keywords for one language (a very common single-language-effort setup on
+an otherwise multi-language store), the language-scoped query only
+*replaces* the result when it actually finds a match: if it returns zero
+rows, the code falls back to the original language-agnostic query before
+concluding the segment doesn't resolve to anything. Net effect: a
+language-scoped row wins when one exists (fixing the ambiguous-collision
+case this fix targets); a store with no per-language rows at all keeps
+working exactly as it did before, for every language. Nothing about
+`rewrite()`, `category_id`/`product_id`/`manufacturer_id`/
+`information_id` handling below the lookup, or any other controller
+changed.
+
+**Compatibility impact:** Additive fallback keeps every currently-working
+URL working. The one intentional behavior change: on a multi-language
+store where a `keyword` collides across two languages' rows, the visitor
+now reaches the row matching their *actual* resolved language instead of
+an arbitrary one of the colliding rows — this is the bug being fixed, not
+a regression. A narrower edge case worth naming: a store that deliberately
+relies on the old collision behavior to always land visitors on one
+specific language's page regardless of their detected language (unlikely,
+and not a documented/intended OpenCart behavior) would see that specific
+row selection change; no code in this repository does that.
+
+**Tests:** `php -l` clean on the modified `seo_url.php`. No dedicated
+regression test added — same rationale as MC-0001–MC-0003: `index()` is a
+`Controller`-extending pre-action wired through OpenCart's own
+`Registry`/`Router`/`Action` machinery (`$this->db`, `$this->config`,
+`$this->request`), the same class of dependency `docs/upstream-diff.md`
+already notes this environment can't bootstrap live (no MySQL server).
+The change itself is a minimal, mechanical addition of the exact
+`AND language_id = ...` clause `rewrite()`'s three lookups in this same
+file already use, plus a fallback query using the pre-existing,
+already-proven-correct original clause verbatim. A human should confirm
+on a real multi-language install: (1) with only one language's SEO
+keywords configured, every existing pretty URL still resolves exactly as
+before, for every store language; (2) after intentionally giving two
+different products (in two different languages) the identical keyword,
+requesting that keyword resolves to the product matching the visitor's
+current language, not an arbitrary one of the two.

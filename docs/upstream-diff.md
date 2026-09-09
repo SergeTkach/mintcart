@@ -950,3 +950,43 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/catalog/controller/startup/seo_url.php` (MC-0009)
+
+**Reason:** Fix MC-0009 (`docs/fixes/registry.md`) — `index()`'s incoming
+pretty-URL decode looked up a `seo_url` row by `keyword`/`store_id` only,
+missing the `language_id` filter this same class's own `rewrite()` method
+already applies on every one of its lookups. On a multi-language store
+where two different entities in different languages happen to share the
+same `keyword` text, this could silently serve the wrong product/category
+to a visitor, with no error.
+
+**What changed:** `index()`'s per-segment lookup now filters by
+`language_id = config_language_id` first (the request's already-resolved
+language — set earlier in the pre-action chain by
+`ControllerStartupStartup::index()`); if that returns no rows, it falls
+back to the original language-agnostic query so a store with SEO keywords
+configured for only one language keeps working unchanged. No other method,
+route, or `$data` shape touched.
+
+**Why it can't live in the MintCart layer instead:** `ControllerStartupSeoUrl::index()`
+is OpenCart's own registered pre-action (`system/config/catalog.php`'s
+`action_pre_action` list) that decodes every incoming storefront request
+before any controller runs — there is no MintCart-owned equivalent hook
+positioned earlier in the request lifecycle to intercept and correct this
+in a separate layer without duplicating the entire pre-action mechanism.
+
+**Compatibility impact:** Additive fallback — every currently-working URL
+on a store with no cross-language keyword collision resolves identically
+to before. The one behavior change is the fix's actual purpose: a
+colliding keyword now resolves to the row matching the visitor's current
+language instead of an arbitrary one of the colliding rows.
+
+**Tests:** `php -l` clean. No dedicated regression test — `index()` needs
+a live OpenCart `Registry`/`Router` bootstrap this environment can't
+provide (same gap as every other `startup/*`/controller-level fix in this
+repo). See `docs/fixes/registry.md`'s MC-0009 entry for the full
+reproduction/verification writeup and the two manual-verification steps a
+human should run on a real multi-language install.
