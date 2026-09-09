@@ -16,7 +16,25 @@ class ControllerStartupSeoUrl extends Controller {
 			}
 
 			foreach ($parts as $part) {
-				$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE keyword = '" . $this->db->escape($part) . "' AND store_id = '" . (int)$this->config->get('config_store_id') . "'");
+				// MintCart fix MC-0009 (docs/fixes/registry.md): prefer the
+				// seo_url row saved for the request's actual resolved
+				// language (config_language_id is already set by
+				// startup/startup.php, which runs before this pre-action -
+				// see the fix registry entry for why). rewrite() below
+				// already filters outgoing links by language_id; this
+				// mirrors that on the incoming decode side, which
+				// previously matched on keyword + store_id only and could
+				// silently resolve to a different language's entity that
+				// happens to share the same keyword text.
+				$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE keyword = '" . $this->db->escape($part) . "' AND store_id = '" . (int)$this->config->get('config_store_id') . "' AND language_id = '" . (int)$this->config->get('config_language_id') . "'");
+
+				// No row for the current language - fall back to the
+				// original language-agnostic match so a store that only
+				// ever set up SEO keywords for one language keeps working
+				// exactly as before for every other language.
+				if (!$query->num_rows) {
+					$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE keyword = '" . $this->db->escape($part) . "' AND store_id = '" . (int)$this->config->get('config_store_id') . "'");
+				}
 
 				if ($query->num_rows) {
 					$url = explode('=', $query->row['query']);
