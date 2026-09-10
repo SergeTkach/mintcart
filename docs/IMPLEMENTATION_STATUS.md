@@ -778,6 +778,19 @@ which exists; building the writer ahead of the form that sets the value would
 be API ahead of a consumer (`CLAUDE.md` §85). Until then a preset is inspected
 by setting the attribute by hand.
 
+**Theme live preview (`MINTCART_FUNCTIONAL_SCOPE.md` §31) — RESEARCH item
+resolved, not yet implemented.** `docs/adr/008-theme-live-preview.md` fixes
+the target architecture the future Theme Settings admin form must build
+against: a `draft`/`published` settings-row pair per store, a signed
+short-TTL preview token as an iframe query parameter (never a session flag,
+never cached), token-only changes (color/spacing/`data-mc-preset`) applied
+client-side via `postMessage` against ADR 004's `data-mc-preset`/`--mc-*`
+mechanism with no reload, and DOM-changing theme/component changes falling
+back to a real iframe reload. Explicitly not a visual page editor, per the
+Functional Scope's own instruction. No code, schema, or admin screen exists
+yet — this is documentation only, matching how ADR 005/006/007 resolved
+their own Functional Scope RESEARCH items (rollback, autosave, editor).
+
 ## Phase 10 — Homepage Blocks
 
 - [x] Block API storage (`mc_page`, `mc_page_description`, `mc_block`,
