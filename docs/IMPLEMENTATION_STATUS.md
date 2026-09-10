@@ -2016,6 +2016,60 @@ Not started.
 
 Not started.
 
+## Documentation (Functional Scope §33 / Technical Plan §40)
+
+- [~] User docs (`docs/user/`) — **install and Setup Wizard guides done this
+      run**; products/delivery/payments/design/homepage/orders/SEO basics
+      guides not started (most of those features aren't built far enough
+      yet to document accurately — see each one's own Phase section above).
+- [ ] Developer architecture overview (`docs/developer/architecture/`,
+      Technical Plan §40's third `docs/` subtree) — not started; the
+      `docs/developer/{components,blocks,commerce,theme-api,onboarding,catalog,update}/`
+      per-feature docs already exist and are kept current per-PR, but there
+      is no single overview doc tying the layers together for a new
+      contributor (`CLAUDE.md`'s own §90 "Final principle" diagram is the
+      closest thing that exists today, inside `CLAUDE.md` itself).
+
+**This run:** `docs/user/install.md` and `docs/user/setup-wizard.md` — this
+repository had **zero** files under `docs/user/` despite it being an
+explicit Functional Scope §33 P1 requirement and part of Technical Plan
+§40's documented `docs/` layout; no open PR (of 50 checked at step 0)
+touched documentation content, so this was genuinely unclaimed and,
+being pure Markdown with no code, carried zero collision risk with any
+in-flight PR. `install.md` documents OpenCart 3.0.5.1's own unmodified
+installer (requirements list cross-checked live against
+`upload/install/controller/install/step_2.php` rather than written from
+memory, per `CLAUDE.md` §84) plus the one real MintCart-specific
+difference (`install/opencart.sql`'s InnoDB/utf8mb4 normalization,
+already applied, no user action needed). `setup-wizard.md` documents
+`mintcart/wizard` exactly as `ControllerMintcartWizard`/`WizardProgress`
+behave today — Welcome and Store are real, the other seven steps are
+listed as roadmap-only (matching `WizardProgress::IMPLEMENTED_STEPS`
+exactly, cross-checked against the actual class rather than assumed) —
+including the known gaps (no admin entry point yet, logo upload not
+wired, `admin.min.js` not enqueued on this page). Both docs are
+deliberately honest about what's *not* built yet rather than describing
+the full roadmap as if it already worked, matching this file's own
+practice for developer docs.
+
+Verified: no code touched (Markdown only), so `php -l`/`npm run build`/the
+`tests/mintcart/` suite don't apply; every concrete claim in both files
+(installer requirement list, wizard step names/order, Store step's field
+validation rules and character limits, the `mintcart/readiness` JSON
+route) was cross-checked against the actual source file it describes
+(`upload/install/controller/install/step_2.php`,
+`upload/system/library/mintcart/onboarding/wizardprogress.php`,
+`upload/admin/controller/mintcart/wizard.php`) rather than written from
+memory.
+
+**Next step:** a `products.md` user guide is the natural next one to add
+(Store → Products already has a stable, complete admin screen in stock
+OpenCart, unlike most of the Wizard's remaining steps) — or continue this
+section once more Phase 13 Wizard steps/Phase 14 Business Settings façades
+land and can be documented accurately. Low collision risk either way
+(pure Markdown, `docs/` only) — re-check `docs/user/` isn't newly claimed
+by another open PR before starting, same as any other increment.
+
 ---
 
 ## Next step for the next routine run
@@ -2633,3 +2687,15 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, 2026-09-10):** with 50 open PRs at step 0 covering
+nearly every remaining phase (fixes MC-0004–MC-0013, all four remaining
+SEO Core pieces, three more Update Manager steps, five Entity Picker
+backends, the admin asset-enqueue problem itself, and more — see each
+PR's own title), and no untouched code area found that didn't risk
+colliding with one of them, this run picked the completely unclaimed
+`docs/user/` gap instead (zero files existed there) — see the new
+"Documentation" section above. Next run: re-check `gh pr list --state
+open` first (the backlog is large and merges happen between runs); if it's
+still this saturated, another `docs/user/` guide or the developer
+architecture overview are safe, low-collision picks.
