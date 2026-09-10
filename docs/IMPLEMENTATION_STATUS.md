@@ -1941,11 +1941,47 @@ features (this one and Phase 12's Entity Picker) are now blocked on it.
 
 ## Phase 18 — SEO Core
 
-- [ ] SEO URL, canonical, hreflang, meta title/description, robots controls, XML
-      sitemap, Schema.org Product/Breadcrumb/Organization
+- [~] SEO URL, canonical, hreflang, meta title/description, robots controls, XML
+      sitemap, Schema.org Product/Breadcrumb/Organization — **meta
+      title/description** has a first increment this run (see below);
+      canonical, hreflang, robots, sitemap and Schema.org each have their
+      own increment sitting in open, unmerged PRs as of this run — see
+      each PR's own title, not reflected in this checklist yet since they
+      haven't merged
 - [ ] System route URL aliases (cart, checkout, search, contact, account, etc.)
+      — also has an open, unmerged PR as of this run
 
-Not started.
+**Update (this run): `MintCart\Seo\MetaBuilder` — meta title/description
+fallback.** Pure fix for `category.php`/`product.php`/`home.php` passing
+an entity's own (frequently blank) `meta_title`/`meta_description`/
+`config_meta_title`/`config_meta_description` straight to
+`Document::setTitle()`/`setDescription()` with no fallback at all — a
+category, product or homepage that never had its meta fields filled in
+today ships with a silently empty `<title>` tag. Full writeup:
+`docs/developer/seo/meta-builder.md`. No controller wiring yet — same
+deliberately-deferred, mechanical follow-up `CanonicalUrlBuilder` (PR
+open as of this run) already established, to keep this diff small and
+reviewable. This run's step-0 duplicate-work check found 47 open PRs
+covering `CanonicalUrlBuilder`, `HreflangBuilder`, `RobotsBuilder`,
+`SitemapBuilder`, a Schema.org increment, and the System route URL
+aliases item already claimed (none named "meta" or touching
+`category.php`/`product.php`/`home.php`) — so meta title/description was
+the one Phase 18 sub-piece still genuinely unclaimed.
+
+Verified: `php -l` clean. `tests/mintcart/seo/meta-builder-test.php` (9
+scenarios) — covers the basic fallback rule plus the exact blank-meta
+shapes `category.php`/`product.php`/`home.php` produce today. Pure PHP,
+no OpenCart dependency — no live-install verification gap applies. Full
+`tests/mintcart/` suite re-run end to end (35 files, was 34) — all
+passing, no regressions.
+
+**Next step:** wire `category.php`/`product.php`/`home.php` to call
+`MetaBuilder` instead of their own direct pass-through (mechanical, fixes
+the blank-title/description defect — add a `docs/fixes/registry.md`
+entry for it as part of that increment, per `CLAUDE.md` §13), or pick a
+remaining Phase 18 sub-piece — or re-check `gh pr list --state open`
+first, since this backlog is large (47+ open PRs at the time of this run)
+and moving fast.
 
 ## Phase 9 (Technical Plan §42 numbering) — Productivity
 
