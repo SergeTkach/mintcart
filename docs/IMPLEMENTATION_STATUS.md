@@ -1973,16 +1973,20 @@ this phase (diagnostics, measured performance work) is not started.
 
 - [~] Update Manager (check → compatibility → backup → download → verify →
       maintenance → files → migrations → cache clear → health check → done) —
-      **first increment done:** `MintCart\Update\PackageManifest`
+      **`MintCart\Update\PackageManifest`**
       (`upload/system/library/mintcart/update/packagemanifest.php`), a pure
       manifest parser/validator/compatibility-constraint checker (name,
       version, requirements, files, migrations, checksum), following the
       same "primitive first, wire the flow around it once a real caller
       exists" pattern `MigrationManager` (Phase 1) and `WizardProgress`
-      (Phase 13) already used. See
-      `docs/developer/update/package-manifest.md` for the full contract and
-      what's still not done (no caller/downloader/backup/verify/maintenance-
-      mode/file-copy/migration-runner/cache-clear/health-check steps yet).
+      (Phase 13) already used. See `docs/developer/update/package-manifest.md`.
+      **`MintCart\Update\PackageVerifier`** (this run) — the `verify` step:
+      `verifyChecksum()` checks a downloaded archive against the manifest's
+      declared `checksum`, `missingFiles()` checks an extracted package
+      against the manifest's declared `files()` list. See
+      `docs/developer/update/package-verifier.md`. Still not done: no
+      caller/downloader/backup/maintenance-mode/file-copy/migration-runner/
+      cache-clear/health-check steps.
 - [ ] Theme/extension rollback (RESEARCH item per Functional Scope §21)
 - [ ] Compatibility Checker (`install.xml` analysis, heuristic warnings only)
 - [ ] **Release packaging script (TODO, not started).** Node/npm (`npm install`
@@ -1996,11 +2000,12 @@ this phase (diagnostics, measured performance work) is not started.
       manifest work (Technical Plan §33), or a standalone `docs/release.md`
       if it's needed before Update Manager exists.
 
-In progress. Verified: `php -l` clean; new
-`tests/mintcart/update/package-manifest-test.php` (11 scenarios) passing;
-full `tests/mintcart/` suite re-run end to end — no regressions (pure
-addition, no existing file modified). No OpenCart dependency, so no live-
-install verification gap applies to this specific increment.
+In progress. Verified (this run): `php -l` clean on every touched/added
+PHP file; new `tests/mintcart/update/package-verifier-test.php` (12
+scenarios) passing; full `tests/mintcart/` suite re-run end to end (35
+files) — no regressions (pure addition, no existing file modified). No
+OpenCart dependency, so no live-install verification gap applies to this
+specific increment.
 
 ## Phase 12 — Early Access
 
@@ -2633,3 +2638,28 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, 2026-09-10): Update Manager's `verify` step —
+`MintCart\Update\PackageVerifier`.** At the time this run started there
+were 49 open PRs (see `gh pr list --state open`), covering nearly every
+remaining phase, several already contending for the same shared files
+(e.g. `upload/admin/controller/mintcart/entity.php` is touched by five
+open entity-picker-backend PRs, `column_left.php` by many more) — those
+areas were avoided this run per the routine's shared-file-collision
+guard. Update Manager's `verify` step was unclaimed by any open PR and
+self-contained (new files only, no shared-file contention):
+`PackageVerifier::verifyChecksum()` checks a downloaded archive against
+`PackageManifest`'s declared `checksum`; `PackageVerifier::missingFiles()`
+checks an extracted package directory against the manifest's declared
+`files()` list. Full writeup: `docs/developer/update/package-verifier.md`.
+**Next step:** the remaining Update Manager stages (`check` — a real
+manifest fetch + `PackageManifest::isCompatible()` call against
+`MintCart\Core\Version`; `download`; `backup`; `maintenance` mode; the
+actual file-copy/migration-runner/cache-clear/health-check steps) are
+still open, though `check` (PR #82) and `backup` (PR #86) already have
+open, unmerged PRs — re-check `gh pr list --state open` before starting
+either. Given the scale of the current open-PR backlog (49 as of this
+run, the large majority marked `ROUTINE-STATUS: DONE` but still awaiting
+human review/merge), a human merge pass is likely more valuable right now
+than further new increments — most of the "next unclaimed step" surface
+in this file is already covered by an open PR.

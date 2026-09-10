@@ -85,7 +85,9 @@ compatible" into one class.
   later increment's job, once the flow actually calls `MigrationManager`
   with this list.
 - `checksum` is opaque here (a `sha256:...`-style string) — verifying it
-  against a downloaded file is the `verify` step, not this class's job.
+  against a downloaded file is the `verify` step
+  (`MintCart\Update\PackageVerifier`, see
+  `docs/developer/update/package-verifier.md`), not this class's job.
 
 ## Compatibility constraints
 
@@ -126,8 +128,10 @@ Two instance-level convenience methods sit on top of the static checker:
   manifest and calls `isCompatible()` against `MintCart\Core\Version`, or
   a `backup` step that reads `files()` to know what to snapshot before
   overwriting.
-- No download/verify/backup/maintenance-mode/file-copy/migration-runner/
+- No download/backup/maintenance-mode/file-copy/migration-runner/
   cache-clear/health-check steps — the rest of the Technical Plan §33 flow.
+  `verify` now has a first increment — see
+  `docs/developer/update/package-verifier.md`.
 - No package **signing** — `checksum` is carried as opaque data; nothing
   computes or verifies a hash against it yet.
 
