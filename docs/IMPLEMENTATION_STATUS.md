@@ -1960,14 +1960,46 @@ tracked once each.)*
 - [ ] SEO Core (tracked above as Phase 18)
 - [x] `docs/fixes/registry.md` Fix Registry established, entries added only after
       reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
-      (`category.php` blank language strings) and MC-0002 (`search.php`
-      missing canonical/prev/next links, this run)
+      (`category.php` blank language strings), MC-0002 (`search.php`
+      missing canonical/prev/next links), and MC-0011 (this run —
+      `DB\MySQLi::query()` never recovered from a dropped connection,
+      `upload/system/library/db/mysqli.php` +
+      `tests/mintcart/fixes/mc-0011-mysqli-reconnect-test.php`)
 - [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
-Fix Registry mechanism is established and has two real entries; the rest of
-this phase (diagnostics, measured performance work) is not started.
+Fix Registry mechanism is established and has three real entries on this
+branch (MC-0001, MC-0002, MC-0011 — several open PRs at the time of this
+run independently claim MC-0003 through MC-0010, unconfirmed merged yet);
+the rest of this phase (diagnostics, measured performance work) is not
+started here, though open PRs cover parts of it (see this run's "Update"
+note below).
+
+**Update (this run): MC-0011 fix registry entry.** `DB\MySQLi::query()`
+(`upload/system/library/db/mysqli.php`) threw immediately on any mysqli
+error, including errno 2006/2013 (dropped TCP connection — MySQL
+`wait_timeout`, server restart), instead of reconnecting and retrying the
+same query once — the "database connection / reconnect issues" Known Fix
+Research Queue item (`MINTCART_FUNCTIONAL_SCOPE.md` §18), directly
+relevant to MintCart's own longer-running `MigrationManager`/Update
+Manager operations. Step 0 checked all 45 open PRs at the time (`#52`–
+`#97`): none touch `system/library/db/mysqli.php` or any
+`system/library/db*` file (PR #79's MC-0006 touches `system/library/db.php`
+only — a different file, the `DB` facade, not the `MySQLi` adaptor). See
+`docs/fixes/registry.md`'s MC-0011 entry and `docs/upstream-diff.md`'s new
+`mysqli.php` entry for the full writeup, including the deliberate ID
+choice (MC-0011, not MC-0004) to avoid colliding with PRs #76/#78/#79/#89/
+#92/#93/#97's own in-flight MC-0004–MC-0010 registry entries — the
+registry file itself will need human/reconciliation renumbering once all
+of these merge (same numbering-collision note PR #79 already left for
+MC-0004–0006). Verified: `php -l` clean; new 5-scenario test (a
+`DB\TestableMySQLi` subclass overriding the now-`protected` `connect()`
+with a fake connection, no live MySQL needed); full `tests/mintcart/`
+suite re-run end to end (36 files, was 35) — all passing, no regressions.
+**Not verified:** no live MySQL server in this environment to force a real
+disconnect — see the registry entry's "Not verified" note for what a human
+should confirm.
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
