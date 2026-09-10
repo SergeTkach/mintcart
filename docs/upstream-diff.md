@@ -950,3 +950,36 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/catalog/model/extension/payment/opayo.php`
+
+**Reason:** MC-0010 (`docs/fixes/registry.md`) — `setPaymentData()` called
+the deprecated `strftime()` (deprecated since PHP 8.1) to build part of a
+recurring-payment `VendorTxCode`. `MINTCART_FUNCTIONAL_SCOPE.md` §18's
+Known Fix Research Queue names "PHP 8.x compatibility problems" as a
+candidate to investigate; a prior run already grepped for several other
+PHP 8-incompatible constructs and found the baseline otherwise clear, but
+didn't check for `strftime()`/`gmstrftime()` specifically (see
+`docs/IMPLEMENTATION_STATUS.md`'s Phase 8 section for that earlier grep).
+
+**Why it can't live in the MintCart layer instead:** This is a one-line
+fix inside a stock OpenCart payment extension's own request-building logic
+— there is no Mint-layer equivalent to route this through, and per
+`CLAUDE.md` §13/§39 a historical/compatibility bugfix like this is applied
+directly at its source, not duplicated into a parallel Mint-owned copy of
+the gateway integration.
+
+**Compatibility impact:** Purely additive/behavior-preserving —
+`strftime("%Y%m%d%H%M%S")` and `date('YmdHis')` produce byte-identical
+output for this purely numeric format (no locale-sensitive tokens), so the
+generated `VendorTxCode` values are unaffected. No method signature, route,
+or `$data`/request-payload shape changed.
+
+**Tests:** `php -l` clean. New
+`tests/mintcart/fixes/mc-0010-opayo-strftime-test.php` (see MC-0010 for the
+full writeup) — full `tests/mintcart/` suite re-run end to end (35 files,
+was 34), all pass. Not verified: no live MySQL/OpenCart admin session or
+Opayo/Sage Pay merchant account in this environment — a human with both
+should confirm a real recurring charge still succeeds.

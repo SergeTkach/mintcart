@@ -173,3 +173,19 @@ manufacturer that has an image set and one that doesn't:
    (prefix match, not substring — see
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
+
+## MC-0010 — Opayo/Sage Pay recurring payment, never hit end to end
+
+`setPaymentData()` (`catalog/model/extension/payment/opayo.php`) is only
+called for a repeat/cron-triggered recurring charge, which needs both a
+live OpenCart order with an active recurring plan and a real Opayo/Sage
+Pay merchant account — neither exists in this environment. A human with
+both should, after this fix:
+
+1. Trigger a recurring payment run (however this store's cron/recurring
+   job is configured) against a test/sandbox Opayo account.
+2. Confirm the charge still succeeds and the gateway accepts the generated
+   `VendorTxCode` (proving `date('YmdHis')` produces a value Opayo accepts
+   the same way the old `strftime()`-built one did).
+3. Check the PHP error log for that request and confirm no
+   `strftime() is deprecated` notice appears (the bug this fix removes).
