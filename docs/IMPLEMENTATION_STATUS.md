@@ -1960,14 +1960,55 @@ tracked once each.)*
 - [ ] SEO Core (tracked above as Phase 18)
 - [x] `docs/fixes/registry.md` Fix Registry established, entries added only after
       reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
-      (`category.php` blank language strings) and MC-0002 (`search.php`
-      missing canonical/prev/next links, this run)
+      (`category.php` blank language strings), MC-0002 (`search.php`
+      missing canonical/prev/next links) on `master`; MC-0012
+      (`ModelSettingSetting::editSetting()` not transactional, this run) —
+      see below. MC-0004 through MC-0011 exist as open, unmerged PRs at the
+      time of this run (`docs/fixes/registry.md`'s own numbering gap
+      reflects that, same as MC-0007's own note when it was added).
 - [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
-Fix Registry mechanism is established and has two real entries; the rest of
-this phase (diagnostics, measured performance work) is not started.
+Fix Registry mechanism is established. This run added **MC-0012**:
+`upload/admin/model/setting/setting.php`'s `editSetting()` — the single
+save path for every OpenCart settings screen and extension config form
+(117 call sites) — deleted a `code` group's rows and reinserted them with
+no transaction around either step; a mid-loop failure (`DB\MySQLi::query()`
+throws on any SQL error, e.g. a dropped connection, MC-0011's scenario)
+left that group's settings partially deleted with no rollback. Fixed with
+`START TRANSACTION`/`COMMIT`/`ROLLBACK`, the same raw-SQL transaction
+pattern `MintCart\Core\Migration\MigrationManager` and Phase 17's
+`moveCategory()` already established. Reproduced and verified with a real
+unit test against the actual `ModelSettingSetting` class driven by a
+transaction-aware in-memory DB double
+(`tests/mintcart/fixes/mc-0012-setting-transaction-test.php`, 4 scenarios),
+confirmed non-vacuous by re-running the same test against the pre-fix
+method (it reliably reproduces the exact data loss the fix removes). Full
+writeup: `docs/fixes/registry.md`'s MC-0012 entry and
+`docs/upstream-diff.md`'s `admin/model/setting/setting.php` entry.
+Verified: `php -l` clean across the whole `upload`/`tests` tree; full
+`tests/mintcart/**/*-test.php` suite re-run end to end (35 files, was 34)
+— all passing, no regressions. Diagnostics dev mode and the rest of
+"measured performance improvements" remain not started on `master` (open
+PRs cover pieces of this phase — re-check `gh pr list --state open` before
+picking up more of it).
+
+Step 0/0f dedup check for this run: 48 open PRs (`#52`–`#98`) were listed
+at the start of this run. None touch `upload/admin/model/setting/setting.php`
+or any `MintCart\*` transaction-wrapping class. Several hot shared files
+were identified and avoided: `wizard.php`/`wizardprogress.php`/
+`wizard.twig`/the wizard language file (contended by 3 open PRs —
+#52/#64/#84), `upload/catalog/controller/product/category.php` and
+`search.php` (contended by 2 — #62/#83), `admin/controller/mintcart/entity.php`
+and `column_left.php` (contended by 2+, per PR #83's own write-up). All
+five remaining Entity Picker backends, all SEO Core sub-pieces, Business
+Settings façades, Bulk Editor, Diagnostics, `HealthCheck`, Compatibility
+Checker, release packaging, Update Manager's first increments, and
+MC-0004 through MC-0011 were already covered by other open PRs (see each
+PR's own title) — the "installer edge cases"/reliability family of the
+Known Fix Research Queue (`MINTCART_FUNCTIONAL_SCOPE.md` §18) was
+genuinely unclaimed and led to this fix.
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
@@ -2633,3 +2674,14 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, 2026-09-10): MC-0012 shipped —
+`ModelSettingSetting::editSetting()` is now transactional.** See Phase 10
+(Technical Plan)'s section above and `docs/fixes/registry.md` for the full
+writeup. This repo had 48 open PRs (`#52`–`#98`) at the start of this run;
+re-check `gh pr list --state open` for what's newly merged/unclaimed
+before picking the next increment — most named phases already have an
+open PR, so the remaining Known Fix Research Queue items (multilingual SEO
+URL issues, category path/update issues beyond Phase 17, further
+"installer edge cases") or Diagnostics dev mode are reasonable next
+candidates once the current backlog clears.

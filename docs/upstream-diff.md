@@ -950,3 +950,61 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/admin/model/setting/setting.php`
+
+**Reason:** MC-0012 (`docs/fixes/registry.md`) — `editSetting()` deleted
+every existing `setting` row for a `code` group, then looped issuing one
+`INSERT` per key, with no transaction around either step.
+`DB\MySQLi::query()` throws on any SQL error (a lock timeout, a deadlock
+with a concurrent writer, a dropped connection — MC-0011's scenario), and
+this method is the single save path for every OpenCart settings screen
+(117 call sites: every payment/shipping/total/module extension's config
+form, `Settings → Store`, and MintCart's own Setup Wizard steps). A
+failure partway through the `INSERT` loop previously left that `code`
+group's settings partially deleted — the `DELETE` had already committed,
+but only some of the replacement rows existed — with no rollback and no
+indication to the admin that the save had failed destructively. Wrapped
+the whole sequence in `START TRANSACTION` / `COMMIT`, with `ROLLBACK` +
+rethrow on any `\Throwable`.
+
+**Why it can't live in the MintCart layer instead:** This is OpenCart's
+own core settings-persistence method, called directly by dozens of stock
+extension controllers this codebase does not own or control (payment/
+shipping/total/module/report extensions across `upload/admin/controller/
+extension/**`) as well as `Settings → Store` and MintCart's own
+`ControllerMintcartWizard`. A parallel MintCart-owned settings-save path
+would only protect Mint's own callers, leaving every stock OpenCart
+extension's config form exposed to the exact same data-loss window this
+fix closes. Fixing the shared method in place protects every caller with
+one change, the same rationale MC-0007's `Cache\File` fix and Phase 17's
+`ModelCatalogCategory::moveCategory()` extraction both already used for
+their own shared, heavily-called core methods.
+
+**Compatibility impact:** Purely internal to the write mechanics —
+`editSetting($code, $data, $store_id)`'s signature, return type (`void`),
+and the exact `DELETE`/`INSERT` SQL it issues on the success path are all
+unchanged, so every existing caller (OpenCart core, every stock extension,
+MintCart's own Wizard) keeps working identically when nothing fails
+mid-call. The only observable behavior change is the failure path: a
+`\Throwable` from any query now rolls back the transaction before
+rethrowing the same exception object, so a caller that already wraps
+`editSetting()` in a `try`/`catch` (none currently do, but nothing
+prevents one from being added later) sees the identical exception type and
+message as before — only the database's own state differs (intact instead
+of half-deleted).
+
+**Tests:** `php -l` clean on the modified file.
+`tests/mintcart/fixes/mc-0012-setting-transaction-test.php` (4 scenarios —
+see `docs/fixes/registry.md`'s MC-0012 entry for the full list). Verified
+not vacuous: the identical test run against the pre-fix method fails on
+the critical rollback assertion. Full `tests/mintcart/**/*-test.php` suite
+re-run end to end (35 files, was 34) — all pass, no regressions. Same
+pre-existing gap as every earlier phase: no MySQL server in this
+environment, so the real `\DB\MySQLi` transaction queries themselves were
+never exercised against a live database (only the double's transaction
+semantics were) — a human should confirm on a real install that a
+`ROLLBACK` genuinely restores the previous row set under InnoDB (the
+engine every `oc_setting` table in a MintCart install uses).
