@@ -3,7 +3,7 @@
  * Phase 12 (Entity Picker, `MINTCART_FUNCTIONAL_SCOPE.md` §8,
  * `MINTCART_TECHNICAL_PLAN.md` §20) — real `fetchItems` backends for
  * `McEntityPicker` (Phase 11), one action per entity type. `category()` is
- * the first, `manufacturer()` the second.
+ * the first, `manufacturer()` the second, `product()` the third.
  *
  * Deliberately a new, fully-additive controller under `mintcart/entity/*`
  * rather than a change to `catalog/category.php`'s existing `autocomplete()`
@@ -89,5 +89,50 @@ class ControllerMintcartEntity extends Controller {
 		$provider = new \MintCart\Design\ManufacturerPickerProvider();
 
 		$this->respond($provider->build($rows, $page, $limit));
+	}
+
+	// route=mintcart/entity/product - GET filter_name, page, limit
+	public function product() {
+		if (!$this->user->hasPermission('access', 'mintcart/entity')) {
+			$this->respond(array('error' => 'Permission denied'));
+			return;
+		}
+
+		$this->load->model('catalog/product');
+		$this->load->model('tool/image');
+
+		$filter_name = isset($this->request->get['filter_name']) ? (string)$this->request->get['filter_name'] : '';
+		$page = isset($this->request->get['page']) ? (int)$this->request->get['page'] : 1;
+		$limit = isset($this->request->get['limit']) ? (int)$this->request->get['limit'] : 20;
+
+		if ($page < 1) {
+			$page = 1;
+		}
+
+		if ($limit < 1) {
+			$limit = 20;
+		}
+
+		$filter_data = array(
+			'filter_name' => $filter_name,
+			'sort'        => 'pd.name',
+			'order'       => 'ASC',
+			'start'       => ($page - 1) * $limit,
+			'limit'       => $limit
+		);
+
+		$rows = $this->model_catalog_product->getProducts($filter_data);
+		$total = (int)$this->model_catalog_product->getTotalProducts(array('filter_name' => $filter_name));
+
+		foreach ($rows as &$row) {
+			$row['image_url'] = (!empty($row['image']) && is_file(DIR_IMAGE . $row['image']))
+				? $this->model_tool_image->resize($row['image'], 100, 100)
+				: null;
+		}
+		unset($row);
+
+		$provider = new \MintCart\Design\ProductPickerProvider();
+
+		$this->respond($provider->build($rows, $total));
 	}
 }

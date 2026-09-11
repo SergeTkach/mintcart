@@ -195,3 +195,33 @@ real install, at `mintcart/wizard` once Store is completed:
    `href`s (currently a plain first-letter glyph per link — icon rendering
    is still a documented follow-up, see `footer.twig`'s own `mc_icon()`
    comment, unrelated to this change).
+
+## Phase 12 — `mintcart/entity/product` endpoint, never hit end to end
+
+Same gap as category/manufacturer above, plus one thing neither of those
+exercised: SQL-level pagination (this backend counts/pages in the
+database, not PHP — see `docs/developer/components/entity-picker.md`'s
+Product backend section). On a real install, with a catalog of more than
+20 products and at least one product that has an image set and one that
+doesn't:
+
+1. Grant `mintcart/entity` **Access** if not already done for the
+   category/manufacturer endpoints above (same permission covers all
+   three routes).
+2. Request `index.php?route=mintcart/entity/product&user_token=<your
+   token>&filter_name=&page=1&limit=20` and confirm a JSON
+   `{"items": [...], "total": N}` response where `total` is the real
+   store-wide product count (not just 20, the page size).
+3. Request `page=2` with the same `limit` and confirm it returns the
+   *next* 20 products, not the same page again or an empty set — this is
+   the first entity backend where a wrong `start` calculation could
+   silently repeat or skip rows, since paging happens in SQL rather than
+   `array_slice()` over an already-fetched PHP array.
+4. Confirm the product with an image returns a real, loadable `image` URL
+   (the same 100x100 thumbnail `Catalog → Products`' own list shows), and
+   the one without an image returns `image: null`.
+5. Confirm `filter_name` set to the *start* of one product's name matches
+   it, but a substring from the middle does not (prefix match, same as
+   manufacturer, not category's substring match) — and confirm `total`
+   reflects the *filtered* count when `filter_name` is set, not the
+   store-wide total.

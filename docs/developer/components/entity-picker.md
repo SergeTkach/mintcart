@@ -271,7 +271,7 @@ or wiring a screen to it.
   consumer.
 - The other entity types (products, attributes, options, information
   pages, customers) each need their own backend the same shape as this
-  one — **manufacturer** is now done too, see below.
+  one — **manufacturer** and **product** are now done too, see below.
 
 ## Manufacturer backend
 
@@ -325,3 +325,64 @@ is this backend's identified first real consumer, for the same reason
 Category was identified for that endpoint — already single-select
 search-as-you-type, so a future `McEntityPicker` swap is a shape match,
 not a new pattern.
+
+## Product backend
+
+```
+GET index.php?route=mintcart/entity/product&user_token=…&filter_name=…&page=…&limit=…
+```
+
+`ControllerMintcartEntity::product()` wraps the existing
+`ModelCatalogProduct::getProducts()`/`getTotalProducts()` calls — it never
+queries the database directly — and normalizes rows via
+`MintCart\Design\ProductPickerProvider`
+(`upload/system/library/mintcart/design/productpickerprovider.php`, no
+OpenCart dependency, unit-tested in
+`tests/mintcart/design/product-picker-provider-test.php`) into the same
+`{items: [{id, name, image}], total}` shape. Same reason as category/
+manufacturer for a new route rather than reshaping an existing
+`autocomplete()` action — `catalog/product.php`'s own `autocomplete()` is
+already the busiest of the three (ten existing admin-template consumers,
+including `product_form.twig`'s own Related Products field, `order_form.twig`,
+`return_form.twig`/`return_list.twig`, `coupon_form.twig`, and several
+more), returning a plain `[{product_id, name, model, image}]` array with no
+pagination — reshaping it would be an even larger breaking change than
+category's five consumers.
+
+**Difference from category/manufacturer: paging happens in SQL, not PHP.**
+Unlike `ModelCatalogCategory`/`ModelCatalogManufacturer`,
+`ModelCatalogProduct::getTotalProducts($data)` accepts the *same*
+`filter_name` the list query does and returns a real filtered count, not
+just an unfiltered store-wide total — so `getTotalProductsByLayoutId()`-style
+core changes were not needed here, unlike the gap the category backend
+flagged. The controller passes `start`/`limit` straight through to
+`getProducts()` and calls `getTotalProducts()` with the same filter, so
+`ProductPickerProvider::build()` takes `(array $rows, int $total)` rather
+than `(array $rows, int $page, int $limit)` — `$rows` is already the
+current page, `$total` is the real filtered count. This is the exact
+"once a second `PickerProvider` needs a filtered count" case the category
+backend's write-up above flagged as the natural fix — product catalogs are
+the entity type most likely to be large enough for PHP-side slicing of the
+full result set (category/manufacturer's approach) to actually matter.
+
+**Image resolution:** same pattern as manufacturer — `oc_product.image`
+is a filename, resolved to a real thumbnail URL via
+`model_tool_image->resize()` (the same helper `product_form.twig` already
+uses for its own image preview), or `null` when the product has no image
+file on disk.
+
+**Filter matching:** `ModelCatalogProduct::getProducts()`/`getTotalProducts()`
+match `filter_name` as a prefix (`LIKE '…%'`), same as manufacturer, unlike
+category's substring match — again pre-existing OpenCart behavior, not
+introduced here.
+
+Same permission requirement (`mintcart/entity` **Access**) and the same
+"not done yet, by design" live-wiring gap as category/manufacturer: no
+admin screen calls this endpoint yet (MintCart's asset bundle still isn't
+enqueued on any admin page — see above). The identified first real
+consumer is `product_form.twig`'s **Related Products** field
+(`upload/admin/view/template/catalog/product_form.twig`, the
+`#input-related`/`related` multi-select block using its own jQuery UI
+`autocomplete()` against `catalog/product.autocomplete`) — already
+multi-select with removable tags, the same shape match reasoning
+category/manufacturer's identified consumers follow.
