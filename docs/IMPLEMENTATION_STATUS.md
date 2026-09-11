@@ -48,11 +48,15 @@ Phase 0 is **complete**.
       exit), `frontend-build` (`npm ci && npm run build`). Runs on push/PR
       against `master`.
 
-**In progress.** Remaining for a future run: `MintCart\Compatibility\OpenCart3\*`
-adapters (no consumer needs one yet — first candidate is likely `SettingsAdapter`
-when Business Settings/Setup Wizard starts, per `CLAUDE.md` §85 "API appears when
-there's a real consumer") and a health-check surface. `Bootstrap::boot()` has
-no automatic call site yet by design (see ADR 001) — the first real caller wires it.
+**In progress.** `MintCart\Compatibility\OpenCart3\*` adapters: `SettingsAdapter`
+and `ExtensionAdapter` exist as open, unmerged PRs at the time of this update;
+this run adds a fourth (`CustomerAdapter`, wrapping OpenCart's customer lookup —
+see `docs/developer/compatibility/customer-adapter.md`) as its own open PR.
+`ProductAdapter`, `CategoryAdapter` and `OrderAdapter` (Technical Plan §5's
+remaining three named adapters) are still unstarted. A health-check surface is
+also still unstarted (`HealthCheck` per PR #67 is open but unmerged as of this
+update). `Bootstrap::boot()` has no automatic call site yet by design (see ADR
+001) — the first real caller wires it.
 
 ## Phase 2 — Frontend foundation
 
@@ -2633,3 +2637,37 @@ textareas becoming a real add/remove-row repeater — see
 legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
+
+**Update (this run, 2026-09-11): Phase 1's adapter layer gets a fourth
+adapter — `MintCart\Compatibility\OpenCart3\CustomerAdapter`.** At the
+time this run started there were 54 open PRs; `git ls-remote` showed
+`master` itself only as far as PR #51 (Homepage Builder block editor)
+plus a directly-pushed "Phase 11: PackageManifest" commit (not via PR —
+noted here as an anomaly, not something this run attempted to undo).
+Checked all 54 open PR titles/head branches for overlap before starting;
+confirmed via `git diff <branch> --stat` against `#81` (`SettingsAdapter`)
+and the branch behind `#87` (`ExtensionAdapter`) that neither, nor any
+other open PR title, covers `ProductAdapter`/`CategoryAdapter`/
+`OrderAdapter`/`CustomerAdapter` — Technical Plan §5's remaining three
+named adapters plus this one. Picked `CustomerAdapter`: OpenCart ships two
+customer models (`admin/model/customer/customer.php`,
+`catalog/model/account/customer.php`) with diverging method sets that
+happen to share `getCustomer()`/`getCustomerByEmail()`; this adapter
+normalizes that shared surface (see
+`docs/developer/compatibility/customer-adapter.md`). New files only
+(`upload/system/library/mintcart/compatibility/opencart3/customeradapter.php`,
+its test, this doc) — touches no file any open PR touches, so no hot-file
+collision. Like `SettingsAdapter`/`ExtensionAdapter`, not wired into any
+controller yet (no checkout/order call site exists in this codebase yet).
+Verified: `php -l` clean; the new standalone test
+(`tests/mintcart/compatibility/opencart3/customer-adapter-test.php`)
+passes end to end, including against a second, differently-shaped
+duck-typed double standing in for the storefront model.
+
+**Next step:** `ProductAdapter`/`CategoryAdapter`/`OrderAdapter` remain
+the last unclaimed named adapters (check `gh pr list --state open` again
+first — this backlog grows fast); or re-check whether any of the 54 open
+PRs listed here have since merged, since almost every phase's remaining
+checklist items in this file are already claimed by one of them and a
+fresh `gh pr list` pass is the only reliable way to find real unclaimed
+scope right now.
