@@ -44,16 +44,23 @@ assertSame('store', $afterWelcome->currentStep(), 'after welcome: currentStep is
 assertTrue($afterWelcome->isCompleted('welcome'), 'after welcome: welcome is completed', $failures);
 assertTrue(!$afterWelcome->isCompleted('store'), 'after welcome: store not completed yet', $failures);
 
-// 3. Completing both implemented steps is "ready" (nothing left to do today).
+// 3. Completing store advances to contacts (not yet "ready" - contacts is
+// also implemented today).
 $afterStore = new WizardProgress($afterWelcome->withCompleted('store'));
-assertSame(null, $afterStore->currentStep(), 'after store: currentStep is null (all implemented steps done)', $failures);
-assertTrue($afterStore->isReady(), 'after store: isReady is true', $failures);
+assertSame('contacts', $afterStore->currentStep(), 'after store: currentStep is contacts', $failures);
+assertTrue(!$afterStore->isReady(), 'after store: not ready yet - contacts still pending', $failures);
+
+// 3b. Completing every implemented step (welcome, store, contacts) is
+// "ready" (nothing left to do today).
+$afterContacts = new WizardProgress($afterStore->withCompleted('contacts'));
+assertSame(null, $afterContacts->currentStep(), 'after contacts: currentStep is null (all implemented steps done)', $failures);
+assertTrue($afterContacts->isReady(), 'after contacts: isReady is true', $failures);
 
 // 4. withCompleted() is idempotent - completing an already-completed step changes nothing.
 assertSame(
-    $afterStore->withCompleted('store'),
-    ['welcome', 'store'],
-    'idempotent: re-completing store keeps the same completed list',
+    $afterContacts->withCompleted('contacts'),
+    ['welcome', 'store', 'contacts'],
+    'idempotent: re-completing contacts keeps the same completed list',
     $failures
 );
 
@@ -68,13 +75,14 @@ assertTrue($dirty->isCompleted('design'), 'dirty input: design is a real (if uni
 // 6. Completed-step storage is reordered to canonical STEPS order regardless
 // of the order it was stored in (e.g. a hand-edited setting row).
 $outOfOrder = new WizardProgress(['store', 'welcome']);
-assertTrue($outOfOrder->isReady(), 'reorder: out-of-order storage still reads as ready', $failures);
+assertTrue(!$outOfOrder->isReady(), 'reorder: contacts still pending, not ready yet', $failures);
 assertSame(['welcome', 'store'], $outOfOrder->withCompleted('store'), 'reorder: completed list normalizes to canonical STEPS order', $failures);
 
 // 7. isImplemented() distinguishes real steps from roadmap-only ones.
 assertTrue($progress->isImplemented('welcome'), 'isImplemented: welcome is implemented', $failures);
 assertTrue($progress->isImplemented('store'), 'isImplemented: store is implemented', $failures);
-assertTrue(!$progress->isImplemented('contacts'), 'isImplemented: contacts is not implemented yet', $failures);
+assertTrue($progress->isImplemented('contacts'), 'isImplemented: contacts is implemented', $failures);
+assertTrue(!$progress->isImplemented('language_currency'), 'isImplemented: language_currency is not implemented yet', $failures);
 assertTrue(!$progress->isImplemented('ready'), 'isImplemented: ready is not implemented yet', $failures);
 
 // 8. steps() exposes the full roadmap, not just the implemented subset.
@@ -89,5 +97,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: WizardProgress smoke test (' . 8 . " scenarios)\n";
+echo 'PASS: WizardProgress smoke test (' . 9 . " scenarios)\n";
 exit(0);

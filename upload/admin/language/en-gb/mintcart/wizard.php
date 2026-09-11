@@ -32,10 +32,19 @@ $_['entry_telephone']   = 'Telephone';
 $_['entry_address']     = 'Address';
 $_['button_continue']   = 'Continue';
 
+// Contacts step
+
+$_['contacts_title']          = 'Where can shoppers find you online?';
+$_['contacts_text']           = 'Add links to your store\'s social profiles. They\'ll appear in your storefront footer. This step is optional — leave any field blank and add it later.';
+$_['entry_social_facebook']   = 'Facebook';
+$_['entry_social_instagram']  = 'Instagram';
+$_['entry_social_twitter']    = 'Twitter / X';
+$_['entry_social_youtube']    = 'YouTube';
+
 // Ready / more-steps-coming state
 
 $_['ready_title'] = 'You\'re off to a great start';
-$_['ready_text']  = 'The rest of the Setup Wizard (contacts, delivery, payment, design and your first product) is coming in a future update. For now, head to your dashboard to keep setting up your store.';
+$_['ready_text']  = 'The rest of the Setup Wizard (delivery, payment, design and your first product) is coming in a future update. For now, head to your dashboard to keep setting up your store.';
 $_['button_go_to_dashboard'] = 'Go to dashboard';
 
 // Errors
@@ -45,3 +54,4 @@ $_['error_name']      = 'Store name must be between 1 and 64 characters!';
 $_['error_email']     = 'E-Mail Address does not appear to be valid!';
 $_['error_telephone'] = 'Telephone must be between 3 and 32 characters!';
 $_['error_address']   = 'Address must be between 3 and 256 characters!';
+$_['error_social']    = '%s must be a valid URL!';

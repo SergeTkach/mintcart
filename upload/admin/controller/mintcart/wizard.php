@@ -97,6 +97,10 @@ class ControllerMintcartWizard extends Controller
             $this->validateStoreStep();
         }
 
+        if ($step === 'contacts') {
+            $this->validateContactsStep();
+        }
+
         if ($this->error && !isset($this->error['warning'])) {
             $this->error['warning'] = $this->language->get('error_warning');
         }
@@ -109,6 +113,10 @@ class ControllerMintcartWizard extends Controller
 
         if ($step === 'store') {
             $this->saveStoreStep();
+        }
+
+        if ($step === 'contacts') {
+            $this->saveContactsStep();
         }
 
         $this->model_setting_setting->editSetting('mintcart_wizard', [
@@ -143,6 +151,74 @@ class ControllerMintcartWizard extends Controller
     }
 
     /**
+     * The social networks the Contacts step collects a profile URL for.
+     * Matches MintCart\Design\FooterViewProvider::buildSocial()'s `network`
+     * values exactly - `saveContactsStep()` writes this same set of codes,
+     * so a link this step saves needs no translation before it can be
+     * handed straight to that provider (see ControllerCommonFooter, wired
+     * this run).
+     */
+    private const SOCIAL_NETWORKS = ['facebook', 'instagram', 'twitter', 'youtube'];
+
+    /**
+     * All four fields are optional - a store with no social presence yet is
+     * a completely valid, finishable state (Functional Scope §2 lists
+     * social profiles under Contacts, but nothing in the product vision
+     * makes them mandatory to reach "ready"). A filled-in field must be a
+     * well-formed http(s) URL - this is what gets rendered as an `href` on
+     * the live storefront footer, so a scheme is checked explicitly rather
+     * than trusting FILTER_VALIDATE_URL alone: it happily accepts
+     * `javascript:...`/`data:...` as "valid" URLs (it only checks syntax,
+     * not scheme), which would otherwise let a stored link execute script
+     * in a storefront visitor's browser when they click it.
+     */
+    private function validateContactsStep(): void
+    {
+        foreach (self::SOCIAL_NETWORKS as $network) {
+            $url = trim((string)($this->request->post['social_' . $network] ?? ''));
+
+            if ($url !== '' && (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', $url))) {
+                $this->error['social_' . $network] = sprintf($this->language->get('error_social'), $this->language->get('entry_social_' . $network));
+            }
+        }
+    }
+
+    /**
+     * Stored under its own 'mintcart_contacts' setting code, never merged
+     * into 'config' - social profile links have no standard OpenCart
+     * storage to reuse (same "genuinely new capability" reasoning
+     * FooterViewProvider's own doc-comment already gives for why `$social`
+     * defaults to empty, CLAUDE.md §6/§39), and unlike 'config' this code
+     * has exactly one key MintCart itself owns end to end, so there is no
+     * editSetting() partial-write trap to guard against here (nothing else
+     * writes to 'mintcart_contacts').
+     *
+     * Written in the exact {network, href} shape
+     * MintCart\Design\FooterViewProvider::build()'s $social parameter
+     * expects, so ControllerCommonFooter can pass this setting's value
+     * straight through with no reshaping.
+     */
+    private function saveContactsStep(): void
+    {
+        $social = [];
+
+        foreach (self::SOCIAL_NETWORKS as $network) {
+            $url = trim((string)($this->request->post['social_' . $network] ?? ''));
+
+            if ($url !== '') {
+                $social[] = [
+                    'network' => $network,
+                    'href' => $url,
+                ];
+            }
+        }
+
+        $this->model_setting_setting->editSetting('mintcart_contacts', [
+            'mintcart_contacts_social' => $social,
+        ]);
+    }
+
+    /**
      * Merge-then-save, never a bare editSetting('config', $partialData) -
      * ModelSettingSetting::editSetting() DELETEs every existing row for the
      * given code before re-inserting only the keys it's handed, so saving a
@@ -166,6 +242,31 @@ class ControllerMintcartWizard extends Controller
         ]);
 
         $this->model_setting_setting->editSetting('config', $merged);
+    }
+
+    /**
+     * Re-reads the network => href map saved by saveContactsStep(), keyed by
+     * network code, so revisiting the step (allowed per resolveViewableStep())
+     * re-populates each field instead of showing it blank.
+     *
+     * @return array<string, string>
+     */
+    private function loadContactsSocial(): array
+    {
+        $setting = $this->model_setting_setting->getSetting('mintcart_contacts');
+        $social = isset($setting['mintcart_contacts_social']) && is_array($setting['mintcart_contacts_social'])
+            ? $setting['mintcart_contacts_social']
+            : [];
+
+        $byNetwork = [];
+
+        foreach ($social as $link) {
+            if (!empty($link['network']) && !empty($link['href'])) {
+                $byNetwork[$link['network']] = $link['href'];
+            }
+        }
+
+        return $byNetwork;
     }
 
     private function render(?string $step, \MintCart\Onboarding\WizardProgress $progress): void
@@ -198,6 +299,14 @@ class ControllerMintcartWizard extends Controller
             $data['config_email'] = $this->request->post['config_email'] ?? $this->config->get('config_email');
             $data['config_telephone'] = $this->request->post['config_telephone'] ?? $this->config->get('config_telephone');
             $data['config_address'] = $this->request->post['config_address'] ?? $this->config->get('config_address');
+        }
+
+        if ($step === 'contacts') {
+            $saved = $this->loadContactsSocial();
+
+            foreach (self::SOCIAL_NETWORKS as $network) {
+                $data['social_' . $network] = $this->request->post['social_' . $network] ?? ($saved[$network] ?? '');
+            }
         }
 
         $this->response->setOutput($this->load->view('mintcart/wizard', $data));

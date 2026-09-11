@@ -1,12 +1,12 @@
 # Setup Wizard (Phase 13)
 
 `MINTCART_FUNCTIONAL_SCOPE.md` §2, `MINTCART_IMPLEMENTATION_GUIDE.md` §54.
-First increment: the wizard shell plus two working steps — **Welcome** and
-**Store**. The rest of the flow (`contacts` → `language_currency` →
-`delivery` → `payment` → `design` → `first_product` → `ready`) is listed in
-the step nav as a roadmap but has no real content yet — visiting or
-submitting any of those steps falls back to the live resume point
-(`CLAUDE.md` §85: no UI ahead of a real, working consumer).
+Three working steps so far — **Welcome**, **Store** and **Contacts**. The
+rest of the flow (`language_currency` → `delivery` → `payment` → `design` →
+`first_product` → `ready`) is listed in the step nav as a roadmap but has no
+real content yet — visiting or submitting any of those steps falls back to
+the live resume point (`CLAUDE.md` §85: no UI ahead of a real, working
+consumer).
 
 PHP:
 - `upload/system/library/mintcart/onboarding/wizardprogress.php` —
@@ -98,6 +98,38 @@ This was caught by reading the actual model implementation before writing
 the save path (`CLAUDE.md` §84/§10 — never assume an existing OpenCart flow
 from memory), not discovered after the fact.
 
+## The Contacts step — social profile links
+
+`Contacts` collects up to four optional social profile URLs (Facebook,
+Instagram, Twitter/X, YouTube). All four are optional — a store with no
+social presence yet is a completely valid, finishable state; a filled-in
+field must pass `filter_var(..., FILTER_VALIDATE_URL)` **and** start with
+`http://`/`https://`. The scheme check is deliberate, not redundant:
+`FILTER_VALIDATE_URL` only checks syntax, so it happily accepts
+`javascript:...`/`data:...` as "valid" — without the extra check, a stored
+link like that would execute script in a storefront visitor's browser the
+moment they clicked it (this value is later rendered as a plain `href` on
+the live footer).
+
+Unlike Store, this data is genuinely Mint-specific — OpenCart has no
+built-in storage for social profile links — so it's saved under its own
+`mintcart_contacts` setting code (`mintcart_contacts_social`, a
+JSON-serialized list of `{network, href}`) rather than merged into
+`config`. There's no `editSetting()` partial-write trap to guard against
+here the way `saveStoreStep()` has to for `config`: nothing else writes to
+`mintcart_contacts`, so a bare `editSetting('mintcart_contacts', [...])`
+call is safe.
+
+The stored shape is deliberately identical to
+`MintCart\Design\FooterViewProvider::build()`'s `$social` parameter
+(`docs/developer/components/footer.md`) — `ControllerCommonFooter::index()`
+now reads this same setting and passes it straight through with no
+reshaping, so a social link saved here renders on the live storefront
+footer without any translation step. This closes the "no storage yet" gap
+Phase 7's Footer sub-step originally left for `$social` (payments and
+newsletter remain unimplemented — no Business Settings/Commerce API
+consumer for either yet).
+
 ## Why a standalone page, not the usual admin chrome
 
 `upload/admin/view/template/mintcart/wizard.twig` is a complete, self-
@@ -154,9 +186,9 @@ done) is allowed, for review; skipping ahead is not.
 
 ## What's explicitly not done yet, by design
 
-- The `contacts`/`language_currency`/`delivery`/`payment`/`design`/
-  `first_product`/`ready` steps — each needs its own real form + save logic,
-  following the same shape `store` established (or, for `ready`, real
+- The `language_currency`/`delivery`/`payment`/`design`/`first_product`/
+  `ready` steps — each needs its own real form + save logic, following the
+  same shape `store`/`contacts` established (or, for `ready`, real
   `Store Readiness` integration — Phase 14, not started).
 - Store step's **logo** upload (Functional Scope §2 lists it under Store) —
   deferred; needs `McMediaPicker` (Phase 11, already shipped) wired to a
