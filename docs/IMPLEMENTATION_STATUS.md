@@ -1907,8 +1907,8 @@ scenarios — empty product list, empty field list, unknown field name,
 valid status update with ID dedup/normalization, multiple invalid field
 values reported independently, nullable `special_price`, `category_ids`
 validation, chunk splitting, and three `nextBatch()` steps plus one
-past-the-end call); full `tests/mintcart/` suite re-run end to end (34
-files, was 33) — all pass, no regressions. Same pre-existing gap as every
+past-the-end call); full `tests/mintcart/` suite re-run end to end (35
+files, was 34) — all pass, no regressions. Same pre-existing gap as every
 earlier phase: no MySQL server in this environment, so the (not yet built)
 apply step will need manual verification on a real install once it exists.
 
