@@ -1016,6 +1016,48 @@ install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
 
 ---
 
+## `upload/admin/controller/tool/backup.php`
+
+**Reason:** MC-0004 (`docs/fixes/registry.md`) — `ControllerToolBackup::import()`'s
+safety check that stops a backup restore before it reaches the `user`/
+`user_group` tables' `TRUNCATE TABLE` lines compared `$line` against a
+*hardcoded* byte-length (`24`/`30`) instead of the actual length of the
+`DB_PREFIX`-aware needle string it already builds. Those numbers only
+happen to be correct for the stock 3-character `oc_` prefix; any other
+`DB_PREFIX` length (OpenCart's own installer, and MintCart's Setup Wizard,
+both allow choosing one) makes the comparison never match, so the safety
+guard silently never fires and a restore can run straight through the
+`user`/`user_group` tables instead of stopping before them. Full
+reproduction and rationale: `docs/fixes/registry.md`'s MC-0004 entry.
+
+**Why it can't live in the MintCart layer instead:** This is a one-line
+logic error inside OpenCart's own backup/restore streaming loop
+(`ControllerToolBackup::import()`), tightly coupled to that method's file
+handle/position/batch-count state. There is no separate MintCart-owned
+restore mechanism to move this into — Functional Scope §21's
+theme/extension rollback is a distinct, not-yet-built feature, not a
+replacement for this stock full-database backup/restore tool. Fixing the
+length computation in place is the smaller, safer diff.
+
+**Compatibility impact:** None for a stock `oc_`-prefixed install — the
+`strlen()`-derived lengths are identical to the old hardcoded `24`/`30` in
+that case (see the registry entry's reproduction). Every install with a
+different `DB_PREFIX` length now gets the safety guard actually working,
+which is a strictly safer behavior change (the guard can only start
+firing where it silently didn't before; it can never newly *fail* to fire
+somewhere it used to work). No change to the rest of `import()`'s
+batching/streaming logic, no template change, no schema change.
+
+**Tests:** `php -l` clean on the modified file. New
+`tests/mintcart/fixes/mc-0004-backup-restore-prefix-test.php` (5 scenarios)
+— this bug is pure string-length logic with no OpenCart runtime dependency,
+so unlike most controller-wiring fixes in this backlog it's fully testable
+in isolation without a live install; see the registry entry for what it
+covers. Full `tests/mintcart/**/*-test.php` suite re-run end to end — all
+passing, no regressions. **Not verified:** an actual restore against a real
+non-default-`DB_PREFIX` MySQL install (this environment has no MySQL
+server, the same pre-existing gap noted throughout this file) — a human
+should confirm per the registry entry's own manual-verification note.
 ## `upload/catalog/controller/startup/seo_url.php`
 
 **Reason:** Phase 18 (System route URL aliases,

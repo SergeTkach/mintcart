@@ -2707,6 +2707,37 @@ tracked once each.)*
 - [ ] SEO Core (tracked above as Phase 18)
 - [x] `docs/fixes/registry.md` Fix Registry established, entries added only after
       reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
+      (`category.php` blank language strings), MC-0002 (`search.php`
+      missing canonical/prev/next links), MC-0003 (`manufacturer.php` blank
+      language strings), and MC-0004 (`tool/backup`'s user/user_group
+      restore safety-stop hardcoded a byte-length instead of deriving it
+      from `DB_PREFIX`, this run — see below)
+- [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
+- [ ] Measured performance improvements (lazy loading, responsive images, asset
+      minification, cache invalidation API — no mandatory Redis)
+
+**This run: MC-0004.** Picked from `MINTCART_FUNCTIONAL_SCOPE.md` §18's
+Known Fix Research Queue ("hardcoded database prefix in backup/restore
+logic") — reproduced directly against this repo (not from memory, per
+`CLAUDE.md` §84): `ControllerToolBackup::import()`'s check for the
+`user`/`user_group` `TRUNCATE TABLE` lines used hardcoded lengths (`24`/`30`)
+that only happen to be correct for the stock 3-character `oc_` `DB_PREFIX`;
+any other prefix length (which OpenCart's installer, and MintCart's own
+Setup Wizard, both allow choosing) silently breaks the safety guard that
+stops a restore before it overwrites those two tables. Fixed by deriving
+the comparison length from the actual needle string's `strlen()` instead of
+a literal. New, fully isolated regression test (no OpenCart dependency, a
+first for this Fix Registry — MC-0001–MC-0003 all needed a live controller
+to test properly): `tests/mintcart/fixes/mc-0004-backup-restore-prefix-test.php`
+(5 scenarios). Full writeup: `docs/fixes/registry.md`'s MC-0004 entry and
+`docs/upstream-diff.md`'s new `upload/admin/controller/tool/backup.php`
+entry. Verified: `php -l` clean; full `tests/mintcart/**/*-test.php` suite
+re-run end to end (35 files, was 34) — all passing, no regressions. Not
+touched by, or touching, any of the 23 PRs open at the time of this run
+(none mention `tool/backup` or restore/backup logic).
+
+Fix Registry mechanism is established and has four real entries; the rest of
+this phase (diagnostics, measured performance work) is not started.
       (`category.php` blank language strings) and MC-0002 (`search.php`
       missing canonical/prev/next links, this run)
 - [~] Diagnostics dev mode (query count, DB time, render time, cache status) —
@@ -3480,6 +3511,20 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (this run): MC-0004 Fix Registry entry** (`tool/backup`'s
+hardcoded-byte-length safety check — see Phase 10 (Technical Plan)
+section above) — a self-contained, low-collision-risk increment picked
+because 23 PRs were open at the time (`#52`–`#75`), covering nearly every
+phase with unclaimed scope, and this repo's own admin asset-enqueue
+question (above) blocks the category-drag-and-drop and Entity Picker
+live-wiring candidates until a human resolves the Bootstrap-3/5 admin
+shell architectural question. Next candidates: re-check `gh pr list
+--state open` for what's newly merged/unclaimed, or work through the rest
+of `MINTCART_FUNCTIONAL_SCOPE.md` §18's Known Fix Research Queue
+(pagination `?page=1` — checked this run, does not reproduce on this
+baseline's `Pagination` class; database reconnect issues; multilingual
+SEO URL issues; cache race conditions; installer edge cases; PHP 8.x
+compatibility problems — none attempted yet).
 **Update (routine run): Phase 10 (Technical Plan) Diagnostics collector
 shipped.** At the time of this run, `list_pull_requests --state open`
 found 22 open PRs (`#52`-`#74`, minus `#58`) covering, among others: the
