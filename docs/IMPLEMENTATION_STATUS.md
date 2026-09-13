@@ -2398,6 +2398,10 @@ features (this one and Phase 12's Entity Picker) are now blocked on it.
 
 ## Phase 18 — SEO Core
 
+- [ ] SEO URL, canonical, meta title/description, XML sitemap, Schema.org
+      Product/Breadcrumb/Organization
+- [~] robots controls — `MintCart\Seo\RobotsBuilder` (pure contract + tests
+      only, no live wiring yet) — see below
 - [ ] SEO URL, canonical, meta title/description, robots controls, XML
       sitemap, Schema.org Product/Breadcrumb/Organization
 - [~] hreflang — `MintCart\Seo\HreflangBuilder` (pure contract + tests only,
@@ -2420,6 +2424,39 @@ features (this one and Phase 12's Entity Picker) are now blocked on it.
 - [ ] System route URL aliases (cart, checkout, search, contact, account, etc.)
       (`MINTCART_FUNCTIONAL_SCOPE.md` §4) — not attempted
 
+**In progress.** `MintCart\Seo\RobotsBuilder`
+(`upload/system/library/mintcart/seo/robotsbuilder.php`) decides the
+per-page `<meta name="robots" content="...">` directive: `noindex, follow`
+for the checkout flow and every account-area page (a fixed whitelist
+checked against the real controllers in this repo), `noindex, follow` for
+an empty `product/search` result, `index, follow` for everything else. No
+OpenCart dependency, unit-tested in isolation
+(`tests/mintcart/seo/robots-builder-test.php`, 74 assertions). Full
+writeup, including why there's no live controller wiring yet: `docs/developer/seo/robots.md`.
+Deliberately does not touch `ControllerCommonHeader`/`header.twig` (the
+natural wiring point) since those files are already being edited by an
+in-flight PR adding Schema.org JSON-LD — this increment stays
+additive-only (three new files under a new `mintcart/seo/` directory, zero
+existing files touched) to avoid a same-file collision, same reasoning an
+earlier `HreflangBuilder` increment already used for itself. Verified:
+`php -l` clean; full `tests/mintcart/**/*-test.php` suite re-run end to
+end (34 files), all passing, no regressions.
+
+At the time this increment started, the 17 open pull requests already
+covered: all five remaining Phase 12 entity-picker backends, the Setup
+Wizard Contacts and Language & currency steps, Business
+Contacts/Delivery/Payments facades and a Store Readiness dashboard widget,
+`mc-search-box`, Bulk Editor, Phase 1 Health checks, a release-packaging
+script, and — within Phase 18 itself — Schema.org JSON-LD, system route
+URL aliases, and hreflang (each deliberately avoiding the others' files,
+same pattern this increment follows). Robots controls was the one
+remaining, genuinely unclaimed Phase 18 sub-item.
+
+**Next step:** wire `RobotsBuilder` into `ControllerCommonHeader`/
+`mint_default/template/common/header.twig` once the header-chrome
+contention above clears (check `gh pr list --state open` first); meta
+title/description and canonical/XML-sitemap centralization remain
+unclaimed too, or re-check open PRs for what else has landed.
 **In progress.** `MintCart\Seo\HreflangBuilder`
 (`upload/system/library/mintcart/seo/hreflangbuilder.php`) assembles a
 page's `rel="alternate" hreflang="..."` link set from caller-supplied
@@ -3238,6 +3275,14 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (this run): Phase 18's robots-controls item shipped —
+`MintCart\Seo\RobotsBuilder`, additive-only (new `mintcart/seo/` files),
+no live wiring yet.** See that phase's section above for the full writeup
+and why the 17 open PRs at the time (#52-#69) left this as the one
+genuinely unclaimed Phase 18 sub-item. Next candidates once the open PRs
+land: wiring `RobotsBuilder`/`HreflangBuilder`/`SchemaOrgBuilder` into
+`ControllerCommonHeader`, meta title/description, or re-checking
+`gh pr list --state open` for what's newly unclaimed.
 **Update (this run): the release packaging script is done** (see
 "Phase 11 (Technical Plan) — Update / Compatibility" above,
 `scripts/release.js`/`docs/release.md`). At the time of this run, 16 open
