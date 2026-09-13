@@ -370,3 +370,32 @@ actually submitted. On a real install:
    Setup Wizard's Store/Contacts steps show the same telephone/email/address
    values — all four should be reading the exact same `config`/
    `mintcart_contacts` storage, not a second copy.
+
+## Phase 15 — `mc-search-box` component, never exercised in a browser
+
+`assets/src/js/components/search-box.js` is bundle-verified (present in
+`catalog.min.js`, absent from `admin.min.js`) but has no live template to
+mount against yet (`docs/developer/components/search-box.md`). Once a
+future increment drops its markup contract into a real page (most likely
+`mint_default/template/common/header.twig`, replacing or sitting alongside
+the legacy search fragment):
+
+1. Type a 1-character query and confirm no network request fires (open the
+   browser's network tab) and the dropdown stays closed.
+2. Type a 2+ character query matching at least one real product and
+   confirm the dropdown opens with image/name/price per result.
+3. Type quickly (e.g. paste then keep typing) and confirm only the final
+   query's response is ever rendered — no flicker back to an earlier,
+   slower response (the `AbortController` cancellation this component
+   relies on).
+4. From the input, press ArrowDown and confirm focus moves into the first
+   result; ArrowDown/ArrowUp move between results; ArrowUp from the first
+   result returns focus to the input; Enter navigates to the focused
+   result's product page; Escape closes the dropdown and returns focus to
+   the input.
+5. Search for a term matching more than 8 products (the server's
+   `SUGGEST_LIMIT`) and confirm a "View all results" link appears and
+   navigates to `product/search`'s full results page with the same query;
+   search for a term matching 8 or fewer and confirm it does not appear.
+6. Click outside the dropdown and confirm it closes without clearing the
+   typed query.
