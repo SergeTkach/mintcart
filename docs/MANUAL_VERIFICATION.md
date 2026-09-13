@@ -184,6 +184,48 @@ manufacturer that has an image set and one that doesn't:
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
 
+## Phase 18 — System route URL aliases, never exercised end to end
+
+`ControllerMintcartSeoSystemPages` is `php -l` clean and its pure
+whitelist (`MintCart\Seo\SystemRoutes`) is unit-tested, but no live
+MySQL/admin session in this environment means the form was never actually
+submitted, and the `ControllerStartupSeoUrl::rewrite()` core change was
+never exercised against a real request. On a real install
+(`config_theme = mint_default` not required — this feature is
+theme-independent):
+
+1. Grant `mintcart/seo/system_pages` **Access** + **Modify** to your user
+   group under **System → Users → User Groups**, then confirm a new
+   "System Pages" entry appears in the left nav under **Design**, next to
+   "SEO URL".
+2. Open **Design → System Pages** and confirm all twelve rows render with
+   their correct default route shown (`route=checkout/cart`, etc.) and a
+   blank alias field (assuming a fresh install with no prior `seo_url`
+   rows for these routes).
+3. Set the "Shopping Cart" row's alias to `cart` and Save. Confirm the
+   success message, and that reloading the screen shows `cart` still
+   filled in (round-trips through `seo_url`, not lost).
+4. Visit `/cart` directly (no `index.php?route=...`) and confirm it
+   resolves to the shopping cart page — this direction already worked
+   before this change (`ControllerStartupSeoUrl::index()`'s pre-existing
+   generic decode branch), so a failure here indicates a decode-side
+   regression, not this change.
+5. **The part this change actually adds:** find a link the storefront
+   itself generates to `route=checkout/cart` (e.g. the header's cart
+   icon/link) and confirm its `href` is now `/cart` rather than
+   `index.php?route=checkout/cart`.
+6. Attempt to save two different rows (e.g. "Shopping Cart" and
+   "Checkout") with the same alias. Confirm both show a validation error
+   and neither saves.
+7. Set the "Checkout" row's alias to a value already used by an unrelated
+   `seo_url` row created via the stock **Design → SEO URL** screen (e.g.
+   a category's own keyword). Confirm a validation error and nothing
+   saves — the store-scoped `getSeoUrlsByKeyword()` collision check should
+   catch it regardless of which screen created the conflicting row.
+8. Clear the "Shopping Cart" alias (blank the field) and Save. Confirm the
+   corresponding `seo_url` row is deleted (visible in **Design → SEO
+   URL**'s own list) and `/cart` no longer resolves (falls back to
+   `index.php?route=checkout/cart`).
 ## Phase 14 — `Business → Delivery`/`Payments` facades, never exercised end to end
 
 `ControllerMintcartBusinessDelivery`/`...Payments` are `php -l` clean and

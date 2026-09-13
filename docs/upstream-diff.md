@@ -1016,6 +1016,70 @@ install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
 
 ---
 
+## `upload/catalog/controller/startup/seo_url.php`
+
+**Reason:** Phase 18 (System route URL aliases,
+`MINTCART_FUNCTIONAL_SCOPE.md` §4). `ControllerMintcartSeoSystemPages`
+(`docs/developer/seo/system-route-aliases.md`) lets a shop owner set a
+friendly `seo_url` alias for a fixed whitelist of "system pages"
+(`MintCart\Seo\SystemRoutes::ROUTES` — cart, checkout, search, contact,
+account, login, register, wishlist, compare, special, manufacturer,
+sitemap) that carry no id parameter of their own. Incoming request decoding
+of a plain `keyword => route` `seo_url` row already worked with zero
+changes — `index()`'s own generic branch (the `$url[0] != '...id'` checks
+near the end of the method) already assigns `$query->row['query']` straight
+to `$this->request->get['route']`. **Outgoing link generation did not**:
+`rewrite()` only special-cases `product_id`/`manufacturer_id`/`path`/
+`information_id` inside its `foreach ($data as $key => $value)` loop — a
+plain `route=checkout/cart` link with no id keys never matched any branch,
+so `$url` stayed empty and the method fell through to `return $link`
+unchanged (`index.php?route=checkout/cart` instead of `/cart`, even with a
+matching `seo_url` row already saved). Added one small, additive check
+right after the existing loop: if `$url` is still empty and `$data['route']`
+is one of the twelve known system routes, look up a `seo_url` row by
+`query = route` (same query pattern, same store/language scoping, as every
+existing branch in this method) and use its `keyword` the same way the
+existing branches do.
+
+**Why it can't live in the MintCart layer instead:** `rewrite()` is
+OpenCart's own link-rewriting hook, registered against `Url` via
+`$this->url->addRewrite($this)` in this same class's `index()` and called
+by `Url::link()` for every generated link in the request. There is no
+MintCart-owned equivalent hook for outbound URL rewriting; reimplementing
+that mechanism in parallel would mean two systems deciding what a link
+looks like. Extending the one
+existing method that already owns this decision, with a change scoped to
+exactly the twelve routes `SystemRoutes` declares (every other route is
+completely unaffected — the new check only runs `if (!$url && ...)`, after
+every pre-existing branch has already had its chance), keeps this a small,
+targeted addition rather than a parallel routing layer.
+
+**Compatibility impact:** Purely additive — the new branch only ever fires
+when (a) no earlier branch already produced a `$url` and (b) `$data['route']`
+exactly matches one of the twelve whitelisted routes. Every other route
+(the vast majority of links a store generates) is untouched, byte-for-byte
+identical output to before this change. A store with no `seo_url` row for
+any of the twelve routes (the common case until an admin visits the new
+**Design → System Pages** screen and sets at least one alias) sees zero
+behavior change — the lookup query simply returns no rows, `$url` stays
+empty, same `return $link` fallback as before.
+
+**Tests:** `php -l` clean. `MintCart\Seo\SystemRoutes` (the whitelist this
+change consults) is covered by `tests/mintcart/seo/system-routes-test.php`
+(8 scenarios) — see `docs/developer/seo/system-route-aliases.md` for why
+`rewrite()`'s new branch itself has no standalone test (it is four lines of
+already-proven-safe SQL/array-membership glue around a method with no
+OpenCart-independent seam to unit-test in isolation, same category as this
+method's own four pre-existing branches, none of which have a test either).
+Full `tests/mintcart/**/*-test.php` suite re-run end to end — all passing,
+no regressions. **Not verified:** no live MySQL/`Url`/`Registry` session in
+this environment — a human should confirm on a real install that saving an
+alias (e.g. `cart` for `checkout/cart`) via **Design → System Pages** makes
+both `/cart` resolve to the shopping cart page (already true before this
+change, via `index()`'s existing generic decode) **and** every link the
+store itself generates to `route=checkout/cart` (e.g. the header cart icon)
+come out as `/cart` instead of `index.php?route=checkout/cart` (the part
+this change adds) — see `docs/MANUAL_VERIFICATION.md`'s new Phase 18 entry.
 ## `upload/catalog/controller/product/product.php` / `upload/catalog/language/en-gb/product/product.php`
 
 **Reason:** Phase 6/8 (Product Card / Theme resolver, `MINTCART_TECHNICAL_PLAN.md`

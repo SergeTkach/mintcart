@@ -2522,6 +2522,31 @@ features (this one and Phase 12's Entity Picker) are now blocked on it.
       only, no live wiring yet) — see below
 - [ ] SEO URL, canonical, meta title/description, robots controls, XML
       sitemap, Schema.org Product/Breadcrumb/Organization
+- [x] System route URL aliases (cart, checkout, search, contact, account, etc.)
+      — `MintCart\Seo\SystemRoutes` (the fixed whitelist of twelve routes) +
+      `ControllerMintcartSeoSystemPages` (`Design → System Pages`, a
+      facade over the stock `seo_url` table, not a second SEO storage) +
+      a small additive `ControllerStartupSeoUrl::rewrite()` core change so
+      a *generated* link also comes out as the saved alias (incoming
+      request decode already worked with zero core changes). Full
+      writeup: `docs/developer/seo/system-route-aliases.md`,
+      `docs/upstream-diff.md`'s `startup/seo_url.php` entry. Test:
+      `tests/mintcart/seo/system-routes-test.php` (8 scenarios). Known
+      limitation: scoped to the main store + storefront default language
+      only, no multi-store/multi-language variant yet.
+
+**Update (this run):** started this phase with System route URL aliases —
+at the time this run began, PR #62 (also open, unmerged) had already
+started this same phase from a different angle (`MintCart\Seo\SchemaOrgBuilder`
++ Organization/BreadcrumbList JSON-LD), confirmed via its own diff to
+touch none of the files this run touches (`seo_url.php`,
+`SystemRoutes`, `mintcart/seo/system_pages.*`, `column_left.php`'s
+Design menu block vs. its own `header.php`/`category.php`/`search.php`
+changes) — a human will reconcile both onto `master` once merged; this
+file's checklist above reflects only this run's own increment, not #62's
+still-unmerged one. Rest of the phase (hreflang/robots, canonical/sitemap
+centralization beyond what #62 may add, Schema.org Product once a
+`mint_default` product-detail page exists) remains unclaimed.
 - [~] hreflang — `MintCart\Seo\HreflangBuilder` (pure contract + tests only,
       no live wiring yet) — see below
 - [x] SEO URL, canonical — already stock OpenCart (`ControllerSeoUrl`,
