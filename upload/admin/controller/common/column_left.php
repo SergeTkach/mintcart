@@ -365,12 +365,23 @@ class ControllerCommonColumnLeft extends Controller {
 
 			// Business (MINTCART_FUNCTIONAL_SCOPE.md §3, MINTCART_TECHNICAL_PLAN.md §23)
 			// - UI facades over standard OpenCart storage/extensions, not a
-			// second data store (CLAUDE.md §6/§39). Delivery/Payments are
+			// second data store (CLAUDE.md §6/§39). Contacts is a facade
+			// over the mintcart_contacts setting
+			// (ControllerMintcartBusinessContacts); Delivery/Payments are
 			// facades over the existing shipping/payment extension list
-			// (ControllerMintcartBusinessDelivery/Payments); a Contacts
-			// facade over config/mintcart_contacts settings is a separate,
-			// independent increment.
+			// (ControllerMintcartBusinessDelivery/Payments). Kept in one
+			// menu group/one 'children' array — see docs/MANUAL_VERIFICATION.md
+			// "Phase 14 — duplicate menu-mintcart-business admin menu group"
+			// for why this used to be two separate groups.
 			$business = array();
+
+			if ($this->user->hasPermission('access', 'mintcart/business/contacts')) {
+				$business[] = array(
+					'name'	   => $this->language->get('text_mintcart_business_contacts'),
+					'href'     => $this->url->link('mintcart/business/contacts', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
 
 			if ($this->user->hasPermission('access', 'mintcart/business/delivery')) {
 				$business[] = array(
@@ -432,33 +443,6 @@ class ControllerCommonColumnLeft extends Controller {
 					'name'	   => $this->language->get('text_marketing'),
 					'href'     => '',
 					'children' => $marketing
-				);
-			}
-
-			// Business (MINTCART_FUNCTIONAL_SCOPE.md §3, MINTCART_TECHNICAL_PLAN.md §23)
-			// - a UI facade over standard OpenCart storage/extensions, not a
-			// second data store (CLAUDE.md §6/§39). Only 'Contacts' has a
-			// real screen so far (ControllerMintcartBusinessContacts);
-			// 'Delivery'/'Payments' are future increments over the same
-			// pattern, added the same conditional way every other menu
-			// group above already is.
-			$business = array();
-
-			if ($this->user->hasPermission('access', 'mintcart/business/contacts')) {
-				$business[] = array(
-					'name'	   => $this->language->get('text_mintcart_business_contacts'),
-					'href'     => $this->url->link('mintcart/business/contacts', 'user_token=' . $this->session->data['user_token'], true),
-					'children' => array()
-				);
-			}
-
-			if ($business) {
-				$data['menus'][] = array(
-					'id'       => 'menu-mintcart-business',
-					'icon'	   => 'fa-briefcase',
-					'name'	   => $this->language->get('text_mintcart_business'),
-					'href'     => '',
-					'children' => $business
 				);
 			}
 
