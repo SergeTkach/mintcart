@@ -54,6 +54,9 @@
 {% for analytic in analytics %}
 {{ analytic }}
 {% endfor %}
+{% if mc_schema_organization %}
+<script type="application/ld+json">{{ mc_schema_organization|raw }}</script>
+{% endif %}
 </head>
 <body>
 {{ mc_header }}

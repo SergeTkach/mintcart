@@ -2252,11 +2252,82 @@ features (this one and Phase 12's Entity Picker) are now blocked on it.
 
 ## Phase 18 — SEO Core
 
-- [ ] SEO URL, canonical, hreflang, meta title/description, robots controls, XML
-      sitemap, Schema.org Product/Breadcrumb/Organization
+- [x] SEO URL, canonical — already stock OpenCart (`ControllerSeoUrl`,
+      `document->addLink(..., 'canonical')`, present since before MintCart;
+      MC-0002 in Phase 10's Fix Registry entry fixed `search.php`'s missing
+      canonical/prev/next, see below)
+- [ ] hreflang, robots controls — not attempted
+- [~] XML sitemap — already stock OpenCart
+      (`catalog/controller/extension/feed/google_sitemap.php`, an
+      installable dashboard/feed extension, same mechanism the Phase 14
+      dashboard widget (PR #59) uses for its own tile) — works today via the
+      standard **Extensions → Feeds** flow; not centralized into a MintCart
+      "SEO" admin section yet, no new backend needed per se (`CLAUDE.md`
+      §39: don't duplicate what OpenCart already has)
+- [x] **Schema.org: Product, BreadcrumbList, Organization** — see below.
+      Product is built + unit-tested; BreadcrumbList and Organization are
+      also live-wired.
 - [ ] System route URL aliases (cart, checkout, search, contact, account, etc.)
+      (`MINTCART_FUNCTIONAL_SCOPE.md` §4) — not attempted
 
-Not started.
+**This run: `MintCart\Seo\SchemaOrgBuilder`.** Pure, OpenCart-independent
+builder (`upload/system/library/mintcart/seo/schemaorgbuilder.php`) for the
+three Schema.org types the scope doc names explicitly, same shape as
+`ProductViewProvider`/`SearchService`. Full design writeup:
+`docs/developer/seo/schema-org.md`.
+
+- **Organization** — live-wired into `ControllerCommonHeader::index()`,
+  inside the existing `isMintAware()` gate; renders as one
+  `<script type="application/ld+json">` in
+  `mint_default/template/common/header.twig`'s `<head>`, on every
+  Mint-aware page (header is common to all of them). Reuses the same config
+  values `HeaderViewProvider`/`FooterViewProvider` already read
+  (`config_name`/`config_logo`/`config_telephone`/`config_address`) — no
+  new OpenCart storage.
+- **BreadcrumbList** — live-wired into `ControllerProductCategory::index()`
+  and `ControllerProductSearch::index()`, at the end of each method once
+  `$data['breadcrumbs']` is fully built (that array grows incrementally
+  through both methods); renders as a second `<script type="application/ld+json">`
+  block in `category.twig`/`search.twig`, right after `{{ header }}`.
+  Manufacturer/Special listing pages are not wired yet (natural next
+  candidates, same pattern).
+- **Product** — `SchemaOrgBuilder::product()` is implemented and
+  unit-tested but has **no live consumer yet**: `mint_default` has no
+  `template/product/product.twig` at all (Phase 6/8 wired the *listing*
+  pages, never the product detail page itself). Wiring it needs that page
+  template to exist first — out of scope for this run, see "Next step"
+  below and `docs/developer/seo/schema-org.md`'s "Product: built, not
+  wired" section for the full rationale.
+
+Both live wiring points reuse the exact same `ActiveTheme::isMintAware()`
+gate every other Mint-only controller addition uses (no cost/behavior
+change on the legacy `default` theme or a third-party theme), and both
+re-check it fresh rather than reusing `$mint_render_product_cards` (which
+can be flipped to `false` mid-request by an unrelated per-product
+`ProductCardListRenderer` failure — a broken product-card must not also
+silently suppress a valid breadcrumb schema). A `SchemaOrgBuilder` failure
+is caught and logged via `MintCart\Core\Logger`, never fatals the page —
+same pattern every other `ComponentRenderer`/provider call site uses.
+
+Verified: `php -l` clean on every touched/added PHP file, re-swept across
+the full `upload`/`tests` tree; new
+`tests/mintcart/seo/schema-org-builder-test.php` (16 scenarios — required-key
+validation, optional-field omission, price/currency/availability shaping,
+`false`-price and zero-review-count edge cases, `</script>`-breakout
+prevention in `toJsonLd()`); full `tests/mintcart/**/*-test.php` suite
+re-run end to end (34 files) — all passing, no regressions. Twig
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts checked
+balanced on all three touched `.twig` files (same script-based technique
+used for every earlier `.twig` file in this repo). No JS/CSS touched, so
+`npm run build` was not re-run this session. **Not verified:** no live
+MySQL/`vendor/twig/twig` session in this environment — same pre-existing
+gap as every earlier phase; a human should load a real `mint_default` page
+and validate both JSON-LD blocks with Google's Rich Results Test — see the
+new Phase 18 entry in `docs/MANUAL_VERIFICATION.md` for the exact steps.
+
+**In progress** — hreflang/robots, System route URL aliases, sitemap
+centralization, and Manufacturer/Special breadcrumb wiring are all
+unclaimed next steps; Product schema awaits its page template.
 
 ## Phase 9 (Technical Plan §42 numbering) — Productivity
 
@@ -3005,3 +3076,20 @@ Settings UI façades, wiring Phase 13's `ready` step to `StoreReadiness`
 the admin asset-enqueue problem itself (now blocking Phase 12 live wiring
 and Phase 17 live UI, though this run's own dashboard widget deliberately
 avoided it by using stock Bootstrap 3 markup instead of `mc-*`).
+
+**Update (a later run): Phase 18 (SEO Core) started — `MintCart\Seo\SchemaOrgBuilder`
++ live Organization/BreadcrumbList wiring.** At the time of this run, open
+PRs #52/#53-57/#59/#60/#61 covered Phase 13's Contacts step, all five
+remaining Phase 12 entity-picker backends, Phase 14's dashboard widget and
+Business Contacts facade, and Phase 15's search-box component — #61's own
+body explicitly flagged `QuickOrderService`/`CheckoutService` as too large
+to attempt safely without live MySQL verification, so this run picked
+Phase 18 instead, genuinely unclaimed and untouched by any of them. See the
+Phase 18 section above and `docs/developer/seo/schema-org.md` for the full
+writeup. Next candidates: wire `SchemaOrgBuilder::breadcrumbList()` into
+Manufacturer/Special the same way Category/Search now use it; wire
+`SchemaOrgBuilder::product()` once a `mint_default/template/product/product.twig`
+exists (a separate, larger increment — Phase 6/8 never wired the product
+detail page itself); hreflang/robots controls; System route URL aliases
+(`MINTCART_FUNCTIONAL_SCOPE.md` §4); or re-check `gh pr list --state open`
+for what's newly unclaimed.
