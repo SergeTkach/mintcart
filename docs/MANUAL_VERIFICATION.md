@@ -605,3 +605,37 @@ specials:
    silently doing nothing or throwing a fatal error.
 6. Confirm the legacy Delete/Copy buttons still behave exactly as before
    (this increment must not have changed their behavior).
+
+## Phase 14 — duplicate `menu-mintcart-business` admin menu group
+
+`upload/admin/controller/common/column_left.php` now builds **two**
+separate `$data['menus'][]` entries with `'id' => 'menu-mintcart-business'`
+and the same label (`text_mintcart_business`) — one from the earlier
+Business → Contacts increment (around the "Marketing" block, `$business`
+containing only `mintcart/business/contacts`), and a second, unrelated one
+added by PR #65 (Business → Delivery/Payments) further down in the same
+file, containing `mintcart/business/delivery`/`mintcart/business/payments`.
+Neither PR's branch touched the other's insertion point, so git merged
+both cleanly with no textual conflict — `php -l` and CI stayed green, but
+the two blocks were never reconciled into one.
+
+Found by static code reading (`grep -n "'id".*'menu-` across
+`column_left.php`), not by loading the admin UI — no live admin session in
+this environment. On a real install, confirm:
+
+1. Log into admin and look at the left sidebar: **"Business" currently
+   appears as two separate collapsible menu groups** instead of one
+   (first containing only "Contacts", second containing "Delivery" and
+   "Payments").
+2. Two DOM elements will also share the same `id="menu-mintcart-business"`
+   attribute if the admin template renders that id onto an element —
+   confirm whether this causes any visible/JS side effect (e.g. a
+   collapse/expand toggle only affecting the first match).
+3. Fix: merge the two `$business = array();` blocks in
+   `column_left.php` into one (Contacts + Delivery + Payments together,
+   each still gated by its own `hasPermission()` check), keep a single
+   `$data['menus'][] = array('id' => 'menu-mintcart-business', ...)`
+   entry, and delete the now-redundant second block.
+4. After the fix, confirm all three permission-gated links (Contacts,
+   Delivery, Payments) still each independently show/hide correctly
+   based on the logged-in user's group permissions.
