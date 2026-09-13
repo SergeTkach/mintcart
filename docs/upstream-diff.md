@@ -940,6 +940,16 @@ gap the whole `upload/admin/**` tree currently has) — verified by reading
 the diff against the existing Layouts/Theme/Banner/SEO URL entries it
 sits next to, which it mirrors exactly.
 
+**Update (this run — Phase 14, `Business → Delivery`/`Payments`):** adds a
+new top-level "Business" menu group (`menu-mintcart-business`), placed
+just before the existing Marketing group, with "Delivery"/"Payments"
+children gated by `mintcart/business/delivery`/`mintcart/business/payments`
+access respectively — same conditional-array-then-conditional-group-push
+shape every other menu group in this file already uses (see the Marketing
+group immediately below it). `docs/developer/onboarding/business-delivery-payments.md`
+has the full design writeup. Purely additive; no existing menu entry or
+permission check touched. **Tests:** `php -l` clean.
+
 ---
 
 ## `upload/admin/model/catalog/category.php` / `upload/admin/controller/catalog/category.php`

@@ -351,6 +351,41 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			// Business (MINTCART_FUNCTIONAL_SCOPE.md §3, MINTCART_TECHNICAL_PLAN.md §23)
+			// - UI facades over standard OpenCart storage/extensions, not a
+			// second data store (CLAUDE.md §6/§39). Delivery/Payments are
+			// facades over the existing shipping/payment extension list
+			// (ControllerMintcartBusinessDelivery/Payments); a Contacts
+			// facade over config/mintcart_contacts settings is a separate,
+			// independent increment.
+			$business = array();
+
+			if ($this->user->hasPermission('access', 'mintcart/business/delivery')) {
+				$business[] = array(
+					'name'	   => $this->language->get('text_mintcart_business_delivery'),
+					'href'     => $this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($this->user->hasPermission('access', 'mintcart/business/payments')) {
+				$business[] = array(
+					'name'	   => $this->language->get('text_mintcart_business_payments'),
+					'href'     => $this->url->link('mintcart/business/payments', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($business) {
+				$data['menus'][] = array(
+					'id'       => 'menu-mintcart-business',
+					'icon'	   => 'fa-briefcase',
+					'name'	   => $this->language->get('text_mintcart_business'),
+					'href'     => '',
+					'children' => $business
+				);
+			}
+
 			// Marketing
 			$marketing = array();
 

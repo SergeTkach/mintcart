@@ -2080,11 +2080,19 @@ already asks for its four fields.
       touched, zero upstream diff. Language file:
       `upload/admin/language/en-gb/mintcart/readiness.php`.
 - [~] `Business → Contacts`, `Business → Delivery`, `Business → Payments` UI façades
+      over standard OpenCart storage/extensions — **Delivery and Payments
+      done this run** (see below); Contacts is separately in flight as an
+      open PR — check `docs/IMPLEMENTATION_STATUS.md`'s current state
+      before assuming it's still unclaimed.
+- [ ] Dashboard widget rendering the checklist — not started on `master`
+      as of this run; `mintcart/readiness` is a JSON endpoint only, no
+      admin menu entry or Twig template yet. May already be in flight on
+      an open PR — check before starting one.
       over standard OpenCart storage/extensions — **Contacts done**
       (see below); Delivery/Payments not started.
 - [x] Dashboard widget rendering the checklist — done, see below.
 
-**Sub-step (this run):** `StoreReadiness` service + `mintcart/readiness`
+**Sub-step (a previous run):** `StoreReadiness` service + `mintcart/readiness`
 JSON endpoint. Full writeup: `docs/developer/onboarding/store-readiness.md`.
 Verified: `php -l` clean on every new file and on the full `upload`/`tests`
 tree; full `tests/mintcart/` suite (13 files, including the new
@@ -2096,6 +2104,47 @@ human should hit `mintcart/readiness` as a logged-in admin (the
 `design/homepage`) and confirm each signal flips as expected on a real
 install.
 
+**Update (this run): `Business → Delivery`/`Business → Payments` facades
+are done.** `ControllerMintcartBusinessDelivery`/`...Payments`
+(`upload/admin/controller/mintcart/business/{delivery,payments}.php`,
+routes `mintcart/business/delivery`/`mintcart/business/payments`) list the
+store's installed shipping/payment extensions
+(`ModelSettingExtension::getInstalled()`, the same source
+`Extensions → Shipping/Payment Methods` already use) with a one-click
+enable/disable toggle over the exact `<type>_<code>_status` setting key
+`ModelMintcartReadiness::getSignals()` already reads — full settings
+configuration stays on each extension's own existing
+`extension/shipping|payment/<code>` screen, linked as "Configure", per
+`MINTCART_TECHNICAL_PLAN.md` §23's "don't build a second shipping/payment
+subsystem". New "Business" menu group in `column_left.php`
+(`mintcart/business/delivery`/`mintcart/business/payments` permission-gated).
+Full design writeup, including why a merge-then-save toggle (not
+`editSettingValue()`) and why two near-duplicate controllers instead of a
+shared base class: `docs/developer/onboarding/business-delivery-payments.md`.
+
+Step 0 dedup check found 11 other open PRs at the time (`#52`-`#63`);
+none touch `column_left.php`, `admin/controller/mintcart/business/*`, or
+Phase 14's Delivery/Payments scope — `#60` (if still open) covers a
+*Contacts* facade only, a different file/route with no overlap.
+
+Verified: `php -l` clean on every touched/added PHP file, re-swept across
+the full `upload/`/`tests/` tree; both new `.twig` files' tag counts
+checked balanced; full `tests/mintcart/**/*-test.php` suite re-run end to
+end (33 files) — all passing, no regressions (no new pure logic to test —
+this is OpenCart controller/Twig wiring around existing
+`ModelSettingExtension`/`ModelSettingSetting` calls, same "no new unit
+test" precedent the Store Readiness dashboard widget already set). Not
+verified: no live MySQL/admin session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 14 entry.
+
+**Next step:** a dashboard widget/admin menu entry rendering
+`mintcart/readiness`'s checklist (check open PRs first — may already be
+claimed), a `Business → Contacts` facade (ditto), reconciling the
+"Business" `column_left.php` menu group once more than one of these PRs
+has merged (small, expected conflict — same shape every parallel
+Wizard-step/entity-picker increment in this project has already
+reconciled), or wiring Phase 13's still-unbuilt `ready` Wizard step to
+`StoreReadiness`.
 **Update (a later run): the Store Readiness dashboard widget is done.**
 `ControllerExtensionDashboardMintcartReadiness`
 (`upload/admin/controller/extension/dashboard/mintcart_readiness.php`) is
@@ -3380,6 +3429,19 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (routine run): Phase 14's `Business → Delivery`/`Payments`
+facades shipped** — see that phase's section above and
+`docs/developer/onboarding/business-delivery-payments.md` for the full
+writeup. At the time of this run 11 other PRs were open (`#52`-`#63`,
+covering the Wizard Contacts/Language&currency steps, all five remaining
+Phase 12 entity-picker backends, a Store Readiness dashboard widget, a
+Business Contacts facade, the search-box UI component, Bulk Editor, and
+SEO Core Schema.org) — none overlapped this increment's files. Also
+found: `wizard.php`/`wizard.twig`/`wizardprogress.php` are contended by
+two open PRs (`#52`, `#64`) and `entity.php` by five (`#53`-`#57`) — a
+future run should treat both as blocked hot files (this routine's own
+step 0f) until those land, rather than adding another Wizard step or
+entity-picker backend on top.
 **Update (2026-09-06, routine run) — Phase 6/8: Mint Default product
 detail page.** Step 0 dedup check against 20 open PRs (#52-#73) found none
 touching `catalog/controller/product/product.php` or any
