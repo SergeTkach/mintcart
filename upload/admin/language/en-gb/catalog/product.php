@@ -17,6 +17,12 @@ $_['text_percent']           = 'Percentage';
 $_['text_amount']            = 'Fixed Amount';
 $_['text_keyword']           = 'Do not use spaces, instead replace spaces with - and make sure the SEO URL is globally unique.';
 
+// Text - Bulk Editor (MintCart Phase 16, MINTCART_FUNCTIONAL_SCOPE.md §7/§17)
+$_['text_bulk_update']       = 'Bulk update';
+$_['text_bulk_field_status']   = 'Status';
+$_['text_bulk_field_quantity'] = 'Quantity';
+$_['text_bulk_field_price']    = 'Price';
+
 // Column
 $_['column_name']            = 'Product Name';
 $_['column_model']           = 'Model';
@@ -107,4 +113,6 @@ $_['error_name']             = 'Product Name must be greater than 1 and less tha
 $_['error_meta_title']       = 'Meta Title must be greater than 1 and less than 255 characters!';
 $_['error_model']            = 'Product Model must be greater than 1 and less than 64 characters!';
 $_['error_keyword']          = 'SEO URL already in use!';
+$_['error_bulk_field']       = 'Warning: Choose a valid bulk-update field!';
+$_['error_bulk_value']       = 'Warning: The bulk-update value is not valid for the chosen field!';
 $_['error_unique']           = 'SEO URL must be unique!';
