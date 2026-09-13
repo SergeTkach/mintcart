@@ -1949,8 +1949,7 @@ correctly and that a filled-in social link actually renders on a real
       `upload/admin/language/en-gb/mintcart/readiness.php`.
 - [ ] `Business → Contacts`, `Business → Delivery`, `Business → Payments` UI façades
       over standard OpenCart storage/extensions — not started.
-- [ ] Dashboard widget rendering the checklist — not started; `mintcart/readiness`
-      is a JSON endpoint only, no admin menu entry or Twig template yet.
+- [x] Dashboard widget rendering the checklist — done this run, see below.
 
 **Sub-step (this run):** `StoreReadiness` service + `mintcart/readiness`
 JSON endpoint. Full writeup: `docs/developer/onboarding/store-readiness.md`.
@@ -1964,10 +1963,41 @@ human should hit `mintcart/readiness` as a logged-in admin (the
 `design/homepage`) and confirm each signal flips as expected on a real
 install.
 
+**Update (this run): the Store Readiness dashboard widget is done.**
+`ControllerExtensionDashboardMintcartReadiness`
+(`upload/admin/controller/extension/dashboard/mintcart_readiness.php`) is
+a **standard OpenCart 3 dashboard extension** — the same auto-discovery
+mechanism every stock widget (`recent.php`, `online.php`, `sale.php`, ...)
+already uses (`admin/controller/common/dashboard.php` globs
+`admin/controller/extension/dashboard/*.php`, and a store admin installs +
+enables it once under Extensions -> Dashboard, exactly like any other
+widget) — not OCMOD, not a new mechanism. `dashboard()` reuses the exact
+same `StoreReadiness::evaluate()` + `ModelMintcartReadiness::getSignals()`
+pair `ControllerMintcartReadiness`'s JSON endpoint already calls — one
+computation, two consumers, per `docs/developer/onboarding/store-readiness.md`'s
+own "next consumers" note. Styled with stock Bootstrap 3
+`.tile`/`.progress`/`.label` classes (same as `online_info.twig`), **not**
+`mc-*` markup — deliberately sidesteps the still-unsolved admin
+asset-enqueue blocker (Phase 12/17's identical gap) rather than shipping
+unstyled `mc-*` classes on a page that can't load their CSS. Tile footer
+links to `mintcart/wizard` ("Continue setup..."). Full writeup:
+`docs/developer/onboarding/store-readiness.md`'s new "Dashboard widget"
+section.
+
+Verified: `php -l` clean on the new controller/language file; the two new
+`.twig` files' tag counts checked balanced. No new unit test — pure
+OpenCart controller/Twig wiring around already-tested logic, no new
+computation to test; full `tests/mintcart/` suite re-run end to end — all
+pass, no regressions. Not verified: no live MySQL/admin session in this
+environment — a human should install + enable the widget under Extensions
+-> Dashboard on a real install and confirm it renders/saves correctly. See
+`docs/MANUAL_VERIFICATION.md`'s new Phase 14 entry.
+
 **Next step:** either the Business Settings UI façades (`Business →
-Contacts/Delivery/Payments`), or a dashboard widget/admin menu entry that
-renders this endpoint's checklist, or wiring Phase 13's still-unbuilt
-`ready` Wizard step to this same endpoint.
+Contacts/Delivery/Payments`), or wiring Phase 13's still-unbuilt `ready`
+Wizard step to the same `StoreReadiness` computation (both the JSON
+endpoint and this widget already reuse it — a third consumer, not a
+fourth implementation).
 
 ## Phase 15 — Commerce API
 
@@ -2863,3 +2893,22 @@ information page in flight via open PRs #53/#54). See the Phase 12
 section above for the full writeup. Next unclaimed candidates: option or
 customer entity-picker backends, or re-checking which of #52/#53/#54 have
 merged.
+
+**Update (2026-09-03, routine run) — Phase 14 Store Readiness dashboard
+widget.** Note on session setup: this session's branch was accidentally
+created from a stale local `master` git ref (predating commit `b28c8cf`,
+"Add MintCart\Commerce\SearchService..."), which caused a first attempt at
+this run to duplicate already-merged Phase 15 `SearchService` work before
+the mistake was caught and the duplicate PR (#58) was closed — see that
+PR's comments for the full account. After resetting to the real
+`origin/master` tip, Step 0 was re-run: six other open PRs existed (#52
+Wizard Contacts; #53–#57 Phase 12 entity-picker backends for
+product/information/attribute/option/customer), none touching this run's
+files (`admin/controller/extension/dashboard/mintcart_readiness.php` and
+its Twig/language files are new paths no open PR references). See the
+Phase 14 section above for the full writeup. Next candidates: Business
+Settings UI façades, wiring Phase 13's `ready` step to `StoreReadiness`
+(once #52 merges — it shares `wizard.php`), or once #53–#57 land, tackling
+the admin asset-enqueue problem itself (now blocking Phase 12 live wiring
+and Phase 17 live UI, though this run's own dashboard widget deliberately
+avoided it by using stock Bootstrap 3 markup instead of `mc-*`).

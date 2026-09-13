@@ -1,0 +1,28 @@
+<div class="tile tile-primary">
+  <div class="tile-heading">{{ heading_title }}</div>
+  <div class="tile-body">
+    <div class="progress" style="margin-bottom: 10px;">
+      <div class="progress-bar progress-bar-{{ percent == 100 ? 'success' : (percent >= 50 ? 'info' : 'warning') }}" role="progressbar" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ percent }}%;">{{ percent }}%</div>
+    </div>
+    <ul class="list-unstyled" style="margin-bottom: 10px;">
+      {% for check in checks %}
+      <li>
+        {% if check.complete %}
+        <i class="fa fa-check-circle text-success"></i>
+        {% else %}
+        <i class="fa fa-circle-o text-muted"></i>
+        {% endif %}
+        {{ check.label }}
+      </li>
+      {% endfor %}
+    </ul>
+    <p>
+      {% if ready_for_test_order %}
+      <span class="label label-success"><i class="fa fa-check"></i> {{ text_ready_for_test_order }}</span>
+      {% else %}
+      <span class="label label-default">{{ text_not_ready_for_test_order }}</span>
+      {% endif %}
+    </p>
+  </div>
+  <div class="tile-footer"><a href="{{ wizard }}">{{ text_view }}</a></div>
+</div>

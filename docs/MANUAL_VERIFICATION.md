@@ -316,3 +316,31 @@ confirm.
    `total` is `count()` of an unfiltered PHP array.
 5. Confirm every returned item's `image` is `null` (customers have no
    image concept in OpenCart).
+
+## Phase 14 — Store Readiness dashboard widget, never installed end to end
+
+`ControllerExtensionDashboardMintcartReadiness` is `php -l` clean and
+reuses already-tested `StoreReadiness`/`ModelMintcartReadiness`, but no
+live MySQL/admin session in this environment means it was never actually
+installed or rendered. On a real install:
+
+1. Go to **Extensions → Extensions**, filter by type **Dashboard**, find
+   "Store Readiness", click Install.
+2. Grant the auto-discovered `extension/dashboard/mintcart_readiness`
+   permission (Access + Modify) to your user group under **System → Users
+   → User Groups**.
+3. Open its settings screen (the pencil/edit icon next to it in the
+   Dashboard extension list) and confirm the Width/Status/Sort Order form
+   saves and reloads correctly (same form shape as the stock "People
+   Online"/"Recent Activity" widgets).
+4. Set Status to Enabled, go to the Dashboard, and confirm the tile
+   renders: a progress bar matching `mintcart/readiness`'s own `percent`,
+   a checklist with a check/circle icon per item, and a "ready for a test
+   order" / "not ready yet" label matching that same endpoint's
+   `ready_for_test_order` value.
+5. Change a real signal (e.g. enable a payment extension) and confirm the
+   tile's percent/checklist/ready-for-test-order state updates on the next
+   dashboard load — it should always match `mintcart/readiness`'s live
+   JSON response exactly, since both read the same computation.
+6. Click the tile's "Continue setup..." link and confirm it lands on
+   `mintcart/wizard`.
