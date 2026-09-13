@@ -1947,9 +1947,10 @@ correctly and that a filled-in social link actually renders on a real
       service (CLAUDE.md §85); fully additive, zero existing OpenCart file
       touched, zero upstream diff. Language file:
       `upload/admin/language/en-gb/mintcart/readiness.php`.
-- [ ] `Business → Contacts`, `Business → Delivery`, `Business → Payments` UI façades
-      over standard OpenCart storage/extensions — not started.
-- [x] Dashboard widget rendering the checklist — done this run, see below.
+- [~] `Business → Contacts`, `Business → Delivery`, `Business → Payments` UI façades
+      over standard OpenCart storage/extensions — **Contacts done**
+      (see below); Delivery/Payments not started.
+- [x] Dashboard widget rendering the checklist — done, see below.
 
 **Sub-step (this run):** `StoreReadiness` service + `mintcart/readiness`
 JSON endpoint. Full writeup: `docs/developer/onboarding/store-readiness.md`.
@@ -1963,7 +1964,7 @@ human should hit `mintcart/readiness` as a logged-in admin (the
 `design/homepage`) and confirm each signal flips as expected on a real
 install.
 
-**Update (this run): the Store Readiness dashboard widget is done.**
+**Update (a later run): the Store Readiness dashboard widget is done.**
 `ControllerExtensionDashboardMintcartReadiness`
 (`upload/admin/controller/extension/dashboard/mintcart_readiness.php`) is
 a **standard OpenCart 3 dashboard extension** — the same auto-discovery
@@ -1993,11 +1994,40 @@ environment — a human should install + enable the widget under Extensions
 -> Dashboard on a real install and confirm it renders/saves correctly. See
 `docs/MANUAL_VERIFICATION.md`'s new Phase 14 entry.
 
-**Next step:** either the Business Settings UI façades (`Business →
-Contacts/Delivery/Payments`), or wiring Phase 13's still-unbuilt `ready`
-Wizard step to the same `StoreReadiness` computation (both the JSON
-endpoint and this widget already reuse it — a third consumer, not a
-fourth implementation).
+**Update (a later run): `Business → Contacts` UI facade is done.**
+`ControllerMintcartBusinessContacts` (`upload/admin/controller/mintcart/business/contacts.php`,
+route `mintcart/business/contacts`) is a standalone-editable facade over
+the exact same storage `ControllerMintcartWizard`'s Store/Contacts steps
+already write (`config_telephone`/`config_email`/`config_address` +
+`mintcart_contacts_social`) — a shop owner can now update contact
+details/social links any time from the normal admin nav (new "Business"
+menu group in `column_left.php`), not only once during onboarding. New
+`MintCart\Onboarding\SocialProfileLinks` (pure, unit-tested,
+`tests/mintcart/onboarding/social-profile-links-test.php`) factors out the
+social-link validate/normalize/re-key logic so this controller doesn't
+duplicate the Wizard's inline copy verbatim — deliberately **not** wired
+into `ControllerMintcartWizard` itself this run, since PR #52 ("Setup
+Wizard: Contacts step") had `wizard.php` open for an unrelated change at
+the time; see `docs/developer/onboarding/business-settings.md` for the
+full rationale and the "Next step" note about folding the two together
+once #52 lands. Uses the legacy Bootstrap 3 admin theme, same reasoning as
+the Homepage Builder admin editor and the Store Readiness dashboard
+widget.
+
+Verified: `php -l` clean on every touched/added PHP file, re-swept across
+the full `upload`/`tests` tree; `contacts_form.twig`'s Twig tag counts
+balanced; full `tests/mintcart/**/*-test.php` suite re-run end to end (35
+files, was 34) — all passing, no regressions. Not verified: no live
+MySQL/admin session in this environment — see
+`docs/developer/onboarding/business-settings.md`'s "Verified" section and
+the new `docs/MANUAL_VERIFICATION.md` entry.
+
+**Next step:** `Business → Delivery`/`Business → Payments` (read the
+standard `extension` table for shipping/payment extensions, present a
+simplified enable/configure view — no second shipping/payment subsystem),
+or wiring Phase 13's still-unbuilt `ready` Wizard step to the
+`StoreReadiness` computation the dashboard widget and JSON endpoint
+already share.
 
 ## Phase 15 — Commerce API
 
