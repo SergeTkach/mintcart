@@ -1,0 +1,257 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item">
+                        <a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+                    </li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        {{ column_left }}
+
+        {% if column_left and column_right %}
+            {% set content_class = 'col-lg-6' %}
+        {% elseif column_left or column_right %}
+            {% set content_class = 'col-lg-9' %}
+        {% else %}
+            {% set content_class = 'col-12' %}
+        {% endif %}
+
+        <div class="{{ content_class }}">
+            {{ content_top }}
+
+            <div class="row g-4 mb-4" data-mc-product-form>
+                <div class="col-md-5">
+                    <div class="mc-product-gallery">
+                        <a href="{{ popup }}" class="mc-product-gallery__main-link">
+                            <img class="mc-product-gallery__main" src="{{ thumb }}" alt="{{ heading_title }}">
+                        </a>
+
+                        {% if images %}
+                            <ul class="mc-product-gallery__thumbs">
+                                <li>
+                                    <a
+                                        class="mc-product-gallery__thumb is-active"
+                                        href="{{ popup }}"
+                                        data-mc-action="gallery-thumb"
+                                        data-mc-gallery-src="{{ thumb }}"
+                                        data-mc-gallery-alt="{{ heading_title }}"
+                                    >
+                                        <img class="mc-product-gallery__thumb-image" src="{{ thumb }}" alt="">
+                                    </a>
+                                </li>
+                                {% for image in images %}
+                                    <li>
+                                        <a
+                                            class="mc-product-gallery__thumb"
+                                            href="{{ image.popup }}"
+                                            data-mc-action="gallery-thumb"
+                                            data-mc-gallery-src="{{ image.thumb }}"
+                                            data-mc-gallery-alt="{{ heading_title }}"
+                                        >
+                                            <img class="mc-product-gallery__thumb-image" src="{{ image.thumb }}" alt="">
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-7">
+                    <div class="d-flex gap-2 mb-3">
+                        <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-wishlist" data-product-id="{{ product_id }}" aria-pressed="false" aria-label="{{ text_wishlist }}">♥</button>
+                        <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-compare" data-product-id="{{ product_id }}" aria-pressed="false" aria-label="{{ text_compare }}">⇄</button>
+                    </div>
+
+                    <h1 class="mb-2">{{ heading_title }}</h1>
+
+                    {% if review_status and rating %}
+                        <div class="mc-rating mb-3" style="--mc-rating-value: {{ (rating / 5 * 100)|round }}%" role="img" aria-label="{{ text_rated|format(rating) }}">
+                            <span class="mc-rating__stars" aria-hidden="true">
+                                <span class="mc-rating__stars-empty">★★★★★</span>
+                                <span class="mc-rating__stars-filled">★★★★★</span>
+                            </span>
+                        </div>
+                    {% endif %}
+
+                    <ul class="list-unstyled mb-3">
+                        {% if manufacturer %}
+                            <li>{{ text_manufacturer }} <a href="{{ manufacturers }}">{{ manufacturer }}</a></li>
+                        {% endif %}
+                        <li>{{ text_model }} {{ model }}</li>
+                        {% if reward %}
+                            <li>{{ text_reward }} {{ reward }}</li>
+                        {% endif %}
+                        <li>{{ text_stock }} {{ stock }}</li>
+                    </ul>
+
+                    {% if price %}
+                        <div class="mc-price mb-3{% if special %} mc-price--special{% endif %}" style="font-size: var(--mc-font-size-xl);">
+                            <span class="mc-price__current">{{ special ?: price }}</span>
+                            {% if special %}<span class="mc-price__original">{{ price }}</span>{% endif %}
+                            {% if tax %}<span class="mc-price__tax d-block">{{ text_tax }} {{ tax }}</span>{% endif %}
+                        </div>
+
+                        {% if points %}
+                            <p>{{ text_points }} {{ points }}</p>
+                        {% endif %}
+
+                        {% if discounts %}
+                            <ul class="list-unstyled mb-3">
+                                {% for discount in discounts %}
+                                    <li>{{ discount.quantity }}{{ text_discount }}{{ discount.price }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if options %}
+                        <h2 class="h5 mb-3">{{ text_option }}</h2>
+                        <div data-mc-product-options>
+                            {% for option in options %}
+                                <div class="mc-field mb-3">
+                                    {% if option.type == 'select' %}
+                                        <label class="mc-field__label" for="input-option-{{ option.product_option_id }}">{{ option.name }}{% if option.required %} *{% endif %}</label>
+                                        <select id="input-option-{{ option.product_option_id }}" name="option[{{ option.product_option_id }}]" class="mc-field__control" data-mc-option-id="{{ option.product_option_id }}">
+                                            <option value=""></option>
+                                            {% for value in option.product_option_value %}
+                                                <option value="{{ value.product_option_value_id }}">{{ value.name }}{% if value.price %} ({{ value.price_prefix }}{{ value.price }}){% endif %}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% elseif option.type == 'radio' %}
+                                        <fieldset>
+                                            <legend class="mc-field__label">{{ option.name }}{% if option.required %} *{% endif %}</legend>
+                                            {% for value in option.product_option_value %}
+                                                <label class="mc-radio">
+                                                    <input type="radio" class="mc-radio__input" name="option[{{ option.product_option_id }}]" value="{{ value.product_option_value_id }}" data-mc-option-id="{{ option.product_option_id }}">
+                                                    <span class="mc-radio__label">{{ value.name }}{% if value.price %} ({{ value.price_prefix }}{{ value.price }}){% endif %}</span>
+                                                </label>
+                                            {% endfor %}
+                                        </fieldset>
+                                    {% elseif option.type == 'checkbox' %}
+                                        <fieldset>
+                                            <legend class="mc-field__label">{{ option.name }}{% if option.required %} *{% endif %}</legend>
+                                            {% for value in option.product_option_value %}
+                                                <label class="mc-checkbox">
+                                                    <input type="checkbox" class="mc-checkbox__input" name="option[{{ option.product_option_id }}][]" value="{{ value.product_option_value_id }}" data-mc-option-id="{{ option.product_option_id }}">
+                                                    <span class="mc-checkbox__label">{{ value.name }}{% if value.price %} ({{ value.price_prefix }}{{ value.price }}){% endif %}</span>
+                                                </label>
+                                            {% endfor %}
+                                        </fieldset>
+                                    {% elseif option.type == 'textarea' %}
+                                        <label class="mc-field__label" for="input-option-{{ option.product_option_id }}">{{ option.name }}{% if option.required %} *{% endif %}</label>
+                                        <textarea id="input-option-{{ option.product_option_id }}" name="option[{{ option.product_option_id }}]" class="mc-field__control" rows="3" data-mc-option-id="{{ option.product_option_id }}">{{ option.value }}</textarea>
+                                    {% elseif option.type == 'file' %}
+                                        <label class="mc-field__label" for="input-option-{{ option.product_option_id }}">{{ option.name }}{% if option.required %} *{% endif %}</label>
+                                        <input type="file" id="input-option-{{ option.product_option_id }}" class="mc-field__control">
+                                        
+                                    {% else %}
+                                        <label class="mc-field__label" for="input-option-{{ option.product_option_id }}">{{ option.name }}{% if option.required %} *{% endif %}</label>
+                                        <input type="{{ option.type in ['date', 'time', 'datetime'] ? option.type : 'text' }}" id="input-option-{{ option.product_option_id }}" name="option[{{ option.product_option_id }}]" value="{{ option.value }}" class="mc-field__control" data-mc-option-id="{{ option.product_option_id }}">
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="mc-quantity">
+                            <button type="button" class="mc-quantity__button" data-mc-action="quantity-decrement" aria-label="Decrease quantity">−</button>
+                            <input type="number" id="input-quantity" class="mc-quantity__input" name="quantity" value="{{ minimum }}" min="{{ minimum }}" step="1" inputmode="numeric" aria-label="{{ entry_qty }}">
+                            <button type="button" class="mc-quantity__button" data-mc-action="quantity-increment" aria-label="Increase quantity">+</button>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="mc-button mc-button--primary"
+                            data-mc-action="add-to-cart"
+                            data-product-id="{{ product_id }}"
+                            data-quantity-input="input-quantity"
+                            data-mc-text-added="{{ text_added_to_cart }}"
+                            data-mc-text-add-error="{{ text_add_to_cart_error }}"
+                            {{ price is same as(false) ? 'disabled' : '' }}
+                        >
+                            {{ text_add_to_cart }}
+                        </button>
+                    </div>
+
+                    {% if minimum > 1 %}
+                        <p class="mc-field__help mt-2">{{ text_minimum }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mc-tabs mb-4">
+                <div class="mc-tabs__list nav nav-tabs" role="tablist">
+                    <button class="mc-tabs__tab nav-link active" type="button" role="tab" id="tab-description" data-mc-action="show-tab" data-bs-target="#pane-description" aria-controls="pane-description" aria-selected="true">{{ tab_description }}</button>
+                    {% if attribute_groups %}
+                        <button class="mc-tabs__tab nav-link" type="button" role="tab" id="tab-attribute" data-mc-action="show-tab" data-bs-target="#pane-attribute" aria-controls="pane-attribute" aria-selected="false" tabindex="-1">{{ tab_attribute }}</button>
+                    {% endif %}
+                    <button class="mc-tabs__tab nav-link" type="button" role="tab" id="tab-review" data-mc-action="show-tab" data-bs-target="#pane-review" aria-controls="pane-review" aria-selected="false" tabindex="-1">{{ tab_review }}</button>
+                </div>
+
+                <div class="mc-tabs__panels tab-content">
+                    <div class="mc-tabs__panel tab-pane fade show active mc-prose py-3" id="pane-description" role="tabpanel" aria-labelledby="tab-description" tabindex="0">
+                        {{ description|raw }}
+                    </div>
+
+                    {% if attribute_groups %}
+                        <div class="mc-tabs__panel tab-pane fade py-3" id="pane-attribute" role="tabpanel" aria-labelledby="tab-attribute" tabindex="0">
+                            {% for attribute_group in attribute_groups %}
+                                <h3 class="h6">{{ attribute_group.name }}</h3>
+                                <table class="table table-striped">
+                                    <tbody>
+                                        {% for attribute in attribute_group.attribute %}
+                                            <tr>
+                                                <td>{{ attribute.name }}</td>
+                                                <td>{{ attribute.text }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="mc-tabs__panel tab-pane fade py-3" id="pane-review" role="tabpanel" aria-labelledby="tab-review" tabindex="0">
+                        <p>{{ text_no_reviews }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% if tags %}
+                <p class="mb-4">
+                    {{ text_tags }}
+                    {% for tag in tags %}
+                        <a href="{{ tag.href }}">{{ tag.tag }}</a>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+            {% endif %}
+
+            {% if product_cards %}
+                <h2 class="h4 mb-3">{{ text_related }}</h2>
+                <div class="row g-4">
+                    {% for product_card in product_cards %}
+                        <div class="col-6 col-lg-3">
+                            {{ product_card }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {{ content_bottom }}
+        </div>
+
+        {{ column_right }}
+    </div>
+</div>
+{{ footer }}
