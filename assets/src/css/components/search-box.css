@@ -1,0 +1,129 @@
+/**
+ * mc-search-box
+ *
+ * AJAX search-as-you-type dropdown chrome (`MINTCART_FUNCTIONAL_SCOPE.md`
+ * §14). Pure layout/visual styling; all interaction lives in
+ * `assets/src/js/components/search-box.js`, which owns the
+ * `data-mc-search-box-*` hooks this file styles by attribute/child selector
+ * rather than a JS-added state class where a semantic attribute or the
+ * element's own `hidden` state already exists (CLAUDE.md §13) - the results
+ * panel's visibility is `[hidden]`, not a class; `is-open`/`is-loading` are
+ * the only two transient states this component actually needs, both
+ * carried on `.mc-search-box` itself.
+ *
+ * Reuses `mc-price`/`mc-price--special` for each result's price instead of
+ * a second price-formatting look (`MINTCART_IMPLEMENTATION_GUIDE.md` §9's
+ * "don't duplicate an existing component's CSS").
+ *
+ * Contract: docs/developer/components/search-box.md
+ */
+
+.mc-search-box {
+    position: relative;
+}
+
+.mc-search-box__input {
+    width: 100%;
+}
+
+.mc-search-box.is-loading .mc-search-box__input {
+    opacity: 0.8;
+}
+
+.mc-search-box__results {
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    z-index: var(--mc-z-dropdown);
+    margin-top: var(--mc-space-1);
+    background: var(--mc-surface);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    box-shadow: var(--mc-shadow-lg);
+    max-height: 24rem;
+    overflow-y: auto;
+}
+
+.mc-search-box__list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-search-box__item {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    padding: var(--mc-space-2) var(--mc-space-3);
+    cursor: pointer;
+    color: var(--mc-text);
+    text-decoration: none;
+    transition: background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-search-box__item:hover,
+.mc-search-box__item:focus-visible {
+    background-color: var(--mc-surface-alt);
+}
+
+.mc-search-box__item:focus-visible {
+    outline: 2px solid var(--mc-primary);
+    outline-offset: -2px;
+}
+
+.mc-search-box__item-image {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--mc-radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.mc-search-box__item-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-1);
+    min-width: 0;
+}
+
+.mc-search-box__item-name {
+    font-size: var(--mc-font-size-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-search-box__item-price {
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-search-box__empty {
+    margin: 0;
+    padding: var(--mc-space-4);
+    text-align: center;
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-search-box__view-all {
+    display: block;
+    padding: var(--mc-space-3);
+    text-align: center;
+    font-size: var(--mc-font-size-sm);
+    color: var(--mc-primary);
+    text-decoration: none;
+    border-top: var(--mc-border-width) solid var(--mc-border);
+}
+
+.mc-search-box__view-all:hover,
+.mc-search-box__view-all:focus-visible {
+    text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-search-box__item {
+        transition: none;
+    }
+}
