@@ -1,0 +1,62 @@
+/**
+ * mc-product-gallery
+ *
+ * The product detail page's main image + thumbnail strip
+ * (`mint_default/template/product/product.twig`, Phase 6/8's identified
+ * gap - Category/Search/Manufacturer/Special listing pages were wired to
+ * `mc-product-card`, but the product page itself never existed). Distinct
+ * from `mc-gallery` (the Homepage Builder Gallery block's static, non-
+ * interactive image grid, `docs/developer/blocks/gallery.md`) - this
+ * component swaps one focused "main" image via thumbnail selection
+ * (`assets/src/js/components/product-gallery.js`), a different UI shape
+ * with a different behavior contract.
+ *
+ * Contract: docs/developer/components/product-gallery.md
+ */
+
+.mc-product-gallery__main {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    background: var(--mc-surface-alt);
+    border-radius: var(--mc-radius-lg);
+    margin-bottom: var(--mc-space-3);
+}
+
+.mc-product-gallery__thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-product-gallery__thumb {
+    display: block;
+    width: 4.5rem;
+    height: 4.5rem;
+    padding: 0;
+    background: var(--mc-surface-alt);
+    border: var(--mc-border-width) solid transparent;
+    border-radius: var(--mc-radius-md);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.mc-product-gallery__thumb:hover,
+.mc-product-gallery__thumb:focus-visible {
+    border-color: var(--mc-border);
+}
+
+.mc-product-gallery__thumb.is-active {
+    border-color: var(--mc-primary);
+}
+
+.mc-product-gallery__thumb-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}

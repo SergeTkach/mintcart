@@ -158,6 +158,20 @@ behavior change for stores that don't notice the labels were blank.
 **Tests:** `php -l` clean. See `docs/fixes/registry.md` MC-0001 for the
 full fix-policy writeup (reproduction, upstream status, resolution).
 
+**Update (this run — Phase 18, SEO Core):** right before rendering, inside
+a fresh `ActiveTheme::isMintAware()` check (not `$mint_render_product_cards`,
+which by this point in the method may have been flipped to `false` by an
+unrelated per-product `ProductCardListRenderer` failure), builds
+`$data['mc_schema_breadcrumb']` via
+`MintCart\Seo\SchemaOrgBuilder::breadcrumbList($data['breadcrumbs'])` — the
+same breadcrumb array `category.twig`'s visible nav already renders, now
+also emitted as `BreadcrumbList` JSON-LD. Same caught-and-logged failure
+handling as every other `SchemaOrgBuilder`/`ComponentRenderer` call site.
+Full design rationale: `docs/developer/seo/schema-org.md`. **Tests:**
+`php -l` clean; `tests/mintcart/seo/schema-org-builder-test.php` (16
+scenarios) covers `breadcrumbList()` directly; full `tests/mintcart/` suite
+re-run end to end — all passing, no regressions.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/category.php`
@@ -199,14 +213,26 @@ OpenCart's own `config_telephone`/`config_email`/`config_address` settings
 result through `MintCart\Design\ComponentRenderer::render('footer', ...)`
 into a new `$data['mc_footer']` string.
 
-**Update (this run):** refactored to call the newly-extracted
+**Update:** refactored to call the newly-extracted
 `MintCart\Design\ActiveTheme::directory()`/`isMintAware()` instead of this
 controller's own private `mintActiveThemeDirectory()` helper — see
 `docs/developer/theme-api/product-card-list-renderer.md`. `CLAUDE.md`
 §85/§86 had this entry deliberately keep its own small copy rather than
 extract a shared helper for just two call sites; `ControllerProductSearch`
-(also this run) is the third, so the duplication is now extracted. No
+(also that run) is the third, so the duplication is now extracted. No
 behavioral change.
+
+**Update (this run):** `$social` is no longer always a hardcoded empty
+array. Now reads the `mintcart_contacts` setting (`getSetting()`, via the
+existing `catalog/model/setting/setting.php` — same model class the admin
+side already uses, `$this->load->model('setting/setting')` newly added to
+this controller) and passes its `mintcart_contacts_social` value straight
+through to `FooterViewProvider::build()`. That setting is written by the
+Setup Wizard's new Contacts step (`docs/developer/onboarding/setup-wizard.md`)
+in the exact `{network, href}` shape `build()`'s `$social` parameter already
+expects — no reshaping in this controller. A store that hasn't run that
+Wizard step yet still gets `$social = []`, identical to the previous
+hardcoded behavior — this is purely additive for stores that have.
 
 **Why it can't live in the MintCart layer instead:** Same rationale as
 `ControllerProductCategory` — `FooterViewProvider` and `ComponentRenderer`
@@ -348,6 +374,18 @@ display-only params like `sort`/`order`/`limit` from the canonical URL,
 same as `category.php`'s `path`-only canonical). No template change, no
 new language strings, `$data['products']`/`$data['product_cards']`
 untouched. `php -l` clean.
+
+**Update (this run — Phase 18, SEO Core):** right before rendering, inside
+a fresh `ActiveTheme::isMintAware()` check (same reasoning as `category.php`'s
+own entry above — not `$mint_render_product_cards`, which may have been
+flipped `false` by an unrelated per-product render failure by this point),
+builds `$data['mc_schema_breadcrumb']` via
+`MintCart\Seo\SchemaOrgBuilder::breadcrumbList($data['breadcrumbs'])`. Same
+caught-and-logged failure handling as every other `SchemaOrgBuilder` call
+site. Full design rationale: `docs/developer/seo/schema-org.md`. **Tests:**
+`php -l` clean; `tests/mintcart/seo/schema-org-builder-test.php` (16
+scenarios) covers `breadcrumbList()` directly; full `tests/mintcart/` suite
+re-run end to end — all passing, no regressions.
 
 ---
 
@@ -513,6 +551,21 @@ smoke-test a real page on a configured install before this reaches
 production — see `docs/developer/components/header.md`'s "Known gap"
 section for the one deliberately-deferred piece (MintCart's own compiled
 asset bundle is still not enqueued on any live page).
+
+**Update (this run — Phase 18, SEO Core):** inside the same
+`isMintAware()`-gated block, also builds `$data['mc_schema_organization']`
+via the new `MintCart\Seo\SchemaOrgBuilder::organization()` — one
+Organization JSON-LD payload per request, reusing the same config values
+(`config_name`/`config_logo`/`config_telephone`) plus `config_address`
+already read for `HeaderViewProvider`. Same failure handling as `mc_header`
+above: caught, logged via `MintCart\Core\Logger`, never fatals the page.
+Rendered in `mint_default/template/common/header.twig`'s `<head>`. Full
+design rationale: `docs/developer/seo/schema-org.md`. **Tests:** `php -l`
+clean; `tests/mintcart/seo/schema-org-builder-test.php` (16 scenarios)
+covers `organization()`/`toJsonLd()` directly; full `tests/mintcart/`
+suite re-run end to end — all passing. Same pre-existing no-live-request
+gap as every earlier phase — see `docs/MANUAL_VERIFICATION.md`'s new
+Phase 18 entry.
 
 ---
 
@@ -887,6 +940,16 @@ gap the whole `upload/admin/**` tree currently has) — verified by reading
 the diff against the existing Layouts/Theme/Banner/SEO URL entries it
 sits next to, which it mirrors exactly.
 
+**Update (this run — Phase 14, `Business → Delivery`/`Payments`):** adds a
+new top-level "Business" menu group (`menu-mintcart-business`), placed
+just before the existing Marketing group, with "Delivery"/"Payments"
+children gated by `mintcart/business/delivery`/`mintcart/business/payments`
+access respectively — same conditional-array-then-conditional-group-push
+shape every other menu group in this file already uses (see the Marketing
+group immediately below it). `docs/developer/onboarding/business-delivery-payments.md`
+has the full design writeup. Purely additive; no existing menu entry or
+permission check touched. **Tests:** `php -l` clean.
+
 ---
 
 ## `upload/admin/model/catalog/category.php` / `upload/admin/controller/catalog/category.php`
@@ -950,3 +1013,237 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/catalog/controller/startup/seo_url.php`
+
+**Reason:** Phase 18 (System route URL aliases,
+`MINTCART_FUNCTIONAL_SCOPE.md` §4). `ControllerMintcartSeoSystemPages`
+(`docs/developer/seo/system-route-aliases.md`) lets a shop owner set a
+friendly `seo_url` alias for a fixed whitelist of "system pages"
+(`MintCart\Seo\SystemRoutes::ROUTES` — cart, checkout, search, contact,
+account, login, register, wishlist, compare, special, manufacturer,
+sitemap) that carry no id parameter of their own. Incoming request decoding
+of a plain `keyword => route` `seo_url` row already worked with zero
+changes — `index()`'s own generic branch (the `$url[0] != '...id'` checks
+near the end of the method) already assigns `$query->row['query']` straight
+to `$this->request->get['route']`. **Outgoing link generation did not**:
+`rewrite()` only special-cases `product_id`/`manufacturer_id`/`path`/
+`information_id` inside its `foreach ($data as $key => $value)` loop — a
+plain `route=checkout/cart` link with no id keys never matched any branch,
+so `$url` stayed empty and the method fell through to `return $link`
+unchanged (`index.php?route=checkout/cart` instead of `/cart`, even with a
+matching `seo_url` row already saved). Added one small, additive check
+right after the existing loop: if `$url` is still empty and `$data['route']`
+is one of the twelve known system routes, look up a `seo_url` row by
+`query = route` (same query pattern, same store/language scoping, as every
+existing branch in this method) and use its `keyword` the same way the
+existing branches do.
+
+**Why it can't live in the MintCart layer instead:** `rewrite()` is
+OpenCart's own link-rewriting hook, registered against `Url` via
+`$this->url->addRewrite($this)` in this same class's `index()` and called
+by `Url::link()` for every generated link in the request. There is no
+MintCart-owned equivalent hook for outbound URL rewriting; reimplementing
+that mechanism in parallel would mean two systems deciding what a link
+looks like. Extending the one
+existing method that already owns this decision, with a change scoped to
+exactly the twelve routes `SystemRoutes` declares (every other route is
+completely unaffected — the new check only runs `if (!$url && ...)`, after
+every pre-existing branch has already had its chance), keeps this a small,
+targeted addition rather than a parallel routing layer.
+
+**Compatibility impact:** Purely additive — the new branch only ever fires
+when (a) no earlier branch already produced a `$url` and (b) `$data['route']`
+exactly matches one of the twelve whitelisted routes. Every other route
+(the vast majority of links a store generates) is untouched, byte-for-byte
+identical output to before this change. A store with no `seo_url` row for
+any of the twelve routes (the common case until an admin visits the new
+**Design → System Pages** screen and sets at least one alias) sees zero
+behavior change — the lookup query simply returns no rows, `$url` stays
+empty, same `return $link` fallback as before.
+
+**Tests:** `php -l` clean. `MintCart\Seo\SystemRoutes` (the whitelist this
+change consults) is covered by `tests/mintcart/seo/system-routes-test.php`
+(8 scenarios) — see `docs/developer/seo/system-route-aliases.md` for why
+`rewrite()`'s new branch itself has no standalone test (it is four lines of
+already-proven-safe SQL/array-membership glue around a method with no
+OpenCart-independent seam to unit-test in isolation, same category as this
+method's own four pre-existing branches, none of which have a test either).
+Full `tests/mintcart/**/*-test.php` suite re-run end to end — all passing,
+no regressions. **Not verified:** no live MySQL/`Url`/`Registry` session in
+this environment — a human should confirm on a real install that saving an
+alias (e.g. `cart` for `checkout/cart`) via **Design → System Pages** makes
+both `/cart` resolve to the shopping cart page (already true before this
+change, via `index()`'s existing generic decode) **and** every link the
+store itself generates to `route=checkout/cart` (e.g. the header cart icon)
+come out as `/cart` instead of `index.php?route=checkout/cart` (the part
+this change adds) — see `docs/MANUAL_VERIFICATION.md`'s new Phase 18 entry.
+## `upload/catalog/controller/product/product.php` / `upload/catalog/language/en-gb/product/product.php`
+
+**Reason:** Phase 6/8 (Product Card / Theme resolver, `MINTCART_TECHNICAL_PLAN.md`
+§15C-D/§45). Every listing controller (Category, Search, Manufacturer,
+Special) was already wired to `MintCart\Design\ProductCardListRenderer` —
+the product *detail* page was the one page in this whole pipeline that
+never was. `mint_default` had no `template/product/product.twig` at all
+before this change: a shopper on a Mint-aware theme could browse every
+listing page but the product page itself rendered nothing Mint-specific.
+
+Three changes:
+
+1. **Controller:** the existing "Related Products" loop (already computing
+   `$data['products']` for the legacy `default` theme) now also builds
+   `$data['product_cards']` via the same `ProductCardListRenderer`/
+   `ActiveTheme`/`ComponentRenderer` trio Category/Search/Manufacturer/
+   Special already use — same Mint-aware gate, same per-product try/catch-
+   and-degrade-for-the-rest-of-the-list behavior, same shared
+   `text_badge`/`text_wishlist`/`text_compare`/etc. language strings built
+   inline (not stored on `$data`, since they only feed `ComponentRenderer`,
+   never this page's own template). A handful of plain field labels the
+   language file already defined but no prior version of this controller
+   ever assigned to `$data` for *any* theme (`text_manufacturer`/
+   `text_model`/`text_reward`/`text_stock`/`text_points`/`text_discount`/
+   `text_option`/`text_related`/`text_tags`/`tab_description`/
+   `tab_attribute`/`text_no_reviews`/`entry_qty`) are now assigned too —
+   purely additive `$data` keys the legacy `default` theme's own template
+   never reads, needed by the brand-new `mint_default` template being
+   written from scratch (see `docs/developer/components/product-card.md`
+   for why this differs from `search.php`'s own entry, which found the
+   *same* class of gap on an *existing* template and left it undocumented
+   rather than fixed).
+2. **View:** `catalog/view/theme/mint_default/template/product/product.twig`
+   (new file) — gallery (`mc-product-gallery`, new component), title/
+   manufacturer/model/rating/price/special/tax/stock/discounts, an option
+   picker covering every OpenCart option type (select/radio/checkbox/text/
+   textarea/date/time/datetime/file), quantity (`mc-quantity`) + Add to
+   Cart (`mc-button`, reusing `product-card.js`'s `add-to-cart` handler),
+   `mc-tabs` Description/Specification/Reviews (Reviews is a read-only
+   placeholder this run — see "Not done yet" below), tags, and the Related
+   Products grid via `mc-product-card`.
+3. **JS:** `product-card.js`'s `add-to-cart` handler learns to read a
+   linked `mc-quantity` input (`data-quantity-input`) and
+   `[data-mc-option-id]` fields inside a `[data-mc-product-form]` ancestor
+   — a grid card sets neither attribute, so its own behavior is completely
+   unchanged; this is additive, not a rewrite. See
+   `docs/developer/components/product-card.md`'s "Extended for the product
+   detail page" section for the exact contract and its known gaps
+   (multi-value checkbox options, file-type options).
+
+**Why it can't live in the MintCart layer instead:** Same rationale as
+every other listing-controller entry above — `ProductViewProvider`/
+`ProductCardListRenderer`/`ComponentRenderer` are deliberately OpenCart-
+agnostic, but something has to call them with real resolved product rows,
+and `catalog/controller/product/product.php` is the one file OpenCart
+already routes a product-page request to.
+
+**Compatibility impact:** The controller's original `$data['products']`
+array (the one the legacy `default` theme's own `product.twig` reads) is
+completely untouched — same keys, same values, same computation, same
+order. The new `$data['product_cards']`/label keys are purely additive and
+only ever populated when the active theme ships a `theme.json` manifest
+(`ActiveTheme::isMintAware()`), so a store on `default` or an unrelated
+third-party theme pays no extra cost and sees zero behavior change.
+`product-card.js`'s `add-to-cart` change is backward compatible: a card
+with no `data-quantity-input`/no `[data-mc-product-form]` ancestor behaves
+exactly as before (verified by re-running the full frontend build and
+confirming the existing `catalog.min.js`/`admin.min.js` bundling still
+produces the expected storefront-only scoping).
+
+**Not done yet, by design:**
+- **Reviews tab is a read-only placeholder** (`text_no_reviews` only,
+  Reviews are loaded via a separate `product/product.review` AJAX endpoint
+  and a write-review form in the legacy theme, both jQuery-driven) — a
+  real Mint-native reviews UI (list + write form) is a separate, self-
+  contained increment, not attempted here to keep this one focused on the
+  page's core "browse and buy" path.
+- **Recurring/subscription payment profiles** (`$data['recurrings']`) have
+  no picker on this page yet — a product that requires selecting one still
+  redirects back to itself on Add to Cart via the existing
+  `mintcart/cart/add` "missing required option/recurring" fallback
+  (`ControllerMintcartCart::add()`, Phase 15), the same way an unanswered
+  required product option does; not a regression, since no Mint-native
+  product page existed to pick one before this change either.
+- **Multi-value checkbox options and file-upload options** — see the
+  "Known gap" paragraph in `docs/developer/components/product-card.md`'s
+  "Extended for the product detail page" section.
+
+**Tests:** `php -l` clean on both touched PHP files, re-swept across the
+full `upload`/`tests` tree; full `tests/mintcart/**/*-test.php` suite
+re-run end to end — all passing, no regressions (no existing pure-logic
+class was modified by this increment, only controller/language/JS wiring
+around already-tested classes). `product.twig`'s Twig `if`/`elseif`/`else`/
+`endif`/`for`/`endfor` tag counts checked balanced (29/29, 11/11) with the
+same script-based technique used for every earlier `.twig` file in this
+repo. `npm install` (0 vulnerabilities) + `npm run build` (minified) both
+compile cleanly; `mc-product-gallery`/`gallery-thumb` confirmed present in
+`catalog.min.js`/`index.min.css` and **absent** from `admin.min.js`
+(storefront-only, same scoping technique every other Phase 6/7/15
+component doc uses); `npm test` (preset-token contract checks, unaffected)
+still passing. **Not verified:** no live MySQL/`vendor/twig/twig` session
+in this environment (same pre-existing gap as every earlier phase) — a
+human should load a real product page on a `mint_default`-themed install
+and confirm the gallery/options/add-to-cart/tabs/related-products all
+render and behave correctly, and that the legacy `default` theme's own
+product page is pixel-identical to before this change. See
+`docs/MANUAL_VERIFICATION.md`'s new entry for the exact steps.
+## `upload/admin/model/catalog/product.php` / `upload/admin/controller/catalog/product.php` / `upload/admin/view/template/catalog/product_list.twig`
+
+**Reason:** Phase 16 (Bulk Editor, `MINTCART_FUNCTIONAL_SCOPE.md` §7/§17,
+`MINTCART_TECHNICAL_PLAN.md` §29, `MINTCART_IMPLEMENTATION_GUIDE.md` §62)
+needed a mass status/quantity/price update over the existing `Catalog →
+Products` multi-select checkboxes. Full design writeup:
+`docs/developer/catalog/bulk-editor.md`. Three changes:
+
+1. **Model:** a new, additive `updateProductField($product_id, $field,
+   $value)` method — a single-column partial `UPDATE oc_product SET
+   <field> = ..., date_modified = NOW()`, deliberately **not**
+   `editProduct()` (which deletes and reinserts descriptions/attributes/
+   options/discounts/specials/etc. wholesale on every call, and would
+   silently wipe them if called with only a partial field set). `$field`
+   must be one of the three columns `MintCart\Catalog\BulkProductUpdateValidator::FIELDS`
+   whitelists (`status`/`quantity`/`price`); an unrecognized field is a
+   defensive no-op.
+2. **Controller:** a new, fully-additive `bulkUpdate()`/`validateBulkUpdate()`
+   pair (route `catalog/product.bulkupdate`) — same form-POST-then-redirect
+   shape as the existing `delete()`/`copy()` actions (same `selected[]`
+   checkboxes, same filter-preserving redirect URL), fed by the new
+   `MintCart\Catalog\BulkProductUpdateValidator` for field/value validation
+   and selected-id normalization.
+3. **View:** `product_list.twig`'s toolbar gained one `<select>` +
+   `<input>` + submit button, using `type="submit"`/`formaction`/`onclick="return
+   confirm(...)"` rather than the existing Delete button's `type="button"`
+   + manual `$('#form-product').submit()` pattern — see
+   `docs/developer/catalog/bulk-editor.md` "Why `type=\"submit\"`..." for
+   why copying Delete's own pattern verbatim would have been unsafe for a
+   button whose `formaction` differs from the form's default `action`.
+
+**Why it can't live in the MintCart layer instead:** `oc_product` is
+OpenCart core storage (`CLAUDE.md` §39 — do not duplicate OpenCart DB). A
+new MintCart-owned table/service that re-implemented product field
+storage alongside the existing one would fork a single source of truth
+into two. Extending the existing model/controller/template — the same
+place `addProduct()`/`editProduct()`/`deleteProduct()` and their `delete()`/
+`copy()` actions already live — keeps the product table's one true owner
+in one place.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+column, or return value changed; `editProduct()`'s own behavior is
+unchanged. The toolbar addition to `product_list.twig` is a new button
+alongside the existing Add/Copy/Delete/Filter buttons, not a change to
+any of them.
+
+**Tests:** `php -l` clean on all three touched/added PHP files (both admin
+files and the new `MintCart\Catalog\BulkProductUpdateValidator`). New
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` (25
+scenarios — field whitelist, per-field value validation including every
+rejection case, product-id normalization/dedup/dropping non-positive
+ids). Full `tests/mintcart/` suite re-run end to end — all pass, no
+regressions. `product_list.twig`'s `{% if %}`/`{% endif %}`/`{% for %}`/
+`{% endfor %}` tag counts checked balanced before and after the toolbar
+addition. Same pre-existing gap as every earlier phase: no MySQL in this
+environment, so `updateProductField()` and the `bulkUpdate()` action
+itself were never exercised against a real database — a human should
+confirm on a real install, in particular that a bulk update leaves every
+other relation (descriptions, options, discounts, specials) untouched —
+see `docs/MANUAL_VERIFICATION.md`'s new Phase 16 section.
