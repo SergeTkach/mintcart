@@ -225,3 +225,32 @@ doesn't:
    manufacturer, not category's substring match) — and confirm `total`
    reflects the *filtered* count when `filter_name` is set, not the
    store-wide total.
+
+## Phase 12 — `mintcart/entity/information` endpoint, never hit end to end
+
+Same never-hit-live gap as category/manufacturer above, plus one thing
+those two couldn't exercise: this backend filters in PHP, not SQL, since
+`ModelCatalogInformation::getInformations()` has no `filter_name` support
+at all. On a real install, with at least three information pages (the
+default OpenCart demo data already ships "About Us", "Delivery
+Information" and "Privacy Policy" — good enough):
+
+1. Grant `mintcart/entity` **Access** if not already done for the category
+   endpoint above (same permission covers all three routes).
+2. Request `index.php?route=mintcart/entity/information&user_token=<your
+   token>&filter_name=&page=1&limit=20` and confirm a JSON
+   `{"items": [...], "total": N}` response with real information page
+   titles, `image` always `null`.
+3. Set `filter_name=delivery` (lowercase) and confirm only "Delivery
+   Information" comes back, with `total: 1` — confirms the case-insensitive
+   PHP-side match actually runs against live data, not just the unit test's
+   plain arrays.
+4. Set `filter_name` to a substring from the *middle* of a title (e.g.
+   `mation` for "Delivery Information") and confirm it still matches —
+   confirms this is a substring match, not a prefix match like
+   manufacturer's.
+5. With more information pages than one page's `limit`, confirm page 2
+   returns the next slice of the *filtered* set, not the next slice of the
+   full unfiltered set (paging is applied after filtering, per
+   `InformationPickerProvider`'s own doc comment — this ordering has no
+   unit-test equivalent against a live cache invalidation path).
