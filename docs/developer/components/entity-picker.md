@@ -269,10 +269,9 @@ or wiring a screen to it.
 - Filters beyond search text, and the create-new-flow (add a category
   inline from the picker) — no requirement identified yet for this first
   consumer.
-- The other entity types (products, attributes, options, information
-  pages, customers) each need their own backend the same shape as this
-  one — **manufacturer**, **product** and **information pages** are now
-  done too, see below.
+- The other entity types (attributes, options, customers) each need their
+  own backend the same shape as this one — **manufacturer**, **product**,
+  **information pages** and **attributes** are now done too, see below.
 
 ## Manufacturer backend
 
@@ -431,3 +430,55 @@ several places (`information_form.twig`'s own layout/link settings and any
 future "related pages" style field), so the first real consumer should be
 identified when one of those screens is actually being migrated to
 `McEntityPicker`, not guessed at here.
+
+## Attribute backend
+
+```
+GET index.php?route=mintcart/entity/attribute&user_token=…&filter_name=…&page=…&limit=…
+```
+
+Same shape as the category backend:
+`ControllerMintcartEntity::attribute()` wraps
+`ModelCatalogAttribute::getAttributes()` (never queries the database
+directly) and normalizes rows via `MintCart\Design\AttributePickerProvider`
+(`upload/system/library/mintcart/design/attributepickerprovider.php`, no
+OpenCart dependency, unit-tested in
+`tests/mintcart/design/attribute-picker-provider-test.php`) into the same
+`{items: [{id, name, image}], total}` shape. `image` is always `null` —
+`oc_attribute`/`oc_attribute_description` have no image column, the same
+situation as category and information pages.
+
+**Why a new route instead of reusing an existing autocomplete action:**
+`catalog/product.php` has no attribute autocomplete of its own today
+(product attribute values are entered via a dropdown of *already-loaded*
+attributes on `product_form.twig`'s Attribute tab, not a search field), so
+there is no existing consumer this route could break — unlike category/
+manufacturer, this is a genuinely new capability, not a reshape of one.
+Still added as a `mintcart/entity/*` action rather than a new method on
+`ModelCatalogAttribute` itself, for the same separation-of-concerns reason
+(`CategoryPickerProvider`'s section above): the model returns raw OpenCart
+rows, the picker-shape normalization is MintCart's own concern.
+
+**Why paging happens in PHP, not SQL:** `ModelCatalogAttribute::getAttributes()`
+supports `start`/`limit` at the SQL level, but the model only has
+`getTotalAttributes()` (unfiltered, store-wide) and
+`getTotalAttributesByAttributeGroupId()` (filtered by attribute group, not
+by name) — no *filtered-by-name* total-count method to pair with a
+SQL-level `LIMIT`. Same category-established pattern: take the full
+filtered (but unpaged) row set and slice/count it in PHP. Attribute counts
+are small (dozens even for a large catalog's full attribute set), so this
+isn't a real cost today.
+
+**Filter matching is a prefix match, not substring** — inherited from
+`ModelCatalogAttribute::getAttributes()`'s own `LIKE '…%'` (matches from
+the start of the name only), the same as manufacturer, not category's
+`LIKE '%…%'` substring match. Pre-existing OpenCart behavior, not
+introduced here.
+
+Same permission requirement and the same "not done yet, by design"
+live-wiring gap as category/manufacturer above. No obvious first live
+consumer has been identified yet for this one — unlike category/
+manufacturer, there is no existing single-select attribute autocomplete
+field on `product_form.twig` to swap out; a future consumer would be a
+*new* UI affordance (e.g. searching attributes by name when adding one to
+a product), not a drop-in replacement of something that already exists.

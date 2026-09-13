@@ -1581,8 +1581,8 @@ PHP touched, so the PHP `tests/mintcart/` suite doesn't apply.
       filter requirement identified yet.
 - [~] Real `fetchItems` backends per entity type (products, categories,
       manufacturers, attributes, options, information pages, customers) —
-      **category, manufacturer, product and information pages are done**,
-      see below; attributes, options and customers still need their own.
+      **category, manufacturer, product, information pages and attributes
+      are done**, see below; options and customers still need their own.
 - [ ] Live wiring into an actual admin screen/field — both backends exist
       but nothing calls either yet (see below for why, and each one's
       identified first consumer).
@@ -1720,13 +1720,48 @@ no-MySQL/no-`vendor/twig/twig` gap as every prior phase — see
 confirm, including the filter-then-page ordering that has no unit-test
 equivalent against a live cache.
 
-**Next step:** either wire the category, manufacturer, product or
-information backend into a live admin screen (blocked on the admin
-asset-enqueue problem first — see above; Phase 13's wizard found one way
-around it worth reading before attempting this: a standalone page with no
-legacy chrome, see that phase's "Design decision worth flagging"), or pick
-another entity type (attribute, option, customer) and build its backend
-the same shape as these four.
+**Update (a later run): the attribute `fetchItems` backend is done too**,
+same shape as category —
+`ControllerMintcartEntity::attribute()` (route `mintcart/entity/attribute`)
+wraps `ModelCatalogAttribute::getAttributes()` and normalizes rows via the
+new `MintCart\Design\AttributePickerProvider`
+(`upload/system/library/mintcart/design/attributepickerprovider.php`, no
+OpenCart dependency, unit-tested —
+`tests/mintcart/design/attribute-picker-provider-test.php`, 7 scenarios).
+`image` is always `null` (no image concept, same as category); paging
+happens in PHP over the full filtered set, same reason as category
+(`ModelCatalogAttribute` has no filtered-by-name total-count method);
+`filter_name` prefix-matches (`LIKE '…%'`), same as manufacturer, not
+category's substring match — all documented in
+`docs/developer/components/entity-picker.md`'s new "Attribute backend"
+section, including why (unlike category/manufacturer) there's no existing
+autocomplete consumer this route replaces — it's a genuinely new
+capability. Live wiring deliberately not attempted, same reason as
+category/manufacturer (admin asset-enqueue problem, see above); unlike
+those two, no obvious first live consumer has been identified yet for
+this one (documented rather than guessed at). Step 0 dedup check at the
+start of this run found three other open PRs: **#52** (Wizard Contacts
+step, Phase 13 — different phase, no file overlap), **#53** (Phase 12
+product backend, adds `ControllerMintcartEntity::product()` — a separate
+method, no shared lines with this run's `attribute()`), and **#54**
+(Phase 12 information-page backend, adds `::information()` — same,
+separate method). None touch the Homepage Builder block-type registry,
+`homepage_list.twig`, or `block.css` (the historical hot-file collision
+point per this routine's own root-cause note), and neither does this run,
+so that area isn't contended. Verified: `php -l` clean on every
+touched/added PHP file, re-swept across the full `upload/`/`tests/` tree;
+full `tests/mintcart/**/*-test.php` suite re-run end to end (35 files now,
+was 34) — all pass, no regressions. No `.twig` files touched. No live
+end-to-end request possible (same pre-existing no-MySQL/no-`vendor/twig/twig`
+gap) — see the new Phase 12 entry in `docs/MANUAL_VERIFICATION.md`.
+
+**Next step:** either wire the category, manufacturer, product,
+information or attribute backend into a live admin screen (all blocked on
+solving the admin asset-enqueue problem first — see above; Phase 13's
+wizard found one way around it worth reading before attempting this: a
+standalone page with no legacy chrome, see that phase's "Design decision
+worth flagging"), or pick another entity type (option, customer) and
+build its backend the same shape as these five.
 
 ## Phase 13 — Setup Wizard
 
@@ -2768,3 +2803,10 @@ overlapping this increment. Next candidates per Phase 12's own "Next step"
 above: attribute/option/customer entity-picker backends, or tackling the
 admin asset-enqueue problem itself now that three backends (category,
 manufacturer, information) are waiting on it.
+
+**Update (routine run): Phase 12's attribute `fetchItems` backend shipped
+too** (category, manufacturer, attribute now done; product and
+information page in flight via open PRs #53/#54). See the Phase 12
+section above for the full writeup. Next unclaimed candidates: option or
+customer entity-picker backends, or re-checking which of #52/#53/#54 have
+merged.

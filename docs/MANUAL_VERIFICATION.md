@@ -254,3 +254,23 @@ Information" and "Privacy Policy" — good enough):
    full unfiltered set (paging is applied after filtering, per
    `InformationPickerProvider`'s own doc comment — this ordering has no
    unit-test equivalent against a live cache invalidation path).
+
+## Phase 12 — `mintcart/entity/attribute` endpoint, never hit end to end
+
+Same gap as the category/manufacturer endpoints above. On a real install,
+with at least two attributes (e.g. under **Catalog → Attributes**) sharing
+a name pattern where one match is at the start and one only in the middle:
+
+1. Grant `mintcart/entity` **Access** if not already done for the category
+   endpoint above (same permission covers all three routes).
+2. Request `index.php?route=mintcart/entity/attribute&user_token=<your
+   token>&filter_name=&page=1&limit=20` and confirm a JSON
+   `{"items": [...], "total": N}` response with real attribute names and
+   `image: null` on every row (attributes have no image concept).
+3. Confirm `filter_name` set to the *start* of one attribute's name
+   matches it, but a substring from the *middle* of that name does not
+   (prefix match, same `LIKE '…%'` behavior as the manufacturer endpoint,
+   not category's substring match — see
+   `docs/developer/components/entity-picker.md`'s attribute section).
+4. Confirm paging (`page=2`) returns the next slice of the same
+   alphabetically-sorted list, not a repeat or a skip.
