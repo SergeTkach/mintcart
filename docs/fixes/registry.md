@@ -223,3 +223,91 @@ regression test added — same rationale as MC-0001/MC-0002: the fix is four
 this same file. A human should confirm on a real install that the
 manufacturer page's sort/limit labels and empty-listing message/button are
 no longer blank, on both the stock `default` theme and `mint_default`.
+
+---
+
+## MC-0004 — `tool/backup`'s user/user_group safety-stop uses a hardcoded byte-length instead of `DB_PREFIX`'s actual length
+
+**Problem:** `ControllerToolBackup::import()`
+(`upload/admin/controller/tool/backup.php`) streams a `.sql` backup file
+back in and executes each `TRUNCATE TABLE`/`INSERT INTO` statement in
+batches. Before executing a line, it deliberately checks whether that line
+is the `TRUNCATE TABLE` for the `user` or `user_group` table and, if so,
+stops the import there (`fseek()`s back and `break`s) rather than
+executing it — a safety guard so restoring an old backup mid-session can't
+truncate the very `user`/`user_group` tables the currently logged-in admin
+account lives in. That check is:
+
+```php
+if ($i > 0 && (substr($line, 0, 24) == 'TRUNCATE TABLE `' . DB_PREFIX . 'user`'
+    || substr($line, 0, 30) == 'TRUNCATE TABLE `' . DB_PREFIX . 'user_group`')) {
+```
+
+`24` and `30` are hardcoded byte-lengths of the two needle strings — but
+they are only correct when `DB_PREFIX` is exactly 3 characters long (the
+stock default, `oc_`). OpenCart's own installer lets an installer choose
+*any* `DB_PREFIX` (MintCart's own Setup Wizard does too, per
+`MINTCART_FUNCTIONAL_SCOPE.md` §2's Setup Wizard step list). For any other
+prefix length, `substr($line, 0, 24)`/`substr($line, 0, 30)` compares the
+wrong number of characters against the (correctly-built, `DB_PREFIX`-aware)
+needle string, so the comparison can never be `true` — the safety guard
+silently never fires, and the import loop keeps executing straight through
+the `user`/`user_group` `TRUNCATE TABLE`/`INSERT INTO` statements instead
+of stopping before them. This is exactly the "hardcoded database prefix in
+backup/restore logic" item `MINTCART_FUNCTIONAL_SCOPE.md` §18's Known Fix
+Research Queue names explicitly.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1 (this
+repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale as
+MC-0001–MC-0003 (no second checkout available to diff against; the fix is
+a self-contained, version-agnostic correction of a length computation, not
+a behavior redesign).
+
+**Source:** Discovered directly in this repository while auditing the
+Known Fix Research Queue candidates in `MINTCART_FUNCTIONAL_SCOPE.md` §18
+— not an imported historical community patch. Reproduced with a plain PHP
+one-liner (`CLAUDE.md` §84 — verified against the real file, not assumed
+from memory): with `DB_PREFIX = 'oc_'`, `strlen('TRUNCATE TABLE \`oc_user\`')`
+is exactly 24 and `strlen('TRUNCATE TABLE \`oc_user_group\`')` is exactly
+30 — which is *why* this bug has shipped unnoticed (the hardcoded numbers
+happen to be right for the one prefix every default install uses). With
+`DB_PREFIX = 'mintcart_'` the same two needles are 30 and 36 bytes long —
+the hardcoded `24`/`30` comparison no longer matches either one.
+
+**Reproduced on MintCart baseline:** Yes — confirmed by reading the actual
+file (`upload/admin/controller/tool/backup.php`, lines 92–96 prior to this
+fix) and computing the real needle lengths for both the default prefix and
+a representative custom prefix, as described above.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Replaced the two hardcoded length literals with
+`strlen()` of the same needle strings the code already builds from
+`DB_PREFIX` — the needles themselves were already correct
+(`DB_PREFIX`-aware); only the length used to slice `$line` for comparison
+was wrong. No behavior change for the default `oc_` prefix (the lengths
+computed by `strlen()` are identical to the old hardcoded `24`/`30` in
+that case — see the reproduction above); every other `DB_PREFIX` length
+now has the safety guard actually trigger. No new files, no schema change,
+no change to the rest of `import()`'s batching/streaming logic.
+
+**Tests:** `php -l` clean on the modified `backup.php`. New
+`tests/mintcart/fixes/mc-0004-backup-restore-prefix-test.php` (5 scenarios)
+— unlike MC-0001–MC-0003, this bug is pure string-length logic with no
+OpenCart runtime dependency, so it's fully testable in isolation: it
+reproduces the pre-fix hardcoded-length comparison failing for a 9-char
+and a 2-char and an empty custom prefix (while confirming it happens to
+still work for the stock 3-char `oc_` prefix, which is why the bug shipped
+unnoticed), then confirms the fixed length-from-`strlen()` comparison
+succeeds for all of them, plus a negative check that the fixed comparison
+doesn't false-positive on an unrelated table merely starting with `user`
+(e.g. a hypothetical `user_settings` table). A human should still confirm
+on a real install with a non-default `DB_PREFIX`: start a backup restore
+of a file containing rows after the `user`/`user_group` tables, and
+confirm the import stops at those tables rather than continuing through
+them.
