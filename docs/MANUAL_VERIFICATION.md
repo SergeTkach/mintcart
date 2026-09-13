@@ -184,6 +184,32 @@ manufacturer that has an image set and one that doesn't:
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
 
+## Phase 15 — Quick Order, never hit end to end
+
+`MintCart\Commerce\QuickOrderService` and the
+`202609041200_create_mc_quick_order.php` migration are both covered by
+standalone tests, but no live MySQL in this environment means
+`mintcart/quickorder/submit` has never actually run, and the modal built by
+`assets/src/js/components/quick-order.js` has never been clicked in a real
+browser. A human should, on a real install:
+
+1. Run the pending migration (`mc_quick_order` table should appear).
+2. Open a product listing (category/search/home), click **Quick Order** on
+   a product with no options, fill in name + phone (or email), submit —
+   confirm the modal closes, a success toast appears, and a new row lands
+   in `mc_quick_order` with the right `product_id`/`quantity`/`name`/
+   `telephone`/`email`/`status = 'new'`.
+3. Submit with an empty name, or with both phone and email empty, or with
+   a malformed email — confirm the matching field gets `has-error` +
+   the translated message, and nothing is inserted.
+4. Click Quick Order on a product that has required options — confirm it
+   redirects to the product page instead of opening the modal's success
+   path (same fallback `add-to-cart` already uses), and nothing is
+   inserted.
+5. Confirm keyboard-only use works: open the modal via Enter/Space on the
+   button, tab through the fields, submit via Enter, and that focus
+   returns to the triggering button when the modal closes (Bootstrap
+   `Modal`'s own focus-management, not custom code here).
 ## Phase 13 — Wizard Contacts step, never exercised end to end
 
 `ControllerMintcartWizard::validateContactsStep()`/`saveContactsStep()`

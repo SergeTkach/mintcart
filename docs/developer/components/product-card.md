@@ -129,7 +129,7 @@ template is:
         </button>
 
         {% if product.actions.quick_order and display.action_variant != 'compact' %}
-            <button type="button" class="mc-button mc-button--secondary mc-product-card__quick-order" data-mc-action="quick-order" data-product-id="{{ product.id }}">
+            <button type="button" class="mc-button mc-button--secondary mc-product-card__quick-order" data-mc-action="quick-order" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">
                 {{ text_quick_order }}
             </button>
         {% endif %}
@@ -155,7 +155,7 @@ duplicated per controller).
 | `data-mc-action="toggle-wishlist"` | `.mc-product-card__action-button` | Toggles its own `aria-pressed`, dispatches bubbling `mc:product-card:wishlist-toggle` with `{ productId, active }`. **No network call** — see below. |
 | `data-mc-action="toggle-compare"` | `.mc-product-card__action-button` | Same as wishlist, dispatches `mc:product-card:compare-toggle`. |
 | `data-mc-action="add-to-cart"` | `.mc-product-card__add-to-cart` | Calls `MintCart\Commerce\CartService` via `cart-client.js`'s `addToCart()`; dispatches `mc:cart:updated` on success, navigates to the product page if options/a recurring plan are required, shows a toast either way. See below. |
-| `data-mc-action="quick-order"` | `.mc-product-card__quick-order` | **Markup + hook only, no JS shipped yet.** Reserved for the future `QuickOrderService`/component (Phase 15, `MINTCART_TECHNICAL_PLAN.md` §28). |
+| `data-mc-action="quick-order"` | `.mc-product-card__quick-order` | Opens a shared `mc-modal` (`components/quick-order.js`) collecting quantity/name/phone/email, submits to `MintCart\Commerce\QuickOrderService` via `quick-order-client.js`. See below and `docs/developer/commerce/quick-order-service.md`. |
 
 ### Why wishlist/compare toggle but add-to-cart does something real now
 
@@ -182,9 +182,12 @@ end-to-end against a live install. The button shows `is-loading`
   fallback `checkout/cart.php` itself uses for the same case, or
 - a `createToast()` error toast on a network failure (`data-mc-text-add-error`).
 
-`quick-order` stays intentionally **not** wired — separate
-`QuickOrderService`, not built in this increment
-(`CLAUDE.md` §85: no wiring ahead of a real consumer).
+**Quick Order is wired as of this increment too**, in its own
+`components/quick-order.js` module rather than inline here — a modal-based
+flow (quantity/name/phone/email), not a single click handler, so it doesn't
+share `initAddToCart()`'s shape. Same required-option/recurring-plan
+redirect fallback as add-to-cart. Full contract:
+`docs/developer/commerce/quick-order-service.md`.
 
 ## Clickable title, not clickable card
 
@@ -241,7 +244,7 @@ padding via CSS only — same DOM/contract, no separate template.
 
 - [x] Documented contract (this file + `docs/developer/commerce/product-view-provider.md` + `docs/developer/commerce/cart-service.md`/`cart-client.md`)
 - [x] `mc-*` BEM markup
-- [x] JS only where actually needed (wishlist/compare toggle state; add-to-cart now calls the real Cart client, Phase 15's first increment — confirmed working against a live install); quick-order stays hook-only, separate `QuickOrderService` not built yet
+- [x] JS only where actually needed (wishlist/compare toggle state; add-to-cart and quick-order both call real Commerce API services — `CartService`/`QuickOrderService` — add-to-cart confirmed against a live install, quick-order not yet live-verified, see `docs/MANUAL_VERIFICATION.md`)
 - [x] Colors/spacing/fonts read from `--mc-*` tokens
 - [x] Keyboard usable (real `<a>`/`<button>` elements, focus-visible outlines, no keyboard trap)
 - [x] Mobile checked (flexible media aspect-ratio, wrapping actions row, no fixed widths)
