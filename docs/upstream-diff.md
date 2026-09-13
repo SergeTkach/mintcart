@@ -1003,3 +1003,66 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+---
+
+## `upload/admin/model/catalog/product.php` / `upload/admin/controller/catalog/product.php` / `upload/admin/view/template/catalog/product_list.twig`
+
+**Reason:** Phase 16 (Bulk Editor, `MINTCART_FUNCTIONAL_SCOPE.md` §7/§17,
+`MINTCART_TECHNICAL_PLAN.md` §29, `MINTCART_IMPLEMENTATION_GUIDE.md` §62)
+needed a mass status/quantity/price update over the existing `Catalog →
+Products` multi-select checkboxes. Full design writeup:
+`docs/developer/catalog/bulk-editor.md`. Three changes:
+
+1. **Model:** a new, additive `updateProductField($product_id, $field,
+   $value)` method — a single-column partial `UPDATE oc_product SET
+   <field> = ..., date_modified = NOW()`, deliberately **not**
+   `editProduct()` (which deletes and reinserts descriptions/attributes/
+   options/discounts/specials/etc. wholesale on every call, and would
+   silently wipe them if called with only a partial field set). `$field`
+   must be one of the three columns `MintCart\Catalog\BulkProductUpdateValidator::FIELDS`
+   whitelists (`status`/`quantity`/`price`); an unrecognized field is a
+   defensive no-op.
+2. **Controller:** a new, fully-additive `bulkUpdate()`/`validateBulkUpdate()`
+   pair (route `catalog/product.bulkupdate`) — same form-POST-then-redirect
+   shape as the existing `delete()`/`copy()` actions (same `selected[]`
+   checkboxes, same filter-preserving redirect URL), fed by the new
+   `MintCart\Catalog\BulkProductUpdateValidator` for field/value validation
+   and selected-id normalization.
+3. **View:** `product_list.twig`'s toolbar gained one `<select>` +
+   `<input>` + submit button, using `type="submit"`/`formaction`/`onclick="return
+   confirm(...)"` rather than the existing Delete button's `type="button"`
+   + manual `$('#form-product').submit()` pattern — see
+   `docs/developer/catalog/bulk-editor.md` "Why `type=\"submit\"`..." for
+   why copying Delete's own pattern verbatim would have been unsafe for a
+   button whose `formaction` differs from the form's default `action`.
+
+**Why it can't live in the MintCart layer instead:** `oc_product` is
+OpenCart core storage (`CLAUDE.md` §39 — do not duplicate OpenCart DB). A
+new MintCart-owned table/service that re-implemented product field
+storage alongside the existing one would fork a single source of truth
+into two. Extending the existing model/controller/template — the same
+place `addProduct()`/`editProduct()`/`deleteProduct()` and their `delete()`/
+`copy()` actions already live — keeps the product table's one true owner
+in one place.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+column, or return value changed; `editProduct()`'s own behavior is
+unchanged. The toolbar addition to `product_list.twig` is a new button
+alongside the existing Add/Copy/Delete/Filter buttons, not a change to
+any of them.
+
+**Tests:** `php -l` clean on all three touched/added PHP files (both admin
+files and the new `MintCart\Catalog\BulkProductUpdateValidator`). New
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` (25
+scenarios — field whitelist, per-field value validation including every
+rejection case, product-id normalization/dedup/dropping non-positive
+ids). Full `tests/mintcart/` suite re-run end to end — all pass, no
+regressions. `product_list.twig`'s `{% if %}`/`{% endif %}`/`{% for %}`/
+`{% endfor %}` tag counts checked balanced before and after the toolbar
+addition. Same pre-existing gap as every earlier phase: no MySQL in this
+environment, so `updateProductField()` and the `bulkUpdate()` action
+itself were never exercised against a real database — a human should
+confirm on a real install, in particular that a bulk update leaves every
+other relation (descriptions, options, discounts, specials) untouched —
+see `docs/MANUAL_VERIFICATION.md`'s new Phase 16 section.

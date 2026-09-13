@@ -430,3 +430,33 @@ never rendered on a real page or run through an actual validator. On a
    `mint_default/template/product/product.twig` exists — Phase 6/8 never
    wired the product *detail* page itself, only listing pages) — nothing
    to verify live until that page exists.
+
+## Phase 16 — Bulk Editor (`catalog/product.bulkupdate`), never exercised end to end
+
+`ModelCatalogProduct::updateProductField()`/`ControllerCatalogProduct::bulkUpdate()`
+are `php -l` clean and `BulkProductUpdateValidator` is unit-tested in
+isolation, but no live MySQL/admin session in this environment means the
+form was never actually submitted. On a real install, with at least three
+products, at least one carrying non-default descriptions/options/discounts/
+specials:
+
+1. Go to **Catalog → Products**, select two or three products via their
+   row checkboxes.
+2. Choose "Quantity" in the new bulk-update field select, type a number,
+   click the new toolbar button (a checkmark/square icon next to
+   Copy/Delete), confirm the dialog, and confirm the redirect lands back
+   on the same filtered/sorted/paged list with a success message and the
+   selected products' Quantity column updated to the new value.
+3. Repeat for "Status" (value `0` or `1`) and "Price" (a decimal value)
+   and confirm each updates only that column.
+4. For the product with existing descriptions/options/discounts/specials,
+   open its edit form after a bulk update and confirm every one of those
+   is completely unchanged — the entire reason `updateProductField()`
+   exists instead of reusing `editProduct()` (see
+   `docs/developer/catalog/bulk-editor.md` "Why a new model method").
+5. Submit the bulk-update button with no products selected, and again
+   with a deliberately invalid value (e.g. `-5` for quantity, `abc` for
+   price) and confirm each shows the appropriate warning rather than
+   silently doing nothing or throwing a fatal error.
+6. Confirm the legacy Delete/Copy buttons still behave exactly as before
+   (this increment must not have changed their behavior).
