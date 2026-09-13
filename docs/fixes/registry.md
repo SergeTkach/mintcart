@@ -422,3 +422,87 @@ the process now prints the corrected message instead of dying silently at
 `startup.php`'s `require_once`, though the more useful confirmation is
 simply that the two messages agree with each other and with
 `startup.php`, which this fix guarantees structurally.
+
+---
+
+## MC-0006 — `DB::connected()` calls a method no adaptor implements
+
+**Problem:** `system/library/db.php`'s public `DB::connected()` method
+delegates to `$this->adaptor->connected()`:
+
+```php
+public function connected() {
+    return $this->adaptor->connected();
+}
+```
+
+but every real adaptor under `system/library/db/` —
+`DB\MySQLi`, `DB\PDO`, `DB\PgSQL` — implements a method named
+`isConnected()`, never `connected()`. Calling `DB::connected()` against any
+real adaptor therefore fatals with `Error: Call to undefined method
+DB\MySQLi::isConnected()`-shaped output (actually the inverse — "Call to
+undefined method DB\MySQLi::connected()") instead of returning the
+boolean the method's own name and signature promise. This is squarely the
+Known Fix Research Queue's "database connection / reconnect issues"
+category (`MINTCART_FUNCTIONAL_SCOPE.md` §18): any future MintCart code
+that wants to check the connection is alive before running a long
+operation or deciding whether to reconnect — the exact kind of call a
+real reconnect-on-drop feature would need — would hit this fatal the
+moment it tried.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1 (this
+repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale as
+MC-0001–MC-0005 (no second checkout available to diff against in this
+environment); the mismatch is a plain naming bug between two files that
+both ship as part of the same core library, not a version-specific
+regression, so cross-checking every intermediate release wasn't necessary
+to apply the fix safely.
+
+**Source:** Discovered directly in this repository while working through
+`MINTCART_FUNCTIONAL_SCOPE.md` §18's remaining Known Fix Research Queue
+items — not an imported historical community patch. Reproduced by
+`grep -rn "function connected\|function isConnected" upload/system/library/db.php upload/system/library/db/*.php`:
+`db.php` calls `connected()`, all three adaptors define `isConnected()`
+only. Confirmed nothing in this repository currently calls
+`DB::connected()` (`grep -rn "->connected(" upload/` returns zero
+matches) — which is exactly why this has shipped unnoticed: it's dead code
+today, but any code written against `DB`'s own public method name would
+hit it immediately.
+
+**Reproduced on MintCart baseline:** Yes — see
+`tests/mintcart/fixes/mc-0006-db-connected-adaptor-mismatch-test.php`,
+which fatals with `Call to undefined method DB\FakeAdaptor::connected()`
+against the pre-fix code (verified by hand, reverting the fix locally and
+re-running the test) and passes after the fix.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Changed `DB::connected()`'s one-line body to call
+`$this->adaptor->isConnected()` instead of `$this->adaptor->connected()`.
+`DB`'s own public method name (`connected()`) is left unchanged — this is
+the safest fix (a single call-site correction, no public API rename) in
+case any theme/extension already calls `$this->db->connected()` expecting
+today's method name to keep working, now with it actually returning a
+real value instead of fataling. Deliberately **not** attempted in this
+fix: real reconnect-on-drop behavior (catching a dropped-connection error
+mid-request and re-establishing the link) — that's a materially larger
+feature than fixing a naming mismatch, and no real caller of
+`DB::connected()` exists yet to design a reconnect flow around
+(`CLAUDE.md` §85); a future fix/feature can build on this method now that
+it actually works.
+
+**Tests:** `tests/mintcart/fixes/mc-0006-db-connected-adaptor-mismatch-test.php`
+(new) — a pure PHP regression test with no OpenCart/MySQL dependency: a
+`DB\FakeAdaptor` duck-typing the real adaptors (implements `isConnected()`
+only) is injected into a real `DB` instance via reflection (bypassing the
+constructor's real connection attempt, since no MySQL server is available
+in this environment), then `DB::connected()` is called for real and its
+return value checked against the adaptor's `true`/`false` state. `php -l`
+clean on the modified `db.php` and the new test file. Full
+`tests/mintcart/**/*-test.php` suite re-run end to end: all passing, no
+regressions.
