@@ -340,9 +340,10 @@ belongs to Phase 8 once a theme exists to render.
       stays OpenCart's job upstream of it); computes `stock`/`badges`/
       `actions` consistently instead of each controller doing it ad hoc.
       Actual controller wiring was deferred to Phase 8 (Theme resolver) and
-      has since landed for Category, Search, Special and Manufacturer — all
-      four now via the shared `MintCart\Design\ProductCardListRenderer`.
-      Phase 6's listing-controller wiring is complete.
+      has since landed for Category, Search, Special, Manufacturer and the
+      product detail page's own Related Products list — all five now via
+      the shared `MintCart\Design\ProductCardListRenderer`. Phase 6's
+      listing-controller wiring is complete.
 - [x] `mc-product-card` Twig + CSS + JS — `assets/src/css/components/product-card.css`
       + `assets/src/js/components/product-card.js` (`initProductCardActions`,
       wired into `catalog.js` only — storefront component); documented
@@ -373,7 +374,46 @@ later phases:
 - Wishlist/compare persistence — Phase 15 as well (today's toggle is a UI
   affordance + event only, no storage).
 
-Verified: `php -l` on `productviewprovider.php` (clean, previous run); the
+**Update (this run): the product detail page (`ControllerProductProduct`)
+is wired too, closing the one listing/page gap this section's history had
+repeatedly deferred.** `mint_default` previously had no
+`template/product/product.twig` at all — a shopper on a Mint-aware theme
+could browse Category/Search/Manufacturer/Special but the actual page they
+buy from rendered nothing Mint-specific. This run's step 0 dedup check
+found 20 open PRs (#52-#73) covering entity-picker backends, Wizard steps,
+Business Settings facades, SEO builders and more, none touching
+`catalog/controller/product/product.php` or any `product/product.twig`
+path — genuinely unclaimed, and three files (`admin/controller/mintcart/entity.php`
+— 5 open PRs, `admin/controller/mintcart/wizard.php` — 2, `admin/controller/common/column_left.php`
+— 2+) were deliberately avoided as already hot-contended per this file's
+own §0f-style guidance.
+
+Full writeup: `docs/upstream-diff.md`'s new `product.php` entry,
+`docs/developer/components/product-card.md`'s updated "Live Twig template"
+section (fifth `ProductCardListRenderer` consumer), and the new
+`docs/developer/components/product-gallery.md` (a genuinely new component
+this page needed — a main-image/thumbnail swap `mc-product-card` has no
+equivalent of). Also extends `product-card.js`'s `add-to-cart` handler to
+read a linked `mc-quantity` input and product-page option fields
+(backward-compatible — a grid card sets neither new attribute).
+Deliberately scoped down: the Reviews tab is a read-only placeholder (no
+AJAX write-review form yet — a separate, self-contained increment) and
+recurring/subscription payment profiles have no picker (falls back to the
+existing "missing required option" redirect, not a regression since no
+Mint-native product page existed to pick one before).
+
+Verified: `php -l` clean on both touched PHP files, re-swept across the
+full `upload`/`tests` tree; full `tests/mintcart/**/*-test.php` suite
+re-run end to end — all passing, no regressions; `product.twig`'s Twig tag
+counts checked balanced (29 if/29 endif, 11 for/11 endfor); `npm install`
+(0 vulnerabilities) + `npm run build` compile cleanly, `mc-product-gallery`/
+`gallery-thumb` confirmed present in `catalog.min.js`/`index.min.css` and
+absent from `admin.min.js`; `npm test` still passing. **Not verified:** no
+live MySQL/`vendor/twig/twig` session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new entry for what a human should confirm
+on a real install.
+
+Verified (previous run): `php -l` on `productviewprovider.php` (clean, previous run); the
 7-scenario `tests/mintcart/commerce/product-view-provider-test.php` smoke
 test (previous run, still passing — `ProductViewProvider` wasn't touched this
 run); `npm install` (0 vulnerabilities, fresh install this run) then `npm run
@@ -3340,6 +3380,22 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (2026-09-06, routine run) — Phase 6/8: Mint Default product
+detail page.** Step 0 dedup check against 20 open PRs (#52-#73) found none
+touching `catalog/controller/product/product.php` or any
+`product/product.twig` path; `admin/controller/mintcart/entity.php` (5
+open PRs), `wizard.php` (2 open PRs), and `admin/controller/common/column_left.php`
+(2+ open PRs) were deliberately avoided as already hot-contended. Wired
+`ControllerProductProduct`'s Related Products list to the same
+`ProductCardListRenderer` pipeline Category/Search/Manufacturer/Special
+already use, and added the missing `mint_default/template/product/product.twig`
+page itself (gallery, options, price/stock, discounts, attributes, tabs,
+related products) — see the Phase 6 section above for the full writeup.
+Next candidates: a real reviews UI (list + AJAX write form) for this same
+page, `QuickOrderService`/`CheckoutService` (flagged as large/risky by
+prior runs without live MySQL to verify against), or re-checking
+`gh pr list --state open` for what's newly unclaimed once the current
+backlog lands.
 ---
 
 ## Update (2026-09-06, routine run) — Compatibility Checker (Phase 11/Technical Plan)

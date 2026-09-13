@@ -18,8 +18,10 @@ import { initQuantityStepper } from './components/quantity.js';
 import { initModalTriggers } from './components/modal.js';
 import { initDrawerTriggers } from './components/drawer.js';
 import { initToastTriggers } from './components/toast.js';
+import { initTabsTriggers } from './components/tabs.js';
 import { initProductCardActions } from './components/product-card.js';
 import { initHeaderCartRefresh } from './components/header-cart.js';
+import { initProductGalleries } from './components/product-gallery.js';
 import { initQuickOrderActions } from './components/quick-order.js';
 import { initSearchBoxes } from './components/search-box.js';
 
@@ -30,7 +32,13 @@ initQuantityStepper();
 initModalTriggers();
 initDrawerTriggers();
 initToastTriggers();
+// mc-tabs was Phase 11's Mint Admin-only primitive until the product detail
+// page (Description/Specification/Reviews tabs) became its first storefront
+// consumer - see docs/developer/components/tabs.md "Not wired into
+// catalog.js" for why this was deferred until now.
+initTabsTriggers();
 initProductCardActions();
 initHeaderCartRefresh();
+initProductGalleries();
 initQuickOrderActions();
 initSearchBoxes();

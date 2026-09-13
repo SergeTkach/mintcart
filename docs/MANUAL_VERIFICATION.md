@@ -184,6 +184,43 @@ manufacturer that has an image set and one that doesn't:
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
 
+## Phase 6/8 — Mint Default product detail page, never rendered live
+
+`mint_default/template/product/product.twig` is new this run; the
+controller wiring is `php -l` clean and reuses already-tested classes, but
+no live MySQL/`vendor/twig/twig` session in this environment means the
+page was never actually rendered. On a `config_theme=mint_default` install,
+with at least one product that has: a secondary image, a special price, a
+required select-type option, a manufacturer, and at least one related
+product configured:
+
+1. Load the product page and confirm the gallery's main image + thumbnail
+   strip render, clicking a thumbnail swaps the main image without a page
+   reload, and the thumbnail links still work (right-click → open image)
+   even if JS is disabled.
+2. Confirm price/special/tax render via `mc-price`, stock/manufacturer/
+   model render, and the rating stars render only when the product has
+   approved reviews (same pre-existing gap noted for Phase 8's own rating
+   entry — no demo product has a non-zero rating).
+3. Select the required option and click Add to Cart — confirm it succeeds
+   (toast, `mc:cart:updated`, header cart count updates); then reload and
+   click Add to Cart **without** selecting the option — confirm it
+   redirects back to the same product page (the existing "missing required
+   option" fallback), not a silent failure.
+4. Confirm the Description/Specification/Reviews tabs switch panels
+   correctly (`mc-tabs`, keyboard arrow-key navigable) and that
+   Specification only appears when the product actually has attributes.
+5. Confirm the Related Products grid renders `mc-product-card` markup
+   identical in shape to the same product's appearance on a category page.
+6. Switch to the legacy `default` theme and confirm the product page is
+   pixel-identical to its pre-this-change appearance (this increment must
+   not have changed `$data['products']`/any existing key that template
+   reads).
+7. Switch to `test_theme` and confirm it falls back to `mint_default`'s
+   `product.twig` (it has no override of its own) while still rendering
+   `test_theme`'s own distinct `product-card.twig` DOM in the Related
+   Products grid — the same per-component-name fallback independence
+   `component-renderer-test.php` already proves at the unit level.
 ## Phase 15 — Quick Order, never hit end to end
 
 `MintCart\Commerce\QuickOrderService` and the
