@@ -2424,6 +2424,21 @@ features (this one and Phase 12's Entity Picker) are now blocked on it.
 - [ ] System route URL aliases (cart, checkout, search, contact, account, etc.)
       (`MINTCART_FUNCTIONAL_SCOPE.md` §4) — not attempted
 
+Not started on `master` yet, but multiple sub-items are in flight as open,
+unmerged PRs: `MintCart\Seo\SchemaOrgBuilder` (#62), system route URL
+aliases (#66), `MintCart\Seo\HreflangBuilder` (#68), `MintCart\Seo\RobotsBuilder`
+(#70), and `MintCart\Seo\SitemapBuilder` (#71, this run) — see
+`docs/developer/seo/sitemap.md` for the full writeup, including why
+canonical and meta title/description turned out to already be covered by
+stock OpenCart (nothing left to add there). A human reconciling this
+backlog should check which of #62/#66/#68/#70/#71 have landed before
+picking the next Phase 18 increment; none of the five touch the same
+existing file (each ships a new, distinct file under
+`upload/system/library/mintcart/seo/`), so they should merge cleanly in
+any order. Live route/controller wiring for the sitemap (querying
+product/category/manufacturer/information models) is not started and
+needs a real MySQL install to verify — see `docs/developer/seo/sitemap.md`'s
+"Not done yet" section for a concrete checklist.
 **In progress.** `MintCart\Seo\RobotsBuilder`
 (`upload/system/library/mintcart/seo/robotsbuilder.php`) decides the
 per-page `<meta name="robots" content="...">` directive: `noindex, follow`
@@ -3275,6 +3290,13 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (this run, PR #71): `MintCart\Seo\SitemapBuilder` added** — the
+Phase 18 checklist's last unclaimed sub-item (XML sitemap), per #66's and
+#70's own "Next steps" notes. See the Phase 18 section above and
+`docs/developer/seo/sitemap.md` for the full writeup. This repo currently
+has 18+ open PRs in flight (#52 onward) — re-check `gh pr list --state
+open` before starting new work rather than trusting any snapshot in this
+file.
 **Update (this run): Phase 18's robots-controls item shipped —
 `MintCart\Seo\RobotsBuilder`, additive-only (new `mintcart/seo/` files),
 no live wiring yet.** See that phase's section above for the full writeup
