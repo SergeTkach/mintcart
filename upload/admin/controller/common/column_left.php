@@ -232,6 +232,18 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			// MintCart\Seo\SystemRoutes facade (MINTCART_FUNCTIONAL_SCOPE.md
+			// §4) - a friendlier alias picker for the fixed system-page
+			// list, over the exact same seo_url storage 'SEO / Url' above
+			// already edits.
+			if ($this->user->hasPermission('access', 'mintcart/seo/system_pages')) {
+				$design[] = array(
+					'name'	   => $this->language->get('text_mintcart_seo_system_pages'),
+					'href'     => $this->url->link('mintcart/seo/system_pages', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			if ($design) {
 				$data['menus'][] = array(
 					'id'       => 'menu-design',
@@ -351,6 +363,41 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			// Business (MINTCART_FUNCTIONAL_SCOPE.md §3, MINTCART_TECHNICAL_PLAN.md §23)
+			// - UI facades over standard OpenCart storage/extensions, not a
+			// second data store (CLAUDE.md §6/§39). Delivery/Payments are
+			// facades over the existing shipping/payment extension list
+			// (ControllerMintcartBusinessDelivery/Payments); a Contacts
+			// facade over config/mintcart_contacts settings is a separate,
+			// independent increment.
+			$business = array();
+
+			if ($this->user->hasPermission('access', 'mintcart/business/delivery')) {
+				$business[] = array(
+					'name'	   => $this->language->get('text_mintcart_business_delivery'),
+					'href'     => $this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($this->user->hasPermission('access', 'mintcart/business/payments')) {
+				$business[] = array(
+					'name'	   => $this->language->get('text_mintcart_business_payments'),
+					'href'     => $this->url->link('mintcart/business/payments', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($business) {
+				$data['menus'][] = array(
+					'id'       => 'menu-mintcart-business',
+					'icon'	   => 'fa-briefcase',
+					'name'	   => $this->language->get('text_mintcart_business'),
+					'href'     => '',
+					'children' => $business
+				);
+			}
+
 			// Marketing
 			$marketing = array();
 
@@ -385,6 +432,33 @@ class ControllerCommonColumnLeft extends Controller {
 					'name'	   => $this->language->get('text_marketing'),
 					'href'     => '',
 					'children' => $marketing
+				);
+			}
+
+			// Business (MINTCART_FUNCTIONAL_SCOPE.md §3, MINTCART_TECHNICAL_PLAN.md §23)
+			// - a UI facade over standard OpenCart storage/extensions, not a
+			// second data store (CLAUDE.md §6/§39). Only 'Contacts' has a
+			// real screen so far (ControllerMintcartBusinessContacts);
+			// 'Delivery'/'Payments' are future increments over the same
+			// pattern, added the same conditional way every other menu
+			// group above already is.
+			$business = array();
+
+			if ($this->user->hasPermission('access', 'mintcart/business/contacts')) {
+				$business[] = array(
+					'name'	   => $this->language->get('text_mintcart_business_contacts'),
+					'href'     => $this->url->link('mintcart/business/contacts', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($business) {
+				$data['menus'][] = array(
+					'id'       => 'menu-mintcart-business',
+					'icon'	   => 'fa-briefcase',
+					'name'	   => $this->language->get('text_mintcart_business'),
+					'href'     => '',
+					'children' => $business
 				);
 			}
 

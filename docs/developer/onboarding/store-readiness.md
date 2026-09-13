@@ -111,3 +111,58 @@ re-deriving the checklist.
   `mintcart/readiness` permission) and confirm each signal flips as
   expected — e.g. enabling a payment extension flips `payment` to `true`
   and moves `percent`/`ready_for_test_order` accordingly.
+
+## Dashboard widget
+
+`ControllerExtensionDashboardMintcartReadiness`
+(`upload/admin/controller/extension/dashboard/mintcart_readiness.php`) is
+the "dashboard widget" consumer this file's own "next consumers" note
+above named. It's a **standard OpenCart 3 dashboard extension** — the
+same mechanism every stock widget (`recent.php`, `online.php`, `sale.php`,
+...) already uses, not OCMOD and not a new MintCart-specific mechanism:
+`admin/controller/common/dashboard.php` discovers it automatically (any
+`admin/controller/extension/dashboard/*.php` file is globbed by
+`marketplace/extension.php`), and a store admin installs + enables it once
+under **Extensions -> Dashboard**, exactly like any other widget. No
+manifest file, no install()/uninstall() hooks needed — OpenCart's own
+`model_setting_extension` handles registration generically for every
+dashboard extension.
+
+**Reuses, does not re-derive**, the checklist: `dashboard()` calls the
+exact same `StoreReadiness::evaluate()` + `ModelMintcartReadiness::getSignals()`
+pair `ControllerMintcartReadiness`'s JSON endpoint already calls — one
+computation, two consumers, per this file's own "Why a new controller/route
+instead of a dashboard widget directly" section above (that section named
+this widget as the deferred next step; it's not a second implementation of
+the checklist).
+
+**Styled with stock Bootstrap 3 `.tile`/`.progress`/`.label` classes**
+(the same markup `online_info.twig`/`sale_info.twig` already use) —
+deliberately **not** `mc-*` component markup. MintCart's own compiled
+`assets/dist/{css,js}` bundle still isn't enqueued on any admin page (see
+`docs/developer/components/entity-picker.md` "Admin backends" and Phase
+17's category-drag-drop doc for the identical blocker) — a widget styled
+with markup the admin theme already loads sidesteps that gap completely,
+rather than shipping `mc-*` classes with no CSS behind them on a page that
+can't load it.
+
+The tile's footer links to `mintcart/wizard` ("Continue setup...") — the
+Setup Wizard is the one existing MintCart admin page a shopper-facing
+"finish setting up your store" action can point to today; there is no
+dedicated Store Readiness page yet (`docs/IMPLEMENTATION_STATUS.md` Phase
+13/14's still-open "Wizard `ready` step should integrate with
+`StoreReadiness`" item is the natural place to eventually replace this
+with something more specific).
+
+**Verified:** `php -l` clean on the new controller and language file; the
+two new `.twig` files' `if`/`for`/`endif`/`endfor` tag counts checked
+balanced, same script-based technique used for every `.twig` file in this
+repo. No new unit test — this increment adds no new pure logic, only
+OpenCart controller/Twig wiring around the already-tested
+`StoreReadiness`/`ModelMintcartReadiness` pair; the full `tests/mintcart/`
+suite was re-run end to end to confirm no regression.
+**Not verified:** no live MySQL/admin session in this environment (same
+gap as above) — a human should install + enable the widget under
+Extensions -> Dashboard on a real install, confirm it renders the correct
+percent/checklist/ready-for-test-order state, and confirm the width/status/
+sort-order settings form saves and is respected by the dashboard grid.
