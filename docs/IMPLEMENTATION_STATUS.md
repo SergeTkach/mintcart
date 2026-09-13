@@ -2621,6 +2621,27 @@ this phase (diagnostics, measured performance work) is not started.
       what's still not done (no caller/downloader/backup/verify/maintenance-
       mode/file-copy/migration-runner/cache-clear/health-check steps yet).
 - [ ] Theme/extension rollback (RESEARCH item per Functional Scope §21)
+- [x] Compatibility Checker (`install.xml` analysis, heuristic warnings only) —
+      `MintCart\Compatibility\InstallManifestParser` +
+      `MintCart\Compatibility\CompatibilityChecker`
+      (`upload/system/library/mintcart/compatibility/`), first consumer
+      `ControllerMintcartCompatibility` (route
+      `mintcart/compatibility/check`, POST, JSON). Reports modified
+      files/controllers/templates, Bootstrap 3 markup assumptions (reusing
+      `bootstrap3-shim.css`'s own marker list), and potential conflicts
+      against `docs/upstream-diff.md`'s known-modified-file list — never
+      blocks (Functional Scope §29). Full writeup:
+      `docs/developer/compatibility/compatibility-checker.md`. No admin
+      menu entry yet (`column_left.php` contended by 3 other open PRs at
+      the time of this run — see the doc's "Why no admin menu entry yet").
+- [ ] **Release packaging script** — open PR at the time of this run (see
+      "Next step" below); not yet merged to this checklist.
+
+Compatibility Checker is done for what a heuristic, non-blocking analyzer
+needs (parser + checker + a real JSON consumer, fully unit-tested, zero
+existing OpenCart file touched). Update Manager and rollback remain not
+started. Release packaging script's status is tracked by its own PR, not
+rewritten here to avoid conflicting with it.
 - [ ] Compatibility Checker (`install.xml` analysis, heuristic warnings only)
 - [x] **Release packaging script** — `scripts/release.js` (`npm run
       release`), documented in `docs/release.md`. Builds the frontend
@@ -3319,6 +3340,30 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+---
+
+## Update (2026-09-06, routine run) — Compatibility Checker (Phase 11/Technical Plan)
+
+Step 0 dedup check at the time of this run: 20 open PRs (`#52`–`#72`,
+`#58`/`#71` gaps aside — see the PR list itself), covering every Phase 18
+SEO Core item, Phase 12's remaining entity-picker backends, the remaining
+Setup Wizard steps, Business Settings facades, `HealthCheck`, Bulk
+Editor, `QuickOrderService`, `mc-search-box`, and release packaging.
+`wizard.php`/`wizardprogress.php`/`wizard.twig` (2 open PRs) and
+`admin/controller/mintcart/entity.php` (5 open PRs) and
+`admin/controller/common/column_left.php` (3 open PRs) are all
+hot-contended per this file's own §0f rule — avoided entirely. Picked
+Compatibility Checker instead: genuinely unclaimed by any open PR, and
+implementable as new files only (no hot shared file touched). See the
+Phase 11 (Technical Plan) section above and
+`docs/developer/compatibility/compatibility-checker.md` for the full
+writeup.
+
+**Next step:** an upload-based admin screen + menu entry for the
+Compatibility Checker (blocked on `column_left.php` decontention, same as
+several other in-flight PRs); Diagnostics dev mode (Technical Plan §35,
+still fully unclaimed); Update Manager itself; or re-check `gh pr list
+--state open` — this repo had 20 open PRs at the time of this run.
 **Update (this run, PR #72): Phase 15 — `QuickOrderService` built.** See
 the Phase 15 section above for the full writeup — a Quick Order request
 is recorded as a lead in a new `mc_quick_order` table, deliberately never
