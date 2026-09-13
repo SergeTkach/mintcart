@@ -5,7 +5,7 @@
  * `McEntityPicker` (Phase 11), one action per entity type. `category()` is
  * the first, `manufacturer()` the second, `product()` the third,
  * `information()` the fourth, `attribute()` the fifth, `option()` the
- * sixth.
+ * sixth, `customer()` the seventh.
  *
  * Deliberately a new, fully-additive controller under `mintcart/entity/*`
  * rather than a change to `catalog/category.php`'s existing `autocomplete()`
@@ -209,5 +209,42 @@ class ControllerMintcartEntity extends Controller {
 		$provider = new \MintCart\Design\OptionPickerProvider();
 
 		$this->respond($provider->build($rows, $page, $limit));
+	}
+
+	// route=mintcart/entity/customer - GET filter_name, page, limit
+	public function customer() {
+		if (!$this->user->hasPermission('access', 'mintcart/entity')) {
+			$this->respond(array('error' => 'Permission denied'));
+			return;
+		}
+
+		$this->load->model('customer/customer');
+
+		$filter_name = isset($this->request->get['filter_name']) ? (string)$this->request->get['filter_name'] : '';
+		$page = isset($this->request->get['page']) ? (int)$this->request->get['page'] : 1;
+		$limit = isset($this->request->get['limit']) ? (int)$this->request->get['limit'] : 20;
+
+		$page = ($page < 1) ? 1 : $page;
+		$limit = ($limit < 1) ? 20 : $limit;
+
+		// Unlike category/manufacturer, ModelCustomerCustomer::getTotalCustomers()
+		// accepts filter_name and returns a real filtered count, so paging
+		// happens at the SQL level (start/limit) rather than in PHP - see
+		// CustomerPickerProvider's own doc comment for why.
+		$rows = $this->model_customer_customer->getCustomers(array(
+			'filter_name' => $filter_name,
+			'sort'        => 'name',
+			'order'       => 'ASC',
+			'start'       => ($page - 1) * $limit,
+			'limit'       => $limit
+		));
+
+		$total = $this->model_customer_customer->getTotalCustomers(array(
+			'filter_name' => $filter_name
+		));
+
+		$provider = new \MintCart\Design\CustomerPickerProvider();
+
+		$this->respond($provider->build($rows, (int)$total));
 	}
 }

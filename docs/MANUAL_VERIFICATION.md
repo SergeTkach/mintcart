@@ -290,3 +290,29 @@ one product option configured (`Catalog → Options`):
 3. Confirm `filter_name` set to the *start* of one option's name matches
    it, but a substring from the *middle* of that name does not (prefix
    match, same as manufacturer, not category's substring match).
+
+## Phase 12 — `mintcart/entity/customer` endpoint, never hit end to end
+
+Same no-MySQL/no-live-request gap as category/manufacturer above, plus a
+check unique to this backend: it's the first entity picker to page at the
+SQL level rather than in PHP, so pagination itself needs a real database to
+confirm.
+
+1. Grant `mintcart/entity` **Access** if not already done for the other two
+   endpoints above (same permission covers all three routes).
+2. With at least 25 customers on the store, request `index.php?route=mintcart/entity/customer&user_token=<your
+   token>&filter_name=&page=1&limit=20` and confirm a JSON `{"items": [...
+   20 items ...], "total": N}` response where `N` is the real total
+   customer count (not 20).
+3. Request `page=2` with the same `limit=20` and confirm it returns the
+   *next* 20 customers (rows 21+), not a repeat of page 1 and not an empty
+   set — this is the SQL-paging-specific check `ProductPickerProvider`'s
+   own manual-verification entry called out; category/manufacturer's
+   PHP-side slicing never needed it.
+4. Set `filter_name` to part of one customer's full name (`firstname
+   lastname`) and confirm both the returned `items` and the `total` reflect
+   only matching customers (not the store-wide total) — `total` here comes
+   from a real filtered `COUNT(*)`, unlike category/manufacturer where
+   `total` is `count()` of an unfiltered PHP array.
+5. Confirm every returned item's `image` is `null` (customers have no
+   image concept in OpenCart).
