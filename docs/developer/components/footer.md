@@ -24,26 +24,39 @@ settings — never duplicated into a Mint-owned table
 $footer = (new \MintCart\Design\FooterViewProvider())->build(
     $columns,     // link columns, e.g. Information / Service / Account
     $contacts,    // ['phone' => ..., 'email' => ..., 'address' => ...]
-    $social,      // [] until Business Settings (Phase 14) has storage
+    $social,      // now real data - see "Social links" below
     $payments,    // [] until Business -> Payments (Phase 14) has storage
     $newsletter,  // null/disabled until a subscribe endpoint exists (Phase 15)
     $powered      // pre-formatted "Powered by X" text
 );
 ```
 
-### Why social/payments/newsletter default to empty/disabled
+### Social links — now sourced from the Setup Wizard
 
-OpenCart has no built-in storage for social profile links or payment
-badges, and no subscribe endpoint for a newsletter form exists yet
-(`MintCart\Commerce` gets a `CartService`/`SearchService` in Phase 15, not
-before). Rather than invent a settings table or a fake POST target ahead of
-a real consumer (`CLAUDE.md` §85), `FooterViewProvider` renders these
-sections exactly as empty/disabled as the data actually is today — a caller
-that has nothing to pass gets a footer with no social/payments/newsletter
-sections at all, not broken-looking placeholders. `newsletter.enabled` is
-only ever `true` when the caller supplies **both** `enabled: true` **and** a
-real `action` URL — supplying one without the other still renders nothing,
-because a form pointed at nowhere is worse than no form.
+`$social` is no longer always empty. The Setup Wizard's **Contacts** step
+(`docs/developer/onboarding/setup-wizard.md`, Phase 13) writes up to four
+social profile URLs (Facebook, Instagram, Twitter/X, YouTube) to a
+dedicated `mintcart_contacts` setting (`oc_setting`, key
+`mintcart_contacts_social`), already in the exact `{network, href}` shape
+this parameter expects. `ControllerCommonFooter::index()` reads that
+setting and passes it straight through — a store that hasn't run the Wizard
+Contacts step yet still gets `$social = []` (same empty-by-default
+behavior as before this existed), but one that has now renders real links.
+
+### Why payments/newsletter still default to empty/disabled
+
+OpenCart has no built-in storage for payment badges, and no subscribe
+endpoint for a newsletter form exists yet (`MintCart\Commerce` gets a
+`CartService`/`SearchService` in Phase 15, not `QuickOrderService`/a
+newsletter endpoint). Rather than invent a settings table or a fake POST
+target ahead of a real consumer (`CLAUDE.md` §85), `FooterViewProvider`
+renders these two sections exactly as empty/disabled as the data actually
+is today — a caller that has nothing to pass gets a footer with no
+payments/newsletter sections at all, not broken-looking placeholders.
+`newsletter.enabled` is only ever `true` when the caller supplies **both**
+`enabled: true` **and** a real `action` URL — supplying one without the
+other still renders nothing, because a form pointed at nowhere is worse
+than no form.
 
 ## Live Twig template
 

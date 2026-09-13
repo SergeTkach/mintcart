@@ -29,8 +29,9 @@
  * instead, same fallback `checkout/cart.php` itself uses when options are
  * missing; the product page itself has no such fallback to redirect to, so
  * it always passes any collected `option[<id>]` values along. `quick-order`
- * stays intentionally NOT wired here - separate `QuickOrderService`, not
- * built yet.
+ * is wired separately, in its own `./quick-order.js` module
+ * (`initQuickOrderActions()`) - a modal-based flow, not a single click
+ * handler, so it doesn't belong in this file.
  *
  * Contract: docs/developer/components/product-card.md
  */
