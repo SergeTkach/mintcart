@@ -101,6 +101,10 @@ class ControllerMintcartWizard extends Controller
             $this->validateContactsStep();
         }
 
+        if ($step === 'language_currency') {
+            $this->validateLanguageCurrencyStep();
+        }
+
         if ($this->error && !isset($this->error['warning'])) {
             $this->error['warning'] = $this->language->get('error_warning');
         }
@@ -117,6 +121,10 @@ class ControllerMintcartWizard extends Controller
 
         if ($step === 'contacts') {
             $this->saveContactsStep();
+        }
+
+        if ($step === 'language_currency') {
+            $this->saveLanguageCurrencyStep();
         }
 
         $this->model_setting_setting->editSetting('mintcart_wizard', [
@@ -269,6 +277,50 @@ class ControllerMintcartWizard extends Controller
         return $byNetwork;
     }
 
+    /**
+     * config_language/config_currency are existing OpenCart 'config' settings
+     * (the same store-default fields Settings -> Store's own General tab
+     * manages, upload/admin/controller/setting/store.php) - a code must
+     * actually exist in oc_language/oc_currency, mirroring Settings -> Store's
+     * own permissiveness rather than inventing a stricter "must be status
+     * enabled" rule that screen itself doesn't enforce (CLAUDE.md §84: checked
+     * against the real controller before writing this, not assumed).
+     */
+    private function validateLanguageCurrencyStep(): void
+    {
+        $this->load->model('localisation/language');
+        $this->load->model('localisation/currency');
+
+        $language = trim((string)($this->request->post['config_language'] ?? ''));
+        $currency = trim((string)($this->request->post['config_currency'] ?? ''));
+
+        if ($language === '' || !$this->model_localisation_language->getLanguageByCode($language)) {
+            $this->error['language'] = $this->language->get('error_language');
+        }
+
+        if ($currency === '' || !$this->model_localisation_currency->getCurrencyByCode($currency)) {
+            $this->error['currency'] = $this->language->get('error_currency');
+        }
+    }
+
+    /**
+     * Same merge-then-save shape saveStoreStep() uses, into the same 'config'
+     * setting group - config_language/config_currency are two more keys in
+     * that one existing row set, not a new Mint-owned duplicate (CLAUDE.md
+     * §6/§39).
+     */
+    private function saveLanguageCurrencyStep(): void
+    {
+        $existing = $this->model_setting_setting->getSetting('config');
+
+        $merged = array_merge($existing, [
+            'config_language' => trim((string)$this->request->post['config_language']),
+            'config_currency' => trim((string)$this->request->post['config_currency']),
+        ]);
+
+        $this->model_setting_setting->editSetting('config', $merged);
+    }
+
     private function render(?string $step, \MintCart\Onboarding\WizardProgress $progress): void
     {
         $data['heading_title'] = $this->language->get('heading_title');
@@ -307,6 +359,16 @@ class ControllerMintcartWizard extends Controller
             foreach (self::SOCIAL_NETWORKS as $network) {
                 $data['social_' . $network] = $this->request->post['social_' . $network] ?? ($saved[$network] ?? '');
             }
+        }
+
+        if ($step === 'language_currency') {
+            $this->load->model('localisation/language');
+            $this->load->model('localisation/currency');
+
+            $data['config_language'] = $this->request->post['config_language'] ?? $this->config->get('config_language');
+            $data['config_currency'] = $this->request->post['config_currency'] ?? $this->config->get('config_currency');
+            $data['languages'] = $this->model_localisation_language->getLanguages();
+            $data['currencies'] = $this->model_localisation_currency->getCurrencies();
         }
 
         $this->response->setOutput($this->load->view('mintcart/wizard', $data));
