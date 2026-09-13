@@ -21,8 +21,9 @@
  * Commerce API consumer. A product needing options this card can't offer a
  * picker for (no option UI on a grid card) gets redirected to its full
  * product page instead, same fallback `checkout/cart.php` itself uses when
- * options are missing. `quick-order` stays intentionally NOT wired here -
- * separate `QuickOrderService`, not built yet.
+ * options are missing. `quick-order` is wired separately, in its own
+ * `./quick-order.js` module (`initQuickOrderActions()`) - a modal-based
+ * flow, not a single click handler, so it doesn't belong in this file.
  *
  * Contract: docs/developer/components/product-card.md
  */

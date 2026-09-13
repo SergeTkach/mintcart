@@ -79,6 +79,70 @@
       </form>
       {% endif %}
 
+      {% if step == 'contacts' %}
+      <h2 class="mc-card__title">{{ contacts_title }}</h2>
+      <p class="mc-card__text">{{ contacts_text }}</p>
+      <form action="{{ action }}" method="post" novalidate>
+        <input type="hidden" name="step" value="contacts" />
+
+        <div class="mc-field mb-3 {% if error.social_facebook %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-social-facebook">{{ entry_social_facebook }}</label>
+          <input type="url" id="input-social-facebook" name="social_facebook" value="{{ social_facebook }}" placeholder="https://facebook.com/yourstore" class="mc-field__control" {% if error.social_facebook %}aria-invalid="true" aria-describedby="error-social-facebook"{% endif %} />
+          {% if error.social_facebook %}<p class="mc-field__error" id="error-social-facebook" role="alert">{{ error.social_facebook }}</p>{% endif %}
+        </div>
+
+        <div class="mc-field mb-3 {% if error.social_instagram %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-social-instagram">{{ entry_social_instagram }}</label>
+          <input type="url" id="input-social-instagram" name="social_instagram" value="{{ social_instagram }}" placeholder="https://instagram.com/yourstore" class="mc-field__control" {% if error.social_instagram %}aria-invalid="true" aria-describedby="error-social-instagram"{% endif %} />
+          {% if error.social_instagram %}<p class="mc-field__error" id="error-social-instagram" role="alert">{{ error.social_instagram }}</p>{% endif %}
+        </div>
+
+        <div class="mc-field mb-3 {% if error.social_twitter %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-social-twitter">{{ entry_social_twitter }}</label>
+          <input type="url" id="input-social-twitter" name="social_twitter" value="{{ social_twitter }}" placeholder="https://x.com/yourstore" class="mc-field__control" {% if error.social_twitter %}aria-invalid="true" aria-describedby="error-social-twitter"{% endif %} />
+          {% if error.social_twitter %}<p class="mc-field__error" id="error-social-twitter" role="alert">{{ error.social_twitter }}</p>{% endif %}
+        </div>
+
+        <div class="mc-field mb-4 {% if error.social_youtube %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-social-youtube">{{ entry_social_youtube }}</label>
+          <input type="url" id="input-social-youtube" name="social_youtube" value="{{ social_youtube }}" placeholder="https://youtube.com/@yourstore" class="mc-field__control" {% if error.social_youtube %}aria-invalid="true" aria-describedby="error-social-youtube"{% endif %} />
+          {% if error.social_youtube %}<p class="mc-field__error" id="error-social-youtube" role="alert">{{ error.social_youtube }}</p>{% endif %}
+        </div>
+
+        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_continue }}</button>
+      </form>
+      {% endif %}
+
+      {% if step == 'language_currency' %}
+      <h2 class="mc-card__title">{{ language_currency_title }}</h2>
+      <p class="mc-card__text">{{ language_currency_text }}</p>
+      <form action="{{ action }}" method="post" novalidate>
+        <input type="hidden" name="step" value="language_currency" />
+
+        <div class="mc-field mb-3 {% if error.language %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-config-language">{{ entry_language }}</label>
+          <select id="input-config-language" name="config_language" class="mc-field__control" {% if error.language %}aria-invalid="true" aria-describedby="error-config-language"{% endif %}>
+            {% for language in languages %}
+            <option value="{{ language.code }}" {% if language.code == config_language %}selected="selected"{% endif %}>{{ language.name }}</option>
+            {% endfor %}
+          </select>
+          {% if error.language %}<p class="mc-field__error" id="error-config-language" role="alert">{{ error.language }}</p>{% endif %}
+        </div>
+
+        <div class="mc-field mb-4 {% if error.currency %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-config-currency">{{ entry_currency }}</label>
+          <select id="input-config-currency" name="config_currency" class="mc-field__control" {% if error.currency %}aria-invalid="true" aria-describedby="error-config-currency"{% endif %}>
+            {% for currency in currencies %}
+            <option value="{{ currency.code }}" {% if currency.code == config_currency %}selected="selected"{% endif %}>{{ currency.title }} ({{ currency.code }})</option>
+            {% endfor %}
+          </select>
+          {% if error.currency %}<p class="mc-field__error" id="error-config-currency" role="alert">{{ error.currency }}</p>{% endif %}
+        </div>
+
+        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_continue }}</button>
+      </form>
+      {% endif %}
+
       {% if is_ready %}
       <h2 class="mc-card__title">{{ ready_title }}</h2>
       <p class="mc-card__text">{{ ready_text }}</p>

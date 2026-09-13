@@ -92,9 +92,18 @@ $manager = new MigrationManager($db, DB_PREFIX, __DIR__ . '/../../../upload/syst
 
 $result = $manager->run();
 
+// MigrationManager discovers every file in the real migrations directory,
+// not just the two this test is named after — 202609041200_create_mc_quick_order.php
+// (Phase 15) is unrelated to Homepage Builder but lives alongside these and
+// is expected to apply too. Its own schema is covered by
+// tests/mintcart/commerce/quick-order-migration-test.php, not here.
 check(
-    $result['applied'] === ['202608231405_create_mc_pages.php', '202608231406_create_mc_blocks.php'],
-    'both real migrations should apply in filename order, got: ' . json_encode($result['applied']),
+    $result['applied'] === [
+        '202608231405_create_mc_pages.php',
+        '202608231406_create_mc_blocks.php',
+        '202609041200_create_mc_quick_order.php',
+    ],
+    'all real migrations should apply in filename order, got: ' . json_encode($result['applied']),
     $failures
 );
 

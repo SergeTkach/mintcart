@@ -20,6 +20,8 @@ import { initDrawerTriggers } from './components/drawer.js';
 import { initToastTriggers } from './components/toast.js';
 import { initProductCardActions } from './components/product-card.js';
 import { initHeaderCartRefresh } from './components/header-cart.js';
+import { initQuickOrderActions } from './components/quick-order.js';
+import { initSearchBoxes } from './components/search-box.js';
 
 // MintCart-owned catalog behavior modules are added here as components ship
 // (Phase 4 onward).
@@ -30,3 +32,5 @@ initDrawerTriggers();
 initToastTriggers();
 initProductCardActions();
 initHeaderCartRefresh();
+initQuickOrderActions();
+initSearchBoxes();
