@@ -2870,6 +2870,12 @@ tracked once each.)*
       reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
       (`category.php` blank language strings), MC-0002 (`search.php`
       missing canonical/prev/next links), MC-0003 (`manufacturer.php` blank
+      language strings) merged to `master`; MC-0004 through MC-0008 sit in
+      their own still-open, unmerged PRs (see each PR's title) as of this
+      run; MC-0009 (`seo_url.php` incoming decode ignores `language_id`,
+      can resolve the wrong entity on a multi-language store — see
+      `docs/fixes/registry.md` and `docs/upstream-diff.md` for the full
+      writeup) is this run's own increment
       language strings), and MC-0008 (`Cart::__construct()` unconditional
       per-request cleanup query, this run — see below); MC-0004 through
       MC-0007 are open PRs, not yet landed on this branch
@@ -4006,6 +4012,32 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (this run, 2026-09-09): fix MC-0009 shipped** —
+`ControllerStartupSeoUrl::index()`'s incoming pretty-URL decode now
+filters by `language_id` (with a language-agnostic fallback), fixing a
+real correctness bug on multi-language stores where two entities in
+different languages share the same SEO keyword. At the time this run
+started there were 41 open PRs (`#52`-`#92`); step 0 found `#66`
+(System route URL aliases) also touches `seo_url.php`, but a different
+method (`rewrite()`, near the end of the file) — this run's change is in
+`index()`, a different, non-overlapping location, addressing a different
+problem (incoming decode's missing language filter, not outgoing system
+route aliasing), confirmed by reading `#66`'s full diff before starting.
+No other open PR touches `catalog/controller/startup/seo_url.php`,
+`docs/fixes/registry.md`, or the MC-0004–MC-0008 fix IDs already claimed
+by `#76`/`#78`/`#79`/`#89`/`#92` (this run used MC-0009, the next free ID
+after those). See `docs/fixes/registry.md`'s MC-0009 entry and
+`docs/upstream-diff.md`'s new `seo_url.php` (MC-0009) entry for the full
+writeup. Verified: `php -l` clean on the modified file; full
+`tests/mintcart/**/*-test.php` suite re-run end to end — no regressions
+(no existing PHP library file touched, only the controller). **Next
+step:** re-run `gh pr list --state open` first (this backlog moves fast —
+40+ open PRs at the time of this run, many independently claiming nearly
+every remaining unclaimed phase/checklist item); a second Known Fix
+Research Queue candidate (`MINTCART_FUNCTIONAL_SCOPE.md` §18 — pagination
+`?page=1`/duplicate-entry issues, PHP 8.x compatibility problems) is a
+reasonable next increment of the same low-collision-risk shape, once
+re-confirmed unclaimed.
 **Update (this run, 2026-09-09): Phase 7's "Mobile Navigation" gap is
 closed.** At the time this run started there were 37 open PRs (`#52`–`#89`)
 covering nearly every phase with unclaimed work — Compatibility adapters,
