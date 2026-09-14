@@ -32,10 +32,34 @@ $_['entry_telephone']   = 'Telephone';
 $_['entry_address']     = 'Address';
 $_['button_continue']   = 'Continue';
 
-// Ready / more-steps-coming state
+// Contacts step
+
+$_['contacts_title']          = 'Where can shoppers find you online?';
+$_['contacts_text']           = 'Add links to your store\'s social profiles. They\'ll appear in your storefront footer. This step is optional — leave any field blank and add it later.';
+$_['entry_social_facebook']   = 'Facebook';
+$_['entry_social_instagram']  = 'Instagram';
+$_['entry_social_twitter']    = 'Twitter / X';
+$_['entry_social_youtube']    = 'YouTube';
+
+// Language & currency step
+
+$_['language_currency_title'] = 'Language & currency';
+$_['language_currency_text']  = 'Choose the default language and currency shoppers see on your storefront. You can add more of either later in Settings.';
+$_['entry_language']          = 'Default language';
+$_['entry_currency']          = 'Default currency';
+
+// Ready step (Store Readiness checklist)
+
+$_['readiness_title']       = 'How ready is your store?';
+$_['readiness_text']        = 'Here\'s where things stand today, based on your real store settings. You can finish setup and come back to this checklist any time.';
+$_['text_check_done']       = 'Done';
+$_['text_check_pending']    = 'Not yet';
+$_['button_finish_setup']   = 'Finish setup';
+
+// Ready / more-steps-coming state (shown once every implemented step, ready included, is completed)
 
 $_['ready_title'] = 'You\'re off to a great start';
-$_['ready_text']  = 'The rest of the Setup Wizard (contacts, delivery, payment, design and your first product) is coming in a future update. For now, head to your dashboard to keep setting up your store.';
+$_['ready_text']  = 'The rest of the Setup Wizard (delivery, payment, design and your first product) is coming in a future update. For now, head to your dashboard to keep setting up your store.';
 $_['button_go_to_dashboard'] = 'Go to dashboard';
 
 // Errors
@@ -45,3 +69,6 @@ $_['error_name']      = 'Store name must be between 1 and 64 characters!';
 $_['error_email']     = 'E-Mail Address does not appear to be valid!';
 $_['error_telephone'] = 'Telephone must be between 3 and 32 characters!';
 $_['error_address']   = 'Address must be between 3 and 256 characters!';
+$_['error_social']    = '%s must be a valid URL!';
+$_['error_language']  = 'Please choose a valid language!';
+$_['error_currency']  = 'Please choose a valid currency!';

@@ -252,6 +252,8 @@ class ControllerProductCategory extends Controller {
 							'name'                        => $result['name'],
 							'url'                         => $href,
 							'image'                       => $image,
+							'image_width'                 => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'),
+							'image_height'                => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'),
 							'price'                       => $price,
 							'special'                     => $special,
 							'tax'                         => $tax,
@@ -458,6 +460,25 @@ class ControllerProductCategory extends Controller {
 			$data['content_bottom'] = $this->load->controller('common/content_bottom');
 			$data['footer'] = $this->load->controller('common/footer');
 			$data['header'] = $this->load->controller('common/header');
+
+			// MintCart\Seo\SchemaOrgBuilder BreadcrumbList JSON-LD
+			// (MINTCART_FUNCTIONAL_SCOPE.md §16, Phase 18). Re-checks
+			// Mint-awareness directly (not $mint_render_product_cards,
+			// which above this point may have been flipped to false by
+			// ProductCardListRenderer::isEnabled() after an unrelated
+			// per-product render failure) - the breadcrumb list is
+			// independent of whether product-card rendering succeeded.
+			// $data['breadcrumbs'] is complete by this point (built at the
+			// top of this method and appended to throughout).
+			if (\MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme)) {
+				try {
+					$schema_builder = new \MintCart\Seo\SchemaOrgBuilder();
+
+					$data['mc_schema_breadcrumb'] = $schema_builder->toJsonLd($schema_builder->breadcrumbList($data['breadcrumbs']));
+				} catch (\Throwable $e) {
+					(new \MintCart\Core\Logger())->error('SchemaOrgBuilder failed to build BreadcrumbList schema: ' . $e->getMessage());
+				}
+			}
 
 			$this->response->setOutput($this->load->view('product/category', $data));
 		} else {

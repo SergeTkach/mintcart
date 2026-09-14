@@ -104,6 +104,27 @@ class ControllerStartupSeoUrl extends Controller {
 			}
 		}
 
+		// MintCart\Seo\SystemRoutes (MINTCART_FUNCTIONAL_SCOPE.md §4): a
+		// fixed whitelist of "system pages" (cart, checkout, search, ...)
+		// that carry no id parameter of their own, so the loop above never
+		// matches them - only product_id/manufacturer_id/path/
+		// information_id links get a pretty URL today. Incoming requests
+		// already decode a plain keyword=>route seo_url row correctly (see
+		// this class's own index() method, the generic branch after the
+		// product_id/category_id/manufacturer_id/information_id checks);
+		// this is the missing other half - generating that same pretty URL
+		// when a controller calls $this->url->link('checkout/cart', ...).
+		// Documented in docs/upstream-diff.md.
+		if (!$url && isset($data['route']) && in_array($data['route'], \MintCart\Seo\SystemRoutes::ROUTES, true)) {
+			$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE `query` = '" . $this->db->escape($data['route']) . "' AND store_id = '" . (int)$this->config->get('config_store_id') . "' AND language_id = '" . (int)$this->config->get('config_language_id') . "'");
+
+			if ($query->num_rows && $query->row['keyword']) {
+				$url .= '/' . $query->row['keyword'];
+
+				unset($data['route']);
+			}
+		}
+
 		if ($url) {
 			unset($data['route']);
 
