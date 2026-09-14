@@ -1676,6 +1676,23 @@ PHP `tests/mintcart/` suite doesn't apply.
 `index.min.css` confirms `.mc-progress`/`--indeterminate` are present. No
 PHP touched, so the PHP `tests/mintcart/` suite doesn't apply.
 
+**Autosave (`MINTCART_FUNCTIONAL_SCOPE.md` §22, P1/RESEARCH) — research
+done this run, no code.** This item wasn't tracked anywhere in this file
+before now and nothing among the 40+ PRs open at the time of this run
+touches it. `docs/adr/006-autosave-strategy.md` resolves the six open
+questions (scope/allowlist, trigger/transport, state machine, failure
+backoff, conflict handling via a version token, navigation warning) per
+`CLAUDE.md` §20's "determine before implementing." No `McAutosave`
+primitive is built yet — every plausible first consumer (Homepage
+Builder block settings, a future Theme settings form) sits behind the
+same admin-bundle-enqueue blocker already tracked in this file (Phase 7's
+"Known gap," Phases 10/12/17), and building the primitive with no
+consumer to prove it against would be speculative (`CLAUDE.md` §85).
+**Next step:** build `McAutosave` (`assets/src/js/components/autosave.js`,
+`createAutosave(form, options)` factory, same shape as `McEntityPicker`/
+`McMediaPicker`) once a real consumer exists and the admin bundle enqueue
+question is resolved — see the ADR's "Consequences" section.
+
 ## Phase 12 — Entity Picker
 
 - [x] List primitive shipped (Phase 11 — `McEntityPicker`, see above):
