@@ -42,6 +42,22 @@
 
     <div class="mc-header__main">
         <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
+            {% if widgets.menu %}
+                <button
+                    type="button"
+                    class="mc-header__nav-toggle d-lg-none"
+                    data-mc-action="open-drawer"
+                    data-mc-target="#mcHeaderNav"
+                    aria-expanded="false"
+                    aria-controls="mcHeaderNav"
+                    aria-label="{{ text_menu }}"
+                >
+                    <span class="mc-header__nav-toggle-bar"></span>
+                    <span class="mc-header__nav-toggle-bar"></span>
+                    <span class="mc-header__nav-toggle-bar"></span>
+                </button>
+            {% endif %}
+
             <div class="mc-header__branding">
                 <a class="mc-header__logo" href="{{ branding.home }}">
                     {% if branding.logo %}
@@ -67,6 +83,19 @@
     </div>
 
     {% if widgets.menu %}
-        <nav class="mc-header__nav mc-legacy">{{ widgets.menu|raw }}</nav>
+        <nav
+            class="offcanvas offcanvas-lg offcanvas-start mc-drawer mc-header__nav"
+            tabindex="-1"
+            id="mcHeaderNav"
+            aria-labelledby="mcHeaderNavTitle"
+        >
+            <div class="offcanvas-header d-lg-none">
+                <h2 class="offcanvas-title mc-drawer__title" id="mcHeaderNavTitle">{{ text_menu }}</h2>
+                <button type="button" class="mc-drawer__close" data-mc-action="close-drawer" aria-label="{{ text_close }}">&times;</button>
+            </div>
+            <div class="offcanvas-body mc-legacy">
+                {{ widgets.menu|raw }}
+            </div>
+        </nav>
     {% endif %}
 </header>

@@ -388,6 +388,37 @@
                         <input type="hidden" name="product_category[]" value="{{ product_category.category_id }}"/>
                       </div>
                     {% endfor %}</div>
+                  {#
+                    MintCart Phase 12 (Entity Picker) - a searchable,
+                    paginated, multi-select browser as an additional way to
+                    add categories, alongside the jQuery autocomplete input
+                    above (kept as-is, not replaced - this environment has
+                    no live MySQL/admin session to visually verify a full
+                    swap; see docs/developer/admin/asset-enqueue.md).
+                    Confirming a selection appends the exact same
+                    #product-category{id}/product_category[] hidden-input
+                    markup the autocomplete's own 'select' handler below
+                    already produces, so ControllerCatalogProduct's
+                    save logic (validateForm()/addProduct()/editProduct())
+                    needs no change at all.
+                  #}
+                  <button type="button" class="mc-button mc-button--secondary" id="button-category-picker" style="margin-top: 8px;">
+                    <i class="fa fa-search"></i> {{ text_category_picker_browse }}
+                  </button>
+                  <div class="mc-entity-picker" id="category-picker" hidden style="margin-top: 8px;">
+                    <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_category_picker_search }}" placeholder="{{ text_category_picker_search }}">
+                    <ul class="mc-entity-picker__list" role="listbox" aria-multiselectable="true" aria-label="{{ entry_category }}" data-mc-entity-picker-list></ul>
+                    <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_category_picker_empty }}</p>
+                    <div class="mc-entity-picker__pager">
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_category_picker_prev }}</button>
+                      <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_category_picker_next }}</button>
+                    </div>
+                    <div class="mc-entity-picker__footer">
+                      <span class="mc-entity-picker__selected-count" data-mc-entity-picker-selected-count></span>
+                      <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_category_picker_confirm }}</button>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="form-group">
@@ -1185,6 +1216,83 @@
   $('#product-category').delegate('.fa-minus-circle', 'click', function() {
 	  $(this).parent().remove();
   });
+
+  // MintCart Phase 12 (Entity Picker) - Category field's McEntityPicker
+  // (docs/developer/components/entity-picker.md "Admin backends"). Plain
+  // vanilla JS, not jQuery, per CLAUDE.md §7 (new MintCart JS never uses
+  // jQuery, even inside a page that still loads it for legacy behavior
+  // like the autocomplete block above). Appends into the exact same
+  // #product-category well the autocomplete's own 'select' handler above
+  // already writes to, so ControllerCatalogProduct's save logic needs no
+  // change at all - see the {# ... #} comment above the picker's markup.
+  (function () {
+	  var browseButton = document.getElementById('button-category-picker');
+	  var pickerRoot = document.getElementById('category-picker');
+	  var well = document.getElementById('product-category');
+
+	  if (!browseButton || !pickerRoot || !well || !window.MintCart || !window.MintCart.createEntityPicker) {
+		  return;
+	  }
+
+	  function addCategoryToWell(id, name) {
+		  var existing = document.getElementById('product-category' + id);
+
+		  if (existing) {
+			  existing.remove();
+		  }
+
+		  var row = document.createElement('div');
+		  row.id = 'product-category' + id;
+
+		  var icon = document.createElement('i');
+		  icon.className = 'fa fa-minus-circle';
+		  row.appendChild(icon);
+		  row.appendChild(document.createTextNode(' ' + name));
+
+		  var hidden = document.createElement('input');
+		  hidden.type = 'hidden';
+		  hidden.name = 'product_category[]';
+		  hidden.value = id;
+		  row.appendChild(hidden);
+
+		  well.appendChild(row);
+	  }
+
+	  var picker = window.MintCart.createEntityPicker(pickerRoot, {
+		  fetchItems: function (options) {
+			  var params = new URLSearchParams({
+				  filter_name: options.query,
+				  page: options.page,
+				  limit: options.pageSize
+			  });
+
+			  return fetch('index.php?route=mintcart/entity/category&user_token={{ user_token }}&' + params, {
+				  signal: options.signal
+			  }).then(function (response) {
+				  return response.json();
+			  });
+		  },
+		  multiple: true,
+		  onConfirm: function (selected) {
+			  selected.forEach(function (item) {
+				  addCategoryToWell(item.id, item.name);
+			  });
+
+			  picker.clear();
+			  pickerRoot.hidden = true;
+		  }
+	  });
+
+	  browseButton.addEventListener('click', function () {
+		  var opening = pickerRoot.hidden;
+
+		  pickerRoot.hidden = !pickerRoot.hidden;
+
+		  if (opening) {
+			  picker.refresh();
+		  }
+	  });
+  })();
 
   // Filter
   $('input[name=\'filter\']').autocomplete({
