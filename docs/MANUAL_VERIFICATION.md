@@ -184,6 +184,33 @@ manufacturer that has an image set and one that doesn't:
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
 
+## Phase 15 — Checkout totals refactor + new endpoint, never exercised against a real DB
+
+No MySQL/OpenCart session in this environment. `MintCart\Compatibility\OpenCart3\TotalsAdapter`
+is unit-tested in isolation (`tests/mintcart/compatibility/totals-adapter-test.php`),
+and `checkout/payment_method.php`/`checkout/confirm.php` are `php -l` clean
+after being refactored to use it, but neither controller was ever actually
+run against a real cart. On a real install, with at least one shipping
+extension and one payment extension enabled:
+
+1. Add a product to the cart and walk through checkout up to and including
+   the Payment step — confirm the same payment methods appear, in the same
+   order, as before this change, and that the amount each payment
+   extension is quoted (e.g. a percentage-of-total surcharge) matches what
+   it showed pre-refactor.
+2. Complete an order end to end and check the resulting row in `oc_order`
+   — `total` should match the total shown throughout checkout (this is
+   the specific line `docs/upstream-diff.md`'s `confirm.php` entry
+   describes fixing from a latent bug this refactor would otherwise have
+   exposed — worth confirming it actually landed correctly).
+3. Request `index.php?route=mintcart/checkout/totals` (GET, logged-in
+   session with items in the cart) and confirm a JSON `{lines: [...],
+   total: "..."}` response — `lines` should list the same total rows
+   (Sub-Total, Shipping if a method is selected, Tax if applicable, Total)
+   in the same order the cart/checkout page already shows them.
+4. Repeat step 3 with **no** shipping method selected yet in session —
+   confirm the `shipping` line is simply absent (matches
+   `extension/total/shipping.php`'s own guard), not an error.
 ## Admin asset-enqueue fix + `product_form.twig`'s Category `McEntityPicker`, never exercised end to end
 
 `docs/developer/admin/asset-enqueue.md` has the full design writeup. No

@@ -2323,6 +2323,14 @@ already share.
       No Mint-native search-box UI component calls this endpoint yet
       (`CLAUDE.md` §85 — ships ahead of its first consumer, same as every
       other Phase 11/15 primitive) — that is the natural next increment.
+- [~] `QuickOrderService` — open PR #52-#87 backlog includes one (Phase 15
+      item, not yet merged as of this update — check `gh pr list --state
+      open` before starting a second one).
+- [~] `CheckoutService` — first increment this run:
+      `MintCart\Commerce\CheckoutTotalsService` +
+      `MintCart\Compatibility\OpenCart3\TotalsAdapter` + the
+      `mintcart/checkout/totals` AJAX endpoint (recomputed order totals,
+      no address/shipping/payment mutation yet). See the writeup below.
 - [x] `MintCart\Commerce\QuickOrderService` + Quick Order component (this
       run) — `upload/system/library/mintcart/commerce/quickorderservice.php`
       + `upload/catalog/controller/mintcart/quickorder.php`
@@ -2358,6 +2366,49 @@ already share.
 - [ ] Quick Order component — not started; `mc-product-card`'s
       `data-mc-action="quick-order"` stays hook-only.
 - [ ] Modern checkout UI over existing shipping/payment extensions/totals/order model — not started.
+
+**Update (this run): `CheckoutTotalsService` + `TotalsAdapter` — first
+`CheckoutService` increment.** Step 0 dedup check against the 35 open PRs
+at the time (`#52`-`#87`) found none touching Phase 15's `QuickOrderService`/
+`CheckoutService` gap, and none touching `checkout/payment_method.php`/
+`checkout/confirm.php`/anything under `compatibility/opencart3/` — the only
+contended areas were the Setup Wizard files (`#52`/`#64`/`#84`),
+`column_left.php` (`#60`/`#65`/`#66`), `category.php`/`search.php`
+(`#62`/`#83`), `admin/controller/catalog/product.php` (`#63`/`#80`), and
+`docs/developer/update/package-manifest.md` (`#82`/`#86`) — none of which
+this increment touches.
+
+`checkout/payment_method.php` and `checkout/confirm.php` each inlined an
+identical ~20-line loop computing order totals from installed `total`
+extensions. Extracted into `MintCart\Compatibility\OpenCart3\TotalsAdapter`
+(`docs/developer/compatibility/totals-adapter.md`) — the repo's second
+`Compatibility\OpenCart3` adapter, following the same "wait for a third
+real call site" extraction threshold `ActiveTheme`/`ProductCardListRenderer`
+were extracted under. The third call site is a new, fully-additive
+`ControllerMintcartCheckout::totals()` (route `mintcart/checkout/totals`,
+GET, JSON), whose response is normalized via the new
+`MintCart\Commerce\CheckoutTotalsService`
+(`docs/developer/commerce/checkout-totals-service.md`) — same
+no-OpenCart-dependency, formatter-injected split `CartService::snapshot()`
+already established.
+
+**Bug caught while refactoring:** removing `confirm.php`'s totals loop
+left `$order_data['total'] = $total_data['total'];` (further down the same
+method) reading a now-undefined variable — a leftover alias for the exact
+value the plain `$total` variable already held. Fixed by pointing it at
+`$total` directly; see `docs/upstream-diff.md`'s `confirm.php` entry for
+the full explanation. This was a latent risk this refactor exposed and
+fixed in the same change, not a pre-existing bug being shipped separately.
+
+Verified: `php -l` clean across the full `upload/`/`tests/` tree; full
+`tests/mintcart/` suite re-run end to end (35 files, was 33, including the
+two new `tests/mintcart/compatibility/totals-adapter-test.php` and
+`tests/mintcart/commerce/checkout-totals-service-test.php`) — all pass, no
+regressions. Same pre-existing gap as every other controller-wiring
+increment: no MySQL/OpenCart bootstrap in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 15 entry for what a human should
+confirm on a real install (same payment methods/amounts as before the
+refactor, correct `oc_order.total`, and the new endpoint's JSON shape).
 
 **Update (this run): the header's legacy cart dropdown now reacts to
 `mc:cart:updated`.** `assets/src/js/components/header-cart.js`
@@ -3800,6 +3851,15 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+---
+
+**Update (2026-09-09, routine run):** Phase 15's `CheckoutTotalsService`
++ `TotalsAdapter` increment shipped (see Phase 15's own section above for
+the full writeup) — genuinely unclaimed at the time against all 35 open
+PRs (`#52`-`#87`). Next candidates once those PRs land: `QuickOrderService`
+(open as PR #72, not yet merged), a Mint-native checkout UI consuming the
+new `mintcart/checkout/totals` endpoint, or re-checking `gh pr list
+--state open` for whatever's newly unclaimed.
 **Update (this run, 2026-09-09): Phase 1's Compatibility layer has a first
 adapter — `MintCart\Compatibility\OpenCart3\ExtensionAdapter`.** At the
 time this run started there were 36 open PRs (#52–#86); a step-0 dedup
