@@ -2639,6 +2639,44 @@ features (this one and Phase 12's Entity Picker) are now blocked on it.
 
 ## Phase 18 — SEO Core
 
+- [~] SEO URL, canonical, hreflang, meta title/description, robots controls, XML
+      sitemap, Schema.org Product/Breadcrumb/Organization — **canonical** has a
+      first increment this run (see below); several sibling sub-pieces
+      (hreflang, robots, sitemap, Schema.org) have their own increments sitting
+      in open, unmerged PRs as of this run — see each PR's own title, not
+      reflected in this checklist yet since they haven't merged
+- [ ] System route URL aliases (cart, checkout, search, contact, account, etc.)
+      — also has an open, unmerged PR as of this run
+
+**Update (this run): `MintCart\Seo\CanonicalUrlBuilder` — canonical/prev/next
+pagination links.** Pure extraction of the canonical/prev/next link logic
+that is byte-for-byte duplicated (same linked comment, same branching)
+across `catalog/controller/product/{category,manufacturer,search,special}.php`.
+Full writeup: `docs/developer/seo/canonical-url-builder.md`. No controller
+wiring yet — a separate, mechanical follow-up (swap each controller's inline
+block for a call into this class, no behavior change) once this primitive is
+reviewed, same primitive-first pattern `PackageManifest`/
+`CategoryMoveValidator` already used (`CLAUDE.md` §85). This run's step-0
+duplicate-work check found `MintCart\Seo\HreflangBuilder`, `RobotsBuilder`,
+`SitemapBuilder` and a Schema.org increment already claimed by open PRs
+(none of them named "canonical" or touched `catalog/controller/product/*`),
+plus the System route URL aliases item — so canonical was the one Phase 18
+sub-piece still genuinely unclaimed.
+
+Verified: `php -l` clean. `tests/mintcart/seo/canonical-url-builder-test.php`
+(8 scenarios) — scenarios 1-5 replay the exact page/limit/total/base-query
+shapes the four controllers already produce today, confirming this is a
+faithful extraction, not a behavior change; scenarios 6-8 cover `limit = 0`,
+zero total results, and defensive input clamping. Pure PHP, no OpenCart
+dependency — no live-install verification gap applies (same as
+`PackageManifest`).
+
+**Next step:** wire the four controllers to call `CanonicalUrlBuilder`
+instead of their own inline block (mechanical, no behavior change — do this
+once reviewed), or pick the remaining Phase 18 sub-pieces this run left
+untouched (meta title/description has no `MetaBuilder` and no open PR as of
+this run) — or re-check `gh pr list --state open` first, since this backlog
+was large (30+ open PRs) and moving fast at the time of this run.
 - [ ] SEO URL, canonical, meta title/description, XML sitemap, Schema.org
       Product/Breadcrumb/Organization
 - [~] robots controls — `MintCart\Seo\RobotsBuilder` (pure contract + tests
