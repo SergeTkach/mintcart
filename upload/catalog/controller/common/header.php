@@ -154,6 +154,28 @@ class ControllerCommonHeader extends Controller {
 				// pattern already used by footer/category.
 				(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render header: ' . $e->getMessage());
 			}
+
+			// MintCart\Seo\SchemaOrgBuilder Organization JSON-LD
+			// (MINTCART_FUNCTIONAL_SCOPE.md §16, Phase 18). Site-wide (one
+			// Organization per page, not per component), so it is built
+			// here rather than inside HeaderViewProvider's own contract -
+			// every field below reuses config values HeaderViewProvider
+			// already reads (name/logo/telephone), no new OpenCart storage.
+			// Guarded by the same try/catch-and-log pattern as mc_header
+			// above: a malformed value must not fatal the page.
+			try {
+				$schema_builder = new \MintCart\Seo\SchemaOrgBuilder();
+
+				$data['mc_schema_organization'] = $schema_builder->toJsonLd($schema_builder->organization(array(
+					'name' => $data['name'],
+					'url' => $data['home'],
+					'logo' => $data['logo'] ?: null,
+					'telephone' => $data['telephone'] ?: null,
+					'address' => $this->config->get('config_address') ?: null
+				)));
+			} catch (\Throwable $e) {
+				(new \MintCart\Core\Logger())->error('SchemaOrgBuilder failed to build Organization schema: ' . $e->getMessage());
+			}
 		}
 
 		return $this->load->view('common/header', $data);
