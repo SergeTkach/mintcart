@@ -1,12 +1,21 @@
 # Setup Wizard (Phase 13)
 
 `MINTCART_FUNCTIONAL_SCOPE.md` §2, `MINTCART_IMPLEMENTATION_GUIDE.md` §54.
-Four working steps so far — **Welcome**, **Store**, **Contacts** and
-**Language & currency**. The rest of the flow (`delivery` → `payment` →
-`design` → `first_product` → `ready`) is listed in the step nav as a
-roadmap but has no real content yet — visiting or submitting any of those
-steps falls back to the live resume point (`CLAUDE.md` §85: no UI ahead of
-a real, working consumer).
+Five working steps so far — **Welcome**, **Store**, **Contacts**,
+**Language & currency**, and **Ready** (the Store Readiness checklist,
+Phase 14's `StoreReadiness` service surfaced inside the Wizard flow rather
+than only as a standalone dashboard widget). The rest of the flow
+(`delivery` → `payment` → `design` → `first_product`) is listed in the step
+nav as a roadmap but has no real content yet — visiting or submitting any
+of those steps falls back to the live resume point (`CLAUDE.md` §85: no UI
+ahead of a real, working consumer). Note `ready` sits last in
+`WizardProgress::STEPS` but is implemented ahead of the steps before it in
+the canonical order — `IMPLEMENTED_STEPS` doesn't have to be a strict
+prefix of `STEPS`, it only has to list which steps have real content today;
+`currentStep()` walks `IMPLEMENTED_STEPS` in its own order, so completing
+`language_currency` advances straight to `ready`, skipping the
+unimplemented steps between them, same as it already skipped nothing when
+only `welcome`/`store`/`contacts`/`language_currency` existed.
 
 PHP:
 - `upload/system/library/mintcart/onboarding/wizardprogress.php` —
@@ -155,6 +164,42 @@ doesn't itself enforce.
 The step's `<select>` options come from the same `getLanguages()`/
 `getCurrencies()` calls `Settings → Store` uses, keyed by `code`.
 
+## The `ready` step reuses `StoreReadiness`, it doesn't recompute it
+
+`ControllerMintcartWizard::loadReadiness()` calls the exact same
+`MintCart\Onboarding\StoreReadiness::evaluate()` + `ModelMintcartReadiness::getSignals()`
+pair `ControllerMintcartReadiness` (the `mintcart/readiness` JSON endpoint,
+Phase 14) already uses, with the same checklist labels loaded from that
+same controller's own language file (`mintcart/readiness`, not a second
+copy of the seven `text_check_*` strings in `mintcart/wizard`'s language
+file) — one computation, two callers, per `StoreReadiness`'s own docblock
+("`ModelMintcartReadiness` ... no new Mint-specific table for any of
+this ... dashboard widget, Wizard 'Ready' step ... not a second copy of
+the computation"). This deliberately calls the model directly rather than
+hitting the `mintcart/readiness` route internally, so it does **not** go
+through that controller's own `hasPermission('access', 'mintcart/readiness')`
+gate — consistent with the rest of `ControllerMintcartWizard` having no
+`hasPermission()` gate of its own (see below).
+
+The step renders `readiness.percent` through the `mc-progress` component
+(`docs/developer/components/progress.md` — it explicitly lists "a Setup
+Wizard step indicator" as an intended use case) plus a plain checklist
+list, each item badged `mc-badge--success`/plain via `check.complete`. No
+new component needed — `mc-progress`, `mc-badge`, `mc-card` are all
+already-shipped Phase 4/11 primitives. Submitting the step (`POST
+step=ready`) has no fields to validate/save (unlike `store`) — it only
+marks `ready` completed, the same generic `withCompleted()` path every
+step (including the still-unimplemented ones) will eventually use.
+
+The pre-existing terminal "You're off to a great start" screen
+(`is_ready` — shown once every *implemented* step, `ready` included, is
+completed) is intentionally left as-is: its "the rest of the Setup Wizard
+... is coming in a future update" copy remains accurate (`contacts`
+through `first_product` are still unimplemented), and it is not
+redundant with the `ready` step's own checklist — one is "here is how
+ready your real store is today", the other is "there is no more Wizard
+content to show you right now, go to your dashboard".
+
 ## Why a standalone page, not the usual admin chrome
 
 `upload/admin/view/template/mintcart/wizard.twig` is a complete, self-
@@ -211,11 +256,9 @@ done) is allowed, for review; skipping ahead is not.
 
 ## What's explicitly not done yet, by design
 
-- The `delivery`/`payment`/`design`/`first_product`/`ready` steps — each
-  needs its own real form + save logic, following the same shape
-  `store`/`contacts`/`language_currency` established (or, for `ready`, real
-  `Store Readiness` integration — Phase 14's service already exists,
-  `mintcart/readiness`, just not wired into this step yet).
+- The `delivery`/`payment`/`design`/`first_product` steps — each needs its
+  own real form + save logic, following the same shape
+  `store`/`contacts`/`language_currency`/`ready` established.
 - Store step's **logo** upload (Functional Scope §2 lists it under Store) —
   deferred; needs `McMediaPicker` (Phase 11, already shipped) wired to a
   real upload endpoint, which doesn't exist yet.

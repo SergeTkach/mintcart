@@ -1928,6 +1928,15 @@ action that needs it) rather than re-solving this.
 ## Phase 13 — Setup Wizard
 
 - [~] Welcome → Store → Contacts → Language/Currency → Delivery → Payment → Design →
+      First Product → Ready — **Welcome, Store and Ready implemented** (in
+      that resume order — `ready` is last in the canonical step list but
+      third in `IMPLEMENTED_STEPS`, so it comes right after Store, ahead of
+      the still-unimplemented steps between them); the remaining six steps
+      are listed in the step nav as a roadmap but have no real content yet
+      (see below)
+- [x] Progress saving, resume, writes to standard OpenCart settings storage —
+      done for all three implemented steps; "skip optional steps" doesn't
+      apply yet (none of the three implemented steps is optional)
       First Product → Ready — **Welcome, Store, Contacts and Language &
       currency implemented**; the remaining steps (`delivery`, `payment`,
       `design`, `first_product`, `ready`) are listed in the step nav as a
@@ -1944,19 +1953,27 @@ unit-tested standalone, `tests/mintcart/onboarding/wizard-progress-test.php`,
 9 scenarios) + `ControllerMintcartWizard` (route `mintcart/wizard`, fully
 additive, zero existing OpenCart file modified) + a standalone
 `mintcart/wizard.twig` page (no legacy admin chrome — see below) implement
+the **Welcome**, **Store** and **Ready** steps end to end: Welcome is purely
+informational with a "Get started" button; Store collects
 the **Welcome** and **Store** steps end to end (Contacts is written up
 separately below): Welcome is purely informational with a "Get started"
 button; Store collects
 `config_name`/`config_email`/`config_telephone`/`config_address` (existing
 OpenCart `config` settings, merged in rather than overwritten — see the
 `editSetting()` partial-write trap below) with the same validation rules
-`Settings → Store` already uses. Progress (`mintcart_wizard_completed_steps`)
-is stored via the standard `oc_setting` table under a `mintcart_wizard`
-code — a Mint-specific concept, but a handful of flags, not a new entity, so
-no new `mc_*` table/migration was added for it (`CLAUDE.md` §17).
-Step-order is enforced server-side in both directions (GET `?step=` and POST
-`step`): a request can never view or submit a step ahead of the live resume
-point, though revisiting an already-completed step is allowed.
+`Settings → Store` already uses; Ready renders Phase 14's
+`MintCart\Onboarding\StoreReadiness` checklist (same `evaluate()` call and
+`mintcart/readiness` signal/label source `ControllerMintcartReadiness`'s
+JSON endpoint already uses — one computation, two callers, not a second
+copy) via the already-shipped `mc-progress`/`mc-badge` primitives, with a
+"Finish setup" submit that has no fields of its own to validate/save.
+Progress (`mintcart_wizard_completed_steps`) is stored via the standard
+`oc_setting` table under a `mintcart_wizard` code — a Mint-specific
+concept, but a handful of flags, not a new entity, so no new `mc_*`
+table/migration was added for it (`CLAUDE.md` §17). Step-order is enforced
+server-side in both directions (GET `?step=` and POST `step`): a request
+can never view or submit a step ahead of the live resume point, though
+revisiting an already-completed step is allowed.
 
 **Design decision worth flagging:** `wizard.twig` is a complete, standalone
 HTML document — it does not include `common/header`/`common/column_left`/
@@ -1969,17 +1986,18 @@ neither implemented step needs client-side JS. Full rationale, the
 `editSetting()` partial-write trap this caught, and the no-`hasPermission()`-
 gate reasoning are all in `docs/developer/onboarding/setup-wizard.md`.
 
-Verified: `php -l` clean on every new PHP file; full `tests/mintcart/`
-suite re-run end to end (now 12 files, including the 2 new
-`tests/mintcart/onboarding/*`) — all pass; the new `.twig` file's
+Verified: `php -l` clean on every touched/new PHP file; full `tests/mintcart/`
+suite re-run end to end (34 files) — all pass; the updated `.twig` file's
 `if`/`for`/`endif`/`endfor` tags checked balanced (same script-based
-technique used for every earlier `.twig` file in this repo). Same
-pre-existing gap as every other controller-wiring increment: no live
-request test (no MySQL/OpenCart bootstrap in this environment) — a human
-should confirm `mintcart/wizard` actually renders and saves on a real
-install, in particular that the `editSetting('config', $merged)` call
-really does preserve every other existing `config_*` setting rather than
-just the four fields this step writes.
+technique used for every earlier `.twig` file in this repo, `if: 20
+endif: 20`, `for: 2 endfor: 2`). Same pre-existing gap as every other
+controller-wiring increment: no live request test (no MySQL/OpenCart
+bootstrap in this environment) — a human should confirm `mintcart/wizard`
+actually renders and saves on a real install, in particular that the
+`editSetting('config', $merged)` call really does preserve every other
+existing `config_*` setting rather than just the four fields the Store
+step writes, and that the Ready step's checklist/percentage match what
+`mintcart/readiness`'s own JSON endpoint reports for the same store.
 
 **Update (a later run): the Contacts step is done.** `WizardProgress::IMPLEMENTED_STEPS`
 now includes `contacts`. `ControllerMintcartWizard::validateContactsStep()`/
@@ -2066,6 +2084,9 @@ every other `config_*` setting, the same way the Store step's own caveat
 already asks for its four fields.
 
 **Not done yet, by design — natural next-run candidates:**
+- The remaining six steps (`contacts`, `language_currency`, `delivery`,
+  `payment`, `design`, `first_product`), each needing its own real
+  form/save logic the way `store` established.
 - The remaining steps (`delivery`, `payment`, `design`, `first_product`,
   `ready`), each needing its own real form/save logic the way
   `store`/`contacts`/`language_currency` established — `ready` in
