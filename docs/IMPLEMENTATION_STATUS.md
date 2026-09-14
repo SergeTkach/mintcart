@@ -2970,6 +2970,15 @@ Definition of Done checklist for exactly what's still open).
       `docs/developer/update/package-manifest.md` for the full contract and
       what's still not done (no caller/downloader/backup/verify/maintenance-
       mode/file-copy/migration-runner/cache-clear/health-check steps yet).
+- [x] Theme/extension rollback — **research/design only, no code** (RESEARCH
+      item per Functional Scope §21): `docs/adr/005-theme-extension-update-rollback.md`
+      answers all seven of §21's open questions (change detection, manifest
+      diffing, handling package-removed files, DB migration interaction,
+      retention policy, disk limits, security) as concrete design decisions.
+      No `mc_installed_file` table, no `PackageManifest` `removes` field, and
+      no rollback action/service exist yet — deferred until the Update
+      Manager's own `files`/`backup` steps exist to hang a snapshot off of
+      (`CLAUDE.md` §85: no API ahead of a real consumer).
 - [ ] Theme/extension rollback (RESEARCH item per Functional Scope §21)
 - [x] Compatibility Checker (`install.xml` analysis, heuristic warnings only) —
       `MintCart\Compatibility\InstallManifestParser` +
@@ -3021,6 +3030,35 @@ In progress. Verified: `php -l` clean; new
 full `tests/mintcart/` suite re-run end to end (35 files) — no regressions
 (pure addition, no existing file modified). No OpenCart dependency, so no
 live-install verification gap applies to either increment.
+
+**Update (this run, 2026-09-09): Theme/extension rollback RESEARCH item
+answered — no code, one ADR.** At the time this run started there were 31
+open PRs; the visible "next step" for nearly every phase already had an
+open PR against it by title (Update Manager's own `check` step, Setup
+Wizard's remaining steps, all five remaining Entity Picker backends, both
+Business Settings façades left, the Store Readiness dashboard widget, SEO
+Core's four sub-pieces, Bulk Editor, `QuickOrderService`, the search-box
+component, Diagnostics, `CacheInvalidator`, `HealthCheck`,
+`SettingsAdapter`, the Compatibility Checker, three registry fixes
+(MC-0004/0005/0006), the admin asset-enqueue blocker, the product-card
+image-dimensions fix and the product detail page) — see `gh pr list
+--state open` for the current set. This phase's rollback bullet was the one
+item with real, unstarted scope and no PR anywhere near it: it's an
+explicit RESEARCH item (Functional Scope §21), so the correct increment is
+answering its seven open design questions, not writing untested rollback
+code with no real caller yet. Full writeup:
+`docs/adr/005-theme-extension-update-rollback.md`. Verified: no code
+changed, so no test suite applies to this increment; the ADR's own claims
+about existing code (`PackageManifest`'s current field list having no
+per-file checksum or `removes` field) were checked directly against
+`upload/system/library/mintcart/update/packagemanifest.php` on this branch.
+**Next step:** implement the `mc_installed_file` ledger table (via the
+Migration Manager) and `PackageManifest`'s optional `removes` field once
+the Update Manager's `files`/`backup` steps have a real caller to attach a
+snapshot to (PR #82's `UpdateChecker` — the `check` step — is a
+prerequisite in the flow's own ordering); or re-run `gh pr list --state
+open` for whatever has newly merged/unclaimed before picking the next
+phase, since this run observed an unusually large (31) open-PR backlog.
 
 ## Phase 12 — Early Access
 
