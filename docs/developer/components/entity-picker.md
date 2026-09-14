@@ -149,13 +149,21 @@ drawerEl.addEventListener('mc:entity-picker:change', (event) => {
 - `destroy()` — remove all listeners (call if the host drawer/modal is
   removed from the DOM)
 
-## Not wired into `catalog.js`/`admin.js` yet
+## Not auto-initialized — exposed on `window.MintCart` for legacy templates
 
-`createEntityPicker` is exported for direct import, not auto-initialized
-from either entry point — it needs a caller-supplied `fetchItems` data
-source and a root element that doesn't exist until a real Phase 12 admin
-screen renders one. Per `CLAUDE.md` §85, the import is added to whichever
-screen needs it once that consumer exists, not ahead of time.
+`createEntityPicker` still isn't auto-initialized the way `initModalTriggers()`
+and friends are — it needs a caller-supplied `fetchItems` data source and
+options (`getId`/`getLabel`/`onConfirm`/...) specific to whichever field is
+hosting it, so each consumer calls it directly with its own options.
+
+What changed once a real consumer existed (`product_form.twig`'s Category
+field, see "Admin backends" below): `assets/src/js/admin.js` now imports it
+and assigns `window.MintCart.createEntityPicker = createEntityPicker`.
+Admin Twig templates use plain non-module inline `<script>` blocks
+(jQuery-style), not `type="module"`, so they can't `import` this ES module
+themselves — the `window.MintCart` bridge is how they reach it. See
+`docs/developer/admin/asset-enqueue.md` for the full writeup, including why
+the bundle wasn't enqueued anywhere until this run.
 
 ## Definition of Done checklist (`MINTCART_IMPLEMENTATION_GUIDE.md` §79)
 
@@ -240,34 +248,28 @@ them in **Users → User Groups → Permissions** for an admin to grant. Grant
 `mintcart/entity` **Access** to a user group before testing this endpoint
 or wiring a screen to it.
 
-**Not done yet, by design:**
-- No live admin screen calls `createEntityPicker()` against this endpoint.
-  The identified first real consumer is `product_form.twig`'s **Category**
-  multi-select (`upload/admin/view/template/catalog/product_form.twig`,
-  the `#input-category`/`#product-category` well + its jQuery UI
-  `autocomplete()` block) — it already has the right UI shape (search +
-  multi-select + removable tags), so swapping it for a `McEntityPicker`
-  mount inside an `mc-drawer` is closer to a drop-in replacement than a
-  new pattern, and it wouldn't need any change to `product_form.php`'s
-  save logic (the picker would keep emitting the same
-  `product_category[]` hidden inputs the form already reads on submit).
-- **Deliberately not attempted this run:** actually wiring it. Doing so
-  needs MintCart's own compiled bundle (`assets/dist/{css,js}`) loaded on
-  an admin page, and *nothing enqueues it there yet* — the one prior
-  attempt to enqueue the shared `index.min.css` bundle on a storefront
-  page was reverted after it broke legacy Bootstrap 3 widgets by loading
-  Bootstrap 5's CSS reset/base layer alongside them (see
-  `docs/developer/components/header.md` "Known gap" and
-  `upload/catalog/view/theme/mint_default/template/common/header.twig`'s
-  own comment) — admin pages are equally Bootstrap-3-based, so the same
-  conflict risk applies, and this environment still has no
-  MySQL/`vendor/twig/twig` to verify a fix visually. Wiring this consumer
-  live should wait for that enqueue problem to be solved first (or scope
-  a narrow, verified fix for it as part of the same increment) rather than
-  shipping markup that would silently render unstyled/broken on a real
-  install.
+**Live-wired (this run):** `product_form.twig`'s **Category** field
+(`upload/admin/view/template/catalog/product_form.twig`) now mounts a real
+`McEntityPicker` against this endpoint, via
+`window.MintCart.createEntityPicker` — see
+`docs/developer/admin/asset-enqueue.md` for the enqueue side and
+`docs/upstream-diff.md`'s `product.php`/`product_form.twig` entry for the
+full diff writeup. Kept **additive** alongside the existing jQuery
+`autocomplete()` block (not a replacement — this environment has no live
+MySQL/admin session to visually verify a full swap), and *not* hosted in
+an `mc-drawer` — `mc-drawer` needs Bootstrap 5's own `.offcanvas`
+structural CSS, which the `components.min.css` bundle this page loads
+deliberately excludes (see that doc's caveat). Instead it's a plain
+`hidden`-toggled panel, shown/hidden with vanilla JS. Both mechanisms
+write the identical `#product-category{id}`/`product_category[]`
+hidden-input shape, so `product.php`'s save logic needed no change.
+Removing the old autocomplete once a human confirms the picker works on a
+real install is a natural, low-risk follow-up — not attempted this run for
+the same no-live-verification reason.
+
+**Still not done, by design:**
 - Filters beyond search text, and the create-new-flow (add a category
-  inline from the picker) — no requirement identified yet for this first
+  inline from the picker) — no requirement identified yet for this
   consumer.
 - Every other entity type is now done — **manufacturer**, **product**,
   **information pages**, **attributes**, **options** and **customers**,

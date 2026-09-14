@@ -568,7 +568,30 @@ class ControllerCatalogProduct extends Controller {
 		$this->response->setOutput($this->load->view('catalog/product_list', $data));
 	}
 
+	/**
+	 * MintCart Phase 12 (Entity Picker, MINTCART_FUNCTIONAL_SCOPE.md §8,
+	 * MINTCART_TECHNICAL_PLAN.md §20) - enqueues MintCart's own compiled
+	 * bundle for this screen's new Category field McEntityPicker below.
+	 * Deliberately the "components" bundle, not "index" - index.min.css
+	 * bundles the full Bootstrap 5 reset, which conflicts with this
+	 * page's existing Bootstrap 3 admin theme (see
+	 * docs/developer/admin/asset-enqueue.md). $this->document->addStyle()/
+	 * addScript() is OpenCart's own standard per-page asset mechanism
+	 * (three existing admin controllers already use it,
+	 * e.g. extension/payment/paypal.php) - header.twig's existing
+	 * {% for style in styles %}/{% for script in scripts %} loops render
+	 * whatever this call queues, no template change needed. HTTP_CATALOG
+	 * is the same webroot-relative base admin/controller/mintcart/wizard.php
+	 * already uses for this same assets/dist/ path.
+	 */
+	protected function enqueueMintAssets() {
+		$this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
+		$this->document->addScript(HTTP_CATALOG . 'assets/dist/js/admin.min.js');
+	}
+
 	protected function getForm() {
+		$this->enqueueMintAssets();
+
 		$data['text_form'] = !isset($this->request->get['product_id']) ? $this->language->get('text_add') : $this->language->get('text_edit');
 
 		if (isset($this->error['warning'])) {

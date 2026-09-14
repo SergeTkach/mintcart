@@ -184,6 +184,55 @@ manufacturer that has an image set and one that doesn't:
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
 
+## Admin asset-enqueue fix + `product_form.twig`'s Category `McEntityPicker`, never exercised end to end
+
+`docs/developer/admin/asset-enqueue.md` has the full design writeup. No
+live MySQL/admin session/browser in this environment, so none of this was
+exercised. On a real install:
+
+1. Grant `mintcart/entity` **Access** to your user group if not already
+   done (same permission the category/manufacturer/product backends
+   already need).
+2. Go to **Catalog → Products → Edit** (or **Add**) any product, open the
+   **Links** tab.
+3. Open the page's view-source / devtools and confirm
+   `assets/dist/css/components.min.css` and `assets/dist/js/admin.min.js`
+   are both linked in `<head>`, and both load with a 200 (not 404) — this
+   confirms `HTTP_CATALOG`-relative resolution is correct for your actual
+   deployment layout.
+4. Confirm the existing Category autocomplete input + well still work
+   exactly as before (type a few letters, pick a suggestion, confirm it
+   adds a removable tag) — this change must not have altered that at all.
+5. Confirm a new "Browse categories" button appears below the well, styled
+   as an `mc-button` (not unstyled/broken — this is the actual visual
+   proof the CSS bundle loaded and didn't break anything already on the
+   page: check the rest of the Bootstrap-3-based form around it still
+   looks completely normal, particularly `.container`/`.row`/`.btn`/
+   `.form-control`/`.panel` elsewhere on the same page).
+6. Click it — confirm a search box + category list appears, paginates via
+   Previous/Next, and that typing filters results (debounced, ~250ms).
+7. Select two or three categories, click "Add selected" — confirm the
+   panel closes, the well now shows those categories as new rows (in
+   addition to whatever the autocomplete already added), and each has a
+   working "remove" (minus-circle icon) affordance identical to the
+   autocomplete-added ones.
+8. Re-open the picker and select a category already in the well — confirm
+   it does not create a duplicate row (the row is replaced in place, same
+   `id`).
+9. Save the product — confirm every category from both the old
+   autocomplete and the new picker ends up saved
+   (`product_to_category`), and re-opening the edit form shows all of
+   them pre-populated in the well as before (this part of `getForm()`/
+   `product_categories` was not touched by this change).
+10. Confirm labels on the new UI (button text, search placeholder, empty-
+    state text, Previous/Next/"Add selected") render as real text, not
+    blank — see `docs/upstream-diff.md`'s note on this trimmed
+    repository's pre-existing `entry_category`-and-friends gap. If they
+    render blank on your install too, that's the pre-existing gap, not
+    something new; if your install's `product.php` already has the full
+    `$data['entry_xxx'] = ...` block (a real, un-trimmed OpenCart 3
+    install would), they should render correctly with no further change
+    needed.
 ## Phase 18 — System route URL aliases, never exercised end to end
 
 `ControllerMintcartSeoSystemPages` is `php -l` clean and its pure
