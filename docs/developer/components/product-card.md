@@ -38,6 +38,22 @@ Special and Manufacturer all call it for each product row, rendering into
 `mint_default/template/product/special.twig` and
 `mint_default/template/product/manufacturer_info.twig` respectively.
 
+**`ControllerProductProduct`** (the product *detail* page,
+`upload/catalog/controller/product/product.php`) is the fifth consumer —
+its own "Related Products" list, using the exact same
+`ProductCardListRenderer`/`ActiveTheme` pair, rendered into
+`mint_default/template/product/product.twig`. This closes a gap every
+earlier phase's status notes flagged repeatedly: Category/Search/
+Manufacturer/Special were wired to `mc-product-card`, but the product page
+itself — the page a shopper actually buys from — never existed under
+`mint_default` at all until this increment. The *main* product on that page
+(gallery, options, discounts, attributes) is rendered directly from the
+controller's own resolved `$data`, not through `ProductViewProvider` — that
+contract is shaped for a listing-grid card, not a full product page's
+richer hero section; see `docs/developer/components/product-gallery.md` for
+the one genuinely new component this page needed (a main-image/thumbnail
+swap `mc-product-card` has no equivalent of).
+
 A second theme, `catalog/view/theme/test_theme/`, overrides only
 `product-card.twig` with a genuinely different DOM (single badge, no
 secondary-image swap, no wishlist/compare quick-actions, no quick-order
@@ -129,7 +145,7 @@ template is:
         </button>
 
         {% if product.actions.quick_order and display.action_variant != 'compact' %}
-            <button type="button" class="mc-button mc-button--secondary mc-product-card__quick-order" data-mc-action="quick-order" data-product-id="{{ product.id }}">
+            <button type="button" class="mc-button mc-button--secondary mc-product-card__quick-order" data-mc-action="quick-order" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">
                 {{ text_quick_order }}
             </button>
         {% endif %}
@@ -155,7 +171,7 @@ duplicated per controller).
 | `data-mc-action="toggle-wishlist"` | `.mc-product-card__action-button` | Toggles its own `aria-pressed`, dispatches bubbling `mc:product-card:wishlist-toggle` with `{ productId, active }`. **No network call** — see below. |
 | `data-mc-action="toggle-compare"` | `.mc-product-card__action-button` | Same as wishlist, dispatches `mc:product-card:compare-toggle`. |
 | `data-mc-action="add-to-cart"` | `.mc-product-card__add-to-cart` | Calls `MintCart\Commerce\CartService` via `cart-client.js`'s `addToCart()`; dispatches `mc:cart:updated` on success, navigates to the product page if options/a recurring plan are required, shows a toast either way. See below. |
-| `data-mc-action="quick-order"` | `.mc-product-card__quick-order` | **Markup + hook only, no JS shipped yet.** Reserved for the future `QuickOrderService`/component (Phase 15, `MINTCART_TECHNICAL_PLAN.md` §28). |
+| `data-mc-action="quick-order"` | `.mc-product-card__quick-order` | Opens a shared `mc-modal` (`components/quick-order.js`) collecting quantity/name/phone/email, submits to `MintCart\Commerce\QuickOrderService` via `quick-order-client.js`. See below and `docs/developer/commerce/quick-order-service.md`. |
 
 ### Why wishlist/compare toggle but add-to-cart does something real now
 
@@ -182,9 +198,34 @@ end-to-end against a live install. The button shows `is-loading`
   fallback `checkout/cart.php` itself uses for the same case, or
 - a `createToast()` error toast on a network failure (`data-mc-text-add-error`).
 
-`quick-order` stays intentionally **not** wired — separate
-`QuickOrderService`, not built in this increment
-(`CLAUDE.md` §85: no wiring ahead of a real consumer).
+**Quick Order is wired as of this increment too**, in its own
+`components/quick-order.js` module rather than inline here — a modal-based
+flow (quantity/name/phone/email), not a single click handler, so it doesn't
+share `initAddToCart()`'s shape. Same required-option/recurring-plan
+redirect fallback as add-to-cart. Full contract:
+`docs/developer/commerce/quick-order-service.md`.
+
+**Extended for the product detail page.** The same `[data-mc-action="add-to-cart"]`
+handler in `product-card.js` now also supports a button that carries
+`data-quantity-input="<id>"` (reads the current value of that `mc-quantity`
+input instead of a static `data-quantity`) and a `[data-mc-product-form]`
+ancestor containing `[data-mc-option-id]` fields (collected into the
+`options` object `addToCart()` already accepted but no caller populated
+until now). A grid card never sets either attribute, so its own behavior is
+completely unchanged — this is additive, not a rewrite. See
+`docs/developer/components/product-gallery.md` and `docs/upstream-diff.md`'s
+`product.php` entry for the product page's own markup contract
+(`data-mc-product-form`/`data-mc-product-options`/`data-mc-option-id`).
+**Known gap:** a multi-select checkbox-type product option (`option[<id>][]`)
+only keeps the *last* checked box's value — `addToCart()`'s `options` shape
+is one value per option id, matching most real catalogs (select/radio/text
+options are far more common than a required checkbox group), but a true
+multi-value checkbox option isn't fully supported yet. A required
+`file`-type option is also not collectable via `fetch()`/`URLSearchParams`
+and is rendered without a `data-mc-option-id` hook — a product depending on
+one falls back to the server's own "missing required option" redirect
+(back to the same page) the same way an unanswered required option always
+has.
 
 ## Image dimensions (layout-shift prevention)
 
@@ -255,12 +296,12 @@ padding via CSS only — same DOM/contract, no separate template.
 
 - [x] Documented contract (this file + `docs/developer/commerce/product-view-provider.md` + `docs/developer/commerce/cart-service.md`/`cart-client.md`)
 - [x] `mc-*` BEM markup
-- [x] JS only where actually needed (wishlist/compare toggle state; add-to-cart now calls the real Cart client, Phase 15's first increment — confirmed working against a live install); quick-order stays hook-only, separate `QuickOrderService` not built yet
+- [x] JS only where actually needed (wishlist/compare toggle state; add-to-cart and quick-order both call real Commerce API services — `CartService`/`QuickOrderService` — add-to-cart confirmed against a live install, quick-order not yet live-verified, see `docs/MANUAL_VERIFICATION.md`)
 - [x] Colors/spacing/fonts read from `--mc-*` tokens
 - [x] Keyboard usable (real `<a>`/`<button>` elements, focus-visible outlines, no keyboard trap)
 - [x] Mobile checked (flexible media aspect-ratio, wrapping actions row, no fixed widths)
 - [x] No Bootstrap 3 dependency
 - [x] No OCMOD required
 - [x] Ships a real Mint Default `.twig` file, resolvable via `ComponentRenderer`
-- [x] Live controller wiring — `ControllerProductCategory`/`ControllerProductSearch`/`ControllerProductSpecial`/`ControllerProductManufacturer` all render it via `ProductViewProvider` + `ComponentRenderer`
+- [x] Live controller wiring — `ControllerProductCategory`/`ControllerProductSearch`/`ControllerProductSpecial`/`ControllerProductManufacturer`/`ControllerProductProduct` (Related Products) all render it via `ProductViewProvider` + `ComponentRenderer`
 - [x] Theme override checked — `catalog/view/theme/test_theme/` overrides only `product-card.twig` with a genuinely different DOM; `ComponentRenderer` resolves it correctly in both directions (override active vs. Mint Default active), see `docs/adr/002-theme-api-milestone-proof.md`. Resolution is proven; a human still needs to confirm the override actually **renders** correctly on a real install (no MySQL/`vendor/twig/twig` in this environment — same gap as every earlier Phase 8 entry)

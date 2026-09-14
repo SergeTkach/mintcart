@@ -34,6 +34,16 @@ final class MigrationManager
 
     private string $migrationsPath;
 
+    /**
+     * Memoizes ensureSchema() per instance so calling applied() repeatedly
+     * within a single run() (once directly for `skipped`, once again inside
+     * pending()) — or from any other caller, e.g. HealthCheck's
+     * pending-migrations signal — issues one `CREATE TABLE IF NOT EXISTS`
+     * query, not one per call. Idempotent either way; this is purely to
+     * avoid an avoidable duplicate query on every run().
+     */
+    private bool $schemaEnsured = false;
+
     public function __construct(object $db, string $dbPrefix, string $migrationsPath)
     {
         $this->db = $db;
@@ -46,6 +56,10 @@ final class MigrationManager
      */
     public function ensureSchema(): void
     {
+        if ($this->schemaEnsured) {
+            return;
+        }
+
         $this->db->query("
             CREATE TABLE IF NOT EXISTS `{$this->prefix}mc_migration` (
                 `migration_id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -55,6 +69,8 @@ final class MigrationManager
                 UNIQUE KEY `migration` (`migration`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
         ");
+
+        $this->schemaEnsured = true;
     }
 
     /**
@@ -62,6 +78,15 @@ final class MigrationManager
      */
     public function applied(): array
     {
+        // Ensures the tracking table exists before selecting from it. Not
+        // just belt-and-braces: on a fresh install where run() has never
+        // been called, a real `\DB\MySQLi` (mysqli_report(MYSQLI_REPORT_ERROR)
+        // is enabled) throws on a SELECT against a table that doesn't exist
+        // yet, which pending()/applied() would otherwise hit as soon as any
+        // caller other than run() (e.g. MintCart\Core\HealthCheck's
+        // migrations signal) asks before the first migration has ever run.
+        $this->ensureSchema();
+
         $query = $this->db->query("SELECT `migration` FROM `{$this->prefix}mc_migration` ORDER BY `migration` ASC");
 
         return array_column($query->rows, 'migration');
@@ -82,8 +107,9 @@ final class MigrationManager
      */
     public function run(): array
     {
-        $this->ensureSchema();
-
+        // applied() (called right below) now ensures the schema itself, so
+        // an explicit call here would just be a redundant duplicate
+        // CREATE TABLE IF NOT EXISTS on every run().
         $result = [
             'applied' => [],
             'skipped' => $this->applied(),

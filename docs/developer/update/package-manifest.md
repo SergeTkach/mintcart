@@ -118,23 +118,64 @@ Two instance-level convenience methods sit on top of the static checker:
   skipped — an update flow should never treat "we don't know" as
   "compatible."
 
+## The `check` step — `UpdateChecker`
+
+`MintCart\Update\UpdateChecker`
+(`upload/system/library/mintcart/update/updatechecker.php`) is the second
+increment: the flow's own `check` step. Given an already-parsed
+`PackageManifest` plus the version currently installed for whatever the
+manifest is an update *for*, plus the currently installed versions of
+everything the manifest declares a `requirements` constraint on, it decides
+whether the manifest is both newer (`update_available`) and installable
+(`compatible`):
+
+```php
+$checker = new \MintCart\Update\UpdateChecker();
+
+$result = $checker->check(
+    $manifest,                                   // PackageManifest
+    \MintCart\Core\Version::VERSION,              // installed version of the thing being updated
+    ['mint_version' => \MintCart\Core\Version::VERSION, 'php_version' => PHP_VERSION]
+);
+
+// $result === [
+//     'update_available' => bool,
+//     'compatible'        => bool,
+//     'should_apply'      => bool,  // both of the above
+//     'manifest_version'  => string,
+//     'installed_version' => string,
+// ]
+```
+
+Same plain-array-contract shape as `MintCart\Onboarding\StoreReadiness::evaluate()`
+(`@return array{...}` documented on the method, no dedicated result class —
+CLAUDE.md §86, one clear method over a class hierarchy). `update_available`
+and `compatible` are deliberately independent booleans, not collapsed into
+one: a UI showing "an update exists but isn't compatible yet" needs to
+distinguish the two, not just get a single yes/no.
+
+Still has no downloader — resolving *how* to fetch a manifest for `check`
+to consume is the flow's own `download` step (see below), a later
+increment.
+
 ## What's deliberately not done yet
 
 - No caller — no admin controller, no `mintcart/update/*` route, nothing
-  parses a real downloaded manifest today. The next real increment is
-  whichever piece needs this first: a `check` step that fetches a remote
-  manifest and calls `isCompatible()` against `MintCart\Core\Version`, or
-  a `backup` step that reads `files()` to know what to snapshot before
-  overwriting.
+  fetches a real remote manifest today. `UpdateChecker` exists but nothing
+  calls it outside its own test yet.
 - No download/verify/backup/maintenance-mode/file-copy/migration-runner/
   cache-clear/health-check steps — the rest of the Technical Plan §33 flow.
+  The `health-check` step should wait for `MintCart\Core\HealthCheck`
+  (tracked separately) to land before it's wired in.
 - No package **signing** — `checksum` is carried as opaque data; nothing
   computes or verifies a hash against it yet.
 
 Verified: `php -l` clean; `tests/mintcart/update/package-manifest-test.php`
 (11 scenarios, including the semver-caret edge cases and a check that this
 class's actual `version_compare()` reliance orders `MintCart\Core\Version`'s
-real `"0.1.0-dev"` string the way the class assumes). Pure PHP, no OpenCart
-dependency, so no live-install verification gap applies here (unlike most
-other increments in this repo) — there is nothing to run against a real
-install yet.
+real `"0.1.0-dev"` string the way the class assumes) and
+`tests/mintcart/update/update-checker-test.php` (7 scenarios, including one
+composing `UpdateChecker` with the real `MintCart\Core\Version::VERSION`).
+Pure PHP, no OpenCart dependency, so no live-install verification gap
+applies here (unlike most other increments in this repo) — there is
+nothing to run against a real install yet.
