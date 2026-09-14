@@ -105,13 +105,17 @@ one.
   (`filter_name` only, no tag/description/category filters — a suggest box
   searches by name, the same way a typeahead would) — this class only
   normalizes the response shape.
-- **No Mint-native search-box UI yet.** No JS component calls this
-  endpoint — same "ships ahead of its first consumer" pattern documented
-  throughout `docs/IMPLEMENTATION_STATUS.md` (`CLAUDE.md` §85). Wiring a
-  `mc-search` component (debounced input, dropdown, keyboard navigation —
-  likely composing `McEntityPicker`'s already-shipped list/keyboard
-  behavior, `docs/developer/components/entity-picker.md`) against this
-  endpoint is the natural next increment.
+- **A Mint-native search-box UI now exists** —
+  `docs/developer/components/search-box.md` (`mc-search-box`,
+  `assets/src/js/components/search-box.js`). It does not reuse
+  `McEntityPicker` itself (that component's contract is
+  search/paginate/multi-select against an arbitrary entity list; a
+  typeahead dropdown needs none of the pagination/selection-state
+  machinery, just debounce + AbortController + keyboard nav, so composing
+  it here would import more than this consumer needs, per `CLAUDE.md`
+  §86) — it borrows the same debounce/AbortController/roving-tabindex
+  techniques instead. Not wired into any live template yet — see that
+  doc's "Not wired into any live template yet" section.
 
 ## Definition of Done checklist
 

@@ -1,20 +1,21 @@
 # Setup Wizard (Phase 13)
 
 `MINTCART_FUNCTIONAL_SCOPE.md` §2, `MINTCART_IMPLEMENTATION_GUIDE.md` §54.
-Three working steps so far — **Welcome**, **Store**, and **Ready** (the
-Store Readiness checklist, Phase 14's `StoreReadiness` service surfaced
-inside the Wizard flow rather than only as a standalone dashboard widget).
-The rest of the flow (`contacts` → `language_currency` → `delivery` →
-`payment` → `design` → `first_product`) is listed in the step nav as a
-roadmap but has no real content yet — visiting or submitting any of those
-steps falls back to the live resume point (`CLAUDE.md` §85: no UI ahead of
-a real, working consumer). Note `ready` sits last in `WizardProgress::STEPS`
-but is implemented ahead of the steps before it in the canonical order —
-`IMPLEMENTED_STEPS` doesn't have to be a strict prefix of `STEPS`, it only
-has to list which steps have real content today; `currentStep()` walks
-`IMPLEMENTED_STEPS` in its own order, so completing `store` advances
-straight to `ready`, skipping the unimplemented steps between them, same
-as it already skipped nothing when only `welcome`/`store` existed.
+Five working steps so far — **Welcome**, **Store**, **Contacts**,
+**Language & currency**, and **Ready** (the Store Readiness checklist,
+Phase 14's `StoreReadiness` service surfaced inside the Wizard flow rather
+than only as a standalone dashboard widget). The rest of the flow
+(`delivery` → `payment` → `design` → `first_product`) is listed in the step
+nav as a roadmap but has no real content yet — visiting or submitting any
+of those steps falls back to the live resume point (`CLAUDE.md` §85: no UI
+ahead of a real, working consumer). Note `ready` sits last in
+`WizardProgress::STEPS` but is implemented ahead of the steps before it in
+the canonical order — `IMPLEMENTED_STEPS` doesn't have to be a strict
+prefix of `STEPS`, it only has to list which steps have real content today;
+`currentStep()` walks `IMPLEMENTED_STEPS` in its own order, so completing
+`language_currency` advances straight to `ready`, skipping the
+unimplemented steps between them, same as it already skipped nothing when
+only `welcome`/`store`/`contacts`/`language_currency` existed.
 
 PHP:
 - `upload/system/library/mintcart/onboarding/wizardprogress.php` —
@@ -26,7 +27,7 @@ Language: `upload/admin/language/en-gb/mintcart/wizard.php`
 
 Twig: `upload/admin/view/template/mintcart/wizard.twig`
 
-Test: `tests/mintcart/onboarding/wizard-progress-test.php` (9 scenarios)
+Test: `tests/mintcart/onboarding/wizard-progress-test.php` (10 scenarios)
 
 Fully additive — no existing OpenCart controller, model or template is
 modified. Same "0 controller patches" shape as `ControllerMintcartCart`
@@ -105,6 +106,63 @@ $this->model_setting_setting->editSetting('config', $merged);
 This was caught by reading the actual model implementation before writing
 the save path (`CLAUDE.md` §84/§10 — never assume an existing OpenCart flow
 from memory), not discovered after the fact.
+
+## The Contacts step — social profile links
+
+`Contacts` collects up to four optional social profile URLs (Facebook,
+Instagram, Twitter/X, YouTube). All four are optional — a store with no
+social presence yet is a completely valid, finishable state; a filled-in
+field must pass `filter_var(..., FILTER_VALIDATE_URL)` **and** start with
+`http://`/`https://`. The scheme check is deliberate, not redundant:
+`FILTER_VALIDATE_URL` only checks syntax, so it happily accepts
+`javascript:...`/`data:...` as "valid" — without the extra check, a stored
+link like that would execute script in a storefront visitor's browser the
+moment they clicked it (this value is later rendered as a plain `href` on
+the live footer).
+
+Unlike Store, this data is genuinely Mint-specific — OpenCart has no
+built-in storage for social profile links — so it's saved under its own
+`mintcart_contacts` setting code (`mintcart_contacts_social`, a
+JSON-serialized list of `{network, href}`) rather than merged into
+`config`. There's no `editSetting()` partial-write trap to guard against
+here the way `saveStoreStep()` has to for `config`: nothing else writes to
+`mintcart_contacts`, so a bare `editSetting('mintcart_contacts', [...])`
+call is safe.
+
+The stored shape is deliberately identical to
+`MintCart\Design\FooterViewProvider::build()`'s `$social` parameter
+(`docs/developer/components/footer.md`) — `ControllerCommonFooter::index()`
+now reads this same setting and passes it straight through with no
+reshaping, so a social link saved here renders on the live storefront
+footer without any translation step. This closes the "no storage yet" gap
+Phase 7's Footer sub-step originally left for `$social` (payments and
+newsletter remain unimplemented — no Business Settings/Commerce API
+consumer for either yet).
+
+## Language & currency step
+
+`config_language`/`config_currency` are two more keys in the same standard
+`config` setting row `saveStoreStep()` already merges into — exactly the
+fields `Settings → Store`'s own General tab manages
+(`upload/admin/controller/setting/store.php`, checked before writing this
+step per `CLAUDE.md` §84/§10), not a new Mint-owned duplicate
+(`CLAUDE.md` §6/§39). `saveLanguageCurrencyStep()` reuses the same
+merge-then-save shape `saveStoreStep()` established, for the same reason:
+`editSetting()` deletes every existing row for a code first, so a bare
+two-field write would wipe out every other `config_*` setting.
+
+Validation (`validateLanguageCurrencyStep()`) checks the submitted code
+against `ModelLocalisationLanguage::getLanguageByCode()`/
+`ModelLocalisationCurrency::getCurrencyByCode()` — it must be a code that
+actually exists in `oc_language`/`oc_currency`. It deliberately does **not**
+also require `status = 1` (enabled): `Settings → Store`'s own language/
+currency dropdowns (`getLanguages()`/`getCurrencies()` with no arguments)
+list every row regardless of status, so this step mirrors that screen's
+existing permissiveness rather than inventing a stricter rule that screen
+doesn't itself enforce.
+
+The step's `<select>` options come from the same `getLanguages()`/
+`getCurrencies()` calls `Settings → Store` uses, keyed by `code`.
 
 ## The `ready` step reuses `StoreReadiness`, it doesn't recompute it
 
@@ -198,9 +256,9 @@ done) is allowed, for review; skipping ahead is not.
 
 ## What's explicitly not done yet, by design
 
-- The `contacts`/`language_currency`/`delivery`/`payment`/`design`/
-  `first_product` steps — each needs its own real form + save logic,
-  following the same shape `store` established.
+- The `delivery`/`payment`/`design`/`first_product` steps — each needs its
+  own real form + save logic, following the same shape
+  `store`/`contacts`/`language_currency`/`ready` established.
 - Store step's **logo** upload (Functional Scope §2 lists it under Store) —
   deferred; needs `McMediaPicker` (Phase 11, already shipped) wired to a
   real upload endpoint, which doesn't exist yet.

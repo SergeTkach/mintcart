@@ -1,0 +1,93 @@
+/**
+ * MintCart "components-only" CSS entry point.
+ *
+ * Bundled with esbuild into assets/dist/css/components.min.css (production)
+ * or assets/dist/css/components.css (dev, with sourcemap). See
+ * package.json scripts.
+ *
+ * This is `index.css` (Phase 2/3) with exactly one line removed: the
+ * `@import 'bootstrap/dist/css/bootstrap.css'` line. Every other import is
+ * identical and in the same order (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §11's "Bootstrap 5 -> MintCart tokens -> elements -> components ->
+ * utilities -> compatibility -> theme overrides" order, minus the first
+ * step).
+ *
+ * Why this file exists (docs/developer/admin/asset-enqueue.md has the full
+ * writeup): `index.css` bundles the *entire* Bootstrap 5 CSS reset/base/
+ * grid/utility layer. Loading that alongside a page that already runs on
+ * Bootstrap 3 (every stock OpenCart 3 admin screen, and the storefront's
+ * `default`-theme-wrapping pages) redefines `.container`/`.row`/`.col-*`/
+ * `.btn`/`.modal`/`.form-control`/etc. out from under the existing
+ * Bootstrap 3 markup - confirmed broken in a live check on 2026-08-24 (see
+ * `catalog/view/theme/mint_default/template/common/header.twig`'s own
+ * comment): it shrank body text, broke `.navbar-nav`/dropdown menus, and
+ * made widgets overlap.
+ *
+ * Every remaining import below only ever touches `--mc-*` custom
+ * properties on `:root`/`[data-mc-preset]` or `.mc-*`-scoped selectors
+ * (verified: none of `settings/tokens.css`, `presets/*.css`,
+ * `elements/prose.css`, or any `components/*.css` file declares a bare
+ * `body`/`html`/`*`/element selector - grepped before adding this file).
+ * `compatibility/bootstrap3-shim.css` is the one exception by design: it
+ * only *patches* specific legacy Bootstrap-3 classes
+ * (`.pull-right`/`.btn-default`/`.panel`/...) with `--mc-*` token values,
+ * which is additive/beneficial on a Bootstrap-3 page, not a conflict. So
+ * this bundle is safe to add to a legacy Bootstrap-3 page without
+ * reverting or reworking anything already on it - unlike `index.css`,
+ * which stays the right choice for a page that owns its full asset stack
+ * (a standalone MintCart page with no Bootstrap 3, e.g.
+ * `admin/view/template/mintcart/wizard.twig`).
+ *
+ * IMPORTANT caveat, not obvious from the import list above: `mc-modal`,
+ * `mc-drawer`, `mc-toast`, `mc-confirm`, `mc-tabs` and `mc-progress` all
+ * wrap a Bootstrap 5 JS primitive (`Modal`/`Offcanvas`/`Toast`/tab) and
+ * rely on *that same* primitive's own structural CSS
+ * (`.modal`/`.offcanvas`/`.toast`/...) from the full `bootstrap.css` for
+ * actual positioning, backdrop and animation
+ * (`docs/developer/components/{modal,drawer,toast}.md` "Why it wraps
+ * Bootstrap's ..." sections). That structural CSS is exactly what this
+ * bundle deliberately excludes, so those six components render as
+ * unstyled/non-functional chrome here - safe to use only where the full
+ * `index.css` bundle is also loaded. Every other shipped component
+ * (`mc-button`, `mc-field`, `mc-badge`, `mc-entity-picker`'s own list/row
+ * styling, ...) has no such dependency and works standalone in this
+ * bundle. See `docs/developer/admin/asset-enqueue.md` for which bundle to
+ * pick.
+ *
+ * Keep this list's imports (order included) identical to index.css any
+ * time index.css gains or reorders one - only the Bootstrap import line
+ * differs between the two files.
+ */
+
+@import './settings/tokens.css';
+@import './presets/clean.css';
+@import './presets/warm.css';
+@import './elements/prose.css';
+@import './components/button.css';
+@import './components/alert.css';
+@import './components/field.css';
+@import './components/checkbox.css';
+@import './components/radio.css';
+@import './components/badge.css';
+@import './components/price.css';
+@import './components/quantity.css';
+@import './components/rating.css';
+@import './components/breadcrumb.css';
+@import './components/pagination.css';
+@import './components/card.css';
+@import './components/modal.css';
+@import './components/drawer.css';
+@import './components/toast.css';
+@import './components/confirm.css';
+@import './components/sortable.css';
+@import './components/tabs.css';
+@import './components/product-card.css';
+@import './components/footer.css';
+@import './components/header.css';
+@import './components/block.css';
+@import './components/banner-grid.css';
+@import './components/gallery.css';
+@import './components/entity-picker.css';
+@import './components/media-picker.css';
+@import './components/progress.css';
+@import './compatibility/bootstrap3-shim.css';
