@@ -2956,6 +2956,25 @@ Definition of Done checklist for exactly what's still open).
 
 - [~] Update Manager (check → compatibility → backup → download → verify →
       maintenance → files → migrations → cache clear → health check → done) —
+      **`check` and `backup` steps built** (this run added `backup`;
+      `check` — `MintCart\Update\UpdateChecker` — is a separate, still-open
+      PR, #82, not yet on `master` as of this run):
+      `MintCart\Update\PackageManifest`
+      (`upload/system/library/mintcart/update/packagemanifest.php`), a pure
+      manifest parser/validator/compatibility-constraint checker (name,
+      version, requirements, files, `removes` — added this run, see below —
+      migrations, checksum); and `MintCart\Update\BackupPlanner`
+      (`upload/system/library/mintcart/update/backupplanner.php`, this
+      run), the `backup` step — given a manifest and which of its declared
+      paths currently exist on disk, decides exactly what to snapshot and
+      where, per `docs/adr/005-theme-extension-update-rollback.md`'s
+      decisions #3/#6/#7. All follow the same "primitive first, wire the
+      flow around it once a real caller exists" pattern `MigrationManager`
+      (Phase 1) and `WizardProgress` (Phase 13) already used. See
+      `docs/developer/update/package-manifest.md` for the full contract and
+      what's still not done (no caller/downloader/verify/maintenance-
+      mode/file-copy/migration-runner/cache-clear/health-check steps yet,
+      no `mc_installed_file` ledger).
       **two increments done:** `MintCart\Update\PackageManifest`
       (`upload/system/library/mintcart/update/packagemanifest.php`), a pure
       manifest parser/validator/compatibility-constraint checker (name,
@@ -3002,6 +3021,44 @@ existing OpenCart file touched). Update Manager and rollback remain not
 started. Release packaging script's status is tracked by its own PR, not
 rewritten here to avoid conflicting with it.
 - [ ] Compatibility Checker (`install.xml` analysis, heuristic warnings only)
+- [ ] **Release packaging script (TODO, not started).** Node/npm (`npm install`
+      && `npm run build`) and the PHP vendor libraries already committed
+      under `upload/system/**/vendor/` are dev/release-time tooling only —
+      the end user installing MintCart must never need Node or Composer.
+      Need a documented/scripted step that runs the frontend build and
+      packages `upload/` (with `assets/dist/` already generated and
+      included) into an installable zip, the same way OpenCart itself ships
+      a pre-built `upload/`. Natural home: alongside Update Manager package
+      manifest work (Technical Plan §33), or a standalone `docs/release.md`
+      if it's needed before Update Manager exists.
+
+In progress.
+
+**Update (this run, 2026-09-09): `MintCart\Update\BackupPlanner` (the
+`backup` step) + `PackageManifest::removes()`.** At the start of this run
+there were 30 open PRs (#52–#85, #58 absent); only #82 (`UpdateChecker`,
+the `check` step) touched `upload/system/library/mintcart/update/` at all,
+and its diff (checked via `pull_request_read`) adds only
+`updatechecker.php` — it does not touch `packagemanifest.php`, so adding
+`removes()` there and a new `backupplanner.php` file collides with nothing
+in flight. PR #85 (theme/extension rollback ADR, also open) explicitly
+names `PackageManifest`'s `removes` field and a future `BackupPlanner`-
+shaped `backup` step as its own "next step for a future run" — this run
+is exactly that follow-up, sequenced independently of `UpdateChecker`
+landing first (the `backup` step only needs `PackageManifest`, already on
+`master`). Verified: `php -l` clean across the full `upload/`/`tests` tree;
+`tests/mintcart/update/package-manifest-test.php` (11 scenarios, now
+covering `removes()`) and the new
+`tests/mintcart/update/backup-planner-test.php` (7 scenarios) passing;
+full `tests/mintcart/**/*-test.php` suite re-run end to end (35 files, was
+34) — all passing, no regressions. No OpenCart dependency in either
+touched/added file, so no live-install verification gap applies to this
+specific increment (same as `PackageManifest` itself). **Next step:** the
+`mc_installed_file` ledger (ADR 005 decision #1, needs the Migration
+Manager once a real `files` step exists to write to it), or continuing the
+flow itself (`download`/`verify`/`maintenance`/`files` steps) once a
+transport/caller exists — or re-check `gh pr list --state open` for
+what's newly merged/unclaimed, since this backlog is unusually large.
 - [x] **Release packaging script** — `scripts/release.js` (`npm run
       release`), documented in `docs/release.md`. Builds the frontend
       (`npm run build`), stages the *committed* `upload/` tree via

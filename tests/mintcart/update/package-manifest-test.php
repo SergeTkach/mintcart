@@ -39,6 +39,7 @@ assertSame('mint_default', $minimal->name(), 'minimal: name', $failures);
 assertSame('1.0.0', $minimal->version(), 'minimal: version', $failures);
 assertSame([], $minimal->requirements(), 'minimal: requirements defaults to empty', $failures);
 assertSame([], $minimal->files(), 'minimal: files defaults to empty', $failures);
+assertSame([], $minimal->removes(), 'minimal: removes defaults to empty', $failures);
 assertSame([], $minimal->migrations(), 'minimal: migrations defaults to empty', $failures);
 assertSame(null, $minimal->checksum(), 'minimal: checksum defaults to null', $failures);
 
@@ -48,11 +49,13 @@ $fullData = [
     'version' => '1.2.0',
     'requirements' => ['mint_version' => '^0.1.0', 'php_version' => '>=8.1.0'],
     'files' => ['catalog/view/theme/mint_default/theme.json'],
+    'removes' => ['catalog/view/theme/mint_default/template/mint/components/old-card.twig'],
     'migrations' => ['202608210001_create_mc_migration.php'],
     'checksum' => 'sha256:deadbeef',
 ];
 $full = PackageManifest::fromArray($fullData);
 assertSame($fullData, $full->toArray(), 'full: toArray round-trips fromArray input', $failures);
+assertSame($fullData['removes'], $full->removes(), 'full: removes() returns the declared list', $failures);
 
 // 3. Missing name/version both fail validation, and both problems are
 // reported together (not just the first).
@@ -67,9 +70,12 @@ try {
     assertTrue(strpos($e->getMessage(), 'version') !== false, 'fromArray: exception mentions version', $failures);
 }
 
-// 4. requirements/files/migrations must be arrays when present.
+// 4. requirements/files/removes/migrations must be arrays when present.
 $typeErrors = PackageManifest::validate(['name' => 'x', 'version' => '1.0.0', 'files' => 'not-an-array']);
 assertTrue(count($typeErrors) === 1, 'validate: non-array files is rejected', $failures);
+
+$removesTypeErrors = PackageManifest::validate(['name' => 'x', 'version' => '1.0.0', 'removes' => 'not-an-array']);
+assertTrue(count($removesTypeErrors) === 1, 'validate: non-array removes is rejected', $failures);
 
 // 5. A requirement constraint that is not a non-empty string is rejected.
 $badRequirement = PackageManifest::validate([
@@ -132,5 +138,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: PackageManifest smoke test (' . 11 . " scenarios)\n";
+echo 'PASS: PackageManifest smoke test (' . 11 . " scenarios, now covering removes())\n";
 exit(0);

@@ -61,6 +61,9 @@ compatible" into one class.
   "files": [
     "catalog/view/theme/mint_default/theme.json"
   ],
+  "removes": [
+    "catalog/view/theme/mint_default/template/mint/components/old-card.twig"
+  ],
   "migrations": [
     "202608210001_create_mc_migration.php"
   ],
@@ -76,9 +79,18 @@ compatible" into one class.
   eventually resolves "what's the currently installed X" knows which
   components matter for a given package.
 - `files` is a plain list of relative paths this package installs/
-  overwrites — used later by the backup step (back up whatever a file list
-  says will be overwritten, the same open question
-  `MINTCART_FUNCTIONAL_SCOPE.md` §21 flags for theme/extension rollback).
+  overwrites — used by the `backup` step (see `BackupPlanner` below) to
+  back up whatever a file list says will be overwritten, the same open
+  question `MINTCART_FUNCTIONAL_SCOPE.md` §21 flags for theme/extension
+  rollback.
+- `removes` is a plain list of relative paths this package **deletes**,
+  distinct from `files`' overwrites. Per
+  `docs/adr/005-theme-extension-update-rollback.md` decision #3, a path
+  simply missing from a new manifest's `files` list is not, by itself,
+  safe to infer as "delete this" (it may have moved elsewhere in the
+  package) — a package author must say so explicitly. `BackupPlanner`
+  snapshots a `removes` path exactly like an overwritten `files` path
+  before anything is deleted.
 - `migrations` is a list of migration filenames following
   `MigrationManager`'s own naming convention
   (`upload/system/mintcart/migrations/README.md`) — running them is a
@@ -158,24 +170,94 @@ Still has no downloader — resolving *how* to fetch a manifest for `check`
 to consume is the flow's own `download` step (see below), a later
 increment.
 
+## The `backup` step — `BackupPlanner`
+
+`MintCart\Update\BackupPlanner`
+(`upload/system/library/mintcart/update/backupplanner.php`) is the third
+increment: the flow's own `backup` step. Given a manifest plus which of
+its declared paths currently exist on disk (and their sizes — resolved by
+the caller, not this class), it decides exactly what belongs in the
+backup and where to put it:
+
+```php
+$planner = new \MintCart\Update\BackupPlanner();
+
+$plan = $planner->plan(
+    $manifest,                                    // PackageManifest
+    ['catalog/view/theme/mint_default/theme.json' => 512],  // path => size in bytes, caller-resolved
+    '20260909120000'                              // snapshot timestamp, caller-generated
+);
+
+// $plan === [
+//     'package'      => 'mint_default',
+//     'snapshot_dir' => 'system/storage/mintcart/backup/mint_default/20260909120000',
+//     'files'        => ['catalog/view/theme/mint_default/theme.json'],
+//     'total_bytes'  => 512,
+// ]
+```
+
+Design decisions, following `docs/adr/005-theme-extension-update-rollback.md`:
+
+- **Union of `files()` and `removes()`, de-duplicated.** Both an
+  overwritten file and a deleted file get backed up before the update
+  touches them (decision #3); a path listed in both is only backed up
+  once.
+- **Only paths that actually exist are backed up.** A `files()`/`removes()`
+  path missing from the caller's `$existingFiles` map is treated as "not
+  installed yet" — nothing to snapshot (a brand-new file the update only
+  adds has nothing to back up).
+- **`snapshotPath()` never lands under a web-servable directory**
+  (decision #7) — `system/storage/mintcart/backup/<package>/<timestamp>`,
+  the same convention OpenCart already uses for its own non-servable files
+  (`system/storage/cache`, `system/storage/logs`).
+- **`hasEnoughDiskSpace(int $snapshotBytes, int $incomingPackageBytes, int $freeBytes): bool`**
+  is a separate pre-flight check (decision #6), sized for *both* the
+  snapshot being written and the incoming package's own files landing on
+  the same disk. Meant to run — and refuse to start — before any file is
+  touched, never to abort a copy already in progress.
+
+Same "resolved values in, normalized contract out" shape as
+`PackageManifest`/`UpdateChecker`: no `\Registry`, no `\DB`, no
+`disk_free_space()`/`filesize()` call of its own. A real `files` step
+caller resolves which paths exist and their sizes (e.g. via `file_exists()`/
+`filesize()` against the live install) and passes that resolved map in.
+
 ## What's deliberately not done yet
 
 - No caller — no admin controller, no `mintcart/update/*` route, nothing
-  fetches a real remote manifest today. `UpdateChecker` exists but nothing
-  calls it outside its own test yet.
-- No download/verify/backup/maintenance-mode/file-copy/migration-runner/
+  fetches a real remote manifest or parses a real downloaded manifest
+  today, and nothing calls `BackupPlanner::plan()` against a live
+  install's files. `UpdateChecker` exists but nothing calls it outside its
+  own test yet.
+- No `mc_installed_file` ledger (per-file change detection via sha256,
+  ADR 005 decision #1) — `BackupPlanner` only knows what a manifest
+  declares, not whether an installed file was hand-edited since its last
+  install. That needs the Migration Manager to add the table once a real
+  `files` step exists to write to it.
+- No actual file copy/restore — `plan()` only decides *what* to copy;
+  performing the copy (and a restore action on top of a stored snapshot)
+  is later work, once the `files` step itself exists.
+- No download/verify/maintenance-mode/file-copy/migration-runner/
   cache-clear/health-check steps — the rest of the Technical Plan §33 flow.
   The `health-check` step should wait for `MintCart\Core\HealthCheck`
   (tracked separately) to land before it's wired in.
 - No package **signing** — `checksum` is carried as opaque data; nothing
   computes or verifies a hash against it yet.
 
-Verified: `php -l` clean; `tests/mintcart/update/package-manifest-test.php`
-(11 scenarios, including the semver-caret edge cases and a check that this
+Verified: `php -l` clean on every touched/added file, re-swept across the
+full `upload`/`tests` tree; `tests/mintcart/update/package-manifest-test.php`
+(11 scenarios, including the semver-caret edge cases, a check that this
 class's actual `version_compare()` reliance orders `MintCart\Core\Version`'s
-real `"0.1.0-dev"` string the way the class assumes) and
-`tests/mintcart/update/update-checker-test.php` (7 scenarios, including one
-composing `UpdateChecker` with the real `MintCart\Core\Version::VERSION`).
-Pure PHP, no OpenCart dependency, so no live-install verification gap
-applies here (unlike most other increments in this repo) — there is
-nothing to run against a real install yet.
+real `"0.1.0-dev"` string the way the class assumes, and now `removes()`
+coverage), `tests/mintcart/update/update-checker-test.php` (7 scenarios,
+including one composing `UpdateChecker` with the real
+`MintCart\Core\Version::VERSION`), and the new
+`tests/mintcart/update/backup-planner-test.php` (7 scenarios: empty plan, a
+not-yet-existing path skipped, an existing `files()` path backed up with
+its size counted, a `removes()` path backed up the same way, a path in
+both lists de-duplicated, `snapshotPath()`'s exact output, and
+`hasEnoughDiskSpace()`'s boundary). Full `tests/mintcart/**/*-test.php`
+suite re-run end to end — all passing, no regressions. Pure PHP, no
+OpenCart dependency, so no live-install verification gap applies here
+(unlike most other increments in this repo) — there is nothing to run
+against a real install yet.

@@ -24,6 +24,14 @@ namespace MintCart\Update;
  * Technical Plan §39/Functional Scope §29). This class only concerns
  * itself with one manifest's own declared identity, requirements and file
  * list — it never inspects OCMOD XML.
+ *
+ * `removes` (added alongside `MintCart\Update\BackupPlanner`, the flow's
+ * `backup` step) follows `docs/adr/005-theme-extension-update-rollback.md`
+ * decision #3: a path a *new* manifest no longer lists is not, by itself,
+ * safe to infer as "delete this" (it may simply have moved elsewhere in
+ * the package). `removes` is how a package author states deletions
+ * explicitly; `BackupPlanner` snapshots a `removes` path exactly like an
+ * overwritten `files` path before anything is deleted.
  */
 final class PackageManifest
 {
@@ -37,6 +45,9 @@ final class PackageManifest
     /** @var string[] relative file paths this package installs/overwrites */
     private array $files;
 
+    /** @var string[] relative file paths this package deletes (ADR 005 decision #3) — distinct from files() overwrites */
+    private array $removes;
+
     /** @var string[] migration filenames (see MigrationManager's naming convention) this package includes */
     private array $migrations;
 
@@ -47,6 +58,7 @@ final class PackageManifest
         string $version,
         array $requirements,
         array $files,
+        array $removes,
         array $migrations,
         ?string $checksum
     ) {
@@ -54,6 +66,7 @@ final class PackageManifest
         $this->version = $version;
         $this->requirements = $requirements;
         $this->files = $files;
+        $this->removes = $removes;
         $this->migrations = $migrations;
         $this->checksum = $checksum;
     }
@@ -79,6 +92,7 @@ final class PackageManifest
             $data['version'],
             $data['requirements'] ?? [],
             $data['files'] ?? [],
+            $data['removes'] ?? [],
             $data['migrations'] ?? [],
             $data['checksum'] ?? null
         );
@@ -100,7 +114,7 @@ final class PackageManifest
             $errors[] = 'version is required and must be a non-empty string';
         }
 
-        foreach (['requirements', 'files', 'migrations'] as $listField) {
+        foreach (['requirements', 'files', 'removes', 'migrations'] as $listField) {
             if (isset($data[$listField]) && !is_array($data[$listField])) {
                 $errors[] = "{$listField} must be an array when present";
             }
@@ -141,6 +155,12 @@ final class PackageManifest
     public function files(): array
     {
         return $this->files;
+    }
+
+    /** @return string[] */
+    public function removes(): array
+    {
+        return $this->removes;
     }
 
     /** @return string[] */
@@ -260,7 +280,7 @@ final class PackageManifest
     }
 
     /**
-     * @return array{name:string,version:string,requirements:array<string,string>,files:string[],migrations:string[],checksum:?string}
+     * @return array{name:string,version:string,requirements:array<string,string>,files:string[],removes:string[],migrations:string[],checksum:?string}
      */
     public function toArray(): array
     {
@@ -269,6 +289,7 @@ final class PackageManifest
             'version' => $this->version,
             'requirements' => $this->requirements,
             'files' => $this->files,
+            'removes' => $this->removes,
             'migrations' => $this->migrations,
             'checksum' => $this->checksum,
         ];
