@@ -140,7 +140,9 @@ class ControllerCommonHeader extends Controller {
 					'text_transaction' => $this->language->get('text_transaction'),
 					'text_download' => $this->language->get('text_download'),
 					'text_logout' => $this->language->get('text_logout'),
-					'text_wishlist' => $data['text_wishlist']
+					'text_wishlist' => $data['text_wishlist'],
+					'text_menu' => $this->language->get('text_menu'),
+					'text_close' => $this->language->get('text_close')
 				));
 			} catch (\Throwable $e) {
 				// Same rationale as ControllerCommonFooter's own catch: a
@@ -151,6 +153,28 @@ class ControllerCommonHeader extends Controller {
 				// in that case, same "log and disable for this request"
 				// pattern already used by footer/category.
 				(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render header: ' . $e->getMessage());
+			}
+
+			// MintCart\Seo\SchemaOrgBuilder Organization JSON-LD
+			// (MINTCART_FUNCTIONAL_SCOPE.md §16, Phase 18). Site-wide (one
+			// Organization per page, not per component), so it is built
+			// here rather than inside HeaderViewProvider's own contract -
+			// every field below reuses config values HeaderViewProvider
+			// already reads (name/logo/telephone), no new OpenCart storage.
+			// Guarded by the same try/catch-and-log pattern as mc_header
+			// above: a malformed value must not fatal the page.
+			try {
+				$schema_builder = new \MintCart\Seo\SchemaOrgBuilder();
+
+				$data['mc_schema_organization'] = $schema_builder->toJsonLd($schema_builder->organization(array(
+					'name' => $data['name'],
+					'url' => $data['home'],
+					'logo' => $data['logo'] ?: null,
+					'telephone' => $data['telephone'] ?: null,
+					'address' => $this->config->get('config_address') ?: null
+				)));
+			} catch (\Throwable $e) {
+				(new \MintCart\Core\Logger())->error('SchemaOrgBuilder failed to build Organization schema: ' . $e->getMessage());
 			}
 		}
 
