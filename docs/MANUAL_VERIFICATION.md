@@ -184,6 +184,36 @@ manufacturer that has an image set and one that doesn't:
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
 
+## Phase 7 — Header mobile navigation, never opened in a real browser
+
+`mc-header__nav`'s new responsive off-canvas behavior (`docs/developer/components/header.md`
+"Mobile navigation") is unit-verified only as far as this environment
+allows (Twig tag balance, `npm run build` output, no runtime DOM). On a
+`config_theme=mint_default` install, once MintCart's own asset bundle is
+enqueued (`docs/developer/components/header.md`'s "Known gap" — still
+required before *any* Mint component is visually verifiable):
+
+1. At a viewport ≥992px (`lg` and up), confirm the store's navigation menu
+   renders as a normal horizontal bar under the header, with **no**
+   hamburger button visible.
+2. Resize below 992px (or use a mobile device/emulator). Confirm the
+   navigation menu disappears from the page and a hamburger button
+   (`.mc-header__nav-toggle`) appears instead.
+3. Tap/click the hamburger. Confirm the navigation slides in from the left
+   edge as a panel with a "Menu" heading and a close (`×`) button, a
+   backdrop appears behind it, and the page behind it stops scrolling.
+4. With the panel open, confirm: pressing `Escape` closes it; clicking the
+   backdrop closes it; clicking the close button closes it; keyboard focus
+   is trapped inside the panel while open (`Tab`/`Shift+Tab` cycle only
+   through its own focusable elements) and returns to the hamburger button
+   once closed.
+5. With a screen reader (or the browser's accessibility inspector),
+   confirm the hamburger button's `aria-expanded` reads `false` when
+   closed and `true` while the panel is open (`docs/developer/components/drawer.md`'s
+   `syncTriggerAriaExpanded()`).
+6. Resize back to ≥992px while the panel is open below it, and confirm the
+   navigation returns to its normal inline position with no leftover
+   backdrop/scroll-lock (Bootstrap's own responsive-offcanvas behavior).
 ## Phase 15 — Checkout totals refactor + new endpoint, never exercised against a real DB
 
 No MySQL/OpenCart session in this environment. `MintCart\Compatibility\OpenCart3\TotalsAdapter`

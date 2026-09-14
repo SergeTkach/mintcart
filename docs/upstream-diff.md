@@ -308,6 +308,32 @@ repo today.
 
 ---
 
+## `upload/catalog/language/en-gb/common/header.php`
+
+**Reason:** Adds two new language strings (`text_menu`, `text_close`) for
+Header's new mobile navigation off-canvas panel (`mc-header__nav`, see
+`upload/catalog/controller/common/header.php`'s own entry above and
+`docs/developer/components/header.md`) — neither existed under any name
+(`text_category` is "Categories", a different label for a different
+purpose; the panel wraps the whole `widgets.menu` fragment, not just
+categories). Follows the exact same "reuse `mc-drawer`'s open/close pattern,
+add the two labels its markup needs" precedent
+`docs/developer/components/drawer.md`'s own basic-usage example already
+documents.
+
+**Why it can't live in the MintCart layer instead:** Same as
+`common/footer.php`'s own entry above — OpenCart's language system is
+file-per-route, loaded by `$this->load->language('common/header')` in the
+controller.
+
+**Compatibility impact:** Purely additive — two new keys appended after the
+existing ones, nothing removed or renamed. Only `en-gb` exists in this repo
+today.
+
+**Tests:** `php -l` (clean).
+
+---
+
 ## `upload/catalog/controller/product/search.php`
 
 **Reason:** Wires Search as the second real listing consumer of the Theme
@@ -552,6 +578,39 @@ production — see `docs/developer/components/header.md`'s "Known gap"
 section for the one deliberately-deferred piece (MintCart's own compiled
 asset bundle is still not enqueued on any live page).
 
+**Update (this run): mobile navigation.** `mc-header__nav` (the `<nav>`
+wrapping `widgets.menu`) now also carries Bootstrap 5's responsive
+off-canvas classes (`.offcanvas.offcanvas-lg.offcanvas-start`) plus
+`.mc-drawer` (`docs/developer/components/drawer.md`) — at the `lg`
+breakpoint and up it renders exactly as before (a normal static block, this
+component's own Definition of Done already had a `[ ]` next to "no
+responsive off-canvas/hamburger behavior yet"); below `lg` it becomes a
+slide-in panel opened by a new `.mc-header__nav-toggle` hamburger button via
+the existing `data-mc-action="open-drawer"` contract — no new JS wiring
+needed, `initDrawerTriggers()` is already called from `catalog.js`. Two new
+language keys (`text_menu`, `text_close`, see that file's own entry above)
+were added to the `$header_view + array(...)` merge already building
+`$data['mc_header']` — same array, same pattern as the existing
+`text_account`/`text_wishlist`/... entries, no other line changed. Also
+extended `assets/src/js/components/drawer.js` (`syncTriggerAriaExpanded()`)
+to keep `aria-expanded` on any `[data-mc-action="open-drawer"]` trigger in
+sync with the drawer's actual shown/hidden state — this is `mc-drawer`'s
+first real trigger-button consumer in this repo, and nothing previously
+kept a static `aria-expanded="false"` written in markup honest once the
+panel opened (`MINTCART_FUNCTIONAL_SCOPE.md` §27, keyboard/screen-reader
+correctness). **Tests:** `php -l` clean on all touched PHP; `node --check`
+on `drawer.js`; Twig `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag
+counts re-balanced (11/11) after the template change; `npm run build` clean,
+`grep` against the built bundles confirms `.mc-header__nav-toggle`/
+`.mc-header__nav-toggle-bar` in `index.min.css` and `CSS.escape`/
+`data-mc-target` in `catalog.min.js`; full `tests/mintcart/**/*-test.php`
+suite re-run end to end (34 files) — all passing, no regressions (no PHP
+test covers Twig/CSS/JS directly, but confirms nothing else in the touched
+PHP files broke). Same pre-existing no-live-browser gap as every earlier
+Phase 7 entry — see `docs/MANUAL_VERIFICATION.md` for what a human should
+confirm (tap the hamburger below `lg`, confirm the panel slides in with
+focus trapped and `Escape`/backdrop/close-button all work, confirm the nav
+renders inline with no toggle visible at `lg` and up).
 **Update (this run — Phase 18, SEO Core):** inside the same
 `isMintAware()`-gated block, also builds `$data['mc_schema_organization']`
 via the new `MintCart\Seo\SchemaOrgBuilder::organization()` — one

@@ -466,10 +466,18 @@ bundled-output grep + manual review against the Definition of Done checklist.
       legacy fragments" for the rationale (each has its own real Mint API
       planned for Phase 15/Commerce API; no second real consumer yet for a
       Mint-native Navigation component, `CLAUDE.md` §85). "Mobile
-      Navigation" specifically is **not** addressed — `mc-header` has no
-      responsive off-canvas/hamburger behavior yet, it relies on
-      `flex-wrap` only; a dedicated mobile nav pattern (likely composing
-      `mc-drawer`, Phase 4) is deferred to a future run.
+      Navigation" — **done this run**: `mc-header__nav` now carries
+      Bootstrap 5's responsive off-canvas classes
+      (`.offcanvas.offcanvas-lg.offcanvas-start`) plus `.mc-drawer`, opened
+      below the `lg` breakpoint by a new hamburger `.mc-header__nav-toggle`
+      button through the existing `data-mc-action="open-drawer"` contract —
+      composing `mc-drawer` (Phase 4) exactly as this note previously
+      anticipated, no new JS component. See
+      `docs/developer/components/header.md` "Mobile navigation" and
+      `docs/upstream-diff.md`'s `common/header.php`/`common/header.php`
+      language-file entries for the full writeup, including a small
+      `drawer.js` addition (`syncTriggerAriaExpanded()`) this needed —
+      `mc-drawer`'s first real trigger-button consumer in this repo.
 - [x] Footer, Footer Columns, Contacts, Social links, Payments, Newsletter —
       `MintCart\Design\FooterViewProvider`
       (`upload/system/library/mintcart/design/footerviewprovider.php`) +
@@ -3897,6 +3905,39 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (this run, 2026-09-09): Phase 7's "Mobile Navigation" gap is
+closed.** At the time this run started there were 37 open PRs (`#52`–`#89`)
+covering nearly every phase with unclaimed work — Compatibility adapters,
+Entity Picker's remaining backends, SEO Core's remaining builders, Bulk
+Editor, Update Manager's later steps, several Fix Registry candidates, and
+more (see each PR's own title). `admin/controller/mintcart/entity.php` (5
+open PRs: `#53`–`#57`) and `wizard.php`/`wizardprogress.php` (2 open PRs)
+were treated as blocked hot files and avoided; `MintCart\Compatibility\OpenCart3\*`
+adapters and further Fix Registry entries were skipped even though
+unclaimed by title, since `#81` already documents (per its own doc) that a
+second adapter has no real consumer yet, and four separate open PRs
+(`#76`/`#78`/`#79`/`#89`) are actively working the Fix Registry area this
+run. `docs/IMPLEMENTATION_STATUS.md`'s own Phase 7 note (added several runs
+ago) explicitly named "a dedicated mobile nav pattern, likely composing
+`mc-drawer`" as deferred, unclaimed-by-title work — genuinely untouched
+files (`mint/components/header.twig`, `header.css`, `drawer.js`; PR `#62`
+touches `common/header.twig`/`header.php` but only inside the `<head>`
+schema-JSON-LD block and a separate try/catch, not the same lines this run
+edited). See the Phase 7 section above,
+`docs/developer/components/header.md` "Mobile navigation", and
+`docs/developer/components/drawer.md`'s new "Responsive (breakpoint)
+offcanvas" section for the full writeup. Verified: `php -l` clean; `node
+--check` on `drawer.js`; Twig tag counts re-balanced; `npm run build` clean
+with the new CSS/JS confirmed present in the built bundles; full
+`tests/mintcart/**/*-test.php` suite (34 files) re-run end to end, all
+passing, no regressions. Same pre-existing no-live-browser gap as every
+earlier Phase 7 entry — see `docs/upstream-diff.md`'s `common/header.php`
+entry for exactly what a human should confirm on a real install. **Next
+step:** re-check `gh pr list --state open` for what has newly merged or
+opened before picking the next phase — Header/Footer/Navigation's remaining
+sub-item is Search/Cart/Navigation getting real Mint-native components
+instead of legacy widget fragments (Phase 15/Commerce API), each still
+waiting on its own second real consumer per `CLAUDE.md` §85.
 **Update (this run, 2026-09-09): MC-0007 shipped — `Cache\File` atomic
 write / concurrent-read fatal fix.** See the Phase 10 (Technical Plan)
 section above and `docs/fixes/registry.md` for the full writeup. This

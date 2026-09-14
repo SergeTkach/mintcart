@@ -140,7 +140,9 @@ class ControllerCommonHeader extends Controller {
 					'text_transaction' => $this->language->get('text_transaction'),
 					'text_download' => $this->language->get('text_download'),
 					'text_logout' => $this->language->get('text_logout'),
-					'text_wishlist' => $data['text_wishlist']
+					'text_wishlist' => $data['text_wishlist'],
+					'text_menu' => $this->language->get('text_menu'),
+					'text_close' => $this->language->get('text_close')
 				));
 			} catch (\Throwable $e) {
 				// Same rationale as ControllerCommonFooter's own catch: a
