@@ -595,3 +595,91 @@ against the pre-fix code fails with the exact fatal error this fix
 removes (see "Reproduced on MintCart baseline"). Full
 `tests/mintcart/**/*-test.php` suite re-run end to end — all passing, no
 regressions.
+
+---
+
+## MC-0008 — `Cart::__construct()` runs an unconditional cleanup `DELETE` on every single request
+
+**Problem:** `\Cart\Cart::__construct()` (`upload/system/library/cart/cart.php`)
+runs `DELETE FROM `.DB_PREFIX.`cart WHERE (api_id > '0' OR customer_id = '0')
+AND date_added < DATE_SUB(NOW(), INTERVAL 1 HOUR)` unconditionally, every
+single time the class is constructed. `Cart` is instantiated once per
+request by both `catalog/controller/startup/startup.php` and
+`admin/controller/startup/startup.php` — i.e. on **every** storefront and
+admin page load, not only when a visitor actually has cart activity. This
+is exactly the "зайві записи/updates session/cart" (excessive session/cart
+writes) class of issue `MINTCART_FUNCTIONAL_SCOPE.md` §18's Known Fix
+Research Queue names explicitly. On a typical store the overwhelming
+majority of requests (anonymous browsing, search, category/product pages,
+static pages) have no cart activity at all, so this is a guaranteed extra
+write query — real cost on shared hosting, and a contributor to
+`information_schema`/binlog write volume that's disproportionate to how
+rarely it does useful work (there is nothing to delete on most requests).
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1 (this
+repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale as
+MC-0001 through MC-0007 (no second checkout available to diff against, and
+the fix is a request-frequency gate around an existing query, not a
+version-specific behavior change).
+
+**Source:** Discovered directly in this repository while working through
+the Known Fix Research Queue candidates in `MINTCART_FUNCTIONAL_SCOPE.md`
+§18 — not an imported historical community patch, though the underlying
+"OpenCart cleans up the cart table on every page load" observation is a
+long-standing, widely reported community complaint (the probability-gate
+mitigation applied here mirrors PHP's own `session.gc_probability`/
+`session.gc_divisor` pattern, a well-established fix shape for exactly this
+class of "run cleanup only sometimes, not every request" problem).
+
+**Reproduced on MintCart baseline:** Yes — confirmed by reading
+`\Cart\Cart::__construct()` directly: the `DELETE` query is the first
+statement in the constructor, unconditional, with no request-type or
+probability guard anywhere in the method. Confirmed both `catalog/controller/startup/startup.php`
+and `admin/controller/startup/startup.php` instantiate `Cart\Cart` directly
+in their own `index()` (i.e. once per request, not lazily on first cart
+access).
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Added `MintCart\Commerce\CartGarbageCollector`
+(`upload/system/library/mintcart/commerce/cartgarbagecollector.php`) — a
+small, pure, OpenCart-independent class (`CLAUDE.md` §85's "one clear
+service" preference over a bigger abstraction) whose only job is
+`shouldRun(): bool`, gating on a `(probability, divisor)` pair defaulting
+to `(5, 100)` — a 5% chance per request, the same order of magnitude
+PHP's own default session GC uses. `Cart::__construct()`'s existing
+`DELETE` query is now wrapped in
+`if ((new \MintCart\Commerce\CartGarbageCollector())->shouldRun()) { ... }`
+— a two-line diff around the existing query, not a rewrite. The cleanup
+behavior itself (what gets deleted, and when a row becomes eligible) is
+completely unchanged; only *how often the check runs* changes. A caller
+that explicitly wants the old unconditional behavior back can construct
+`new CartGarbageCollector(100, 100)` (`shouldRun()` always `true` — see the
+class's own boundary-condition contract), so this is a strict behavior
+subset, not a divergent reimplementation. No new config/settings UI was
+added — the probability is a constructor default, not a merchant-facing
+setting, since there is no real consumer yet asking for one to be tunable
+(`CLAUDE.md` §85; a future run could surface it as a `Settings → Store`
+value if that need appears).
+
+**Tests:** `php -l` clean on both the new class and the modified
+`cart.php`. `tests/mintcart/commerce/cart-garbage-collector-test.php` (7
+scenarios) — since `shouldRun()` is inherently probabilistic in the
+general case, the test asserts only the deterministic boundary conditions
+(`probability = 0` never runs, `probability >= divisor` always runs,
+negative probability behaves like zero rather than erroring) plus a loose
+statistical sanity check on the default `(5, 100)` args (at least one
+`false` in 500 runs — not asserting at least one `true`, since a 5% chance
+never hitting once in 500 runs is vanishingly unlikely but not provably
+impossible, and a flaky test is worse than a slightly weaker assertion).
+No live end-to-end request test — this environment has no MySQL server
+(same pre-existing gap noted throughout this file). A human should confirm
+on a real install (e.g. with `error_log` temporarily added inside the
+`if`) that the cleanup query now runs on roughly 1 in 20 requests instead
+of every request, and that abandoned carts still expire correctly over
+time.

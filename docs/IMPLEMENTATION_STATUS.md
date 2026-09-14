@@ -2869,6 +2869,10 @@ tracked once each.)*
 - [x] `docs/fixes/registry.md` Fix Registry established, entries added only after
       reproduction on the MintCart baseline (per `CLAUDE.md` §13) — MC-0001
       (`category.php` blank language strings), MC-0002 (`search.php`
+      missing canonical/prev/next links), MC-0003 (`manufacturer.php` blank
+      language strings), and MC-0008 (`Cart::__construct()` unconditional
+      per-request cleanup query, this run — see below); MC-0004 through
+      MC-0007 are open PRs, not yet landed on this branch
       missing canonical/prev/next links) on `master`; MC-0007 (`Cache\File`
       atomic write / concurrent-read fatal, this run) — see below. MC-0004
       through MC-0006 exist as open, unmerged PRs at the time of this run
@@ -2926,6 +2930,65 @@ tracked once each.)*
 - [~] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
+Fix Registry mechanism is established and has four real entries on this
+branch (MC-0001/0002/0003/0008); diagnostics and most of "measured
+performance improvements" are not started (see the "product-card image
+width/height" note elsewhere in this file for the one exception).
+
+**Update (this run, 2026-09-09): MC-0008.** `\Cart\Cart::__construct()`
+(`upload/system/library/cart/cart.php`) ran an unconditional
+stale-cart-cleanup `DELETE` query on *every* request (catalog and admin
+alike — `Cart` is instantiated once per page load by both front
+controllers' startup sequence), the "excessive session/cart writes" class
+of issue `MINTCART_FUNCTIONAL_SCOPE.md` §18's Known Fix Research Queue
+names explicitly. Added `MintCart\Commerce\CartGarbageCollector`
+(`upload/system/library/mintcart/commerce/cartgarbagecollector.php`) — a
+small, pure, OpenCart-independent probability gate (default 5% of
+requests, mirroring PHP's own `session.gc_probability`/`session.gc_divisor`
+pattern) — and wrapped the existing query in
+`if ((new \MintCart\Commerce\CartGarbageCollector())->shouldRun()) { ... }`.
+The cleanup's own logic (which rows are eligible, when) is unchanged; only
+how often the check runs changes. Full write-up: `docs/fixes/registry.md`'s
+MC-0008 entry and `docs/upstream-diff.md`'s new `cart.php` entry.
+
+Step 0 dedup check for this run: `gh pr list --state open` showed 39 open
+PRs (`#52`–`#91`) at the start of this run, covering nearly every other
+unstarted item in this file (all remaining Entity Picker backends, three
+more Wizard steps, five SEO Core sub-pieces, Bulk Editor, Diagnostics,
+`HealthCheck`, `CacheInvalidator`, `UpdateChecker`/`BackupPlanner`,
+`SettingsAdapter`/`ExtensionAdapter`, Compatibility Checker, the theme/
+extension rollback RESEARCH item, `QuickOrderService`,
+`CheckoutTotalsService`, the product detail page, mobile navigation, the
+admin asset-enqueue fix, four historical-fix registry entries
+(MC-0004–MC-0007), and a release packaging script — see each PR's own
+title). None of them touch `Cart\Cart`, `system/library/cart/`, or any
+`MintCart\Commerce\*` file (confirmed via each PR's title/scope; the
+closest, `#88`'s `CheckoutTotalsService`, is a checkout-totals AJAX
+endpoint, not the cart storage class) — this was picked because it's a
+genuinely isolated, unclaimed, self-contained increment (one core file
+plus one new pure class) that couldn't collide with any file the other 39
+PRs are touching. Step 0f hot-file check: none of `system/library/cart/`,
+`system/library/mintcart/commerce/`, `docs/fixes/registry.md`, or
+`docs/upstream-diff.md` are contended by 2+ open PRs (registry.md/
+upstream-diff.md are append-only per-entry files — MC-0004 through MC-0007
+each append their own section, same pattern as this entry, so a merge
+conflict there is a trivial diff-append conflict, not a semantic one).
+
+Verified: `php -l` clean on `cart.php`, the new
+`CartGarbageCollector`, and its test.
+`tests/mintcart/commerce/cart-garbage-collector-test.php` (7 scenarios —
+deterministic boundary conditions only, since `shouldRun()` is
+probabilistic in the general case; see the registry entry for why). Full
+`tests/mintcart/**/*-test.php` suite re-run end to end (35 files, was 34)
+— all passing, no regressions. **Not verified:** no live MySQL in this
+environment (same pre-existing gap noted throughout this file) — a human
+should confirm on a real install that the cleanup query now runs on
+roughly 1 in 20 requests instead of every request (e.g. temporary
+`error_log` inside the `if`), and that abandoned carts still expire
+correctly over time. **Next step:** re-check `gh pr list --state open` for
+newly-unclaimed work before picking the next increment — this backlog is
+unusually large (39 open PRs) and many are likely ready for human
+review/merge.
 Fix Registry mechanism is established. This run added **MC-0007**:
 `upload/system/library/cache/file.php` (OpenCart's stock, default file
 cache backend) had two real concurrency bugs — `set()` truncated the
