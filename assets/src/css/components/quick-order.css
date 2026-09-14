@@ -1,0 +1,18 @@
+/**
+ * mc-quick-order-form
+ *
+ * Layout only for the Quick Order modal body (`assets/src/js/components/
+ * quick-order.js`) - the modal chrome itself is `mc-modal`
+ * (`components/modal.css`), the fields are plain `mc-field`
+ * (`components/field.css`). No new BEM component needed beyond spacing
+ * between stacked fields (MINTCART_IMPLEMENTATION_GUIDE.md §17: don't
+ * tokenize/componentize what a simple utility-shaped rule already covers).
+ *
+ * Contract: docs/developer/commerce/quick-order-service.md
+ */
+
+.mc-quick-order-form .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-3);
+}
