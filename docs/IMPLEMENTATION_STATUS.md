@@ -29,6 +29,13 @@ Phase 0 is **complete**.
       (`upload/system/library/mintcart/core/bootstrap.php`); see `docs/adr/001-mintcart-core-foundation.md`
 - [x] Service container / service registry bridge into OpenCart's existing registry —
       `MintCart\Core\Bootstrap` wraps `\Registry`, no parallel DI container
+- [~] OpenCart adapter interfaces (`MintCart\Compatibility\OpenCart3\*`) —
+      **first adapter shipped:** `ExtensionAdapter` (installed-vs-enabled
+      extension check, extracted out of `ModelMintcartReadiness`'s inline
+      `hasEnabledExtension()`) — see
+      `docs/developer/compatibility/extension-adapter.md`. Independent of
+      PR #81's `SettingsAdapter` (open at the time of this run, not yet
+      merged onto this branch) — no shared file between the two.
 - [~] OpenCart adapter interfaces (`MintCart\Compatibility\OpenCart3\*`) — first
       adapter done: `MintCart\Compatibility\OpenCart3\SettingsAdapter`
       (`upload/system/library/mintcart/compatibility/opencart3/settingsadapter.php`),
@@ -67,6 +74,14 @@ Phase 0 is **complete**.
       exit), `frontend-build` (`npm ci && npm run build`). Runs on push/PR
       against `master`.
 
+**In progress.** `ExtensionAdapter` is the first `Compatibility\OpenCart3`
+class to land (this run), with a real consumer already wired
+(`ModelMintcartReadiness`). Remaining for a future run: the other
+candidate adapters (`SettingsAdapter` — open PR #81 at the time of this
+run; `ProductAdapter`/`CategoryAdapter`/`OrderAdapter`/`CustomerAdapter`
+once something needs one, per `CLAUDE.md` §85) and a health-check surface.
+`Bootstrap::boot()` has no automatic call site yet by design (see ADR
+001) — the first real caller wires it.
 **In progress.** Remaining for a future run: `MintCart\Compatibility\OpenCart3\*`
 adapters — no consumer needs one yet; the natural first candidate
 (`SettingsAdapter` for Business Settings/Setup Wizard, per `CLAUDE.md` §85)
@@ -3785,6 +3800,33 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (this run, 2026-09-09): Phase 1's Compatibility layer has a first
+adapter — `MintCart\Compatibility\OpenCart3\ExtensionAdapter`.** At the
+time this run started there were 36 open PRs (#52–#86); a step-0 dedup
+audit found five contended files/areas (the Setup Wizard files touched by
+#52/#64/#84, `column_left.php` touched by #60/#65/#66, `category.php`/
+`search.php` touched by #62/#83, `admin/controller/catalog/product.php`
+touched by #63/#80, and `docs/developer/update/package-manifest.md`
+touched by #82/#86) and confirmed the historically-hot Homepage Builder
+files (block-type registry, `homepage_list.twig`, `block.css`) are
+untouched by all 36. `ExtensionAdapter` extracts `ModelMintcartReadiness`'s
+inline installed-vs-enabled extension check into the Compatibility layer
+Technical Plan §5 calls for, with a real existing consumer
+(`ModelMintcartReadiness` itself, wired) — see the Phase 1 section above
+and `docs/developer/compatibility/extension-adapter.md`. Touches only
+`upload/system/library/mintcart/compatibility/opencart3/extensionadapter.php`
+(new) and `upload/admin/model/mintcart/readiness.php` (unchanged
+behavior, implementation only) — neither file is touched by any of the 36
+open PRs. Verified: `php -l` clean across `upload/`+`tests/`; full
+`tests/mintcart/` suite (35 files, was 34) passing end to end, no
+regressions. **Next step:** another `Compatibility\OpenCart3` adapter once
+a real consumer needs one (`CLAUDE.md` §85 — do not add
+`ProductAdapter`/`CategoryAdapter`/`OrderAdapter`/`CustomerAdapter`
+speculatively), or re-check `gh pr list --state open` for what has
+newly merged/unclaimed — Categories drag-and-drop's live `McSortable` UI
+and Phase 12's `product_form.twig` wiring are both worth re-checking once
+PR #80 (which claims to solve the admin asset-enqueue blocker both are
+waiting on) lands.
 **Update (this run, 2026-09-08): Phase 10 (Technical Plan)'s Performance
 item has a first small increment — `product.image_width`/`image_height`
 now flow through `ProductViewProvider` into `mc-product-card`'s `<img
