@@ -246,6 +246,49 @@ class ControllerProductProduct extends Controller {
 			$data['text_minimum'] = sprintf($this->language->get('text_minimum'), $product_info['minimum']);
 			$data['text_login'] = sprintf($this->language->get('text_login'), $this->url->link('account/login', '', true), $this->url->link('account/register', '', true));
 
+			// mint_default/template/product/product.twig's own hero section
+			// (wishlist/compare/add-to-cart/tax label) reads these directly -
+			// the related-products grid further down needs the exact same
+			// strings but passes its own copy straight into
+			// ProductCardListRenderer::render() rather than $data (that
+			// array feeds ComponentRenderer, not this page template).
+			$data['text_tax'] = $this->language->get('text_tax');
+			$data['text_wishlist'] = $this->language->get('button_wishlist');
+			$data['text_compare'] = $this->language->get('button_compare');
+			$data['text_add_to_cart'] = $this->language->get('button_cart');
+			$data['text_rated'] = $this->language->get('text_rated');
+			$data['text_badge_sale'] = $this->language->get('text_badge_sale');
+			$data['text_badge_out_of_stock'] = $this->language->get('text_badge_out_of_stock');
+			$data['text_added_to_cart'] = $this->language->get('text_added_to_cart');
+			$data['text_add_to_cart_error'] = $this->language->get('text_add_to_cart_error');
+
+			// Plain field labels product/product.php's own language file
+			// already defines but this controller never assigned to $data
+			// for any theme - the same pre-existing gap
+			// docs/upstream-diff.md's search.php entry already documented
+			// for category.twig/search.twig ("silently renders several
+			// language-string variables as blank because the controller
+			// never assigns them"). mint_default/product.twig is a brand
+			// new template with no prior broken behavior to preserve, so
+			// this run supplies the missing values it needs rather than
+			// repeating the same blank-label gap in a template being
+			// written from scratch. Purely additive $data keys - the
+			// legacy default theme's own template is completely unaffected
+			// either way.
+			$data['text_manufacturer'] = $this->language->get('text_manufacturer');
+			$data['text_model'] = $this->language->get('text_model');
+			$data['text_reward'] = $this->language->get('text_reward');
+			$data['text_stock'] = $this->language->get('text_stock');
+			$data['text_points'] = $this->language->get('text_points');
+			$data['text_discount'] = $this->language->get('text_discount');
+			$data['text_option'] = $this->language->get('text_option');
+			$data['text_related'] = $this->language->get('text_related');
+			$data['text_tags'] = $this->language->get('text_tags');
+			$data['tab_description'] = $this->language->get('tab_description');
+			$data['tab_attribute'] = $this->language->get('tab_attribute');
+			$data['text_no_reviews'] = $this->language->get('text_no_reviews');
+			$data['entry_qty'] = $this->language->get('entry_qty');
+
 			$this->load->model('catalog/review');
 
 			$data['tab_review'] = sprintf($this->language->get('tab_review'), $product_info['reviews']);
@@ -395,6 +438,39 @@ class ControllerProductProduct extends Controller {
 
 			$results = $this->model_catalog_product->getProductRelated($this->request->get['product_id']);
 
+			// MintCart\Design\ProductCardListRenderer wiring
+			// (MINTCART_TECHNICAL_PLAN.md §11/§15C-D, Phase 8) for the
+			// "Related Products" list below - same gate/pattern
+			// ControllerProductCategory/ControllerProductSearch already use.
+			// The main product itself is rendered directly from $data
+			// further down (image/price/options/etc.), not through
+			// ProductViewProvider - that contract is shaped for a
+			// listing-grid card, not a full product page's richer hero
+			// section (gallery, options, discounts, attributes), and
+			// mint_default/product.twig reads $data directly the same way
+			// category.twig reads $data['thumb']/$data['description'] for
+			// the category's own hero block.
+			$mint_theme = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
+			$mint_render_product_cards = \MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme);
+
+			if ($mint_render_product_cards) {
+				$product_card_list_renderer = new \MintCart\Design\ProductCardListRenderer(
+					new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme)
+				);
+
+				$text_badge = array(
+					'sale'         => $this->language->get('text_badge_sale'),
+					'out-of-stock' => $this->language->get('text_badge_out_of_stock'),
+					'new'          => $this->language->get('text_badge_new')
+				);
+
+				// Same backorder flag ControllerProductCategory/Search
+				// already resolve before calling ProductViewProvider.
+				$allow_out_of_stock_purchase = (bool)$this->config->get('config_stock_checkout');
+
+				$data['product_cards'] = array();
+			}
+
 			foreach ($results as $result) {
 				if ($result['image']) {
 					$image = $this->model_tool_image->resize($result['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_related_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_related_height'));
@@ -428,6 +504,8 @@ class ControllerProductProduct extends Controller {
 					$rating = false;
 				}
 
+				$related_href = $this->url->link('product/product', 'product_id=' . $result['product_id']);
+
 				$data['products'][] = array(
 					'product_id'  => $result['product_id'],
 					'thumb'       => $image,
@@ -438,8 +516,58 @@ class ControllerProductProduct extends Controller {
 					'tax'         => $tax,
 					'minimum'     => $result['minimum'] > 0 ? $result['minimum'] : 1,
 					'rating'      => $rating,
-					'href'        => $this->url->link('product/product', 'product_id=' . $result['product_id'])
+					'href'        => $related_href
 				);
+
+				if ($mint_render_product_cards) {
+					$product_card = $product_card_list_renderer->render(
+						array(
+							'id'                          => $result['product_id'],
+							'name'                        => $result['name'],
+							'url'                         => $related_href,
+							'image'                       => $image,
+							'price'                       => $price,
+							'special'                     => $special,
+							'tax'                         => $tax,
+							'rating'                      => $rating,
+							'quantity'                    => $result['quantity'],
+							'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
+							'minimum'                     => $result['minimum'],
+							'manufacturer'                => isset($result['manufacturer']) ? $result['manufacturer'] : null,
+							'allow_out_of_stock_purchase' => $allow_out_of_stock_purchase
+						),
+						array(),
+						array(
+							'listing_type' => 'related',
+							'position'     => count($data['products'])
+						),
+						array(
+							'text_badge'             => $text_badge,
+							'text_wishlist'          => $this->language->get('button_wishlist'),
+							'text_compare'           => $this->language->get('button_compare'),
+							'text_rated'             => $this->language->get('text_rated'),
+							'text_tax'               => $this->language->get('text_tax'),
+							'text_add_to_cart'       => $this->language->get('button_cart'),
+							'text_quick_order'       => $this->language->get('text_quick_order'),
+							'text_added_to_cart'     => $this->language->get('text_added_to_cart'),
+							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error')
+						),
+						function (\Throwable $e, array $failed_product) {
+							// Same "log and disable for the rest of this
+							// request" degrade behavior every other
+							// ProductCardListRenderer call site uses - a
+							// broken related-product card must not fatal
+							// the whole product page.
+							(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render product-card for related product_id ' . $failed_product['id'] . ': ' . $e->getMessage());
+						}
+					);
+
+					if ($product_card !== null) {
+						$data['product_cards'][] = $product_card;
+					}
+
+					$mint_render_product_cards = $product_card_list_renderer->isEnabled();
+				}
 			}
 
 			$data['tags'] = array();
@@ -458,7 +586,7 @@ class ControllerProductProduct extends Controller {
 			$data['recurrings'] = $this->model_catalog_product->getProfiles($this->request->get['product_id']);
 
 			$this->model_catalog_product->updateViewed($this->request->get['product_id']);
-			
+
 			$data['column_left'] = $this->load->controller('common/column_left');
 			$data['column_right'] = $this->load->controller('common/column_right');
 			$data['content_top'] = $this->load->controller('common/content_top');
