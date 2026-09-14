@@ -143,8 +143,15 @@ function install($options) {
 
 function check_requirements() {
 	$error = null;
-	if (phpversion() < '7.3') {
-		$error = 'Warning: You need to use PHP7.3+ or above for OpenCart to work!';
+
+	// MintCart fix MC-0005 (docs/fixes/registry.md): this used to check
+	// for PHP 7.3+ with a naive string '<' comparison. Both are wrong -
+	// system/startup.php (required a few lines above, unconditionally,
+	// before this function is ever called) already hard-exits below PHP
+	// 8.1.0, so a 7.3+ message here was stale and unreachable. Matches
+	// startup.php's own threshold and comparison method.
+	if (version_compare(phpversion(), '8.1.0', '<') === true) {
+		$error = 'Warning: You need to use PHP 8.1+ or above for OpenCart to work!';
 	}
 
 	if (!ini_get('file_uploads')) {

@@ -14,7 +14,8 @@
     "dev:css": "npm run dev:css:index && npm run dev:css:components",
     "dev:css:index": "esbuild assets/src/css/index.css --bundle --sourcemap --outfile=assets/dist/css/index.css",
     "dev:css:components": "esbuild assets/src/css/components.css --bundle --sourcemap --outfile=assets/dist/css/components.css",
-    "test": "node tests/frontend/preset-tokens-test.js"
+    "test": "node tests/frontend/preset-tokens-test.js",
+    "release": "node scripts/release.js"
   },
   "devDependencies": {
     "esbuild": "0.28.2"
