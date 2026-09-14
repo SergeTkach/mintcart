@@ -302,6 +302,41 @@ class ModelCatalogProduct extends Model {
 		$this->cache->delete('product');
 	}
 
+	/**
+	 * Partial, single-column update for Phase 16 (Bulk Editor,
+	 * MINTCART_FUNCTIONAL_SCOPE.md §7/§17, MINTCART_TECHNICAL_PLAN.md §29,
+	 * MINTCART_IMPLEMENTATION_GUIDE.md §62). Deliberately NOT editProduct()
+	 * above - editProduct() deletes and reinserts product_description/
+	 * product_attribute/product_option/product_discount/product_special/
+	 * product_to_layout/etc. wholesale, so calling it with only a
+	 * status/quantity/price change (without also re-supplying every other
+	 * existing field and relation) would silently wipe descriptions,
+	 * options and every other relation a bulk-selected product already
+	 * has. This method only ever touches the one whitelisted oc_product
+	 * column it's given - nothing else.
+	 *
+	 * $field must be one of MintCart\Catalog\BulkProductUpdateValidator::FIELDS -
+	 * the caller (ControllerCatalogProduct::bulkUpdate()) is responsible
+	 * for validating both $field and $value before calling this; an
+	 * unrecognized $field is a defensive no-op, not an error, since this
+	 * method has no request/response of its own to report one through.
+	 */
+	public function updateProductField($product_id, $field, $value) {
+		$columns = array(
+			'status'   => "status = '" . (int)$value . "'",
+			'quantity' => "quantity = '" . (int)$value . "'",
+			'price'    => "price = '" . (float)$value . "'"
+		);
+
+		if (!isset($columns[$field])) {
+			return;
+		}
+
+		$this->db->query("UPDATE " . DB_PREFIX . "product SET " . $columns[$field] . ", date_modified = NOW() WHERE product_id = '" . (int)$product_id . "'");
+
+		$this->cache->delete('product');
+	}
+
 	public function copyProduct($product_id) {
 		$query = $this->db->query("SELECT DISTINCT * FROM " . DB_PREFIX . "product p WHERE p.product_id = '" . (int)$product_id . "'");
 

@@ -130,6 +130,46 @@ Two instance-level convenience methods sit on top of the static checker:
   skipped — an update flow should never treat "we don't know" as
   "compatible."
 
+## The `check` step — `UpdateChecker`
+
+`MintCart\Update\UpdateChecker`
+(`upload/system/library/mintcart/update/updatechecker.php`) is the second
+increment: the flow's own `check` step. Given an already-parsed
+`PackageManifest` plus the version currently installed for whatever the
+manifest is an update *for*, plus the currently installed versions of
+everything the manifest declares a `requirements` constraint on, it decides
+whether the manifest is both newer (`update_available`) and installable
+(`compatible`):
+
+```php
+$checker = new \MintCart\Update\UpdateChecker();
+
+$result = $checker->check(
+    $manifest,                                   // PackageManifest
+    \MintCart\Core\Version::VERSION,              // installed version of the thing being updated
+    ['mint_version' => \MintCart\Core\Version::VERSION, 'php_version' => PHP_VERSION]
+);
+
+// $result === [
+//     'update_available' => bool,
+//     'compatible'        => bool,
+//     'should_apply'      => bool,  // both of the above
+//     'manifest_version'  => string,
+//     'installed_version' => string,
+// ]
+```
+
+Same plain-array-contract shape as `MintCart\Onboarding\StoreReadiness::evaluate()`
+(`@return array{...}` documented on the method, no dedicated result class —
+CLAUDE.md §86, one clear method over a class hierarchy). `update_available`
+and `compatible` are deliberately independent booleans, not collapsed into
+one: a UI showing "an update exists but isn't compatible yet" needs to
+distinguish the two, not just get a single yes/no.
+
+Still has no downloader — resolving *how* to fetch a manifest for `check`
+to consume is the flow's own `download` step (see below), a later
+increment.
+
 ## The `backup` step — `BackupPlanner`
 
 `MintCart\Update\BackupPlanner`
@@ -185,8 +225,10 @@ caller resolves which paths exist and their sizes (e.g. via `file_exists()`/
 ## What's deliberately not done yet
 
 - No caller — no admin controller, no `mintcart/update/*` route, nothing
-  parses a real downloaded manifest today, and nothing calls
-  `BackupPlanner::plan()` against a live install's files.
+  fetches a real remote manifest or parses a real downloaded manifest
+  today, and nothing calls `BackupPlanner::plan()` against a live
+  install's files. `UpdateChecker` exists but nothing calls it outside its
+  own test yet.
 - No `mc_installed_file` ledger (per-file change detection via sha256,
   ADR 005 decision #1) — `BackupPlanner` only knows what a manifest
   declares, not whether an installed file was hand-edited since its last
@@ -197,6 +239,8 @@ caller resolves which paths exist and their sizes (e.g. via `file_exists()`/
   is later work, once the `files` step itself exists.
 - No download/verify/maintenance-mode/file-copy/migration-runner/
   cache-clear/health-check steps — the rest of the Technical Plan §33 flow.
+  The `health-check` step should wait for `MintCart\Core\HealthCheck`
+  (tracked separately) to land before it's wired in.
 - No package **signing** — `checksum` is carried as opaque data; nothing
   computes or verifies a hash against it yet.
 
@@ -205,12 +249,15 @@ full `upload`/`tests` tree; `tests/mintcart/update/package-manifest-test.php`
 (11 scenarios, including the semver-caret edge cases, a check that this
 class's actual `version_compare()` reliance orders `MintCart\Core\Version`'s
 real `"0.1.0-dev"` string the way the class assumes, and now `removes()`
-coverage) and the new `tests/mintcart/update/backup-planner-test.php` (7
-scenarios: empty plan, a not-yet-existing path skipped, an existing
-`files()` path backed up with its size counted, a `removes()` path backed
-up the same way, a path in both lists de-duplicated, `snapshotPath()`'s
-exact output, and `hasEnoughDiskSpace()`'s boundary). Full
-`tests/mintcart/**/*-test.php` suite re-run end to end (35 files, was 34)
-— all passing, no regressions. Pure PHP, no OpenCart dependency, so no
-live-install verification gap applies here (unlike most other increments
-in this repo) — there is nothing to run against a real install yet.
+coverage), `tests/mintcart/update/update-checker-test.php` (7 scenarios,
+including one composing `UpdateChecker` with the real
+`MintCart\Core\Version::VERSION`), and the new
+`tests/mintcart/update/backup-planner-test.php` (7 scenarios: empty plan, a
+not-yet-existing path skipped, an existing `files()` path backed up with
+its size counted, a `removes()` path backed up the same way, a path in
+both lists de-duplicated, `snapshotPath()`'s exact output, and
+`hasEnoughDiskSpace()`'s boundary). Full `tests/mintcart/**/*-test.php`
+suite re-run end to end — all passing, no regressions. Pure PHP, no
+OpenCart dependency, so no live-install verification gap applies here
+(unlike most other increments in this repo) — there is nothing to run
+against a real install yet.
