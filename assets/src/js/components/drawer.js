@@ -18,7 +18,13 @@
  * re-dispatched as bubbling `mc:drawer:shown`/`mc:drawer:hidden`
  * `CustomEvent`s so extension code only needs to know the `mc:*` event
  * contract (`MINTCART_TECHNICAL_PLAN.md` §25), not Bootstrap's internal
- * event namespace.
+ * event namespace. The same shown/hidden transition also keeps
+ * `aria-expanded` in sync on any trigger(s) that reference the drawer via
+ * `data-mc-target="#<drawer id>"` - Bootstrap's own dropdown/collapse
+ * primitives manage this for their own `data-bs-toggle` triggers, but
+ * `mc-drawer` deliberately never uses that attribute (see above), so
+ * nothing else keeps a static `aria-expanded="false"` written in markup
+ * accurate once the panel actually opens.
  *
  * Contract: docs/developer/components/drawer.md
  */
@@ -26,6 +32,16 @@
 import { Offcanvas } from 'bootstrap';
 
 const relayedDrawers = new WeakSet();
+
+function syncTriggerAriaExpanded(drawer, expanded) {
+    if (!drawer.id) {
+        return;
+    }
+
+    document
+        .querySelectorAll(`[data-mc-action="open-drawer"][data-mc-target="#${CSS.escape(drawer.id)}"]`)
+        .forEach((trigger) => trigger.setAttribute('aria-expanded', String(expanded)));
+}
 
 function relayDrawerEvents(drawer) {
     if (relayedDrawers.has(drawer)) {
@@ -35,10 +51,12 @@ function relayDrawerEvents(drawer) {
     relayedDrawers.add(drawer);
 
     drawer.addEventListener('shown.bs.offcanvas', () => {
+        syncTriggerAriaExpanded(drawer, true);
         drawer.dispatchEvent(new CustomEvent('mc:drawer:shown', { bubbles: true }));
     });
 
     drawer.addEventListener('hidden.bs.offcanvas', () => {
+        syncTriggerAriaExpanded(drawer, false);
         drawer.dispatchEvent(new CustomEvent('mc:drawer:hidden', { bubbles: true }));
     });
 }

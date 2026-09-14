@@ -7,6 +7,13 @@
         <a href="{{ add }}" data-toggle="tooltip" title="{{ button_add }}" class="btn btn-primary"><i class="fa fa-plus"></i></a>
         <button type="submit" form="form-product" formaction="{{ copy }}" data-toggle="tooltip" title="{{ button_copy }}" class="btn btn-default"><i class="fa fa-copy"></i></button>
         <button type="button" form="form-product" formaction="{{ delete }}" data-toggle="tooltip" title="{{ button_delete }}" class="btn btn-danger" onclick="confirm('{{ text_confirm }}') ? $('#form-product').submit() : false;"><i class="fa fa-trash-o"></i></button>
+        <select id="input-bulk-field" name="bulk_field" form="form-product" class="form-control" style="width: auto; display: inline-block;">
+          <option value="status">{{ text_bulk_field_status }}</option>
+          <option value="quantity">{{ text_bulk_field_quantity }}</option>
+          <option value="price">{{ text_bulk_field_price }}</option>
+        </select>
+        <input type="text" id="input-bulk-value" name="bulk_value" form="form-product" placeholder="{{ text_bulk_update }}" class="form-control" style="width: 8em; display: inline-block;" />
+        <button type="submit" form="form-product" formaction="{{ bulkupdate }}" data-toggle="tooltip" title="{{ text_bulk_update }}" class="btn btn-default" onclick="return confirm('{{ text_confirm }}');"><i class="fa fa-check-square-o"></i></button>
       </div>
       <h1>{{ heading_title }}</h1>
       <ul class="breadcrumb">

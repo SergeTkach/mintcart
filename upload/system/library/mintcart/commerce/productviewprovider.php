@@ -50,6 +50,16 @@ final class ProductViewProvider
                 'image' => $product['image'],
                 'secondary_image' => $product['secondary_image'] ?? null,
                 'image_alt' => $product['image_alt'] ?? $product['name'],
+                // Explicit pixel dimensions for the rendered <img>, so the
+                // template can set width/height and avoid a layout shift
+                // while the image loads (MINTCART_FUNCTIONAL_SCOPE.md §19
+                // Performance). Every controller already resizes to a
+                // fixed theme-configured size before this point (the same
+                // dimensions OpenCart's own model_tool_image->resize() was
+                // just called with) — this only threads that already-known
+                // value through, it never re-derives it.
+                'image_width' => $product['image_width'] ?? null,
+                'image_height' => $product['image_height'] ?? null,
                 'price' => $product['price'] ?? false,
                 'special' => $product['special'] ?? false,
                 'tax' => $product['tax'] ?? false,

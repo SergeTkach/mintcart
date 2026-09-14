@@ -60,6 +60,8 @@ those values into consistent `stock` / `badges` / `actions` fields.
 | `image` | yes | `string` | Already-resized primary thumb URL |
 | `secondary_image` | | `?string` | Already-resized second thumb URL, if any |
 | `image_alt` | | `?string` | Defaults to `name` |
+| `image_width` | | `?int` | Pixel width `image`/`secondary_image` were resized to (the same value already passed to `model_tool_image->resize()`). Defaults to `null` |
+| `image_height` | | `?int` | Pixel height, same source as `image_width`. Defaults to `null` |
 | `price` | | `string\|false` | Already currency-formatted, or `false` if hidden (customer-group price restriction) |
 | `special` | | `string\|false` | Already currency-formatted, or `false` |
 | `tax` | | `string\|false` | Already currency-formatted tax-inclusive price, or `false` |
@@ -80,6 +82,7 @@ missing or empty.
 ```text
 product
   id, name, url, image, secondary_image, image_alt
+  image_width, image_height   (nullable — see "Image dimensions" below)
   price, special, tax, rating
   stock: { in_stock: bool, label: ?string }
   badges: [ { type: 'sale'|'out-of-stock'|'new', label: ?string }, ... ]
@@ -128,6 +131,21 @@ would otherwise accept — that gap is exactly what surfaced when
 (`docs/upstream-diff.md`). `wishlist` and `compare` are always `true`: both
 are list actions available regardless of purchasability (OpenCart lets you
 wishlist/compare an out-of-stock or price-hidden item).
+
+### Image dimensions
+
+`image_width`/`image_height` are never derived by this class — every
+listing controller (Category, Search, Manufacturer, Special, the Homepage
+Products block) already resizes to a fixed, theme-configured size (e.g.
+`theme_<config_theme>_image_product_width`/`_height`) before calling
+`build()`, exactly the same value `model_tool_image->resize()` was just
+called with. This class only threads that already-known value through to
+the `product-card.twig` contract so the template can set the `<img>`'s
+`width`/`height` attributes and avoid a layout shift while the image loads
+(`MINTCART_FUNCTIONAL_SCOPE.md` §19 Performance). Both default to `null`
+for a caller that doesn't supply them (a hand-built test fixture, or a
+future consumer with no fixed resize size) — the template guards on this
+and omits the attribute entirely rather than rendering `width=""`.
 
 ### `options_summary`
 
