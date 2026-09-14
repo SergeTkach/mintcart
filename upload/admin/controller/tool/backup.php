@@ -89,7 +89,18 @@ class ControllerToolBackup extends Controller {
 					$start = true;
 				}
 
-				if ($i > 0 && (substr($line, 0, 24) == 'TRUNCATE TABLE `' . DB_PREFIX .  'user`' || substr($line, 0, 30) == 'TRUNCATE TABLE `' . DB_PREFIX . 'user_group`')) {
+				// MintCart fix MC-0004 (docs/fixes/registry.md): the length
+				// literals here used to be hardcoded (24/30), which only
+				// happened to match the default 'oc_' DB_PREFIX (3 chars).
+				// Any other prefix length made this safety check silently
+				// never match, so the loop no longer stopped before
+				// restoring over the user/user_group tables. Deriving the
+				// length from the actual needle string keeps this correct
+				// for any DB_PREFIX.
+				$user_truncate = 'TRUNCATE TABLE `' . DB_PREFIX . 'user`';
+				$user_group_truncate = 'TRUNCATE TABLE `' . DB_PREFIX . 'user_group`';
+
+				if ($i > 0 && (substr($line, 0, strlen($user_truncate)) == $user_truncate || substr($line, 0, strlen($user_group_truncate)) == $user_group_truncate)) {
 					fseek($handle, $position, SEEK_SET);
 
 					break;

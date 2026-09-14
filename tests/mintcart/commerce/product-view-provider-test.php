@@ -152,6 +152,36 @@ assertTrue(!$view['product']['stock']['in_stock'], 'backorder allowed: stock.in_
 assertTrue($view['product']['actions']['add_to_cart'], 'backorder allowed: add_to_cart is true despite quantity 0', $failures);
 assertTrue($view['product']['actions']['quick_order'], 'backorder allowed: quick_order is true despite quantity 0', $failures);
 
+// 9. image_width/image_height pass through when the caller supplies them
+// (every listing controller already resizes to a fixed theme-configured
+// size before calling this - MINTCART_FUNCTIONAL_SCOPE.md §19 Performance,
+// avoiding layout shift while the image loads).
+$view = $provider->build([
+    'id' => 7,
+    'name' => 'Product Seven',
+    'url' => '#',
+    'image' => 'x.jpg',
+    'image_width' => 228,
+    'image_height' => 228,
+]);
+
+assertSame(228, $view['product']['image_width'], 'image dimensions: image_width passes through', $failures);
+assertSame(228, $view['product']['image_height'], 'image dimensions: image_height passes through', $failures);
+
+// 10. image_width/image_height default to null when the caller omits them
+// (no theme configured yet, or a hand-built test fixture) - the template
+// guards on this and simply omits the width/height attribute rather than
+// rendering width="".
+$view = $provider->build([
+    'id' => 8,
+    'name' => 'Product Eight',
+    'url' => '#',
+    'image' => 'x.jpg',
+]);
+
+assertSame(null, $view['product']['image_width'], 'image dimensions: image_width defaults to null', $failures);
+assertSame(null, $view['product']['image_height'], 'image dimensions: image_height defaults to null', $failures);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -160,5 +190,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ProductViewProvider smoke test (' . 8 . " scenarios)\n";
+echo 'PASS: ProductViewProvider smoke test (' . 10 . " scenarios)\n";
 exit(0);
