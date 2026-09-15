@@ -960,3 +960,92 @@ confirm the reconnect against an actual socket — a human should confirm
 on a real install that a long-running MintCart operation (e.g. applying
 several pending migrations back to back with a deliberately-lowered
 `wait_timeout`) survives a mid-run disconnect instead of fataling.
+
+---
+
+## MC-0012 — `ModelSettingSetting::editSetting()` deletes then reinserts with no transaction
+
+**Problem:** `upload/admin/model/setting/setting.php`'s `editSetting($code,
+$data, $store_id)` — the single method every settings screen in OpenCart
+(every payment/shipping/total/module/report extension's own config save,
+`Settings → Store`, and now MintCart's own Setup Wizard steps) uses to
+persist a group of settings — first issues a `DELETE FROM setting WHERE
+code = '<code>'`, then loops over `$data` issuing one `INSERT` per key,
+with no transaction wrapping either step. `DB\MySQLi::query()`
+(`upload/system/library/db/mysqli.php`) throws a plain `\Exception` on any
+SQL error (a lock wait timeout, a deadlock with a concurrent request
+writing to the same table, or a dropped connection — the exact scenario
+MC-0011, `DB\MySQLi::query() never recovers from a dropped connection`,
+describes). If that throw happens partway through the `INSERT` loop, the
+`DELETE` at the top has already removed every existing row for that
+`code` group, but only some (or none) of the new rows have been
+re-inserted — the store silently loses every setting in that group except
+whichever ones happened to insert before the failure, with no rollback and
+no partial-save indication to the admin user. This is in the "installer
+edge cases" / general reliability family of
+`MINTCART_FUNCTIONAL_SCOPE.md` §18's Known Fix Research Queue, and directly
+undermines the "merge-then-save, never a bare partial write" discipline
+`docs/developer/onboarding/setup-wizard.md` already documents MintCart's
+own Wizard steps having to work around (`saveStoreStep()`/
+`saveLanguageCurrencyStep()`'s own `editSetting()` calls) — that discipline
+protects against overwriting *other* keys in the same group on a
+successful call, but nothing previously protected against this method
+losing data on a *failed* one.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1 (this
+repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale as
+every earlier registry entry (no second checkout available in this
+environment to diff against); the fix only adds transaction boundaries
+around an existing, version-agnostic delete/insert sequence.
+
+**Source:** Discovered directly in this repository while auditing
+`upload/admin/model/setting/setting.php` (117 call sites across the
+codebase, `grep -rc "editSetting("` ) as part of the "installer edge
+cases" Known Fix Research Queue family — not an imported historical
+community patch.
+
+**Reproduced on MintCart baseline:** Yes — via a standalone unit test
+against the real `ModelSettingSetting` class (loaded with OpenCart's real
+`upload/system/engine/model.php` base class, no OpenCart bootstrap
+needed), driven by an in-memory DB double that actually implements
+transaction semantics (buffers writes between `START TRANSACTION`/`COMMIT`,
+discards them on `ROLLBACK`) rather than merely recording which SQL
+strings were sent. Re-running the identical test against the unmodified
+pre-fix method confirms the exact defect: a simulated mid-loop `INSERT`
+failure leaves `getSetting('config')` returning the *new*, incomplete data
+with the previous `config_email` value gone entirely — not a rollback to
+the pre-call state (see "Tests" below).
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Wrapped the existing `DELETE` + `INSERT`-loop
+sequence in `START TRANSACTION` / `COMMIT`, with a `catch (\Throwable $e)`
+that issues `ROLLBACK` and rethrows the original exception unchanged — the
+same raw-SQL transaction pattern (OpenCart 3's `\DB\MySQLi` has no
+transaction-wrapper methods) `MintCart\Core\Migration\MigrationManager`
+and `ControllerCatalogCategory::move()`/`ModelCatalogCategory::moveCategory()`
+already established for the identical reason (`CLAUDE.md` §12 "critical
+multi-step operations should use transactions"). No change to the method's
+signature, return type, or the SQL it issues on the success path — a
+caller sees identical behavior for every request that doesn't hit a mid-loop
+failure; the only observable difference is that a failure that previously
+left settings partially deleted now leaves them exactly as they were
+before the call.
+
+**Tests:** `php -l` clean on the modified file.
+`tests/mintcart/fixes/mc-0012-setting-transaction-test.php` — 4 scenarios
+(a normal call starts with `START TRANSACTION` and ends with `COMMIT` with
+every key saved; a second, unrelated `code` group is unaffected; a
+simulated mid-loop failure rethrows the original exception, issues
+`ROLLBACK`, never commits, and — the critical assertion — leaves the
+pre-call settings fully intact rather than half-deleted; a later call
+still works normally after an earlier rollback). Verified not vacuous: the
+identical test run against the pre-fix method fails on exactly that
+critical assertion (`config_email` comes back `NULL` instead of the
+pre-call value). Full `tests/mintcart/**/*-test.php` suite re-run end to
+end (35 files, was 34) — all passing, no regressions.
