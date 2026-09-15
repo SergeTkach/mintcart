@@ -871,3 +871,92 @@ environment, and Opayo/Sage Pay recurring payments additionally require a
 live merchant account with that gateway — a human with both should confirm
 a real repeat/cron-triggered recurring charge still succeeds and that no
 deprecation notice appears in the PHP error log for this code path.
+
+---
+
+## MC-0011 — `DB\MySQLi::query()` never recovers from a dropped connection
+
+**Problem:** `system/library/db/mysqli.php`'s `query()` ran
+`$this->connection->query($sql)` once and, on any mysqli error, threw
+immediately — including errno `2006` ("MySQL server has gone away") and
+`2013` ("Lost connection to MySQL server during query"). Both of those
+specifically mean the underlying TCP connection was dropped (the
+connection sat idle past MySQL's `wait_timeout`, the server restarted,
+etc.), not that `$sql` itself is bad — the exact same query would succeed
+a moment later on a fresh connection. Squarely the Known Fix Research
+Queue's "database connection / reconnect issues" category
+(`MINTCART_FUNCTIONAL_SCOPE.md` §18). This matters most for MintCart's own
+longer-running operations that issue many queries in one request —
+`MintCart\Core\Migration\MigrationManager` applying a batch of pending
+migrations, or the Update Manager flow (`MINTCART_TECHNICAL_PLAN.md` §33)
+— where a connection sitting idle between steps (waiting on a download,
+file I/O, etc.) is exactly the scenario `wait_timeout` drops happen in.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1 (this
+repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale as
+every other Fix Registry entry so far (no second checkout available in
+this environment to diff against, and the fix only adds a narrowly-scoped
+retry path around behavior that is otherwise unchanged).
+
+**Source:** Discovered directly in this repository while working through
+`MINTCART_FUNCTIONAL_SCOPE.md` §18's remaining Known Fix Research Queue
+items — not an imported historical community patch. Reproduced by reading
+`query()`: it has exactly one `$this->connection->query($sql)` call and no
+error-classification of any kind — every `errno` value, recoverable or
+not, took the same `throw` branch.
+
+**Reproduced on MintCart baseline:** Yes — by inspection (no live MySQL
+server in this environment to force a real `wait_timeout` disconnect) and
+via `tests/mintcart/fixes/mc-0011-mysqli-reconnect-test.php`, which drives
+the exact pre-fix code path with a fake connection that returns errno
+`2006`/`2013` and confirms (against the reverted code, checked by hand)
+that it throws with no retry attempted.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Extracted the constructor's connection-setup body
+into a new `connect()` method (verbatim, no behavior change — stores
+`$hostname`/`$username`/`$password`/`$database`/`$port` as properties so
+`connect()` can be called again later), then split `query()` into a
+public entry point and a private `runQuery($sql, $allowReconnect)`. On any
+error, if `$allowReconnect` is true and `$this->connection->errno` is one
+of exactly `2006`/`2013` (`RECOVERABLE_ERRNOS`), it calls `connect()`
+again and retries the *same* `$sql` once, with `$allowReconnect = false`
+on the retry — so a connection that drops twice in a row (or a server
+that's genuinely down) still throws, matching the pre-fix behavior,
+instead of reconnecting forever. Any other errno (bad SQL, missing table,
+permission, ...) still throws immediately on the first attempt, completely
+unchanged. `connect()` is `protected` rather than `private` specifically
+so a test can override it with a fake connection — no other production
+code depends on that visibility change.
+
+**Tests:** `tests/mintcart/fixes/mc-0011-mysqli-reconnect-test.php` (new,
+5 scenarios) — a `DB\TestableMySQLi` subclass overrides the now-`protected`
+`connect()` to pop a fake, duck-typed connection object off a queue
+instead of opening a real `\MySQLi` socket (no live MySQL server in this
+environment, same as every other DB-layer test in this repo):
+1. no error → returns the result, `connect()` called exactly once
+   (constructor only), no retry;
+2. errno 2006 on the first attempt, success on the retry → returns the
+   retry's result, `connect()` called exactly twice;
+3. errno 2013 on the first attempt, success on the retry → same as #2 for
+   the other recoverable errno;
+4. errno 2006 on *both* the original attempt and the retry → throws
+   (does not reconnect a third time / loop forever), `connect()` called
+   exactly twice;
+5. a non-recoverable errno (1146, "table doesn't exist") → throws
+   immediately, `connect()` called exactly once, no reconnect attempted.
+
+`php -l` clean on the modified `mysqli.php` and the new test file. Full
+`tests/mintcart/**/*-test.php` suite re-run end to end (36 files, was 35)
+— all passing, no regressions. **Not verified:** no live MySQL server in
+this environment to force a real `wait_timeout`/restart disconnect and
+confirm the reconnect against an actual socket — a human should confirm
+on a real install that a long-running MintCart operation (e.g. applying
+several pending migrations back to back with a deliberately-lowered
+`wait_timeout`) survives a mid-run disconnect instead of fataling.

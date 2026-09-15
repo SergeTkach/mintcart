@@ -1118,6 +1118,40 @@ install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
 
 ---
 
+## `upload/system/library/db/mysqli.php`
+
+**Reason:** MC-0011 (`docs/fixes/registry.md`) — `query()` threw
+immediately on any mysqli error, including errno 2006/2013 (dropped TCP
+connection), instead of reconnecting and retrying the same query once.
+Extracted the constructor's connection setup into a `connect()` method and
+added a bounded (max one) reconnect-and-retry path for exactly those two
+errnos; every other errno still throws immediately, unretried, same as
+before.
+
+**Why it can't live in the MintCart layer instead:** `DB\MySQLi` is the
+concrete adaptor OpenCart's core `DB` class instantiates by class name
+(`system/library/db.php`'s `new $class(...)`) — there is no MintCart-owned
+seam between `DB` and the adaptor to intercept a query and retry it
+without either modifying this file or replacing OpenCart's whole DB
+bootstrap, which is a much larger and riskier change for a two-errno retry
+fix.
+
+**Compatibility impact:** Every existing success/error path is unchanged
+for every errno *except* 2006/2013, which previously threw and now
+transparently retry once before falling back to the exact same throw
+behavior if the retry also fails. No public method signature changed;
+`connect()` is a new `protected` method (extracted from the constructor,
+not exposed as a new public API) so a test can override it with a fake
+connection. Nothing in this codebase subclasses `DB\MySQLi` today, so the
+visibility change from implicit-constructor-only to a named `protected`
+method has no other effect.
+
+**Tests:** `php -l` clean. New
+`tests/mintcart/fixes/mc-0011-mysqli-reconnect-test.php` (5 scenarios) —
+see the MC-0011 registry entry for full detail. Full `tests/mintcart/`
+suite re-run end to end (36 files) — all pass, no regressions. Not
+verified against a real MySQL server (none available in this
+environment) — see the registry entry's "Not verified" note.
 ## `upload/catalog/model/extension/payment/opayo.php`
 
 **Reason:** MC-0010 (`docs/fixes/registry.md`) — `setPaymentData()` called
