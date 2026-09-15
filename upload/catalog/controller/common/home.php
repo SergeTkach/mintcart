@@ -277,6 +277,8 @@ class ControllerCommonHome extends Controller {
 					'name'                        => $result['name'],
 					'url'                         => $href,
 					'image'                       => $image,
+					'image_width'                 => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'),
+					'image_height'                => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'),
 					'price'                       => $price,
 					'special'                     => $special,
 					'tax'                         => $tax,

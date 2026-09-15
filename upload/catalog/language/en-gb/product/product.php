@@ -31,6 +31,17 @@ $_['text_semi_month']          = 'half-month';
 $_['text_month']               = 'month';
 $_['text_year']                = 'year';
 
+// MintCart mc-product-card contract (docs/developer/components/product-card.md)
+// - same keys ControllerProductCategory/Search already add to their own
+// language files for the "Related Products" product-card grid below.
+$_['text_rated']               = 'Rated %s out of 5 stars';
+$_['text_quick_order']         = 'Quick Order';
+$_['text_badge_sale']          = 'Sale';
+$_['text_badge_out_of_stock']  = 'Out of Stock';
+$_['text_badge_new']           = 'New';
+$_['text_added_to_cart']       = 'Added to cart';
+$_['text_add_to_cart_error']   = 'Could not add this product to your cart';
+
 // Entry
 $_['entry_qty']                = 'Qty';
 $_['entry_name']               = 'Your Name';
