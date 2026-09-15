@@ -32,16 +32,30 @@ final class FakeDb
     /** @var string[] */
     public array $log = [];
 
+    /**
+     * Real `\DB\MySQLi` (mysqli_report(MYSQLI_REPORT_ERROR) enabled) throws
+     * on a SELECT against a table that was never CREATEd. This double
+     * reproduces that instead of always answering — otherwise it can't
+     * catch a caller that queries `mc_migration` before ensuring it exists.
+     */
+    private bool $tableExists = false;
+
     public function query(string $sql): object
     {
         $sql = trim($sql);
         $this->log[] = preg_replace('/\s+/', ' ', $sql);
 
         if (str_starts_with($sql, 'CREATE TABLE')) {
+            $this->tableExists = true;
+
             return $this->result([]);
         }
 
         if (str_starts_with($sql, 'SELECT `migration`')) {
+            if (!$this->tableExists) {
+                throw new \RuntimeException("Table 'oc_mc_migration' doesn't exist");
+            }
+
             $rows = array_map(fn ($m) => ['migration' => $m], $this->rowsMigration);
 
             return $this->result($rows);
@@ -100,6 +114,17 @@ try {
     write_fixture_migration($tmpDir . '/202601020000_create_other.php', '$db->query("CREATE TABLE IF NOT EXISTS mc_other (id INT)");');
     // Should be ignored: does not match the naming convention.
     file_put_contents($tmpDir . '/not-a-migration.php', "<?php\nreturn null;\n");
+
+    // A caller other than run() (e.g. MintCart\Core\HealthCheck's pending-
+    // migrations signal, via ModelMintcartHealth) may ask before any
+    // migration has ever been run — the tracking table doesn't exist yet.
+    // Must not throw, and must report every discovered migration as pending.
+    // Uses its own DB double so it doesn't affect the "tracking table
+    // created once per run()" count checked further down.
+    $freshDb = new FakeDb();
+    $freshManager = new MigrationManager($freshDb, 'oc_', $tmpDir);
+    check($freshManager->applied() === [], 'applied() before any run() must return empty, not throw, when the tracking table does not exist yet');
+    check($freshManager->pending() === ['202601010000_create_thing.php', '202601020000_create_other.php'], 'pending() before any run() must list every discovered migration');
 
     $db = new FakeDb();
     $manager = new MigrationManager($db, 'oc_', $tmpDir);

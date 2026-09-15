@@ -102,11 +102,24 @@ class ControllerCommonFooter extends Controller {
 				'address' => $this->config->get('config_address') ?: null
 			);
 
+			// Social profile links have no standard OpenCart storage to reuse
+			// (FooterViewProvider's own doc-comment already notes this), so
+			// the Setup Wizard's Contacts step (Phase 13) writes them under a
+			// dedicated 'mintcart_contacts' setting code, already in the
+			// exact {network, href} shape build()'s $social parameter
+			// expects - no reshaping needed here. Empty on a store that
+			// hasn't been through that step yet, same as before this change.
+			$this->load->model('setting/setting');
+			$mint_contacts_setting = $this->model_setting_setting->getSetting('mintcart_contacts');
+			$social = isset($mint_contacts_setting['mintcart_contacts_social']) && is_array($mint_contacts_setting['mintcart_contacts_social'])
+				? $mint_contacts_setting['mintcart_contacts_social']
+				: array();
+
 			try {
 				$footer_view_provider = new \MintCart\Design\FooterViewProvider();
 				$component_renderer = new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme);
 
-				$footer_view = $footer_view_provider->build($columns, $contacts, array(), array(), null, $data['powered']);
+				$footer_view = $footer_view_provider->build($columns, $contacts, $social, array(), null, $data['powered']);
 
 				$data['mc_footer'] = $component_renderer->render('footer', $footer_view + array(
 					'text_contact_us'        => $this->language->get('text_contact_us'),
