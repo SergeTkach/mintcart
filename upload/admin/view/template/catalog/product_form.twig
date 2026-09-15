@@ -377,6 +377,36 @@
                 <label class="col-sm-2 control-label" for="input-manufacturer"><span data-toggle="tooltip" title="{{ help_manufacturer }}">{{ entry_manufacturer }}</span></label>
                 <div class="col-sm-10">
                   <input type="text" name="manufacturer" value="{{ manufacturer }}" placeholder="{{ entry_manufacturer }}" id="input-manufacturer" class="form-control"/> <input type="hidden" name="manufacturer_id" value="{{ manufacturer_id }}"/>
+                  {#
+                    MintCart Phase 12 (Entity Picker) - a searchable,
+                    paginated, single-select browser as an additional way
+                    to choose a manufacturer, alongside the jQuery
+                    autocomplete input above (kept as-is, not replaced -
+                    this environment has no live MySQL/admin session to
+                    visually verify a full swap; see
+                    docs/developer/admin/asset-enqueue.md). Confirming a
+                    selection just overwrites the same
+                    #input-manufacturer/manufacturer_id fields the
+                    autocomplete's own 'select' handler below already
+                    writes to, so ControllerCatalogProduct's save logic
+                    needs no change at all.
+                  #}
+                  <button type="button" class="mc-button mc-button--secondary" id="button-manufacturer-picker" style="margin-top: 8px;">
+                    <i class="fa fa-search"></i> {{ text_manufacturer_picker_browse }}
+                  </button>
+                  <div class="mc-entity-picker" id="manufacturer-picker" hidden style="margin-top: 8px;">
+                    <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_manufacturer_picker_search }}" placeholder="{{ text_manufacturer_picker_search }}">
+                    <ul class="mc-entity-picker__list" role="listbox" aria-label="{{ entry_manufacturer }}" data-mc-entity-picker-list></ul>
+                    <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_manufacturer_picker_empty }}</p>
+                    <div class="mc-entity-picker__pager">
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_manufacturer_picker_prev }}</button>
+                      <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_manufacturer_picker_next }}</button>
+                    </div>
+                    <div class="mc-entity-picker__footer">
+                      <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_manufacturer_picker_confirm }}</button>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="form-group">
@@ -1277,6 +1307,62 @@
 			  selected.forEach(function (item) {
 				  addCategoryToWell(item.id, item.name);
 			  });
+
+			  picker.clear();
+			  pickerRoot.hidden = true;
+		  }
+	  });
+
+	  browseButton.addEventListener('click', function () {
+		  var opening = pickerRoot.hidden;
+
+		  pickerRoot.hidden = !pickerRoot.hidden;
+
+		  if (opening) {
+			  picker.refresh();
+		  }
+	  });
+  })();
+
+  // MintCart Phase 12 (Entity Picker) - Manufacturer field's McEntityPicker,
+  // the single-select sibling of the Category field's picker above (plain
+  // vanilla JS, not jQuery, per CLAUDE.md §7). Overwrites the exact same
+  // #input-manufacturer/manufacturer_id fields the autocomplete's own
+  // 'select' handler above already writes to, so ControllerCatalogProduct's
+  // save logic needs no change at all - see the {# ... #} comment above the
+  // picker's markup.
+  (function () {
+	  var browseButton = document.getElementById('button-manufacturer-picker');
+	  var pickerRoot = document.getElementById('manufacturer-picker');
+	  var nameInput = document.getElementById('input-manufacturer');
+	  var idInput = document.querySelector('input[name=\'manufacturer_id\']');
+
+	  if (!browseButton || !pickerRoot || !nameInput || !idInput || !window.MintCart || !window.MintCart.createEntityPicker) {
+		  return;
+	  }
+
+	  var picker = window.MintCart.createEntityPicker(pickerRoot, {
+		  fetchItems: function (options) {
+			  var params = new URLSearchParams({
+				  filter_name: options.query,
+				  page: options.page,
+				  limit: options.pageSize
+			  });
+
+			  return fetch('index.php?route=mintcart/entity/manufacturer&user_token={{ user_token }}&' + params, {
+				  signal: options.signal
+			  }).then(function (response) {
+				  return response.json();
+			  });
+		  },
+		  multiple: false,
+		  onConfirm: function (selected) {
+			  var item = selected[0];
+
+			  if (item) {
+				  nameInput.value = item.name;
+				  idInput.value = item.id;
+			  }
 
 			  picker.clear();
 			  pickerRoot.hidden = true;
