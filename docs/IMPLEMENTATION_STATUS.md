@@ -2641,6 +2641,56 @@ In progress.
 
 ## Phase 16 — Bulk Editor
 
+- [x] Bulk field-change validation + resumable batch chunking (pure, no DB) —
+      see below
+- [ ] Inline edit + multi-select bulk actions for Products (status, quantity, price,
+      special, manufacturer, category, stock, SEO fields) — planner ships
+      status/quantity/price/special_price/manufacturer_id/stock_status_id/
+      category_ids; SEO fields deliberately excluded (see below); no admin
+      UI yet
+- [ ] Chunked/resumable AJAX batch jobs (no background daemon) — the
+      resumable stepping primitive (`nextBatch()`) exists; the actual AJAX
+      endpoint and DB-write loop calling it do not
+
+**`MintCart\Catalog\BulkProductUpdatePlanner`** (pure, no OpenCart
+dependency) validates a bulk product-field-change request (which products,
+which field values) and splits it into resumable batches via `nextBatch()`,
+following the same "primitive first" pattern `CategoryMoveValidator`/
+`PackageManifest`/`WizardProgress` already established. Full writeup:
+`docs/developer/catalog/bulk-product-update.md`.
+
+No apply step yet, by design: `ModelCatalogProduct::editProduct()` is a
+full-replace write (deletes/reinserts descriptions, attributes, options,
+images, categories, etc. on every call), so correctly applying a partial
+bulk edit needs a per-product load-existing-data-then-merge-then-write loop
+that doesn't exist yet — real, separate follow-up work once this validation
+contract exists to build it against. SEO fields are excluded from the
+bulk-editable field set entirely (not just unimplemented) — `seo_url`
+uniqueness is enforced per store/language against the whole table, a
+different shape than the scalar fields this planner handles, and a real
+collision risk across a multi-product batch; see the doc's "SEO fields
+excluded" section.
+
+Verified: `php -l` clean; new
+`tests/mintcart/catalog/bulk-product-update-planner-test.php` (10
+scenarios — empty product list, empty field list, unknown field name,
+valid status update with ID dedup/normalization, multiple invalid field
+values reported independently, nullable `special_price`, `category_ids`
+validation, chunk splitting, and three `nextBatch()` steps plus one
+past-the-end call); full `tests/mintcart/` suite re-run end to end (35
+files, was 34) — all pass, no regressions. Same pre-existing gap as every
+earlier phase: no MySQL server in this environment, so the (not yet built)
+apply step will need manual verification on a real install once it exists.
+
+**Next step:** the load-merge-`editProduct()` apply loop plus a new admin
+controller route (e.g. `catalog/product.bulk`) and permission check,
+following `CLAUDE.md` §8A's controller-orchestrates-service-does-the-work
+split — or the admin UI (multi-select checkboxes + bulk-edit form/drawer),
+which like `McSortable`/`McEntityPicker` wiring elsewhere in this file is
+blocked on the still-unsolved admin asset-enqueue problem for anything
+beyond a plain HTML form.
+
+In progress.
 - [~] Multi-select bulk actions for Products (status, quantity, price,
       special, manufacturer, category, stock, SEO fields) — **status,
       quantity and price are done this run**, see below; the remaining
@@ -4397,6 +4447,18 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (this run, 2026-09-11): Phase 16 (Bulk Editor) has a first
+increment — `MintCart\Catalog\BulkProductUpdatePlanner`.** At the time
+this run started there were 50 open PRs; none targeted Phase 16, so it was
+genuinely unclaimed (see the Phase 16 section above and
+`docs/developer/catalog/bulk-product-update.md` for the full writeup).
+This run also found `origin/master` already carrying the Phase 11 Update
+Manager `PackageManifest` commit from a prior run's direct push (not
+merged via any of the 50 open PRs) — noted here in case it looks like an
+unexplained jump to whoever reviews next. **Next step:** the
+load-merge-`editProduct()` apply loop + admin route for Bulk Editor (see
+Phase 16 above), or re-check the open PR list before picking the next
+phase, since 50 PRs is a large backlog to reconcile.
 **Update (this run, 2026-09-11): Phase 1's `CategoryAdapter` shipped, wired
 into `ControllerCatalogCategory::move()`.** See the Phase 1 section above
 for the full writeup. At the time of this run there were 54 open PRs
