@@ -856,3 +856,34 @@ confirm:
    Delivery only, Payments only, all three, none) and confirm each link
    shows/hides correctly and the group itself disappears entirely when
    all three are denied.
+
+## Phase 18 — `MintCart\Seo\MetaBuilder` live wiring (MC-0015), never exercised end to end
+
+`category.php`/`home.php` are `php -l` clean and `MetaBuilder` itself is
+unit-tested in isolation, but no live MySQL/Twig session in this
+environment means neither controller's rendered `<title>`/meta tags were
+ever actually inspected. On a real install:
+
+1. Create a category and leave its "Meta Tag Title" and "Meta Tag
+   Description" fields blank on the Data tab. Visit that category page
+   and view source: confirm `<title>{category name} - {store name}</title>`
+   (or however the theme's title template composes it) — i.e. the
+   category's own name appears in the title, not an empty string — and
+   that `<meta name="description" content="...">` is present (may be
+   empty if the theme still emits the tag with no content, which is
+   unchanged/expected).
+2. Edit that same category and fill in a real "Meta Tag Title"/
+   "Meta Tag Description". Reload the page and confirm those exact values
+   now appear instead of the category name fallback — the fallback must
+   only apply when the field is genuinely blank.
+3. On a fresh install (or after clearing Settings → Store's "Meta Tag
+   Title"/"Meta Tag Description" fields), visit the homepage and view
+   source: confirm `<title>` contains the store name
+   (Settings → Store's "Store Name") instead of being empty.
+4. Fill in Settings → Store's meta fields, reload the homepage, and
+   confirm those values now appear instead of the store-name fallback.
+5. Confirm `product/product.php`'s product detail pages are **unaffected**
+   by this change (still whatever behavior they had before — this
+   increment deliberately did not touch `product.php`, see
+   `docs/developer/seo/meta-builder.md`'s "What's deliberately not done
+   yet").

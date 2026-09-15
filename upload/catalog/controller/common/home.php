@@ -3,8 +3,23 @@ class ControllerCommonHome extends Controller {
 	public function index() {
 		$this->load->language('common/home');
 
-		$this->document->setTitle($this->config->get('config_meta_title'));
-		$this->document->setDescription($this->config->get('config_meta_description'));
+		// MintCart\Seo\MetaBuilder (MINTCART_FUNCTIONAL_SCOPE.md §16, Phase
+		// 18): config_meta_title/config_meta_description are blank on a
+		// fresh install until a merchant fills them in under Settings, so
+		// without a fallback the homepage ships an empty <title> from
+		// day one - the store name (config_name, already set by Setup
+		// Wizard's Store step) is a sensible fallback title. No fallback
+		// description exists (there is no second, shorter store-level
+		// description field in stock OpenCart), so the description simply
+		// stays '' when config_meta_description is blank, same as today.
+		$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+			$this->config->get('config_meta_title'),
+			$this->config->get('config_meta_description'),
+			$this->config->get('config_name')
+		);
+
+		$this->document->setTitle($mint_meta['title']);
+		$this->document->setDescription($mint_meta['description']);
 		$this->document->setKeywords($this->config->get('config_meta_keyword'));
 
 		if (isset($this->request->get['route'])) {

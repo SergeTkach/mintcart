@@ -81,16 +81,47 @@ $this->document->setTitle($meta['title']);
 $this->document->setDescription($meta['description']);
 ```
 
+## Live wiring
+
+`category.php` and `home.php` now call this class (see
+`docs/upstream-diff.md`'s entries for both files for the full writeup):
+
+```php
+// catalog/controller/product/category.php, inside the success branch
+$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+    $category_info['meta_title'],
+    $category_info['meta_description'],
+    $category_info['name']
+);
+
+$this->document->setTitle($mint_meta['title']);
+$this->document->setDescription($mint_meta['description']);
+```
+
+```php
+// catalog/controller/common/home.php, top of index()
+$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+    $this->config->get('config_meta_title'),
+    $this->config->get('config_meta_description'),
+    $this->config->get('config_name')
+);
+
+$this->document->setTitle($mint_meta['title']);
+$this->document->setDescription($mint_meta['description']);
+```
+
+`product.php`'s equivalent pass-through is still unwired — a genuinely
+separate follow-up (see "What's deliberately not done yet" below).
+
 ## What's deliberately not done yet
 
-- **No controller wiring.** None of `category.php`/`product.php`/
-  `home.php` call this class yet — each still has its own direct
-  pass-through, unchanged and un-behavior-affected by this increment.
-  Swapping the three call sites for calls into this class is a genuinely
-  separate, mechanical follow-up (replace, don't redesign) once this
-  primitive itself has been reviewed — same reasoning
-  `MintCart\Seo\CanonicalUrlBuilder` already documented for its own four
-  controller call sites.
+- **No `product.php` wiring.** `product/product.php`'s own
+  `$this->document->setTitle($product_info['meta_title']);` pass-through
+  is unchanged — left out of this increment since, at the time it shipped,
+  `product.php` was already touched by another open PR (Diagnostics
+  wiring into its related-products render path); picking a different,
+  unclaimed file kept this increment collision-free. A future run should
+  wire it the same mechanical way once that's no longer a concern.
 - **No length truncation/HTML stripping.** `meta_title`/
   `meta_description` are already plain-text admin fields in stock
   OpenCart (distinct from a product's full HTML `description`), so there
@@ -98,14 +129,11 @@ $this->document->setDescription($meta['description']);
   site does one today and it isn't needed to fix the blank-value bug this
   class targets — CLAUDE.md §17 ("don't create abstractions... for
   hypothetical future use").
-- **No Fix Registry entry yet.** This is filed as a new SEO Core
-  capability (Functional Scope §16), matching every sibling `MintCart\Seo\*`
-  builder's own framing. Once a future increment actually wires a
-  controller to use it, that wiring increment is the natural point to
-  also add a `docs/fixes/registry.md` entry for the blank-title/
-  description defect itself (`CLAUDE.md` §13's five-step Fixes Policy —
-  reproduce, check upstream, implement, test — applies to the *wiring*
-  increment, not to this pure primitive).
+- **Fix Registry entry:** `docs/fixes/registry.md` MC-0015 documents the
+  `category.php`/`home.php` blank-title/description defect this wiring
+  fixes, per `CLAUDE.md` §13's five-step Fixes Policy (the Policy applies
+  to the *wiring* increment, not to this pure primitive, which predates
+  the entry).
 
 ## Relationship to other SEO Core pieces
 
@@ -129,3 +157,12 @@ result is always a string, never null. Pure PHP, no OpenCart dependency
 and `CanonicalUrlBuilder`) since no controller calls this class yet. Full
 `tests/mintcart/` suite re-run end to end (35 files, was 34) — all passing,
 no regressions (pure addition, no existing file modified).
+
+**Update (live wiring, MC-0015):** `php -l` clean on both modified
+controllers. No new test file needed — this class's own existing
+scenarios 5/7 already cover the exact shapes now flowing through
+`category.php`/`home.php`. Full `tests/mintcart/` suite (77 files) re-run
+end to end — all passing, no regressions. Not verified: no live
+MySQL/Twig session in this environment — see `docs/fixes/registry.md`
+MC-0015 and `docs/MANUAL_VERIFICATION.md`'s Phase 18 section for the
+manual steps a human should run against a real install.

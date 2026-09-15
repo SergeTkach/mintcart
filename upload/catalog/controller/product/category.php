@@ -90,8 +90,21 @@ class ControllerProductCategory extends Controller {
 		$category_info = $this->model_catalog_category->getCategory($category_id);
 
 		if ($category_info) {
-			$this->document->setTitle($category_info['meta_title']);
-			$this->document->setDescription($category_info['meta_description']);
+			// MintCart\Seo\MetaBuilder (MINTCART_FUNCTIONAL_SCOPE.md §16,
+			// Phase 18): a category left without its own "Meta Tag Title"/
+			// "Meta Tag Description" admin field falls back to the
+			// category's own name rather than shipping an empty <title>.
+			// Pure string logic, cannot throw - no try/catch needed, same
+			// as every other Diagnostics/CanonicalUrlBuilder-shaped pure
+			// value object wired into this controller.
+			$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+				$category_info['meta_title'],
+				$category_info['meta_description'],
+				$category_info['name']
+			);
+
+			$this->document->setTitle($mint_meta['title']);
+			$this->document->setDescription($mint_meta['description']);
 			$this->document->setKeywords($category_info['meta_keyword']);
 
 			$data['heading_title'] = $category_info['name'];
