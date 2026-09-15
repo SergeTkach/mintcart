@@ -172,6 +172,49 @@ Full design rationale: `docs/developer/seo/schema-org.md`. **Tests:**
 scenarios) covers `breadcrumbList()` directly; full `tests/mintcart/` suite
 re-run end to end — all passing, no regressions.
 
+**Update (this run — Phase 10 (Technical Plan), Diagnostics):** constructs
+a `MintCart\Core\Diagnostics` instance right after `$mint_theme`/
+`$mint_render_product_cards` are resolved, gated by a new
+`mintcart_dev_mode` setting (`(bool)$this->config->get('mintcart_dev_mode')`
+— standard OpenCart settings storage, no new Mint table, off by default
+since an unset setting reads as falsy). Passes it as `ComponentRenderer`'s
+new optional 4th constructor argument when the Mint pipeline runs, and
+right before rendering the view, appends `$diagnostics->summary()` as an
+HTML comment to the response body when (and only when) dev mode is
+enabled. See `docs/developer/theme-api/component-renderer.md`'s
+"`$diagnostics` (Phase 10)" section and `docs/developer/core/diagnostics.md`
+for the full design rationale.
+
+**Why it can't live in the MintCart layer instead:** something still has
+to decide when a given request is in dev mode and construct/thread the
+`Diagnostics` instance through the request — `Diagnostics` itself
+deliberately has no `\Registry`/`\Config` dependency so it stays unit-
+testable in isolation (same rationale as `ProductViewProvider`/
+`ComponentRenderer`). A controller is the natural (and, for this first
+increment, the only) place that already knows both `config_theme` and
+whether to run the Mint pipeline at all.
+
+**Compatibility impact:** None when `mintcart_dev_mode` is unset (the
+default) — `Diagnostics(false)` makes every `mark()`/`increment()`/`time()`
+call a no-op per its own contract, `ComponentRenderer::render()`'s Twig
+call still runs exactly as before, and no HTML comment is appended. When
+explicitly enabled, the only visible change is the appended HTML comment
+— `$data`/the rendered template are never touched, so no theme override
+can accidentally surface diagnostics in visible markup (Functional Scope
+§19 "Production UI не повинен показувати sensitive debug data").
+
+**Tests:** `php -l` clean. `tests/mintcart/design/component-renderer-test.php`
+gained three new scenarios (14-16, 16 total) covering: an intentionally-
+empty override never touches `Diagnostics` bookkeeping; a thrown
+resolution error never touches it either; and passing no `Diagnostics`
+(the default) leaves existing behavior byte-for-byte unaffected — none of
+which require `vendor/twig/twig` (same pre-existing gap noted throughout
+this file), since all three exercise paths that never reach
+`new \Template('Twig')`. The happy-path Twig render with `Diagnostics`
+attached is, like every other `ComponentRenderer::render()` call, not
+exercised end-to-end in this environment. Full `tests/mintcart/` suite
+(65 files) re-run end to end — all passing, no regressions.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/category.php`

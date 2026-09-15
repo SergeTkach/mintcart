@@ -3133,13 +3133,37 @@ this phase (diagnostics, measured performance work) is not started.
       accumulated per-bucket timings (`time()`/`duration()`), summarized via
       `summary()`. A cheap no-op when disabled — `time()` still always runs the
       wrapped work and returns its result either way, only the measurement
-      itself is skipped. Deliberately does **not** attempt real query counting
-      (would mean hooking OpenCart's `\DB\MySQLi`, a real upstream-diff
-      decision — `CLAUDE.md` §10/§75) or real render-time wiring around
-      `ComponentRenderer`, and has no "dev mode" setting or visible surface
-      (admin toolbar/JSON endpoint) yet — see the doc's "Next step" for what a
-      future run should decide/build once a real consumer is ready
-      (`CLAUDE.md` §85).
+      itself is skipped. **Update (this run, routine): real render-time
+      measurement + a dev-mode setting + a visible surface are now wired.**
+      `MintCart\Design\ComponentRenderer::render()` gained an optional 4th
+      constructor argument, `?Diagnostics $diagnostics = null` — the one
+      method every component render (product-card, blocks, header, footer)
+      already passes through regardless of caller, so instrumenting it there
+      covers every current and future consumer at once, with `null` (the
+      default) leaving every existing call site byte-for-byte unaffected.
+      `ControllerProductCategory` (`upload/catalog/controller/product/category.php`)
+      is the first real consumer: constructs `Diagnostics` gated by a new
+      `mintcart_dev_mode` setting (standard OpenCart settings storage, no new
+      Mint table), passes it into `ComponentRenderer`, and — only when
+      enabled — appends `$diagnostics->summary()` as an HTML comment to the
+      response body (Functional Scope §19's "Production UI не повинен
+      показувати sensitive debug data": never written into `$data`/the
+      template itself, so no theme override can surface it). Still **not**
+      built: real DB query counting (still a real upstream-diff decision per
+      `CLAUDE.md` §10/§75 — hooking `\DB\MySQLi` without duplicating
+      OpenCart's own DB class), an admin UI toggle for `mintcart_dev_mode`
+      (today it can only be set directly in `oc_setting`), and wiring the
+      same pattern into Search/Manufacturer/Special (each still builds its
+      own bare `ComponentRenderer`). Full writeup:
+      `docs/developer/core/diagnostics.md`,
+      `docs/developer/theme-api/component-renderer.md`'s new "`$diagnostics`
+      (Phase 10)" section, and `docs/upstream-diff.md`'s `category.php` entry.
+      Tests: `tests/mintcart/design/component-renderer-test.php` gained 3
+      scenarios (14-16, 16 total) covering the no-Diagnostics-touched-on-
+      empty-override and thrown-resolution-error paths and the
+      no-Diagnostics-passed default, none needing `vendor/twig/twig` (same
+      pre-existing gap as every other `ComponentRenderer::render()` call);
+      full `tests/mintcart/` suite (65 files) re-run end to end, all passing.
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
@@ -4459,3 +4483,95 @@ exists (a separate, larger increment — Phase 6/8 never wired the product
 detail page itself); hreflang/robots controls; System route URL aliases
 (`MINTCART_FUNCTIONAL_SCOPE.md` §4); or re-check `gh pr list --state open`
 for what's newly unclaimed.
+
+---
+
+**Update (2026-09-15, routine run): Phase 10 (Technical Plan) Diagnostics —
+real render-time measurement wired for the first time.** Step 0 dedup check
+against all 14 open PRs at the time (`#95`-`#108`): `#108` (Catalog
+`BulkProductUpdatePlanner`), `#107` (`CategoryAdapter`), `#106`
+(`CustomerAdapter`), `#105` (MC-0014 Klarna `utf8_encode`/`utf8_decode`
+fix), `#104` (ADR 008 Theme Live Preview), `#103` (`docs/user/install.md`+
+`setup-wizard.md`), `#102` (`PackageVerifier`), `#101` (MC-0013 SMTP HELO
+fix), `#100` (`MetaBuilder`), `#99` (MC-0012 setting-transaction fix),
+`#98` (MC-0011 MySQLi reconnect fix), `#97` (MC-0010 opayo `strftime()`
+fix), `#96` (Media UX backend), `#95` (ADR 007 Modern Editor) — verified via
+each PR's own file list (`gh pr view <n> --json files`), none touch
+`upload/system/library/mintcart/design/componentrenderer.php`,
+`upload/system/library/mintcart/core/diagnostics.php`, or
+`upload/catalog/controller/product/category.php`. All five open Known-Fix
+IDs (MC-0010 through MC-0014) confirmed against `docs/fixes/registry.md`
+before ruling out a sixth fix-registry candidate this run (the next free ID
+is MC-0015, reserved for a future run — this run's own scope stayed inside
+Diagnostics instead of adding a fix). A search for further PHP 8.x-deprecated
+patterns (`utf8_encode`/`utf8_decode`, `create_function`) beyond what
+`#105`/`#97` already claim found nothing else in `upload/` — that Known
+Fix Research Queue avenue is exhausted for now.
+
+Picked `docs/developer/core/diagnostics.md`'s own long-standing "Next step"
+list instead: `MintCart\Core\Diagnostics` (shipped several runs ago as a
+pure, consumer-less collector, `CLAUDE.md` §85) finally has a real
+consumer. `MintCart\Design\ComponentRenderer::render()` gained an optional
+4th constructor argument, `?Diagnostics $diagnostics = null` — deliberately
+the one method every component render (product-card, blocks, header,
+footer, any `$kind`) already passes through regardless of caller, so
+instrumenting there covers every current and future consumer without
+touching each individual call site, and `null` (the default) leaves every
+existing 2-/3-argument call site byte-for-byte unaffected. The
+"intentionally-empty-override" and "component missing everywhere" paths
+both short-circuit before ever touching `Diagnostics` — an empty override
+or a thrown resolution error is not a real render, so it must not pollute
+the `component_render` counter/duration.
+
+`ControllerProductCategory` (`upload/catalog/controller/product/category.php`)
+is the first real caller: constructs `Diagnostics` gated by a new
+`mintcart_dev_mode` setting (`(bool)$this->config->get('mintcart_dev_mode')`
+— standard OpenCart settings storage per `CLAUDE.md` §6, no new Mint
+table, off by default since an unset setting reads falsy), passes it into
+`ComponentRenderer`, and — only when enabled — appends
+`$diagnostics->summary()` as an HTML comment to the response body
+(Functional Scope §19 "Production UI не повинен показувати sensitive debug
+data": never written into `$data`/the template itself, so no theme
+override can surface it in visible markup).
+
+Full writeup: the Phase 10 (Technical Plan) section above (Diagnostics
+checklist item, now `[~]`), `docs/developer/core/diagnostics.md` (updated
+DoD checklist and "Next step"), `docs/developer/theme-api/component-renderer.md`'s
+new "`$diagnostics` (Phase 10)" section, and `docs/upstream-diff.md`'s
+`category.php` entry (new "Update (this run — Phase 10 (Technical Plan),
+Diagnostics)" block).
+
+Still **not** built, same honesty this file's earlier Diagnostics entries
+already carried: real DB query counting (still a real upstream-diff
+decision per `CLAUDE.md` §10/§75 — how to hook `\DB\MySQLi` without
+duplicating OpenCart's own DB class), an admin UI toggle for
+`mintcart_dev_mode` (today it can only be set directly in `oc_setting`),
+and wiring the same `Diagnostics` pattern into
+Search/Manufacturer/Special (each still constructs a bare
+`ComponentRenderer` with no `Diagnostics` — a natural, low-risk follow-up
+now that the pattern exists once).
+
+**Verified:** `php -l` clean on all three touched files
+(`componentrenderer.php`, `category.php`,
+`component-renderer-test.php`). `tests/mintcart/design/component-renderer-test.php`
+gained 3 new scenarios (14-16, 16 total, up from 13) covering the
+no-Diagnostics-touched-on-empty-override path, the
+no-Diagnostics-touched-on-thrown-resolution-error path, and the
+no-Diagnostics-passed default leaving behavior unaffected — none require
+`vendor/twig/twig` (same pre-existing gap noted throughout this file for
+every other `ComponentRenderer::render()` call; the happy-path Twig render
+with `Diagnostics` attached remains, like every other `render()` call,
+unexercised end-to-end in this environment). Full `tests/mintcart/` suite
+(65 files) re-run end to end after the change — all passing, no
+regressions.
+
+**Next candidates:** wire the same `Diagnostics`-through-`ComponentRenderer`
+pattern into `ControllerProductSearch`/`ControllerProductManufacturer`/
+`ControllerProductSpecial` (each still builds a bare `ComponentRenderer`);
+decide the real-DB-query-counting upstream-diff question
+(`\DB\MySQLi` wrapper vs. per-call-site instrumentation) now that a real
+consumer exists to justify making it; MC-0015 (the next free Fix Registry
+ID) once a genuinely new, unclaimed historical-bug candidate turns up; or
+re-check `gh pr list --state open` first, since this backlog moves fast —
+14 open PRs at the time of this run, several already flagged in past
+entries as ready for human merge review.

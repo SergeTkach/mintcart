@@ -11,12 +11,26 @@ PHP: `upload/system/library/mintcart/core/diagnostics.php`
 Test: `tests/mintcart/core/diagnostics-test.php`
 (`php tests/mintcart/core/diagnostics-test.php`, 10 scenarios)
 
-**Consumer: none yet.** This ships a tested, documented collector with no
-live wiring into any real OpenCart controller/model/template — same "ship
-a tested contract before its consumer" precedent already set in this
-codebase (`CLAUDE.md` §85), e.g. `MintCart\Seo\HreflangBuilder` before a
-language-URL resolver existed, or `MintCart\Onboarding\StoreReadiness`
-before its own JSON endpoint was wired.
+**First real consumer (this run): `ControllerProductCategory` +
+`MintCart\Design\ComponentRenderer`.** `ComponentRenderer::render()` now
+accepts an optional 4th constructor argument, `?Diagnostics $diagnostics
+= null` — see `docs/developer/theme-api/component-renderer.md`'s own
+"`$diagnostics` (Phase 10)" section for the full wiring detail. This is
+the real render-time-measurement decision this file previously deferred:
+`render()` is the one method every component render (product-card,
+blocks, header, footer, ...) already passes through, so instrumenting it
+there covers every current and future consumer without touching each
+individual call site. `ControllerProductCategory` constructs a
+`Diagnostics($enabled)` gated by a new `mintcart_dev_mode` setting (read
+via `$this->config->get()`, standard OpenCart settings storage, no new
+Mint table), passes it into `ComponentRenderer`, and — only when
+enabled — appends `$diagnostics->summary()` as an HTML comment to the
+response body. Still **not** built: real DB query counting (see the DoD
+checklist below), an admin UI to toggle `mintcart_dev_mode` (today it can
+only be set directly in `oc_setting`), and wiring the same pattern into
+Search/Manufacturer/Special (each still builds its own `ComponentRenderer`
+without a `Diagnostics` — same shape as `ControllerProductCategory`'s
+pre-Phase-10 state, a natural next increment).
 
 ## Design
 
@@ -96,13 +110,17 @@ order.
 - [ ] Real query counting — needs a decision on how to hook
       `\DB\MySQLi` (or a thin wrapper around it) without duplicating
       OpenCart's own DB class; not attempted this run
-- [ ] Real render-time measurement — needs a decision on where a request
-      first constructs a `Diagnostics` instance and how far through
-      `ComponentRenderer`/page rendering it gets threaded
-- [ ] A "dev mode" admin setting/flag gating `$enabled` — not built yet;
-      no admin screen reads or writes it
-- [ ] A visible surface (admin toolbar, log line, JSON endpoint) that
-      renders `summary()` — not built yet
+- [x] Real render-time measurement — `ComponentRenderer::render()`'s
+      optional `Diagnostics` argument (this run), wired into
+      `ControllerProductCategory`; Search/Manufacturer/Special not wired
+      yet (see above)
+- [x] A "dev mode" setting gating `$enabled` — `mintcart_dev_mode`,
+      standard OpenCart setting (`$this->config->get('mintcart_dev_mode')`
+      in `ControllerProductCategory`); no admin UI toggle yet, must be set
+      directly in `oc_setting` today
+- [x] A visible surface — an HTML comment
+      (`<!-- mintcart-diagnostics {...} -->`) appended to
+      `product/category`'s response body when `mintcart_dev_mode` is on
 - [ ] Live verification against a real install — this environment has no
       MySQL server (same pre-existing gap noted throughout
       `docs/IMPLEMENTATION_STATUS.md`)
@@ -112,14 +130,15 @@ order.
 - Decide how to source a real query count without modifying OpenCart's
   `\DB\MySQLi` in place (a thin counting wrapper registered instead of the
   stock class, vs. instrumenting call sites individually) — a real
-  upstream-diff decision, not a default to make silently.
-- Wire `time('render', ...)` around `ComponentRenderer::render()` calls
-  once that decision is made, so `mc_render` duration reflects real
-  component rendering.
-- A "dev mode" setting (Business/Settings facade, or a new
-  `mintcart_dev_mode` config key) that a request reads once and passes to
-  `new Diagnostics($enabled)`.
-- A visible surface — most likely a small admin-only JSON endpoint (same
-  shape as `mintcart/readiness`) or an HTML comment/log line appended when
-  dev mode is on — once there is a real request path constructing and
-  populating a `Diagnostics` instance to render.
+  upstream-diff decision, still not made.
+- Wire the same `ComponentRenderer` + `Diagnostics` pattern into
+  `ControllerProductSearch`/`ControllerProductManufacturer`/
+  `ControllerProductSpecial` (each still constructs a bare
+  `ComponentRenderer` with no `Diagnostics`), so the same dev-mode flag
+  measures every listing page, not just Category.
+- An admin UI toggle for `mintcart_dev_mode` (Business/Settings facade, or
+  a small Advanced/Settings field) instead of requiring a direct
+  `oc_setting` write.
+- A structured JSON endpoint (same shape as `mintcart/readiness`) as an
+  alternative surface to the HTML comment, for tooling that would rather
+  fetch diagnostics than scrape a page's markup.
