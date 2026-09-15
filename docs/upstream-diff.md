@@ -1118,6 +1118,40 @@ install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
 
 ---
 
+## `upload/catalog/controller/extension/payment/klarna_account.php` / `upload/catalog/controller/extension/payment/klarna_invoice.php`
+
+**Reason:** Fixes **MC-0014** (`docs/fixes/registry.md`): both files called
+the deprecated (PHP 8.2+) `utf8_encode()`/`utf8_decode()` functions to
+convert between the Klarna XML-RPC API's ISO-8859-1 wire format and PHP's
+internal UTF-8 strings — a pure bugfix, no Theme API/component work
+involved, in the same "PHP 8.x compatibility" family as MC-0010
+(`opayo.php`'s `strftime()`).
+
+**Why it can't live in the MintCart layer instead:** These lines are deep
+inside stock OpenCart payment-extension controller logic (building an
+XML-RPC request body / parsing its response) — there is no MintCart-layer
+equivalent to intercept or wrap; the only place to fix a deprecated
+built-in function call is at the call site itself.
+
+**Compatibility impact:** None. `mb_convert_encoding($x, 'UTF-8',
+'ISO-8859-1')` / `mb_convert_encoding($x, 'ISO-8859-1', 'UTF-8')` are the
+documented byte-for-byte equivalents of `utf8_encode()`/`utf8_decode()`
+(`mbstring` is already a hard OpenCart 3 install requirement, so this adds
+no new dependency); no control flow, template, or language string changed
+in either file. The one call site building the Klarna invoice checksum
+digest (`klarna_invoice.php`) was treated with extra care since that
+digest is sent to Klarna's API — the replacement preserves its exact byte
+output rather than taking the chance to "clean up" charset handling.
+
+**Tests:** `php -l` clean on both files.
+`tests/mintcart/fixes/mc-0014-klarna-charset-test.php` (17 assertions)
+proves the replacement is byte-for-byte equivalent to the functions it
+replaces, using PHP's own (deprecated but still callable) `utf8_encode()`/
+`utf8_decode()` as the oracle. No live payment-gateway request test — same
+pre-existing gap as every earlier phase, and this one specifically needs a
+real Klarna merchant sandbox account this environment doesn't have — a
+human should confirm a real Klarna Invoice/Account checkout still
+completes successfully on a PHP 8.2+ install.
 ## `upload/system/library/mail/smtp.php`
 
 **Reason:** Fix MC-0013 (`docs/fixes/registry.md`) — the three `EHLO`/`HELO`

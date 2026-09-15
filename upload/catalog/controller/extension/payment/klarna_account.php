@@ -521,9 +521,9 @@ class ControllerExtensionPaymentKlarnaAccount extends Controller {
 						preg_match('/<member><name>faultCode<\/name><value><int>([0-9]+)<\/int><\/value><\/member>/', $response, $match2);
 
 						$log = new Log('klarna_account.log');
-						$log->write('Failed to create an invoice for order #' . $order_info['order_id'] . '. Message: ' . utf8_encode($match[1]) . ' Code: ' . $match2[1]);
+						$log->write('Failed to create an invoice for order #' . $order_info['order_id'] . '. Message: ' . mb_convert_encoding($match[1], 'UTF-8', 'ISO-8859-1') . ' Code: ' . $match2[1]);
 
-						$json['error'] = utf8_encode($match[1]);
+						$json['error'] = mb_convert_encoding($match[1], 'UTF-8', 'ISO-8859-1');
 					} else {
 						$xml = new DOMDocument();
 						$xml->loadXML($response);

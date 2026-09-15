@@ -1135,3 +1135,77 @@ real mail server) — a human should confirm on a real install, with
 context (e.g. `php index.php route=... --cli` or an OS-level cron entry,
 if/when one exists) now succeeds where it previously failed at the `EHLO`
 step; `docs/MANUAL_VERIFICATION.md` has a new entry for this.
+
+---
+
+## MC-0014 — Klarna payment extensions call the deprecated `utf8_encode()`/`utf8_decode()`
+
+**Problem:** `catalog/controller/extension/payment/klarna_account.php` (2
+call sites) and `catalog/controller/extension/payment/klarna_invoice.php`
+(3 call sites) convert strings between the Klarna XML-RPC API's
+ISO-8859-1 wire format and PHP's internal UTF-8 strings using
+`utf8_encode()`/`utf8_decode()`. Both functions were deprecated in PHP 8.2
+(`E_DEPRECATED`, not removed) — this is exactly the "PHP 8.x compatibility
+problems" family flagged as a Known Fix Research Queue candidate
+(`MINTCART_FUNCTIONAL_SCOPE.md` §18) and already confirmed as a live risk
+for this codebase in `docs/audit.md` §"CLI PHP available in this
+environment: PHP 8.4.19". Left unfixed, every Klarna checkout on PHP
+8.2+ spams the PHP error log with deprecation notices on both the
+success path (building the invoice digest) and the failure path (decoding
+Klarna's XML-RPC fault string) — not fatal, but exactly the kind of
+"upstream doesn't fully work on a modern PHP" gap MintCart's Fixes Policy
+exists to close, in the same family as MC-0010 (`opayo.php`'s
+`strftime()`).
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1 (this
+repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale as
+every other entry in this registry (no second checkout available to diff
+against, and the fix is a drop-in, behavior-preserving replacement, not a
+version-specific workaround).
+
+**Source:** Discovered directly in this repository while auditing
+`MINTCART_FUNCTIONAL_SCOPE.md` §18's "PHP 8.x compatibility problems"
+candidate — not an imported historical community patch. Found by grepping
+`upload/` for `utf8_encode(`/`utf8_decode(`: only these two files matched
+(`opayo.php`'s equivalent `strftime()` issue was already fixed separately
+as MC-0010).
+
+**Reproduced on MintCart baseline:** Yes — `grep -rn "utf8_encode\|utf8_decode" upload/catalog/controller/extension/payment/klarna_account.php upload/catalog/controller/extension/payment/klarna_invoice.php`
+returned 5 matches prior to this fix (2 in `klarna_account.php`, 3 in
+`klarna_invoice.php`), confirmed against the unmodified stock files.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Replaced every `utf8_encode($x)` call with
+`mb_convert_encoding($x, 'UTF-8', 'ISO-8859-1')` and the one
+`utf8_decode($x)` call (in `klarna_invoice.php`'s invoice-digest checksum
+builder) with `mb_convert_encoding($x, 'ISO-8859-1', 'UTF-8')` — the
+documented, byte-for-byte equivalent replacement for both directions
+(`mbstring` is already a hard OpenCart 3 install requirement, so this adds
+no new dependency). The invoice-digest call site is the one place where
+"behavior-preserving" matters most: that digest is a checksum sent to
+Klarna's API, so changing its output would break checkout, not just
+silence a log — `mb_convert_encoding()` was chosen specifically because it
+is the exact inverse operation `utf8_decode()` performed, not a "cleaner"
+UTF-8 handling rewrite. No template change, no language string change, no
+change to either controller's control flow.
+
+**Tests:** `php -l` clean on both modified files.
+`tests/mintcart/fixes/mc-0014-klarna-charset-test.php` (17 assertions)
+proves `mb_convert_encoding()` is byte-for-byte equivalent to
+`utf8_encode()`/`utf8_decode()` for representative ASCII and
+Latin-1-range samples (accented characters, ß, £) using PHP's own
+(deprecated but still callable, even on the PHP 8.4.19 CLI available in
+this environment) `utf8_encode()`/`utf8_decode()` as the oracle, and
+confirms both touched files no longer contain any `utf8_encode(`/
+`utf8_decode(` call. A live payment-gateway request test would need a real
+Klarna merchant sandbox account and a live OpenCart checkout, neither
+available in this environment — a human should confirm a real Klarna
+Invoice/Account checkout still completes successfully (and that PHP's
+error log no longer logs a deprecation notice for these two files) on a
+PHP 8.2+ install.

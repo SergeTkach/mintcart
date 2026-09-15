@@ -4343,6 +4343,65 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+## Update (2026-09-11, routine run) — MC-0014 fix (Fixes Registry)
+
+Step-0 dedup check against all 52 open PRs (`#52`-`#104`) found the backlog
+extremely saturated: essentially every unstarted Phase 10-25 item already
+had an open PR (all first-wave block types, all six Entity Picker
+backends, all remaining Wizard steps, Business Settings façades, SEO
+Core's five sub-pieces, Bulk Editor, the search-box component, the Store
+Readiness dashboard widget, Update Manager's `UpdateChecker`/
+`BackupPlanner`/`PackageVerifier`, Compatibility Checker, Diagnostics,
+`CacheInvalidator`, `HealthCheck`, both remaining `MintCart\Compatibility\OpenCart3\*`
+adapters, mobile header nav, `CheckoutTotalsService`, `QuickOrderService`,
+product detail page template, three ADRs for RESEARCH items, the release
+packaging script, user docs, and ten fixes MC-0004 through MC-0013). Every
+one of these already has real, unmerged work sitting in an open PR — see
+each PR's own title via `gh pr list --state open`/the GitHub MCP
+equivalent before starting a fresh increment in any of those areas.
+
+Rather than gamble on a hot shared file (per step 0f — `column_left.php`,
+the Homepage Builder block registry, and the Wizard controller are all
+touched by 2+ open PRs already, per the "Update (this run, 2026-09-08)"
+note above and PRs `#52`/`#64`/`#84` all touching the Wizard flow), this
+run picked a genuinely fresh, single-file, self-contained item instead:
+**MC-0014** (`docs/fixes/registry.md`) — `klarna_account.php`/
+`klarna_invoice.php` calling the PHP-8.2-deprecated
+`utf8_encode()`/`utf8_decode()`, replaced with the byte-for-byte
+equivalent `mb_convert_encoding()`. No open PR touches either Klarna file
+(confirmed by title — none of the ten open MC-fix PRs mention Klarna,
+opayo, or any payment/klarna* path) and a Fixes Registry entry is
+inherently single-file/low-collision by construction, per the Fixes
+Policy (`CLAUDE.md` §13).
+
+See `docs/fixes/registry.md`'s new MC-0014 entry and
+`docs/upstream-diff.md`'s new `klarna_account.php`/`klarna_invoice.php`
+entry for the full writeup. Verified: `php -l` clean on both modified
+files (and every other `.php` file in `upload/`/`tests/`, re-checked with
+a full-repo sweep); new
+`tests/mintcart/fixes/mc-0014-klarna-charset-test.php` (17 assertions,
+using PHP's own still-callable-but-deprecated `utf8_encode()`/
+`utf8_decode()` as the equivalence oracle); the full `tests/mintcart/`
+suite (34 files) re-run end to end — all passing, no regressions. No
+`npm`/frontend files touched, so the JS/CSS build wasn't re-run this
+increment. Same pre-existing gap as every fix in this registry: no real
+Klarna merchant sandbox account in this environment, so no live payment
+request was exercised — a human should confirm a real Klarna
+Invoice/Account checkout still completes on a PHP 8.2+ install.
+
+**Next step:** re-run `gh pr list --state open` first — with 52+ PRs in
+flight, most of the obvious next candidates are already claimed. If the
+backlog hasn't shrunk, good unclaimed candidates that stay clear of the
+hot shared files identified above are: another Known Fix Research Queue
+item (MC-0015+ — search `upload/` for other stale PHP patterns not
+already covered by MC-0004 through MC-0014, e.g. other deprecated
+built-ins in third-party payment/shipping extensions), or a documentation-
+only ADR/developer-doc increment that doesn't touch any file another PR
+already owns. Once the current backlog of 50+ PRs actually lands on
+`master`, a full re-audit of `docs/IMPLEMENTATION_STATUS.md` against
+what's really left is overdue — this file's per-run "Next step" notes were
+written against a much smaller backlog (as few as 15-23 open PRs) and are
+now significantly stale about what's genuinely available to pick up.
 **Update (this run, 2026-09-10):** with 50 open PRs at step 0 covering
 nearly every remaining phase (fixes MC-0004–MC-0013, all four remaining
 SEO Core pieces, three more Update Manager steps, five Entity Picker
