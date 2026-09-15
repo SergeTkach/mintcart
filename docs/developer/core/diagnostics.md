@@ -11,8 +11,8 @@ PHP: `upload/system/library/mintcart/core/diagnostics.php`
 Test: `tests/mintcart/core/diagnostics-test.php`
 (`php tests/mintcart/core/diagnostics-test.php`, 10 scenarios)
 
-**First real consumer (this run): `ControllerProductCategory` +
-`MintCart\Design\ComponentRenderer`.** `ComponentRenderer::render()` now
+**First real consumer: `ControllerProductCategory` +
+`MintCart\Design\ComponentRenderer`.** `ComponentRenderer::render()`
 accepts an optional 4th constructor argument, `?Diagnostics $diagnostics
 = null` — see `docs/developer/theme-api/component-renderer.md`'s own
 "`$diagnostics` (Phase 10)" section for the full wiring detail. This is
@@ -25,12 +25,22 @@ individual call site. `ControllerProductCategory` constructs a
 via `$this->config->get()`, standard OpenCart settings storage, no new
 Mint table), passes it into `ComponentRenderer`, and — only when
 enabled — appends `$diagnostics->summary()` as an HTML comment to the
-response body. Still **not** built: real DB query counting (see the DoD
-checklist below), an admin UI to toggle `mintcart_dev_mode` (today it can
-only be set directly in `oc_setting`), and wiring the same pattern into
-Search/Manufacturer/Special (each still builds its own `ComponentRenderer`
-without a `Diagnostics` — same shape as `ControllerProductCategory`'s
-pre-Phase-10 state, a natural next increment).
+response body.
+
+**Second/third/fourth consumers (this run): `ControllerProductSearch`,
+`ControllerProductSpecial`, `ControllerProductManufacturer::info()`.** Each
+now carries the identical wiring — its own `Diagnostics($enabled)`
+gated by the same `mintcart_dev_mode` setting, passed as
+`ComponentRenderer`'s 4th argument, `mark('view_rendered')` before its
+`load->view()` call, and the same dev-mode-gated HTML-comment summary
+appended to its response body. `ControllerProductManufacturer`'s plain
+manufacturer-list index and its `error/not_found` path never construct a
+`ComponentRenderer` and were left untouched. Still **not** built: real DB
+query counting (see the DoD checklist below), and an admin UI to toggle
+`mintcart_dev_mode` (today it can only be set directly in `oc_setting`).
+`product.php`'s related-products `ComponentRenderer` call site is also
+still bare — a distinct rendering context (product detail page, not a
+listing page) deliberately left for a separate increment.
 
 ## Design
 
@@ -111,9 +121,10 @@ order.
       `\DB\MySQLi` (or a thin wrapper around it) without duplicating
       OpenCart's own DB class; not attempted this run
 - [x] Real render-time measurement — `ComponentRenderer::render()`'s
-      optional `Diagnostics` argument (this run), wired into
-      `ControllerProductCategory`; Search/Manufacturer/Special not wired
-      yet (see above)
+      optional `Diagnostics` argument, wired into `ControllerProductCategory`,
+      `ControllerProductSearch`, `ControllerProductSpecial`, and
+      `ControllerProductManufacturer::info()`; `product.php`'s related-products
+      call site not wired yet (see above)
 - [x] A "dev mode" setting gating `$enabled` — `mintcart_dev_mode`,
       standard OpenCart setting (`$this->config->get('mintcart_dev_mode')`
       in `ControllerProductCategory`); no admin UI toggle yet, must be set
@@ -132,10 +143,8 @@ order.
   stock class, vs. instrumenting call sites individually) — a real
   upstream-diff decision, still not made.
 - Wire the same `ComponentRenderer` + `Diagnostics` pattern into
-  `ControllerProductSearch`/`ControllerProductManufacturer`/
-  `ControllerProductSpecial` (each still constructs a bare
-  `ComponentRenderer` with no `Diagnostics`), so the same dev-mode flag
-  measures every listing page, not just Category.
+  `product.php`'s related-products `ComponentRenderer` call site (the one
+  remaining bare call site, a product-detail rather than listing context).
 - An admin UI toggle for `mintcart_dev_mode` (Business/Settings facade, or
   a small Advanced/Settings field) instead of requiring a direct
   `oc_setting` write.

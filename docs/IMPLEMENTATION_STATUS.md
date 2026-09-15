@@ -3472,6 +3472,25 @@ this phase (diagnostics, measured performance work) is not started.
       no-Diagnostics-passed default, none needing `vendor/twig/twig` (same
       pre-existing gap as every other `ComponentRenderer::render()` call);
       full `tests/mintcart/` suite (65 files) re-run end to end, all passing.
+      **Update (2026-09-15, routine run): Search/Manufacturer/Special wired
+      too.** `ControllerProductSearch`, `ControllerProductSpecial`, and
+      `ControllerProductManufacturer::info()` now each construct their own
+      `mintcart_dev_mode`-gated `Diagnostics`, pass it as `ComponentRenderer`'s
+      4th argument, and append the same dev-mode-gated HTML-comment summary
+      before their own `setOutput()` call — identical pattern to
+      `category.php`'s, no new test file needed (`component-renderer-test.php`'s
+      existing scenarios are call-site-agnostic). `product.php`'s
+      related-products `ComponentRenderer` call site remains the one bare
+      one left (a product-detail, not listing, context — left for a
+      separate increment). Full writeup: `docs/developer/core/diagnostics.md`,
+      `docs/developer/theme-api/component-renderer.md`, and
+      `docs/upstream-diff.md`'s `search.php`/`special.php`/`manufacturer.php`
+      entries. Verified: `php -l` clean on all three touched files; full
+      `tests/mintcart/**/*-test.php` suite (77 files) re-run end to end —
+      all passing, no regressions. Step 0 dedup check: `gh pr list --state
+      open` returned zero open PRs at the start of this run (the prior
+      14-PR backlog, `#95`-`#108`, had already merged/closed), so no
+      collision check was needed against other in-flight work.
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
@@ -5186,3 +5205,20 @@ ID) once a genuinely new, unclaimed historical-bug candidate turns up; or
 re-check `gh pr list --state open` first, since this backlog moves fast —
 14 open PRs at the time of this run, several already flagged in past
 entries as ready for human merge review.
+
+---
+
+**Update (2026-09-15, routine run): Phase 10 (Technical Plan) Diagnostics —
+Search/Manufacturer/Special wired.** `gh pr list --state open` returned
+zero open PRs at the start of this run — the 14-PR backlog referenced
+just above had already merged/closed, so no dedup/hot-file check applied.
+Picked the exact "next candidates" item this file's own previous entry
+named: extended the `Diagnostics`-through-`ComponentRenderer` wiring from
+`category.php` to `search.php`/`special.php`/`manufacturer.php` (`info()`
+only). Full writeup in the Phase 10 (Technical Plan) section above. `php -l`
+clean on all three files; full `tests/mintcart/` suite (77 files) re-run
+end to end, all passing. **Next candidates:** `product.php`'s bare
+related-products `ComponentRenderer` call site; the real-DB-query-counting
+upstream-diff decision; `manufacturer.php`'s missing `SchemaOrgBuilder`
+breadcrumb wiring (unlike its three sibling controllers); MC-0015; or
+re-check `gh pr list --state open` first.
