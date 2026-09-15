@@ -34,6 +34,19 @@ namespace MintCart\Design;
  * second copy of it (MINTCART_TECHNICAL_PLAN.md §16's "Block Renderer" is
  * a distinct architectural element from "Component Renderer", but nothing
  * about the underlying fallback-chain walk actually differs between them).
+ *
+ * `$diagnostics` (constructor's optional 4th argument) is
+ * `MintCart\Core\Diagnostics` (MINTCART_TECHNICAL_PLAN.md §35,
+ * MINTCART_FUNCTIONAL_SCOPE.md §19 "render time"). `render()` is the one
+ * choke point every component render (product-card, blocks, header,
+ * footer, ...) already passes through regardless of caller, so wiring the
+ * timing here — rather than in each individual call site — instruments
+ * every current and future consumer at once. `null` (the default) keeps
+ * every existing 2-/3-argument call site byte-for-byte unaffected: no
+ * Diagnostics instance means render() does exactly what it always did,
+ * with zero extra work. `ControllerProductCategory` (this run) is the
+ * first real caller passing one, gated behind a `mintcart_dev_mode`
+ * setting — see `docs/developer/core/diagnostics.md`.
  */
 final class ComponentRenderer
 {
@@ -45,11 +58,18 @@ final class ComponentRenderer
 
     private string $kind;
 
-    public function __construct(string $themesDirectory, string $activeTheme, string $kind = 'components')
-    {
+    private ?\MintCart\Core\Diagnostics $diagnostics;
+
+    public function __construct(
+        string $themesDirectory,
+        string $activeTheme,
+        string $kind = 'components',
+        ?\MintCart\Core\Diagnostics $diagnostics = null
+    ) {
         $this->themesDirectory = rtrim($themesDirectory, '/') . '/';
         $this->activeTheme = $activeTheme;
         $this->kind = $kind;
+        $this->diagnostics = $diagnostics;
     }
 
     /**
@@ -118,6 +138,11 @@ final class ComponentRenderer
         // which doesn't include the resolved theme directory - it would
         // look in the wrong place and throw a misleading error instead of
         // rendering an intentionally empty override. Short-circuit instead.
+        //
+        // Deliberately short-circuits BEFORE any Diagnostics bookkeeping
+        // too: an intentionally-empty override never reaches Twig, so it
+        // is not a "render" - counting it would inflate component_render's
+        // counter/duration with calls that did no real rendering work.
         if ($code === '') {
             return '';
         }
@@ -128,7 +153,17 @@ final class ComponentRenderer
             $template->set($key, $value);
         }
 
-        return $template->render('mint/' . $this->kind . '/' . $component, $code);
+        $render = function () use ($template, $component, $code): string {
+            return $template->render('mint/' . $this->kind . '/' . $component, $code);
+        };
+
+        if ($this->diagnostics === null) {
+            return $render();
+        }
+
+        $this->diagnostics->increment('component_render');
+
+        return $this->diagnostics->time('component_render', $render);
     }
 
     private function componentPath(string $theme, string $component): string

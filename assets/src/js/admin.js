@@ -19,6 +19,7 @@ import { initToastTriggers } from './components/toast.js';
 import { initSortableLists } from './components/sortable.js';
 import { initTabsTriggers } from './components/tabs.js';
 import { initProgressBars } from './components/progress.js';
+import { createEntityPicker } from './components/entity-picker.js';
 
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
@@ -31,13 +32,20 @@ import { initProgressBars } from './components/progress.js';
 // General/Data/Links/Attributes/... - are its first expected consumer), so
 // it too is wired here and not in catalog.js.
 //
-// mc-entity-picker (McEntityPicker) shipped in `./components/entity-picker.js`
-// as an exported `createEntityPicker(root, options)` factory, not imported
-// here: it needs a caller-supplied `fetchItems` data source and a root
-// element that doesn't exist until a real admin screen (Phase 12 - product/
-// category/manufacturer/attribute/option/information-page/customer pickers)
-// renders one and calls it directly - no wiring ahead of a real consumer
-// (CLAUDE.md §85).
+// mc-entity-picker (McEntityPicker) - `createEntityPicker(root, options)`
+// still needs a caller-supplied `fetchItems` data source and options
+// (getId/getLabel/onConfirm/...) specific to whichever entity type/field is
+// hosting it, so it isn't auto-initialized here the way initXxx() above are
+// - each consumer calls it directly with its own options, same as before.
+// What changed with product_form.twig's Category field (Phase 12's first
+// live consumer, docs/developer/components/entity-picker.md "Admin
+// backends"): admin Twig templates use plain non-module inline <script>
+// blocks (jQuery-style), not `type="module"`, so they cannot `import` this
+// ES module themselves. Exposing the factory on `window.MintCart` is the
+// minimal bridge - no per-page bundle, no new build entry, and every other
+// admin.js behavior stays exactly as declarative (data-mc-*) as before.
+window.MintCart = window.MintCart || {};
+window.MintCart.createEntityPicker = createEntityPicker;
 //
 // mc-media-picker (McMediaPicker) shipped the same way in
 // `./components/media-picker.js` as `createMediaPicker(root, options)`: it
