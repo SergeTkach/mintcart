@@ -778,6 +778,29 @@ never rendered on a real page or run through an actual validator. On a
    wired the product *detail* page itself, only listing pages) — nothing
    to verify live until that page exists.
 
+## Phase 18 — `RobotsBuilder` meta tag, never validated against a real page
+
+`RobotsBuilder` is unit-tested in isolation (74 assertions), but its
+`ControllerCommonHeader` wiring (2026-09-15) was never rendered on a real
+page. On a `config_theme=mint_default` install:
+
+1. Load the homepage, a category page, and a product page; confirm
+   `<meta name="robots" content="index, follow">` appears in `<head>`.
+2. Load `checkout/cart`, `checkout/checkout` (add an item to the cart
+   first), and — while logged in — `account/account`, `account/order`,
+   `account/wishlist`; confirm each instead renders
+   `<meta name="robots" content="noindex, follow">`.
+3. Load `product/search` with a query that matches nothing (e.g. a random
+   string); confirm it currently still renders `content="index, follow"`
+   — this is the documented, deliberate known limitation (see
+   `docs/developer/seo/robots.md` "Known limitation"), not a bug: a real
+   fix needs `$hasResults` threaded from `ControllerProductSearch` into
+   `ControllerCommonHeader`, not yet built.
+4. Confirm the tag does **not** appear at all on the legacy `default`
+   theme (this wiring is not gated by `isMintAware()`, but `default`'s own
+   `common/header.twig` never reads `$data['mc_robots_content']`, so it
+   should render unchanged).
+
 ## Phase 16 — Bulk Editor (`catalog/product.bulkupdate`), never exercised end to end
 
 `ModelCatalogProduct::updateProductField()`/`ControllerCatalogProduct::bulkUpdate()`

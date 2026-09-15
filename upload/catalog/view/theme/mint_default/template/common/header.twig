@@ -12,6 +12,9 @@
 {% if keywords %}
 <meta name="keywords" content="{{ keywords }}" />
 {% endif %}
+{% if mc_robots_content %}
+<meta name="robots" content="{{ mc_robots_content }}" />
+{% endif %}
 {#
     MintCart's own compiled assets/dist/{css,js} bundle is not enqueued
     here yet - this wrapper deliberately keeps the exact same asset stack

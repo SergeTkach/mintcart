@@ -705,6 +705,58 @@ suite re-run end to end — all passing. Same pre-existing no-live-request
 gap as every earlier phase — see `docs/MANUAL_VERIFICATION.md`'s new
 Phase 18 entry.
 
+**Update (2026-09-15, routine run — Phase 18, SEO Core): `MintCart\Seo\RobotsBuilder`
+live wiring.** Also builds `$data['mc_robots_content']` via
+`RobotsBuilder::metaContent()`, resolving the current route from
+`$this->request->get['route']` (same defensive `isset()` guard
+`common/content_top.php` already uses for the same superglobal, since
+header renders as a sub-controller of every page). Unlike `mc_header`/
+`mc_schema_organization`, this block deliberately sits **outside** the
+`$mint_render_header` (`isMintAware()`) gate: a robots directive is a
+per-route SEO signal, not a Mint component DOM contract, so it is computed
+for every request regardless of active theme — a theme/template that
+doesn't read `$data['mc_robots_content']` (the legacy `default` theme, or
+any third-party theme) simply never sees the extra array key, at zero
+cost. Same catch-and-log failure handling as the two blocks above it. `<head>`
+output added to `mint_default/template/common/header.twig` right after the
+existing `keywords` meta tag.
+
+**Known limitation (deliberate, see `docs/developer/seo/robots.md`):**
+`RobotsBuilder::metaContent()`'s second parameter, `$hasResults` (only
+meaningful for `product/search`), is left at its default (`true`) here —
+header.php has no way to know whether the current request's search
+actually matched anything, since it renders as a sibling sub-controller of
+`ControllerProductSearch`, not that controller itself. Threading a real
+`hasResults` signal across that boundary (registry/session) is a separate,
+slightly larger follow-up; today every `product/search` page, including an
+empty-results one, renders `index, follow` rather than the `noindex,
+follow` `RobotsBuilder` is capable of producing. Every other route
+(the full `NOINDEX_ROUTES` checkout/account whitelist, and every ordinary
+catalog/information/home route) is unaffected by this limitation and
+behaves exactly as `RobotsBuilder`'s own test suite already verifies.
+
+**Compatibility impact:** None for the legacy `default` theme or any
+unrelated third-party theme (their own header templates never read
+`$data['mc_robots_content']`, so nothing new renders for them — same
+"extra unused array key" cost model as every other new `$data[...]` this
+controller has ever added). For `mint_default`, purely additive: a new
+`<meta name="robots">` tag only appears when `RobotsBuilder` resolves a
+non-null route; a failure inside `RobotsBuilder` is caught and logged,
+degrading to no robots meta tag rather than fataling the page.
+
+**Tests:** `php -l` clean on `header.php` and `header.twig`'s Twig
+`{% if %}`/`{% endif %}` tag balance re-checked by hand (unchanged
+count otherwise, one new matched pair added). `tests/mintcart/seo/robots-builder-test.php`
+(pre-existing, 74 assertions) already covers `metaContent()` itself —
+no new PHP unit test needed since this change only threads an existing,
+already-tested pure function's output into `$data` via a one-line call. Full
+`tests/mintcart/**/*-test.php` suite re-run end to end (77 files) — all
+passing, no regressions. Same pre-existing no-live-request gap as every
+earlier phase — see `docs/MANUAL_VERIFICATION.md`'s new Phase 18 addition
+for what a human should confirm once installed (checkout/account pages
+render `content="noindex, follow"`; ordinary catalog pages render
+`content="index, follow"`).
+
 ---
 
 ## `upload/catalog/controller/product/manufacturer.php`
