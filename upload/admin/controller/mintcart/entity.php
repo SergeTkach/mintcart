@@ -3,7 +3,9 @@
  * Phase 12 (Entity Picker, `MINTCART_FUNCTIONAL_SCOPE.md` §8,
  * `MINTCART_TECHNICAL_PLAN.md` §20) — real `fetchItems` backends for
  * `McEntityPicker` (Phase 11), one action per entity type. `category()` is
- * the first, `manufacturer()` the second.
+ * the first, `manufacturer()` the second, `product()` the third,
+ * `information()` the fourth, `attribute()` the fifth, `option()` the
+ * sixth, `customer()` the seventh.
  *
  * Deliberately a new, fully-additive controller under `mintcart/entity/*`
  * rather than a change to `catalog/category.php`'s existing `autocomplete()`
@@ -16,7 +18,8 @@
  * contract would be a breaking change to their existing consumers
  * (`CLAUDE.md` §10). Every action here instead wraps the *same* underlying
  * model call (`ModelCatalogCategory::getCategories()` /
- * `ModelCatalogManufacturer::getManufacturers()`), never queries the
+ * `ModelCatalogManufacturer::getManufacturers()` /
+ * `ModelCatalogInformation::getInformations()`), never queries the
  * database directly, so every pair of endpoints stays in sync with the
  * same source of truth.
  *
@@ -89,5 +92,159 @@ class ControllerMintcartEntity extends Controller {
 		$provider = new \MintCart\Design\ManufacturerPickerProvider();
 
 		$this->respond($provider->build($rows, $page, $limit));
+	}
+
+	// route=mintcart/entity/product - GET filter_name, page, limit
+	public function product() {
+		if (!$this->user->hasPermission('access', 'mintcart/entity')) {
+			$this->respond(array('error' => 'Permission denied'));
+			return;
+		}
+
+		$this->load->model('catalog/product');
+		$this->load->model('tool/image');
+
+		$filter_name = isset($this->request->get['filter_name']) ? (string)$this->request->get['filter_name'] : '';
+		$page = isset($this->request->get['page']) ? (int)$this->request->get['page'] : 1;
+		$limit = isset($this->request->get['limit']) ? (int)$this->request->get['limit'] : 20;
+
+		if ($page < 1) {
+			$page = 1;
+		}
+
+		if ($limit < 1) {
+			$limit = 20;
+		}
+
+		$filter_data = array(
+			'filter_name' => $filter_name,
+			'sort'        => 'pd.name',
+			'order'       => 'ASC',
+			'start'       => ($page - 1) * $limit,
+			'limit'       => $limit
+		);
+
+		$rows = $this->model_catalog_product->getProducts($filter_data);
+		$total = (int)$this->model_catalog_product->getTotalProducts(array('filter_name' => $filter_name));
+
+		foreach ($rows as &$row) {
+			$row['image_url'] = (!empty($row['image']) && is_file(DIR_IMAGE . $row['image']))
+				? $this->model_tool_image->resize($row['image'], 100, 100)
+				: null;
+		}
+		unset($row);
+
+		$provider = new \MintCart\Design\ProductPickerProvider();
+
+		$this->respond($provider->build($rows, $total));
+	}
+
+	// route=mintcart/entity/information - GET filter_name, page, limit
+	public function information() {
+		if (!$this->user->hasPermission('access', 'mintcart/entity')) {
+			$this->respond(array('error' => 'Permission denied'));
+			return;
+		}
+
+		$this->load->model('catalog/information');
+
+		$filter_name = isset($this->request->get['filter_name']) ? (string)$this->request->get['filter_name'] : '';
+		$page = isset($this->request->get['page']) ? (int)$this->request->get['page'] : 1;
+		$limit = isset($this->request->get['limit']) ? (int)$this->request->get['limit'] : 20;
+
+		// getInformations() called with no args intentionally - it has no
+		// filter_name support (see InformationPickerProvider's own docblock),
+		// so this fetches every information page (via the model's own cache)
+		// and lets the provider filter/paginate in PHP.
+		$rows = $this->model_catalog_information->getInformations();
+
+		$provider = new \MintCart\Design\InformationPickerProvider();
+
+		$this->respond($provider->build($rows, $filter_name, $page, $limit));
+	}
+
+	// route=mintcart/entity/attribute - GET filter_name, page, limit
+	public function attribute() {
+		if (!$this->user->hasPermission('access', 'mintcart/entity')) {
+			$this->respond(array('error' => 'Permission denied'));
+			return;
+		}
+
+		$this->load->model('catalog/attribute');
+
+		$filter_name = isset($this->request->get['filter_name']) ? (string)$this->request->get['filter_name'] : '';
+		$page = isset($this->request->get['page']) ? (int)$this->request->get['page'] : 1;
+		$limit = isset($this->request->get['limit']) ? (int)$this->request->get['limit'] : 20;
+
+		$rows = $this->model_catalog_attribute->getAttributes(array(
+			'filter_name' => $filter_name,
+			'sort'        => 'ad.name',
+			'order'       => 'ASC'
+		));
+
+		$provider = new \MintCart\Design\AttributePickerProvider();
+
+		$this->respond($provider->build($rows, $page, $limit));
+	}
+
+	// route=mintcart/entity/option - GET filter_name, page, limit
+	public function option() {
+		if (!$this->user->hasPermission('access', 'mintcart/entity')) {
+			$this->respond(array('error' => 'Permission denied'));
+			return;
+		}
+
+		$this->load->model('catalog/option');
+
+		$filter_name = isset($this->request->get['filter_name']) ? (string)$this->request->get['filter_name'] : '';
+		$page = isset($this->request->get['page']) ? (int)$this->request->get['page'] : 1;
+		$limit = isset($this->request->get['limit']) ? (int)$this->request->get['limit'] : 20;
+
+		$rows = $this->model_catalog_option->getOptions(array(
+			'filter_name' => $filter_name,
+			'sort'        => 'od.name',
+			'order'       => 'ASC'
+		));
+
+		$provider = new \MintCart\Design\OptionPickerProvider();
+
+		$this->respond($provider->build($rows, $page, $limit));
+	}
+
+	// route=mintcart/entity/customer - GET filter_name, page, limit
+	public function customer() {
+		if (!$this->user->hasPermission('access', 'mintcart/entity')) {
+			$this->respond(array('error' => 'Permission denied'));
+			return;
+		}
+
+		$this->load->model('customer/customer');
+
+		$filter_name = isset($this->request->get['filter_name']) ? (string)$this->request->get['filter_name'] : '';
+		$page = isset($this->request->get['page']) ? (int)$this->request->get['page'] : 1;
+		$limit = isset($this->request->get['limit']) ? (int)$this->request->get['limit'] : 20;
+
+		$page = ($page < 1) ? 1 : $page;
+		$limit = ($limit < 1) ? 20 : $limit;
+
+		// Unlike category/manufacturer, ModelCustomerCustomer::getTotalCustomers()
+		// accepts filter_name and returns a real filtered count, so paging
+		// happens at the SQL level (start/limit) rather than in PHP - see
+		// CustomerPickerProvider's own doc comment for why.
+		$rows = $this->model_customer_customer->getCustomers(array(
+			'filter_name' => $filter_name,
+			'sort'        => 'name',
+			'order'       => 'ASC',
+			'start'       => ($page - 1) * $limit,
+			'limit'       => $limit
+		));
+
+		$total = $this->model_customer_customer->getTotalCustomers(array(
+			'filter_name' => $filter_name
+		));
+
+		$provider = new \MintCart\Design\CustomerPickerProvider();
+
+		$this->respond($provider->build($rows, (int)$total));
 	}
 }

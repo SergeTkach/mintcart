@@ -631,10 +631,12 @@ class ControllerCatalogCategory extends Controller {
 	 * that category's new sort_order).
 	 *
 	 * Orchestration only, per CLAUDE.md §8A: existence/permission checks
-	 * and cycle-prevention happen here using the existing
-	 * getCategory()/getCategoryPath() model methods (the very same
+	 * and cycle-prevention happen here via
+	 * MintCart\Compatibility\OpenCart3\CategoryAdapter, which wraps the
+	 * same getCategory()/getCategoryPath() model methods
 	 * ModelCatalogCategory::validateForm() already relies on for the
-	 * single-category edit form's own parent-picker), then
+	 * single-category edit form's own parent-picker (see
+	 * docs/developer/compatibility/category-adapter.md), then
 	 * ModelCatalogCategory::moveCategory() does the actual transactional
 	 * write.
 	 */
@@ -649,26 +651,22 @@ class ControllerCatalogCategory extends Controller {
 			$json['error'] = $this->language->get('error_permission');
 		}
 
+		$category_adapter = new \MintCart\Compatibility\OpenCart3\CategoryAdapter($this->model_catalog_category);
+
 		if (!$json) {
 			$category_id = isset($this->request->post['category_id']) ? (int)$this->request->post['category_id'] : 0;
 			$parent_id = isset($this->request->post['parent_id']) ? (int)$this->request->post['parent_id'] : 0;
 			$order = (isset($this->request->post['order']) && is_array($this->request->post['order'])) ? array_map('intval', $this->request->post['order']) : array();
 
-			if (!$category_id || !$this->model_catalog_category->getCategory($category_id)) {
+			if (!$category_id || !$category_adapter->exists($category_id)) {
 				$json['error'] = $this->language->get('error_category');
-			} elseif ($parent_id && !$this->model_catalog_category->getCategory($parent_id)) {
+			} elseif ($parent_id && !$category_adapter->exists($parent_id)) {
 				$json['error'] = $this->language->get('error_category');
 			}
 		}
 
 		if (!$json) {
-			$ancestor_path_ids = array();
-
-			if ($parent_id) {
-				foreach ($this->model_catalog_category->getCategoryPath($parent_id) as $result) {
-					$ancestor_path_ids[] = $result['path_id'];
-				}
-			}
+			$ancestor_path_ids = $parent_id ? $category_adapter->getAncestorPathIds($parent_id) : array();
 
 			$validator = new \MintCart\Catalog\CategoryMoveValidator();
 

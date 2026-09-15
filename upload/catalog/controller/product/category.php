@@ -164,9 +164,20 @@ class ControllerProductCategory extends Controller {
 			$mint_theme = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
 			$mint_render_product_cards = \MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme);
 
+			// MintCart\Core\Diagnostics (MINTCART_TECHNICAL_PLAN.md §35,
+			// MINTCART_FUNCTIONAL_SCOPE.md §19 "render time"). Off by
+			// default - every mark()/increment()/time() call becomes a
+			// cheap no-op unless a store explicitly sets the
+			// 'mintcart_dev_mode' setting (no admin toggle exists for it
+			// yet; docs/developer/core/diagnostics.md's "Next step" tracks
+			// that as a separate increment). First real consumer of both
+			// this flag and ComponentRenderer's optional 4th constructor
+			// argument - see that class's own doc comment.
+			$mint_diagnostics = new \MintCart\Core\Diagnostics((bool)$this->config->get('mintcart_dev_mode'));
+
 			if ($mint_render_product_cards) {
 				$product_card_list_renderer = new \MintCart\Design\ProductCardListRenderer(
-					new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme)
+					new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme, 'components', $mint_diagnostics)
 				);
 
 				$text_badge = array(
@@ -252,6 +263,8 @@ class ControllerProductCategory extends Controller {
 							'name'                        => $result['name'],
 							'url'                         => $href,
 							'image'                       => $image,
+							'image_width'                 => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'),
+							'image_height'                => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'),
 							'price'                       => $price,
 							'special'                     => $special,
 							'tax'                         => $tax,
@@ -459,7 +472,41 @@ class ControllerProductCategory extends Controller {
 			$data['footer'] = $this->load->controller('common/footer');
 			$data['header'] = $this->load->controller('common/header');
 
-			$this->response->setOutput($this->load->view('product/category', $data));
+			// MintCart\Seo\SchemaOrgBuilder BreadcrumbList JSON-LD
+			// (MINTCART_FUNCTIONAL_SCOPE.md §16, Phase 18). Re-checks
+			// Mint-awareness directly (not $mint_render_product_cards,
+			// which above this point may have been flipped to false by
+			// ProductCardListRenderer::isEnabled() after an unrelated
+			// per-product render failure) - the breadcrumb list is
+			// independent of whether product-card rendering succeeded.
+			// $data['breadcrumbs'] is complete by this point (built at the
+			// top of this method and appended to throughout).
+			if (\MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme)) {
+				try {
+					$schema_builder = new \MintCart\Seo\SchemaOrgBuilder();
+
+					$data['mc_schema_breadcrumb'] = $schema_builder->toJsonLd($schema_builder->breadcrumbList($data['breadcrumbs']));
+				} catch (\Throwable $e) {
+					(new \MintCart\Core\Logger())->error('SchemaOrgBuilder failed to build BreadcrumbList schema: ' . $e->getMessage());
+				}
+			}
+
+			$mint_diagnostics->mark('view_rendered');
+
+			$output = $this->load->view('product/category', $data);
+
+			// Functional Scope §19: "Production UI не повинен показувати
+			// sensitive debug data" - the summary is only ever appended
+			// when dev mode is on (isEnabled() mirrors the constructor
+			// flag above), and only as an HTML comment appended to the
+			// final response body, never written into $data/the template
+			// itself, so no theme override can accidentally surface it in
+			// visible markup.
+			if ($mint_diagnostics->isEnabled()) {
+				$output .= "\n<!-- mintcart-diagnostics " . json_encode($mint_diagnostics->summary()) . " -->";
+			}
+
+			$this->response->setOutput($output);
 		} else {
 			$url = '';
 
