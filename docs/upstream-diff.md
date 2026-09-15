@@ -2108,3 +2108,24 @@ itself were never exercised against a real database — a human should
 confirm on a real install, in particular that a bulk update leaves every
 other relation (descriptions, options, discounts, specials) untouched —
 see `docs/MANUAL_VERIFICATION.md`'s new Phase 16 section.
+
+**Update (this run — Phase 16, Bulk Editor):** added `manufacturer_id` as
+a fourth whitelisted bulk-update field, same shape as status/quantity/
+price — `BulkProductUpdateValidator::FIELDS` gains the entry (validated
+as a non-negative integer, `0` meaning "no manufacturer", matching
+OpenCart's own product-edit-form convention), `updateProductField()`
+gains the matching column mapping, and `product_list.twig`'s toolbar
+`<select>` gains a "Manufacturer" option (plus its
+`text_bulk_field_manufacturer` language key). **Why it can't live in the
+MintCart layer:** same reasoning as the entry above — `oc_product` stays
+the one true owner of its own columns. **Compatibility impact:** none —
+purely additive, no existing field/column/behavior changed. **Tests:**
+`php -l` clean on all touched files;
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` grows
+from 27 to 34 assertions (manufacturer_id whitelist + value-validation
+coverage, including the rejection cases); full `tests/mintcart/` suite
+(77 files) re-run end to end — all passing, no regressions.
+`product_list.twig`'s tag counts re-checked balanced (14/14, 2/2) after
+the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
+this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
+section.

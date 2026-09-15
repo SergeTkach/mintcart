@@ -4,11 +4,11 @@
 `MINTCART_TECHNICAL_PLAN.md` §29 ("Bulk Editor"),
 `MINTCART_IMPLEMENTATION_GUIDE.md` §62.
 
-First increment: mass **status / quantity / price** update across a
+Mass **status / quantity / price / manufacturer** update across a
 multi-selected set of products, reusing the exact `selected[]` checkboxes
 `Catalog → Products`' existing Delete/Copy actions already provide.
-Manufacturer/category/stock-status/SEO fields are natural follow-ups over
-the same shape — see "Next step" below.
+Category/stock-status/SEO fields are natural follow-ups over the same
+shape — see "Next step" below.
 
 PHP:
 
@@ -27,7 +27,7 @@ Language: `upload/admin/language/en-gb/catalog/product.php` (new
 `text_bulk_*`/`error_bulk_*` keys)
 
 Test: `tests/mintcart/catalog/bulk-product-update-validator-test.php`
-(25 scenarios)
+(34 scenarios)
 
 ## Why a new model method, not `editProduct()`
 
@@ -98,24 +98,34 @@ this button's own `formaction`).
 ## Value input
 
 The toolbar renders one generic `bulk_field` `<select>`
-(Status/Quantity/Price) and one generic `bulk_value` text `<input>` — not
+(Status/Quantity/Price/Manufacturer) and one generic `bulk_value` text
+`<input>` — not
 a per-field-typed control (e.g. a `<select>` for Status specifically).
 `BulkProductUpdateValidator::validateValue()` still enforces the right
 shape server-side (`0`/`1` for status, a non-negative whole number for
-quantity, a non-negative number for price) regardless of what the generic
-text input lets a merchant type. A friendlier per-field control (swapping
+quantity, a non-negative number for price, a non-negative whole number —
+a manufacturer ID, or `0` for none — for manufacturer) regardless of what
+the generic text input lets a merchant type. A friendlier per-field control (swapping
 to a `<select>` when `status` is chosen, a `type="number"` input
 otherwise) needs a small amount of new JS — deliberately not added this
 run to avoid introducing a new inline `<script>` block for a first
 increment; a natural follow-up, not a blocker.
 
+Manufacturer is entered as a raw `manufacturer_id` integer, the same way
+the other three fields are raw values today — not the `McEntityPicker`
+manufacturer backend Phase 12 already ships (`docs/developer/components/entity-picker.md`'s
+"Manufacturer backend" section). Wiring that picker in here is the same
+"blocked on the admin asset-enqueue problem" gap Phase 12/17/16's own
+"Next step" entries already track elsewhere in
+`docs/IMPLEMENTATION_STATUS.md`, not a new one this increment introduces.
+
 ## Verified
 
 - `php -l` clean on every touched/added PHP file.
-- `tests/mintcart/catalog/bulk-product-update-validator-test.php` (25
+- `tests/mintcart/catalog/bulk-product-update-validator-test.php` (34
   scenarios: field whitelist, per-field value validation incl. rejection
-  cases, product-id normalization/dedup/dropping non-positive ids) —
-  passing.
+  cases for status/quantity/price/manufacturer_id, product-id
+  normalization/dedup/dropping non-positive ids) — passing.
 - Full `tests/mintcart/**/*-test.php` suite re-run end to end — all
   passing, no regressions.
 - `product_list.twig`'s `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor
@@ -127,16 +137,16 @@ increment; a natural follow-up, not a blocker.
 
 **Not verified:** no live MySQL/admin session in this environment — a
 human should confirm the toolbar renders correctly, the confirm dialog
-appears, the redirect preserves filters, and each of the three fields
+appears, the redirect preserves filters, and each of the four fields
 actually updates the right column without disturbing anything else (in
 particular: confirm a product's descriptions/options/discounts/specials
-are unchanged after a bulk status/quantity/price update — the whole point
-of not using `editProduct()`). See `docs/MANUAL_VERIFICATION.md`'s new
-Phase 16 entry.
+are unchanged after a bulk status/quantity/price/manufacturer update — the
+whole point of not using `editProduct()`). See
+`docs/MANUAL_VERIFICATION.md`'s Phase 16 entry.
 
 ## Next step
 
-- Manufacturer, category, stock-status, and SEO fields as further
+- Category, stock-status, and SEO fields as further
   `BulkProductUpdateValidator::FIELDS` entries, same shape.
 - Chunked/resumable AJAX batch jobs (`MINTCART_TECHNICAL_PLAN.md` §29)
   for very large selections — today's synchronous PHP loop mirrors

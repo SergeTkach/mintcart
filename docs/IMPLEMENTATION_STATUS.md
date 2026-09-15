@@ -2773,10 +2773,11 @@ beyond a plain HTML form.
 
 In progress.
 - [~] Multi-select bulk actions for Products (status, quantity, price,
-      special, manufacturer, category, stock, SEO fields) — **status,
-      quantity and price are done this run**, see below; the remaining
-      fields (special, manufacturer, category, stock status, SEO) are
-      natural follow-ups over the same shape.
+      special, manufacturer, category, stock, SEO fields) — status,
+      quantity and price done in an earlier run, **manufacturer added
+      this run** (see the "Update" below); the remaining fields (special,
+      category, stock status, SEO) are natural follow-ups over the same
+      shape.
 - [ ] True inline edit (editing a value directly in the product list
       table, no separate bulk-toolbar step) — not attempted.
 - [ ] Chunked/resumable AJAX batch jobs (no background daemon) — today's
@@ -2831,6 +2832,32 @@ category, stock status, SEO), a friendlier per-field value control (a
 `<select>` for Status instead of a generic text input), or true inline
 edit directly in the product list table (likely blocked on the same
 admin asset-enqueue problem Phase 12/17 already flagged).
+
+**Update (2026-09-15, routine run): Manufacturer added as a fourth
+bulk-editable field.** Step 0 dedup check: two open PRs at the start of
+this run (#110, #111 — both Phase 10 Diagnostics wiring into storefront
+`upload/catalog/controller/product/*.php`), neither touching this run's
+admin-side files (`upload/admin/**`, `upload/system/library/mintcart/catalog/**`).
+`MintCart\Catalog\BulkProductUpdateValidator::FIELDS` gains
+`manufacturer_id` (validated as a non-negative integer, `0` = no
+manufacturer, matching OpenCart's own product-edit-form convention);
+`ModelCatalogProduct::updateProductField()` gains the matching column
+mapping; `product_list.twig`'s toolbar `<select>` gains a "Manufacturer"
+option; `en-gb/catalog/product.php` gains
+`text_bulk_field_manufacturer`. Same form-POST-then-redirect shape, no
+new AJAX endpoint, no new admin asset bundle. Full writeup:
+`docs/developer/catalog/bulk-editor.md`, `docs/upstream-diff.md`'s
+admin/product entry, `docs/MANUAL_VERIFICATION.md`'s Phase 16 section.
+Verified: `php -l` clean on every file under `upload/`/`tests/`;
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` grows
+from 27 to 34 assertions; full `tests/mintcart/` suite (77 files) re-run
+end to end — all passing, no regressions; `product_list.twig`'s tag
+counts re-checked balanced (14/14, 2/2). Not verified: no live
+MySQL/admin session in this environment, same pre-existing gap. **Next
+candidates:** category/stock-status/special-price as further
+`BulkProductUpdateValidator::FIELDS` entries (same shape); or re-check
+`gh pr list`/`list_pull_requests` first, since PRs #110/#111 may have
+merged by then.
 
 ## Phase 17 — Categories drag & drop
 
@@ -5358,3 +5385,13 @@ path still has no `SchemaOrgBuilder::breadcrumbList()` wiring, unlike
 `category.php`/`search.php`/`special.php`; MC-0015 remains the next free
 Fix Registry ID once a genuinely new candidate turns up; or re-check
 `gh pr list --state open` first.
+
+**Update (2026-09-15, routine run): Phase 16 Bulk Editor — Manufacturer
+field.** Step 0 found two open PRs (#110, #111 — Phase 10 Diagnostics,
+storefront-only) with zero file overlap. Added `manufacturer_id` as a
+fourth bulk-editable field, same shape as status/quantity/price. Full
+writeup in the Phase 16 section above. **Next candidates:** the remaining
+Phase 16 fields (special, category, stock status), Phase 10's
+Search/Manufacturer/Special Diagnostics wiring (likely already covered
+by #110 — re-check first), or re-check `list_pull_requests`/`gh pr list`
+before picking anything new.
