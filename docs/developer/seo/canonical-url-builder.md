@@ -83,17 +83,32 @@ empty) — both reach `Url::link()` and come out correct either way. This
 class relies on that same guarantee: it always joins with a plain
 `'&page=' . $page`, regardless of whether `$baseQuery` is empty.
 
+## Live wiring
+
+`category.php`, `manufacturer.php`, `search.php` and `special.php` now
+all call this class instead of carrying their own inline copy of the
+page-arithmetic — the "genuinely separate, mechanical follow-up" this
+doc previously deferred. Each controller keeps building its own
+non-pagination `$baseQuery` exactly as before (`'path=' . $category_id`,
+`'manufacturer_id=' . ...`, the already-fixed MC-0002 `$canonical_url`
+filter set for search, or `''` for special) and only hands it to
+`CanonicalUrlBuilder::build()`; `special.php` keeps passing
+`secure = true` to `Url::link()` as it always did (the only one of the
+four that forces SSL).
+
+Like `RobotsBuilder` in `common/header.php`, this runs unconditionally
+regardless of active theme — canonical/prev/next links are a per-route
+SEO signal, not a Mint component DOM contract, so `ActiveTheme::isMintAware()`
+does not gate it. Each call site wraps the builder call in a
+`try/catch (\Throwable)` that logs via `MintCart\Core\Logger` and simply
+skips emitting the link tags on failure (matching `SchemaOrgBuilder`'s
+existing wiring pattern in the same files) rather than falling back to
+a duplicated inline computation — the builder is pure and already
+covered by 8 passing scenarios, so this is a defensive backstop, not an
+expected path.
+
 ## What's deliberately not done yet
 
-- **No controller wiring.** None of `category.php`/`manufacturer.php`/
-  `search.php`/`special.php` call this class yet — each still has its
-  own inline copy of the logic, unchanged and un-behavior-affected by
-  this increment. Swapping the four inline blocks for calls into this
-  class is a genuinely separate, mechanical follow-up (replace, don't
-  redesign) once this primitive itself has been reviewed; deferred
-  rather than bundled into this increment to keep the diff reviewable
-  and to avoid touching four live storefront controllers in the same
-  change that introduces the new class.
 - **No `common/home.php` / `product/product.php` coverage.** Neither
   emits a `prev`/`next` pair today (`product/product.php` only sets a
   bare canonical with no pagination concept; `common/home.php` has no
@@ -127,6 +142,14 @@ this class's output matches the existing controllers' behavior exactly
 (a refactor-ready extraction, not a behavior change); scenarios 6-8 cover
 `limit = 0` ("show all"), zero total results, and defensive clamping of
 out-of-range input. Pure PHP, no OpenCart dependency, so no live-install
-verification gap applies here (same as `PackageManifest`) — there is
-nothing to run against a real install yet since no controller calls this
-class.
+verification gap applies here (same as `PackageManifest`) for the class
+itself.
+
+`php -l` also clean on all four now-wired controllers. Full
+`tests/mintcart/**/*-test.php` suite re-run end to end after wiring — all
+passing, no regressions. **Not verified:** no live MySQL/`vendor/twig/twig`
+session in this environment — a human should confirm on a real install
+that a category/manufacturer/search-results/specials listing page emits
+matching `<link rel="canonical">`/`<link rel="prev">`/`<link rel="next">`
+tags before and after this change (byte-identical output is the
+intended result — see `docs/MANUAL_VERIFICATION.md`'s Phase 18 section).

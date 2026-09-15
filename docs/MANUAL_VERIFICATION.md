@@ -886,3 +886,31 @@ ever actually inspected. On a real install:
    increment deliberately did not touch `product.php`, see
    `docs/developer/seo/meta-builder.md`'s "What's deliberately not done
    yet").
+
+## Phase 18 — `CanonicalUrlBuilder` live wiring, never exercised end to end
+
+`category.php`/`manufacturer.php`/`search.php`/`special.php` now all call
+`MintCart\Seo\CanonicalUrlBuilder::build()` instead of their own inline
+canonical/prev/next arithmetic (a behavior-preserving refactor, not a new
+feature) — `php -l` clean, the builder's own 8-scenario unit test already
+covers the arithmetic, and the full `tests/mintcart/` suite passes, but no
+live MySQL/browser session in this environment means the four listing
+pages were never actually loaded to confirm the rendered `<link>` tags are
+unchanged. On a real install with enough products to produce at least 3
+pages of results (set the theme's product limit low, e.g. 4, if needed):
+
+1. Load page 1 of a category, a manufacturer, a search-results page, and
+   the specials page. Confirm each has exactly one
+   `<link rel="canonical" href="...">` with **no** `page` parameter.
+2. Load page 2 of each: confirm `canonical` now includes `page=2`, and a
+   `<link rel="prev" href="...">` appears **without** a `page` parameter
+   (pointing bare at page 1).
+3. Load page 3 (or later) of each: confirm `prev` now includes `page=2`
+   (or one less than the current page), and a `<link rel="next" ...>`
+   appears pointing to the next page.
+4. Load the last page of results: confirm `next` is absent.
+5. Confirm `product/special`'s canonical/prev/next links are all `https://`
+   (or match whatever `config_ssl` resolves to) — the only one of the four
+   that forces `secure = true`.
+6. Confirm this is unaffected by which theme is active (`default` or
+   `mint_default`) — canonical links are not gated by Mint-awareness.

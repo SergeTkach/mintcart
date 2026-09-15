@@ -3044,6 +3044,53 @@ once reviewed), or pick the remaining Phase 18 sub-pieces this run left
 untouched (meta title/description has no `MetaBuilder` and no open PR as of
 this run) — or re-check `gh pr list --state open` first, since this backlog
 was large (30+ open PRs) and moving fast at the time of this run.
+
+**Update (2026-09-15, routine run): `CanonicalUrlBuilder` live wiring —
+`category.php`/`manufacturer.php`/`search.php`/`special.php` all call it
+now.** This is the mechanical follow-up the "Next step" note right above
+had been waiting for. Each controller's inline
+`http://googlewebmastercentral.blogspot.com/2011/09/pagination-with-relnext-and-relprev.html`
+block is replaced with `CanonicalUrlBuilder::build($page, $limit,
+$product_total, $baseQuery)`, wrapped in the same `try`/`catch (\Throwable)`
++ `MintCart\Core\Logger` pattern the existing `SchemaOrgBuilder` call in
+the same files already uses; each controller keeps building its own
+non-pagination `$baseQuery` exactly as before (`'path=' . $category_id`,
+`'manufacturer_id=' . ...`, search's already-fixed MC-0002 `$canonical_url`
+filter set, or `''` + `secure = true` for special). Like `RobotsBuilder`'s
+wiring in `common/header.php`, this runs unconditionally regardless of
+active theme — canonical/prev/next links are a per-route SEO signal, not a
+Mint component DOM contract.
+
+Step 0 dedup check: `mcp__github__list_pull_requests` (all open, not
+filtered by branch-name pattern) returned 6 open PRs (#110-#115) covering
+Diagnostics wiring into search/manufacturer/special/product.php (#110,
+#111), a Bulk Editor manufacturer_id field (#112), `RobotsBuilder` wiring
+into `header.php` (#113), `MetaBuilder` wiring into `category.php`/
+`home.php` (#114), and `McEntityPicker` wiring into `product_form.twig`'s
+Manufacturer field (#115). None touch `CanonicalUrlBuilder` or its four
+consumer controllers' canonical/prev/next blocks specifically — #114 does
+touch `category.php`, but only its meta-title/description fallback near
+the top of `index()`, a different concern and a different insertion point
+than this change's pagination-link block further down the same method (the
+existing `SchemaOrgBuilder` breadcrumb block already sits between them
+without conflict). Hot shared files (§0f): none of this increment's files
+are Homepage Builder block-registry files or `block.css`.
+
+Verified: `php -l` clean on all four controllers. Full `tests/mintcart/`
+suite (78 files) re-run end to end — all passing, no regressions (the
+pre-existing `CanonicalUrlBuilder` unit test already covers the arithmetic
+itself; this run only threads its output into the four real call sites, a
+behavior-preserving refactor by construction). Not verified: no live
+MySQL/browser session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 18 "`CanonicalUrlBuilder` live
+wiring" entry for the full manual script a human should run before this
+reaches production.
+
+**Next step:** meta title/description (`MetaBuilder`) still needs wiring
+into `product.php` specifically (per #114/#113's own notes, `category.php`/
+`home.php` are already claimed there); `HreflangBuilder`/`SitemapBuilder`
+still have no live consumer; or re-check `gh pr list --state open` first,
+since this backlog moves fast.
 - [ ] SEO URL, canonical, meta title/description, XML sitemap, Schema.org
       Product/Breadcrumb/Organization
 - [x] robots controls — `MintCart\Seo\RobotsBuilder`, now live-wired into
@@ -5467,3 +5514,10 @@ wired into `category.php`/`home.php` (blank meta title fallback;
 blank descriptions are preserved). See the Phase 18 section above for the full writeup. Step 0
 checked all 4 open PRs at the time (#110-#113); `category.php`/`home.php`
 were uncontended. Next: same wiring for `product.php` once #111 merges.
+
+**Trailer note (2026-09-15, routine run):** `CanonicalUrlBuilder` now has
+its first four live consumers (`category.php`/`manufacturer.php`/
+`search.php`/`special.php`) — see the Phase 18 section above for the full
+writeup. 6 open PRs (#110-#115) existed at the start of this run, none
+overlapping this increment's files. Re-check `gh pr list --state open`
+before picking the next step.
