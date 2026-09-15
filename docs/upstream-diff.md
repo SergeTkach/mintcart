@@ -1104,6 +1104,15 @@ unchanged (verbatim extraction). Nothing calls the new `move()` action yet
 (no template wiring — see `docs/developer/catalog/category-drag-drop.md`
 "Not done yet").
 
+**Update (later run):** `move()`'s inline `getCategory()`/`getCategoryPath()`
+existence/ancestor-chain checks were routed through the new
+`MintCart\Compatibility\OpenCart3\CategoryAdapter` (Phase 1's adapter
+layer, `MINTCART_TECHNICAL_PLAN.md` §5) — see
+`docs/developer/compatibility/category-adapter.md`. Implementation only,
+no behavior change: same existence-check semantics, same
+`$ancestor_path_ids` values in the same order. `moveCategory()` itself
+(the model's transactional write) is untouched.
+
 **Tests:** `php -l` clean on all four touched/added PHP files (both admin
 files, the new `MintCart\Catalog\CategoryMoveValidator`, and its test). New
 `tests/mintcart/catalog/category-move-validator-test.php` (6 scenarios —

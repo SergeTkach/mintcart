@@ -30,6 +30,14 @@ Phase 0 is **complete**.
 - [x] Service container / service registry bridge into OpenCart's existing registry —
       `MintCart\Core\Bootstrap` wraps `\Registry`, no parallel DI container
 - [~] OpenCart adapter interfaces (`MintCart\Compatibility\OpenCart3\*`) —
+      `CategoryAdapter` (this run) is the first to land with a real, live
+      consumer already wired in (`ControllerCatalogCategory::move()`, Phase
+      17) — see "Sub-step" below and
+      `docs/developer/compatibility/category-adapter.md`.
+      `SettingsAdapter`/`ExtensionAdapter`/`CustomerAdapter` exist as open,
+      unmerged PRs (#81/#87/#106) at the time of this update, each shipped
+      unwired (no real consumer yet, or the consumer's file was contended
+      by other open PRs). `ProductAdapter`/`OrderAdapter` remain unstarted.
       **first adapter shipped:** `ExtensionAdapter` (installed-vs-enabled
       extension check, extracted out of `ModelMintcartReadiness`'s inline
       `hasEnabledExtension()`) — see
@@ -74,6 +82,43 @@ Phase 0 is **complete**.
       exit), `frontend-build` (`npm ci && npm run build`). Runs on push/PR
       against `master`.
 
+**In progress.** Remaining for a future run: the other
+`MintCart\Compatibility\OpenCart3\*` adapters (`ProductAdapter`/
+`OrderAdapter` still unstarted; `SettingsAdapter`/`ExtensionAdapter`/
+`CustomerAdapter` open as unmerged PRs) and a health-check surface.
+`Bootstrap::boot()` has no automatic call site yet by design (see ADR 001)
+— the first real caller wires it.
+
+**Sub-step (this run): `CategoryAdapter`.** Step 0 dedup check against all
+54 open PRs (`#52`–`#106`) found `SettingsAdapter` (#81), `ExtensionAdapter`
+(#87) and `CustomerAdapter` (#106) already claim the other three named
+adapters from `MINTCART_TECHNICAL_PLAN.md` §5 — `ProductAdapter`/
+`CategoryAdapter`/`OrderAdapter` were the only ones left unclaimed.
+`CategoryAdapter` was picked because it has a real, already-duplicated,
+already-`master` call site to point at right now:
+`ControllerCatalogCategory::move()` (Phase 17, merged) has an inline
+`getCategory()` existence check repeated twice and a `getCategoryPath()`
+row-to-`path_id`-list loop — exactly the "extract a real duplicated inline
+pattern" shape `ExtensionAdapter`'s own doc describes for
+`ModelMintcartReadiness`. Wired into `move()` in this same run (no other
+open PR touches `upload/admin/controller/catalog/category.php`), unlike
+the other three adapters which shipped unwired. No behavior change: same
+existence-check semantics, same `$ancestor_path_ids` values/order. Full
+writeup: `docs/developer/compatibility/category-adapter.md`; upstream-diff
+addendum: `docs/upstream-diff.md`'s `category.php` entry. Verified: `php
+-l` clean across every `.php` file in `upload/` and `tests/`; full
+standalone `tests/mintcart/**/*-test.php` suite re-run end to end (35
+files, was 34, all passing — no regressions, since no existing PHP
+behavior changed beyond the two call sites now routed through the
+adapter, both proven equivalent by the existing
+`category-move-validator-test.php`, itself unaffected since
+`CategoryMoveValidator` was not touched). Same pre-existing gap as every
+earlier phase: no MySQL/OpenCart admin session in this environment — a
+human should smoke-test the drag & drop `move()` endpoint (once its live
+UI wiring lands) on a real install to confirm behavior is unchanged.
+**Next step:** `ProductAdapter`/`OrderAdapter` are the last two unstarted
+named adapters — re-check `gh pr list --state open` first, since this
+backlog grows fast.
 **In progress.** `MintCart\Compatibility\OpenCart3\*` adapters: `SettingsAdapter`
 and `ExtensionAdapter` exist as open, unmerged PRs at the time of this update;
 this run adds a fourth (`CustomerAdapter`, wrapping OpenCart's customer lookup —
@@ -4352,6 +4397,12 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (this run, 2026-09-11): Phase 1's `CategoryAdapter` shipped, wired
+into `ControllerCatalogCategory::move()`.** See the Phase 1 section above
+for the full writeup. At the time of this run there were 54 open PRs
+(`#52`–`#106`); `ProductAdapter`/`OrderAdapter` are the last two unstarted
+named adapters from `MINTCART_TECHNICAL_PLAN.md` §5 — re-check `gh pr
+list --state open` first before picking either, this backlog grows fast.
 **Update (this run, 2026-09-11): Phase 1's adapter layer gets a fourth
 adapter — `MintCart\Compatibility\OpenCart3\CustomerAdapter`.** At the
 time this run started there were 54 open PRs; `git ls-remote` showed
