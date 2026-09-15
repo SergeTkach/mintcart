@@ -3757,6 +3757,23 @@ had already consolidated onto the shared class by then).
    parameter" deprecation doesn't fire either) — so that specific
    Known-Fix-Research-Queue candidate is provisionally clear on this
    baseline, not a live gap to fix.
+   **Update (a later run): one more PHP 8.x hit found and fixed —
+   `catalog/model/extension/payment/opayo.php` called the deprecated
+   `strftime()` (deprecated since PHP 8.1), missed by the grep above since
+   that pass didn't check for `strftime`/`gmstrftime` specifically. Fixed
+   as **MC-0010** (`docs/fixes/registry.md`), replaced with the
+   byte-identical, non-deprecated `date('YmdHis')`; new
+   `tests/mintcart/fixes/mc-0010-opayo-strftime-test.php` confirms both the
+   format match and that the deprecation notice is gone. A repo-wide grep
+   confirmed this was the only occurrence of `strftime`/`gmstrftime`
+   anywhere under `upload/`. The other Known Fix Research Queue candidates
+   listed above (database reconnect, multilingual SEO URL issues — now
+   separately addressed by MC-0009 per an open PR, category path/update
+   issues, cache race conditions — MC-0007, extra session/cart writes —
+   MC-0008, installer edge cases — MC-0005) remain the natural next picks;
+   re-check `docs/fixes/registry.md` and open PRs for the current state of
+   each before starting one, since several have already landed as
+   still-unmerged PRs elsewhere in this backlog.
 5. With 1–4 either blocked on a human merge decision or already covered,
    consider **Phase 18's system-route-URL-alias gap**
    (`MINTCART_FUNCTIONAL_SCOPE.md` §4) — note this is data-seeding/UI work

@@ -796,3 +796,78 @@ before, for every store language; (2) after intentionally giving two
 different products (in two different languages) the identical keyword,
 requesting that keyword resolves to the product matching the visitor's
 current language, not an arbitrary one of the two.
+
+---
+
+## MC-0010 — `opayo.php` calls the deprecated `strftime()` (PHP 8.1+)
+
+**Problem:** `catalog/model/extension/payment/opayo.php`'s
+`setPaymentData()` (used to build a repeat/cron-triggered recurring-payment
+request to Opayo/Sage Pay) calls `strftime("%Y%m%d%H%M%S")` to build part
+of a unique `VendorTxCode`. `strftime()` (and `gmstrftime()`) has been
+deprecated since PHP 8.1 and emits an `E_DEPRECATED` notice on every call;
+a future PHP major version removes it outright. This is exactly the
+"PHP 8.x compatibility problems" candidate named in
+`MINTCART_FUNCTIONAL_SCOPE.md` §18's Known Fix Research Queue — a prior
+run's grep for this same queue item (documented in
+`docs/IMPLEMENTATION_STATUS.md`'s Phase 8 section, "Known Fix Research
+Queue candidate" update) checked for `each()`/`create_function()`/curly-
+brace string offsets/`FILTER_SANITIZE_STRING`/PHP4-style constructors/
+mysqli strict-mode and found the baseline otherwise clear, but did not
+check for `strftime()`/`gmstrftime()` specifically.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1 (this
+repository's documented upstream baseline). Not independently checked
+against other 3.x point releases (no second checkout available in this
+environment) — the fix is a locale-independent, behavior-preserving
+substitution, so this doesn't need to be re-verified per point release.
+
+**Source:** Found via a targeted repository-wide grep for historically
+known PHP 8.x-incompatible constructs
+(`strftime(`/`gmstrftime(`/`money_format(`/`get_magic_quotes`/
+`FILTER_SANITIZE_STRING`/`(unset)` casts/`each(`/`create_function(`), run
+directly against this repo's `upload/` tree — not an imported historical
+community patch. `strftime(` was the only real hit across the entire
+`upload/` tree; every other pattern checked had zero occurrences (a few
+`each(`/`(unset)` grep hits turned out to be substring false positives —
+`foreach(`/`unset(` — confirmed by inspecting each match directly).
+
+**Reproduced on MintCart baseline:** Yes — this environment has PHP 8.4
+installed (the same version this repo's own CI, `.github/workflows/ci.yml`,
+tests against). `php -r 'strftime("%Y%m%d%H%M%S");'` reproducibly emits
+`PHP Deprecated: Function strftime() is deprecated since 8.1, use
+IntlDateFormatter::format() instead` on this baseline, confirmed before
+making any change.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Replaced `strftime("%Y%m%d%H%M%S")` with
+`date('YmdHis')`. Both format specifiers are purely numeric (year, month,
+day, hour, minute, second — no locale-sensitive month/day names), and this
+value is never displayed to a user — it only ever feeds into a generated
+`VendorTxCode` string sent to the payment gateway — so `date()` is a
+byte-for-byte drop-in replacement with no behavior change, only a
+different (non-deprecated) code path to the same output. No other file
+references `strftime`/`gmstrftime` anywhere in this repository (grepped
+both `catalog/` and `admin/` model/controller trees, including
+`admin/model/extension/payment/opayo.php`, the admin-side counterpart —
+clean).
+
+**Tests:** `php -l` clean on the modified file. New
+`tests/mintcart/fixes/mc-0010-opayo-strftime-test.php` — asserts the
+deprecated call is gone from the source (regression guard), that
+`date('YmdHis')` formats a fixed timestamp identically to how
+`strftime('%Y%m%d%H%M%S')` did, and (by shelling out to a small probe
+script against this same PHP binary) that `strftime()` still emits a
+deprecation notice on this PHP version — proving the test would have
+caught the original bug — while `date('YmdHis')` emits none. Full
+`tests/mintcart/` suite re-run end to end (35 files, was 34) — all pass, no
+regressions. Not verified: no live MySQL/OpenCart admin session in this
+environment, and Opayo/Sage Pay recurring payments additionally require a
+live merchant account with that gateway — a human with both should confirm
+a real repeat/cron-triggered recurring charge still succeeds and that no
+deprecation notice appears in the PHP error log for this code path.
