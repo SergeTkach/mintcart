@@ -290,7 +290,7 @@ class ControllerExtensionPaymentKlarnaInvoice extends Controller {
 				$digest = '';
 
 				foreach ($goods_list as $goods) {
-					$digest .= utf8_decode(htmlspecialchars(html_entity_decode($goods['goods']['title'], ENT_COMPAT, 'UTF-8'))) . ':';
+					$digest .= mb_convert_encoding(htmlspecialchars(html_entity_decode($goods['goods']['title'], ENT_COMPAT, 'UTF-8')), 'ISO-8859-1', 'UTF-8') . ':';
 				}
 
 				$digest = base64_encode(pack('H*', hash('sha256', $digest . $klarna_invoice[$order_info['payment_iso_code_3']]['secret'])));
@@ -379,9 +379,9 @@ class ControllerExtensionPaymentKlarnaInvoice extends Controller {
 						preg_match('/<member><name>faultCode<\/name><value><int>([0-9]+)<\/int><\/value><\/member>/', $response, $match2);
 
 						$log = new Log('klarna_invoice.log');
-						$log->write('Failed to create an invoice for order #' . $order_info['order_id'] . '. Message: ' . utf8_encode($match[1]) . ' Code: ' . $match2[1]);
+						$log->write('Failed to create an invoice for order #' . $order_info['order_id'] . '. Message: ' . mb_convert_encoding($match[1], 'UTF-8', 'ISO-8859-1') . ' Code: ' . $match2[1]);
 
-						$json['error'] = utf8_encode($match[1]);
+						$json['error'] = mb_convert_encoding($match[1], 'UTF-8', 'ISO-8859-1');
 					} else {
 						$xml = new DOMDocument();
 						$xml->loadXML($response);

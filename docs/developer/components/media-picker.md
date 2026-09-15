@@ -112,14 +112,14 @@ import { Offcanvas } from 'bootstrap';
 const drawerEl = document.querySelector('#product-image-picker');
 const picker = createMediaPicker(drawerEl.querySelector('.mc-media-picker'), {
     async fetchItems({ query, folder, page, pageSize, signal }) {
-        const params = new URLSearchParams({ filter_name: query, folder_id: folder, page, limit: pageSize });
-        const response = await fetch(`index.php?route=design/media.list&${params}`, { signal });
+        const params = new URLSearchParams({ query, folder, page, pageSize });
+        const response = await fetch(`index.php?route=design/media/list&user_token=${userToken}&${params}`, { signal });
         const data = await response.json();
 
-        return { items: data.files, total: data.total };
+        return { items: data.items, total: data.total };
     },
     async fetchFolders() {
-        const response = await fetch('index.php?route=design/media.folders');
+        const response = await fetch(`index.php?route=design/media/folders&user_token=${userToken}`);
         const data = await response.json();
 
         return data.folders; // [{ id, label }, ...]
@@ -128,13 +128,13 @@ const picker = createMediaPicker(drawerEl.querySelector('.mc-media-picker'), {
         const form = new FormData();
         files.forEach((file) => form.append('file[]', file));
 
-        await fetch('index.php?route=design/media.upload', { method: 'POST', body: form });
+        await fetch(`index.php?route=design/media/upload&user_token=${userToken}`, { method: 'POST', body: form });
     },
     async deleteItems(items) {
-        await fetch('index.php?route=design/media.delete', {
+        await fetch(`index.php?route=design/media/delete&user_token=${userToken}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ids: items.map((item) => item.id) }),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ 'paths[]': items.map((item) => item.id) }),
         });
     },
     multiple: false,
@@ -150,6 +150,11 @@ const picker = createMediaPicker(drawerEl.querySelector('.mc-media-picker'), {
 
 drawerEl.addEventListener('mc:drawer:shown', () => picker.refresh());
 ```
+
+The routes are slash-separated (`design/media/list`, not `design/media.list`)
+— see `docs/developer/design/media-library.md` for why the dot form never
+actually worked, and the full backend contract now shipped behind these
+four routes (`ModelDesignMedia`/`ControllerDesignMedia`).
 
 ## Behavior
 
@@ -211,6 +216,23 @@ from either entry point — it needs a caller-supplied data source and a
 root element that doesn't exist until a real Product/Category/Blocks
 image field renders one. Per `CLAUDE.md` §85, the import is added to
 whichever screen needs it once that consumer exists, not ahead of time.
+
+**Update: a real data source now exists.** `ModelDesignMedia`/
+`ControllerDesignMedia` (`design/media/list`, `/folders`, `/upload`,
+`/delete`) implement exactly the `fetchItems`/`fetchFolders`/
+`uploadFiles`/`deleteItems` shape the usage example above calls —
+browsing/uploading/deleting inside OpenCart's own `image/catalog/`
+directory. See `docs/developer/design/media-library.md` for the full
+endpoint contract. What's still missing is the other half of "real
+consumer": no Product/Category/Blocks admin screen mounts
+`mc-media-picker` inside a drawer/modal yet, and it can't until the
+admin asset-enqueue question
+(`docs/developer/blocks/homepage-admin.md`'s "Why this screen uses the
+legacy admin theme") is resolved — the same blocker `McEntityPicker` is
+up against as of this writing (an open, unmerged PR proposes resolving
+it and wiring `McEntityPicker` into `product_form`'s Category field;
+re-check `gh pr list --state open` for its status before assuming
+either picker is live anywhere).
 
 ## Definition of Done checklist (`MINTCART_IMPLEMENTATION_GUIDE.md` §79)
 
