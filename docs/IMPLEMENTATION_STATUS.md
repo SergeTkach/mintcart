@@ -2885,6 +2885,20 @@ new Phase 18 entry in `docs/MANUAL_VERIFICATION.md` for the exact steps.
 centralization, and Manufacturer/Special breadcrumb wiring are all
 unclaimed next steps; Product schema awaits its page template.
 
+## Modern Editor (Functional Scope §24, P2/RESEARCH)
+
+- [x] Research step: verify whether the rich-text editor needs replacing —
+      resolved via `docs/adr/007-modern-editor-decision.md`. **Decision:
+      keep Summernote 0.8.18** (OpenCart 3.0.5.1's stock editor, admin-only,
+      already covers multilingual/image integration per the ADR's checklist
+      against Functional Scope §24's own requirements). No new `Mc*` editor
+      component built — no real gap identified, per `CLAUDE.md` §85. Three
+      concrete revisit conditions are documented in the ADR rather than
+      leaving this open-ended.
+
+Resolved. No further action unless one of the ADR's revisit conditions is
+met.
+
 ## Phase 9 (Technical Plan §42 numbering) — Productivity
 
 *(Numbering note: Technical Plan §42 lists Bulk Editor / category drag-and-drop /
@@ -4066,6 +4080,29 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (2026-09-09, routine run): Modern Editor RESEARCH item resolved.**
+Step 0 found 46 open PRs (#52–#94) at the start of this run, covering
+nearly every phase (all Phase 12 entity-picker backends, most Setup Wizard
+steps, all Business Settings facades, Phase 15 Commerce services, six
+separate Phase 18 SEO builders, five Fixes-registry entries, and — a
+second instance of the PackageManifest duplication pattern first seen with
+the Homepage Builder blocks — at least four open PRs (#82, #85, #86, #94)
+each independently shipping their own copy of `MintCart\Update\PackageManifest`).
+Phase 11 (Technical Plan "Update/Compatibility") was treated as blocked
+per the shared-file/hot-area collision guard and avoided entirely. Picked
+Functional Scope §24 (Modern Editor) instead: genuinely unclaimed (no open
+PR title or body mentions "editor"/"summernote"/"tinymce"), self-contained
+(one new ADR file, no shared registry/controller touched), and matches the
+established pattern of resolving a RESEARCH-priority item via ADR before
+any code (same shape as Autosave/Rollback). See
+`docs/adr/007-modern-editor-decision.md`: decision is to keep Summernote
+0.8.18 for 1.0, no new editor component built. **Next candidates for a
+future run:** re-run `gh pr list --state open` first (46 PRs were in
+flight, likely to shift significantly by the next run) — Functional Scope
+§31 (Theme live preview, P1/P2, not yet claimed by title as of this run)
+is a similar low-collision RESEARCH-flavored candidate if still open; the
+Phase 18 SEO builders and Phase 11 Update Manager work should stay
+avoided until their PR counts drop, per the hot-file collision guard.
 **Update (this run, 2026-09-09): fix MC-0009 shipped** —
 `ControllerStartupSeoUrl::index()`'s incoming pretty-URL decode now
 filters by `language_id` (with a language-agnostic fallback), fixing a
