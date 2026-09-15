@@ -17,16 +17,39 @@ class ModelSettingSetting extends Model {
 	}
 
 	public function editSetting($code, $data, $store_id = 0) {
-		$this->db->query("DELETE FROM `" . DB_PREFIX . "setting` WHERE store_id = '" . (int)$store_id . "' AND `code` = '" . $this->db->escape($code) . "'");
+		// MintCart fix MC-0012 (docs/fixes/registry.md): the delete-then-
+		// reinsert sequence below used to run outside any transaction. A
+		// failure partway through the INSERT loop (DB::query() throws on
+		// any SQL error, e.g. a dropped connection - MC-0011) left this
+		// code's settings partially deleted: the DELETE above had already
+		// committed, but only some (or none) of the new rows had been
+		// re-inserted. Wrapping the whole sequence in a transaction means a
+		// failure rolls back to the previous settings instead of losing
+		// them - the same pattern MintCart\Core\Migration\MigrationManager
+		// and ControllerCatalogCategory::move()/moveCategory() already use
+		// for the same reason (OpenCart 3's \DB\MySQLi has no transaction
+		// wrapper methods, only raw START TRANSACTION/COMMIT/ROLLBACK
+		// queries).
+		$this->db->query("START TRANSACTION");
 
-		foreach ($data as $key => $value) {
-			if (substr($key, 0, strlen($code)) == $code) {
-				if (!is_array($value)) {
-					$this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape($value) . "'");
-				} else {
-					$this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape(json_encode($value, true)) . "', serialized = '1'");
+		try {
+			$this->db->query("DELETE FROM `" . DB_PREFIX . "setting` WHERE store_id = '" . (int)$store_id . "' AND `code` = '" . $this->db->escape($code) . "'");
+
+			foreach ($data as $key => $value) {
+				if (substr($key, 0, strlen($code)) == $code) {
+					if (!is_array($value)) {
+						$this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape($value) . "'");
+					} else {
+						$this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape(json_encode($value, true)) . "', serialized = '1'");
+					}
 				}
 			}
+
+			$this->db->query("COMMIT");
+		} catch (\Throwable $e) {
+			$this->db->query("ROLLBACK");
+
+			throw $e;
 		}
 	}
 

@@ -5,10 +5,12 @@ MintCart's storefront header component (`MINTCART_IMPLEMENTATION_GUIDE.md`
 parallel increment — see `docs/IMPLEMENTATION_STATUS.md`).
 
 CSS: `assets/src/css/components/header.css`
-No JS — purely presentational. The account menu reuses Bootstrap 5's
-dropdown primitive (`data-bs-toggle="dropdown"`), the same allowance
-already used by `mc-modal`/`mc-drawer` for Bootstrap's Modal/Offcanvas JS
-(`MINTCART_IMPLEMENTATION_GUIDE.md` §9).
+No JS of its own — the account menu reuses Bootstrap 5's dropdown primitive
+(`data-bs-toggle="dropdown"`), and mobile navigation (below) composes the
+existing `mc-drawer` component (`assets/src/js/components/drawer.js`,
+already wired into `catalog.js`) rather than adding a new script — the same
+allowance already used by `mc-modal`/`mc-drawer` for Bootstrap's
+Modal/Offcanvas JS (`MINTCART_IMPLEMENTATION_GUIDE.md` §9).
 
 ## Provider
 
@@ -122,9 +124,13 @@ verification of any Mint component still needs that link added first.
         {# contacts.phone, widgets.language, widgets.currency, account menu, links.wishlist #}
     </div>
     <div class="mc-header__main">
-        {# branding.logo/name -> links.home, widgets.search, widgets.cart #}
+        {# mobile nav toggle, branding.logo/name -> links.home, widgets.search, widgets.cart #}
     </div>
-    {% if widgets.menu %}<nav class="mc-header__nav mc-legacy">{{ widgets.menu|raw }}</nav>{% endif %}
+    {% if widgets.menu %}
+        <nav class="offcanvas offcanvas-lg offcanvas-start mc-drawer mc-header__nav" id="mcHeaderNav">
+            {# offcanvas-header (mobile only) + widgets.menu in .offcanvas-body #}
+        </nav>
+    {% endif %}
 </header>
 ```
 
@@ -137,7 +143,38 @@ wishlist count (matching `ControllerCommonHeader`'s pre-existing
 `sprintf($this->language->get('text_wishlist'), ...)` call) — `Header`
 does not re-format it from `account.wishlist_count`, which stays available
 in the contract for a theme that wants a different presentation (e.g. a
-badge counter instead of inline text).
+badge counter instead of inline text). `text_menu`/`text_close` **are** two
+new strings, added to the same file for the mobile navigation panel below
+(`docs/upstream-diff.md`'s `catalog/language/en-gb/common/header.php`
+entry).
+
+## Mobile navigation
+
+`mc-header__nav` (the `<nav>` wrapping `widgets.menu`) carries Bootstrap
+5's responsive off-canvas classes — `.offcanvas.offcanvas-lg.offcanvas-start`
+— plus `.mc-drawer` (`docs/developer/components/drawer.md`). At the `lg`
+breakpoint (992px) and up, Bootstrap's own CSS neutralizes the off-canvas
+positioning/backdrop/transform and the nav renders as a normal static
+block, unchanged from before this landed. Below `lg`, it becomes the same
+slide-in panel `mc-drawer` uses everywhere else, opened by a new
+`.mc-header__nav-toggle` hamburger button (visible only below `lg`, via
+`d-lg-none`) through the existing `data-mc-action="open-drawer"` /
+`data-mc-target="#mcHeaderNav"` contract — no new JS component, no change
+to `initDrawerTriggers()`'s call sites (already called once from
+`catalog.js`).
+
+This is `mc-drawer`'s first real trigger-button consumer in this repo, so
+`assets/src/js/components/drawer.js` gained one small addition:
+`syncTriggerAriaExpanded()` keeps `aria-expanded` on any
+`[data-mc-action="open-drawer"]` trigger referencing the drawer via
+`data-mc-target="#<drawer id>"` in sync with the panel's actual
+shown/hidden state (Bootstrap's dropdown/collapse primitives do this for
+their own `data-bs-toggle` triggers automatically; `mc-drawer` deliberately
+never uses that attribute, so nothing else did this before). See
+`docs/developer/components/drawer.md` for the full behavior — this is a
+generic drawer improvement, not header-specific, and benefits any future
+`data-mc-action="open-drawer"` trigger (e.g. a future cart-drawer button)
+the same way.
 
 ## Bootstrap grid/utilities, not a parallel one
 
@@ -158,6 +195,12 @@ this component never reimplements grid/flex math of its own.
   behavior OpenCart's own sub-controller templates already provide — the
   `mc-legacy` wrapper only adds layout spacing, never touches the
   fragment's own markup (`MINTCART_IMPLEMENTATION_GUIDE.md` §36).
+- The mobile navigation toggle is a real `<button>` with `aria-controls`,
+  a translated `aria-label` (`text_menu`), and `aria-expanded` kept in sync
+  with the panel's actual open/closed state (see "Mobile navigation"
+  above). Opening it hands off to Bootstrap's `Offcanvas` for focus
+  trapping, `Escape`-to-close and backdrop click-to-close — same
+  `mc-drawer` behavior documented in `docs/developer/components/drawer.md`.
 
 ## Definition of Done checklist (`MINTCART_IMPLEMENTATION_GUIDE.md` §79)
 
@@ -168,7 +211,9 @@ this component never reimplements grid/flex math of its own.
 - [x] Colors/spacing/fonts read from `--mc-*` tokens
 - [x] Keyboard usable (real `<a>`/`<button>` elements, Bootstrap dropdown
       focus/`Escape` behavior)
-- [x] Mobile checked (topbar/main rows use `flex-wrap`, no fixed widths)
+- [x] Mobile checked (topbar/main rows use `flex-wrap`, no fixed widths;
+      navigation gets a dedicated off-canvas/hamburger pattern below `lg` —
+      see "Mobile navigation" above)
 - [x] No Bootstrap 3 dependency in the component's own CSS
 - [x] No OCMOD required
 - [x] Ships a real Mint Default `.twig` file, resolvable via

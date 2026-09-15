@@ -16,7 +16,25 @@ class ControllerStartupSeoUrl extends Controller {
 			}
 
 			foreach ($parts as $part) {
-				$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE keyword = '" . $this->db->escape($part) . "' AND store_id = '" . (int)$this->config->get('config_store_id') . "'");
+				// MintCart fix MC-0009 (docs/fixes/registry.md): prefer the
+				// seo_url row saved for the request's actual resolved
+				// language (config_language_id is already set by
+				// startup/startup.php, which runs before this pre-action -
+				// see the fix registry entry for why). rewrite() below
+				// already filters outgoing links by language_id; this
+				// mirrors that on the incoming decode side, which
+				// previously matched on keyword + store_id only and could
+				// silently resolve to a different language's entity that
+				// happens to share the same keyword text.
+				$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE keyword = '" . $this->db->escape($part) . "' AND store_id = '" . (int)$this->config->get('config_store_id') . "' AND language_id = '" . (int)$this->config->get('config_language_id') . "'");
+
+				// No row for the current language - fall back to the
+				// original language-agnostic match so a store that only
+				// ever set up SEO keywords for one language keeps working
+				// exactly as before for every other language.
+				if (!$query->num_rows) {
+					$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE keyword = '" . $this->db->escape($part) . "' AND store_id = '" . (int)$this->config->get('config_store_id') . "'");
+				}
 
 				if ($query->num_rows) {
 					$url = explode('=', $query->row['query']);
@@ -101,6 +119,27 @@ class ControllerStartupSeoUrl extends Controller {
 
 					unset($data[$key]);
 				}
+			}
+		}
+
+		// MintCart\Seo\SystemRoutes (MINTCART_FUNCTIONAL_SCOPE.md §4): a
+		// fixed whitelist of "system pages" (cart, checkout, search, ...)
+		// that carry no id parameter of their own, so the loop above never
+		// matches them - only product_id/manufacturer_id/path/
+		// information_id links get a pretty URL today. Incoming requests
+		// already decode a plain keyword=>route seo_url row correctly (see
+		// this class's own index() method, the generic branch after the
+		// product_id/category_id/manufacturer_id/information_id checks);
+		// this is the missing other half - generating that same pretty URL
+		// when a controller calls $this->url->link('checkout/cart', ...).
+		// Documented in docs/upstream-diff.md.
+		if (!$url && isset($data['route']) && in_array($data['route'], \MintCart\Seo\SystemRoutes::ROUTES, true)) {
+			$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE `query` = '" . $this->db->escape($data['route']) . "' AND store_id = '" . (int)$this->config->get('config_store_id') . "' AND language_id = '" . (int)$this->config->get('config_language_id') . "'");
+
+			if ($query->num_rows && $query->row['keyword']) {
+				$url .= '/' . $query->row['keyword'];
+
+				unset($data['route']);
 			}
 		}
 

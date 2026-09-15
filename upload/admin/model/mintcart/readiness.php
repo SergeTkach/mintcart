@@ -51,13 +51,12 @@ class ModelMintcartReadiness extends Model {
 	// "enabled" — each one has its own `<type>_<code>_status` config flag
 	// (set by that extension's own admin controller when saved), so
 	// readiness needs at least one *enabled* one, not merely one installed.
+	// Extracted to MintCart\Compatibility\OpenCart3\ExtensionAdapter so a
+	// future Business -> Delivery/Payments facade can reuse the same
+	// installed-vs-enabled check instead of re-deriving it.
 	private function hasEnabledExtension($type) {
-		foreach ($this->model_setting_extension->getInstalled($type) as $code) {
-			if ($this->config->get($type . '_' . $code . '_status')) {
-				return true;
-			}
-		}
+		$adapter = new \MintCart\Compatibility\OpenCart3\ExtensionAdapter($this->config, $this->model_setting_extension);
 
-		return false;
+		return $adapter->hasEnabled($type);
 	}
 }

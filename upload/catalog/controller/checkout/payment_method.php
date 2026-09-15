@@ -4,38 +4,14 @@ class ControllerCheckoutPaymentMethod extends Controller {
 		$this->load->language('checkout/checkout');
 
 		if (isset($this->session->data['payment_address'])) {
-			// Totals
-			$totals = array();
-			$taxes = $this->cart->getTaxes();
-			$total = 0;
+			// Totals - computed via MintCart\Compatibility\OpenCart3\TotalsAdapter,
+			// which extracts this identical loop out of this file and
+			// checkout/confirm.php (see docs/upstream-diff.md's entry for
+			// this file).
+			$totals_adapter = new \MintCart\Compatibility\OpenCart3\TotalsAdapter($this->config, $this->load, $this->registry);
+			$totals_result = $totals_adapter->calculate($this->cart->getTaxes());
 
-			// Because __call can not keep var references so we put them into an array.
-			$total_data = array(
-				'totals' => &$totals,
-				'taxes'  => &$taxes,
-				'total'  => &$total
-			);
-			
-			$this->load->model('setting/extension');
-
-			$sort_order = array();
-
-			$results = $this->model_setting_extension->getExtensions('total');
-
-			foreach ($results as $key => $value) {
-				$sort_order[$key] = $this->config->get('total_' . $value['code'] . '_sort_order');
-			}
-
-			array_multisort($sort_order, SORT_ASC, $results);
-
-			foreach ($results as $result) {
-				if ($this->config->get('total_' . $result['code'] . '_status')) {
-					$this->load->model('extension/total/' . $result['code']);
-					
-					// We have to put the totals in an array so that they pass by reference.
-					$this->{'model_extension_total_' . $result['code']}->getTotal($total_data);
-				}
-			}
+			$total = $totals_result['total'];
 
 			// Payment Methods
 			$method_data = array();

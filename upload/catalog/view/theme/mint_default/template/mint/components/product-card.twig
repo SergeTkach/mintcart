@@ -1,9 +1,9 @@
 <article class="mc-product-card{% if display.action_variant == 'compact' %} mc-product-card--compact{% endif %}">
     <div class="mc-product-card__media">
         <a class="mc-product-card__media-link" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
-            <img class="mc-product-card__image" src="{{ product.image }}" alt="{{ product.image_alt }}" loading="lazy">
+            <img class="mc-product-card__image" src="{{ product.image }}" alt="{{ product.image_alt }}" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
             {% if display.show_secondary_image and product.secondary_image %}
-                <img class="mc-product-card__image mc-product-card__image--secondary" src="{{ product.secondary_image }}" alt="" loading="lazy">
+                <img class="mc-product-card__image mc-product-card__image--secondary" src="{{ product.secondary_image }}" alt="" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
             {% endif %}
         </a>
 
@@ -73,7 +73,7 @@
         </button>
 
         {% if product.actions.quick_order and display.action_variant != 'compact' %}
-            <button type="button" class="mc-button mc-button--secondary mc-product-card__quick-order" data-mc-action="quick-order" data-product-id="{{ product.id }}">
+            <button type="button" class="mc-button mc-button--secondary mc-product-card__quick-order" data-mc-action="quick-order" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">
                 {{ text_quick_order }}
             </button>
         {% endif %}
