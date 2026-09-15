@@ -1992,6 +1992,25 @@ exactly as before (verified by re-running the full frontend build and
 confirming the existing `catalog.min.js`/`admin.min.js` bundling still
 produces the expected storefront-only scoping).
 
+**Update (this run — Phase 10 (Technical Plan), Diagnostics):** same
+`MintCart\Core\Diagnostics` wiring as `category.php`/`search.php`/
+`special.php`/`manufacturer.php`'s own "Update" entries — constructs it
+right after `$mint_render_product_cards` is resolved (unconditionally,
+so it also covers the case where the theme isn't Mint-aware and the
+related-products `ComponentRenderer` never runs), gated by
+`mintcart_dev_mode`, passes it as `ComponentRenderer`'s 4th constructor
+argument, and appends `$diagnostics->summary()` as an HTML comment before
+`setOutput()` only when dev mode is enabled. This was the last remaining
+`ComponentRenderer` call site in `upload/catalog/controller/product/`
+without `Diagnostics` wired in. **Why it can't live in the MintCart
+layer:** same reasoning as `category.php`'s entry — a controller is the
+only place that already knows both `config_theme` and whether to run the
+Mint pipeline. **Compatibility impact:** none when `mintcart_dev_mode` is
+unset (the default). **Tests:** `php -l` clean; no new test file (covered
+by `component-renderer-test.php`'s existing scenarios, which are
+call-site-agnostic); full `tests/mintcart/` suite (77 files) re-run end
+to end — all passing, no regressions.
+
 **Not done yet, by design:**
 - **Reviews tab is a read-only placeholder** (`text_no_reviews` only,
   Reviews are loaded via a separate `product/product.review` AJAX endpoint
