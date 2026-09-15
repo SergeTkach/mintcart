@@ -97,7 +97,9 @@ compatible" into one class.
   later increment's job, once the flow actually calls `MigrationManager`
   with this list.
 - `checksum` is opaque here (a `sha256:...`-style string) — verifying it
-  against a downloaded file is the `verify` step, not this class's job.
+  against a downloaded file is the `verify` step
+  (`MintCart\Update\PackageVerifier`, see
+  `docs/developer/update/package-verifier.md`), not this class's job.
 
 ## Compatibility constraints
 
@@ -237,10 +239,12 @@ caller resolves which paths exist and their sizes (e.g. via `file_exists()`/
 - No actual file copy/restore — `plan()` only decides *what* to copy;
   performing the copy (and a restore action on top of a stored snapshot)
   is later work, once the `files` step itself exists.
-- No download/verify/maintenance-mode/file-copy/migration-runner/
+- No download/maintenance-mode/file-copy/migration-runner/
   cache-clear/health-check steps — the rest of the Technical Plan §33 flow.
-  The `health-check` step should wait for `MintCart\Core\HealthCheck`
-  (tracked separately) to land before it's wired in.
+  `verify` now has a first increment — see
+  `docs/developer/update/package-verifier.md`. The `health-check` step
+  should wait for `MintCart\Core\HealthCheck` (tracked separately) to land
+  before it's wired in.
 - No package **signing** — `checksum` is carried as opaque data; nothing
   computes or verifies a hash against it yet.
 
