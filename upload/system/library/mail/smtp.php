@@ -101,7 +101,13 @@ class Smtp extends \stdClass {
 				}
 			}
 
-			fputs($handle, 'EHLO ' . getenv('SERVER_NAME') . "\r\n");
+			// Fix MC-0013 (docs/fixes/registry.md): getenv('SERVER_NAME') is
+			// empty outside a real web request (CLI/cron), which produced a
+			// malformed 'EHLO \r\n'/'HELO \r\n' with no hostname argument
+			// and made some SMTP servers reject the whole session.
+			$helo_hostname = \MintCart\Mail\HeloHostname::resolve();
+
+			fputs($handle, 'EHLO ' . $helo_hostname . "\r\n");
 
 			$reply = '';
 
@@ -131,7 +137,7 @@ class Smtp extends \stdClass {
 					throw new \Exception('Error: TLS could not be established!');
 				}
 
-				fputs($handle, 'EHLO ' . getenv('SERVER_NAME') . "\r\n");
+				fputs($handle, 'EHLO ' . $helo_hostname . "\r\n");
 
 				$this->handleReply($handle, 250, 'Error: EHLO not accepted from server!');
 			}
@@ -150,7 +156,7 @@ class Smtp extends \stdClass {
 				$this->handleReply($handle, 235, 'Error: Password not accepted from server!');
 
 			} else {
-				fputs($handle, 'HELO ' . getenv('SERVER_NAME') . "\r\n");
+				fputs($handle, 'HELO ' . $helo_hostname . "\r\n");
 
 				$this->handleReply($handle, 250, 'Error: HELO not accepted from server!');
 			}
