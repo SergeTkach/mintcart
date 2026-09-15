@@ -80,6 +80,45 @@ already-tested fallback walk instead of a second copy of it. Every
 existing 2-argument call site is unaffected (`$kind` defaults to
 `'components'`, unchanged behavior).
 
+## `$diagnostics` (Phase 10): render-time instrumentation
+
+The constructor's optional 4th argument is `?MintCart\Core\Diagnostics
+$diagnostics = null` (`docs/developer/core/diagnostics.md`,
+`MINTCART_TECHNICAL_PLAN.md` §35). `render()` is the one method every
+component render — `product-card`, blocks, header, footer, anything
+resolved through this class regardless of `$kind` — already passes
+through, so this is the single choke point that instruments every current
+and future consumer without touching each call site individually.
+
+When a `Diagnostics` instance is passed, `render()`:
+
+- increments its `component_render` counter once per call that actually
+  reaches Twig (see below for what does *not* count), and
+- times the Twig render itself into the `component_render` duration
+  bucket (`Diagnostics::time()` accumulates across calls, so a listing
+  page's 20-40 product-card renders sum into one total).
+
+The "intentionally empty override" short-circuit (`$code === ''`, see
+above) returns before any of this — an empty override does no real
+rendering work, so counting it would inflate the numbers with calls that
+never touched Twig. Same for a thrown resolution error (`resolve()`
+finding the component nowhere in the chain): the exception propagates
+before `Diagnostics` is ever touched.
+
+`null` (the default) means zero behavior change — every existing 2-/3-
+argument call site is unaffected, same guarantee `$kind` already has.
+`ControllerProductCategory` is the first real caller passing one, gated
+behind a `mintcart_dev_mode` setting read via `$this->config->get()`
+(standard OpenCart settings storage — `CLAUDE.md` §6, no new Mint table);
+when enabled, the controller appends the resulting
+`$diagnostics->summary()` as an HTML comment to the response body (never
+into `$data`/the template itself, so no theme override can accidentally
+surface it in visible markup — Functional Scope §19's "Production UI не
+повинен показувати sensitive debug data"). Real DB query counting is
+still not wired anywhere — that remains the deliberately deferred,
+separate upstream-diff decision `docs/developer/core/diagnostics.md`
+documents.
+
 ## Usage
 
 ```php

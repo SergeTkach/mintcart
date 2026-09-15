@@ -164,9 +164,20 @@ class ControllerProductCategory extends Controller {
 			$mint_theme = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
 			$mint_render_product_cards = \MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme);
 
+			// MintCart\Core\Diagnostics (MINTCART_TECHNICAL_PLAN.md §35,
+			// MINTCART_FUNCTIONAL_SCOPE.md §19 "render time"). Off by
+			// default - every mark()/increment()/time() call becomes a
+			// cheap no-op unless a store explicitly sets the
+			// 'mintcart_dev_mode' setting (no admin toggle exists for it
+			// yet; docs/developer/core/diagnostics.md's "Next step" tracks
+			// that as a separate increment). First real consumer of both
+			// this flag and ComponentRenderer's optional 4th constructor
+			// argument - see that class's own doc comment.
+			$mint_diagnostics = new \MintCart\Core\Diagnostics((bool)$this->config->get('mintcart_dev_mode'));
+
 			if ($mint_render_product_cards) {
 				$product_card_list_renderer = new \MintCart\Design\ProductCardListRenderer(
-					new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme)
+					new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme, 'components', $mint_diagnostics)
 				);
 
 				$text_badge = array(
@@ -480,7 +491,22 @@ class ControllerProductCategory extends Controller {
 				}
 			}
 
-			$this->response->setOutput($this->load->view('product/category', $data));
+			$mint_diagnostics->mark('view_rendered');
+
+			$output = $this->load->view('product/category', $data);
+
+			// Functional Scope §19: "Production UI не повинен показувати
+			// sensitive debug data" - the summary is only ever appended
+			// when dev mode is on (isEnabled() mirrors the constructor
+			// flag above), and only as an HTML comment appended to the
+			// final response body, never written into $data/the template
+			// itself, so no theme override can accidentally surface it in
+			// visible markup.
+			if ($mint_diagnostics->isEnabled()) {
+				$output .= "\n<!-- mintcart-diagnostics " . json_encode($mint_diagnostics->summary()) . " -->";
+			}
+
+			$this->response->setOutput($output);
 		} else {
 			$url = '';
 
