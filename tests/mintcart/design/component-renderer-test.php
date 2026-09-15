@@ -24,8 +24,11 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../../upload/system/library/mintcart/design/componentrenderer.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/commerce/productviewprovider.php';
+require __DIR__ . '/../../../upload/system/library/mintcart/core/diagnostics.php';
 
 use MintCart\Commerce\ProductViewProvider;
+
+use MintCart\Core\Diagnostics;
 
 use MintCart\Design\ComponentRenderer;
 
@@ -418,6 +421,92 @@ assertSame_(
     $failures
 );
 
+// 14. MintCart\Core\Diagnostics wiring (constructor's optional 4th
+//     argument, MINTCART_TECHNICAL_PLAN.md §35): render()'s "intentionally
+//     empty override" short-circuit (scenario covered indirectly since
+//     scenario 1-13 never exercise it) must return before ever touching
+//     Diagnostics - an empty override does no real rendering work, so it
+//     must not be counted as one. This is real-repo-independent and does
+//     NOT require vendor/twig/twig (render() never reaches
+//     `new \Template('Twig')` on this path), unlike the happy-path Twig
+//     render itself (see the file docblock).
+$root = buildThemesFixture([
+    'mint_default' => ['components' => ['product-card']],
+    'custom_theme' => ['components' => ['product-card']],
+]);
+file_put_contents($root . '/custom_theme/template/mint/components/product-card.twig', '');
+
+$diagnostics = new Diagnostics(true);
+$renderer = new ComponentRenderer($root, 'custom_theme', 'components', $diagnostics);
+
+assertSame_(
+    '',
+    $renderer->render('product-card'),
+    'Scenario 14: render() should return an empty string for an intentionally-empty override',
+    $failures
+);
+assertSame_(
+    0,
+    $diagnostics->counter('component_render'),
+    'Scenario 14: an intentionally-empty override must not increment the component_render counter',
+    $failures
+);
+assertSame_(
+    0.0,
+    $diagnostics->duration('component_render'),
+    'Scenario 14: an intentionally-empty override must not record any component_render duration',
+    $failures
+);
+removeDirectory($root);
+
+// 15. Diagnostics wiring, continued: when the component exists nowhere in
+//     the chain (resolve() throws before render() ever reaches the
+//     Diagnostics-wrapped section), the counter/duration stay untouched -
+//     a thrown resolution error is not a partially-measured render.
+$root = buildThemesFixture([
+    'mint_default' => ['components' => []],
+    'custom_theme' => ['components' => []],
+]);
+
+$diagnostics = new Diagnostics(true);
+$renderer = new ComponentRenderer($root, 'custom_theme', 'components', $diagnostics);
+$threw = false;
+
+try {
+    $renderer->render('product-card');
+} catch (\RuntimeException $e) {
+    $threw = true;
+}
+
+assertSame_(true, $threw, 'Scenario 15: render() should still throw when the component exists nowhere, even with Diagnostics attached', $failures);
+assertSame_(
+    0,
+    $diagnostics->counter('component_render'),
+    'Scenario 15: a thrown resolution error must not increment the component_render counter',
+    $failures
+);
+removeDirectory($root);
+
+// 16. Passing no Diagnostics (the default) must leave existing behavior
+//     byte-for-byte unaffected on the same empty-override path scenario 14
+//     exercises - i.e. the 4th constructor argument being optional truly
+//     means every pre-existing 2-/3-argument call site is unaffected.
+$root = buildThemesFixture([
+    'mint_default' => ['components' => ['product-card']],
+    'custom_theme' => ['components' => ['product-card']],
+]);
+file_put_contents($root . '/custom_theme/template/mint/components/product-card.twig', '');
+
+$renderer = new ComponentRenderer($root, 'custom_theme');
+
+assertSame_(
+    '',
+    $renderer->render('product-card'),
+    'Scenario 16: render() without a Diagnostics instance should behave exactly as before (empty override -> empty string)',
+    $failures
+);
+removeDirectory($root);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -426,5 +515,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ComponentRenderer smoke test (' . 13 . " scenarios)\n";
+echo 'PASS: ComponentRenderer smoke test (' . 16 . " scenarios)\n";
 exit(0);
