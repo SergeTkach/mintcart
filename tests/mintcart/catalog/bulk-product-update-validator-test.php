@@ -40,7 +40,8 @@ $validator = new BulkProductUpdateValidator();
 assertTrue($validator->isValidField('status'), 'isValidField: status is valid', $failures);
 assertTrue($validator->isValidField('quantity'), 'isValidField: quantity is valid', $failures);
 assertTrue($validator->isValidField('price'), 'isValidField: price is valid', $failures);
-assertTrue(!$validator->isValidField('manufacturer_id'), 'isValidField: manufacturer_id is not (yet) a whitelisted field', $failures);
+assertTrue($validator->isValidField('manufacturer_id'), 'isValidField: manufacturer_id is valid', $failures);
+assertTrue(!$validator->isValidField('category_ids'), 'isValidField: category_ids is not (yet) a whitelisted field', $failures);
 assertTrue(!$validator->isValidField(''), 'isValidField: blank is not valid', $failures);
 
 // --- validateValue() - status ---
@@ -69,9 +70,18 @@ assertTrue($validator->validateValue('price', '-1') !== null, 'price: a negative
 assertTrue($validator->validateValue('price', 'free') !== null, 'price: a non-numeric value is rejected', $failures);
 assertTrue($validator->validateValue('price', '') !== null, 'price: blank is rejected', $failures);
 
+// --- validateValue() - manufacturer_id ---
+
+assertSame(null, $validator->validateValue('manufacturer_id', '0'), 'manufacturer_id: 0 (no manufacturer) is valid', $failures);
+assertSame(null, $validator->validateValue('manufacturer_id', '12'), 'manufacturer_id: a positive whole number is valid', $failures);
+assertTrue($validator->validateValue('manufacturer_id', '-1') !== null, 'manufacturer_id: a negative number is rejected', $failures);
+assertTrue($validator->validateValue('manufacturer_id', '2.5') !== null, 'manufacturer_id: a decimal is rejected (must be a whole number)', $failures);
+assertTrue($validator->validateValue('manufacturer_id', 'acme') !== null, 'manufacturer_id: a non-numeric value is rejected', $failures);
+assertTrue($validator->validateValue('manufacturer_id', '') !== null, 'manufacturer_id: blank is rejected', $failures);
+
 // --- validateValue() - unknown field, defensive ---
 
-assertTrue($validator->validateValue('manufacturer_id', '5') !== null, 'validateValue: an unwhitelisted field always errors, defensively', $failures);
+assertTrue($validator->validateValue('category_ids', '5') !== null, 'validateValue: an unwhitelisted field always errors, defensively', $failures);
 
 // --- normalizeProductIds() ---
 
@@ -88,5 +98,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BulkProductUpdateValidator smoke test (25 scenarios)\n";
+echo "PASS: BulkProductUpdateValidator smoke test (34 scenarios)\n";
 exit(0);

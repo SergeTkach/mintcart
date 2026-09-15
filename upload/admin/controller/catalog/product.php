@@ -235,10 +235,10 @@ class ControllerCatalogProduct extends Controller {
 	 * docs/developer/blocks/homepage-admin.md's "Why this screen uses the
 	 * legacy admin theme" gives for other admin-side MintCart additions.
 	 *
-	 * Only the three fields MintCart\Catalog\BulkProductUpdateValidator
-	 * whitelists (status/quantity/price) are supported this run -
-	 * manufacturer/category/stock-status/SEO fields are natural follow-ups
-	 * over the same shape, see docs/developer/catalog/bulk-editor.md.
+	 * Only the fields MintCart\Catalog\BulkProductUpdateValidator whitelists
+	 * (status/quantity/price/manufacturer_id) are supported -
+	 * category/stock-status/SEO fields are natural follow-ups over the
+	 * same shape, see docs/developer/catalog/bulk-editor.md.
 	 */
 	public function bulkUpdate() {
 		$this->load->language('catalog/product');

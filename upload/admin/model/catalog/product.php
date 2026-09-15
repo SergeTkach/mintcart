@@ -323,9 +323,10 @@ class ModelCatalogProduct extends Model {
 	 */
 	public function updateProductField($product_id, $field, $value) {
 		$columns = array(
-			'status'   => "status = '" . (int)$value . "'",
-			'quantity' => "quantity = '" . (int)$value . "'",
-			'price'    => "price = '" . (float)$value . "'"
+			'status'          => "status = '" . (int)$value . "'",
+			'quantity'        => "quantity = '" . (int)$value . "'",
+			'price'           => "price = '" . (float)$value . "'",
+			'manufacturer_id' => "manufacturer_id = '" . (int)$value . "'"
 		);
 
 		if (!isset($columns[$field])) {
