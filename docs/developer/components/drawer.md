@@ -80,6 +80,28 @@ add it directly to the root element next to `.offcanvas`
 <div class="offcanvas offcanvas-bottom mc-drawer">…</div>
 ```
 
+### Responsive (breakpoint) offcanvas
+
+For content that should be a normal, always-visible block at wider
+viewports and only collapse into an off-canvas panel below some breakpoint
+— the exact shape `mc-header`'s mobile navigation needs
+(`docs/developer/components/header.md` "Mobile navigation") — add one of
+Bootstrap's responsive offcanvas classes (`.offcanvas-sm`/`-md`/`-lg`/
+`-xl`/`-xxl`) alongside `.offcanvas`:
+
+```html
+<nav class="offcanvas offcanvas-lg offcanvas-start mc-drawer" id="mainNav">…</nav>
+```
+
+At the named breakpoint and up, Bootstrap's own CSS neutralizes the
+positioning/backdrop/transform styles entirely — the element renders as a
+normal static block, and its trigger button should be hidden at that same
+breakpoint (`d-lg-none` for `offcanvas-lg`) since there is nothing to
+open/close there. Below the breakpoint, it behaves exactly like any other
+`mc-drawer`. This is a Bootstrap CSS variant, not a MintCart concern, same
+allowance as the plain placement variants above
+(`MINTCART_IMPLEMENTATION_GUIDE.md` §9).
+
 ## Behavior
 
 `initDrawerTriggers()` is called once from both `catalog.js` and `admin.js`
@@ -98,6 +120,14 @@ per-instance init call — same pattern as `mc-modal`.
 - Everything else (focus trap, `Escape` to close, backdrop click to close,
   background scroll lock, returning focus to the trigger on close) is
   Bootstrap's `Offcanvas` behavior, unmodified.
+- On the same shown/hidden transition, `aria-expanded` is kept in sync on
+  any trigger(s) whose `data-mc-target` references the drawer by its `id`
+  (`data-mc-target="#<id>"`) — Bootstrap's dropdown/collapse primitives do
+  this automatically for their own `data-bs-toggle` triggers, but
+  `mc-drawer` deliberately never uses that attribute (see above), so a
+  trigger's own static `aria-expanded="false"` in markup would otherwise
+  never update. A trigger only needs a real `id` on the drawer and a
+  matching `data-mc-target` — no extra markup or JS call required.
 
 ## Styling notes
 
