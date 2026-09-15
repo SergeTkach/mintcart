@@ -149,13 +149,21 @@ drawerEl.addEventListener('mc:entity-picker:change', (event) => {
 - `destroy()` — remove all listeners (call if the host drawer/modal is
   removed from the DOM)
 
-## Not wired into `catalog.js`/`admin.js` yet
+## Not auto-initialized — exposed on `window.MintCart` for legacy templates
 
-`createEntityPicker` is exported for direct import, not auto-initialized
-from either entry point — it needs a caller-supplied `fetchItems` data
-source and a root element that doesn't exist until a real Phase 12 admin
-screen renders one. Per `CLAUDE.md` §85, the import is added to whichever
-screen needs it once that consumer exists, not ahead of time.
+`createEntityPicker` still isn't auto-initialized the way `initModalTriggers()`
+and friends are — it needs a caller-supplied `fetchItems` data source and
+options (`getId`/`getLabel`/`onConfirm`/...) specific to whichever field is
+hosting it, so each consumer calls it directly with its own options.
+
+What changed once a real consumer existed (`product_form.twig`'s Category
+field, see "Admin backends" below): `assets/src/js/admin.js` now imports it
+and assigns `window.MintCart.createEntityPicker = createEntityPicker`.
+Admin Twig templates use plain non-module inline `<script>` blocks
+(jQuery-style), not `type="module"`, so they can't `import` this ES module
+themselves — the `window.MintCart` bridge is how they reach it. See
+`docs/developer/admin/asset-enqueue.md` for the full writeup, including why
+the bundle wasn't enqueued anywhere until this run.
 
 ## Definition of Done checklist (`MINTCART_IMPLEMENTATION_GUIDE.md` §79)
 
@@ -240,38 +248,32 @@ them in **Users → User Groups → Permissions** for an admin to grant. Grant
 `mintcart/entity` **Access** to a user group before testing this endpoint
 or wiring a screen to it.
 
-**Not done yet, by design:**
-- No live admin screen calls `createEntityPicker()` against this endpoint.
-  The identified first real consumer is `product_form.twig`'s **Category**
-  multi-select (`upload/admin/view/template/catalog/product_form.twig`,
-  the `#input-category`/`#product-category` well + its jQuery UI
-  `autocomplete()` block) — it already has the right UI shape (search +
-  multi-select + removable tags), so swapping it for a `McEntityPicker`
-  mount inside an `mc-drawer` is closer to a drop-in replacement than a
-  new pattern, and it wouldn't need any change to `product_form.php`'s
-  save logic (the picker would keep emitting the same
-  `product_category[]` hidden inputs the form already reads on submit).
-- **Deliberately not attempted this run:** actually wiring it. Doing so
-  needs MintCart's own compiled bundle (`assets/dist/{css,js}`) loaded on
-  an admin page, and *nothing enqueues it there yet* — the one prior
-  attempt to enqueue the shared `index.min.css` bundle on a storefront
-  page was reverted after it broke legacy Bootstrap 3 widgets by loading
-  Bootstrap 5's CSS reset/base layer alongside them (see
-  `docs/developer/components/header.md` "Known gap" and
-  `upload/catalog/view/theme/mint_default/template/common/header.twig`'s
-  own comment) — admin pages are equally Bootstrap-3-based, so the same
-  conflict risk applies, and this environment still has no
-  MySQL/`vendor/twig/twig` to verify a fix visually. Wiring this consumer
-  live should wait for that enqueue problem to be solved first (or scope
-  a narrow, verified fix for it as part of the same increment) rather than
-  shipping markup that would silently render unstyled/broken on a real
-  install.
+**Live-wired (this run):** `product_form.twig`'s **Category** field
+(`upload/admin/view/template/catalog/product_form.twig`) now mounts a real
+`McEntityPicker` against this endpoint, via
+`window.MintCart.createEntityPicker` — see
+`docs/developer/admin/asset-enqueue.md` for the enqueue side and
+`docs/upstream-diff.md`'s `product.php`/`product_form.twig` entry for the
+full diff writeup. Kept **additive** alongside the existing jQuery
+`autocomplete()` block (not a replacement — this environment has no live
+MySQL/admin session to visually verify a full swap), and *not* hosted in
+an `mc-drawer` — `mc-drawer` needs Bootstrap 5's own `.offcanvas`
+structural CSS, which the `components.min.css` bundle this page loads
+deliberately excludes (see that doc's caveat). Instead it's a plain
+`hidden`-toggled panel, shown/hidden with vanilla JS. Both mechanisms
+write the identical `#product-category{id}`/`product_category[]`
+hidden-input shape, so `product.php`'s save logic needed no change.
+Removing the old autocomplete once a human confirms the picker works on a
+real install is a natural, low-risk follow-up — not attempted this run for
+the same no-live-verification reason.
+
+**Still not done, by design:**
 - Filters beyond search text, and the create-new-flow (add a category
-  inline from the picker) — no requirement identified yet for this first
+  inline from the picker) — no requirement identified yet for this
   consumer.
-- The other entity types (products, attributes, options, information
-  pages, customers) each need their own backend the same shape as this
-  one — **manufacturer** is now done too, see below.
+- Every other entity type is now done — **manufacturer**, **product**,
+  **information pages**, **attributes**, **options** and **customers**,
+  see below.
 
 ## Manufacturer backend
 
@@ -325,3 +327,243 @@ is this backend's identified first real consumer, for the same reason
 Category was identified for that endpoint — already single-select
 search-as-you-type, so a future `McEntityPicker` swap is a shape match,
 not a new pattern.
+
+## Product backend
+
+```
+GET index.php?route=mintcart/entity/product&user_token=…&filter_name=…&page=…&limit=…
+```
+
+`ControllerMintcartEntity::product()` wraps the existing
+`ModelCatalogProduct::getProducts()`/`getTotalProducts()` calls — it never
+queries the database directly — and normalizes rows via
+`MintCart\Design\ProductPickerProvider`
+(`upload/system/library/mintcart/design/productpickerprovider.php`, no
+OpenCart dependency, unit-tested in
+`tests/mintcart/design/product-picker-provider-test.php`) into the same
+`{items: [{id, name, image}], total}` shape. Same reason as category/
+manufacturer for a new route rather than reshaping an existing
+`autocomplete()` action — `catalog/product.php`'s own `autocomplete()` is
+already the busiest of the three (ten existing admin-template consumers,
+including `product_form.twig`'s own Related Products field, `order_form.twig`,
+`return_form.twig`/`return_list.twig`, `coupon_form.twig`, and several
+more), returning a plain `[{product_id, name, model, image}]` array with no
+pagination — reshaping it would be an even larger breaking change than
+category's five consumers.
+
+**Difference from category/manufacturer: paging happens in SQL, not PHP.**
+Unlike `ModelCatalogCategory`/`ModelCatalogManufacturer`,
+`ModelCatalogProduct::getTotalProducts($data)` accepts the *same*
+`filter_name` the list query does and returns a real filtered count, not
+just an unfiltered store-wide total — so `getTotalProductsByLayoutId()`-style
+core changes were not needed here, unlike the gap the category backend
+flagged. The controller passes `start`/`limit` straight through to
+`getProducts()` and calls `getTotalProducts()` with the same filter, so
+`ProductPickerProvider::build()` takes `(array $rows, int $total)` rather
+than `(array $rows, int $page, int $limit)` — `$rows` is already the
+current page, `$total` is the real filtered count. This is the exact
+"once a second `PickerProvider` needs a filtered count" case the category
+backend's write-up above flagged as the natural fix — product catalogs are
+the entity type most likely to be large enough for PHP-side slicing of the
+full result set (category/manufacturer's approach) to actually matter.
+
+**Image resolution:** same pattern as manufacturer — `oc_product.image`
+is a filename, resolved to a real thumbnail URL via
+`model_tool_image->resize()` (the same helper `product_form.twig` already
+uses for its own image preview), or `null` when the product has no image
+file on disk.
+
+**Filter matching:** `ModelCatalogProduct::getProducts()`/`getTotalProducts()`
+match `filter_name` as a prefix (`LIKE '…%'`), same as manufacturer, unlike
+category's substring match — again pre-existing OpenCart behavior, not
+introduced here.
+
+Same permission requirement (`mintcart/entity` **Access**) and the same
+"not done yet, by design" live-wiring gap as category/manufacturer: no
+admin screen calls this endpoint yet (MintCart's asset bundle still isn't
+enqueued on any admin page — see above). The identified first real
+consumer is `product_form.twig`'s **Related Products** field
+(`upload/admin/view/template/catalog/product_form.twig`, the
+`#input-related`/`related` multi-select block using its own jQuery UI
+`autocomplete()` against `catalog/product.autocomplete`) — already
+multi-select with removable tags, the same shape match reasoning
+category/manufacturer's identified consumers follow.
+
+## Information page backend
+
+```
+GET index.php?route=mintcart/entity/information&user_token=…&filter_name=…&page=…&limit=…
+```
+
+Fourth entity backend, same overall shape:
+`ControllerMintcartEntity::information()` wraps
+`ModelCatalogInformation::getInformations()` (never queries the database
+directly) and normalizes rows via `MintCart\Design\InformationPickerProvider`
+(`upload/system/library/mintcart/design/informationpickerprovider.php`, no
+OpenCart dependency, unit-tested in
+`tests/mintcart/design/information-picker-provider-test.php`) into the same
+`{items: [{id, name, image}], total}` shape. `image` is always `null` —
+information pages have no image concept in OpenCart, the same reason
+category's is always `null`.
+
+**Difference from category/manufacturer: filtering also happens in PHP, not
+just paging.** `ModelCatalogInformation::getInformations()`'s `$data`-driven
+query path only understands `sort`/`order`/`start`/`limit` — there is no
+`filter_name` support to pass through at all (unlike `getCategories()`/
+`getManufacturers()`, which at least support filtering in SQL even without a
+matching filtered-count method). Adding one to `ModelCatalogInformation` for
+a single new consumer would be a genuine OpenCart-core-file modification
+(`CLAUDE.md` §10), so the controller instead calls `getInformations()` with
+no arguments (all rows, via the model's own cache) and
+`InformationPickerProvider` does both the `filter_name` substring match
+(case-insensitive, matches anywhere in the title — the more permissive of
+category's and manufacturer's two matching styles) and the paging itself, in
+PHP. Information page counts are small (a handful to a few dozen even for a
+large store), so this isn't a real cost today — same reasoning that already
+justified PHP-side paging alone for category and manufacturer.
+
+Same permission requirement (`mintcart/entity` **Access** must be granted to
+a user group first) and the same "not done yet, by design" live-wiring gap:
+no admin screen calls this endpoint yet, blocked on the same admin
+asset-enqueue problem as category and manufacturer (see above). There is no
+single obvious first consumer the way `product_form.twig`'s Category/
+Manufacturer fields are for the other two — information pages are picked in
+several places (`information_form.twig`'s own layout/link settings and any
+future "related pages" style field), so the first real consumer should be
+identified when one of those screens is actually being migrated to
+`McEntityPicker`, not guessed at here.
+
+## Attribute backend
+
+```
+GET index.php?route=mintcart/entity/attribute&user_token=…&filter_name=…&page=…&limit=…
+```
+
+Same shape as the category backend:
+`ControllerMintcartEntity::attribute()` wraps
+`ModelCatalogAttribute::getAttributes()` (never queries the database
+directly) and normalizes rows via `MintCart\Design\AttributePickerProvider`
+(`upload/system/library/mintcart/design/attributepickerprovider.php`, no
+OpenCart dependency, unit-tested in
+`tests/mintcart/design/attribute-picker-provider-test.php`) into the same
+`{items: [{id, name, image}], total}` shape. `image` is always `null` —
+`oc_attribute`/`oc_attribute_description` have no image column, the same
+situation as category and information pages.
+
+**Why a new route instead of reusing an existing autocomplete action:**
+`catalog/product.php` has no attribute autocomplete of its own today
+(product attribute values are entered via a dropdown of *already-loaded*
+attributes on `product_form.twig`'s Attribute tab, not a search field), so
+there is no existing consumer this route could break — unlike category/
+manufacturer, this is a genuinely new capability, not a reshape of one.
+Still added as a `mintcart/entity/*` action rather than a new method on
+`ModelCatalogAttribute` itself, for the same separation-of-concerns reason
+(`CategoryPickerProvider`'s section above): the model returns raw OpenCart
+rows, the picker-shape normalization is MintCart's own concern.
+
+**Why paging happens in PHP, not SQL:** `ModelCatalogAttribute::getAttributes()`
+supports `start`/`limit` at the SQL level, but the model only has
+`getTotalAttributes()` (unfiltered, store-wide) and
+`getTotalAttributesByAttributeGroupId()` (filtered by attribute group, not
+by name) — no *filtered-by-name* total-count method to pair with a
+SQL-level `LIMIT`. Same category-established pattern: take the full
+filtered (but unpaged) row set and slice/count it in PHP. Attribute counts
+are small (dozens even for a large catalog's full attribute set), so this
+isn't a real cost today.
+
+**Filter matching is a prefix match, not substring** — inherited from
+`ModelCatalogAttribute::getAttributes()`'s own `LIKE '…%'` (matches from
+the start of the name only), the same as manufacturer, not category's
+`LIKE '%…%'` substring match. Pre-existing OpenCart behavior, not
+introduced here.
+
+Same permission requirement and the same "not done yet, by design"
+live-wiring gap as category/manufacturer above. No obvious first live
+consumer has been identified yet for this one — unlike category/
+manufacturer, there is no existing single-select attribute autocomplete
+field on `product_form.twig` to swap out; a future consumer would be a
+*new* UI affordance (e.g. searching attributes by name when adding one to
+a product), not a drop-in replacement of something that already exists.
+
+## Option backend
+
+```
+GET index.php?route=mintcart/entity/option&user_token=…&filter_name=…&page=…&limit=…
+```
+
+Same shape as category/manufacturer: `ControllerMintcartEntity::option()`
+wraps `ModelCatalogOption::getOptions()` (never queries the database
+directly) and normalizes rows via `MintCart\Design\OptionPickerProvider`
+(`upload/system/library/mintcart/design/optionpickerprovider.php`, no
+OpenCart dependency, unit-tested in
+`tests/mintcart/design/option-picker-provider-test.php`) into the same
+`{items: [{id, name, image}], total}` shape. Same reason for a new route
+instead of reshaping `catalog/option.php`'s own `autocomplete()` action
+(an existing `product_form.twig` consumer with no pagination), and for
+paging in PHP rather than SQL (`ModelCatalogOption` has
+`getTotalOptions()`, unfiltered store-wide, but no *filtered*
+total-count method to pair with `getOptions()`'s own `start`/`limit`
+support).
+
+`image` is always `null` — `oc_option` has no image column of its own
+(individual `oc_option_value` rows can carry one, but an *option* — the
+group, e.g. "Size" — cannot), same reasoning as category.
+
+`filter_name` prefix-matches (`LIKE '…%'`), same as manufacturer, not
+category's substring match — inherited unchanged from
+`ModelCatalogOption::getOptions()`.
+
+Same permission requirement (`mintcart/entity` **Access**) and the same
+"not done yet, by design" live-wiring gap as category/manufacturer: no
+admin screen calls this endpoint yet, for the identical reason
+(MintCart's asset bundle still isn't enqueued on any admin page — see
+above). `product_form.twig`'s **Option** tab (`#input-option`, the
+jQuery UI `autocomplete()` block using `catalog/option/autocomplete`) is
+this backend's identified first real consumer — already
+search-as-you-type, so a future `McEntityPicker` swap is a shape match,
+not a new pattern.
+
+## Customer backend
+
+```
+GET index.php?route=mintcart/entity/customer&user_token=…&filter_name=…&page=…&limit=…
+```
+
+`ControllerMintcartEntity::customer()` wraps `ModelCustomerCustomer::getCustomers()`
+(never queries the database directly) and normalizes rows via the new
+`MintCart\Design\CustomerPickerProvider`
+(`upload/system/library/mintcart/design/customerpickerprovider.php`, no
+OpenCart dependency, unit-tested in
+`tests/mintcart/design/customer-picker-provider-test.php`) into the same
+`{items: [{id, name, image}], total}` shape.
+
+**Deliberate design difference from category/manufacturer: paging happens
+at the SQL level, not in PHP.** Unlike `ModelCatalogCategory`/
+`ModelCatalogManufacturer`, `ModelCustomerCustomer::getTotalCustomers($data)`
+accepts the same `filter_name` the list query does and returns a real
+*filtered* count — so `getCustomers()`'s own `start`/`limit` SQL support is
+used directly, and `CustomerPickerProvider::build(array $rows, int $total)`
+takes an already-paged row set plus the real filtered total, instead of
+`build(array $rows, int $page, int $limit)` slicing a full result set in
+PHP. This is the same shape `ProductPickerProvider` uses for the same
+reason — customer tables, like product catalogs, are realistically large
+enough (potentially thousands of rows) for PHP-side slicing of the *entire*
+filtered set to be a real cost, unlike category/manufacturer/attribute
+lists which stay small.
+
+`name` is `CONCAT(firstname, ' ', lastname)`, matched by `filter_name` as a
+substring (`LIKE '%…%'`) — inherited unchanged from
+`ModelCustomerCustomer::getCustomers()`'s existing behavior, same matching
+style as category (not manufacturer's prefix match).
+
+`image` is always `null` — customers have no image concept in OpenCart.
+
+Live wiring **not** attempted — same reason category/manufacturer left it
+undone: MintCart's asset bundle still isn't enqueued on any admin page. No
+single obvious first live consumer has been identified yet for this one
+either (there is no existing customer-autocomplete field on any admin
+template to replace, unlike category/manufacturer/product) — documented
+here rather than guessed at, per `CLAUDE.md` §85.
+
+Same permission requirement as every other backend above (`mintcart/entity`
+**Access** must be granted to a user group first).
