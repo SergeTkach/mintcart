@@ -1118,6 +1118,45 @@ install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
 
 ---
 
+## `upload/system/library/mail/smtp.php`
+
+**Reason:** Fix MC-0013 (`docs/fixes/registry.md`) — the three `EHLO`/`HELO`
+call sites in `Mail\Smtp::send()` built the command directly from
+`getenv('SERVER_NAME')`, which is empty (`false`) outside a real web
+request. Any CLI/cron-triggered mail send (a scheduled OpenCart cron
+hitting a route by literal PHP CLI invocation, or MintCart's own planned
+batch-job/Update Manager work, `MINTCART_FUNCTIONAL_SCOPE.md` §7/§21)
+produced a malformed, argument-less `EHLO \r\n`/`HELO \r\n` that a number of
+real SMTP server configurations reject outright, silently breaking outgoing
+mail with no visible error to the merchant. Replaced the raw `getenv()` call
+at all three sites with `\MintCart\Mail\HeloHostname::resolve()`.
+
+**Why it can't live in the MintCart layer instead:** `Mail\Smtp::send()` is
+where the SMTP conversation itself happens (socket I/O, `EHLO`/`STARTTLS`/
+`AUTH`/`DATA` sequencing) — there is no MintCart-owned mail transport to
+reroute this through, and building a parallel one merely to fix one
+hostname-resolution call would duplicate OpenCart's entire SMTP client for
+a three-line fix. The actual hostname-fallback *logic*, which is genuinely
+new and independently testable, does live in the MintCart layer
+(`MintCart\Mail\HeloHostname`, `upload/system/library/mintcart/mail/`) —
+this core-file edit is reduced to the minimum: call the Mint helper instead
+of `getenv()` directly, at the three sites that needed it.
+
+**Compatibility impact:** None when `SERVER_NAME` is present and non-empty
+(the common case on real web hosting) — `HeloHostname::resolve()` returns
+it unchanged, so the `EHLO`/`HELO` argument sent is byte-for-byte identical
+to before. Only the previously-broken `SERVER_NAME`-absent case changes
+behavior, and only for the better (a real hostname instead of none). No
+method signature, public property, or other class in the `Mail\` namespace
+changed.
+
+**Tests:** `php -l` clean on both the modified `smtp.php` and the new
+`helohostname.php`. New `tests/mintcart/mail/helo-hostname-test.php` (3
+scenarios), passing. Full `tests/mintcart/` suite re-run end to end (35
+files now, was 34) — all pass, no regressions. No live SMTP-server test was
+possible in this environment (no outbound SMTP access) — see
+`docs/MANUAL_VERIFICATION.md`'s new MC-0013 entry for what a human should
+confirm on a real install.
 ## `upload/admin/model/setting/setting.php`
 
 **Reason:** MC-0012 (`docs/fixes/registry.md`) — `editSetting()` deleted

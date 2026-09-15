@@ -3071,6 +3071,22 @@ tracked once each.)*
 - [~] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
+Fix Registry mechanism is established. **This run adds MC-0013** —
+`system/library/mail/smtp.php`'s `EHLO`/`HELO` commands used raw
+`getenv('SERVER_NAME')`, empty outside a real web request (CLI/cron),
+producing a malformed command several real SMTP servers reject outright.
+Fixed via a new, pure `MintCart\Mail\HeloHostname::resolve()`
+(`upload/system/library/mintcart/mail/helohostname.php`), with a 3-scenario
+standalone test (`tests/mintcart/mail/helo-hostname-test.php`). Full
+writeup: `docs/fixes/registry.md`'s MC-0013 entry and
+`docs/upstream-diff.md`'s new `smtp.php` entry. Verified: `php -l` clean on
+both touched/added PHP files; full `tests/mintcart/` suite re-run end to
+end (35 files, was 34) — all pass, no regressions. No live SMTP-server
+verification possible in this environment (no outbound SMTP access) — see
+`docs/MANUAL_VERIFICATION.md`'s new MC-0013 entry for what a human should
+confirm. The rest of this phase (diagnostics, measured performance work) is
+not started — see the "Next step" trailer below for the current PR-backlog
+snapshot before picking either.
 Fix Registry mechanism is established. This run added **MC-0012**:
 `upload/admin/model/setting/setting.php`'s `editSetting()` — the single
 save path for every OpenCart settings screen and extension config form
@@ -4258,6 +4274,32 @@ legacy admin theme" section. Swapping `category_id`/`parent_id` for a
 real `McEntityPicker` (Phase 12's category backend now exists) is a
 separate, self-contained follow-up untouched by that question.
 
+**Update (this run, 2026-09-10): MC-0013 (SMTP `EHLO`/`HELO` hostname
+fallback) added.** At step 0, ~55 open PRs were already covering nearly
+every unclaimed checklist item across every phase in this file (all
+remaining Entity Picker backends, all remaining SEO Core sub-pieces, both
+remaining Wizard steps with real scope, all three Business Settings
+façades, the Store Readiness dashboard widget, Bulk Editor, Diagnostics,
+Compatibility Checker, QuickOrderService/CheckoutTotalsService, the
+search-box component, mobile navigation, Update Manager's next increments,
+and MC-0004 through MC-0012), and several areas (`wizard.php`/`wizard.twig`
+touched by 3 open PRs, the Homepage Builder block registry/`block.css`
+touched historically by many more) were already at or past the step-0f
+shared-file collision threshold. `system/library/mail/smtp.php` was
+untouched by any open PR and unrelated to every claimed area, so this run
+picked it as a fresh, isolated Fix Registry candidate instead of any
+checklist phase item — see `docs/fixes/registry.md`'s MC-0013 entry and
+this file's Phase 10 (Technical Plan) section above for the full writeup.
+**Next step:** re-run `gh pr list --state open` before picking anything —
+given the current backlog size, most straightforward checklist items are
+likely already claimed; a fresh Fix Registry candidate (per
+`MINTCART_FUNCTIONAL_SCOPE.md` §18) or documentation-only work (a new ADR
+for a flagged-but-undecided architectural question) is more likely to be
+genuinely uncontested than another feature-phase increment. Also worth a
+human's attention independent of any single run: the sheer number of open,
+unmerged PRs itself — a merge/reconciliation pass (like the one documented
+above for the original nine-PR backlog) would likely be more valuable than
+another routine run adding to the pile.
 **Update (this run, 2026-09-10): MC-0012 shipped —
 `ModelSettingSetting::editSetting()` is now transactional.** See Phase 10
 (Technical Plan)'s section above and `docs/fixes/registry.md` for the full

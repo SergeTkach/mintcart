@@ -184,6 +184,31 @@ manufacturer that has an image set and one that doesn't:
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
 
+## MC-0013 — SMTP `EHLO`/`HELO` hostname fallback, never exercised against a real SMTP server
+
+This environment has no outbound SMTP access, so `HeloHostname::resolve()`
+is only unit-tested (`tests/mintcart/mail/helo-hostname-test.php`) against
+`getenv()`/`php_uname()` directly, never against a live `Mail\Smtp::send()`
+call. On a real install with `Settings → Mail` (`config_mail_engine`) set
+to `SMTP` and real SMTP host/port/username/password configured:
+
+1. Trigger any email through the normal web request path (e.g. **Sales →
+   Orders** → an order's own "Send" email action, or a customer
+   registration confirmation) and confirm it still arrives — this exercises
+   the unchanged, overwhelmingly common case where `SERVER_NAME` is present,
+   confirming the fix introduced no regression there.
+2. Trigger the same kind of email from a CLI context instead — e.g. `php
+   index.php route=<any route that sends mail>` run directly from a shell,
+   or an existing OS-level cron entry that hits an OpenCart route by URL
+   with `curl`/`wget` (which still runs the request through the normal web
+   SAPI, so this specifically needs a *literal* PHP CLI invocation to
+   reproduce the original bug) — and confirm it also now arrives, where
+   before this fix the SMTP server would have rejected the malformed empty
+   `EHLO`/`HELO` at that step. Compare against `system/storage/logs/`
+   (OpenCart's own error log) for an `"Error: EHLO not accepted from
+   server!"`/`"Error: HELO not accepted from server!"` exception before vs.
+   after the fix, if a CLI-triggered mail send doesn't already exist to
+   test against.
 ## MC-0010 — Opayo/Sage Pay recurring payment, never hit end to end
 
 `setPaymentData()` (`catalog/model/extension/payment/opayo.php`) is only
