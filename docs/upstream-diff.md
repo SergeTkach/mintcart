@@ -456,6 +456,20 @@ site. Full design rationale: `docs/developer/seo/schema-org.md`. **Tests:**
 scenarios) covers `breadcrumbList()` directly; full `tests/mintcart/` suite
 re-run end to end — all passing, no regressions.
 
+**Update (this run — Phase 10 (Technical Plan), Diagnostics):** same
+`MintCart\Core\Diagnostics` wiring as `category.php`'s own "Update" entry
+above — constructs it right after `$mint_render_product_cards` is
+resolved, gated by `mintcart_dev_mode`, passes it as `ComponentRenderer`'s
+4th constructor argument, and appends `$diagnostics->summary()` as an HTML
+comment before `setOutput()` only when dev mode is enabled. **Why it can't
+live in the MintCart layer:** same reasoning as `category.php`'s entry —
+a controller is the only place that already knows both `config_theme` and
+whether to run the Mint pipeline. **Compatibility impact:** none when
+`mintcart_dev_mode` is unset (the default). **Tests:** `php -l` clean; no
+new test file (covered by `component-renderer-test.php`'s existing
+scenarios, which are call-site-agnostic); full `tests/mintcart/` suite
+(77 files) re-run end to end — all passing, no regressions.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/search.php`
@@ -533,6 +547,18 @@ end-to-end request test — same pre-existing gap as every earlier phase (no
 MySQL/`vendor/twig/twig` in this environment). A human should smoke-test a
 real special-offers page on a `mint_default`-configured install before this
 reaches production.
+
+**Update (this run — Phase 10 (Technical Plan), Diagnostics):** same
+`MintCart\Core\Diagnostics` wiring as `category.php`/`search.php`'s own
+"Update" entries above — constructs it right after
+`$mint_render_product_cards` is resolved, gated by `mintcart_dev_mode`,
+passes it as `ComponentRenderer`'s 4th constructor argument, and appends
+`$diagnostics->summary()` as an HTML comment before `setOutput()` only
+when dev mode is enabled. **Why it can't live in the MintCart layer:**
+same reasoning as `category.php`'s entry. **Compatibility impact:** none
+when `mintcart_dev_mode` is unset (the default). **Tests:** `php -l`
+clean; full `tests/mintcart/` suite (77 files) re-run end to end — all
+passing, no regressions.
 
 ---
 
@@ -714,6 +740,20 @@ environment). A human should smoke-test a real manufacturer page on a
 `mint_default`-configured install before this reaches production —
 including confirming MC-0003's sort/limit labels and empty-state message
 are no longer blank on both `default` and `mint_default`.
+
+**Update (this run — Phase 10 (Technical Plan), Diagnostics):** same
+`MintCart\Core\Diagnostics` wiring as the three sibling controllers' own
+"Update" entries above, applied only to `info()` (the only method that
+constructs a `ComponentRenderer` — the plain manufacturer-list `index()`
+and the `error/not_found` fallback are untouched). Constructs
+`Diagnostics` right after `$mint_render_product_cards` is resolved, gated
+by `mintcart_dev_mode`, passes it as `ComponentRenderer`'s 4th
+constructor argument, and appends `$diagnostics->summary()` as an HTML
+comment before `setOutput()` only when dev mode is enabled. **Why it
+can't live in the MintCart layer:** same reasoning as `category.php`'s
+entry. **Compatibility impact:** none when `mintcart_dev_mode` is unset
+(the default). **Tests:** `php -l` clean; full `tests/mintcart/` suite
+(77 files) re-run end to end — all passing, no regressions.
 
 ---
 

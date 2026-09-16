@@ -81,9 +81,16 @@ class ControllerProductSpecial extends Controller {
 		$mint_theme = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
 		$mint_render_product_cards = \MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme);
 
+		// MintCart\Core\Diagnostics (MINTCART_TECHNICAL_PLAN.md §35,
+		// MINTCART_FUNCTIONAL_SCOPE.md §19 "render time") - same
+		// category.php-only wiring extended to Special. Off by default;
+		// see category.php's identical comment and
+		// docs/developer/core/diagnostics.md.
+		$mint_diagnostics = new \MintCart\Core\Diagnostics((bool)$this->config->get('mintcart_dev_mode'));
+
 		if ($mint_render_product_cards) {
 			$product_card_list_renderer = new \MintCart\Design\ProductCardListRenderer(
-				new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme)
+				new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme, 'components', $mint_diagnostics)
 			);
 
 			$text_badge = array(
@@ -355,6 +362,16 @@ class ControllerProductSpecial extends Controller {
 		$data['footer'] = $this->load->controller('common/footer');
 		$data['header'] = $this->load->controller('common/header');
 
-		$this->response->setOutput($this->load->view('product/special', $data));
+		$mint_diagnostics->mark('view_rendered');
+
+		$output = $this->load->view('product/special', $data);
+
+		// Functional Scope §19: "Production UI не повинен показувати
+		// sensitive debug data" - see category.php's identical comment.
+		if ($mint_diagnostics->isEnabled()) {
+			$output .= "\n<!-- mintcart-diagnostics " . json_encode($mint_diagnostics->summary()) . " -->";
+		}
+
+		$this->response->setOutput($output);
 	}
 }
