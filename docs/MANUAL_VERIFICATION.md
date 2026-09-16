@@ -866,20 +866,19 @@ ever actually inspected. On a real install:
 
 1. Create a category and leave its "Meta Tag Title" and "Meta Tag
    Description" fields blank on the Data tab. Visit that category page
-   and view source: confirm `<title>{category name} - {store name}</title>`
-   (or however the theme's title template composes it) — i.e. the
-   category's own name appears in the title, not an empty string — and
-   that `<meta name="description" content="...">` is present (may be
-   empty if the theme still emits the tag with no content, which is
-   unchanged/expected).
+   and view source: confirm `<title>{category name}</title>` in the shipped
+   themes. The description stays blank: their header templates omit
+   `<meta name="description">` when it is empty. A custom theme may render
+   an empty tag; neither case should synthesize the title as a description.
 2. Edit that same category and fill in a real "Meta Tag Title"/
    "Meta Tag Description". Reload the page and confirm those exact values
-   now appear instead of the category name fallback — the fallback must
+   now appear (with surrounding whitespace trimmed) — the title fallback must
    only apply when the field is genuinely blank.
 3. On a fresh install (or after clearing Settings → Store's "Meta Tag
    Title"/"Meta Tag Description" fields), visit the homepage and view
    source: confirm `<title>` contains the store name
-   (Settings → Store's "Store Name") instead of being empty.
+   (Settings → Store's "Store Name") instead of being empty. The description
+   remains blank, and the shipped themes omit its meta tag.
 4. Fill in Settings → Store's meta fields, reload the homepage, and
    confirm those values now appear instead of the store-name fallback.
 5. Confirm `product/product.php`'s product detail pages are **unaffected**

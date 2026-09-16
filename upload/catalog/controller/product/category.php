@@ -91,9 +91,10 @@ class ControllerProductCategory extends Controller {
 
 		if ($category_info) {
 			// MintCart\Seo\MetaBuilder (MINTCART_FUNCTIONAL_SCOPE.md §16,
-			// Phase 18): a category left without its own "Meta Tag Title"/
-			// "Meta Tag Description" admin field falls back to the
-			// category's own name rather than shipping an empty <title>.
+			// Phase 18): a blank "Meta Tag Title" falls back to the category
+			// name. The optional fourth argument is omitted deliberately:
+			// a blank meta description stays blank, not a copy of the title.
+			// See docs/developer/seo/meta-builder.md, "Live wiring".
 			// Pure string logic, cannot throw - no try/catch needed, same
 			// as every other Diagnostics/CanonicalUrlBuilder-shaped pure
 			// value object wired into this controller.

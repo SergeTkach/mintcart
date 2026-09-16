@@ -1212,7 +1212,7 @@ PHP 8.2+ install.
 
 ---
 
-## MC-0015 — Category page and homepage ship an empty `<title>`/meta description when the admin field is left blank
+## MC-0015 — Category page and homepage ship an empty `<title>` when the admin title is left blank
 
 **Problem:** `catalog/controller/product/category.php` and
 `catalog/controller/common/home.php` pass an entity's own meta fields
@@ -1286,8 +1286,9 @@ the category's own `name`; `home.php` falls back to the store's own
 call site gained a fallback *description* beyond what `MetaBuilder`
 itself offers (there is no second, shorter description field anywhere in
 stock OpenCart to fall back to) — a blank `meta_description` with a
-non-blank fallback title still renders `description=""`, unchanged from
-today. See `docs/developer/seo/meta-builder.md` and
+non-blank fallback title still returns an empty description. The shipped
+header templates omit the description meta tag in that case; no description
+is generated from the title. See `docs/developer/seo/meta-builder.md` and
 `docs/upstream-diff.md`'s `category.php`/`home.php` entries for the full
 writeup. `product.php`'s equivalent pass-through is a known, deliberately
 deferred remaining gap (see `docs/developer/seo/meta-builder.md`'s "What's

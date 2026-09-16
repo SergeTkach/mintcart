@@ -110,6 +110,11 @@ $this->document->setTitle($mint_meta['title']);
 $this->document->setDescription($mint_meta['description']);
 ```
 
+**Title-only fallback at these call sites:** the third argument supplies
+only a title. Neither controller passes the optional fourth argument, so an
+empty description remains empty. The shipped header templates omit its meta
+tag. Do not infer a description fallback from the title argument.
+
 `product.php`'s equivalent pass-through is still unwired — a genuinely
 separate follow-up (see "What's deliberately not done yet" below).
 
@@ -130,7 +135,7 @@ separate follow-up (see "What's deliberately not done yet" below).
   class targets — CLAUDE.md §17 ("don't create abstractions... for
   hypothetical future use").
 - **Fix Registry entry:** `docs/fixes/registry.md` MC-0015 documents the
-  `category.php`/`home.php` blank-title/description defect this wiring
+  `category.php`/`home.php` blank-title defect this wiring
   fixes, per `CLAUDE.md` §13's five-step Fixes Policy (the Policy applies
   to the *wiring* increment, not to this pure primitive, which predates
   the entry).

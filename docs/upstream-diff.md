@@ -230,7 +230,8 @@ exercised end-to-end in this environment. Full `tests/mintcart/` suite
 `$this->document->setTitle($category_info['meta_title'])`/
 `setDescription($category_info['meta_description'])` pass-through for a
 call to `MintCart\Seo\MetaBuilder::build()`, falling back to the
-category's own `name` when `meta_title`/`meta_description` are blank —
+category's own `name` when `meta_title` is blank; a blank
+`meta_description` stays blank because no fallback description is supplied —
 see `docs/developer/seo/meta-builder.md`. `setKeywords()` is unchanged
 (no fallback rule exists for keywords). Pure string logic (`trim()` +
 ternary fallback), cannot throw, so no `try`/`catch` guard was added,
@@ -242,8 +243,9 @@ its own `meta_title`/`meta_description` filled in (the common case for
 any store that has gone through its catalog) — `MetaBuilder`'s internal
 fallback picker returns the entity's own trimmed value unchanged. Only a
 category whose admin "Meta Tag Title"/"Meta Tag Description" fields were
-left blank changes: it now ships `<title>{category name}</title>` and a
-matching `<meta name="description">` instead of an empty `<title>` tag —
+left blank changes only its title: it now ships `<title>{category name}</title>`.
+A blank description stays blank; the shipped header templates omit its meta tag.
+The title fallback fixes
 the exact defect `docs/developer/seo/meta-builder.md` documents. No
 template change, no new `$data` key (still `setTitle()`/`setDescription()`
 on `Document`, same as before).
@@ -1097,8 +1099,8 @@ lands.)
 `$this->document->setTitle($this->config->get('config_meta_title'))`/
 `setDescription($this->config->get('config_meta_description'))`
 pass-through for a call to `MintCart\Seo\MetaBuilder::build()`, falling
-back to the store name (`config_name`) when `config_meta_title`/
-`config_meta_description` are blank — the documented fresh-install case
+back to the store name (`config_name`) only when `config_meta_title` is blank.
+A blank `config_meta_description` stays blank — the documented fresh-install case
 in `docs/developer/seo/meta-builder.md` (these settings are empty until a
 merchant fills them in under Settings, a step Setup Wizard doesn't force).
 `setKeywords()` is unchanged. Pure string logic, cannot throw, no
