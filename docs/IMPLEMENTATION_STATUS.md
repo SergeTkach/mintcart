@@ -4,6 +4,16 @@ Tracks progress against the phases defined in `MINTCART_TECHNICAL_PLAN.md` §42 
 starting sequence in `CLAUDE.md` §21. Update this file at the end of every work
 increment (see `CLAUDE.md` §14/§20).
 
+**Review correction (2026-09-16, Codex, PR #115):** manufacturer picker wiring
+now follows Implementation Guide §§14–18/21: data hooks, token-based spacing,
+and a text trigger without a legacy icon dependency. Existing OpenCart
+field IDs/names are preserved. Hidden panels explicitly override flex display;
+the trigger exposes its expanded state and regains focus after confirmation.
+Verified: frontend production build and preset contract checks passed; an
+isolated Node harness exercised the actual inline handler's open/close,
+selection, focus, request parameters/abort signal, and missing-bundle paths.
+This is not a live admin/browser test; that check remains outstanding.
+
 Legend: `[x]` done, `[~]` in progress / partially done, `[ ]` not started.
 
 ## Phase 0 — Audit

@@ -277,6 +277,16 @@ the same no-live-verification reason.
 
 ## Manufacturer backend
 
+**Integration conventions (2026-09-16 review):** the product form uses
+`data-mc-manufacturer-*` and `data-mc-action="browse-manufacturers"` hooks.
+Existing field IDs/names remain compatible with OpenCart labels, autocomplete
+and save handling. The panel ID is retained for `aria-controls`, not JS lookup.
+The embedded field's spacing uses `--mc-space-2` through
+`.mc-entity-picker-field`; its text button needs no Font Awesome icon
+(Implementation Guide §§14–18, 21). `.mc-entity-picker[hidden]` explicitly
+overrides the component's flex display. The trigger tracks `aria-expanded`
+and receives focus after confirmation (Implementation Guide §§13, 68).
+
 ```
 GET index.php?route=mintcart/entity/manufacturer&user_token=…&filter_name=…&page=…&limit=…
 ```

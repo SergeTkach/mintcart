@@ -376,7 +376,7 @@
               <div class="form-group">
                 <label class="col-sm-2 control-label" for="input-manufacturer"><span data-toggle="tooltip" title="{{ help_manufacturer }}">{{ entry_manufacturer }}</span></label>
                 <div class="col-sm-10">
-                  <input type="text" name="manufacturer" value="{{ manufacturer }}" placeholder="{{ entry_manufacturer }}" id="input-manufacturer" class="form-control"/> <input type="hidden" name="manufacturer_id" value="{{ manufacturer_id }}"/>
+                  <input type="text" name="manufacturer" value="{{ manufacturer }}" placeholder="{{ entry_manufacturer }}" id="input-manufacturer" class="form-control" data-mc-manufacturer-name/> <input type="hidden" name="manufacturer_id" value="{{ manufacturer_id }}" data-mc-manufacturer-id/>
                   {#
                     MintCart Phase 12 (Entity Picker) - a searchable,
                     paginated, single-select browser as an additional way
@@ -391,20 +391,24 @@
                     writes to, so ControllerCatalogProduct's save logic
                     needs no change at all.
                   #}
-                  <button type="button" class="mc-button mc-button--secondary" id="button-manufacturer-picker" style="margin-top: 8px;">
-                    <i class="fa fa-search"></i> {{ text_manufacturer_picker_browse }}
-                  </button>
-                  <div class="mc-entity-picker" id="manufacturer-picker" hidden style="margin-top: 8px;">
-                    <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_manufacturer_picker_search }}" placeholder="{{ text_manufacturer_picker_search }}">
-                    <ul class="mc-entity-picker__list" role="listbox" aria-label="{{ entry_manufacturer }}" data-mc-entity-picker-list></ul>
-                    <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_manufacturer_picker_empty }}</p>
-                    <div class="mc-entity-picker__pager">
-                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_manufacturer_picker_prev }}</button>
-                      <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
-                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_manufacturer_picker_next }}</button>
-                    </div>
-                    <div class="mc-entity-picker__footer">
-                      <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_manufacturer_picker_confirm }}</button>
+                  {# Implementation Guide §§14–18, 21: data hooks and token spacing.
+                     The text label needs no legacy Font Awesome icon. #}
+                  <div class="mc-entity-picker-field">
+                    <button type="button" class="mc-button mc-button--secondary" data-mc-action="browse-manufacturers" aria-controls="manufacturer-picker" aria-expanded="false">
+                      {{ text_manufacturer_picker_browse }}
+                    </button>
+                    <div class="mc-entity-picker" id="manufacturer-picker" data-mc-manufacturer-picker hidden>
+                      <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_manufacturer_picker_search }}" placeholder="{{ text_manufacturer_picker_search }}">
+                      <ul class="mc-entity-picker__list" role="listbox" aria-label="{{ entry_manufacturer }}" data-mc-entity-picker-list></ul>
+                      <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_manufacturer_picker_empty }}</p>
+                      <div class="mc-entity-picker__pager">
+                        <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_manufacturer_picker_prev }}</button>
+                        <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+                        <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_manufacturer_picker_next }}</button>
+                      </div>
+                      <div class="mc-entity-picker__footer">
+                        <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_manufacturer_picker_confirm }}</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1332,10 +1336,12 @@
   // save logic needs no change at all - see the {# ... #} comment above the
   // picker's markup.
   (function () {
-	  var browseButton = document.getElementById('button-manufacturer-picker');
-	  var pickerRoot = document.getElementById('manufacturer-picker');
-	  var nameInput = document.getElementById('input-manufacturer');
-	  var idInput = document.querySelector('input[name=\'manufacturer_id\']');
+	  // Implementation Guide §§14–15: use data hooks for new behavior.
+	  // Keep legacy IDs/names for labels, autocomplete and form saving.
+	  var browseButton = document.querySelector('[data-mc-action="browse-manufacturers"]');
+	  var pickerRoot = document.querySelector('[data-mc-manufacturer-picker]');
+	  var nameInput = document.querySelector('[data-mc-manufacturer-name]');
+	  var idInput = document.querySelector('[data-mc-manufacturer-id]');
 
 	  if (!browseButton || !pickerRoot || !nameInput || !idInput || !window.MintCart || !window.MintCart.createEntityPicker) {
 		  return;
@@ -1366,6 +1372,8 @@
 
 			  picker.clear();
 			  pickerRoot.hidden = true;
+			  browseButton.setAttribute('aria-expanded', 'false');
+			  browseButton.focus();
 		  }
 	  });
 
@@ -1373,6 +1381,7 @@
 		  var opening = pickerRoot.hidden;
 
 		  pickerRoot.hidden = !pickerRoot.hidden;
+		  browseButton.setAttribute('aria-expanded', String(opening));
 
 		  if (opening) {
 			  picker.refresh();

@@ -1,5 +1,15 @@
 # Upstream diff
 
+**PR #115 review correction (2026-09-16):**
+`upload/admin/view/template/catalog/product_form.twig` uses data attributes
+for the new manufacturer picker, preserving existing OpenCart IDs/names.
+Its embedded spacing is owned by MintCart's token-based CSS; the new trigger
+uses a text label, tracks expanded state, and regains focus after confirmation.
+These changes belong at the form's integration point; shared layout and hidden
+state rules live in `assets/src/css/components/entity-picker.css`.
+Validation: production build, preset checks and isolated handler checks passed.
+Live admin verification remains required, including the existing autocomplete.
+
 Tracks every direct modification to an OpenCart 3.0.5.1 core file
 (`CLAUDE.md` §11, `MINTCART_TECHNICAL_PLAN.md` §41). Every entry here is
 technical debt that needs justification — the goal is to keep this list as
