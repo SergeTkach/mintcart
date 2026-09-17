@@ -1209,3 +1209,104 @@ available in this environment — a human should confirm a real Klarna
 Invoice/Account checkout still completes successfully (and that PHP's
 error log no longer logs a deprecation notice for these two files) on a
 PHP 8.2+ install.
+
+---
+
+## MC-0015 — Category page and homepage ship an empty `<title>` when the admin title is left blank
+
+**Problem:** `catalog/controller/product/category.php` and
+`catalog/controller/common/home.php` pass an entity's own meta fields
+straight to `Document::setTitle()`/`setDescription()` with no fallback at
+all:
+
+```php
+// category.php
+$this->document->setTitle($category_info['meta_title']);
+$this->document->setDescription($category_info['meta_description']);
+
+// home.php
+$this->document->setTitle($this->config->get('config_meta_title'));
+$this->document->setDescription($this->config->get('config_meta_description'));
+```
+
+A category created without its "Meta Tag Title" admin field ever being
+filled in — a common case for anything added quickly, since OpenCart's own
+category-add form does not require it — ships that page with a blank
+`<title>` tag and no meta description. The homepage is exactly as exposed:
+`config_meta_title`/`config_meta_description` are empty on a fresh
+install until a merchant separately visits Settings → Store and fills
+them in, a step MintCart's own Setup Wizard (Phase 13) does not force —
+so a store that has completed the Wizard and is ready to take orders can
+still be shipping a blank `<title>` on its own homepage. This is a
+well-known, easily reproduced OpenCart SEO complaint (a missing
+`<title>` is one of the first things any basic SEO audit tool flags), not
+a hypothetical.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale
+as every other entry in this registry (no second checkout available to
+diff against, and the fix is additive — a fallback only applies when the
+existing field is blank — so it cannot regress a store that already has
+its meta fields filled in on any 3.x point release).
+
+**Source:** Discovered directly in this repository while working through
+Functional Scope §16 "SEO Core" — not an imported historical community
+patch. `MintCart\Seo\MetaBuilder` itself (the fallback primitive this fix
+wires in) shipped several runs earlier as a pure, consumer-less class
+(`CLAUDE.md` §85 — the class existed before this fix registry entry, not
+the other way around); this entry documents the point where it gained its
+first two real call sites, per the Fixes Policy's own five-step order
+(reproduce → check upstream → implement → test applies to *this* wiring
+step, not to building the primitive).
+
+**Reproduced on MintCart baseline:** Yes — read both controllers'
+`index()` methods directly; neither had any fallback branch prior to this
+fix (confirmed via `git show` against this repository's own history for
+both files).
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status. Note this is arguably not a "bug" upstream would ever
+fix the same way — OpenCart has no store-name-fallback convention
+anywhere else either; MintCart's own product principle (`MINTCART_PRODUCT_VISION.md`
+§5, "MintCart прибирає технічні рішення, які користувач не повинен
+приймати") is what motivates closing this gap, not an upstream defect
+report.
+
+**MintCart solution:** Both controllers now call
+`MintCart\Seo\MetaBuilder::build($entityTitle, $entityDescription,
+$fallbackTitle)` — a pure, OpenCart-independent value object (`trim()` +
+fallback, cannot throw) — and pass its result to `setTitle()`/
+`setDescription()` instead of the raw field. `category.php` falls back to
+the category's own `name`; `home.php` falls back to the store's own
+`config_name` setting (already set by Setup Wizard's Store step). Neither
+call site gained a fallback *description* beyond what `MetaBuilder`
+itself offers (there is no second, shorter description field anywhere in
+stock OpenCart to fall back to) — a blank `meta_description` with a
+non-blank fallback title still returns an empty description. The shipped
+header templates omit the description meta tag in that case; no description
+is generated from the title. See `docs/developer/seo/meta-builder.md` and
+`docs/upstream-diff.md`'s `category.php`/`home.php` entries for the full
+writeup. `product.php`'s equivalent pass-through is a known, deliberately
+deferred remaining gap (see `docs/developer/seo/meta-builder.md`'s "What's
+deliberately not done yet").
+
+**Tests:** `php -l` clean on both modified files.
+`tests/mintcart/seo/meta-builder-test.php` (9 assertions, pre-existing —
+scenarios 5 and 7 already replay `category.php`'s and `home.php`'s exact
+blank-meta shapes) already covers `MetaBuilder::build()` itself; no new
+test file was added since this fix only threads that already-tested pure
+function's output into two existing `Document` setter calls per
+controller — same reasoning MC-0013/MC-0014's own wiring-only follow-ups
+used where applicable. Full `tests/mintcart/` suite (77 files) re-run end
+to end — all passing, no regressions. A live MySQL/Twig request test is
+not possible in this environment (no `vendor/twig/twig`, no MySQL
+server) — a human should confirm on a real install that a category with a
+blank "Meta Tag Title" renders `<title>{category name}</title>`, and that
+a fresh install's homepage (before Settings → Store's meta fields are
+filled in) renders `<title>{store name}</title>`, instead of an empty
+tag in either case (see `docs/MANUAL_VERIFICATION.md`'s Phase 18
+section).

@@ -14,6 +14,13 @@ isolated Node harness exercised the actual inline handler's open/close,
 selection, focus, request parameters/abort signal, and missing-bundle paths.
 This is not a live admin/browser test; that check remains outstanding.
 
+**Review correction (2026-09-16, Codex, PR #114):** corrected the controller
+comments, SEO documentation, fix registry and manual checklist to describe
+the actual title-only fallback. Neither call site supplies a fallback
+description; blank descriptions remain blank and the shipped headers omit
+their meta tag. Runtime PHP behavior is unchanged. Verified with PHP 8.3.30:
+both controllers pass syntax checks and all 9 MetaBuilder smoke scenarios pass.
+
 Legend: `[x]` done, `[~]` in progress / partially done, `[ ]` not started.
 
 ## Phase 0 — Audit
@@ -2978,6 +2985,28 @@ entry for it as part of that increment, per `CLAUDE.md` §13), or pick a
 remaining Phase 18 sub-piece — or re-check `gh pr list --state open`
 first, since this backlog is large (47+ open PRs at the time of this run)
 and moving fast.
+
+**Update (2026-09-15, routine run): `MetaBuilder` wired into `category.php`
+and `home.php` (`docs/fixes/registry.md` MC-0015).** Both controllers'
+direct `setTitle()`/`setDescription()` pass-through now uses `MetaBuilder`.
+Only a blank title falls back to the category's `name` / store's
+`config_name`; a blank description stays blank (no fourth argument). Step 0 dedup check against the four open PRs at the time
+(#110 Diagnostics into search/manufacturer/special.php, #111 Diagnostics
+into product.php, #112 admin bulk-editor manufacturer field, #113
+`RobotsBuilder` into `header.php`) found none touching `category.php` or
+`home.php` — `product.php` was left unwired this run specifically because
+#111 already had it open, per this file's own "avoid the same file as an
+open PR" guidance. See `docs/upstream-diff.md`'s `category.php`/`home.php`
+entries and `docs/developer/seo/meta-builder.md` for the full writeup.
+Verified: `php -l` clean; full `tests/mintcart/` suite (77 files) re-run
+end to end, all passing, no regressions — no new test file needed since
+`meta-builder-test.php` scenarios 5/7 already cover these exact shapes.
+Not verified: no live MySQL/Twig session in this environment (see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 18 section for the manual
+steps). **Next candidates:** wire `product.php` the same way once #111
+merges; wire `CanonicalUrlBuilder` into `category.php` (also uncontended);
+or re-check `gh pr list --state open` first, since this backlog moves
+fast.
       sitemap, Schema.org Product/Breadcrumb/Organization — **canonical** has a
       first increment this run (see below); several sibling sub-pieces
       (hreflang, robots, sitemap, Schema.org) have their own increments sitting
@@ -5432,3 +5461,9 @@ and `home.php` are uncontended today); hreflang live wiring (`HreflangBuilder`
 still has no consumer, needs a per-language URL resolver first per its own
 doc); or re-check `gh pr list --state open` first, since this backlog moves
 fast.
+
+**Update (2026-09-15, routine run):** MC-0015 filed — `MintCart\Seo\MetaBuilder`
+wired into `category.php`/`home.php` (blank meta title fallback;
+blank descriptions are preserved). See the Phase 18 section above for the full writeup. Step 0
+checked all 4 open PRs at the time (#110-#113); `category.php`/`home.php`
+were uncontended. Next: same wiring for `product.php` once #111 merges.
