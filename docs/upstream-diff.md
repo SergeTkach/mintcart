@@ -1,5 +1,15 @@
 # Upstream diff
 
+**PR #115 review correction (2026-09-16):**
+`upload/admin/view/template/catalog/product_form.twig` uses data attributes
+for the new manufacturer picker, preserving existing OpenCart IDs/names.
+Its embedded spacing is owned by MintCart's token-based CSS; the new trigger
+uses a text label, tracks expanded state, and regains focus after confirmation.
+These changes belong at the form's integration point; shared layout and hidden
+state rules live in `assets/src/css/components/entity-picker.css`.
+Validation: production build, preset checks and isolated handler checks passed.
+Live admin verification remains required, including the existing autocomplete.
+
 Tracks every direct modification to an OpenCart 3.0.5.1 core file
 (`CLAUDE.md` §11, `MINTCART_TECHNICAL_PLAN.md` §41). Every entry here is
 technical debt that needs justification — the goal is to keep this list as
@@ -1661,6 +1671,52 @@ environment today. Confirmed this is not new: `entry_category` itself,
 already in this exact template before this change, has the same gap.
 Out of scope to fix here (a much larger, unrelated pass over the whole
 file); flagging so it isn't mistaken for something this change broke.
+
+**Update (this run — Phase 12, Entity Picker): Manufacturer field wired
+into the same admin screen.** `product_form.twig`'s Manufacturer field
+(`#input-manufacturer`/`input[name="manufacturer_id"]`, previously only a
+jQuery UI `autocomplete()` field) gains the same "Browse manufacturers"
+button + hidden `.mc-entity-picker` panel pattern as the Category field
+above, against the already-shipped, previously-consumer-less
+`mintcart/entity/manufacturer` backend
+(`docs/developer/components/entity-picker.md` "Manufacturer backend").
+Unlike Category, this is **single-select** (`multiple: false`) since a
+product has exactly one `manufacturer_id`: confirming a selection
+overwrites the two existing fields directly instead of appending into a
+well, so there is no new hidden-input array shape to reason about at
+all — `ControllerCatalogProduct::validateForm()`/`addProduct()`/
+`editProduct()`'s handling of `manufacturer`/`manufacturer_id` is
+completely untouched. No controller change was needed this run — this
+screen's `enqueueMintAssets()` already covers the whole form (added for
+Category), not a per-field enqueue. Six new
+`text_manufacturer_picker_*` language keys were added, same file/pattern
+as Category's own six.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+the Category entry above — this is the one true owner of the product
+edit screen's form.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, or `$data` key changed; the existing jQuery autocomplete still
+works exactly as before. `docs/upstream-diff.md`'s Bulk Editor
+manufacturer_id entry (PR touching `updateProductField()`/`product_list.twig`)
+is unrelated — different file (`product_list.twig`, not
+`product_form.twig`) and different code path (bulk column update, not
+the single-product edit form).
+
+**Tests:** `php -l` clean on the language file (no PHP changed in the
+controller or any `upload/system/library/mintcart/*` class — this is
+Twig/JS/language-file only, reusing the already-tested
+`ManufacturerPickerProvider`/`ControllerMintcartEntity::manufacturer()`
+backend as-is). Twig `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}`
+tag counts checked balanced before and after. Full `tests/mintcart/`
+suite (77 files) re-run end to end — all passing, no regressions (no
+PHP library code changed here). **Not verified:** no live MySQL/admin
+session in this environment — see `docs/MANUAL_VERIFICATION.md`'s new
+entry for the full manual script. Same pre-existing "trimmed repository"
+label-blank gap noted above applies identically to the six new
+`text_manufacturer_picker_*` keys — not a new gap this change
+introduces.
 ## `upload/system/library/db.php`
 
 **Reason:** MC-0006 (`docs/fixes/registry.md`) — `DB::connected()` called

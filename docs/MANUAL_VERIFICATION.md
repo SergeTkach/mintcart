@@ -352,6 +352,40 @@ exercised. On a real install:
     `$data['entry_xxx'] = ...` block (a real, un-trimmed OpenCart 3
     install would), they should render correctly with no further change
     needed.
+
+## `product_form.twig`'s Manufacturer `McEntityPicker`, never exercised end to end
+
+Same asset-enqueue mechanism as the Category picker above (already loaded
+on this same form — no separate enqueue to verify), but **single-select**
+instead of multi-select. On a real install:
+
+1. Go to **Catalog → Products → Edit** (or **Add**) any product, open the
+   **Links** tab (same tab as Category/Manufacturer today).
+2. Confirm the existing Manufacturer autocomplete input still works
+   exactly as before (type a few letters, pick a suggestion, confirm the
+   text field and hidden `manufacturer_id` both update) — this change
+   must not have altered that at all.
+3. Confirm a new "Browse manufacturers" button appears below the
+   Manufacturer input, styled as an `mc-button`.
+4. Click it — confirm a search box + manufacturer list appears (with
+   thumbnails for manufacturers that have a logo image, `null`/no image
+   otherwise), paginates via Previous/Next, and that typing filters
+   results (debounced, ~250ms).
+5. Select a manufacturer, click "Select" — confirm the panel closes and
+   the Manufacturer text input + hidden `manufacturer_id` field are both
+   overwritten with the picked manufacturer (not appended — there is no
+   well for this field, unlike Category).
+6. Select a different manufacturer from the picker afterward — confirm it
+   replaces the previous selection again (single-select, not additive).
+7. Save the product — confirm `manufacturer_id` is saved correctly
+   regardless of whether it was set via the old autocomplete or the new
+   picker, and re-opening the edit form shows the same manufacturer
+   pre-populated in both the text input and the picker's underlying
+   state.
+8. Confirm labels on the new UI render as real text, not blank — same
+   pre-existing "trimmed repository" caveat as the Category picker's own
+   step 10 above; not a new gap.
+
 ## Phase 18 — System route URL aliases, never exercised end to end
 
 `ControllerMintcartSeoSystemPages` is `php -l` clean and its pure

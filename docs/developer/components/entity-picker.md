@@ -277,6 +277,16 @@ the same no-live-verification reason.
 
 ## Manufacturer backend
 
+**Integration conventions (2026-09-16 review):** the product form uses
+`data-mc-manufacturer-*` and `data-mc-action="browse-manufacturers"` hooks.
+Existing field IDs/names remain compatible with OpenCart labels, autocomplete
+and save handling. The panel ID is retained for `aria-controls`, not JS lookup.
+The embedded field's spacing uses `--mc-space-2` through
+`.mc-entity-picker-field`; its text button needs no Font Awesome icon
+(Implementation Guide §§14–18, 21). `.mc-entity-picker[hidden]` explicitly
+overrides the component's flex display. The trigger tracks `aria-expanded`
+and receives focus after confirmation (Implementation Guide §§13, 68).
+
 ```
 GET index.php?route=mintcart/entity/manufacturer&user_token=…&filter_name=…&page=…&limit=…
 ```
@@ -317,16 +327,26 @@ their respective existing model method — this is pre-existing OpenCart
 behavior, not a MintCart inconsistency to fix here.
 
 Same permission requirement as category (`mintcart/entity` **Access**
-must be granted to a user group first) and the same "not done yet, by
-design" live-wiring gap: no admin screen calls this endpoint yet, for the
-identical reason (MintCart's asset bundle still isn't enqueued on any
-admin page — see above). `product_form.twig`'s **Manufacturer**
-autocomplete field (`upload/admin/view/template/catalog/product_form.twig`,
-the jQuery UI `autocomplete()` block using `catalog/manufacturer/autocomplete`)
-is this backend's identified first real consumer, for the same reason
-Category was identified for that endpoint — already single-select
-search-as-you-type, so a future `McEntityPicker` swap is a shape match,
-not a new pattern.
+must be granted to a user group first).
+
+**Live-wired (this run):** `product_form.twig`'s **Manufacturer** field
+now mounts a real `McEntityPicker` against this endpoint, via
+`window.MintCart.createEntityPicker` — the same enqueue
+(`docs/developer/admin/asset-enqueue.md`) the Category field already
+uses, since `getForm()`'s existing `enqueueMintAssets()` call covers the
+whole form, not just the Category field. Kept **additive** alongside the
+existing jQuery UI `autocomplete()` field (not a replacement, for the same
+no-live-verification reason the Category picker gives). The one real
+difference from Category's wiring: this endpoint is **single-select**
+(`multiple: false` — a product has exactly one `manufacturer_id`), so
+confirming a selection *overwrites*
+`#input-manufacturer`/`input[name="manufacturer_id"]` directly, instead of
+appending into a multi-select well — there is no "selected count" footer
+element for this picker, since 0-or-1 is not worth counting. Both
+mechanisms write the identical `input-manufacturer`/`manufacturer_id`
+fields, so `product.php`'s save logic needed no change. Removing the old
+autocomplete field is the same natural, low-risk, not-yet-attempted
+follow-up as Category's.
 
 ## Product backend
 

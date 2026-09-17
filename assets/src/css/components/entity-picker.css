@@ -21,6 +21,24 @@
     min-height: 0;
 }
 
+/* Implementation Guide §13: the flex layout must not override the hidden state. */
+.mc-entity-picker[hidden] {
+    display: none;
+}
+
+/* Implementation Guide §§16–18: embedded field spacing follows theme tokens, not inline pixels. */
+.mc-entity-picker-field {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--mc-space-2);
+    margin-block-start: var(--mc-space-2);
+}
+
+.mc-entity-picker-field > .mc-entity-picker {
+    width: 100%;
+}
+
 .mc-entity-picker.is-loading {
     opacity: 0.6;
 }

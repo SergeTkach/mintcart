@@ -4,6 +4,16 @@ Tracks progress against the phases defined in `MINTCART_TECHNICAL_PLAN.md` §42 
 starting sequence in `CLAUDE.md` §21. Update this file at the end of every work
 increment (see `CLAUDE.md` §14/§20).
 
+**Review correction (2026-09-16, Codex, PR #115):** manufacturer picker wiring
+now follows Implementation Guide §§14–18/21: data hooks, token-based spacing,
+and a text trigger without a legacy icon dependency. Existing OpenCart
+field IDs/names are preserved. Hidden panels explicitly override flex display;
+the trigger exposes its expanded state and regains focus after confirmation.
+Verified: frontend production build and preset contract checks passed; an
+isolated Node harness exercised the actual inline handler's open/close,
+selection, focus, request parameters/abort signal, and missing-bundle paths.
+This is not a live admin/browser test; that check remains outstanding.
+
 Legend: `[x]` done, `[~]` in progress / partially done, `[ ]` not started.
 
 ## Phase 0 — Audit
@@ -1813,14 +1823,11 @@ question is resolved — see the ADR's "Consequences" section.
       manufacturers, attributes, options, information pages, customers) —
       **category and manufacturer are done** (manufacturer this run), see
       below; the other five entity types still need their own.
-- [~] Live wiring into an actual admin screen/field — **category is done**
-      (`product_form.twig`'s Category field, this run, see the "Admin
-      asset-enqueue problem solved" update below); manufacturer/product
-      backends still have no live consumer.
-      **all seven entity types are done**, see below.
-- [ ] Live wiring into an actual admin screen/field — both backends exist
-      but nothing calls either yet (see below for why, and each one's
-      identified first consumer).
+- [~] Live wiring into an actual admin screen/field — **category and
+      manufacturer are both done** (`product_form.twig`'s Category field
+      in an earlier run, its Manufacturer field this run — see the
+      "Manufacturer field live-wired" update below); product/information/
+      attribute/option/customer backends still have no live consumer.
 - [ ] Create-new flow via drawer/modal — not attempted.
 
 **Update (this run): the category `fetchItems` backend is done.**
@@ -2073,6 +2080,80 @@ real-repeater follow-up — all can now reuse the same `components.min.css`
 + `admin.min.js` enqueue pattern (call `$this->document->addStyle()`/
 `addScript()` with `HTTP_CATALOG . 'assets/dist/...'` on the specific
 action that needs it) rather than re-solving this.
+
+**Update (2026-09-15, routine run): Manufacturer field live-wired,
+same shape as Category.** Step 0 dedup check: 5 open PRs at the start of
+this run (#110/#111 — Phase 10 Diagnostics, storefront controllers only;
+#112 — Phase 16 bulk `manufacturer_id` field, touches `product_list.twig`/
+`ModelCatalogProduct::updateProductField()`, not `product_form.twig`;
+#113 — `RobotsBuilder` into `header.php`; #114 — `MetaBuilder` into
+`category.php`/`home.php`) — none touch `product_form.twig`,
+`ControllerCatalogProduct::getForm()`, or
+`upload/admin/language/en-gb/catalog/product.php`'s Category/Manufacturer
+picker language block (#112 only adds one `text_bulk_field_manufacturer`
+key further down the same file, in the separate Bulk Editor block — no
+line/content overlap). Also investigated Phase 17's category
+drag-and-drop live-UI wiring first (the other "next candidate" this same
+asset-enqueue fix unblocked) and found a real, undocumented-until-now
+architectural mismatch: `admin/view/template/catalog/category_list.twig`
+is a flat, paginated table spanning every parent (sorted by name or
+`sort_order` across the *entire* category tree, inherited unmodified from
+stock OpenCart), while `ModelCatalogCategory::moveCategory()`'s contract
+is sibling-scoped (`order[]` must be "the full new sibling order under
+`parent_id`") — wiring real drag reorder onto that list would either
+silently corrupt `sort_order` for siblings not on the current page, or
+require guessing a UI redesign (parent-scoped drill-down/tree view) that
+`CLAUDE.md` §20 reserves for a human decision. Documented as a real fork,
+not attempted; picked the unambiguous Manufacturer-field mechanical
+increment instead — see the fork write-up below.
+
+`product_form.twig`'s Manufacturer field (`#input-manufacturer`/
+`input[name="manufacturer_id"]`) gains the same "Browse manufacturers"
+button + `.mc-entity-picker` panel pattern the Category field already
+has, against the already-shipped `mintcart/entity/manufacturer` backend —
+**single-select** (`multiple: false`, a product has exactly one
+`manufacturer_id`), so confirming a selection overwrites the two existing
+fields directly instead of appending into a well. No controller change
+needed (`getForm()`'s existing `enqueueMintAssets()` already covers this
+whole form). Six new `text_manufacturer_picker_*` language keys, same
+file/pattern as Category's own six. Full writeup:
+`docs/developer/components/entity-picker.md`'s "Manufacturer backend"
+section, `docs/upstream-diff.md`'s new entry appended to the
+`product.php`/`product_form.twig` block, `docs/MANUAL_VERIFICATION.md`'s
+new entry.
+
+**Verified:** `php -l` clean on the language file (no PHP library code
+touched — this is Twig/JS/language-file only, reusing the already-tested
+`ManufacturerPickerProvider`/`ControllerMintcartEntity::manufacturer()`
+backend as-is). Twig `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}`
+tag counts re-checked balanced (38/38, 37/37, unchanged counts since this
+only added matching pairs). New inline `<script>` block extracted and
+checked with `node --check` (valid syntax). Full `tests/mintcart/`
+suite (77 files) re-run end to end — all passing, no regressions (no
+library code changed). **Not verified:** no live MySQL/admin session in
+this environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for the
+full manual script.
+
+**Architectural fork identified, not resolved (Phase 17):** live
+drag-and-drop wiring for `catalog/category` needs a product decision on
+how the flat, cross-parent, paginated category list should represent
+sibling-scoped reordering — options include (a) a parent-scoped
+drill-down/tree view (bigger, real UX change), (b) restricting drag to
+same-parent adjacent rows with reject-and-snap-back otherwise (partial,
+potentially confusing), or (c) a "Manage order for: [parent selector]"
+filter added to the existing list screen (smaller than a full tree, still
+a new list-filtering feature). Not guessed at this run per `CLAUDE.md`
+§20 — a future run or a human should decide before attempting Phase 17's
+live UI wiring; the backend (`ControllerCatalogCategory::move()`,
+`CategoryMoveValidator`, `moveCategory()`) is unaffected and remains
+ready to consume whichever UI shape is chosen.
+
+**Next candidates:** the remaining Phase 12 entity types still need live
+wiring (product's Related Products field, information/attribute/option/
+customer — each has an identified first consumer already documented in
+`docs/developer/components/entity-picker.md`); resolving the Phase 17
+category-list fork above (needs a product decision first); or re-check
+`gh pr list --state open` first, since this backlog moves fast.
 
 ## Phase 13 — Setup Wizard
 
@@ -2806,12 +2887,26 @@ exercised against a real database — see `docs/MANUAL_VERIFICATION.md`'s
 new Phase 17 section for what a human should confirm, including that
 `editCategory()` still behaves identically post-extraction.
 
-**Next step:** wire `McSortable` into `admin/view/template/catalog/category_list.twig`
-and POST to `catalog/category.move` on drop/keyboard-reorder — blocked on
-solving the admin asset-enqueue problem first (same blocker Phase 12's
-`product_form.twig`/Category-field wiring is waiting on), or tackle that
-enqueue problem itself as a standalone increment since at least two
-features (this one and Phase 12's Entity Picker) are now blocked on it.
+**Next step (updated 2026-09-15, routine run):** the admin asset-enqueue
+problem this note used to cite as the blocker was solved several runs ago
+(`docs/developer/admin/asset-enqueue.md`, `enqueueMintAssets()` now has
+two real consumers — Phase 12's Category/Manufacturer picker fields on
+`product_form.twig`). Re-investigated this run to wire `McSortable` here
+as the natural "second admin screen" consumer, and found a real,
+previously-undocumented architectural mismatch instead:
+`category_list.twig` is a flat, paginated table spanning every parent
+(sorted by name or `sort_order` across the *entire* tree, unmodified from
+stock OpenCart), while `moveCategory()`'s `order[]` contract is
+sibling-scoped ("the full new sibling order under `parent_id`"). Naively
+wrapping visible `<tr>`s in `data-mc-sortable`/`data-mc-sortable-item`
+would either silently corrupt `sort_order` for same-parent siblings not
+on the current page, or require guessing a list-UX redesign — a real
+product/architecture decision (`CLAUDE.md` §20), not attempted. See
+Phase 12's "Architectural fork identified, not resolved" update above for
+the option set (parent-scoped tree/drill-down view; same-parent-only drag
+with reject-and-snap-back; or a "Manage order for: [parent]" filter on
+the existing list). A future run or a human should decide the list-UX
+shape first; the backend itself needs no further work.
 
 ## Phase 18 — SEO Core
 
