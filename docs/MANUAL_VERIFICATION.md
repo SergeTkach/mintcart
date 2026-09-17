@@ -761,11 +761,13 @@ never rendered on a real page or run through an actual validator. On a
    `"@type": "Organization"` appears in `<head>`, with `name`/`url`
    matching **Settings → Store**, and `logo`/`contactPoint`/`address`
    present only when a logo/telephone/address is actually configured.
-2. Load a category page and a search-results page; confirm a second
-   `<script type="application/ld+json">` block with
-   `"@type": "BreadcrumbList"` appears, `itemListElement` matching the
-   visible breadcrumb trail exactly (same labels, same order, position
-   starting at 1).
+2. Load a category page, a search-results page, a manufacturer page
+   (`product/manufacturer/info`), and a specials page (`product/special`);
+   confirm a second `<script type="application/ld+json">` block with
+   `"@type": "BreadcrumbList"` appears on each, `itemListElement` matching
+   the visible breadcrumb trail exactly (same labels, same order, position
+   starting at 1). (2026-09-17: manufacturer/special wiring is new this
+   run — not yet rendered on a real page.)
 3. Paste both blocks into
    [Google's Rich Results Test](https://search.google.com/test/rich-results)
    (or the [Schema.org validator](https://validator.schema.org/)) and
@@ -787,6 +789,10 @@ never rendered on a real page or run through an actual validator. On a
 6. `manufacturer.php`/`special.php` `BreadcrumbList` wiring has an open,
    unmerged PR as of this run — nothing to verify live here until it
    merges (see that PR's own description for its verification steps).
+5. `SchemaOrgBuilder::product()` has no live consumer yet — `mint_default`
+   does have `template/product/product.twig` (Phase 6/8 wired the product
+   detail page), but nothing on it calls `SchemaOrgBuilder::product()` yet
+   — nothing to verify live until that wiring lands.
 
 ## Phase 18 — `RobotsBuilder` meta tag, never validated against a real page
 

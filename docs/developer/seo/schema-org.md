@@ -12,13 +12,13 @@ Test: `tests/mintcart/seo/schema-org-builder-test.php`
 (`php tests/mintcart/seo/schema-org-builder-test.php`, 16 scenarios)
 
 Consumers: `upload/catalog/controller/common/header.php` (Organization),
-`upload/catalog/controller/product/category.php` and
-`upload/catalog/controller/product/search.php` (BreadcrumbList),
+`upload/catalog/controller/product/category.php`,
+`upload/catalog/controller/product/search.php`,
+`upload/catalog/controller/product/manufacturer.php` (`info()`) and
+`upload/catalog/controller/product/special.php` (BreadcrumbList) — the
+four listing pages that build `$data['breadcrumbs']` — and
 `upload/catalog/controller/product/product.php` (Product) — see "Product:
-live-wired" below. `manufacturer.php`/`special.php` BreadcrumbList wiring
-is not on `master` yet as of this run but has an open, unmerged PR (see
-`docs/IMPLEMENTATION_STATUS.md`'s Phase 18 section for the PR number at
-the time it was checked) — not duplicated here.
+live-wired" below.
 
 ## Design
 
@@ -92,7 +92,8 @@ missing) is caught and logged via `MintCart\Core\Logger`, never allowed to
 fatal the page — same "log and disable for this request" pattern
 `ComponentRenderer` failures already use in `header.php`/`footer.php`.
 
-**`category.php`/`search.php` specifically re-check `isMintAware()` fresh**
+**`category.php`/`search.php`/`manufacturer.php`/`special.php` specifically
+re-check `isMintAware()` fresh**
 rather than reusing `$mint_render_product_cards` — that variable can be
 flipped to `false` mid-request by `ProductCardListRenderer::isEnabled()`
 after an unrelated per-product render failure (a broken `product-card.twig`
@@ -112,13 +113,14 @@ renders nothing rather than an empty `<script>` tag.
 
 ## BreadcrumbList: reuses each controller's existing `$data['breadcrumbs']`
 
-`category.php` and `search.php` both already build `$data['breadcrumbs']`
-for their own visible breadcrumb nav (`mc-breadcrumb`, Phase 4) — the schema
-is built from that same array, at the end of `index()` once every entry has
-been appended (breadcrumb arrays grow incrementally through those methods,
-so building the schema too early would silently drop later entries).
-Rendered as a second `<script type="application/ld+json">` block right
-after `{{ header }}` in `category.twig`/`search.twig`.
+`category.php`, `search.php`, `manufacturer.php` (`info()`) and
+`special.php` all already build `$data['breadcrumbs']` for their own
+visible breadcrumb nav (`mc-breadcrumb`, Phase 4) — the schema is built
+from that same array, once every entry has been appended (breadcrumb
+arrays grow incrementally through those methods, so building the schema
+too early would silently drop later entries). Rendered as a second
+`<script type="application/ld+json">` block right after `{{ header }}` in
+`category.twig`/`search.twig`/`manufacturer_info.twig`/`special.twig`.
 
 ## Product: live-wired
 
@@ -154,9 +156,8 @@ increment, not part of this one.
 - [x] `toJsonLd()` is safe to embed directly in a `<script>` tag
       (`JSON_HEX_TAG` — no manual escaping needed by a caller)
 - [x] Live-wired for Organization (header, all Mint-aware pages),
-      BreadcrumbList (category, search) and Product (product detail page)
-- [ ] BreadcrumbList live-wired for manufacturer/special (open, unmerged PR
-      as of this run — see `docs/IMPLEMENTATION_STATUS.md`)
+      BreadcrumbList (category, search, manufacturer, special) and Product
+      (product detail page)
 - [ ] Validated against a real page with Google's Rich Results Test /
       schema.org validator (`docs/MANUAL_VERIFICATION.md`, Phase 18 entry —
       this environment has no MySQL/`vendor/twig/twig` to render a real

@@ -649,6 +649,19 @@ as `category.php`'s entry. **Tests:** `php -l` clean; full
 `tests/mintcart/` suite (78 files) re-run end to end — all passing, no
 regressions.
 
+**Update (2026-09-17, routine run — Phase 18, SEO Core, `SchemaOrgBuilder`
+BreadcrumbList):** right before rendering, inside a fresh
+`ActiveTheme::isMintAware()` check (not `$mint_render_product_cards`, per
+the same reasoning as `category.php`'s identical update), builds
+`$data['mc_schema_breadcrumb']` via
+`MintCart\Seo\SchemaOrgBuilder::breadcrumbList($data['breadcrumbs'])`.
+`special.twig` renders it as a second `<script type="application/ld+json">`
+block right after `{{ header }}`, same as `category.twig`/`search.twig`.
+Same caught-and-logged failure handling as every other `SchemaOrgBuilder`
+call site. Full design rationale: `docs/developer/seo/schema-org.md`.
+**Tests:** `php -l` clean; Twig tag balance checked; full `tests/mintcart/`
+suite (77 files) re-run end to end — all passing, no regressions.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/special.php`
@@ -905,6 +918,22 @@ wrapping, same unconditional-regardless-of-theme wiring as `category.php`'s
 identical update. Behavior unchanged — same reasoning as `category.php`'s
 entry. **Tests:** `php -l` clean; full `tests/mintcart/` suite (78 files)
 re-run end to end — all passing, no regressions.
+
+**Update (2026-09-17, routine run — Phase 18, SEO Core, `SchemaOrgBuilder`
+BreadcrumbList):** applied only to `info()` (the only method that builds
+`$data['breadcrumbs']` for a real listing page — the plain manufacturer-list
+`index()` has no breadcrumb list of individual products to describe).
+Right before rendering, inside a fresh `ActiveTheme::isMintAware()` check
+(same reasoning as `category.php`'s identical update), builds
+`$data['mc_schema_breadcrumb']` via
+`MintCart\Seo\SchemaOrgBuilder::breadcrumbList($data['breadcrumbs'])`.
+`manufacturer_info.twig` renders it as a second
+`<script type="application/ld+json">` block right after `{{ header }}`,
+same as `category.twig`/`search.twig`. Same caught-and-logged failure
+handling as every other `SchemaOrgBuilder` call site. Full design
+rationale: `docs/developer/seo/schema-org.md`. **Tests:** `php -l` clean;
+Twig tag balance checked; full `tests/mintcart/` suite (77 files) re-run
+end to end — all passing, no regressions.
 
 ---
 
@@ -2264,6 +2293,29 @@ and confirm the gallery/options/add-to-cart/tabs/related-products all
 render and behave correctly, and that the legacy `default` theme's own
 product page is pixel-identical to before this change. See
 `docs/MANUAL_VERIFICATION.md`'s new entry for the exact steps.
+
+**Update (this run — Phase 18 (SEO Core), MC-0016):** the controller's
+`$this->document->setTitle($product_info['meta_title']);
+$this->document->setDescription($product_info['meta_description']);`
+pass-through (byte-for-byte the same blank-title defect MC-0015 already
+fixed on `category.php`/`home.php`) now routes through
+`MintCart\Seo\MetaBuilder::build()`, falling back to `$product_info['name']`
+when `meta_title` is blank. Deliberately deferred from the original
+Phase 6/8 increment above and MC-0015 itself, since at the time both
+shipped this file was already being edited by the Diagnostics wiring
+increment (also documented above) — this run picked it up once that
+collision cleared. **Why it can't live in the MintCart layer:** same
+reasoning as every other `MetaBuilder`/`Diagnostics` call site — a
+controller is the only place that already has both the entity's raw field
+and a sensible fallback value on hand. **Compatibility impact:** none when
+`meta_title`/`meta_description` are already filled in (the fallback only
+applies when blank); `setKeywords()` is untouched. **Tests:** `php -l`
+clean; `tests/mintcart/seo/meta-builder-test.php`'s pre-existing scenario 6
+already covers this exact shape, no new test file needed; full
+`tests/mintcart/` suite (77 files) re-run end to end — all passing, no
+regressions. **Not verified:** no live MySQL/Twig session in this
+environment — see `docs/fixes/registry.md` MC-0016 for the manual step a
+human should run.
 ## `upload/admin/model/catalog/product.php` / `upload/admin/controller/catalog/product.php` / `upload/admin/view/template/catalog/product_list.twig`
 
 **Reason:** Phase 16 (Bulk Editor, `MINTCART_FUNCTIONAL_SCOPE.md` §7/§17,
