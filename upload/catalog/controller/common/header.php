@@ -178,6 +178,34 @@ class ControllerCommonHeader extends Controller {
 			}
 		}
 
+		// MintCart\Seo\RobotsBuilder (MINTCART_FUNCTIONAL_SCOPE.md §16, Phase
+		// 18) - unlike mc_header/mc_schema_organization above, this is not
+		// gated by $mint_render_header: the robots directive is a per-route
+		// SEO signal, not a Mint component DOM, so it applies to every theme
+		// whose common/header.twig reads $data['mc_robots_content'] (today
+		// just mint_default; a theme/legacy template that ignores the key
+		// pays no cost). $this->request->get['route'] is the same route
+		// string startup/router.php and every other route-aware controller
+		// in this repo already reads (content_top.php, event/activity.php);
+		// isset() guarded the same defensive way content_top.php does it,
+		// since header.php runs as a sub-controller of every page and an
+		// unset route is not expected to happen on a real page render.
+		// $hasResults is deliberately left at its default (true) for every
+		// route including product/search: threading the real "did this
+		// search match anything" flag from search.php into header.php needs
+		// a registry/session bridge between two sibling controllers, a
+		// separate, slightly larger wiring task - see
+		// docs/developer/seo/robots.md "Known limitation" for the follow-up.
+		try {
+			$route = isset($this->request->get['route']) ? (string)$this->request->get['route'] : '';
+
+			$robots_builder = new \MintCart\Seo\RobotsBuilder();
+
+			$data['mc_robots_content'] = $robots_builder->metaContent($route);
+		} catch (\Throwable $e) {
+			(new \MintCart\Core\Logger())->error('RobotsBuilder failed to build robots meta content: ' . $e->getMessage());
+		}
+
 		return $this->load->view('common/header', $data);
 	}
 }

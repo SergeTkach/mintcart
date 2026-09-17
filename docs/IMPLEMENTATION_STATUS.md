@@ -3017,8 +3017,9 @@ this run) — or re-check `gh pr list --state open` first, since this backlog
 was large (30+ open PRs) and moving fast at the time of this run.
 - [ ] SEO URL, canonical, meta title/description, XML sitemap, Schema.org
       Product/Breadcrumb/Organization
-- [~] robots controls — `MintCart\Seo\RobotsBuilder` (pure contract + tests
-      only, no live wiring yet) — see below
+- [x] robots controls — `MintCart\Seo\RobotsBuilder`, now live-wired into
+      `ControllerCommonHeader`/`mint_default/template/common/header.twig`
+      (2026-09-15 routine run) — see below
 - [ ] SEO URL, canonical, meta title/description, robots controls, XML
       sitemap, Schema.org Product/Breadcrumb/Organization
 - [x] System route URL aliases (cart, checkout, search, contact, account, etc.)
@@ -5395,3 +5396,39 @@ Phase 16 fields (special, category, stock status), Phase 10's
 Search/Manufacturer/Special Diagnostics wiring (likely already covered
 by #110 — re-check first), or re-check `list_pull_requests`/`gh pr list`
 before picking anything new.
+
+**Update (2026-09-15, routine run): Phase 18 (SEO Core) — `MintCart\Seo\RobotsBuilder`
+live wiring.** Step 0 dedup check found 3 open PRs (`#110`, `#111` — both
+Diagnostics wiring into `manufacturer.php`/`search.php`/`special.php`/
+`product.php`; `#112` — admin Bulk Editor manufacturer field), none
+touching `header.php` or any SEO file. `RobotsBuilder` (a pure, tested,
+consumer-less contract per earlier runs) now has its first real consumer:
+`ControllerCommonHeader::index()` builds `$data['mc_robots_content']` from
+the current `$this->request->get['route']`, rendered by
+`mint_default/template/common/header.twig` as a `<meta name="robots">` tag
+— deliberately *not* gated by `isMintAware()` since it's a per-route SEO
+signal, not a Mint component DOM contract. Known, documented limitation:
+`product/search`'s `$hasResults` isn't threaded from `search.php` yet, so
+an empty search still renders `index, follow` (see
+`docs/developer/seo/robots.md` "Known limitation"). Full writeup:
+`docs/upstream-diff.md`'s `header.php` entry, `docs/developer/seo/robots.md`,
+`docs/MANUAL_VERIFICATION.md`'s new Phase 18 "RobotsBuilder" section.
+Verified: `php -l` clean; `tests/mintcart/seo/robots-builder-test.php`
+unchanged (pre-existing 74 assertions already cover the pure function);
+full `tests/mintcart/**/*-test.php` suite re-run end to end (77 files) —
+all passing, no regressions. Not verified: no live MySQL/Twig session in
+this environment, same pre-existing gap.
+
+**Next candidates:** thread `product/search`'s `$hasResults` from
+`ControllerProductSearch` into `ControllerCommonHeader` (needs a
+registry/session bridge between sibling controllers — a real, slightly
+larger design question, not mechanical); wire `MetaBuilder`/
+`CanonicalUrlBuilder` into `category.php`/`product.php`/`home.php`/
+`manufacturer.php`/`search.php`/`special.php` (both still unwired,
+duplicated inline logic — but `manufacturer.php`/`search.php`/`special.php`/
+`product.php` were touched by this run's open `#110`/`#111`, so re-check
+those PRs' merge status first to avoid a same-file collision; `category.php`
+and `home.php` are uncontended today); hreflang live wiring (`HreflangBuilder`
+still has no consumer, needs a per-language URL resolver first per its own
+doc); or re-check `gh pr list --state open` first, since this backlog moves
+fast.
