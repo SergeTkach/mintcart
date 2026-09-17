@@ -4127,6 +4127,33 @@ prerequisite in the flow's own ordering); or re-run `gh pr list --state
 open` for whatever has newly merged/unclaimed before picking the next
 phase, since this run observed an unusually large (31) open-PR backlog.
 
+**Update (this run): `MintCart\Update\PackageFileInstaller` (the `files`
+step).** At the start of this run there were 7 open PRs (#117-#123):
+four Phase 18 SEO-wiring increments, one Phase 16 Bulk Editor field, and
+two other Update Manager steps in flight (#122 `MaintenanceMode`/
+`maintenance`, #123 `PackageDownloader`/`download`) — neither touches
+`upload/system/library/mintcart/update/packagefileinstaller.php` (a new
+file) or any other file this increment changes, confirmed via each PR's
+own file list. `install()` copies every `PackageManifest::files()` path
+from an extracted package into the live install (atomic
+temp-file-then-rename per file, pre-flight `missingFiles()` check so a
+missing source file writes nothing rather than installing partway), and
+deletes every `PackageManifest::removes()` path (ADR 005 decision #3,
+idempotent when already absent). Returns each installed file's sha256 —
+the exact input the still-unbuilt `mc_installed_file` ledger needs, not
+persisted by this class itself (no table/orchestrator exists yet to call
+it — `CLAUDE.md` §85). Full writeup:
+`docs/developer/update/package-file-installer.md`. Verified: `php -l`
+clean on the new/touched files and across the full `upload`/`tests` tree;
+new `tests/mintcart/update/package-file-installer-test.php` (16 scenarios);
+full `tests/mintcart/**/*-test.php` suite re-run end to end (78 files, was
+77) — all passing, no regressions. Pure PHP against temp-directory
+fixtures, no OpenCart dependency, so no live-install verification gap
+applies to this specific increment. **Next step:** an orchestrator that
+chains `download → verify → maintenance → files → migrations → cache
+clear → health check` end to end (once `download`/`maintenance` land —
+check `gh pr list --state open` first), which is also the real caller the
+`mc_installed_file` ledger table needs before it can be added.
 **Update (2026-09-17, routine run): `MintCart\Update\PackageDownloader` —
 the `download` step.** Step 0 dedup check: `list_pull_requests` (all open,
 not filtered by branch name) returned 6 open PRs at the start of this run
