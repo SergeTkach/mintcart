@@ -2302,3 +2302,26 @@ coverage, including the rejection cases); full `tests/mintcart/` suite
 the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
 section.
+
+**Update (this run — Phase 16, Bulk Editor):** added `stock_status_id` as
+a fifth whitelisted bulk-update field, same shape as `manufacturer_id` —
+`BulkProductUpdateValidator::FIELDS` gains the entry (validated as a
+non-negative integer; `0` is accepted purely because it mirrors
+`ControllerCatalogProduct::getForm()`'s own `$data['stock_status_id'] = 0;`
+fallback, not because it is a meaningful merchant-chosen target — the
+default install's `oc_stock_status` rows start at id `5`),
+`updateProductField()` gains the matching column mapping, and
+`product_list.twig`'s toolbar `<select>` gains a "Stock Status" option
+(plus its `text_bulk_field_stock_status` language key). **Why it can't
+live in the MintCart layer:** same reasoning as the entries above —
+`oc_product` stays the one true owner of its own columns. **Compatibility
+impact:** none — purely additive, no existing field/column/behavior
+changed. **Tests:** `php -l` clean on all touched files;
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` grows
+from 34 to 41 assertions (stock_status_id whitelist + value-validation
+coverage, including the rejection cases); full `tests/mintcart/` suite
+(77 files) re-run end to end — all passing, no regressions.
+`product_list.twig`'s tag counts re-checked balanced (14/14, 2/2) after
+the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
+this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
+section.
