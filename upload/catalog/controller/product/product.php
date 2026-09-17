@@ -230,8 +230,21 @@ class ControllerProductProduct extends Controller {
 				'href' => $this->url->link('product/product', $url . '&product_id=' . $this->request->get['product_id'])
 			);
 
-			$this->document->setTitle($product_info['meta_title']);
-			$this->document->setDescription($product_info['meta_description']);
+			// MintCart\Seo\MetaBuilder (MINTCART_FUNCTIONAL_SCOPE.md §16,
+			// Phase 18, MC-0016): a blank "Meta Tag Title" falls back to the
+			// product name. The optional fourth argument is omitted
+			// deliberately: a blank meta description stays blank, not a
+			// copy of the title. Mirrors category.php/home.php's MC-0015
+			// wiring. See docs/developer/seo/meta-builder.md, "Live wiring".
+			// Pure string logic, cannot throw - no try/catch needed.
+			$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+				$product_info['meta_title'],
+				$product_info['meta_description'],
+				$product_info['name']
+			);
+
+			$this->document->setTitle($mint_meta['title']);
+			$this->document->setDescription($mint_meta['description']);
 			$this->document->setKeywords($product_info['meta_keyword']);
 			$this->document->addLink($this->url->link('product/product', 'product_id=' . $this->request->get['product_id']), 'canonical');
 			$this->document->addScript('catalog/view/javascript/jquery/magnific/jquery.magnific-popup.min.js');
@@ -603,6 +616,52 @@ class ControllerProductProduct extends Controller {
 			$data['content_bottom'] = $this->load->controller('common/content_bottom');
 			$data['footer'] = $this->load->controller('common/footer');
 			$data['header'] = $this->load->controller('common/header');
+
+			// MintCart\Seo\SchemaOrgBuilder Product JSON-LD
+			// (MINTCART_FUNCTIONAL_SCOPE.md §16, Phase 18). Re-checks
+			// Mint-awareness directly (not $mint_render_product_cards,
+			// which above this point may have been flipped to false by
+			// ProductCardListRenderer::isEnabled() after an unrelated
+			// related-product render failure) - the product schema is
+			// independent of whether the related-products cards
+			// rendered, same reasoning as category.php/search.php's
+			// BreadcrumbList wiring.
+			if (\MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme)) {
+				try {
+					// Raw numeric price (not currency-formatted, not the
+					// tax-inclusive display string in $data['price']/
+					// $data['tax']) - same special-overrides-price rule
+					// $data['price']/$data['special'] above already
+					// apply, and the same "false means hidden from this
+					// customer group" convention ProductViewProvider and
+					// SchemaOrgBuilder::product()'s own contract use.
+					if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
+						$mint_schema_price = (!is_null($product_info['special']) && (float)$product_info['special'] >= 0)
+							? (float)$product_info['special']
+							: (float)$product_info['price'];
+					} else {
+						$mint_schema_price = false;
+					}
+
+					$schema_builder = new \MintCart\Seo\SchemaOrgBuilder();
+
+					$data['mc_schema_product'] = $schema_builder->toJsonLd($schema_builder->product(array(
+						'name'         => $product_info['name'],
+						'url'          => $data['share'],
+						'image'        => $data['popup'],
+						'description'  => trim(strip_tags($data['description'])),
+						'sku'          => $product_info['sku'],
+						'brand'        => $product_info['manufacturer'],
+						'price'        => $mint_schema_price,
+						'currency'     => $this->session->data['currency'],
+						'in_stock'     => (float)$product_info['quantity'] > 0,
+						'rating_value' => $product_info['rating'],
+						'rating_count' => $product_info['reviews']
+					)));
+				} catch (\Throwable $e) {
+					(new \MintCart\Core\Logger())->error('SchemaOrgBuilder failed to build Product schema: ' . $e->getMessage());
+				}
+			}
 
 			$mint_diagnostics->mark('view_rendered');
 

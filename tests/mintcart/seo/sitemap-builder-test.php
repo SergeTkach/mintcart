@@ -106,6 +106,52 @@ for ($i = 0; $i < SitemapBuilder::MAX_URLS_PER_SITEMAP + 5; $i++) {
 $xml = $builder->urlset($many);
 assertSame(SitemapBuilder::MAX_URLS_PER_SITEMAP, substr_count($xml, '<url>'), 'urlset: truncates to MAX_URLS_PER_SITEMAP entries', $failures);
 
+// --- urlset(): Google Image sitemap extension (`images`) ---
+
+// 16. No `images` key at all still omits the `xmlns:image` namespace and
+// renders no `<image:image>` blocks (byte-identical to pre-images behavior).
+$xml = $builder->urlset([['loc' => 'https://example.test/no-images']]);
+assertTrue(strpos($xml, 'xmlns:image') === false, 'urlset: no xmlns:image namespace when no entry has images', $failures);
+assertTrue(strpos($xml, '<image:image>') === false, 'urlset: no <image:image> block when no entry has images', $failures);
+
+// 17. An entry with one image renders the xmlns:image namespace and a full <image:image> block.
+$xml = $builder->urlset([
+    ['loc' => 'https://example.test/p1', 'images' => [
+        ['loc' => 'https://example.test/image/p1.jpg', 'caption' => 'Widget', 'title' => 'Widget'],
+    ]],
+]);
+assertTrue(strpos($xml, 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"') !== false, 'urlset: declares xmlns:image when an entry has images', $failures);
+assertSame(1, substr_count($xml, '<image:image>'), 'urlset: one <image:image> block for one image', $failures);
+assertTrue(strpos($xml, '<image:loc>https://example.test/image/p1.jpg</image:loc>') !== false, 'urlset: renders image loc verbatim (escaped)', $failures);
+assertTrue(strpos($xml, '<image:caption>Widget</image:caption>') !== false, 'urlset: renders image caption', $failures);
+assertTrue(strpos($xml, '<image:title>Widget</image:title>') !== false, 'urlset: renders image title', $failures);
+
+// 18. caption/title are optional — omitted entirely when blank, not rendered as empty tags.
+$xml = $builder->urlset([
+    ['loc' => 'https://example.test/p2', 'images' => [['loc' => 'https://example.test/image/p2.jpg']]],
+]);
+assertTrue(strpos($xml, '<image:caption>') === false, 'urlset: omits <image:caption> when not given', $failures);
+assertTrue(strpos($xml, '<image:title>') === false, 'urlset: omits <image:title> when not given', $failures);
+
+// 19. A blank image loc is skipped; duplicate image loc values are de-duplicated.
+$xml = $builder->urlset([
+    ['loc' => 'https://example.test/p3', 'images' => [
+        ['loc' => '  '],
+        ['loc' => 'https://example.test/image/p3.jpg'],
+        ['loc' => 'https://example.test/image/p3.jpg', 'caption' => 'ignored'],
+    ]],
+]);
+assertSame(1, substr_count($xml, '<image:image>'), 'urlset: blank image loc skipped, duplicate image loc de-duplicated', $failures);
+
+// 20. "&" in an image loc/caption is escaped, same rule as the primary <loc>.
+$xml = $builder->urlset([
+    ['loc' => 'https://example.test/p4', 'images' => [
+        ['loc' => 'https://example.test/image/p4.jpg?a=1&b=2', 'caption' => 'Tom & Jerry'],
+    ]],
+]);
+assertTrue(strpos($xml, '<image:loc>https://example.test/image/p4.jpg?a=1&amp;b=2</image:loc>') !== false, 'urlset: "&" in image loc is escaped', $failures);
+assertTrue(strpos($xml, '<image:caption>Tom &amp; Jerry</image:caption>') !== false, 'urlset: "&" in image caption is escaped', $failures);
+
 // --- sitemapIndex() ---
 
 // 13. Empty sitemaps list still produces a well-formed, empty <sitemapindex>.
@@ -137,5 +183,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: SitemapBuilder smoke test (15 scenarios)\n";
+echo "PASS: SitemapBuilder smoke test (20 scenarios)\n";
 exit(0);

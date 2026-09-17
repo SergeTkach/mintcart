@@ -32,28 +32,50 @@ final class SitemapBuilder
 
     private const CHANGEFREQ_VALUES = ['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never'];
 
+    private const IMAGE_NAMESPACE = 'http://www.google.com/schemas/sitemap-image/1.1';
+
     /**
      * @param list<array{
      *     loc: string,
      *     lastmod?: string|\DateTimeInterface|null,
      *     changefreq?: string|null,
-     *     priority?: float|int|null
+     *     priority?: float|int|null,
+     *     images?: list<array{loc: string, caption?: string|null, title?: string|null}>
      * }> $entries Already-resolved absolute URLs (via `$this->url->link(...)`
      *        upstream, the same "presentation values already resolved
      *        upstream" contract `SearchService::results()`/
      *        `ProductViewProvider::build()` use) — this class does no URL
-     *        generation, DB access, or routing of its own.
+     *        generation, DB access, or routing of its own. `images` is the
+     *        Google Image sitemap extension (real consumer:
+     *        `ControllerExtensionFeedGoogleSitemap`, which already emitted
+     *        `<image:image>` blocks for each product's image by hand before
+     *        this class had anywhere to route that data).
      *
      * @return string A complete `<?xml ...?><urlset ...>...</urlset>`
      *         document, UTF-8, always well-formed even for empty/all-invalid
-     *         input (an empty `<urlset>` is valid per the protocol).
+     *         input (an empty `<urlset>` is valid per the protocol). The
+     *         `xmlns:image` namespace is only declared when at least one
+     *         entry actually carries images, so callers with no image data
+     *         get byte-identical output to before this feature existed.
      */
     public function urlset(array $entries): string
     {
         $normalized = array_slice($this->normalize($entries), 0, self::MAX_URLS_PER_SITEMAP);
 
+        $hasImages = false;
+        foreach ($normalized as $entry) {
+            if ($entry['images']) {
+                $hasImages = true;
+                break;
+            }
+        }
+
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
+        if ($hasImages) {
+            $xml .= ' xmlns:image="' . self::IMAGE_NAMESPACE . '"';
+        }
+        $xml .= '>' . "\n";
 
         foreach ($normalized as $entry) {
             $xml .= "\t<url>\n";
@@ -69,6 +91,21 @@ final class SitemapBuilder
 
             if ($entry['priority'] !== null) {
                 $xml .= "\t\t<priority>" . $entry['priority'] . "</priority>\n";
+            }
+
+            foreach ($entry['images'] as $image) {
+                $xml .= "\t\t<image:image>\n";
+                $xml .= "\t\t\t<image:loc>" . $this->escape($image['loc']) . "</image:loc>\n";
+
+                if ($image['caption'] !== null) {
+                    $xml .= "\t\t\t<image:caption>" . $this->escape($image['caption']) . "</image:caption>\n";
+                }
+
+                if ($image['title'] !== null) {
+                    $xml .= "\t\t\t<image:title>" . $this->escape($image['title']) . "</image:title>\n";
+                }
+
+                $xml .= "\t\t</image:image>\n";
             }
 
             $xml .= "\t</url>\n";
@@ -123,7 +160,7 @@ final class SitemapBuilder
     }
 
     /**
-     * @return list<array{loc: string, lastmod: string|null, changefreq: string|null, priority: string|null}>
+     * @return list<array{loc: string, lastmod: string|null, changefreq: string|null, priority: string|null, images: list<array{loc: string, caption: string|null, title: string|null}>}>
      */
     private function normalize(array $entries): array
     {
@@ -154,6 +191,39 @@ final class SitemapBuilder
                 'lastmod' => $this->formatLastmod($entry['lastmod'] ?? null),
                 'changefreq' => $changefreq,
                 'priority' => $priority,
+                'images' => $this->normalizeImages($entry['images'] ?? []),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param list<array{loc: string, caption?: string|null, title?: string|null}> $images
+     *
+     * @return list<array{loc: string, caption: string|null, title: string|null}>
+     */
+    private function normalizeImages(array $images): array
+    {
+        $seen = [];
+        $result = [];
+
+        foreach ($images as $image) {
+            $loc = trim((string) ($image['loc'] ?? ''));
+
+            if ($loc === '' || isset($seen[$loc])) {
+                continue;
+            }
+
+            $seen[$loc] = true;
+
+            $caption = trim((string) ($image['caption'] ?? ''));
+            $title = trim((string) ($image['title'] ?? ''));
+
+            $result[] = [
+                'loc' => $loc,
+                'caption' => $caption === '' ? null : $caption,
+                'title' => $title === '' ? null : $title,
             ];
         }
 

@@ -2781,10 +2781,10 @@ beyond a plain HTML form.
 In progress.
 - [~] Multi-select bulk actions for Products (status, quantity, price,
       special, manufacturer, category, stock, SEO fields) — status,
-      quantity and price done in an earlier run, **manufacturer added
-      this run** (see the "Update" below); the remaining fields (special,
-      category, stock status, SEO) are natural follow-ups over the same
-      shape.
+      quantity, price and manufacturer done in earlier runs,
+      **stock status added this run** (see the "Update" below); the
+      remaining fields (special, category, SEO) are natural follow-ups
+      over the same shape.
 - [ ] True inline edit (editing a value directly in the product list
       table, no separate bulk-toolbar step) — not attempted.
 - [ ] Chunked/resumable AJAX batch jobs (no background daemon) — today's
@@ -2865,6 +2865,39 @@ candidates:** category/stock-status/special-price as further
 `BulkProductUpdateValidator::FIELDS` entries (same shape); or re-check
 `gh pr list`/`list_pull_requests` first, since PRs #110/#111 may have
 merged by then.
+
+**Update (2026-09-17, routine run): Stock Status added as a fifth
+bulk-editable field.** Step 0 dedup check: 3 open PRs at the start of
+this run (#117, #118, #119 — all Phase 18 SEO wiring into storefront
+`upload/catalog/controller/product/*.php`, all marked `ROUTINE-STATUS:
+DONE`), none touching this run's admin-side files (`upload/admin/**`,
+`upload/system/library/mintcart/catalog/**`).
+`MintCart\Catalog\BulkProductUpdateValidator::FIELDS` gains
+`stock_status_id` (validated as a non-negative integer; `0` is accepted
+purely because it mirrors `ControllerCatalogProduct::getForm()`'s own
+fallback when no value has been posted, not because it is a meaningful
+merchant-chosen target — the default install's `oc_stock_status` rows
+start at id `5`); `ModelCatalogProduct::updateProductField()` gains the
+matching column mapping; `product_list.twig`'s toolbar `<select>` gains a
+"Stock Status" option; `en-gb/catalog/product.php` gains
+`text_bulk_field_stock_status`. Same form-POST-then-redirect shape, no
+new AJAX endpoint, no new admin asset bundle. Full writeup:
+`docs/developer/catalog/bulk-editor.md`, `docs/upstream-diff.md`'s
+admin/product entry, `docs/MANUAL_VERIFICATION.md`'s Phase 16 section.
+Verified: `php -l` clean on every touched file under `upload/`/`tests/`;
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` grows
+from 34 to 41 assertions; full `tests/mintcart/` suite (77 files) re-run
+end to end — all passing, no regressions; `product_list.twig`'s tag
+counts re-checked balanced (14/14, 2/2). Not verified: no live
+MySQL/admin session in this environment, same pre-existing gap. **Next
+candidates:** category and special (`special_price`) as further
+`BulkProductUpdateValidator::FIELDS` entries (same shape, note this is a
+distinct class/whitelist from `MintCart\Catalog\BulkProductUpdatePlanner`,
+which already lists `special_price`/`category_ids`/`stock_status_id` in
+its own separate, not-yet-wired-to-a-live-endpoint field set — see the
+Phase 16 section above); a friendlier per-field value control (`<select>`
+for Status, `type="number"` elsewhere); or re-check
+`gh pr list`/`list_pull_requests` first.
 
 ## Phase 17 — Categories drag & drop
 
@@ -3007,6 +3040,35 @@ steps). **Next candidates:** wire `product.php` the same way once #111
 merges; wire `CanonicalUrlBuilder` into `category.php` (also uncontended);
 or re-check `gh pr list --state open` first, since this backlog moves
 fast.
+
+**Update (2026-09-17, routine run): `MetaBuilder` wired into `product.php`
+too (`docs/fixes/registry.md` MC-0016).** Step 0 dedup check: `gh pr list
+--state open` returned zero open PRs at the start of this run (also
+caught and fixed a stale local `master` git ref predating commit `498a481`
+— reset to `origin/master` before branching, same trap a past run already
+documented hitting). `product.php`'s
+`setTitle($product_info['meta_title'])`/`setDescription($product_info['meta_description'])`
+pass-through — left unwired above only because PR #111 (Diagnostics into
+`product.php`) was open at the time — now routes through the same
+`MetaBuilder::build()` call, falling back to `$product_info['name']`. No
+fallback description (same as `category.php`/`home.php`). Full writeup:
+`docs/fixes/registry.md` MC-0016, `docs/developer/seo/meta-builder.md`
+("Live wiring"/"What's deliberately not done yet" — the `manufacturer.php`/
+`search.php` non-wiring is now explained as "not the same bug", not a
+deferred gap), `docs/upstream-diff.md`'s `product.php` entry. Verified:
+`php -l` clean; full `tests/mintcart/` suite (77 files) re-run end to end,
+all passing, no regressions — `meta-builder-test.php` scenario 6 already
+covered this exact shape, no new test file needed. Not verified: same
+no-live-install gap as MC-0015. **With this, Phase 18's meta
+title/description sub-piece is done** for every entity that has a real
+meta field to fall back from. **Next candidates:** wire
+`CanonicalUrlBuilder` into the four listing controllers (now merged per
+commit `498a481` — check `docs/upstream-diff.md`/this file's Phase 18
+section further below for current status); wire `SchemaOrgBuilder`'s
+`breadcrumbList()` into `manufacturer.php`/`special.php` (only
+`category.php`/`search.php` have it so far); `HreflangBuilder` still needs
+a per-language route resolver before it can be wired anywhere; System
+route URL aliases; or re-check `gh pr list --state open` first.
       sitemap, Schema.org Product/Breadcrumb/Organization — **canonical** has a
       first increment this run (see below); several sibling sub-pieces
       (hreflang, robots, sitemap, Schema.org) have their own increments sitting
@@ -3269,6 +3331,127 @@ new Phase 18 entry in `docs/MANUAL_VERIFICATION.md` for the exact steps.
 **In progress** — hreflang/robots, System route URL aliases, sitemap
 centralization, and Manufacturer/Special breadcrumb wiring are all
 unclaimed next steps; Product schema awaits its page template.
+
+**Update (2026-09-17, routine run): `MintCart\Seo\SitemapBuilder` — first
+live consumer wired (Google Sitemap extension).** Step 0 dedup check:
+`list_pull_requests` (all open, no branch-name filter) returned exactly 4
+open PRs at the start of this run — `#117`/`#118`/`#119` (Phase 18
+SEO wiring into `product.php`/`manufacturer.php`/`special.php`) and
+`#120` (Phase 16 Bulk Editor `stock_status_id` field), all marked
+`ROUTINE-STATUS: DONE`. None touch `SitemapBuilder`,
+`google_sitemap.php`, or any of the known hot shared files (Homepage
+Builder block-type registry, `homepage_list.twig`, `block.css`,
+wizard files, `mintcart/entity.php`, `column_left.php`) — confirmed via
+each PR's own file list. This run picked the "Not done yet" item
+`docs/developer/seo/sitemap.md` and prior "Next candidates" notes both
+named — the last unwired `MintCart\Seo` primitive — but instead of the
+brand-new `mintcart/seo/sitemap.xml` route those notes originally
+proposed (still blocked on no-MySQL verification for a *new* flow, per
+`CLAUDE.md` §10), found a lower-risk real consumer: the stock OpenCart
+"Google Sitemap" extension already builds working sitemap XML by hand.
+`SitemapBuilder::urlset()` gained an optional per-entry `images` list
+(Google Image sitemap support, `xmlns:image` only emitted when used) and
+`ControllerExtensionFeedGoogleSitemap::index()`/`getCategories()` now
+build entries arrays and call the builder instead of concatenating XML
+strings. Full writeup: `docs/upstream-diff.md`'s new
+`google_sitemap.php` entry, `docs/developer/seo/sitemap.md`'s "Live
+wiring" section, `docs/MANUAL_VERIFICATION.md`'s new Phase 18 "Google
+Sitemap" section.
+
+**Verified:** `php -l` clean on `sitemapbuilder.php` and
+`google_sitemap.php`. `tests/mintcart/seo/sitemap-builder-test.php` grows
+from 15 to 20 scenarios (the new `images` parameter: no-images stays
+byte-identical, one image renders `xmlns:image` + full `<image:image>`
+block, optional caption/title omitted when blank, blank/duplicate image
+`loc` skipped/de-duplicated, `&` escaped in both `image:loc` and
+`image:caption`). Full `tests/mintcart/**/*-test.php` suite (77 files)
+re-run end to end — all passing, no regressions. **Not verified:** no
+live MySQL/OpenCart bootstrap in this environment — a human should
+enable `feed_google_sitemap_status` on a real install and diff the
+feed's output before/after (see `docs/MANUAL_VERIFICATION.md`).
+
+**Next candidates:** a first-class, always-on MintCart-owned
+`mintcart/seo/sitemap.xml` route honoring `Design → System Pages`
+aliases and `sitemapIndex()` pagination for large catalogs (the Google
+Sitemap extension covers the common case today but stays a separate,
+optional, single-file extension); `HreflangBuilder` still needs a
+per-language route resolver before it can be wired anywhere; or re-check
+`gh pr list --state open` first, since `#117`-`#120` may have merged by
+the time a future run starts. Note: the Phase 18 checklist item "System
+route URL aliases" above (marked `[ ]`) is stale — it shipped as `#66`
+(`MintCart\Seo\SystemRoutes` + `Design → System Pages`) and is already
+merged to `master`; left as-is here per this file's own guidance not to
+rewrite the shared trailer/checklist wholesale in a single run.
+**Update (2026-09-17, routine run): `SchemaOrgBuilder::product()` live
+wiring — `product.php`/`product.twig`.** `mint_default/template/product/
+product.twig` now exists (confirmed on disk this run), unblocking the one
+remaining `SchemaOrgBuilder` method with no live consumer. Wired right
+before `$mint_diagnostics->mark('view_rendered')` in `index()`, same
+`ActiveTheme::isMintAware()` re-check + try/catch + `Logger` pattern as
+`category.php`/`search.php`'s `BreadcrumbList` wiring. `price` is computed
+fresh from `$product_info['price']`/`['special']` (not reused from the
+method's `$tax_price` local, which by that point has been reassigned
+inside the related-products loop to the last related product's price).
+Full writeup: `docs/upstream-diff.md`'s `product.php` entry and
+`docs/developer/seo/schema-org.md`'s "Product: live-wired" section.
+
+Step 0 dedup check: `mcp__github__list_pull_requests` (all open, not
+filtered by branch name) returned exactly two open PRs — #117 (`MetaBuilder`
+into `product.php`, `DONE`) and #118 (`SchemaOrgBuilder::breadcrumbList()`
+into `manufacturer.php`/`special.php`, `DONE`). Neither touches
+`product.twig` or adds `SchemaOrgBuilder::product()` wiring; #117 only
+touches `product.php`'s meta-title/description block near the top of
+`index()`, a different insertion point than this change's block near the
+bottom (right before `view_rendered`). Hot shared files (§0f): this
+increment's files (`product.php`, `product.twig`, three doc files) are none
+of the known hot files (Homepage Builder block registry, `block.css`,
+`wizard.php`, `entity.php`, `column_left.php`) — no contention, and only
+two other PRs were open in total, well under any collision threshold.
+
+Verified: `php -l` clean. `product.twig`'s Twig `if`/`endif`/`for`/`endfor`
+tag counts checked balanced (30/30, 11/11). Full `tests/mintcart/**/*-test.php`
+suite (77 files) re-run end to end — all passing, no regressions (no new
+test file needed — `SchemaOrgBuilder::product()` itself is already covered
+by `tests/mintcart/seo/schema-org-builder-test.php`'s existing 16
+scenarios; this run is wiring-only). **Not verified:** no live MySQL/Twig
+session in this sandboxed environment — see `docs/MANUAL_VERIFICATION.md`'s
+updated Phase 18 Schema.org section (steps 5-6) for the manual script a
+human should run.
+
+**Next step:** manufacturer.php/special.php BreadcrumbList wiring is
+already covered by open PR #118 — do not duplicate. System route URL
+aliases and robots controls are already `[x]` done (see this section's own
+checklist above). Remaining unclaimed Phase 18 sub-pieces: `HreflangBuilder`
+needs a per-language route resolver before it can be wired anywhere;
+sitemap centralization into a MintCart "SEO" admin section (re-check
+`gh pr list --state open` first before starting either).
+**Update (2026-09-17, routine run): `SchemaOrgBuilder` BreadcrumbList
+wired into `manufacturer.php`'s `info()` and `special.php`'s `index()`** —
+the two remaining listing controllers flagged above. Same
+`ActiveTheme::isMintAware()` fresh re-check, `try`/`catch (\Throwable)` +
+`Logger` wrapping, and `mc_schema_breadcrumb` Twig guard as the existing
+`category.php`/`search.php` wiring (`manufacturer_info.twig`/
+`special.twig` get the identical `{% if mc_schema_breadcrumb %}` block
+right after `{{ header }}`). Step 0 dedup check: the only open PR at the
+start of this run was #117 (`MetaBuilder` into `product.php`, unrelated
+file) — this increment's own body had flagged this exact item as its
+recommended next step. See `docs/upstream-diff.md`'s `manufacturer.php`/
+`special.php` entries and `docs/developer/seo/schema-org.md` (updated)
+for the full writeup. Verified: `php -l` clean; Twig tag balance checked
+on both templates; full `tests/mintcart/**/*-test.php` suite (77 files)
+re-run end to end — all passing, no regressions (no new test file needed,
+same reasoning `category.php`/`search.php`'s own wiring used —
+`breadcrumbList()` itself is already covered by
+`schema-org-builder-test.php`). Not verified: no live MySQL/Twig session
+in this environment — a human should load a real manufacturer and
+specials page on a `mint_default` install and confirm the `BreadcrumbList`
+JSON-LD block renders (see `docs/MANUAL_VERIFICATION.md`'s Phase 18
+section). **Next step:** Product schema still awaits a `mint_default`
+product detail page consumer (already exists as of Phase 6/8 — worth
+re-checking whether `SchemaOrgBuilder::product()` can now be wired into
+`product.php`); hreflang still needs its per-language route resolver;
+robots/sitemap centralization and System route URL aliases remain
+unclaimed; or re-check `gh pr list --state open` first.
 
 ## Modern Editor (Functional Scope §24, P2/RESEARCH)
 
@@ -3971,6 +4154,114 @@ chains `download → verify → maintenance → files → migrations → cache
 clear → health check` end to end (once `download`/`maintenance` land —
 check `gh pr list --state open` first), which is also the real caller the
 `mc_installed_file` ledger table needs before it can be added.
+**Update (2026-09-17, routine run): `MintCart\Update\PackageDownloader` —
+the `download` step.** Step 0 dedup check: `list_pull_requests` (all open,
+not filtered by branch name) returned 6 open PRs at the start of this run
+— `#117`-`#121` (Phase 18 SEO wiring + one Phase 16 Bulk Editor field) and
+`#122` (`MintCart\Update\MaintenanceMode`, the `maintenance` step). None
+touch `upload/system/library/mintcart/update/packagedownloader.php` (a new
+file); `#122` touches `maintenancemode.php`,
+`compatibility/opencart3/settingsadapter.php`'s docblock, its own test and
+docs — no file overlap with this increment. This run picks the exact
+remaining item `docs/developer/update/package-verifier.md`'s own "What's
+deliberately not done yet" section named: "a `download` step that actually
+fetches a package archive over HTTP, then hands the local path to
+`verifyChecksum()`."
+
+Built `MintCart\Update\PackageDownloader`
+(`upload/system/library/mintcart/update/packagedownloader.php`): an
+injectable `callable(string $url): string` transport (duck-typed, same
+"no OpenCart/network dependency baked in" pattern `MigrationManager`/
+`SettingsAdapter` already use for their own dependencies) fetches package
+bytes, written atomically (temp file + `rename()`) to a destination path.
+Rejects non-`http(s)` URLs before the transport is ever invoked. No
+orchestrator wires `download → verify` together yet — same "primitive
+first" gap every other Update Manager class in this file already carries.
+Full writeup: `docs/developer/update/package-downloader.md`.
+`docs/developer/update/package-verifier.md`'s "not done yet" note updated
+to mark `download` built and point at the new doc.
+
+Verified: `php -l` clean on both new files, and re-swept across the full
+`upload`/`tests` tree. New `tests/mintcart/update/package-downloader-test.php`
+(9 scenarios — verbatim byte write, exact URL passed to the transport,
+missing parent directories created, no leftover `.part-*` temp file after
+success, a stale existing destination overwritten on retry, a non-http(s)
+URL rejected before the transport runs, a schemeless URL rejected, an
+empty transport response throws with no file written, a thrown transport
+exception propagates unchanged with no file written) — all passing. Full
+`tests/mintcart/**/*-test.php` suite re-run end to end (78 files, up from
+77) — all passing, no regressions. **Not verified:** the default
+`file_get_contents()`-based transport, and any real HTTP fetch — no
+outbound network access in this environment; every test scenario injects
+a fake transport instead.
+
+**Next step:** an orchestrator/caller that chains
+`PackageDownloader::download()` → `PackageVerifier::verifyChecksum()` →
+`MaintenanceMode::enable()` (once `#122` merges) → a `files` step (not yet
+built); the `mc_installed_file` ledger once that `files` step exists; or
+re-check `gh pr list --state open` first, since `#117`-`#122` may have
+merged by the time a future run starts.
+**Update (2026-09-17, routine run): `MintCart\Update\MaintenanceMode` —
+the `maintenance` step.** Step 0 dedup check: `list_pull_requests` (all
+open, not filtered by branch name) returned 5 open PRs at the start of
+this run — `#117`-`#121`, all Phase 18 SEO wiring (`MetaBuilder`/
+`SchemaOrgBuilder`/`CanonicalUrlBuilder`/`RobotsBuilder`/`SitemapBuilder`
+into various storefront controllers) plus one Phase 16 Bulk Editor field
+(`stock_status_id`), all marked `ROUTINE-STATUS: DONE`. None touch
+`upload/system/library/mintcart/update/**`,
+`upload/system/library/mintcart/compatibility/**`, or any Update Manager
+doc — confirmed no overlap. This increment picks the exact next step
+`docs/developer/update/package-verifier.md`'s own "What's deliberately not
+done yet" section named ("`maintenance` mode (put the store in maintenance
+before `files`/`migrations` run)").
+
+Built `MintCart\Update\MaintenanceMode`
+(`upload/system/library/mintcart/update/maintenancemode.php`): toggles
+OpenCart's own `config_maintenance` setting (never a second Mint-owned
+flag, `CLAUDE.md` §39) through
+`MintCart\Compatibility\OpenCart3\SettingsAdapter::merge()` — this is that
+adapter's first real, wired-up consumer since it shipped in Phase 1 with no
+call site (its own docblock previously said "Not wired into any controller
+yet"). `enable()` returns whether the store was already in maintenance
+mode before the call, so a future orchestrator can decide the flow's own
+end state correctly instead of unconditionally reopening a store a site
+owner had already put into maintenance by hand. No orchestrator/caller
+exists yet (no single entry point runs `download → verify → maintenance →
+files → migrations → cache clear → health check` in sequence) — same
+"primitive first" pattern every other Update Manager class in this file
+already used, deliberately with no `around(callable $step)`-style wrapper
+since there's no real flow yet to decide where its boundaries sit
+(`CLAUDE.md` §85).
+
+Full writeup: `docs/developer/update/maintenance-mode.md`. Also updated
+`SettingsAdapter`'s own docblock and `docs/developer/compatibility/settings-adapter.md`
+to point at this new first consumer instead of saying "not wired into any
+controller yet," and `docs/developer/update/package-verifier.md`'s "not
+done yet" note to mark maintenance mode built.
+
+Verified: `php -l` clean on all touched/added PHP files (also re-ran
+`php -l` across the full `upload`/`tests` tree — clean). New
+`tests/mintcart/update/maintenance-mode-test.php` (8 scenarios — unsaved
+setting defaults to disabled; `enable()` persists `config_maintenance =
+"1"` and reports the prior `false` state; a second `enable()` call is a
+no-op write reporting the prior `true` state; `disable()` persists `"0"`
+and is likewise idempotent; both preserve every other existing `config_*`
+key via `SettingsAdapter::merge()`; `isEnabled()` treats a real bool/int
+the same as OpenCart's stored `"1"`/`"0"` strings), reusing the same
+`FakeSettingModel` double `settings-adapter-test.php` already established.
+Full `tests/mintcart/**/*-test.php` suite (78 files, was 77) run end to
+end twice — all passing, no regressions. Pure PHP against an in-memory
+double, no OpenCart dependency, so no live-install verification gap
+applies to this class itself (same as `SettingsAdapter`/`PackageVerifier`).
+
+**Next step:** a `download` step that actually fetches a package archive
+over HTTP (`docs/developer/update/package-verifier.md`'s remaining "not
+done yet" item, unblocks `verifyChecksum()` having a real caller); routing
+`saveStoreStep()`/the Contacts step/the Delivery-Payments toggle actions
+through `SettingsAdapter` (mechanical, no behavior change, per that class's
+own "Not done yet" doc section); or the `mc_installed_file` ledger once a
+`files` step exists — or re-check `gh pr list --state open` first, since
+`#117`-`#121` may have merged by the time a future run starts.
 
 ## Phase 12 — Early Access
 

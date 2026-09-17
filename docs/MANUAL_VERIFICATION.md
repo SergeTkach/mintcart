@@ -761,11 +761,13 @@ never rendered on a real page or run through an actual validator. On a
    `"@type": "Organization"` appears in `<head>`, with `name`/`url`
    matching **Settings → Store**, and `logo`/`contactPoint`/`address`
    present only when a logo/telephone/address is actually configured.
-2. Load a category page and a search-results page; confirm a second
-   `<script type="application/ld+json">` block with
-   `"@type": "BreadcrumbList"` appears, `itemListElement` matching the
-   visible breadcrumb trail exactly (same labels, same order, position
-   starting at 1).
+2. Load a category page, a search-results page, a manufacturer page
+   (`product/manufacturer/info`), and a specials page (`product/special`);
+   confirm a second `<script type="application/ld+json">` block with
+   `"@type": "BreadcrumbList"` appears on each, `itemListElement` matching
+   the visible breadcrumb trail exactly (same labels, same order, position
+   starting at 1). (2026-09-17: manufacturer/special wiring is new this
+   run — not yet rendered on a real page.)
 3. Paste both blocks into
    [Google's Rich Results Test](https://search.google.com/test/rich-results)
    (or the [Schema.org validator](https://validator.schema.org/)) and
@@ -773,10 +775,24 @@ never rendered on a real page or run through an actual validator. On a
 4. Confirm neither block appears on the legacy `default` theme (the
    `ActiveTheme::isMintAware()` gate should make this a no-op there, same
    as every other Mint-only controller addition).
-5. `SchemaOrgBuilder::product()` has no live consumer yet (no
-   `mint_default/template/product/product.twig` exists — Phase 6/8 never
-   wired the product *detail* page itself, only listing pages) — nothing
-   to verify live until that page exists.
+5. Load a product page on `mint_default`; confirm a
+   `<script type="application/ld+json">` block with `"@type": "Product"`
+   appears right after `{{ header }}`, with `name`/`url`/`image` matching
+   the visible page, `offers.price` matching the visible price (or the
+   whole `offers` key absent when pricing is hidden from a logged-out
+   customer via `config_customer_price`), `offers.availability` matching
+   the visible stock state, and `aggregateRating` present only when the
+   product actually has reviews (absent for a product with zero reviews,
+   even if it has a computed `rating` value). Paste it into the same
+   Rich Results Test / validator as step 3 and confirm no errors. Confirm
+   it does **not** appear on the legacy `default` theme's product page.
+6. `manufacturer.php`/`special.php` `BreadcrumbList` wiring has an open,
+   unmerged PR as of this run — nothing to verify live here until it
+   merges (see that PR's own description for its verification steps).
+5. `SchemaOrgBuilder::product()` has no live consumer yet — `mint_default`
+   does have `template/product/product.twig` (Phase 6/8 wired the product
+   detail page), but nothing on it calls `SchemaOrgBuilder::product()` yet
+   — nothing to verify live until that wiring lands.
 
 ## Phase 18 — `RobotsBuilder` meta tag, never validated against a real page
 
@@ -817,9 +833,14 @@ specials:
    Copy/Delete), confirm the dialog, and confirm the redirect lands back
    on the same filtered/sorted/paged list with a success message and the
    selected products' Quantity column updated to the new value.
-3. Repeat for "Status" (value `0` or `1`), "Price" (a decimal value), and
+3. Repeat for "Status" (value `0` or `1`), "Price" (a decimal value),
    "Manufacturer" (an existing `manufacturer_id`, and separately `0` for
-   "no manufacturer") and confirm each updates only that column.
+   "no manufacturer"), and "Stock Status" (an existing `stock_status_id`
+   from **Settings → Stock Statuses**, e.g. the ID shown for "In Stock")
+   and confirm each updates only that column — for "Stock Status" in
+   particular, open the product's edit form afterwards and confirm the
+   **Data** tab's Stock Status dropdown now shows the expected label, not
+   just that the raw column changed.
 4. For the product with existing descriptions/options/discounts/specials,
    open its edit form after a bulk update and confirm every one of those
    is completely unchanged — the entire reason `updateProductField()`
@@ -827,8 +848,9 @@ specials:
    `docs/developer/catalog/bulk-editor.md` "Why a new model method").
 5. Submit the bulk-update button with no products selected, and again
    with a deliberately invalid value (e.g. `-5` for quantity, `abc` for
-   price, `-1` for manufacturer) and confirm each shows the appropriate
-   warning rather than silently doing nothing or throwing a fatal error.
+   price, `-1` for manufacturer, `-1` for stock status) and confirm each
+   shows the appropriate warning rather than silently doing nothing or
+   throwing a fatal error.
 6. Confirm the legacy Delete/Copy buttons still behave exactly as before
    (this increment must not have changed their behavior).
 
@@ -914,3 +936,41 @@ pages of results (set the theme's product limit low, e.g. 4, if needed):
    that forces `secure = true`.
 6. Confirm this is unaffected by which theme is active (`default` or
    `mint_default`) — canonical links are not gated by Mint-awareness.
+
+## Phase 18 — Google Sitemap wired through `MintCart\Seo\SitemapBuilder`, never exercised end to end
+
+`ControllerExtensionFeedGoogleSitemap::index()` now builds a plain
+`{loc, lastmod, changefreq, priority, images}` array per product/category/
+manufacturer/information row and delegates the actual XML string assembly
+to `MintCart\Seo\SitemapBuilder::urlset()`, instead of concatenating
+`<url>...</url>` strings by hand — `php -l` clean, `SitemapBuilder`'s own
+20-scenario unit test covers the XML-assembly rules (including the new
+`images` parameter), and the full `tests/mintcart/` suite passes, but no
+live MySQL/OpenCart bootstrap in this environment means the feed's actual
+output was never fetched and compared. On a real install with existing
+products (at least one with a product image), categories, manufacturers,
+and an information page:
+
+1. Install/enable the "Google Sitemap" extension
+   (`Marketing → Marketing → Feeds → Google Sitemap`) if not already
+   enabled, and note its feed URL.
+2. Load that URL both **before** (checkout a commit prior to this change)
+   and **after** this change, and diff the two XML documents. They should
+   be identical except: (a) whitespace/indentation (the builder uses tab
+   indentation, the original used two-space), and (b) any product/category/
+   manufacturer/information URL that happens to contain an `&` or other
+   XML-special character in its query string now has that character
+   correctly escaped in `<loc>`/`<image:loc>` (a correctness fix — the
+   original never escaped those two tags, only `<image:caption>`/
+   `<image:title>`).
+3. Confirm the response's `Content-Type: application/xml` header is
+   unchanged.
+4. Confirm a product **without** an image still produces a `<url>` block
+   with no `<image:image>` child (unaffected by the new `images` support).
+5. Confirm the `xmlns:image` namespace attribute is present on `<urlset>`
+   whenever at least one product has an image, and validate the whole
+   document against an XML parser (e.g. `xmllint --noout`) to confirm it
+   is well-formed.
+6. Validate the feed against Google's sitemap requirements (e.g. via
+   Google Search Console's sitemap report) to confirm no regression in
+   acceptance.

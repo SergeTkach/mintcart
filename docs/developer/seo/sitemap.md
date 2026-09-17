@@ -30,30 +30,44 @@ The rest of that bullet was already covered before this class existed:
 That leaves **XML sitemap** as the one sub-item with no MintCart
 implementation anywhere in the repo yet.
 
-## Why this ships as a pure builder only, with no live route
+## Live wiring: `ControllerExtensionFeedGoogleSitemap`
 
-Every other `MintCart\Seo` class in this backlog (`HreflangBuilder`,
-`RobotsBuilder`) already established the same pattern for the same
-reason, documented in their own `docs/developer/seo/*.md` files: this
-environment has no MySQL, so a live controller/route that actually
-queries `model_catalog_product`/`model_catalog_category`/
-`model_catalog_manufacturer`/`model_catalog_information` and paginates the
-result into a real `mintcart/seo/sitemap.xml` response can't be exercised
-end to end here — landing it untested would violate `CLAUDE.md` §10's
-"never modify an existing OpenCart flow based only on memory" spirit
-applied to a *new* flow, and there is also no
-`MintCart\Compatibility\OpenCart3\ProductAdapter`/`CategoryAdapter` yet
-(`MINTCART_TECHNICAL_PLAN.md` §5) to build that query against without
-reaching into OpenCart internals directly from a brand-new controller.
+`SitemapBuilder` itself is a pure XML assembler, the same
+OpenCart-independent shape as `SearchService`/`ProductViewProvider`/
+`HreflangBuilder`/`RobotsBuilder`: it takes an already-resolved list of
+`{loc, lastmod, changefreq, priority, images}` entries (URLs generated
+upstream via `$this->url->link(...)`, the same "presentation values
+already resolved upstream" contract every sibling class in this backlog
+uses) and returns a spec-valid XML string. Fully unit-testable, fully
+verified, zero DB/`\Registry`/`\Document` dependency.
 
-`SitemapBuilder` itself has none of that risk — it is a pure XML
-assembler, the same OpenCart-independent shape as `SearchService`/
-`ProductViewProvider`/`HreflangBuilder`/`RobotsBuilder`: it takes an
-already-resolved list of `{loc, lastmod, changefreq, priority}` entries
-(URLs generated upstream via `$this->url->link(...)`, the same
-"presentation values already resolved upstream" contract every sibling
-class in this backlog uses) and returns a spec-valid XML string. Fully
-unit-testable, fully verified, zero DB/`\Registry`/`\Document` dependency.
+A brand-new `mintcart/seo/sitemap.xml` route/controller was deliberately
+**not** built (see "Not done yet" below) — this environment has no MySQL,
+so a new controller resolving `model_catalog_product`/
+`model_catalog_category`/`model_catalog_manufacturer`/
+`model_catalog_information` into a paginated response from scratch
+couldn't be exercised end to end here, the same reasoning
+`HreflangBuilder`/`RobotsBuilder` originally documented for themselves.
+
+Instead, this class's first real consumer is the stock OpenCart
+**"Google Sitemap" extension**
+(`upload/catalog/controller/extension/feed/google_sitemap.php`,
+`Marketing → Marketing → Feeds`) — an existing, already-working XML
+sitemap feed gated by its own `feed_google_sitemap_status` setting, that
+already resolved every product/category/manufacturer/information URL via
+the exact models/`$this->url->link()` calls this class's own contract
+expects. That controller's `index()` used to build the
+`<urlset>`/`<url>`/`<image:image>` XML by hand, string-by-string; it now
+builds a plain array of entries and calls `SitemapBuilder::urlset()` to
+assemble the XML, and `SitemapBuilder` itself gained an optional
+per-entry `images` list (rendering `<image:image>` blocks and the
+`xmlns:image` namespace only when at least one entry has images) so the
+extension's Google Image sitemap support keeps working through the shared
+builder. See `docs/upstream-diff.md`'s
+`google_sitemap.php` entry for the full compatibility analysis — behavior
+is unchanged except that `<loc>`/`<image:loc>` are now correctly escaped
+(a fix; the hand-built version never escaped those two tags, only
+`<image:caption>`/`<image:title>`).
 
 ## API
 
@@ -82,6 +96,14 @@ $xml = $builder->urlset([
   typo'd value gets a slightly less complete sitemap, not a broken one.
 - `priority` — optional, clamped to `[0.0, 1.0]` and formatted to one
   decimal place.
+- `images` — optional, a list of `{loc, caption?, title?}` (the Google
+  Image sitemap extension). `loc` is required per image (blank entries
+  skipped, duplicates de-duplicated, first occurrence wins); `caption`/
+  `title` are optional and omitted entirely when blank rather than
+  rendered as empty tags. The `xmlns:image` namespace attribute is only
+  added to `<urlset>` when at least one entry actually has images, so
+  callers with no image data get byte-identical output to before this
+  parameter existed.
 
 `urlset()` always returns a well-formed `<urlset>` document, even for
 empty or all-invalid input (an empty sitemap is valid per the protocol) —
@@ -106,40 +128,40 @@ $xml = $builder->sitemapIndex([
 
 ## Not done yet (a future run's or a human's next step)
 
-A live `mintcart/seo/sitemap.xml` route/controller that:
-
-1. Enumerates enabled products/categories/manufacturers/information pages
-   via the existing OpenCart models (`model_catalog_product`, etc.) — the
-   same models `ProductViewProvider`/`ProductListingService` already read
-   from, so no new query patterns need inventing.
-2. Resolves each to an absolute URL via `$this->url->link(...)` (respecting
-   the `Design → System Pages` aliases where applicable) and a sensible
-   `lastmod` (each entity's `date_modified`/`date_added` column already
-   exists in OpenCart's schema).
-3. Splits into `urlset()`/`sitemapIndex()` pages once the catalog exceeds
-   `MAX_URLS_PER_SITEMAP`.
-4. Sends the result with an `application/xml` content type and registers
-   the route in `robots.txt` (not yet a MintCart concern — OpenCart ships
-   no `robots.txt` management at all; out of scope for this increment).
-
-This needs a real product/category/manufacturer/information dataset and a
-live OpenCart bootstrap to verify correctly (pagination boundaries,
-multi-store/multi-language URL resolution, `status`/`date_available`
-filtering) — exactly the kind of controller-wiring work this environment
-cannot safely verify without MySQL, per the same caveat every other
-DB-touching increment in this backlog has documented for itself. A human
-with a real install should pick this up as its own follow-up, using this
-file's numbered list as the starting checklist.
+The Google Sitemap extension only covers products/categories/manufacturers/
+information pages that OpenCart's own `getProducts()`/`getCategories()`/
+`getManufacturers()`/`getInformations()` models already enumerate for it —
+it is still gated behind `feed_google_sitemap_status`/its own admin
+extension install, not a first-class always-on MintCart feature, and it
+does not (and still does not, after this run) apply the
+`Design → System Pages` URL aliases (`MintCart\Seo\SystemRoutes`) to any
+of its entries, nor split into `sitemapIndex()` pages once a catalog
+exceeds `MAX_URLS_PER_SITEMAP` (its non-sitemapIndex-aware single-file
+shape is unchanged from before this run). A genuinely first-class
+MintCart-owned `mintcart/seo/sitemap.xml` route — always available, no
+extra extension install, honoring System Page aliases, with
+`sitemapIndex()` support for large catalogs, and registering itself in
+`robots.txt` (which OpenCart ships no management for at all today) —
+remains a real, larger follow-up, not attempted here. A human with a real
+install should pick this up as its own follow-up.
 
 ## Verified
 
-- `php -l` clean on `sitemapbuilder.php` and its test.
-- `tests/mintcart/seo/sitemap-builder-test.php` — 15 scenarios (empty
+- `php -l` clean on `sitemapbuilder.php`, its test, and
+  `google_sitemap.php`.
+- `tests/mintcart/seo/sitemap-builder-test.php` — 20 scenarios (empty
   input, loc-only entry, string/`\DateTimeInterface`/blank `lastmod`,
   valid/invalid `changefreq`, `priority` clamping both directions and
   mid-range formatting, blank `loc` skipped, duplicate `loc`
   de-duplicated keeping the first occurrence, XML-special-character
-  escaping, `MAX_URLS_PER_SITEMAP` truncation, and `sitemapIndex()`'s own
-  empty/populated/blank/duplicate cases).
-- Full `tests/mintcart/**/*-test.php` suite re-run end to end (35 files,
-  was 34) — all pass, no regressions.
+  escaping, `MAX_URLS_PER_SITEMAP` truncation, `sitemapIndex()`'s own
+  empty/populated/blank/duplicate cases, and the new `images` parameter's
+  no-images/one-image/optional-caption-title/blank-duplicate/escaping
+  cases).
+- Full `tests/mintcart/**/*-test.php` suite re-run end to end (77 files)
+  — all pass, no regressions.
+- **Not verified:** no live MySQL/OpenCart bootstrap in this environment
+  — a human should confirm on a real install that the Google Sitemap
+  extension's feed output is unchanged (aside from the `<loc>`/
+  `<image:loc>` escaping fix) — see `docs/MANUAL_VERIFICATION.md`'s new
+  Phase 18 "Google Sitemap" section.

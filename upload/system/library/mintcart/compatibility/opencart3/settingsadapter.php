@@ -39,15 +39,16 @@ namespace MintCart\Compatibility\OpenCart3;
  * testing shape `tests/mintcart/core/migration-manager-test.php`
  * established for `\DB`.
  *
- * Not wired into any controller yet. The three real call sites identified
- * above (`saveStoreStep()`, the Contacts step, the Delivery/Payments
- * toggle actions) all live in files this routine's own duplicate-work
- * check found already contended by other open pull requests at the time
- * this was written (`wizard.php`/`wizardprogress.php`,
- * `admin/controller/mintcart/business/{delivery,payments}.php`) — editing
- * any of them here risked colliding with in-flight work rather than
- * reducing duplication. Routing an existing call site through this
- * adapter is a self-contained follow-up once those land — see
+ * First real consumer: `MintCart\Update\MaintenanceMode` (Phase 11, the
+ * Update Manager's `maintenance` step —
+ * `docs/developer/update/maintenance-mode.md`), which toggles OpenCart's
+ * own `config_maintenance` setting through `merge()` rather than a bare
+ * `editSetting()` call. The three call sites named above
+ * (`saveStoreStep()`, the Setup Wizard's Contacts step, the Business →
+ * Delivery/Payments toggle actions) still duplicate the same
+ * merge-then-save fix inline rather than going through this class —
+ * routing each through `SettingsAdapter` remains a self-contained,
+ * behavior-preserving follow-up — see
  * `docs/developer/compatibility/settings-adapter.md`'s "Not done yet".
  */
 final class SettingsAdapter
