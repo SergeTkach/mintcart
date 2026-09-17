@@ -3944,6 +3944,68 @@ prerequisite in the flow's own ordering); or re-run `gh pr list --state
 open` for whatever has newly merged/unclaimed before picking the next
 phase, since this run observed an unusually large (31) open-PR backlog.
 
+**Update (2026-09-17, routine run): `MintCart\Update\MaintenanceMode` —
+the `maintenance` step.** Step 0 dedup check: `list_pull_requests` (all
+open, not filtered by branch name) returned 5 open PRs at the start of
+this run — `#117`-`#121`, all Phase 18 SEO wiring (`MetaBuilder`/
+`SchemaOrgBuilder`/`CanonicalUrlBuilder`/`RobotsBuilder`/`SitemapBuilder`
+into various storefront controllers) plus one Phase 16 Bulk Editor field
+(`stock_status_id`), all marked `ROUTINE-STATUS: DONE`. None touch
+`upload/system/library/mintcart/update/**`,
+`upload/system/library/mintcart/compatibility/**`, or any Update Manager
+doc — confirmed no overlap. This increment picks the exact next step
+`docs/developer/update/package-verifier.md`'s own "What's deliberately not
+done yet" section named ("`maintenance` mode (put the store in maintenance
+before `files`/`migrations` run)").
+
+Built `MintCart\Update\MaintenanceMode`
+(`upload/system/library/mintcart/update/maintenancemode.php`): toggles
+OpenCart's own `config_maintenance` setting (never a second Mint-owned
+flag, `CLAUDE.md` §39) through
+`MintCart\Compatibility\OpenCart3\SettingsAdapter::merge()` — this is that
+adapter's first real, wired-up consumer since it shipped in Phase 1 with no
+call site (its own docblock previously said "Not wired into any controller
+yet"). `enable()` returns whether the store was already in maintenance
+mode before the call, so a future orchestrator can decide the flow's own
+end state correctly instead of unconditionally reopening a store a site
+owner had already put into maintenance by hand. No orchestrator/caller
+exists yet (no single entry point runs `download → verify → maintenance →
+files → migrations → cache clear → health check` in sequence) — same
+"primitive first" pattern every other Update Manager class in this file
+already used, deliberately with no `around(callable $step)`-style wrapper
+since there's no real flow yet to decide where its boundaries sit
+(`CLAUDE.md` §85).
+
+Full writeup: `docs/developer/update/maintenance-mode.md`. Also updated
+`SettingsAdapter`'s own docblock and `docs/developer/compatibility/settings-adapter.md`
+to point at this new first consumer instead of saying "not wired into any
+controller yet," and `docs/developer/update/package-verifier.md`'s "not
+done yet" note to mark maintenance mode built.
+
+Verified: `php -l` clean on all touched/added PHP files (also re-ran
+`php -l` across the full `upload`/`tests` tree — clean). New
+`tests/mintcart/update/maintenance-mode-test.php` (8 scenarios — unsaved
+setting defaults to disabled; `enable()` persists `config_maintenance =
+"1"` and reports the prior `false` state; a second `enable()` call is a
+no-op write reporting the prior `true` state; `disable()` persists `"0"`
+and is likewise idempotent; both preserve every other existing `config_*`
+key via `SettingsAdapter::merge()`; `isEnabled()` treats a real bool/int
+the same as OpenCart's stored `"1"`/`"0"` strings), reusing the same
+`FakeSettingModel` double `settings-adapter-test.php` already established.
+Full `tests/mintcart/**/*-test.php` suite (78 files, was 77) run end to
+end twice — all passing, no regressions. Pure PHP against an in-memory
+double, no OpenCart dependency, so no live-install verification gap
+applies to this class itself (same as `SettingsAdapter`/`PackageVerifier`).
+
+**Next step:** a `download` step that actually fetches a package archive
+over HTTP (`docs/developer/update/package-verifier.md`'s remaining "not
+done yet" item, unblocks `verifyChecksum()` having a real caller); routing
+`saveStoreStep()`/the Contacts step/the Delivery-Payments toggle actions
+through `SettingsAdapter` (mechanical, no behavior change, per that class's
+own "Not done yet" doc section); or the `mc_installed_file` ledger once a
+`files` step exists — or re-check `gh pr list --state open` first, since
+`#117`-`#121` may have merged by the time a future run starts.
+
 ## Phase 12 — Early Access
 
 - [ ] 10–30 real users/developers
