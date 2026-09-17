@@ -1310,3 +1310,69 @@ a fresh install's homepage (before Settings → Store's meta fields are
 filled in) renders `<title>{store name}</title>`, instead of an empty
 tag in either case (see `docs/MANUAL_VERIFICATION.md`'s Phase 18
 section).
+
+## MC-0016 — Product page ships an empty `<title>` when the admin title is left blank
+
+**Problem:** `catalog/controller/product/product.php` passes a product's
+own meta fields straight to `Document::setTitle()`/`setDescription()`
+with no fallback at all:
+
+```php
+$this->document->setTitle($product_info['meta_title']);
+$this->document->setDescription($product_info['meta_description']);
+```
+
+The exact same defect class MC-0015 fixed on `category.php`/`home.php`:
+a product added without its "Meta Tag Title" admin field ever being
+filled in ships that page with a blank `<title>` tag and no meta
+description.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline). Not independently
+checked against other 3.x point releases — same rationale as every other
+entry in this registry; the fix is additive (a fallback only applies when
+the existing field is blank), so it cannot regress a store that already
+has its meta fields filled in.
+
+**Source:** Discovered directly in this repository while working through
+Functional Scope §16 "SEO Core" — not an imported historical community
+patch. Already flagged as a known, deliberately deferred remaining gap in
+`docs/developer/seo/meta-builder.md`'s "What's deliberately not done yet"
+and MC-0015's own "MintCart solution" paragraph, at the time left
+untouched only because another open PR (Diagnostics wiring into
+`product.php`'s related-products render path) was editing the same file —
+that PR has since merged, clearing the collision.
+
+**Reproduced on MintCart baseline:** Yes — read `product.php`'s
+`index()` method directly; no fallback branch existed prior to this fix.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases. Same as MC-0015, this is arguably not a bug upstream would
+fix the same way — it is MintCart's own no-blank-title product principle
+(`MINTCART_PRODUCT_VISION.md` §5) that motivates closing this gap.
+
+**MintCart solution:** `product.php` now calls
+`MintCart\Seo\MetaBuilder::build($entityTitle, $entityDescription,
+$fallbackTitle)`, falling back to the product's own `name` when
+`meta_title` is blank — the same pure, OpenCart-independent value object
+MC-0015 already wired into `category.php`/`home.php`. No fallback
+*description* is offered (there is no second, shorter description field
+to fall back to), so a blank `meta_description` with a non-blank fallback
+title still returns an empty description, exactly MC-0015's precedent.
+See `docs/developer/seo/meta-builder.md` and `docs/upstream-diff.md`'s
+`product.php` entry for the full writeup.
+
+**Tests:** `php -l` clean on the modified file.
+`tests/mintcart/seo/meta-builder-test.php` (9 assertions, pre-existing —
+scenario 6 already replays `product.php`'s exact blank-meta shape)
+already covers `MetaBuilder::build()` itself; no new test file was added
+since this fix only threads that already-tested pure function's output
+into two existing `Document` setter calls — same reasoning MC-0015 used.
+Full `tests/mintcart/` suite (77 files) re-run end to end — all passing,
+no regressions. A live MySQL/Twig request test is not possible in this
+environment — a human should confirm on a real install that a product
+with a blank "Meta Tag Title" renders `<title>{product name}</title>`
+instead of an empty tag (see `docs/MANUAL_VERIFICATION.md`'s Phase 18
+section).

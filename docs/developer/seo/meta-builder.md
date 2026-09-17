@@ -115,18 +115,31 @@ only a title. Neither controller passes the optional fourth argument, so an
 empty description remains empty. The shipped header templates omit its meta
 tag. Do not infer a description fallback from the title argument.
 
-`product.php`'s equivalent pass-through is still unwired — a genuinely
-separate follow-up (see "What's deliberately not done yet" below).
+`product.php` now calls this class too (MC-0016):
+
+```php
+// catalog/controller/product/product.php, inside the success branch
+$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+    $product_info['meta_title'],
+    $product_info['meta_description'],
+    $product_info['name']
+);
+
+$this->document->setTitle($mint_meta['title']);
+$this->document->setDescription($mint_meta['description']);
+```
+
+Same title-only fallback shape as `category.php`/`home.php`: no fallback
+description is offered, so a blank `meta_description` stays empty.
 
 ## What's deliberately not done yet
 
-- **No `product.php` wiring.** `product/product.php`'s own
-  `$this->document->setTitle($product_info['meta_title']);` pass-through
-  is unchanged — left out of this increment since, at the time it shipped,
-  `product.php` was already touched by another open PR (Diagnostics
-  wiring into its related-products render path); picking a different,
-  unclaimed file kept this increment collision-free. A future run should
-  wire it the same mechanical way once that's no longer a concern.
+- **`product/manufacturer.php` and `product/search.php` are still
+  unwired**, and deliberately so — see "The problem it fixes" above:
+  neither has an entity meta field to fall back from (manufacturer has
+  none in stock OpenCart; search always builds a heading + search term,
+  never a blank title), so they are not instances of the bug this class
+  fixes, not a remaining gap.
 - **No length truncation/HTML stripping.** `meta_title`/
   `meta_description` are already plain-text admin fields in stock
   OpenCart (distinct from a product's full HTML `description`), so there
@@ -134,11 +147,11 @@ separate follow-up (see "What's deliberately not done yet" below).
   site does one today and it isn't needed to fix the blank-value bug this
   class targets — CLAUDE.md §17 ("don't create abstractions... for
   hypothetical future use").
-- **Fix Registry entry:** `docs/fixes/registry.md` MC-0015 documents the
-  `category.php`/`home.php` blank-title defect this wiring
-  fixes, per `CLAUDE.md` §13's five-step Fixes Policy (the Policy applies
-  to the *wiring* increment, not to this pure primitive, which predates
-  the entry).
+- **Fix Registry entries:** `docs/fixes/registry.md` MC-0015 documents the
+  `category.php`/`home.php` blank-title defect; MC-0016 documents the same
+  defect on `product.php`, per `CLAUDE.md` §13's five-step Fixes Policy
+  (the Policy applies to each *wiring* increment, not to this pure
+  primitive, which predates both entries).
 
 ## Relationship to other SEO Core pieces
 
@@ -171,3 +184,9 @@ end to end — all passing, no regressions. Not verified: no live
 MySQL/Twig session in this environment — see `docs/fixes/registry.md`
 MC-0015 and `docs/MANUAL_VERIFICATION.md`'s Phase 18 section for the
 manual steps a human should run against a real install.
+
+**Update (live wiring, MC-0016):** `php -l` clean on `product.php`. No new
+test file needed — scenario 6 already covers this exact shape. Full
+`tests/mintcart/` suite (77 files) re-run end to end — all passing, no
+regressions. Not verified: same no-live-install gap as MC-0015 — see
+`docs/fixes/registry.md` MC-0016 for the manual step a human should run.
