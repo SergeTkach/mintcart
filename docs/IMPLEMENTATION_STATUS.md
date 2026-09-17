@@ -3586,6 +3586,24 @@ this phase (diagnostics, measured performance work) is not started.
       open` returned zero open PRs at the start of this run (the prior
       14-PR backlog, `#95`-`#108`, had already merged/closed), so no
       collision check was needed against other in-flight work.
+      **Update (2026-09-15, routine run): `ControllerProductProduct`'s
+      related-products `ComponentRenderer` call site wired too.** Same
+      pattern as `category.php` — `$mint_diagnostics` constructed
+      unconditionally right after `$mint_render_product_cards` is resolved
+      (so it covers the whole product-page render even when the theme
+      isn't Mint-aware and the related-products renderer never runs),
+      passed as `ComponentRenderer`'s 4th argument, `mark('view_rendered')`
+      before `load->view()`, and the same dev-mode-gated HTML-comment
+      summary appended before `setOutput()`. This was the last bare
+      `ComponentRenderer` call site in `upload/catalog/controller/product/`
+      — Search/Manufacturer/Special were wired in the entry directly above.
+      No new test file needed (`component-renderer-test.php`'s existing
+      scenarios are call-site-agnostic). Full writeup:
+      `docs/developer/core/diagnostics.md`,
+      `docs/developer/theme-api/component-renderer.md`, and
+      `docs/upstream-diff.md`'s `product.php` entry. Verified: `php -l`
+      clean; full `tests/mintcart/` suite (77 files) re-run end to end —
+      all passing, no regressions.
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
@@ -5317,3 +5335,26 @@ related-products `ComponentRenderer` call site; the real-DB-query-counting
 upstream-diff decision; `manufacturer.php`'s missing `SchemaOrgBuilder`
 breadcrumb wiring (unlike its three sibling controllers); MC-0015; or
 re-check `gh pr list --state open` first.
+
+**Update (2026-09-15, later routine run): Phase 10 (Technical Plan)
+Diagnostics — `product.php`'s related-products call site wired.** Step 0
+dedup check: `gh pr list --state open` returned exactly one open PR, `#110`
+("Phase 10: wire MintCart\Core\Diagnostics into Search/Manufacturer/
+Special", status DONE), which extends the same pattern to
+`search.php`/`special.php`/`manufacturer.php` — confirmed via
+`gh pr view 110 --json files` that it does not touch `product.php` or
+`upload/catalog/controller/product/product.php`, so this run picked
+`product.php`'s related-products call site instead, an item `#110`'s own
+body explicitly named as deliberately left out. No hot shared files
+(§0f, Homepage Builder block registry / `block.css`) are touched by this
+increment. Full writeup in the Phase 10 (Technical Plan) section above.
+`php -l` clean; full `tests/mintcart/` suite (77 files) re-run end to
+end, all passing. **Next candidates:** now that `#110` and this increment
+have both landed, `product.php`, `search.php`, `manufacturer.php`,
+`special.php`, and `category.php` all carry the same `Diagnostics`
+wiring — the real-DB-query-counting upstream-diff decision becomes the
+natural next Phase 10 step; separately, `manufacturer.php`'s `info()`
+path still has no `SchemaOrgBuilder::breadcrumbList()` wiring, unlike
+`category.php`/`search.php`/`special.php`; MC-0015 remains the next free
+Fix Registry ID once a genuinely new candidate turns up; or re-check
+`gh pr list --state open` first.

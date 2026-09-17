@@ -108,16 +108,17 @@ before `Diagnostics` is ever touched.
 `null` (the default) means zero behavior change — every existing 2-/3-
 argument call site is unaffected, same guarantee `$kind` already has.
 `ControllerProductCategory`, `ControllerProductSearch`,
-`ControllerProductSpecial`, and `ControllerProductManufacturer::info()`
-each pass one, gated behind a `mintcart_dev_mode` setting read via
-`$this->config->get()` (standard OpenCart settings storage — `CLAUDE.md`
-§6, no new Mint table); when enabled, each controller appends the
-resulting `$diagnostics->summary()` as an HTML comment to its own
-response body (never into `$data`/the template itself, so no theme
-override can accidentally surface it in visible markup — Functional
-Scope §19's "Production UI не повинен показувати sensitive debug data").
-`product.php`'s related-products call site is still bare. Real DB query
-counting is still not wired anywhere — that remains the deliberately
+`ControllerProductSpecial`, `ControllerProductManufacturer::info()`, and
+`ControllerProductProduct`'s related-products call site each pass one,
+gated behind a `mintcart_dev_mode` setting read via `$this->config->get()`
+(standard OpenCart settings storage — `CLAUDE.md` §6, no new Mint table);
+when enabled, each controller appends the resulting
+`$diagnostics->summary()` as an HTML comment to its own response body
+(never into `$data`/the template itself, so no theme override can
+accidentally surface it in visible markup — Functional Scope §19's
+"Production UI не повинен показувати sensitive debug data"). Every
+`ComponentRenderer` call site now passes a `Diagnostics` instance. Real DB
+query counting is still not wired anywhere — that remains the deliberately
 deferred, separate upstream-diff decision `docs/developer/core/diagnostics.md`
 documents.
 

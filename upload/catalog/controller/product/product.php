@@ -453,9 +453,19 @@ class ControllerProductProduct extends Controller {
 			$mint_theme = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
 			$mint_render_product_cards = \MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme);
 
+			// MintCart\Core\Diagnostics (MINTCART_TECHNICAL_PLAN.md §35,
+			// MINTCART_FUNCTIONAL_SCOPE.md §19 "render time") - same
+			// category.php/search.php/special.php/manufacturer.php wiring,
+			// extended here to product.php's related-products
+			// ComponentRenderer call site (the one listing-grid context
+			// that still built a bare ComponentRenderer). Off by default;
+			// see category.php's identical comment and
+			// docs/developer/core/diagnostics.md.
+			$mint_diagnostics = new \MintCart\Core\Diagnostics((bool)$this->config->get('mintcart_dev_mode'));
+
 			if ($mint_render_product_cards) {
 				$product_card_list_renderer = new \MintCart\Design\ProductCardListRenderer(
-					new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme)
+					new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme, 'components', $mint_diagnostics)
 				);
 
 				$text_badge = array(
@@ -594,7 +604,17 @@ class ControllerProductProduct extends Controller {
 			$data['footer'] = $this->load->controller('common/footer');
 			$data['header'] = $this->load->controller('common/header');
 
-			$this->response->setOutput($this->load->view('product/product', $data));
+			$mint_diagnostics->mark('view_rendered');
+
+			$output = $this->load->view('product/product', $data);
+
+			// Functional Scope §19: "Production UI не повинен показувати
+			// sensitive debug data" - see category.php's identical comment.
+			if ($mint_diagnostics->isEnabled()) {
+				$output .= "\n<!-- mintcart-diagnostics " . json_encode($mint_diagnostics->summary()) . " -->";
+			}
+
+			$this->response->setOutput($output);
 		} else {
 			$url = '';
 
