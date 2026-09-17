@@ -761,11 +761,13 @@ never rendered on a real page or run through an actual validator. On a
    `"@type": "Organization"` appears in `<head>`, with `name`/`url`
    matching **Settings → Store**, and `logo`/`contactPoint`/`address`
    present only when a logo/telephone/address is actually configured.
-2. Load a category page and a search-results page; confirm a second
-   `<script type="application/ld+json">` block with
-   `"@type": "BreadcrumbList"` appears, `itemListElement` matching the
-   visible breadcrumb trail exactly (same labels, same order, position
-   starting at 1).
+2. Load a category page, a search-results page, a manufacturer page
+   (`product/manufacturer/info`), and a specials page (`product/special`);
+   confirm a second `<script type="application/ld+json">` block with
+   `"@type": "BreadcrumbList"` appears on each, `itemListElement` matching
+   the visible breadcrumb trail exactly (same labels, same order, position
+   starting at 1). (2026-09-17: manufacturer/special wiring is new this
+   run — not yet rendered on a real page.)
 3. Paste both blocks into
    [Google's Rich Results Test](https://search.google.com/test/rich-results)
    (or the [Schema.org validator](https://validator.schema.org/)) and
@@ -773,10 +775,24 @@ never rendered on a real page or run through an actual validator. On a
 4. Confirm neither block appears on the legacy `default` theme (the
    `ActiveTheme::isMintAware()` gate should make this a no-op there, same
    as every other Mint-only controller addition).
-5. `SchemaOrgBuilder::product()` has no live consumer yet (no
-   `mint_default/template/product/product.twig` exists — Phase 6/8 never
-   wired the product *detail* page itself, only listing pages) — nothing
-   to verify live until that page exists.
+5. Load a product page on `mint_default`; confirm a
+   `<script type="application/ld+json">` block with `"@type": "Product"`
+   appears right after `{{ header }}`, with `name`/`url`/`image` matching
+   the visible page, `offers.price` matching the visible price (or the
+   whole `offers` key absent when pricing is hidden from a logged-out
+   customer via `config_customer_price`), `offers.availability` matching
+   the visible stock state, and `aggregateRating` present only when the
+   product actually has reviews (absent for a product with zero reviews,
+   even if it has a computed `rating` value). Paste it into the same
+   Rich Results Test / validator as step 3 and confirm no errors. Confirm
+   it does **not** appear on the legacy `default` theme's product page.
+6. `manufacturer.php`/`special.php` `BreadcrumbList` wiring has an open,
+   unmerged PR as of this run — nothing to verify live here until it
+   merges (see that PR's own description for its verification steps).
+5. `SchemaOrgBuilder::product()` has no live consumer yet — `mint_default`
+   does have `template/product/product.twig` (Phase 6/8 wired the product
+   detail page), but nothing on it calls `SchemaOrgBuilder::product()` yet
+   — nothing to verify live until that wiring lands.
 
 ## Phase 18 — `RobotsBuilder` meta tag, never validated against a real page
 

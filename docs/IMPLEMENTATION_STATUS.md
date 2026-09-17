@@ -3040,6 +3040,35 @@ steps). **Next candidates:** wire `product.php` the same way once #111
 merges; wire `CanonicalUrlBuilder` into `category.php` (also uncontended);
 or re-check `gh pr list --state open` first, since this backlog moves
 fast.
+
+**Update (2026-09-17, routine run): `MetaBuilder` wired into `product.php`
+too (`docs/fixes/registry.md` MC-0016).** Step 0 dedup check: `gh pr list
+--state open` returned zero open PRs at the start of this run (also
+caught and fixed a stale local `master` git ref predating commit `498a481`
+— reset to `origin/master` before branching, same trap a past run already
+documented hitting). `product.php`'s
+`setTitle($product_info['meta_title'])`/`setDescription($product_info['meta_description'])`
+pass-through — left unwired above only because PR #111 (Diagnostics into
+`product.php`) was open at the time — now routes through the same
+`MetaBuilder::build()` call, falling back to `$product_info['name']`. No
+fallback description (same as `category.php`/`home.php`). Full writeup:
+`docs/fixes/registry.md` MC-0016, `docs/developer/seo/meta-builder.md`
+("Live wiring"/"What's deliberately not done yet" — the `manufacturer.php`/
+`search.php` non-wiring is now explained as "not the same bug", not a
+deferred gap), `docs/upstream-diff.md`'s `product.php` entry. Verified:
+`php -l` clean; full `tests/mintcart/` suite (77 files) re-run end to end,
+all passing, no regressions — `meta-builder-test.php` scenario 6 already
+covered this exact shape, no new test file needed. Not verified: same
+no-live-install gap as MC-0015. **With this, Phase 18's meta
+title/description sub-piece is done** for every entity that has a real
+meta field to fall back from. **Next candidates:** wire
+`CanonicalUrlBuilder` into the four listing controllers (now merged per
+commit `498a481` — check `docs/upstream-diff.md`/this file's Phase 18
+section further below for current status); wire `SchemaOrgBuilder`'s
+`breadcrumbList()` into `manufacturer.php`/`special.php` (only
+`category.php`/`search.php` have it so far); `HreflangBuilder` still needs
+a per-language route resolver before it can be wired anywhere; System
+route URL aliases; or re-check `gh pr list --state open` first.
       sitemap, Schema.org Product/Breadcrumb/Organization — **canonical** has a
       first increment this run (see below); several sibling sub-pieces
       (hreflang, robots, sitemap, Schema.org) have their own increments sitting
@@ -3302,6 +3331,77 @@ new Phase 18 entry in `docs/MANUAL_VERIFICATION.md` for the exact steps.
 **In progress** — hreflang/robots, System route URL aliases, sitemap
 centralization, and Manufacturer/Special breadcrumb wiring are all
 unclaimed next steps; Product schema awaits its page template.
+
+**Update (2026-09-17, routine run): `SchemaOrgBuilder::product()` live
+wiring — `product.php`/`product.twig`.** `mint_default/template/product/
+product.twig` now exists (confirmed on disk this run), unblocking the one
+remaining `SchemaOrgBuilder` method with no live consumer. Wired right
+before `$mint_diagnostics->mark('view_rendered')` in `index()`, same
+`ActiveTheme::isMintAware()` re-check + try/catch + `Logger` pattern as
+`category.php`/`search.php`'s `BreadcrumbList` wiring. `price` is computed
+fresh from `$product_info['price']`/`['special']` (not reused from the
+method's `$tax_price` local, which by that point has been reassigned
+inside the related-products loop to the last related product's price).
+Full writeup: `docs/upstream-diff.md`'s `product.php` entry and
+`docs/developer/seo/schema-org.md`'s "Product: live-wired" section.
+
+Step 0 dedup check: `mcp__github__list_pull_requests` (all open, not
+filtered by branch name) returned exactly two open PRs — #117 (`MetaBuilder`
+into `product.php`, `DONE`) and #118 (`SchemaOrgBuilder::breadcrumbList()`
+into `manufacturer.php`/`special.php`, `DONE`). Neither touches
+`product.twig` or adds `SchemaOrgBuilder::product()` wiring; #117 only
+touches `product.php`'s meta-title/description block near the top of
+`index()`, a different insertion point than this change's block near the
+bottom (right before `view_rendered`). Hot shared files (§0f): this
+increment's files (`product.php`, `product.twig`, three doc files) are none
+of the known hot files (Homepage Builder block registry, `block.css`,
+`wizard.php`, `entity.php`, `column_left.php`) — no contention, and only
+two other PRs were open in total, well under any collision threshold.
+
+Verified: `php -l` clean. `product.twig`'s Twig `if`/`endif`/`for`/`endfor`
+tag counts checked balanced (30/30, 11/11). Full `tests/mintcart/**/*-test.php`
+suite (77 files) re-run end to end — all passing, no regressions (no new
+test file needed — `SchemaOrgBuilder::product()` itself is already covered
+by `tests/mintcart/seo/schema-org-builder-test.php`'s existing 16
+scenarios; this run is wiring-only). **Not verified:** no live MySQL/Twig
+session in this sandboxed environment — see `docs/MANUAL_VERIFICATION.md`'s
+updated Phase 18 Schema.org section (steps 5-6) for the manual script a
+human should run.
+
+**Next step:** manufacturer.php/special.php BreadcrumbList wiring is
+already covered by open PR #118 — do not duplicate. System route URL
+aliases and robots controls are already `[x]` done (see this section's own
+checklist above). Remaining unclaimed Phase 18 sub-pieces: `HreflangBuilder`
+needs a per-language route resolver before it can be wired anywhere;
+sitemap centralization into a MintCart "SEO" admin section (re-check
+`gh pr list --state open` first before starting either).
+**Update (2026-09-17, routine run): `SchemaOrgBuilder` BreadcrumbList
+wired into `manufacturer.php`'s `info()` and `special.php`'s `index()`** —
+the two remaining listing controllers flagged above. Same
+`ActiveTheme::isMintAware()` fresh re-check, `try`/`catch (\Throwable)` +
+`Logger` wrapping, and `mc_schema_breadcrumb` Twig guard as the existing
+`category.php`/`search.php` wiring (`manufacturer_info.twig`/
+`special.twig` get the identical `{% if mc_schema_breadcrumb %}` block
+right after `{{ header }}`). Step 0 dedup check: the only open PR at the
+start of this run was #117 (`MetaBuilder` into `product.php`, unrelated
+file) — this increment's own body had flagged this exact item as its
+recommended next step. See `docs/upstream-diff.md`'s `manufacturer.php`/
+`special.php` entries and `docs/developer/seo/schema-org.md` (updated)
+for the full writeup. Verified: `php -l` clean; Twig tag balance checked
+on both templates; full `tests/mintcart/**/*-test.php` suite (77 files)
+re-run end to end — all passing, no regressions (no new test file needed,
+same reasoning `category.php`/`search.php`'s own wiring used —
+`breadcrumbList()` itself is already covered by
+`schema-org-builder-test.php`). Not verified: no live MySQL/Twig session
+in this environment — a human should load a real manufacturer and
+specials page on a `mint_default` install and confirm the `BreadcrumbList`
+JSON-LD block renders (see `docs/MANUAL_VERIFICATION.md`'s Phase 18
+section). **Next step:** Product schema still awaits a `mint_default`
+product detail page consumer (already exists as of Phase 6/8 — worth
+re-checking whether `SchemaOrgBuilder::product()` can now be wired into
+`product.php`); hreflang still needs its per-language route resolver;
+robots/sitemap centralization and System route URL aliases remain
+unclaimed; or re-check `gh pr list --state open` first.
 
 ## Modern Editor (Functional Scope §24, P2/RESEARCH)
 
