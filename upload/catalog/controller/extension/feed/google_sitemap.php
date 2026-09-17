@@ -2,8 +2,7 @@
 class ControllerExtensionFeedGoogleSitemap extends Controller {
 	public function index() {
 		if ($this->config->get('feed_google_sitemap_status')) {
-			$output  = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-			$output .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">' . PHP_EOL;
+			$entries = array();
 
 			$this->load->model('catalog/product');
 			$this->load->model('tool/image');
@@ -11,38 +10,41 @@ class ControllerExtensionFeedGoogleSitemap extends Controller {
 			$products = $this->model_catalog_product->getProducts();
 
 			foreach ($products as $product) {
-				$output .= '<url>' . PHP_EOL;
-				$output .= '  <loc>' . $this->url->link('product/product', 'product_id=' . $product['product_id']) . '</loc>' . PHP_EOL;
-				$output .= '  <changefreq>weekly</changefreq>';
-				$output .= '  <lastmod>' . date('Y-m-d\TH:i:sP', strtotime($product['date_modified'])) . '</lastmod>' . PHP_EOL;
-				$output .= '  <priority>1.0</priority>' . PHP_EOL;
+				$images = array();
 
 				if ($product['image']) {
-					$output .= '<image:image>' . PHP_EOL;
-					$output .= '  <image:loc>' . $this->model_tool_image->resize($product['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_popup_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_popup_height')) . '</image:loc>' . PHP_EOL;
 					$name = html_entity_decode($product['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
-					$output .= '  <image:caption>' . htmlspecialchars($name, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</image:caption>' . PHP_EOL;
-					$output .= '  <image:title>' . htmlspecialchars($name, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</image:title>' . PHP_EOL;
-					$output .= '</image:image>' . PHP_EOL;
+
+					$images[] = array(
+						'loc'     => $this->model_tool_image->resize($product['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_popup_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_popup_height')),
+						'caption' => $name,
+						'title'   => $name
+					);
 				}
 
-				$output .= '</url>' . PHP_EOL;
+				$entries[] = array(
+					'loc'        => $this->url->link('product/product', 'product_id=' . $product['product_id']),
+					'lastmod'    => date('Y-m-d\TH:i:sP', strtotime($product['date_modified'])),
+					'changefreq' => 'weekly',
+					'priority'   => 1.0,
+					'images'     => $images
+				);
 			}
 
 			$this->load->model('catalog/category');
 
-			$output .= $this->getCategories(0);
+			$entries = array_merge($entries, $this->getCategories(0));
 
 			$this->load->model('catalog/manufacturer');
 
 			$manufacturers = $this->model_catalog_manufacturer->getManufacturers();
 
 			foreach ($manufacturers as $manufacturer) {
-				$output .= '<url>' . PHP_EOL;
-				$output .= '  <loc>' . $this->url->link('product/manufacturer/info', 'manufacturer_id=' . $manufacturer['manufacturer_id']) . '</loc>' . PHP_EOL;
-				$output .= '  <changefreq>weekly</changefreq>' . PHP_EOL;
-				$output .= '  <priority>0.7</priority>' . PHP_EOL;
-				$output .= '</url>' . PHP_EOL;
+				$entries[] = array(
+					'loc'        => $this->url->link('product/manufacturer/info', 'manufacturer_id=' . $manufacturer['manufacturer_id']),
+					'changefreq' => 'weekly',
+					'priority'   => 0.7
+				);
 			}
 
 			$this->load->model('catalog/information');
@@ -50,35 +52,52 @@ class ControllerExtensionFeedGoogleSitemap extends Controller {
 			$informations = $this->model_catalog_information->getInformations();
 
 			foreach ($informations as $information) {
-				$output .= '<url>' . PHP_EOL;
-				$output .= '  <loc>' . $this->url->link('information/information', 'information_id=' . $information['information_id']) . '</loc>' . PHP_EOL;
-				$output .= '  <changefreq>weekly</changefreq>' . PHP_EOL;
-				$output .= '  <priority>0.5</priority>' . PHP_EOL;
-				$output .= '</url>' . PHP_EOL;
+				$entries[] = array(
+					'loc'        => $this->url->link('information/information', 'information_id=' . $information['information_id']),
+					'changefreq' => 'weekly',
+					'priority'   => 0.5
+				);
 			}
 
-			$output .= '</urlset>';
+			// MintCart\Seo\SitemapBuilder (MINTCART_FUNCTIONAL_SCOPE.md §16 /
+			// MINTCART_TECHNICAL_PLAN.md §31, docs/developer/seo/sitemap.md)
+			// replaces this controller's own hand-built XML string
+			// concatenation with a single, tested, spec-valid XML assembler
+			// shared with any future MintCart-owned sitemap route. Behavior
+			// is unchanged for a merchant already using this stock OpenCart
+			// extension: same entries, same escaping rules (SitemapBuilder's
+			// escape() uses the identical ENT_XML1 | ENT_QUOTES pair this
+			// controller already used by hand), same <image:image> shape --
+			// see docs/upstream-diff.md for the full comparison.
+			$sitemap_builder = new \MintCart\Seo\SitemapBuilder();
+
+			$output = $sitemap_builder->urlset($entries);
 
 			$this->response->addHeader('Content-Type: application/xml');
 			$this->response->setOutput($output);
 		}
 	}
 
+	/**
+	 * @return array Sitemap entries (SitemapBuilder::urlset() shape), not
+	 *         pre-rendered XML -- kept recursive/method-per-level identical
+	 *         to the original implementation, only the return type changed.
+	 */
 	protected function getCategories($parent_id) {
-		$output = '';
+		$entries = array();
 
 		$results = $this->model_catalog_category->getCategories($parent_id);
 
 		foreach ($results as $result) {
-			$output .= '<url>' . PHP_EOL;
-			$output .= '  <loc>' . $this->url->link('product/category', 'path=' . $result['category_id']) . '</loc>' . PHP_EOL;
-			$output .= '  <changefreq>weekly</changefreq>' . PHP_EOL;
-			$output .= '  <priority>0.7</priority>' . PHP_EOL;
-			$output .= '</url>' . PHP_EOL;
+			$entries[] = array(
+				'loc'        => $this->url->link('product/category', 'path=' . $result['category_id']),
+				'changefreq' => 'weekly',
+				'priority'   => 0.7
+			);
 
-			$output .= $this->getCategories($result['category_id']);
+			$entries = array_merge($entries, $this->getCategories($result['category_id']));
 		}
 
-		return $output;
+		return $entries;
 	}
 }

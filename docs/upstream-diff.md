@@ -649,6 +649,19 @@ as `category.php`'s entry. **Tests:** `php -l` clean; full
 `tests/mintcart/` suite (78 files) re-run end to end — all passing, no
 regressions.
 
+**Update (2026-09-17, routine run — Phase 18, SEO Core, `SchemaOrgBuilder`
+BreadcrumbList):** right before rendering, inside a fresh
+`ActiveTheme::isMintAware()` check (not `$mint_render_product_cards`, per
+the same reasoning as `category.php`'s identical update), builds
+`$data['mc_schema_breadcrumb']` via
+`MintCart\Seo\SchemaOrgBuilder::breadcrumbList($data['breadcrumbs'])`.
+`special.twig` renders it as a second `<script type="application/ld+json">`
+block right after `{{ header }}`, same as `category.twig`/`search.twig`.
+Same caught-and-logged failure handling as every other `SchemaOrgBuilder`
+call site. Full design rationale: `docs/developer/seo/schema-org.md`.
+**Tests:** `php -l` clean; Twig tag balance checked; full `tests/mintcart/`
+suite (77 files) re-run end to end — all passing, no regressions.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/special.php`
@@ -905,6 +918,22 @@ wrapping, same unconditional-regardless-of-theme wiring as `category.php`'s
 identical update. Behavior unchanged — same reasoning as `category.php`'s
 entry. **Tests:** `php -l` clean; full `tests/mintcart/` suite (78 files)
 re-run end to end — all passing, no regressions.
+
+**Update (2026-09-17, routine run — Phase 18, SEO Core, `SchemaOrgBuilder`
+BreadcrumbList):** applied only to `info()` (the only method that builds
+`$data['breadcrumbs']` for a real listing page — the plain manufacturer-list
+`index()` has no breadcrumb list of individual products to describe).
+Right before rendering, inside a fresh `ActiveTheme::isMintAware()` check
+(same reasoning as `category.php`'s identical update), builds
+`$data['mc_schema_breadcrumb']` via
+`MintCart\Seo\SchemaOrgBuilder::breadcrumbList($data['breadcrumbs'])`.
+`manufacturer_info.twig` renders it as a second
+`<script type="application/ld+json">` block right after `{{ header }}`,
+same as `category.twig`/`search.twig`. Same caught-and-logged failure
+handling as every other `SchemaOrgBuilder` call site. Full design
+rationale: `docs/developer/seo/schema-org.md`. **Tests:** `php -l` clean;
+Twig tag balance checked; full `tests/mintcart/` suite (77 files) re-run
+end to end — all passing, no regressions.
 
 ---
 
@@ -2184,6 +2213,49 @@ by `component-renderer-test.php`'s existing scenarios, which are
 call-site-agnostic); full `tests/mintcart/` suite (77 files) re-run end
 to end — all passing, no regressions.
 
+**Update (this run — Phase 18, `MintCart\Seo\SchemaOrgBuilder::product()`
+live wiring):** the one remaining `SchemaOrgBuilder` builder method with no
+live consumer (`docs/developer/seo/schema-org.md`'s own "Product: built,
+not wired" section, blocked until this file's Phase 6/8 `product.twig`
+existed) is now wired in, mirroring `category.php`/`search.php`'s
+`BreadcrumbList` wiring: same `ActiveTheme::isMintAware(DIR_TEMPLATE,
+$mint_theme)` gate re-checked directly (not `$mint_render_product_cards`,
+which may already have been flipped `false` by
+`ProductCardListRenderer::isEnabled()` after an unrelated related-product
+render failure), same `try`/`catch (\Throwable)` +
+`MintCart\Core\Logger` degrade-and-log pattern, placed right before
+`$mint_diagnostics->mark('view_rendered')`. The raw numeric price passed to
+the builder is computed fresh from `$product_info['price']`/`['special']`
+(not reused from the `$tax_price` local, which by this point in the method
+has been reassigned inside the related-products `foreach` loop to the last
+related product's price, not the main product's) — `false` when
+`config_customer_price` hides pricing from a logged-out customer, matching
+`SchemaOrgBuilder::product()`'s own "`false` means hidden" contract.
+`image`/`url`/`description`/`sku`/`brand` reuse `$data['popup']`/
+`$data['share']`/a `strip_tags()`'d copy of `$data['description']`/
+`$product_info['sku']`/`$product_info['manufacturer']` — no new data
+fetching, all values the controller already resolved. Rendered as a second
+`<script type="application/ld+json">` block right after `{{ header }}` in
+`product.twig`, same position `category.twig` uses for its own
+`mc_schema_breadcrumb` block. **Why it can't live in the MintCart layer:**
+same rationale as `category.php`/`search.php`'s own Schema.org entries —
+`SchemaOrgBuilder` is deliberately OpenCart-agnostic; something has to
+resolve real product values and call it. **Compatibility impact:** none —
+purely additive `$data['mc_schema_product']` key, only populated on a
+Mint-aware theme, only rendered by `mint_default/product.twig`'s own new
+`{% if %}` guard; the legacy `default` theme's product page is untouched.
+**Tests:** `php -l` clean; `product.twig`'s Twig `if`/`endif`/`for`/
+`endfor` tag counts re-checked balanced (30/30, 11/11); full
+`tests/mintcart/**/*-test.php` suite (77 files) re-run end to end — all
+passing, no regressions (`SchemaOrgBuilder::product()` itself already
+covered by `tests/mintcart/seo/schema-org-builder-test.php`'s existing 16
+scenarios; this is wiring-only). **Not verified:** no live MySQL/Twig
+session in this environment — a human should load a real product page on a
+Mint-aware theme and confirm the `Product` JSON-LD block validates against
+Google's Rich Results Test / schema.org validator and matches the visible
+price/stock/rating (see `docs/MANUAL_VERIFICATION.md`'s Phase 18 Schema.org
+section).
+
 **Not done yet, by design:**
 - **Reviews tab is a read-only placeholder** (`text_no_reviews` only,
   Reviews are loaded via a separate `product/product.review` AJAX endpoint
@@ -2221,6 +2293,29 @@ and confirm the gallery/options/add-to-cart/tabs/related-products all
 render and behave correctly, and that the legacy `default` theme's own
 product page is pixel-identical to before this change. See
 `docs/MANUAL_VERIFICATION.md`'s new entry for the exact steps.
+
+**Update (this run — Phase 18 (SEO Core), MC-0016):** the controller's
+`$this->document->setTitle($product_info['meta_title']);
+$this->document->setDescription($product_info['meta_description']);`
+pass-through (byte-for-byte the same blank-title defect MC-0015 already
+fixed on `category.php`/`home.php`) now routes through
+`MintCart\Seo\MetaBuilder::build()`, falling back to `$product_info['name']`
+when `meta_title` is blank. Deliberately deferred from the original
+Phase 6/8 increment above and MC-0015 itself, since at the time both
+shipped this file was already being edited by the Diagnostics wiring
+increment (also documented above) — this run picked it up once that
+collision cleared. **Why it can't live in the MintCart layer:** same
+reasoning as every other `MetaBuilder`/`Diagnostics` call site — a
+controller is the only place that already has both the entity's raw field
+and a sensible fallback value on hand. **Compatibility impact:** none when
+`meta_title`/`meta_description` are already filled in (the fallback only
+applies when blank); `setKeywords()` is untouched. **Tests:** `php -l`
+clean; `tests/mintcart/seo/meta-builder-test.php`'s pre-existing scenario 6
+already covers this exact shape, no new test file needed; full
+`tests/mintcart/` suite (77 files) re-run end to end — all passing, no
+regressions. **Not verified:** no live MySQL/Twig session in this
+environment — see `docs/fixes/registry.md` MC-0016 for the manual step a
+human should run.
 ## `upload/admin/model/catalog/product.php` / `upload/admin/controller/catalog/product.php` / `upload/admin/view/template/catalog/product_list.twig`
 
 **Reason:** Phase 16 (Bulk Editor, `MINTCART_FUNCTIONAL_SCOPE.md` §7/§17,
@@ -2296,6 +2391,90 @@ purely additive, no existing field/column/behavior changed. **Tests:**
 `php -l` clean on all touched files;
 `tests/mintcart/catalog/bulk-product-update-validator-test.php` grows
 from 27 to 34 assertions (manufacturer_id whitelist + value-validation
+coverage, including the rejection cases); full `tests/mintcart/` suite
+(77 files) re-run end to end — all passing, no regressions.
+`product_list.twig`'s tag counts re-checked balanced (14/14, 2/2) after
+the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
+this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
+section.
+
+## `upload/catalog/controller/extension/feed/google_sitemap.php`
+
+**Reason:** Phase 18 (SEO Core, `MINTCART_FUNCTIONAL_SCOPE.md` §16 /
+`MINTCART_TECHNICAL_PLAN.md` §31)'s last unclaimed sub-item was the XML
+sitemap. `MintCart\Seo\SitemapBuilder` (a prior run) shipped as a pure,
+tested XML assembler with no live consumer — `docs/developer/seo/sitemap.md`
+deliberately deferred wiring a brand-new `mintcart/seo/sitemap.xml` route
+because that would need a live OpenCart bootstrap (pagination, multi-store/
+multi-language URL resolution) this environment's lack of MySQL can't
+verify end to end. This run found a lower-risk real consumer instead: OC3
+already ships a working XML sitemap feed at
+`ControllerExtensionFeedGoogleSitemap` (the stock "Google Sitemap"
+extension, `Marketing → Marketing → Feeds`), gated by its own existing
+`feed_google_sitemap_status` setting, already resolving every product/
+category/manufacturer/information URL via the same models/`$this->url->link()`
+calls `ProductViewProvider`/`ProductListingService` already read from. Its
+`index()` method built the `<urlset>`/`<url>`/`<image:image>` XML by hand,
+string-by-string. This run replaces that hand-built string concatenation
+with `MintCart\Seo\SitemapBuilder::urlset()`, and extends the builder
+itself with optional per-entry `images` (an `xmlns:image` block, only
+emitted when at least one entry carries images) so the existing Google
+Image sitemap extension keeps working through the shared builder instead
+of needing its own separate, un-reviewed XML-escaping code path.
+
+**Why it can't live in the MintCart layer instead:** `SitemapBuilder`
+itself already does — it is a pure, `\Registry`-free class
+(`upload/system/library/mintcart/seo/sitemapbuilder.php`). What remains
+controller-specific is exactly what OpenCart's own `Loader`/routing has no
+generic hook for: resolving `oc_product`/`oc_category`/`oc_manufacturer`/
+`oc_information` rows into `{loc, lastmod, changefreq, priority, images}`
+arrays via `$this->load->model(...)` and `$this->url->link(...)`. That
+resolution has to happen inside a controller; only the final XML assembly
+was worth centralizing, and now is.
+
+**Compatibility impact:** None. Same config gate
+(`feed_google_sitemap_status`), same models called in the same order with
+the same (empty) arguments, same URLs/`changefreq`/`priority` values per
+entry, same recursive category-tree traversal, same image resize call and
+`html_entity_decode()` name normalization. The only externally-visible
+difference: `SitemapBuilder::escape()` now also escapes the primary
+`<loc>`/`<image:loc>` URL text itself (the original hand-built version
+escaped `<image:caption>`/`<image:title>` but not `<loc>`/`<image:loc>`) —
+a strict correctness improvement for any store URL containing `&` (e.g. a
+SEO keyword with a query string), not a behavior change for the common
+case where URLs contain no XML-special characters. `<image:caption>`/
+`<image:title>` escaping is byte-identical:
+`SitemapBuilder::escape()` uses the same `htmlspecialchars($value, ENT_QUOTES | ENT_XML1, 'UTF-8')`
+pair the original controller already called by hand.
+
+**Tests:** `php -l` clean on both touched files. `SitemapBuilder`'s own
+test (`tests/mintcart/seo/sitemap-builder-test.php`) grows from 15 to 20
+scenarios covering the new `images` parameter (no-images byte-identical
+output, one image, optional caption/title, blank/duplicate image `loc`
+skipped/de-duplicated, `&` escaping in both `image:loc` and
+`image:caption`). Full `tests/mintcart/**/*-test.php` suite (77 files)
+re-run end to end — all passing, no regressions. **Not verified:** no live
+MySQL/OpenCart bootstrap in this environment — a human with a real install
+should enable `feed_google_sitemap_status`, request the feed's URL, and
+diff its output against the pre-change version for a store with a
+representative product/category/manufacturer/information catalog (see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 18 "Google Sitemap" section).
+**Update (this run — Phase 16, Bulk Editor):** added `stock_status_id` as
+a fifth whitelisted bulk-update field, same shape as `manufacturer_id` —
+`BulkProductUpdateValidator::FIELDS` gains the entry (validated as a
+non-negative integer; `0` is accepted purely because it mirrors
+`ControllerCatalogProduct::getForm()`'s own `$data['stock_status_id'] = 0;`
+fallback, not because it is a meaningful merchant-chosen target — the
+default install's `oc_stock_status` rows start at id `5`),
+`updateProductField()` gains the matching column mapping, and
+`product_list.twig`'s toolbar `<select>` gains a "Stock Status" option
+(plus its `text_bulk_field_stock_status` language key). **Why it can't
+live in the MintCart layer:** same reasoning as the entries above —
+`oc_product` stays the one true owner of its own columns. **Compatibility
+impact:** none — purely additive, no existing field/column/behavior
+changed. **Tests:** `php -l` clean on all touched files;
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` grows
+from 34 to 41 assertions (stock_status_id whitelist + value-validation
 coverage, including the rejection cases); full `tests/mintcart/` suite
 (77 files) re-run end to end — all passing, no regressions.
 `product_list.twig`'s tag counts re-checked balanced (14/14, 2/2) after

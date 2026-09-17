@@ -41,6 +41,7 @@ assertTrue($validator->isValidField('status'), 'isValidField: status is valid', 
 assertTrue($validator->isValidField('quantity'), 'isValidField: quantity is valid', $failures);
 assertTrue($validator->isValidField('price'), 'isValidField: price is valid', $failures);
 assertTrue($validator->isValidField('manufacturer_id'), 'isValidField: manufacturer_id is valid', $failures);
+assertTrue($validator->isValidField('stock_status_id'), 'isValidField: stock_status_id is valid', $failures);
 assertTrue(!$validator->isValidField('category_ids'), 'isValidField: category_ids is not (yet) a whitelisted field', $failures);
 assertTrue(!$validator->isValidField(''), 'isValidField: blank is not valid', $failures);
 
@@ -79,6 +80,15 @@ assertTrue($validator->validateValue('manufacturer_id', '2.5') !== null, 'manufa
 assertTrue($validator->validateValue('manufacturer_id', 'acme') !== null, 'manufacturer_id: a non-numeric value is rejected', $failures);
 assertTrue($validator->validateValue('manufacturer_id', '') !== null, 'manufacturer_id: blank is rejected', $failures);
 
+// --- validateValue() - stock_status_id ---
+
+assertSame(null, $validator->validateValue('stock_status_id', '0'), 'stock_status_id: 0 (none) is valid', $failures);
+assertSame(null, $validator->validateValue('stock_status_id', '7'), 'stock_status_id: a positive whole number is valid', $failures);
+assertTrue($validator->validateValue('stock_status_id', '-1') !== null, 'stock_status_id: a negative number is rejected', $failures);
+assertTrue($validator->validateValue('stock_status_id', '2.5') !== null, 'stock_status_id: a decimal is rejected (must be a whole number)', $failures);
+assertTrue($validator->validateValue('stock_status_id', 'instock') !== null, 'stock_status_id: a non-numeric value is rejected', $failures);
+assertTrue($validator->validateValue('stock_status_id', '') !== null, 'stock_status_id: blank is rejected', $failures);
+
 // --- validateValue() - unknown field, defensive ---
 
 assertTrue($validator->validateValue('category_ids', '5') !== null, 'validateValue: an unwhitelisted field always errors, defensively', $failures);
@@ -98,5 +108,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BulkProductUpdateValidator smoke test (34 scenarios)\n";
+echo "PASS: BulkProductUpdateValidator smoke test (41 scenarios)\n";
 exit(0);
