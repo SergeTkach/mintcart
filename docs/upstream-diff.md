@@ -262,6 +262,23 @@ with a blank "Meta Tag Title" now renders `<title>{category name}</title>`
 instead of an empty tag (see `docs/MANUAL_VERIFICATION.md`'s Phase 18
 section).
 
+**Update (this run — Phase 18, SEO Core, `CanonicalUrlBuilder`):** the
+inline `http://googlewebmastercentral.blogspot.com/2011/09/pagination-with-relnext-and-relprev.html`
+canonical/prev/next block is replaced with a call to
+`MintCart\Seo\CanonicalUrlBuilder::build()` (already shipped as a pure,
+consumer-less primitive in an earlier run — see
+`docs/developer/seo/canonical-url-builder.md`), wrapped in the same
+`try`/`catch (\Throwable)` + `Logger` pattern the `SchemaOrgBuilder` call
+just above already uses. Runs unconditionally regardless of active theme
+(not gated by `isMintAware()`), matching `RobotsBuilder`'s wiring in
+`common/header.php` — a canonical link is a per-route SEO signal, not a
+Mint component DOM contract. Behavior is byte-for-byte unchanged: the
+builder was extracted from, and tested against, this exact controller's
+own page/limit/total arithmetic. **Tests:** `php -l` clean;
+`tests/mintcart/seo/canonical-url-builder-test.php` (8 scenarios, already
+existing) covers the builder itself; full `tests/mintcart/` suite (78
+files) re-run end to end — all passing, no regressions.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/category.php`
@@ -517,6 +534,18 @@ new test file (covered by `component-renderer-test.php`'s existing
 scenarios, which are call-site-agnostic); full `tests/mintcart/` suite
 (77 files) re-run end to end — all passing, no regressions.
 
+**Update (this run — Phase 18, SEO Core, `CanonicalUrlBuilder`):** the
+MC-0002 `canonical`/`prev`/`next` block (see the "Update" entry above)
+now calls `MintCart\Seo\CanonicalUrlBuilder::build()` instead of
+repeating the page-number arithmetic inline — `$canonical_url` (the
+already-fixed, result-defining-params-only filter set) is passed through
+unchanged as the builder's `$baseQuery`. Same `try`/`catch (\Throwable)`
++ `Logger` wrapping, same unconditional-regardless-of-theme wiring as
+`category.php`'s identical update. Behavior unchanged — same reasoning
+as `category.php`'s entry. **Tests:** `php -l` clean; full
+`tests/mintcart/` suite (78 files) re-run end to end — all passing, no
+regressions.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/search.php`
@@ -606,6 +635,19 @@ same reasoning as `category.php`'s entry. **Compatibility impact:** none
 when `mintcart_dev_mode` is unset (the default). **Tests:** `php -l`
 clean; full `tests/mintcart/` suite (77 files) re-run end to end — all
 passing, no regressions.
+
+**Update (this run — Phase 18, SEO Core, `CanonicalUrlBuilder`):** the
+inline `http://googlewebmastercentral.blogspot.com/2011/09/pagination-with-relnext-and-relprev.html`
+canonical/prev/next block now calls `MintCart\Seo\CanonicalUrlBuilder::build()`
+with an empty `$baseQuery` (Special has no identifying query parameter),
+keeping the `secure = true` third argument to `Url::link()` exactly as
+stock OpenCart had it — this is the only one of the four sibling
+controllers that forces an SSL link. Same `try`/`catch (\Throwable)` +
+`Logger` wrapping, same unconditional-regardless-of-theme wiring as
+`category.php`'s identical update. Behavior unchanged — same reasoning
+as `category.php`'s entry. **Tests:** `php -l` clean; full
+`tests/mintcart/` suite (78 files) re-run end to end — all passing, no
+regressions.
 
 ---
 
@@ -853,6 +895,16 @@ can't live in the MintCart layer:** same reasoning as `category.php`'s
 entry. **Compatibility impact:** none when `mintcart_dev_mode` is unset
 (the default). **Tests:** `php -l` clean; full `tests/mintcart/` suite
 (77 files) re-run end to end — all passing, no regressions.
+
+**Update (this run — Phase 18, SEO Core, `CanonicalUrlBuilder`):** the
+inline `http://googlewebmastercentral.blogspot.com/2011/09/pagination-with-relnext-and-relprev.html`
+canonical/prev/next block now calls `MintCart\Seo\CanonicalUrlBuilder::build()`
+with `'manufacturer_id=' . $this->request->get['manufacturer_id']` as
+`$baseQuery`, same as before. Same `try`/`catch (\Throwable)` + `Logger`
+wrapping, same unconditional-regardless-of-theme wiring as `category.php`'s
+identical update. Behavior unchanged — same reasoning as `category.php`'s
+entry. **Tests:** `php -l` clean; full `tests/mintcart/` suite (78 files)
+re-run end to end — all passing, no regressions.
 
 ---
 

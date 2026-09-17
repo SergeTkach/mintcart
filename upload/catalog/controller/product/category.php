@@ -453,19 +453,30 @@ class ControllerProductCategory extends Controller {
 
 			$data['results'] = sprintf($this->language->get('text_pagination'), ($product_total) ? (($page - 1) * $limit) + 1 : 0, ((($page - 1) * $limit) > ($product_total - $limit)) ? $product_total : ((($page - 1) * $limit) + $limit), $product_total, ceil($product_total / $limit));
 
-			// http://googlewebmastercentral.blogspot.com/2011/09/pagination-with-relnext-and-relprev.html
-			if ($page == 1) {
-			    $this->document->addLink($this->url->link('product/category', 'path=' . $category_info['category_id']), 'canonical');
-			} else {
-				$this->document->addLink($this->url->link('product/category', 'path=' . $category_info['category_id'] . '&page='. $page), 'canonical');
-			}
-			
-			if ($page > 1) {
-			    $this->document->addLink($this->url->link('product/category', 'path=' . $category_info['category_id'] . (($page - 2) ? '&page='. ($page - 1) : '')), 'prev');
-			}
+			// MintCart\Seo\CanonicalUrlBuilder (MINTCART_FUNCTIONAL_SCOPE.md
+			// §16, MINTCART_TECHNICAL_PLAN.md §31, Phase 18) - shared, tested
+			// primitive replacing the inline http://googlewebmastercentral.
+			// blogspot.com/2011/09/pagination-with-relnext-and-relprev.html
+			// block duplicated across category.php/manufacturer.php/
+			// search.php/special.php. Canonical/prev/next links are a
+			// per-route SEO signal, not a Mint component DOM contract, so
+			// this runs unconditionally regardless of active theme, matching
+			// RobotsBuilder's wiring in common/header.php.
+			try {
+				$canonical_builder = new \MintCart\Seo\CanonicalUrlBuilder();
+				$canonical_links = $canonical_builder->build($page, (int)$limit, (int)$product_total, 'path=' . $category_info['category_id']);
 
-			if ($limit && ceil($product_total / $limit) > $page) {
-			    $this->document->addLink($this->url->link('product/category', 'path=' . $category_info['category_id'] . '&page='. ($page + 1)), 'next');
+				$this->document->addLink($this->url->link('product/category', $canonical_links['canonical']), 'canonical');
+
+				if ($canonical_links['prev'] !== null) {
+					$this->document->addLink($this->url->link('product/category', $canonical_links['prev']), 'prev');
+				}
+
+				if ($canonical_links['next'] !== null) {
+					$this->document->addLink($this->url->link('product/category', $canonical_links['next']), 'next');
+				}
+			} catch (\Throwable $e) {
+				(new \MintCart\Core\Logger())->error('CanonicalUrlBuilder failed to build pagination links: ' . $e->getMessage());
 			}
 
 			$data['sort'] = $sort;
