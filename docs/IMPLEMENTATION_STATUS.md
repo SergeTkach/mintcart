@@ -2781,10 +2781,10 @@ beyond a plain HTML form.
 In progress.
 - [~] Multi-select bulk actions for Products (status, quantity, price,
       special, manufacturer, category, stock, SEO fields) — status,
-      quantity and price done in an earlier run, **manufacturer added
-      this run** (see the "Update" below); the remaining fields (special,
-      category, stock status, SEO) are natural follow-ups over the same
-      shape.
+      quantity, price and manufacturer done in earlier runs,
+      **stock status added this run** (see the "Update" below); the
+      remaining fields (special, category, SEO) are natural follow-ups
+      over the same shape.
 - [ ] True inline edit (editing a value directly in the product list
       table, no separate bulk-toolbar step) — not attempted.
 - [ ] Chunked/resumable AJAX batch jobs (no background daemon) — today's
@@ -2865,6 +2865,39 @@ candidates:** category/stock-status/special-price as further
 `BulkProductUpdateValidator::FIELDS` entries (same shape); or re-check
 `gh pr list`/`list_pull_requests` first, since PRs #110/#111 may have
 merged by then.
+
+**Update (2026-09-17, routine run): Stock Status added as a fifth
+bulk-editable field.** Step 0 dedup check: 3 open PRs at the start of
+this run (#117, #118, #119 — all Phase 18 SEO wiring into storefront
+`upload/catalog/controller/product/*.php`, all marked `ROUTINE-STATUS:
+DONE`), none touching this run's admin-side files (`upload/admin/**`,
+`upload/system/library/mintcart/catalog/**`).
+`MintCart\Catalog\BulkProductUpdateValidator::FIELDS` gains
+`stock_status_id` (validated as a non-negative integer; `0` is accepted
+purely because it mirrors `ControllerCatalogProduct::getForm()`'s own
+fallback when no value has been posted, not because it is a meaningful
+merchant-chosen target — the default install's `oc_stock_status` rows
+start at id `5`); `ModelCatalogProduct::updateProductField()` gains the
+matching column mapping; `product_list.twig`'s toolbar `<select>` gains a
+"Stock Status" option; `en-gb/catalog/product.php` gains
+`text_bulk_field_stock_status`. Same form-POST-then-redirect shape, no
+new AJAX endpoint, no new admin asset bundle. Full writeup:
+`docs/developer/catalog/bulk-editor.md`, `docs/upstream-diff.md`'s
+admin/product entry, `docs/MANUAL_VERIFICATION.md`'s Phase 16 section.
+Verified: `php -l` clean on every touched file under `upload/`/`tests/`;
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` grows
+from 34 to 41 assertions; full `tests/mintcart/` suite (77 files) re-run
+end to end — all passing, no regressions; `product_list.twig`'s tag
+counts re-checked balanced (14/14, 2/2). Not verified: no live
+MySQL/admin session in this environment, same pre-existing gap. **Next
+candidates:** category and special (`special_price`) as further
+`BulkProductUpdateValidator::FIELDS` entries (same shape, note this is a
+distinct class/whitelist from `MintCart\Catalog\BulkProductUpdatePlanner`,
+which already lists `special_price`/`category_ids`/`stock_status_id` in
+its own separate, not-yet-wired-to-a-live-endpoint field set — see the
+Phase 16 section above); a friendlier per-field value control (`<select>`
+for Status, `type="number"` elsewhere); or re-check
+`gh pr list`/`list_pull_requests` first.
 
 ## Phase 17 — Categories drag & drop
 

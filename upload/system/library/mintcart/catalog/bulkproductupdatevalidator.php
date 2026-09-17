@@ -6,9 +6,10 @@ namespace MintCart\Catalog;
  * `MINTCART_FUNCTIONAL_SCOPE.md` §7/§17, `MINTCART_TECHNICAL_PLAN.md` §29,
  * `MINTCART_IMPLEMENTATION_GUIDE.md` §62 — "Store -> Products" inline
  * edit / mass actions). Bulk-sets one of a small whitelisted set of
- * `oc_product` columns (status, quantity, price, manufacturer_id) across
- * a multi-selected set of products from `Catalog -> Products`.
- * Category/stock-status/SEO fields are natural follow-ups, same shape.
+ * `oc_product` columns (status, quantity, price, manufacturer_id,
+ * stock_status_id) across a multi-selected set of products from
+ * `Catalog -> Products`. Category/SEO fields are natural follow-ups,
+ * same shape.
  *
  * Deliberately has no OpenCart dependency (no `\Registry`, no `\DB`) so it
  * is unit-testable in isolation, same reasoning as
@@ -19,7 +20,7 @@ namespace MintCart\Catalog;
  */
 final class BulkProductUpdateValidator
 {
-    public const FIELDS = ['status', 'quantity', 'price', 'manufacturer_id'];
+    public const FIELDS = ['status', 'quantity', 'price', 'manufacturer_id', 'stock_status_id'];
 
     public function isValidField(string $field): bool
     {
@@ -54,6 +55,11 @@ final class BulkProductUpdateValidator
                 return (ctype_digit($value))
                     ? null
                     : 'Manufacturer must be a manufacturer ID, or 0 for none.';
+
+            case 'stock_status_id':
+                return (ctype_digit($value))
+                    ? null
+                    : 'Stock status must be a stock status ID, or 0 for none.';
 
             default:
                 return 'Unknown bulk-update field.';
