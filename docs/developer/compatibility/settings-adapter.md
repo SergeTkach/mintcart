@@ -98,7 +98,15 @@ the real DELETE-then-reinsert `editSetting()` semantics — the same
 
 ## Not done yet, by design
 
-**Not wired into any of the three call sites named above.** All three
+**First real consumer: `MintCart\Update\MaintenanceMode`** (Phase 11, the
+Update Manager's `maintenance` step —
+`docs/developer/update/maintenance-mode.md`), which toggles
+`config_maintenance` through `merge()` instead of a bare `editSetting()`
+call. The three call sites named below still duplicate the same
+merge-then-save fix inline rather than going through this class; that
+remains open, unclaimed follow-up work.
+
+**Not wired into any of the three call sites named below.** All three
 live in files this routine's own duplicate-work check (`docs/IMPLEMENTATION_STATUS.md`'s
 "Next step" process) found already contended by other open pull requests
 at the time this was written:
