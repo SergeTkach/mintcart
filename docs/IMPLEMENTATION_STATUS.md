@@ -3299,6 +3299,34 @@ new Phase 18 entry in `docs/MANUAL_VERIFICATION.md` for the exact steps.
 centralization, and Manufacturer/Special breadcrumb wiring are all
 unclaimed next steps; Product schema awaits its page template.
 
+**Update (2026-09-17, routine run): `SchemaOrgBuilder` BreadcrumbList
+wired into `manufacturer.php`'s `info()` and `special.php`'s `index()`** —
+the two remaining listing controllers flagged above. Same
+`ActiveTheme::isMintAware()` fresh re-check, `try`/`catch (\Throwable)` +
+`Logger` wrapping, and `mc_schema_breadcrumb` Twig guard as the existing
+`category.php`/`search.php` wiring (`manufacturer_info.twig`/
+`special.twig` get the identical `{% if mc_schema_breadcrumb %}` block
+right after `{{ header }}`). Step 0 dedup check: the only open PR at the
+start of this run was #117 (`MetaBuilder` into `product.php`, unrelated
+file) — this increment's own body had flagged this exact item as its
+recommended next step. See `docs/upstream-diff.md`'s `manufacturer.php`/
+`special.php` entries and `docs/developer/seo/schema-org.md` (updated)
+for the full writeup. Verified: `php -l` clean; Twig tag balance checked
+on both templates; full `tests/mintcart/**/*-test.php` suite (77 files)
+re-run end to end — all passing, no regressions (no new test file needed,
+same reasoning `category.php`/`search.php`'s own wiring used —
+`breadcrumbList()` itself is already covered by
+`schema-org-builder-test.php`). Not verified: no live MySQL/Twig session
+in this environment — a human should load a real manufacturer and
+specials page on a `mint_default` install and confirm the `BreadcrumbList`
+JSON-LD block renders (see `docs/MANUAL_VERIFICATION.md`'s Phase 18
+section). **Next step:** Product schema still awaits a `mint_default`
+product detail page consumer (already exists as of Phase 6/8 — worth
+re-checking whether `SchemaOrgBuilder::product()` can now be wired into
+`product.php`); hreflang still needs its per-language route resolver;
+robots/sitemap centralization and System route URL aliases remain
+unclaimed; or re-check `gh pr list --state open` first.
+
 ## Modern Editor (Functional Scope §24, P2/RESEARCH)
 
 - [x] Research step: verify whether the rich-text editor needs replacing —
