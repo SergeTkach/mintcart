@@ -914,3 +914,41 @@ pages of results (set the theme's product limit low, e.g. 4, if needed):
    that forces `secure = true`.
 6. Confirm this is unaffected by which theme is active (`default` or
    `mint_default`) — canonical links are not gated by Mint-awareness.
+
+## Phase 18 — Google Sitemap wired through `MintCart\Seo\SitemapBuilder`, never exercised end to end
+
+`ControllerExtensionFeedGoogleSitemap::index()` now builds a plain
+`{loc, lastmod, changefreq, priority, images}` array per product/category/
+manufacturer/information row and delegates the actual XML string assembly
+to `MintCart\Seo\SitemapBuilder::urlset()`, instead of concatenating
+`<url>...</url>` strings by hand — `php -l` clean, `SitemapBuilder`'s own
+20-scenario unit test covers the XML-assembly rules (including the new
+`images` parameter), and the full `tests/mintcart/` suite passes, but no
+live MySQL/OpenCart bootstrap in this environment means the feed's actual
+output was never fetched and compared. On a real install with existing
+products (at least one with a product image), categories, manufacturers,
+and an information page:
+
+1. Install/enable the "Google Sitemap" extension
+   (`Marketing → Marketing → Feeds → Google Sitemap`) if not already
+   enabled, and note its feed URL.
+2. Load that URL both **before** (checkout a commit prior to this change)
+   and **after** this change, and diff the two XML documents. They should
+   be identical except: (a) whitespace/indentation (the builder uses tab
+   indentation, the original used two-space), and (b) any product/category/
+   manufacturer/information URL that happens to contain an `&` or other
+   XML-special character in its query string now has that character
+   correctly escaped in `<loc>`/`<image:loc>` (a correctness fix — the
+   original never escaped those two tags, only `<image:caption>`/
+   `<image:title>`).
+3. Confirm the response's `Content-Type: application/xml` header is
+   unchanged.
+4. Confirm a product **without** an image still produces a `<url>` block
+   with no `<image:image>` child (unaffected by the new `images` support).
+5. Confirm the `xmlns:image` namespace attribute is present on `<urlset>`
+   whenever at least one product has an image, and validate the whole
+   document against an XML parser (e.g. `xmllint --noout`) to confirm it
+   is well-formed.
+6. Validate the feed against Google's sitemap requirements (e.g. via
+   Google Search Console's sitemap report) to confirm no regression in
+   acceptance.
