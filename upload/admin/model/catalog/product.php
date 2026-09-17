@@ -326,7 +326,8 @@ class ModelCatalogProduct extends Model {
 			'status'          => "status = '" . (int)$value . "'",
 			'quantity'        => "quantity = '" . (int)$value . "'",
 			'price'           => "price = '" . (float)$value . "'",
-			'manufacturer_id' => "manufacturer_id = '" . (int)$value . "'"
+			'manufacturer_id' => "manufacturer_id = '" . (int)$value . "'",
+			'stock_status_id' => "stock_status_id = '" . (int)$value . "'"
 		);
 
 		if (!isset($columns[$field])) {
