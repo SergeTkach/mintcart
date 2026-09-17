@@ -101,10 +101,12 @@ $missing = PackageVerifier::missingFiles('/tmp/mint_default-extracted', $manifes
   signing metadata beyond the opaque `checksum` string; this class checks
   exactly what that field is (a hash), nothing more.
 - No caller yet — no admin controller, no `mintcart/update/*` route calls
-  this. The next real increment in this flow is whichever piece needs it
-  first: a `download` step that actually fetches a package archive over
-  HTTP (then hands the local path to `verifyChecksum()`), or `maintenance`
-  mode (put the store in maintenance before `files`/`migrations` run).
+  this. `maintenance` mode (put the store in maintenance before
+  `files`/`migrations` run) is now built —
+  `docs/developer/update/maintenance-mode.md`,
+  `MintCart\Update\MaintenanceMode`. The next real increment in this flow
+  is a `download` step that actually fetches a package archive over HTTP
+  (then hands the local path to `verifyChecksum()`).
 
 Verified: `php -l` clean; `tests/mintcart/update/package-verifier-test.php`
 (12 scenarios — null/blank checksum short-circuits, a real sha256 match,
