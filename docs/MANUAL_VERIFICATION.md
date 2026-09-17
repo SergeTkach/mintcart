@@ -794,8 +794,9 @@ specials:
    Copy/Delete), confirm the dialog, and confirm the redirect lands back
    on the same filtered/sorted/paged list with a success message and the
    selected products' Quantity column updated to the new value.
-3. Repeat for "Status" (value `0` or `1`) and "Price" (a decimal value)
-   and confirm each updates only that column.
+3. Repeat for "Status" (value `0` or `1`), "Price" (a decimal value), and
+   "Manufacturer" (an existing `manufacturer_id`, and separately `0` for
+   "no manufacturer") and confirm each updates only that column.
 4. For the product with existing descriptions/options/discounts/specials,
    open its edit form after a bulk update and confirm every one of those
    is completely unchanged — the entire reason `updateProductField()`
@@ -803,8 +804,8 @@ specials:
    `docs/developer/catalog/bulk-editor.md` "Why a new model method").
 5. Submit the bulk-update button with no products selected, and again
    with a deliberately invalid value (e.g. `-5` for quantity, `abc` for
-   price) and confirm each shows the appropriate warning rather than
-   silently doing nothing or throwing a fatal error.
+   price, `-1` for manufacturer) and confirm each shows the appropriate
+   warning rather than silently doing nothing or throwing a fatal error.
 6. Confirm the legacy Delete/Copy buttons still behave exactly as before
    (this increment must not have changed their behavior).
 
