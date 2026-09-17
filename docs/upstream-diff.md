@@ -2398,6 +2398,67 @@ the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
 section.
 
+## `upload/catalog/controller/extension/feed/google_sitemap.php`
+
+**Reason:** Phase 18 (SEO Core, `MINTCART_FUNCTIONAL_SCOPE.md` §16 /
+`MINTCART_TECHNICAL_PLAN.md` §31)'s last unclaimed sub-item was the XML
+sitemap. `MintCart\Seo\SitemapBuilder` (a prior run) shipped as a pure,
+tested XML assembler with no live consumer — `docs/developer/seo/sitemap.md`
+deliberately deferred wiring a brand-new `mintcart/seo/sitemap.xml` route
+because that would need a live OpenCart bootstrap (pagination, multi-store/
+multi-language URL resolution) this environment's lack of MySQL can't
+verify end to end. This run found a lower-risk real consumer instead: OC3
+already ships a working XML sitemap feed at
+`ControllerExtensionFeedGoogleSitemap` (the stock "Google Sitemap"
+extension, `Marketing → Marketing → Feeds`), gated by its own existing
+`feed_google_sitemap_status` setting, already resolving every product/
+category/manufacturer/information URL via the same models/`$this->url->link()`
+calls `ProductViewProvider`/`ProductListingService` already read from. Its
+`index()` method built the `<urlset>`/`<url>`/`<image:image>` XML by hand,
+string-by-string. This run replaces that hand-built string concatenation
+with `MintCart\Seo\SitemapBuilder::urlset()`, and extends the builder
+itself with optional per-entry `images` (an `xmlns:image` block, only
+emitted when at least one entry carries images) so the existing Google
+Image sitemap extension keeps working through the shared builder instead
+of needing its own separate, un-reviewed XML-escaping code path.
+
+**Why it can't live in the MintCart layer instead:** `SitemapBuilder`
+itself already does — it is a pure, `\Registry`-free class
+(`upload/system/library/mintcart/seo/sitemapbuilder.php`). What remains
+controller-specific is exactly what OpenCart's own `Loader`/routing has no
+generic hook for: resolving `oc_product`/`oc_category`/`oc_manufacturer`/
+`oc_information` rows into `{loc, lastmod, changefreq, priority, images}`
+arrays via `$this->load->model(...)` and `$this->url->link(...)`. That
+resolution has to happen inside a controller; only the final XML assembly
+was worth centralizing, and now is.
+
+**Compatibility impact:** None. Same config gate
+(`feed_google_sitemap_status`), same models called in the same order with
+the same (empty) arguments, same URLs/`changefreq`/`priority` values per
+entry, same recursive category-tree traversal, same image resize call and
+`html_entity_decode()` name normalization. The only externally-visible
+difference: `SitemapBuilder::escape()` now also escapes the primary
+`<loc>`/`<image:loc>` URL text itself (the original hand-built version
+escaped `<image:caption>`/`<image:title>` but not `<loc>`/`<image:loc>`) —
+a strict correctness improvement for any store URL containing `&` (e.g. a
+SEO keyword with a query string), not a behavior change for the common
+case where URLs contain no XML-special characters. `<image:caption>`/
+`<image:title>` escaping is byte-identical:
+`SitemapBuilder::escape()` uses the same `htmlspecialchars($value, ENT_QUOTES | ENT_XML1, 'UTF-8')`
+pair the original controller already called by hand.
+
+**Tests:** `php -l` clean on both touched files. `SitemapBuilder`'s own
+test (`tests/mintcart/seo/sitemap-builder-test.php`) grows from 15 to 20
+scenarios covering the new `images` parameter (no-images byte-identical
+output, one image, optional caption/title, blank/duplicate image `loc`
+skipped/de-duplicated, `&` escaping in both `image:loc` and
+`image:caption`). Full `tests/mintcart/**/*-test.php` suite (77 files)
+re-run end to end — all passing, no regressions. **Not verified:** no live
+MySQL/OpenCart bootstrap in this environment — a human with a real install
+should enable `feed_google_sitemap_status`, request the feed's URL, and
+diff its output against the pre-change version for a store with a
+representative product/category/manufacturer/information catalog (see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 18 "Google Sitemap" section).
 **Update (this run — Phase 16, Bulk Editor):** added `stock_status_id` as
 a fifth whitelisted bulk-update field, same shape as `manufacturer_id` —
 `BulkProductUpdateValidator::FIELDS` gains the entry (validated as a
