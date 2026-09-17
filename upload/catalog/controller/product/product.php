@@ -230,8 +230,21 @@ class ControllerProductProduct extends Controller {
 				'href' => $this->url->link('product/product', $url . '&product_id=' . $this->request->get['product_id'])
 			);
 
-			$this->document->setTitle($product_info['meta_title']);
-			$this->document->setDescription($product_info['meta_description']);
+			// MintCart\Seo\MetaBuilder (MINTCART_FUNCTIONAL_SCOPE.md §16,
+			// Phase 18, MC-0016): a blank "Meta Tag Title" falls back to the
+			// product name. The optional fourth argument is omitted
+			// deliberately: a blank meta description stays blank, not a
+			// copy of the title. Mirrors category.php/home.php's MC-0015
+			// wiring. See docs/developer/seo/meta-builder.md, "Live wiring".
+			// Pure string logic, cannot throw - no try/catch needed.
+			$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+				$product_info['meta_title'],
+				$product_info['meta_description'],
+				$product_info['name']
+			);
+
+			$this->document->setTitle($mint_meta['title']);
+			$this->document->setDescription($mint_meta['description']);
 			$this->document->setKeywords($product_info['meta_keyword']);
 			$this->document->addLink($this->url->link('product/product', 'product_id=' . $this->request->get['product_id']), 'canonical');
 			$this->document->addScript('catalog/view/javascript/jquery/magnific/jquery.magnific-popup.min.js');
