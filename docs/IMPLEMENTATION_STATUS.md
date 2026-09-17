@@ -4127,6 +4127,53 @@ prerequisite in the flow's own ordering); or re-run `gh pr list --state
 open` for whatever has newly merged/unclaimed before picking the next
 phase, since this run observed an unusually large (31) open-PR backlog.
 
+**Update (2026-09-17, routine run): `MintCart\Update\PackageDownloader` —
+the `download` step.** Step 0 dedup check: `list_pull_requests` (all open,
+not filtered by branch name) returned 6 open PRs at the start of this run
+— `#117`-`#121` (Phase 18 SEO wiring + one Phase 16 Bulk Editor field) and
+`#122` (`MintCart\Update\MaintenanceMode`, the `maintenance` step). None
+touch `upload/system/library/mintcart/update/packagedownloader.php` (a new
+file); `#122` touches `maintenancemode.php`,
+`compatibility/opencart3/settingsadapter.php`'s docblock, its own test and
+docs — no file overlap with this increment. This run picks the exact
+remaining item `docs/developer/update/package-verifier.md`'s own "What's
+deliberately not done yet" section named: "a `download` step that actually
+fetches a package archive over HTTP, then hands the local path to
+`verifyChecksum()`."
+
+Built `MintCart\Update\PackageDownloader`
+(`upload/system/library/mintcart/update/packagedownloader.php`): an
+injectable `callable(string $url): string` transport (duck-typed, same
+"no OpenCart/network dependency baked in" pattern `MigrationManager`/
+`SettingsAdapter` already use for their own dependencies) fetches package
+bytes, written atomically (temp file + `rename()`) to a destination path.
+Rejects non-`http(s)` URLs before the transport is ever invoked. No
+orchestrator wires `download → verify` together yet — same "primitive
+first" gap every other Update Manager class in this file already carries.
+Full writeup: `docs/developer/update/package-downloader.md`.
+`docs/developer/update/package-verifier.md`'s "not done yet" note updated
+to mark `download` built and point at the new doc.
+
+Verified: `php -l` clean on both new files, and re-swept across the full
+`upload`/`tests` tree. New `tests/mintcart/update/package-downloader-test.php`
+(9 scenarios — verbatim byte write, exact URL passed to the transport,
+missing parent directories created, no leftover `.part-*` temp file after
+success, a stale existing destination overwritten on retry, a non-http(s)
+URL rejected before the transport runs, a schemeless URL rejected, an
+empty transport response throws with no file written, a thrown transport
+exception propagates unchanged with no file written) — all passing. Full
+`tests/mintcart/**/*-test.php` suite re-run end to end (78 files, up from
+77) — all passing, no regressions. **Not verified:** the default
+`file_get_contents()`-based transport, and any real HTTP fetch — no
+outbound network access in this environment; every test scenario injects
+a fake transport instead.
+
+**Next step:** an orchestrator/caller that chains
+`PackageDownloader::download()` → `PackageVerifier::verifyChecksum()` →
+`MaintenanceMode::enable()` (once `#122` merges) → a `files` step (not yet
+built); the `mc_installed_file` ledger once that `files` step exists; or
+re-check `gh pr list --state open` first, since `#117`-`#122` may have
+merged by the time a future run starts.
 **Update (2026-09-17, routine run): `MintCart\Update\MaintenanceMode` —
 the `maintenance` step.** Step 0 dedup check: `list_pull_requests` (all
 open, not filtered by branch name) returned 5 open PRs at the start of
