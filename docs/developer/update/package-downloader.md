@@ -87,10 +87,10 @@ PackageVerifier::verifyChecksum('/tmp/mintcart-update/mint_default-1.2.0.zip', $
 
 ## What's deliberately not done yet
 
-- **No orchestrator.** No single entry point exists yet that runs
+- ~~**No orchestrator.**~~ **Done** — `MintCart\Update\UpdateOrchestrator`
+  (`docs/developer/update/update-orchestrator.md`) now chains
   `download → verify → maintenance → files → migrations → cache clear →
-  health check` in sequence — same gap every other Update Manager primitive
-  in this codebase currently has.
+  health check` end to end. Still no admin controller/route calling it.
 - **No archive extraction.** `PackageVerifier::missingFiles()` already
   expects an *extracted* directory — extraction (zip/tar handling) is a
   separate concern for whichever step calls both classes in sequence, not

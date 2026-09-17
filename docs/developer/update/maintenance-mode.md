@@ -80,14 +80,15 @@ $maintenance->disable();
 
 ## What's deliberately not done yet
 
-- **No orchestrator.** No single entry point exists yet that runs
-  `download → verify → maintenance → files → migrations → cache clear →
-  health check` in sequence — `enable()`/`disable()` are primitives that
-  future orchestrator will call, not a `around(callable $step)`-style
-  wrapper. Building that wrapper now, with no real flow to decide where
-  its boundaries sit (does maintenance stay on through `cache clear`? Through
-  `health check`? Only until `files`/`migrations` finish?), would be
-  exactly the speculative API `CLAUDE.md` §17/§85 warn against.
+- ~~**No orchestrator.**~~ **Done** — `MintCart\Update\UpdateOrchestrator`
+  (`docs/developer/update/update-orchestrator.md`) now calls `enable()`/
+  `disable()` in sequence around `files`/`migrations`/`cache clear`/
+  `health check`, and answers the boundary questions this note used to
+  leave open: maintenance stays enabled through every step after it, a
+  failure anywhere after `enable()` leaves the store in maintenance mode
+  rather than reopening it, and `disable()` only runs on a full success
+  when the store was not already in maintenance mode before `apply()` was
+  called.
 - **No admin UI toggle beyond the one OpenCart already ships**
   (`Settings → Store → Maintenance Mode`). Nothing here needs one — the
   Update Manager flow toggles the same setting programmatically.
