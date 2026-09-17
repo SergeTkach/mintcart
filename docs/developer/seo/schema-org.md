@@ -13,9 +13,12 @@ Test: `tests/mintcart/seo/schema-org-builder-test.php`
 
 Consumers: `upload/catalog/controller/common/header.php` (Organization),
 `upload/catalog/controller/product/category.php` and
-`upload/catalog/controller/product/search.php` (BreadcrumbList).
-`product()` has no live consumer yet — see "Product: built, not wired"
-below.
+`upload/catalog/controller/product/search.php` (BreadcrumbList),
+`upload/catalog/controller/product/product.php` (Product) — see "Product:
+live-wired" below. `manufacturer.php`/`special.php` BreadcrumbList wiring
+is not on `master` yet as of this run but has an open, unmerged PR (see
+`docs/IMPLEMENTATION_STATUS.md`'s Phase 18 section for the PR number at
+the time it was checked) — not duplicated here.
 
 ## Design
 
@@ -117,29 +120,43 @@ so building the schema too early would silently drop later entries).
 Rendered as a second `<script type="application/ld+json">` block right
 after `{{ header }}` in `category.twig`/`search.twig`.
 
-## Product: built, not wired
+## Product: live-wired
 
-`product()` is implemented and unit-tested, but has **no live consumer
-yet** — `mint_default` has no `template/product/product.twig` at all
-(Phase 6/8 wired the *listing* pages — category/search/manufacturer/
-special — never the product detail page itself). Wiring `product()` into
-`catalog/controller/product/product.php` needs that template to exist
-first; shipping the builder method ahead of that consumer follows the same
-"ship a tested, documented contract before its full theme-page consumer
-exists" precedent `CartService`/`SearchService` already set (`CLAUDE.md`
-§85 — the *service* is the real consumer here, its *live rendering* is the
-deferred part). See `docs/IMPLEMENTATION_STATUS.md`'s Phase 18 "Next step"
-for the concrete follow-up.
+`product()` is now wired into `catalog/controller/product/product.php`,
+right before `$mint_diagnostics->mark('view_rendered')`, gated by the same
+`ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme)` check re-checked
+directly (not `$mint_render_product_cards`, for the same
+flipped-mid-request reason `category.php`/`search.php`'s BreadcrumbList
+wiring already documents above). `name`/`url`/`image`/`description`/`sku`/
+`brand` all reuse values the controller already resolved for the page
+itself (`$data['share']`/`$data['popup']`/a `strip_tags()`'d copy of
+`$data['description']`/`$product_info['sku']`/`$product_info['manufacturer']`)
+— no new OpenCart calls. `price` is computed fresh from
+`$product_info['price']`/`['special']` rather than reusing the method's
+`$tax_price` local, which by that point in `index()` has been reassigned
+inside the related-products `foreach` loop to the *last related product's*
+price, not the main product's; it is `false` when `config_customer_price`
+hides pricing from a logged-out customer, matching this builder's own
+"`false` means hidden" convention. `in_stock` is `$product_info['quantity']
+> 0`; `rating_value`/`rating_count` are the product's raw `rating`/
+`reviews` counts (the builder itself only emits `aggregateRating` when both
+are truthy, so a product with zero reviews correctly gets none). Rendered
+as a second `<script type="application/ld+json">` block right after
+`{{ header }}` in `product.twig`, same position `category.twig` uses for
+its own `mc_schema_breadcrumb` block. `product.php` does not (yet) build a
+per-item `$data['breadcrumbs']` trail worth a `BreadcrumbList` of its own
+distinct from `category.php`'s — that remains a separate, unclaimed future
+increment, not part of this one.
 
 ## Definition of Done
 
 - [x] Pure, OpenCart-independent contract, unit-tested in isolation
 - [x] `toJsonLd()` is safe to embed directly in a `<script>` tag
       (`JSON_HEX_TAG` — no manual escaping needed by a caller)
-- [x] Live-wired for Organization (header, all Mint-aware pages) and
-      BreadcrumbList (category, search)
-- [ ] Live-wired for Product (blocked on a `mint_default` product detail
-      page existing — see above)
+- [x] Live-wired for Organization (header, all Mint-aware pages),
+      BreadcrumbList (category, search) and Product (product detail page)
+- [ ] BreadcrumbList live-wired for manufacturer/special (open, unmerged PR
+      as of this run — see `docs/IMPLEMENTATION_STATUS.md`)
 - [ ] Validated against a real page with Google's Rich Results Test /
       schema.org validator (`docs/MANUAL_VERIFICATION.md`, Phase 18 entry —
       this environment has no MySQL/`vendor/twig/twig` to render a real

@@ -773,10 +773,20 @@ never rendered on a real page or run through an actual validator. On a
 4. Confirm neither block appears on the legacy `default` theme (the
    `ActiveTheme::isMintAware()` gate should make this a no-op there, same
    as every other Mint-only controller addition).
-5. `SchemaOrgBuilder::product()` has no live consumer yet (no
-   `mint_default/template/product/product.twig` exists — Phase 6/8 never
-   wired the product *detail* page itself, only listing pages) — nothing
-   to verify live until that page exists.
+5. Load a product page on `mint_default`; confirm a
+   `<script type="application/ld+json">` block with `"@type": "Product"`
+   appears right after `{{ header }}`, with `name`/`url`/`image` matching
+   the visible page, `offers.price` matching the visible price (or the
+   whole `offers` key absent when pricing is hidden from a logged-out
+   customer via `config_customer_price`), `offers.availability` matching
+   the visible stock state, and `aggregateRating` present only when the
+   product actually has reviews (absent for a product with zero reviews,
+   even if it has a computed `rating` value). Paste it into the same
+   Rich Results Test / validator as step 3 and confirm no errors. Confirm
+   it does **not** appear on the legacy `default` theme's product page.
+6. `manufacturer.php`/`special.php` `BreadcrumbList` wiring has an open,
+   unmerged PR as of this run — nothing to verify live here until it
+   merges (see that PR's own description for its verification steps).
 
 ## Phase 18 — `RobotsBuilder` meta tag, never validated against a real page
 

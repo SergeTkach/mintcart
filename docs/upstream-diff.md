@@ -2184,6 +2184,49 @@ by `component-renderer-test.php`'s existing scenarios, which are
 call-site-agnostic); full `tests/mintcart/` suite (77 files) re-run end
 to end — all passing, no regressions.
 
+**Update (this run — Phase 18, `MintCart\Seo\SchemaOrgBuilder::product()`
+live wiring):** the one remaining `SchemaOrgBuilder` builder method with no
+live consumer (`docs/developer/seo/schema-org.md`'s own "Product: built,
+not wired" section, blocked until this file's Phase 6/8 `product.twig`
+existed) is now wired in, mirroring `category.php`/`search.php`'s
+`BreadcrumbList` wiring: same `ActiveTheme::isMintAware(DIR_TEMPLATE,
+$mint_theme)` gate re-checked directly (not `$mint_render_product_cards`,
+which may already have been flipped `false` by
+`ProductCardListRenderer::isEnabled()` after an unrelated related-product
+render failure), same `try`/`catch (\Throwable)` +
+`MintCart\Core\Logger` degrade-and-log pattern, placed right before
+`$mint_diagnostics->mark('view_rendered')`. The raw numeric price passed to
+the builder is computed fresh from `$product_info['price']`/`['special']`
+(not reused from the `$tax_price` local, which by this point in the method
+has been reassigned inside the related-products `foreach` loop to the last
+related product's price, not the main product's) — `false` when
+`config_customer_price` hides pricing from a logged-out customer, matching
+`SchemaOrgBuilder::product()`'s own "`false` means hidden" contract.
+`image`/`url`/`description`/`sku`/`brand` reuse `$data['popup']`/
+`$data['share']`/a `strip_tags()`'d copy of `$data['description']`/
+`$product_info['sku']`/`$product_info['manufacturer']` — no new data
+fetching, all values the controller already resolved. Rendered as a second
+`<script type="application/ld+json">` block right after `{{ header }}` in
+`product.twig`, same position `category.twig` uses for its own
+`mc_schema_breadcrumb` block. **Why it can't live in the MintCart layer:**
+same rationale as `category.php`/`search.php`'s own Schema.org entries —
+`SchemaOrgBuilder` is deliberately OpenCart-agnostic; something has to
+resolve real product values and call it. **Compatibility impact:** none —
+purely additive `$data['mc_schema_product']` key, only populated on a
+Mint-aware theme, only rendered by `mint_default/product.twig`'s own new
+`{% if %}` guard; the legacy `default` theme's product page is untouched.
+**Tests:** `php -l` clean; `product.twig`'s Twig `if`/`endif`/`for`/
+`endfor` tag counts re-checked balanced (30/30, 11/11); full
+`tests/mintcart/**/*-test.php` suite (77 files) re-run end to end — all
+passing, no regressions (`SchemaOrgBuilder::product()` itself already
+covered by `tests/mintcart/seo/schema-org-builder-test.php`'s existing 16
+scenarios; this is wiring-only). **Not verified:** no live MySQL/Twig
+session in this environment — a human should load a real product page on a
+Mint-aware theme and confirm the `Product` JSON-LD block validates against
+Google's Rich Results Test / schema.org validator and matches the visible
+price/stock/rating (see `docs/MANUAL_VERIFICATION.md`'s Phase 18 Schema.org
+section).
+
 **Not done yet, by design:**
 - **Reviews tab is a read-only placeholder** (`text_no_reviews` only,
   Reviews are loaded via a separate `product/product.review` AJAX endpoint
