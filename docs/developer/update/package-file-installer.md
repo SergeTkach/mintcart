@@ -90,19 +90,19 @@ Deliberately has no OpenCart dependency (no `\Registry`, no `\DB`) — same
 
 ## What's deliberately not done yet
 
-- No caller — no admin controller, no `mintcart/update/*` route, and no
-  Update Manager orchestrator exists yet to chain
-  `check → ... → verify → maintenance → files → migrations → ...` end to
-  end. This class is the `files` step's primitive; wiring the flow around
-  it is later work, once that orchestrator exists (`CLAUDE.md` §85).
+- ~~No caller~~ **Done** — `MintCart\Update\UpdateOrchestrator`
+  (`docs/developer/update/update-orchestrator.md`) now calls `install()`
+  as its `files` step, between `maintenance` and `migrations`. Still no
+  admin controller or `mintcart/update/*` route calling the orchestrator
+  itself.
 - No `mc_installed_file` ledger write — `install()` computes and returns
   each file's sha256 but does not persist it. The ledger table (ADR 005
-  decision #1) is added via the Migration Manager once the orchestrator
-  above exists to call it after a successful `install()`.
-- No `migrations`/`cache clear`/`health check` steps — those use the
-  existing `MintCart\Core\Migration\MigrationManager` (Phase 1),
-  `MintCart\Core\Cache\CacheInvalidator` and `MintCart\Core\HealthCheck`
-  respectively, once the orchestrator wires them in after this step.
+  decision #1) is added via the Migration Manager once a real admin
+  controller exists to call it after a successful `UpdateOrchestrator::apply()`.
+- ~~No `migrations`/`cache clear`/`health check` steps~~ **Done** — the
+  orchestrator wires `MintCart\Core\Migration\MigrationManager` (Phase 1),
+  `MintCart\Core\Cache\CacheInvalidator` and `MintCart\Core\HealthCheck` in
+  after this step, in that order.
 - No archive extraction — same as `PackageVerifier`, this assumes a
   caller has already extracted the package (the `download` step's job).
 

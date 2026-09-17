@@ -3993,6 +3993,18 @@ Definition of Done checklist for exactly what's still open).
       `docs/developer/update/package-manifest.md` for the full contract and
       what's still not done (no caller/downloader/backup/verify/maintenance-
       mode/file-copy/migration-runner/cache-clear/health-check steps yet).
+      **Update (2026-09-17, PR #125):** every step's own primitive now
+      exists (`UpdateChecker`, `BackupPlanner`, `PackageDownloader`,
+      `PackageVerifier`, `MaintenanceMode`, `PackageFileInstaller`, the
+      Phase 1 `MigrationManager`, `CacheInvalidator`, `HealthCheck`), and
+      `MintCart\Update\UpdateOrchestrator`
+      (`docs/developer/update/update-orchestrator.md`) now chains
+      `download → verify → maintenance → files → migrations → cache clear
+      → health check` end to end. Still not done: `check`/`compatibility`/
+      `backup` are not wired into the orchestrator itself (a caller is
+      expected to run those first, see the new doc), no archive extractor
+      exists anywhere in this codebase, no `mc_installed_file` ledger, and
+      no admin controller/`mintcart/update/*` route calls any of this yet.
 - [x] Theme/extension rollback — **research/design only, no code** (RESEARCH
       item per Functional Scope §21): `docs/adr/005-theme-extension-update-rollback.md`
       answers all seven of §21's open questions (change detection, manifest
@@ -4262,6 +4274,42 @@ through `SettingsAdapter` (mechanical, no behavior change, per that class's
 own "Not done yet" doc section); or the `mc_installed_file` ledger once a
 `files` step exists — or re-check `gh pr list --state open` first, since
 `#117`-`#121` may have merged by the time a future run starts.
+
+**Update (2026-09-17, routine run, PR #125): `MintCart\Update\UpdateOrchestrator`
+— the flow finally chained end to end.** Step 0 dedup check:
+`list_pull_requests` (all open, not filtered by branch name) returned
+**zero open PRs** at the start of this run. With `download` (#123),
+`maintenance` (#122) and `files` (#124) all landed on `master` alongside
+the pre-existing `verify`/`migrations`/`cache clear`/`health check`
+primitives, every constituent step this file's own "Next step" notes had
+been naming for several runs now existed — so this run built the
+orchestrator itself: `MintCart\Update\UpdateOrchestrator`
+(`upload/system/library/mintcart/update/updateorchestrator.php`) chains
+`PackageDownloader::download()` → `PackageVerifier::verifyChecksum()`/
+`missingFiles()` → `MaintenanceMode::enable()` →
+`PackageFileInstaller::install()` → `MigrationManager::run()` →
+`CacheInvalidator::invalidateAll()` → `HealthCheck::evaluate()`, stopping
+at the first failed step and never disabling maintenance mode on a failure
+path. `check`/`compatibility`/`backup` and archive extraction stay
+deliberately out of scope (earlier decision points / a still-unbuilt
+extractor, same gaps every constituent primitive already documented). Full
+writeup: `docs/developer/update/update-orchestrator.md`; updated the
+"not done yet" sections of `package-downloader.md`, `package-verifier.md`,
+`package-file-installer.md` and `maintenance-mode.md` to point at it.
+
+Verified: `php -l` clean on the new file and across the full `upload`/
+`tests` tree. New `tests/mintcart/update/update-orchestrator-test.php` (7
+scenarios) passing; full `tests/mintcart/**/*-test.php` suite re-run end
+to end (81 files, up from 80) — all passing, no regressions. Not verified:
+no live MySQL/filesystem/HTTP in this environment, same pre-existing gap
+every other Update Manager primitive carries.
+
+**Next step:** a real admin controller/route (`mintcart/update/*`) calling
+`UpdateOrchestrator::apply()` — the real caller the `mc_installed_file`
+ledger table needs before it can be added; deciding and building archive
+extraction (still unbuilt anywhere in this codebase); or wiring
+`UpdateChecker`/`BackupPlanner` as the decision point before a caller
+invokes this orchestrator — or re-check `gh pr list --state open` first.
 
 ## Phase 12 — Early Access
 

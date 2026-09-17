@@ -100,17 +100,13 @@ $missing = PackageVerifier::missingFiles('/tmp/mint_default-extracted', $manifes
 - No signature/PKI verification — `PackageManifest` still carries no
   signing metadata beyond the opaque `checksum` string; this class checks
   exactly what that field is (a hash), nothing more.
-- No caller yet — no admin controller, no `mintcart/update/*` route calls
-  this. `download` (`docs/developer/update/package-downloader.md`,
-  `MintCart\Update\PackageDownloader`), `maintenance` mode
-  (`docs/developer/update/maintenance-mode.md`,
-  `MintCart\Update\MaintenanceMode`) and `files`
-  (`docs/developer/update/package-file-installer.md`,
-  `MintCart\Update\PackageFileInstaller`) each now have their own
-  primitive, but nothing yet chains them together. The next real
-  increment in this flow is the orchestrator that runs
-  `check → ... → download → verify → maintenance → files → ...` end to
-  end.
+- ~~No caller yet~~ **Done** — `MintCart\Update\UpdateOrchestrator`
+  (`docs/developer/update/update-orchestrator.md`) now calls both
+  `verifyChecksum()` and `missingFiles()` as its `verify` step, right after
+  `download` and before `maintenance`/`files`/`migrations`/`cache clear`/
+  `health check`. No admin controller or `mintcart/update/*` route calls
+  the orchestrator itself yet — that remains the next real increment in
+  this flow.
 
 Verified: `php -l` clean; `tests/mintcart/update/package-verifier-test.php`
 (12 scenarios — null/blank checksum short-circuits, a real sha256 match,
