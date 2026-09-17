@@ -3270,6 +3270,50 @@ new Phase 18 entry in `docs/MANUAL_VERIFICATION.md` for the exact steps.
 centralization, and Manufacturer/Special breadcrumb wiring are all
 unclaimed next steps; Product schema awaits its page template.
 
+**Update (2026-09-17, routine run): `SchemaOrgBuilder::product()` live
+wiring — `product.php`/`product.twig`.** `mint_default/template/product/
+product.twig` now exists (confirmed on disk this run), unblocking the one
+remaining `SchemaOrgBuilder` method with no live consumer. Wired right
+before `$mint_diagnostics->mark('view_rendered')` in `index()`, same
+`ActiveTheme::isMintAware()` re-check + try/catch + `Logger` pattern as
+`category.php`/`search.php`'s `BreadcrumbList` wiring. `price` is computed
+fresh from `$product_info['price']`/`['special']` (not reused from the
+method's `$tax_price` local, which by that point has been reassigned
+inside the related-products loop to the last related product's price).
+Full writeup: `docs/upstream-diff.md`'s `product.php` entry and
+`docs/developer/seo/schema-org.md`'s "Product: live-wired" section.
+
+Step 0 dedup check: `mcp__github__list_pull_requests` (all open, not
+filtered by branch name) returned exactly two open PRs — #117 (`MetaBuilder`
+into `product.php`, `DONE`) and #118 (`SchemaOrgBuilder::breadcrumbList()`
+into `manufacturer.php`/`special.php`, `DONE`). Neither touches
+`product.twig` or adds `SchemaOrgBuilder::product()` wiring; #117 only
+touches `product.php`'s meta-title/description block near the top of
+`index()`, a different insertion point than this change's block near the
+bottom (right before `view_rendered`). Hot shared files (§0f): this
+increment's files (`product.php`, `product.twig`, three doc files) are none
+of the known hot files (Homepage Builder block registry, `block.css`,
+`wizard.php`, `entity.php`, `column_left.php`) — no contention, and only
+two other PRs were open in total, well under any collision threshold.
+
+Verified: `php -l` clean. `product.twig`'s Twig `if`/`endif`/`for`/`endfor`
+tag counts checked balanced (30/30, 11/11). Full `tests/mintcart/**/*-test.php`
+suite (77 files) re-run end to end — all passing, no regressions (no new
+test file needed — `SchemaOrgBuilder::product()` itself is already covered
+by `tests/mintcart/seo/schema-org-builder-test.php`'s existing 16
+scenarios; this run is wiring-only). **Not verified:** no live MySQL/Twig
+session in this sandboxed environment — see `docs/MANUAL_VERIFICATION.md`'s
+updated Phase 18 Schema.org section (steps 5-6) for the manual script a
+human should run.
+
+**Next step:** manufacturer.php/special.php BreadcrumbList wiring is
+already covered by open PR #118 — do not duplicate. System route URL
+aliases and robots controls are already `[x]` done (see this section's own
+checklist above). Remaining unclaimed Phase 18 sub-pieces: `HreflangBuilder`
+needs a per-language route resolver before it can be wired anywhere;
+sitemap centralization into a MintCart "SEO" admin section (re-check
+`gh pr list --state open` first before starting either).
+
 ## Modern Editor (Functional Scope §24, P2/RESEARCH)
 
 - [x] Research step: verify whether the rich-text editor needs replacing —
