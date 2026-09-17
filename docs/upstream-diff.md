@@ -649,6 +649,19 @@ as `category.php`'s entry. **Tests:** `php -l` clean; full
 `tests/mintcart/` suite (78 files) re-run end to end — all passing, no
 regressions.
 
+**Update (2026-09-17, routine run — Phase 18, SEO Core, `SchemaOrgBuilder`
+BreadcrumbList):** right before rendering, inside a fresh
+`ActiveTheme::isMintAware()` check (not `$mint_render_product_cards`, per
+the same reasoning as `category.php`'s identical update), builds
+`$data['mc_schema_breadcrumb']` via
+`MintCart\Seo\SchemaOrgBuilder::breadcrumbList($data['breadcrumbs'])`.
+`special.twig` renders it as a second `<script type="application/ld+json">`
+block right after `{{ header }}`, same as `category.twig`/`search.twig`.
+Same caught-and-logged failure handling as every other `SchemaOrgBuilder`
+call site. Full design rationale: `docs/developer/seo/schema-org.md`.
+**Tests:** `php -l` clean; Twig tag balance checked; full `tests/mintcart/`
+suite (77 files) re-run end to end — all passing, no regressions.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/special.php`
@@ -905,6 +918,22 @@ wrapping, same unconditional-regardless-of-theme wiring as `category.php`'s
 identical update. Behavior unchanged — same reasoning as `category.php`'s
 entry. **Tests:** `php -l` clean; full `tests/mintcart/` suite (78 files)
 re-run end to end — all passing, no regressions.
+
+**Update (2026-09-17, routine run — Phase 18, SEO Core, `SchemaOrgBuilder`
+BreadcrumbList):** applied only to `info()` (the only method that builds
+`$data['breadcrumbs']` for a real listing page — the plain manufacturer-list
+`index()` has no breadcrumb list of individual products to describe).
+Right before rendering, inside a fresh `ActiveTheme::isMintAware()` check
+(same reasoning as `category.php`'s identical update), builds
+`$data['mc_schema_breadcrumb']` via
+`MintCart\Seo\SchemaOrgBuilder::breadcrumbList($data['breadcrumbs'])`.
+`manufacturer_info.twig` renders it as a second
+`<script type="application/ld+json">` block right after `{{ header }}`,
+same as `category.twig`/`search.twig`. Same caught-and-logged failure
+handling as every other `SchemaOrgBuilder` call site. Full design
+rationale: `docs/developer/seo/schema-org.md`. **Tests:** `php -l` clean;
+Twig tag balance checked; full `tests/mintcart/` suite (77 files) re-run
+end to end — all passing, no regressions.
 
 ---
 
