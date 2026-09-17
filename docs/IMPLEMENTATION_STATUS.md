@@ -3270,6 +3270,57 @@ new Phase 18 entry in `docs/MANUAL_VERIFICATION.md` for the exact steps.
 centralization, and Manufacturer/Special breadcrumb wiring are all
 unclaimed next steps; Product schema awaits its page template.
 
+**Update (2026-09-17, routine run): `MintCart\Seo\SitemapBuilder` — first
+live consumer wired (Google Sitemap extension).** Step 0 dedup check:
+`list_pull_requests` (all open, no branch-name filter) returned exactly 4
+open PRs at the start of this run — `#117`/`#118`/`#119` (Phase 18
+SEO wiring into `product.php`/`manufacturer.php`/`special.php`) and
+`#120` (Phase 16 Bulk Editor `stock_status_id` field), all marked
+`ROUTINE-STATUS: DONE`. None touch `SitemapBuilder`,
+`google_sitemap.php`, or any of the known hot shared files (Homepage
+Builder block-type registry, `homepage_list.twig`, `block.css`,
+wizard files, `mintcart/entity.php`, `column_left.php`) — confirmed via
+each PR's own file list. This run picked the "Not done yet" item
+`docs/developer/seo/sitemap.md` and prior "Next candidates" notes both
+named — the last unwired `MintCart\Seo` primitive — but instead of the
+brand-new `mintcart/seo/sitemap.xml` route those notes originally
+proposed (still blocked on no-MySQL verification for a *new* flow, per
+`CLAUDE.md` §10), found a lower-risk real consumer: the stock OpenCart
+"Google Sitemap" extension already builds working sitemap XML by hand.
+`SitemapBuilder::urlset()` gained an optional per-entry `images` list
+(Google Image sitemap support, `xmlns:image` only emitted when used) and
+`ControllerExtensionFeedGoogleSitemap::index()`/`getCategories()` now
+build entries arrays and call the builder instead of concatenating XML
+strings. Full writeup: `docs/upstream-diff.md`'s new
+`google_sitemap.php` entry, `docs/developer/seo/sitemap.md`'s "Live
+wiring" section, `docs/MANUAL_VERIFICATION.md`'s new Phase 18 "Google
+Sitemap" section.
+
+**Verified:** `php -l` clean on `sitemapbuilder.php` and
+`google_sitemap.php`. `tests/mintcart/seo/sitemap-builder-test.php` grows
+from 15 to 20 scenarios (the new `images` parameter: no-images stays
+byte-identical, one image renders `xmlns:image` + full `<image:image>`
+block, optional caption/title omitted when blank, blank/duplicate image
+`loc` skipped/de-duplicated, `&` escaped in both `image:loc` and
+`image:caption`). Full `tests/mintcart/**/*-test.php` suite (77 files)
+re-run end to end — all passing, no regressions. **Not verified:** no
+live MySQL/OpenCart bootstrap in this environment — a human should
+enable `feed_google_sitemap_status` on a real install and diff the
+feed's output before/after (see `docs/MANUAL_VERIFICATION.md`).
+
+**Next candidates:** a first-class, always-on MintCart-owned
+`mintcart/seo/sitemap.xml` route honoring `Design → System Pages`
+aliases and `sitemapIndex()` pagination for large catalogs (the Google
+Sitemap extension covers the common case today but stays a separate,
+optional, single-file extension); `HreflangBuilder` still needs a
+per-language route resolver before it can be wired anywhere; or re-check
+`gh pr list --state open` first, since `#117`-`#120` may have merged by
+the time a future run starts. Note: the Phase 18 checklist item "System
+route URL aliases" above (marked `[ ]`) is stale — it shipped as `#66`
+(`MintCart\Seo\SystemRoutes` + `Design → System Pages`) and is already
+merged to `master`; left as-is here per this file's own guidance not to
+rewrite the shared trailer/checklist wholesale in a single run.
+
 ## Modern Editor (Functional Scope §24, P2/RESEARCH)
 
 - [x] Research step: verify whether the rich-text editor needs replacing —
