@@ -853,6 +853,18 @@ specials:
    throwing a fatal error.
 6. Confirm the legacy Delete/Copy buttons still behave exactly as before
    (this increment must not have changed their behavior).
+7. Choose "Special Price" and type a number (e.g. `9.99`), submit, and
+   confirm: (a) the selected products' **Data** tab now shows a Special
+   row at that price for the default customer group with no date range,
+   and (b) for a product that already had one or more existing Special
+   rows (set via the normal edit form, especially one with a non-default
+   customer group or a date range), those rows are fully **replaced** by
+   the single new flat-price row, not appended to. Then bulk-update the
+   same products again with "Special Price" left **blank** and confirm
+   the Special row(s) are removed entirely (product reverts to its normal
+   Price). Also submit "Special Price" with an invalid value (e.g. `-1`)
+   and confirm the same rejection-warning behavior as the other numeric
+   fields.
 
 ## Phase 14 — `menu-mintcart-business` merge fix, never seen rendered live
 

@@ -236,8 +236,8 @@ class ControllerCatalogProduct extends Controller {
 	 * legacy admin theme" gives for other admin-side MintCart additions.
 	 *
 	 * Only the fields MintCart\Catalog\BulkProductUpdateValidator whitelists
-	 * (status/quantity/price/manufacturer_id/stock_status_id) are
-	 * supported - category/SEO fields are natural follow-ups over the
+	 * (status/quantity/price/manufacturer_id/stock_status_id/special_price)
+	 * are supported - category/SEO fields are natural follow-ups over the
 	 * same shape, see docs/developer/catalog/bulk-editor.md.
 	 */
 	public function bulkUpdate() {

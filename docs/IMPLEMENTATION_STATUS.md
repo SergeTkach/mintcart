@@ -2899,6 +2899,49 @@ Phase 16 section above); a friendlier per-field value control (`<select>`
 for Status, `type="number"` elsewhere); or re-check
 `gh pr list`/`list_pull_requests` first.
 
+**Update (2026-09-18, routine run): `special_price` added as a sixth
+bulk-editable field.** Step 0 dedup check: 5 open PRs at the start of
+this run (`#127` PackageExtractor, `#128` BackupExecutor, `#129`
+Diagnostics dev-mode admin toggle, `#130` Related Products
+`McEntityPicker` field, `#131` responsive image width/height + lazy
+loading), none touching `bulkproductupdatevalidator.php`,
+`admin/model|controller/catalog/product.php`, or `product_list.twig`; no
+hot shared files (§0f, Homepage Builder block registry/`block.css`)
+touched either. `BulkProductUpdateValidator::FIELDS` gains
+`special_price` (blank = remove the special, or a non-negative number,
+mirroring `BulkProductUpdatePlanner::validateNullableNonNegativeFloat()`'s
+existing semantics for the same field name).
+`ModelCatalogProduct::updateProductField()` gained a dedicated branch for
+it (not a `$columns` map entry, since `special_price` is an
+`oc_product_special` row, not an `oc_product` column): delete existing
+`oc_product_special` rows for the product, then insert exactly one row
+(default customer group, `priority = 1`, no date range) only if a
+non-blank value was given — a deliberate MVP simplification of the full
+edit form's multi-row/date-ranged Special support, the simplest thing a
+single `bulk_value` text input can express. `product_list.twig`'s toolbar
+`<select>` gains a "Special Price" option;
+`en-gb/catalog/product.php` gains `text_bulk_field_special`.
+`category_ids` remains deliberately unwhitelisted here (needs a
+multi-select control this single-text-input toolbar doesn't have).
+
+Full writeup: `docs/developer/catalog/bulk-editor.md` (new "special_price
+needed its own branch" explanation section, updated Verified/Next step),
+`docs/upstream-diff.md`'s admin/product entry (new "Update" block),
+`docs/MANUAL_VERIFICATION.md`'s Phase 16 section (new step 7). Verified:
+`php -l` clean on every touched file under `upload/`/`tests/`;
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` grows
+from 41 to 46 assertions; full `tests/mintcart/**/*-test.php` suite (81
+files) re-run end to end — all passing, no regressions;
+`product_list.twig`'s tag counts re-checked balanced (14/14, 2/2). Not
+verified: no live MySQL/admin session in this environment, same
+pre-existing gap — in particular, a human should confirm a bulk
+special-price update replaces (not adds to) any existing
+`oc_product_special` row(s) a product already had via the normal edit
+form. **Next candidates:** `category_ids` as a further field (needs a
+multi-select/picker UI, a bigger lift than every field so far); a
+friendlier per-field value control (`<select>` for Status,
+`type="number"` elsewhere); or re-check `gh pr list --state open` first.
+
 ## Phase 17 — Categories drag & drop
 
 - [x] SortableJS-based category move backend (transaction, cycle prevention,
