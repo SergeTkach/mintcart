@@ -4005,6 +4005,23 @@ Definition of Done checklist for exactly what's still open).
       expected to run those first, see the new doc), no archive extractor
       exists anywhere in this codebase, no `mc_installed_file` ledger, and
       no admin controller/`mintcart/update/*` route calls any of this yet.
+      **Update (2026-09-18, routine run):** `BackupPlanner::plan()` only
+      ever decided *what* to snapshot — nothing in this codebase actually
+      performed that copy. `MintCart\Update\BackupExecutor`
+      (`upload/system/library/mintcart/update/backupexecutor.php`,
+      `docs/developer/update/backup-executor.md`) is that missing
+      execution half: given a `BackupPlanner::plan()` result and the live
+      install root, atomically copies every still-existing planned file
+      into the snapshot directory (temp-dir-then-rename, same pattern
+      `PackageExtractor` established for archive extraction). Still not
+      wired into `UpdateOrchestrator::apply()` (would add a `backup` step
+      between `verify`/`maintenance`, changing that method's own tested
+      signature — deliberately deferred, same reasoning as
+      `PackageExtractor`'s own non-wiring). No restore/rollback execution,
+      no admin controller/route. (Note: `MintCart\Update\PackageExtractor`
+      itself, referenced above, was added on a separate branch/PR #127,
+      not yet merged as of this run — this increment does not depend on
+      it and does not touch any of its files.)
 - [x] Theme/extension rollback — **research/design only, no code** (RESEARCH
       item per Functional Scope §21): `docs/adr/005-theme-extension-update-rollback.md`
       answers all seven of §21's open questions (change detection, manifest
@@ -5888,3 +5905,31 @@ its first four live consumers (`category.php`/`manufacturer.php`/
 writeup. 6 open PRs (#110-#115) existed at the start of this run, none
 overlapping this increment's files. Re-check `gh pr list --state open`
 before picking the next step.
+
+**Trailer note (2026-09-18, routine run):** `list_pull_requests` returned
+exactly one open PR at the start of this run, #127 ("Consolidate unmerged
+MintCart work"), whose actual diff against current `master`
+(`gh pr view 127 --json files`) is scoped entirely to
+`MintCart\Update\PackageExtractor` (new file
+`upload/system/library/mintcart/update/packageextractor.php`, its test,
+its own doc, and small "done" edits to `package-downloader.md`/
+`package-verifier.md`/`update-orchestrator.md`) plus this same
+`IMPLEMENTATION_STATUS.md` file — no overlap with any file this run
+touched. This run added `MintCart\Update\BackupExecutor` — see the Phase
+11 (Technical Plan) section above and
+`docs/developer/update/backup-executor.md` for the full writeup: the
+"performing the copy is the flow's own `files` step" gap `BackupPlanner`'s
+own docblock named was never actually filled anywhere in this codebase,
+so this fills it, independently of and with zero file overlap against
+`#127`'s `PackageExtractor` work. No hot shared files (§0f in the routine
+prompt — the Homepage Builder block-type registry/`block.css`) are
+touched by this increment. `php -l` clean on both new files; the new
+`tests/mintcart/update/backup-executor-test.php` (6 scenarios) passes
+standalone. **Next candidates:** now that both `PackageExtractor` (once
+#127 merges) and `BackupExecutor` exist as standalone primitives,
+`UpdateOrchestrator::apply()`'s signature change to actually call them
+(between `download`→`verify` for extraction, and `verify`→`maintenance`
+for backup) is a single natural follow-up increment, per both classes'
+own "deliberately not attempted here" notes; the `mc_installed_file`
+ledger; an admin controller/`mintcart/update/*` route; or re-check
+`gh pr list --state open` first, since this backlog moves fast.
