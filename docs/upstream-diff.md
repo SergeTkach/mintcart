@@ -1304,6 +1304,20 @@ group immediately below it). `docs/developer/onboarding/business-delivery-paymen
 has the full design writeup. Purely additive; no existing menu entry or
 permission check touched. **Tests:** `php -l` clean.
 
+**Update (2026-09-18, routine run — `System → Diagnostics`):** adds one
+entry to the existing `$system` menu array, right after the stock
+"Settings" entry, gated by
+`$this->user->hasPermission('access', 'mintcart/settings/diagnostics')` —
+same conditional-push shape every sibling entry in this file already
+uses. Points at the new `ControllerMintcartSettingsDiagnostics`
+(`upload/admin/controller/mintcart/settings/diagnostics.php`), an admin UI
+toggle for the `mintcart_dev_mode` setting that
+`docs/developer/core/diagnostics.md`'s "Next step" section named as still
+missing (the flag could previously only be set by writing directly to
+`oc_setting`). Purely additive; no existing menu entry, permission check,
+or route touched. **Tests:** `php -l` clean; full `tests/mintcart/`
+suite (81 files) re-run end to end, all passing, no regressions.
+
 ---
 
 ## `upload/admin/model/catalog/category.php` / `upload/admin/controller/catalog/category.php`
