@@ -3891,8 +3891,99 @@ this phase (diagnostics, measured performance work) is not started.
       `docs/upstream-diff.md`'s `product.php` entry. Verified: `php -l`
       clean; full `tests/mintcart/` suite (77 files) re-run end to end —
       all passing, no regressions.
-- [ ] Measured performance improvements (lazy loading, responsive images, asset
-      minification, cache invalidation API — no mandatory Redis)
+- [~] Measured performance improvements (lazy loading, responsive images, asset
+      minification, cache invalidation API — no mandatory Redis) — cache
+      invalidation API and asset minification (esbuild) were already done
+      in earlier phases; **responsive image `width`/`height` attributes and
+      lazy loading are new this run** (see below) for the category
+      thumbnail, product gallery, and Homepage Builder Text/Image block —
+      `mc-product-card`'s listing images and the Banner Grid/Gallery blocks
+      already had this from Phase 6/10. Real DB query counting (the other
+      "measured performance" sub-piece, `MintCart\Core\Diagnostics`) still
+      needs the `\DB\MySQLi`-hooking upstream-diff decision noted in the
+      Diagnostics entries above.
+
+**Update (2026-09-18, routine run): responsive image `width`/`height` +
+lazy loading for the category thumbnail, product gallery, and the
+Text/Image Homepage Builder block.** Step 0 dedup check:
+`mcp__github__list_pull_requests` (all open, not filtered by branch name)
+returned exactly four open PRs at the start of this run — `#127`
+(`MintCart\Update\PackageExtractor`), `#128` (`MintCart\Update\BackupExecutor`,
+both Phase 11 Update Manager, contended — two open PRs already touch
+`upload/system/library/mintcart/update/**`, so per the routine's own §0f
+hot-file guard that whole area was treated as blocked this run), `#129`
+(admin toggle for `mintcart_dev_mode`, System → Diagnostics), and `#130`
+(`product_form.twig`'s Related Products field wired into `McEntityPicker`).
+None touch `category.php`, `product.php`, `common/home.php`, or any
+`mint_default` template — confirmed via each PR's own file list, not just
+its title. Also investigated wiring the remaining Phase 12 Entity Picker
+backends (Option/Attribute/Information/Customer) and the Phase 16 Bulk
+Editor "category"/"special" fields this file's own prior "Next
+candidates" notes had named — both turned out to need real design work
+once checked against the actual code (not guessed from memory, per
+`CLAUDE.md` §84): the Option field's existing autocomplete
+(`catalog/option.php::autocomplete()`) returns nested `option_value`/`type`
+data `McEntityPicker`'s generic `{id, name, image}` contract can't carry,
+and `oc_product` has no `special_price`/category scalar column at all
+(special pricing lives in `oc_product_special`, categories in
+`oc_product_to_category`) — both are join-table/multi-field writes, not
+the same shape as `manufacturer_id`/`stock_status_id`'s plain column
+update despite this file's own earlier note calling them "same shape".
+Documented here rather than attempted as a guess. Picked this
+Functional Scope §19 "responsive images; width/height"/lazy-loading item
+instead — genuinely unclaimed, mechanical, and precedented by
+`mc-product-card.twig`'s and the Banner Grid/Gallery blocks' own existing
+`width`/`height`/`loading="lazy"` pattern.
+
+`category.php`/`product.php` now capture the same
+`theme_<theme>_image_*_width`/`_height` config values their existing
+`resize()` calls already used into named `$data` keys
+(`thumb_width`/`thumb_height`, and per-image `thumb_width`/`thumb_height`
+for `product.php`'s gallery loop) instead of only using them inline — no
+resize behavior change, purely additive keys. `common/home.php`'s
+`renderTextImageBlock()` had a real gap: `TextImageBlockProvider::build()`
+has always computed `image_width`/`image_height` (defaulting to 800x600)
+and the controller already used them to resize the image, but never
+passed them into the block's own render array, so
+`mint/blocks/text-image.twig` had no way to render them at all — now
+fixed. `mint_default/template/product/category.twig`/`product.twig`/
+`mint/blocks/text-image.twig` render explicit `width`/`height` on the
+category thumbnail, product gallery (main image stays eager — the page's
+LCP candidate, same convention `product-card.twig` already established
+for the listing image; every thumbnail in the strip gains
+`loading="lazy"`), and the Text/Image block's image (`loading="lazy"`,
+matching Banner Grid/Gallery's already-existing pattern). Full writeup:
+`docs/upstream-diff.md`'s `category.php`/`common/home.php`/`product.php`
+entries, `docs/MANUAL_VERIFICATION.md`'s new Phase 19 section.
+
+**Verified:** `php -l` clean across the full `upload`/`tests` tree (only
+`category.php`, `product.php`, `common/home.php` touched — no existing
+pure-logic class modified). Full `tests/mintcart/**/*-test.php` suite (81
+files) re-run end to end — all passing, no regressions (no new test file
+needed — this is config-value threading and one missing array key, not
+new logic to unit-test; `TextImageBlockProvider`'s own
+`image_width`/`image_height` computation is already covered by
+`tests/mintcart/blocks/text-image-block-provider-test.php`). Every
+touched `.twig` file's `if`/`endif`/`for`/`endfor` tag counts checked
+balanced before and after (`category.twig` 13/13 + 5/5,  `product.twig`
+36/36 + 11/11, `text-image.twig` 8/8). **Not verified:** no live
+MySQL/Twig session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 19 section for the full manual
+script a human should run.
+
+**Next candidates:** the two Entity Picker/Bulk Editor items this run
+found were bigger than previously documented (see above) — Option field
+wiring needs either a second endpoint returning option-value/type data or
+accepting a lesser feature (name-only, then a follow-up fetch), and
+category/special bulk-edit need a join-table write path, not a
+`BulkProductUpdateValidator::FIELDS` entry — both are real design
+questions for a human or a future run with more room to make that call,
+not mechanical follow-ups; other listing/detail templates (search,
+manufacturer, special) may have their own `<img>` tags worth the same
+`width`/`height`/lazy-loading treatment — worth a quick audit; or
+re-check `gh pr list --state open` first, since `#127`-`#130` may have
+merged by the time a future run starts, un-blocking Update Manager's
+`apply()` wiring.
 
 Fix Registry mechanism is established and has four real entries on this
 branch (MC-0001, MC-0002, MC-0003, MC-0006); the rest of this phase

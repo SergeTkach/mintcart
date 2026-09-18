@@ -974,3 +974,52 @@ and an information page:
 6. Validate the feed against Google's sitemap requirements (e.g. via
    Google Search Console's sitemap report) to confirm no regression in
    acceptance.
+
+## Phase 19 — Responsive image `width`/`height` + lazy loading, never rendered in a browser
+
+`category.php`/`product.php`/`home.php`'s new `thumb_width`/`thumb_height`/
+`image_width`/`image_height` values are simple config-value threading (no
+new logic), and `php -l` plus the full `tests/mintcart/` suite (81 files)
+pass, and every touched `.twig` file's `if`/`endif`/`for`/`endfor` tag
+counts were re-checked balanced — but no live MySQL/Twig session in this
+environment means none of this was ever actually rendered and inspected
+in a browser. On a real `mint_default`-themed install:
+
+1. Open a category page for a category that has its own image configured
+   (`Catalog → Categories → Edit → Data → Image`). Confirm the category
+   thumbnail (`img-fluid rounded`, next to the description) has explicit
+   `width`/`height` attributes matching
+   `Design → Theme` (or `Settings → Store` per‑theme) settings'
+   "Category Image" width/height, and that the layout does not visibly
+   shift once the image finishes loading (throttle the network in dev
+   tools to see the reserved space hold before the image paints).
+2. Open a product detail page for a product with at least one additional
+   image (`Catalog → Products → Edit → Links/Images` — the "Additional
+   Images" tab). Confirm:
+   - the main gallery image (`mc-product-gallery__main`) has explicit
+     `width`/`height` matching the theme's "Thumb Image" size, and has
+     **no** `loading="lazy"` attribute (it should load eagerly — it's the
+     page's largest above-the-fold image);
+   - every thumbnail in the strip below it (`mc-product-gallery__thumb-image`,
+     including the first one that duplicates the main image) has both
+     explicit `width`/`height` matching the theme's "Additional Image"
+     size **and** `loading="lazy"`;
+   - clicking a thumbnail still swaps the main image via the existing
+     `data-mc-action="gallery-thumb"` JS exactly as before — this change
+     only adds attributes to already-existing `<img>` tags, no markup
+     structure or JS behavior changed.
+3. Open a homepage that has a Homepage Builder "Text + Image" (or plain
+   "Text") block configured with an image. Confirm the block's `<img>` now
+   has explicit `width`/`height` (defaulting to 800×600 when the block's
+   own settings don't override them — `MintCart\Blocks\TextImageBlockProvider`'s
+   defaults) and `loading="lazy"`, matching the Banner Grid/Gallery blocks'
+   already-existing images on the same page. Confirm a "Text + Image"
+   block with **no** image configured still renders correctly (title/body
+   only, no broken `<img>` tag, no layout regression) — this change only
+   threads values through when an image exists, per `renderTextImageBlock()`'s
+   own `$image === null` short-circuit.
+4. Confirm the legacy `default` theme's `category.twig`/`product.twig`
+   (neither of which this change touches) render byte-identical to before —
+   this increment only ever changes `mint_default`'s own templates plus the
+   controllers' `$data` arrays, and `default`'s templates never read the
+   new keys.

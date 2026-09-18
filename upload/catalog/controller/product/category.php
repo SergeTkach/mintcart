@@ -118,8 +118,17 @@ class ControllerProductCategory extends Controller {
 				'href' => $this->url->link('product/category', 'path=' . $this->request->get['path'])
 			);
 
+			// MintCart: width/height alongside the resized thumb so
+			// category.twig can render explicit <img width>/<height>
+			// (Functional Scope §19 "responsive images; width/height" —
+			// prevents layout shift while the image loads), same
+			// convention ProductViewProvider already uses for
+			// product.image_width/product.image_height.
+			$data['thumb_width'] = (int)$this->config->get('theme_' . $this->config->get('config_theme') . '_image_category_width');
+			$data['thumb_height'] = (int)$this->config->get('theme_' . $this->config->get('config_theme') . '_image_category_height');
+
 			if ($category_info['image']) {
-				$data['thumb'] = $this->model_tool_image->resize($category_info['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_category_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_category_height'));
+				$data['thumb'] = $this->model_tool_image->resize($category_info['image'], $data['thumb_width'], $data['thumb_height']);
 			} else {
 				$data['thumb'] = '';
 			}
