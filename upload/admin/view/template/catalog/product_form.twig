@@ -502,6 +502,37 @@
                         <input type="hidden" name="product_related[]" value="{{ product_related.product_id }}"/>
                       </div>
                     {% endfor %}</div>
+                  {#
+                    MintCart Phase 12 (Entity Picker) - a searchable,
+                    paginated, multi-select browser as an additional way to
+                    add related products, alongside the jQuery autocomplete
+                    input above (kept as-is, not replaced - this environment
+                    has no live MySQL/admin session to visually verify a full
+                    swap; see docs/developer/admin/asset-enqueue.md).
+                    Confirming a selection appends the exact same
+                    #product-related{id}/product_related[] hidden-input
+                    markup the autocomplete's own 'select' handler below
+                    already produces, so ControllerCatalogProduct's
+                    save logic (validateForm()/addProduct()/editProduct())
+                    needs no change at all.
+                  #}
+                  <button type="button" class="mc-button mc-button--secondary" id="button-related-picker" style="margin-top: 8px;">
+                    <i class="fa fa-search"></i> {{ text_related_picker_browse }}
+                  </button>
+                  <div class="mc-entity-picker" id="related-picker" hidden style="margin-top: 8px;">
+                    <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_related_picker_search }}" placeholder="{{ text_related_picker_search }}">
+                    <ul class="mc-entity-picker__list" role="listbox" aria-multiselectable="true" aria-label="{{ entry_related }}" data-mc-entity-picker-list></ul>
+                    <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_related_picker_empty }}</p>
+                    <div class="mc-entity-picker__pager">
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_related_picker_prev }}</button>
+                      <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_related_picker_next }}</button>
+                    </div>
+                    <div class="mc-entity-picker__footer">
+                      <span class="mc-entity-picker__selected-count" data-mc-entity-picker-selected-count></span>
+                      <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_related_picker_confirm }}</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1475,6 +1506,82 @@
   $('#product-related').delegate('.fa-minus-circle', 'click', function() {
 	  $(this).parent().remove();
   });
+
+  // MintCart Phase 12 (Entity Picker) - Related Products field's
+  // McEntityPicker, the multi-select sibling of the Category field's
+  // picker above (plain vanilla JS, not jQuery, per CLAUDE.md §7). Appends
+  // into the exact same #product-related well the autocomplete's own
+  // 'select' handler above already writes to, so ControllerCatalogProduct's
+  // save logic needs no change at all - see the {# ... #} comment above the
+  // picker's markup.
+  (function () {
+	  var browseButton = document.getElementById('button-related-picker');
+	  var pickerRoot = document.getElementById('related-picker');
+	  var well = document.getElementById('product-related');
+
+	  if (!browseButton || !pickerRoot || !well || !window.MintCart || !window.MintCart.createEntityPicker) {
+		  return;
+	  }
+
+	  function addRelatedToWell(id, name) {
+		  var existing = document.getElementById('product-related' + id);
+
+		  if (existing) {
+			  existing.remove();
+		  }
+
+		  var row = document.createElement('div');
+		  row.id = 'product-related' + id;
+
+		  var icon = document.createElement('i');
+		  icon.className = 'fa fa-minus-circle';
+		  row.appendChild(icon);
+		  row.appendChild(document.createTextNode(' ' + name));
+
+		  var hidden = document.createElement('input');
+		  hidden.type = 'hidden';
+		  hidden.name = 'product_related[]';
+		  hidden.value = id;
+		  row.appendChild(hidden);
+
+		  well.appendChild(row);
+	  }
+
+	  var picker = window.MintCart.createEntityPicker(pickerRoot, {
+		  fetchItems: function (options) {
+			  var params = new URLSearchParams({
+				  filter_name: options.query,
+				  page: options.page,
+				  limit: options.pageSize
+			  });
+
+			  return fetch('index.php?route=mintcart/entity/product&user_token={{ user_token }}&' + params, {
+				  signal: options.signal
+			  }).then(function (response) {
+				  return response.json();
+			  });
+		  },
+		  multiple: true,
+		  onConfirm: function (selected) {
+			  selected.forEach(function (item) {
+				  addRelatedToWell(item.id, item.name);
+			  });
+
+			  picker.clear();
+			  pickerRoot.hidden = true;
+		  }
+	  });
+
+	  browseButton.addEventListener('click', function () {
+		  var opening = pickerRoot.hidden;
+
+		  pickerRoot.hidden = !pickerRoot.hidden;
+
+		  if (opening) {
+			  picker.refresh();
+		  }
+	  });
+  })();
   //--></script>
   <script type="text/javascript"><!--
   var attribute_row = {{ attribute_row }};

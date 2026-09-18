@@ -386,6 +386,47 @@ instead of multi-select. On a real install:
    pre-existing "trimmed repository" caveat as the Category picker's own
    step 10 above; not a new gap.
 
+## `product_form.twig`'s Related Products `McEntityPicker`, never exercised end to end
+
+Same asset-enqueue mechanism as the Category/Manufacturer pickers above
+(already loaded on this same form — no separate enqueue to verify), and
+**multi-select** like Category (not single-select like Manufacturer). On
+a real install:
+
+1. Go to **Catalog → Products → Edit** (or **Add**) any product, open the
+   **Links** tab.
+2. Confirm the existing Related Products autocomplete input still works
+   exactly as before (type a few letters, pick a suggestion, confirm it
+   appears in the well below with a red minus-circle icon) — this change
+   must not have altered that at all.
+3. Confirm a new "Browse products" button appears below the Related
+   Products well, styled as an `mc-button`.
+4. Click it — confirm a search box + product list appears (with
+   thumbnails for products that have an image, `null`/no image
+   otherwise), paginates via Previous/Next, and that typing filters
+   results (debounced, ~250ms). Unlike Category/Manufacturer's PHP-side
+   paging, this list pages at the SQL level — confirm page 2 shows the
+   *next* set of products, not a repeat or a skip.
+5. Select two or three products (multi-select, same interaction as the
+   Category picker), click "Add selected" — confirm the panel closes and
+   every selected product appears in the well below (`#product-related`),
+   each with its own hidden `product_related[]` input, without disturbing
+   any product already added via the old autocomplete.
+6. Re-open the picker and select a product already present in the well —
+   confirm it does not create a duplicate row (the existing row is
+   replaced, same de-dupe behavior the Category picker's own step
+   verifies).
+7. Remove a related product via the well's minus-circle icon (either one
+   added by the picker or by the old autocomplete) — confirm removal
+   works identically regardless of which UI added it.
+8. Save the product — confirm every `product_related[]` value is saved
+   correctly regardless of whether it was added via the old autocomplete
+   or the new picker, and re-opening the edit form shows the same
+   products pre-populated in the well.
+9. Confirm labels on the new UI render as real text, not blank — same
+   pre-existing "trimmed repository" caveat as the Category picker's own
+   step 10 above; not a new gap.
+
 ## Phase 18 — System route URL aliases, never exercised end to end
 
 `ControllerMintcartSeoSystemPages` is `php -l` clean and its pure

@@ -398,16 +398,26 @@ match `filter_name` as a prefix (`LIKE '…%'`), same as manufacturer, unlike
 category's substring match — again pre-existing OpenCart behavior, not
 introduced here.
 
-Same permission requirement (`mintcart/entity` **Access**) and the same
-"not done yet, by design" live-wiring gap as category/manufacturer: no
-admin screen calls this endpoint yet (MintCart's asset bundle still isn't
-enqueued on any admin page — see above). The identified first real
-consumer is `product_form.twig`'s **Related Products** field
-(`upload/admin/view/template/catalog/product_form.twig`, the
-`#input-related`/`related` multi-select block using its own jQuery UI
-`autocomplete()` against `catalog/product.autocomplete`) — already
-multi-select with removable tags, the same shape match reasoning
-category/manufacturer's identified consumers follow.
+Same permission requirement (`mintcart/entity` **Access**) as
+category/manufacturer.
+
+**Live-wired (this run):** `product_form.twig`'s **Related Products**
+field (`#input-related`/`product_related[]`) gains the same
+"Browse products" button + `.mc-entity-picker` panel pattern the
+Category field already established — **multi-select**
+(`multiple: true`, same as Category, since a product can have many
+related products), so confirming a selection appends into the exact same
+`#product-related{id}` well markup (`<i class="fa fa-minus-circle">` +
+name + a `product_related[]` hidden input) the existing jQuery UI
+`autocomplete()`'s own `'select'` handler already produces — no
+`ControllerCatalogProduct::validateForm()`/`addProduct()`/`editProduct()`
+change needed. Kept **additive** alongside the existing autocomplete
+field, same no-live-verification reason Category/Manufacturer give. No
+controller change needed (`getForm()`'s existing `enqueueMintAssets()`
+already covers this whole form). Six new `text_related_picker_*` language
+keys, same file/pattern as Category's/Manufacturer's own six.
+Removing the old autocomplete field is the same natural, low-risk,
+not-yet-attempted follow-up as Category's/Manufacturer's.
 
 ## Information page backend
 
