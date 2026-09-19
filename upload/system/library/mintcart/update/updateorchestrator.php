@@ -24,23 +24,22 @@ use MintCart\Core\Migration\MigrationManager;
  * exist. This class is that orchestrator: it owns sequencing and failure
  * handling, not any of the steps' own logic.
  *
+ * `PackageExtractor` (`extract`, between `download` and `verify`) and
+ * `BackupPlanner`+`BackupExecutor` (`backup`, between `verify` and
+ * `maintenance`) are both wired in as **optional** steps — each pair of
+ * constructor arguments defaults to `null`, in which case `apply()` behaves
+ * exactly as it always has (an already-extracted `$extractedDir` is
+ * assumed, no snapshot is taken), so every caller/test written before this
+ * class knew about either primitive keeps working unchanged. `check`/
+ * `compatibility` (`UpdateChecker`) remain earlier decision points a caller
+ * makes *before* deciding to apply a specific manifest at all — e.g.
+ * showing the admin user "an update is available and compatible" and
+ * letting them confirm — this class still starts from "the operator has
+ * already decided to apply this exact manifest."
+ *
  * Deliberately out of scope, same as every constituent step already
  * documents:
  *
- * - `check` (`UpdateChecker`), `compatibility` (requirement matching, also
- *   `UpdateChecker`) and `backup` (`BackupPlanner`) are earlier decision
- *   points a caller makes BEFORE deciding to apply an update at all (e.g.
- *   showing the admin user "an update is available and compatible" and
- *   letting them confirm) — this class starts from "the operator has
- *   already decided to apply this exact manifest," the same way
- *   `PackageVerifier`/`PackageFileInstaller` already assume verification
- *   inputs are already resolved rather than re-deciding them.
- * - Archive extraction. No extractor exists anywhere in this codebase yet
- *   (`PackageDownloader`'s and `PackageFileInstaller`'s own docblocks both
- *   name this the same still-open gap) — this class takes an
- *   already-extracted directory as an input, exactly like
- *   `PackageVerifier::missingFiles()`/`PackageFileInstaller::install()`
- *   already do.
  * - The `mc_installed_file` ledger (ADR 005 decision #1). `apply()`'s
  *   result carries every installed file's sha256 (from
  *   `PackageFileInstaller::install()`), the exact input that ledger needs,
@@ -61,7 +60,9 @@ use MintCart\Core\Migration\MigrationManager;
 final class UpdateOrchestrator
 {
     public const STEP_DOWNLOAD = 'download';
+    public const STEP_EXTRACT = 'extract';
     public const STEP_VERIFY = 'verify';
+    public const STEP_BACKUP = 'backup';
     public const STEP_MAINTENANCE = 'maintenance';
     public const STEP_FILES = 'files';
     public const STEP_MIGRATIONS = 'migrations';
@@ -81,20 +82,53 @@ final class UpdateOrchestrator
 
     private ?HealthCheck $healthCheck;
 
+    private ?PackageExtractor $extractor;
+
+    private ?BackupPlanner $backupPlanner;
+
+    private ?BackupExecutor $backupExecutor;
+
+    /** @var callable(): string */
+    private $timestampFactory;
+
+    /**
+     * `$extractor` and the `$backupPlanner`/`$backupExecutor` pair are each
+     * all-or-nothing: passing only one half of the backup pair throws
+     * immediately (a partial backup configuration is a caller bug, not a
+     * "skip the step" signal — unlike `$cache`/`$healthCheck`, which are
+     * independently optional). `$timestampFactory` (default: `date('YmdHis')`)
+     * is injectable so `BackupPlanner::plan()`'s snapshot directory name is
+     * deterministic in tests, the same reason `PackageDownloader`'s
+     * transport is injectable.
+     */
     public function __construct(
         PackageDownloader $downloader,
         MaintenanceMode $maintenance,
         PackageFileInstaller $installer,
         MigrationManager $migrations,
         ?CacheInvalidator $cache = null,
-        ?HealthCheck $healthCheck = null
+        ?HealthCheck $healthCheck = null,
+        ?PackageExtractor $extractor = null,
+        ?BackupPlanner $backupPlanner = null,
+        ?BackupExecutor $backupExecutor = null,
+        ?callable $timestampFactory = null
     ) {
+        if (($backupPlanner === null) !== ($backupExecutor === null)) {
+            throw new \InvalidArgumentException(
+                '$backupPlanner and $backupExecutor must be passed together, both null or both set.'
+            );
+        }
+
         $this->downloader = $downloader;
         $this->maintenance = $maintenance;
         $this->installer = $installer;
         $this->migrations = $migrations;
         $this->cache = $cache;
         $this->healthCheck = $healthCheck;
+        $this->extractor = $extractor;
+        $this->backupPlanner = $backupPlanner;
+        $this->backupExecutor = $backupExecutor;
+        $this->timestampFactory = $timestampFactory ?? static fn (): string => date('YmdHis');
     }
 
     /**
@@ -105,9 +139,13 @@ final class UpdateOrchestrator
      * `MigrationManager::run()`'s own "stops on first failure, earlier
      * migrations stay applied" contract one level up).
      *
-     * `$extractedDir` is assumed to already hold the package extracted from
-     * the file `download` just wrote to `$downloadPath` — this class does
-     * not extract archives (see class docblock).
+     * `$extractedDir` is where the extracted package ends up. When no
+     * `PackageExtractor` was injected, it is assumed to already hold the
+     * package extracted from the file `download` just wrote to
+     * `$downloadPath` (this class's original, still-supported behavior). When
+     * one was injected, `extract()` is called between `download` and
+     * `verify` to populate it from `$downloadPath` instead — the caller
+     * passes the same already-empty-or-stale directory either way.
      *
      * @param array<string, mixed> $healthSignals Passed through verbatim to
      *        `HealthCheck::evaluate()` (php_version/extensions/writable/
@@ -124,7 +162,9 @@ final class UpdateOrchestrator
      *     failed_step?: string,
      *     error?: string,
      *     download?: null,
+     *     extract?: string[],
      *     verify?: bool,
+     *     backup?: array{snapshot_dir: string, backed_up: string[]},
      *     maintenance?: array{was_already_enabled: bool},
      *     files?: array{installed: array<int, array{path: string, sha256: string}>, removed: string[]},
      *     migrations?: array{applied: string[], skipped: string[]},
@@ -150,6 +190,15 @@ final class UpdateOrchestrator
         $result['download'] = null;
         $result['completed_steps'][] = self::STEP_DOWNLOAD;
 
+        if ($this->extractor !== null) {
+            try {
+                $result['extract'] = $this->extractor->extract($downloadPath, $extractedDir);
+            } catch (\Throwable $e) {
+                return $this->failure($result, self::STEP_EXTRACT, $e);
+            }
+            $result['completed_steps'][] = self::STEP_EXTRACT;
+        }
+
         try {
             $this->assertVerified($downloadPath, $extractedDir, $manifest);
         } catch (\Throwable $e) {
@@ -157,6 +206,18 @@ final class UpdateOrchestrator
         }
         $result['verify'] = true;
         $result['completed_steps'][] = self::STEP_VERIFY;
+
+        if ($this->backupPlanner !== null && $this->backupExecutor !== null) {
+            try {
+                $existingFiles = $this->resolveExistingFiles($manifest, $destRoot);
+                $timestamp = ($this->timestampFactory)();
+                $plan = $this->backupPlanner->plan($manifest, $existingFiles, $timestamp);
+                $result['backup'] = $this->backupExecutor->backup($plan, $destRoot);
+            } catch (\Throwable $e) {
+                return $this->failure($result, self::STEP_BACKUP, $e);
+            }
+            $result['completed_steps'][] = self::STEP_BACKUP;
+        }
 
         // From here on, a failure must leave the store in maintenance mode
         // rather than risk shoppers hitting a half-applied update.
@@ -214,6 +275,35 @@ final class UpdateOrchestrator
                 'Extracted package is missing declared file(s): ' . implode(', ', $missing)
             );
         }
+    }
+
+    /**
+     * Resolves the `$existingFiles` map `BackupPlanner::plan()` needs
+     * (relative path => current size in bytes) by checking, for every path
+     * $manifest's `files()`/`removes()` declare, whether it currently
+     * exists under $destRoot — the same "caller resolves which declared
+     * paths currently exist on disk" contract `BackupPlanner`'s own
+     * docblock already assumes an upstream caller performs. A path the
+     * manifest declares that is not currently installed is simply absent
+     * from the returned map (nothing to snapshot for it), matching
+     * `plan()`'s own "not currently installed" handling.
+     *
+     * @return array<string,int>
+     */
+    private function resolveExistingFiles(PackageManifest $manifest, string $destRoot): array
+    {
+        $destRoot = rtrim($destRoot, '/\\');
+        $existingFiles = [];
+
+        foreach (array_merge($manifest->files(), $manifest->removes()) as $relativePath) {
+            $path = $destRoot . '/' . ltrim($relativePath, '/\\');
+
+            if (is_file($path)) {
+                $existingFiles[$relativePath] = (int) filesize($path);
+            }
+        }
+
+        return $existingFiles;
     }
 
     private function nextStepAfter(string $completedStep): string
