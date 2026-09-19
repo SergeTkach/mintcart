@@ -4022,6 +4022,19 @@ Definition of Done checklist for exactly what's still open).
       itself, referenced above, was added on a separate branch/PR #127,
       not yet merged as of this run — this increment does not depend on
       it and does not touch any of its files.)
+      **Update (2026-09-17, routine run):** ~~no archive extractor exists~~
+      **done** — `MintCart\Update\PackageExtractor`
+      (`upload/system/library/mintcart/update/packageextractor.php`,
+      `docs/developer/update/package-extractor.md`) extracts a downloaded
+      zip archive into a directory, with zip-slip protection (rejects `..`
+      and absolute-path entry names before writing anything) and atomic
+      temp-dir-then-rename replacement, same shape as
+      `PackageDownloader`/`PackageFileInstaller`'s own atomic-write
+      patterns. Deliberately not wired into `UpdateOrchestrator::apply()`
+      itself yet (would change that method's own signature — a separate,
+      focused increment per the new doc's "Deliberately not attempted
+      here"). Still not done: that orchestrator wiring, the
+      `mc_installed_file` ledger, and any admin controller/route.
 - [x] Theme/extension rollback — **research/design only, no code** (RESEARCH
       item per Functional Scope §21): `docs/adr/005-theme-extension-update-rollback.md`
       answers all seven of §21's open questions (change detection, manifest
@@ -5933,3 +5946,15 @@ for backup) is a single natural follow-up increment, per both classes'
 own "deliberately not attempted here" notes; the `mc_installed_file`
 ledger; an admin controller/`mintcart/update/*` route; or re-check
 `gh pr list --state open` first, since this backlog moves fast.
+**Trailer note (2026-09-17, routine run):** `list_pull_requests` returned
+zero open PRs at the start of this run, so no dedup/hot-shared-file check
+was needed. Added `MintCart\Update\PackageExtractor` — see the Phase 11
+(Technical Plan) section above and `docs/developer/update/package-extractor.md`
+for the full writeup (the archive-extraction gap every other `Update\*`
+primitive's docblock had named). `php -l` clean; full `tests/mintcart/`
+suite (82 files, up from 81) re-run end to end, all passing. **Next
+candidates:** wire `PackageExtractor` into `UpdateOrchestrator::apply()`
+itself (a deliberately separate increment — changes that method's
+signature); the `mc_installed_file` ledger; an admin
+controller/`mintcart/update/*` route; or re-check `gh pr list --state
+open` first.
