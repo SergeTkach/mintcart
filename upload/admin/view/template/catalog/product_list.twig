@@ -13,6 +13,7 @@
           <option value="price">{{ text_bulk_field_price }}</option>
           <option value="manufacturer_id">{{ text_bulk_field_manufacturer }}</option>
           <option value="stock_status_id">{{ text_bulk_field_stock_status }}</option>
+          <option value="special_price">{{ text_bulk_field_special }}</option>
         </select>
         <input type="text" id="input-bulk-value" name="bulk_value" form="form-product" placeholder="{{ text_bulk_update }}" class="form-control" style="width: 8em; display: inline-block;" />
         <button type="submit" form="form-product" formaction="{{ bulkupdate }}" data-toggle="tooltip" title="{{ text_bulk_update }}" class="btn btn-default" onclick="return confirm('{{ text_confirm }}');"><i class="fa fa-check-square-o"></i></button>

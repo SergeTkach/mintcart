@@ -48,6 +48,7 @@ $_['text_bulk_field_quantity'] = 'Quantity';
 $_['text_bulk_field_price']    = 'Price';
 $_['text_bulk_field_manufacturer'] = 'Manufacturer';
 $_['text_bulk_field_stock_status'] = 'Stock Status';
+$_['text_bulk_field_special'] = 'Special Price';
 
 // Column
 $_['column_name']            = 'Product Name';

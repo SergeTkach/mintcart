@@ -2538,6 +2538,51 @@ the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
 section.
 
+**Update (2026-09-18, routine run — Phase 16, Bulk Editor):** added
+`special_price` as a sixth whitelisted bulk-update field.
+`BulkProductUpdateValidator::FIELDS` gains the entry (blank = remove the
+special, or a non-negative number). Unlike every prior field,
+`special_price` does not map to an `oc_product` column — it lives in
+`oc_product_special` — so `ModelCatalogProduct::updateProductField()`
+gained a dedicated branch for it instead of a `$columns` map entry:
+delete every existing `oc_product_special` row for the product, then (only
+if a non-blank value was given) insert exactly one row at the store's
+default customer group (`config_customer_group_id`), `priority = 1`, no
+date range (`date_start`/`date_end` both `'0000-00-00'`) — a deliberate
+simplification of the full product-edit form's multi-row/date-ranged
+Special support, the simplest thing a single `bulk_value` text input can
+express (full reasoning: `docs/developer/catalog/bulk-editor.md`, "Why a
+new model method, not `editProduct()`"). `product_list.twig`'s toolbar
+`<select>` gains a "Special Price" option (plus its
+`text_bulk_field_special` language key). `category_ids` remains
+deliberately excluded from this whitelist — see the same doc's "Next
+step" for why (it needs a multi-select control this single-text-input
+toolbar doesn't have, and is already validated separately by
+`MintCart\Catalog\BulkProductUpdatePlanner`).
+
+**Why it can't live in the MintCart layer:** same reasoning as the two
+entries above — `oc_product`/`oc_product_special` stay OpenCart core
+storage; extending the existing model/controller/template keeps the
+product's special price under one true owner instead of forking it into a
+second, Mint-only table.
+
+**Compatibility impact:** none — purely additive. No existing method
+signature, column, or `editProduct()`/product-edit-form behavior changed;
+a bulk special-price update only touches `oc_product_special` rows for
+the exact products the merchant selected in this action.
+
+**Tests:** `php -l` clean on all touched/added files. `tests/mintcart/catalog/bulk-product-update-validator-test.php`
+grows from 41 to 46 assertions (special_price whitelist + value-validation
+coverage including blank-is-valid and the rejection cases); full
+`tests/mintcart/**/*-test.php` suite (81 files) re-run end to end — all
+passing, no regressions. `product_list.twig`'s tag counts re-checked
+balanced (14/14, 2/2) after the new `<option>`. Same pre-existing gap: no
+live MySQL/admin session in this environment — a human should confirm a
+bulk special-price update replaces (not adds to) any existing
+`oc_product_special` row(s) for a product, including one previously set
+via the normal edit form with a non-default customer group or a date
+range — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16 section.
+
 ## `upload/catalog/controller/extension/feed/google_sitemap.php`
 
 **Reason:** Phase 18 (SEO Core, `MINTCART_FUNCTIONAL_SCOPE.md` §16 /

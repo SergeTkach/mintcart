@@ -320,8 +320,32 @@ class ModelCatalogProduct extends Model {
 	 * for validating both $field and $value before calling this; an
 	 * unrecognized $field is a defensive no-op, not an error, since this
 	 * method has no request/response of its own to report one through.
+	 *
+	 * `special_price` is not a plain oc_product column, so it can't join
+	 * the $columns map below - it lives in oc_product_special, the same
+	 * table editProduct()'s own product_special relation writes to. This
+	 * bulk path intentionally does the simplest thing that matches a
+	 * single bulk_value text input: replace whatever oc_product_special
+	 * rows the product already has with at most one flat, always-on
+	 * override (no per-customer-group price, no date range) at the
+	 * store's default customer group - a deliberate MVP simplification
+	 * of editProduct()'s full multi-row/date-ranged product_special
+	 * support, not a redesign of it. Blank $value removes the special
+	 * (no row) rather than writing a 0 price row.
 	 */
 	public function updateProductField($product_id, $field, $value) {
+		if ($field === 'special_price') {
+			$this->db->query("DELETE FROM " . DB_PREFIX . "product_special WHERE product_id = '" . (int)$product_id . "'");
+
+			if ($value !== '' && $value !== null) {
+				$this->db->query("INSERT INTO " . DB_PREFIX . "product_special SET product_id = '" . (int)$product_id . "', customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "', priority = '1', price = '" . (float)$value . "', date_start = '0000-00-00', date_end = '0000-00-00'");
+			}
+
+			$this->cache->delete('product');
+
+			return;
+		}
+
 		$columns = array(
 			'status'          => "status = '" . (int)$value . "'",
 			'quantity'        => "quantity = '" . (int)$value . "'",
