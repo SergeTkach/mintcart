@@ -40,6 +40,18 @@ class ControllerProductManufacturer extends Controller {
 			);
 		}
 
+		// MC-0017 (docs/fixes/registry.md) - manufacturer_list.twig (both
+		// the stock `default` theme and `mint_default`) references
+		// heading_title/text_index/text_no_results/button_continue, but
+		// this method never assigned any of them to $data - the same
+		// class of bug as MC-0001 (category.php) and MC-0003
+		// (manufacturer.php's own info() method), found here while
+		// building mint_default's own manufacturer_list.twig.
+		$data['heading_title'] = $this->language->get('heading_title');
+		$data['text_index'] = $this->language->get('text_index');
+		$data['text_no_results'] = $this->language->get('text_no_results');
+		$data['button_continue'] = $this->language->get('button_continue');
+
 		$data['continue'] = $this->url->link('common/home');
 
 		$data['column_left'] = $this->load->controller('common/column_left');

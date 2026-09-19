@@ -1376,3 +1376,76 @@ environment — a human should confirm on a real install that a product
 with a blank "Meta Tag Title" renders `<title>{product name}</title>`
 instead of an empty tag (see `docs/MANUAL_VERIFICATION.md`'s Phase 18
 section).
+
+---
+
+## MC-0017 — `manufacturer.php`'s `index()` never assigns `heading_title`/`text_index`/`text_no_results`/`button_continue` to `$data`
+
+**Problem:** `catalog/view/theme/default/template/product/manufacturer_list.twig`
+references four variables — `heading_title` (the page `<h1>`), `text_index`
+(the "Brand Index:" label above the A-Z jump links), `text_no_results`
+(the no-brands-installed message) and `button_continue` (the empty-state
+"Continue" button) — but `ControllerProductManufacturer::index()` never
+assigns any of them to `$data` (it only calls
+`$this->document->setTitle(...)` with `heading_title`, never adds it to
+`$data` itself). Same class of bug as MC-0001 (`category.php`) and MC-0003
+(this same controller's sibling `info()` method): Twig's default
+`strict_variables => false` renders an undefined variable as an empty
+string instead of throwing, so the brand-index page's `<h1>`, its "Brand
+Index:" label, and (for a store with zero manufacturers) its empty-state
+message and Continue button are all silently blank.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline). Not independently
+checked against other 3.x point releases — same rationale as
+MC-0001/MC-0003 (no second checkout available to diff against, and the
+fix only adds `$data` keys the template already expects).
+
+**Source:** Discovered directly in this repository while building
+`mint_default`'s own `manufacturer_list.twig` (previously missing
+entirely — `mint_default` fell through `event/theme.php`'s fallback chain
+to the stock `default` theme's template for this one page,
+`docs/adr/003-page-template-fallback-fix.md`) and cross-referencing every
+`$data[...] =` assignment in `index()`: none of the four appear anywhere
+in the method, even though `info()` on the very same controller already
+had the equivalent fix applied under MC-0003. Not an imported historical
+community patch.
+
+**Reproduced on MintCart baseline:** Yes — confirmed against
+`upload/catalog/view/theme/default/template/product/manufacturer_list.twig`
+(stock, references all four keys) and the controller's actual `index()`
+method body (no assignment for any of the four anywhere in the method).
+All four language keys already exist and load correctly: `text_index`/
+`text_no_results` in `catalog/language/en-gb/product/manufacturer.php`
+(loaded via `$this->load->language('product/manufacturer')` at the top of
+`index()`), `heading_title` in the same file, `button_continue` in the
+global `catalog/language/en-gb/en-gb.php` (auto-loaded on every page,
+same as MC-0003's finding) — so, like MC-0001/MC-0003, this is purely a
+missing `$data[...] = $this->language->get(...)` call, not a missing
+translation.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Added the four missing assignments to
+`ControllerProductManufacturer::index()`, immediately before the existing
+`$data['continue'] = $this->url->link('common/home');` line — the exact
+placement MC-0003 already used one method below in the same file. No new
+language strings, no change to `$data['categories']`'s existing
+computation. Applies equally to the stock `default` theme and the new
+`mint_default/template/product/manufacturer_list.twig` added alongside
+this fix (`docs/upstream-diff.md`'s new-file entry for that template).
+
+**Tests:** `php -l` clean on the modified `manufacturer.php`. No dedicated
+regression test added — same rationale as MC-0001/MC-0003: the fix is
+four `$this->language->get()` calls already unit-proven correct by
+`category.php`'s/`manufacturer.php`'s own `info()` method's identical
+fixes. A human should confirm on a real install that the brand-index page
+(`product/manufacturer`) shows a real `<h1>`/"Brand Index:" label with at
+least one manufacturer installed, and a real empty-state message plus a
+working Continue button with zero manufacturers installed, on both the
+stock `default` theme and `mint_default` (see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 6 entry).
