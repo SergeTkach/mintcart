@@ -143,6 +143,41 @@
       </form>
       {% endif %}
 
+      {% if step == 'delivery' %}
+      <h2 class="mc-card__title">{{ delivery_title }}</h2>
+      <p class="mc-card__text">{{ delivery_text }}</p>
+
+      {% if shipping_extensions is empty %}
+      <p class="mc-card__text mb-3">{{ text_delivery_empty }}</p>
+      {% else %}
+      <ul class="list-unstyled mb-3">
+        {% for extension in shipping_extensions %}
+        <li class="d-flex justify-content-between align-items-center mb-2">
+          <span>{{ extension.name }}</span>
+          <span class="d-flex align-items-center gap-2">
+            {% if extension.enabled %}
+            <span class="mc-badge mc-badge--success">{{ text_enabled }}</span>
+            {% else %}
+            <span class="mc-badge">{{ text_disabled }}</span>
+            {% endif %}
+            <form action="{{ toggle_delivery }}" method="post">
+              <input type="hidden" name="code" value="{{ extension.code }}" />
+              <button type="submit" class="mc-button mc-button--ghost mc-button--sm">{% if extension.enabled %}{{ button_disable }}{% else %}{{ button_enable }}{% endif %}</button>
+            </form>
+          </span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      <a href="{{ manage_delivery }}" class="mc-card__text d-inline-block mb-4">{{ button_manage_delivery }}</a>
+
+      <form action="{{ action }}" method="post">
+        <input type="hidden" name="step" value="delivery" />
+        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_continue }}</button>
+      </form>
+      {% endif %}
+
       {% if step == 'ready' %}
       <h2 class="mc-card__title">{{ readiness_title }}</h2>
       <p class="mc-card__text">{{ readiness_text }}</p>

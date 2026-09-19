@@ -22,7 +22,11 @@
  * freshly-installed admin sees, the same reasoning ControllerCommonDashboard
  * uses for not gating on a permission that a brand-new install's default
  * user group may not even have been granted yet. A valid admin session
- * (user_token) is still required, same as every other admin route.
+ * (user_token) is still required, same as every other admin route. The
+ * Delivery step's own toggleDelivery() action keeps this same no-gate
+ * shape, unlike ControllerMintcartBusinessDelivery::toggle()'s explicit
+ * hasPermission('modify', ...) check - deliberately consistent with the
+ * rest of this controller rather than with that one.
  */
 class ControllerMintcartWizard extends Controller
 {
@@ -104,6 +108,16 @@ class ControllerMintcartWizard extends Controller
         if ($step === 'language_currency') {
             $this->validateLanguageCurrencyStep();
         }
+
+        // Delivery has nothing to validate: unlike Store/Language & currency
+        // it collects no fields of its own on this step's Continue submit -
+        // shipping methods are toggled through their own dedicated action
+        // (toggleDelivery(), see below), and Functional Scope §2 explicitly
+        // allows "optional steps" to be skipped, so a store with zero
+        // enabled shipping methods yet is still a valid state to continue
+        // from (the Ready step's own StoreReadiness checklist is what
+        // actually surfaces "shipping configured" as outstanding, not this
+        // step's ability to proceed).
 
         if ($this->error && !isset($this->error['warning'])) {
             $this->error['warning'] = $this->language->get('error_warning');
@@ -371,11 +385,91 @@ class ControllerMintcartWizard extends Controller
             $data['currencies'] = $this->model_localisation_currency->getCurrencies();
         }
 
+        if ($step === 'delivery') {
+            $data['shipping_extensions'] = $this->loadShippingExtensions();
+            $data['toggle_delivery'] = $this->url->link('mintcart/wizard.toggleDelivery', 'user_token=' . $this->session->data['user_token'] . '&step=delivery', true);
+            $data['manage_delivery'] = $this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'], true);
+        }
+
         if ($step === 'ready') {
             $data['readiness'] = $this->loadReadiness();
         }
 
         $this->response->setOutput($this->load->view('mintcart/wizard', $data));
+    }
+
+    /**
+     * route=mintcart/wizard.toggleDelivery - POST code. Toggles one shipping
+     * extension's enabled state without advancing/validating the wizard step
+     * itself, then redirects back to this same step - same shape
+     * ControllerMintcartBusinessDelivery::toggle() already established
+     * (`Business -> Delivery`, Phase 14), duplicated here rather than shared
+     * because the two controllers' surrounding contexts differ (this one has
+     * no hasPermission() gate anywhere else either, see the class docblock)
+     * - the same "two near-duplicate controllers, not a shared base class"
+     * call `docs/developer/onboarding/business-delivery-payments.md` already
+     * made for Business -> Delivery vs. Business -> Payments.
+     */
+    public function toggleDelivery(): void
+    {
+        $this->load->language('mintcart/wizard');
+        $this->load->model('setting/extension');
+        $this->load->model('setting/setting');
+
+        $code = isset($this->request->post['code']) ? (string)$this->request->post['code'] : '';
+
+        if ($code !== '' && in_array($code, $this->model_setting_extension->getInstalled('shipping'), true)) {
+            // Merge-then-save, never a bare editSetting('shipping_<code>', [...]) -
+            // ModelSettingSetting::editSetting() DELETEs every existing row
+            // for the setting code first, so toggling just the *_status key
+            // without re-supplying the extension's other settings (cost, tax
+            // class, geo zone, ...) would silently wipe them. Same trap
+            // saveStoreStep()/saveLanguageCurrencyStep() already document for
+            // the 'config' code, and ControllerMintcartBusinessDelivery::toggle()
+            // documents for this exact 'shipping_<code>' code.
+            $existing = $this->model_setting_setting->getSetting('shipping_' . $code);
+
+            $existing['shipping_' . $code . '_status'] = empty($existing['shipping_' . $code . '_status']) ? '1' : '0';
+
+            $this->model_setting_setting->editSetting('shipping_' . $code, $existing);
+        }
+
+        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=delivery', true));
+    }
+
+    /**
+     * Read-only list of installed shipping extensions for the Delivery step
+     * - same data source and "only list an extension that still has a real
+     * controller file" defensive check
+     * `ControllerMintcartBusinessDelivery::getExtensionRows()` already
+     * established (Phase 14): `ModelSettingExtension::getInstalled('shipping')`
+     * for the list, each extension's own language file for its display name,
+     * and the `shipping_<code>_status` config key every stock shipping
+     * extension controller already saves under for its enabled state.
+     *
+     * @return array<int, array{code: string, name: string, enabled: bool}>
+     */
+    private function loadShippingExtensions(): array
+    {
+        $this->load->model('setting/extension');
+
+        $rows = [];
+
+        foreach ($this->model_setting_extension->getInstalled('shipping') as $code) {
+            if (!is_file(DIR_APPLICATION . 'controller/extension/shipping/' . $code . '.php')) {
+                continue;
+            }
+
+            $this->load->language('extension/shipping/' . $code, 'extension');
+
+            $rows[] = [
+                'code' => $code,
+                'name' => $this->language->get('extension')->get('heading_title'),
+                'enabled' => (bool)$this->config->get('shipping_' . $code . '_status'),
+            ];
+        }
+
+        return $rows;
     }
 
     /**
