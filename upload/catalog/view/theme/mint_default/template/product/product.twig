@@ -35,7 +35,7 @@
                 <div class="col-md-5">
                     <div class="mc-product-gallery">
                         <a href="{{ popup }}" class="mc-product-gallery__main-link">
-                            <img class="mc-product-gallery__main" src="{{ thumb }}" alt="{{ heading_title }}">
+                            <img class="mc-product-gallery__main" src="{{ thumb }}" alt="{{ heading_title }}"{% if thumb_width %} width="{{ thumb_width }}"{% endif %}{% if thumb_height %} height="{{ thumb_height }}"{% endif %}>
                         </a>
 
                         {% if images %}
@@ -48,7 +48,7 @@
                                         data-mc-gallery-src="{{ thumb }}"
                                         data-mc-gallery-alt="{{ heading_title }}"
                                     >
-                                        <img class="mc-product-gallery__thumb-image" src="{{ thumb }}" alt="">
+                                        <img class="mc-product-gallery__thumb-image" src="{{ thumb }}" alt="" loading="lazy"{% if thumb_width %} width="{{ thumb_width }}"{% endif %}{% if thumb_height %} height="{{ thumb_height }}"{% endif %}>
                                     </a>
                                 </li>
                                 {% for image in images %}
@@ -60,7 +60,7 @@
                                             data-mc-gallery-src="{{ image.thumb }}"
                                             data-mc-gallery-alt="{{ heading_title }}"
                                         >
-                                            <img class="mc-product-gallery__thumb-image" src="{{ image.thumb }}" alt="">
+                                            <img class="mc-product-gallery__thumb-image" src="{{ image.thumb }}" alt="" loading="lazy"{% if image.thumb_width %} width="{{ image.thumb_width }}"{% endif %}{% if image.thumb_height %} height="{{ image.thumb_height }}"{% endif %}>
                                         </a>
                                     </li>
                                 {% endfor %}

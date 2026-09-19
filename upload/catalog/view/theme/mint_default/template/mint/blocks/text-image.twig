@@ -14,7 +14,14 @@
 
             {% if image %}
                 <div class="col-12 col-md-6{% if image_position == 'left' %} order-md-first{% endif %}">
-                    <img src="{{ image }}" alt="{{ image_alt }}" class="mc-block__text-image-media">
+                    <img
+                        src="{{ image }}"
+                        alt="{{ image_alt }}"
+                        class="mc-block__text-image-media"
+                        {% if image_width %}width="{{ image_width }}"{% endif %}
+                        {% if image_height %}height="{{ image_height }}"{% endif %}
+                        loading="lazy"
+                    >
                 </div>
             {% endif %}
         </div>

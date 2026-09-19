@@ -37,7 +37,7 @@
                 <div class="row g-4 align-items-start mb-4">
                     {% if thumb %}
                         <div class="col-sm-3">
-                            <img src="{{ thumb }}" alt="{{ heading_title }}" class="img-fluid rounded">
+                            <img src="{{ thumb }}" alt="{{ heading_title }}" class="img-fluid rounded"{% if thumb_width %} width="{{ thumb_width }}"{% endif %}{% if thumb_height %} height="{{ thumb_height }}"{% endif %}>
                         </div>
                     {% endif %}
                     {% if description %}

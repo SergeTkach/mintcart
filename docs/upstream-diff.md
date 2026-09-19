@@ -279,6 +279,30 @@ own page/limit/total arithmetic. **Tests:** `php -l` clean;
 existing) covers the builder itself; full `tests/mintcart/` suite (78
 files) re-run end to end — all passing, no regressions.
 
+**Update (2026-09-18, routine run — Performance, responsive images):**
+`$data['thumb']`'s resize call already reads
+`theme_<theme>_image_category_width`/`_height` from config — this run
+just also stores those two ints as `$data['thumb_width']`/
+`$data['thumb_height']` so `mint_default/template/product/category.twig`
+can render explicit `<img width>`/`<height>` on the category thumbnail
+(`MINTCART_FUNCTIONAL_SCOPE.md` §19 "responsive images; width/height" —
+prevents layout shift while the image loads), the same convention
+`ProductViewProvider` already established for the listing product card's
+`product.image_width`/`product.image_height`. No resize behavior change:
+the same two config values are passed into `resize()` as before, just
+captured into named variables first instead of being read from
+`$this->config->get()` twice. **Why it can't live in the MintCart layer:**
+`$data` is this controller's own view-data array; there is no other place
+to add these two keys. **Compatibility impact:** none — purely additive
+keys, no existing key/behavior changed; the stock `default` theme's own
+`category.twig` is untouched and never reads these new keys. **Tests:**
+`php -l` clean; full `tests/mintcart/` suite (81 files) re-run end to
+end — all passing, no regressions (no new test file needed — this is
+config-value threading, not new logic to unit-test). `category.twig`'s
+Twig `if`/`endif`/`for`/`endfor` tag counts checked balanced before and
+after (13/13, 5/5). **Not verified:** no live MySQL/Twig session in this
+environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 19 entry.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/category.php`
@@ -1206,6 +1230,31 @@ this environment — a human should confirm on a fresh install (before
 Settings → Store's meta fields are filled in) that the homepage renders
 `<title>{store name}</title>` instead of an empty tag (see
 `docs/MANUAL_VERIFICATION.md`'s Phase 18 section).
+
+**Update (2026-09-18, routine run — Performance, responsive images):**
+`renderTextImageBlock()` already resolves the block's image via
+`model_tool_image->resize($settings['image'], $settings['image_width'],
+$settings['image_height'])` — `TextImageBlockProvider::build()` has
+always computed those two ints (defaulting to 800x600) — but the render
+array passed to `mint/blocks/text-image.twig` never included them, so the
+template had no way to render `<img width>`/`<height>` at all. This run
+adds `'image_width'`/`'image_height'` to that render array; the template
+change lives in the `mint_default` theme entry below, not here (this file
+only tracks OpenCart-side controller changes, and `home.php` — unlike
+`category.php`/`product.php` above — is itself already a MintCart-owned,
+fully-additive controller method with no stock OpenCart behavior to stay
+compatible with). **Why it can't live in the MintCart layer:** the
+provider already computed the right values; the gap was purely in this
+controller forgetting to pass them through to the renderer, no different
+in kind from a typo. **Compatibility impact:** none — an unused key added
+to an array only this block's own template reads. **Tests:** `php -l`
+clean; full `tests/mintcart/` suite (81 files) re-run end to end — all
+passing, no regressions (no new test file needed — `TextImageBlockProvider`
+already unit-tests `image_width`/`image_height`'s own value, this is
+wiring-only). `text-image.twig`'s Twig `if`/`endif` tag counts checked
+balanced before and after (8/8). **Not verified:** no live MySQL/Twig
+session in this environment — see `docs/MANUAL_VERIFICATION.md`'s new
+Phase 19 entry.
 
 ---
 
@@ -2375,6 +2424,38 @@ already covers this exact shape, no new test file needed; full
 regressions. **Not verified:** no live MySQL/Twig session in this
 environment — see `docs/fixes/registry.md` MC-0016 for the manual step a
 human should run.
+
+**Update (2026-09-18, routine run — Performance, responsive images):**
+`$data['thumb']` (main product image) and each `$data['images'][]` entry's
+`'thumb'` (gallery strip thumbnail) already resize via
+`theme_<theme>_image_thumb_width`/`_height` and
+`theme_<theme>_image_additional_width`/`_height` config respectively —
+this run captures those same values into `$data['thumb_width']`/
+`$data['thumb_height']` and each image's own `'thumb_width'`/
+`'thumb_height'` so `mint_default/template/product/product.twig` can
+render explicit `<img width>`/`<height>` (`MINTCART_FUNCTIONAL_SCOPE.md`
+§19 "responsive images; width/height" — prevents layout shift), same
+convention as the `category.php` entry above. No resize behavior change —
+the same config values are passed into `resize()` as before, just also
+captured into named variables/array keys. The gallery thumbnail strip
+(`mc-product-gallery__thumb-image`, small below/beside the main image)
+also gains `loading="lazy"`; the main gallery image
+(`mc-product-gallery__main`, the page's LCP candidate) deliberately does
+not, matching `product-card.twig`'s own already-established convention of
+never lazy-loading the primary above-the-fold image. **Why it can't live
+in the MintCart layer:** `$data`/`$data['images']` are this controller's
+own view-data arrays; there is no other place to add these keys.
+**Compatibility impact:** none — purely additive keys/attribute, no
+existing key/behavior changed; the legacy `default` theme's own
+`product.twig` is untouched and never reads these new keys. **Tests:**
+`php -l` clean; full `tests/mintcart/` suite (81 files) re-run end to
+end — all passing, no regressions (no new test file needed — this is
+config-value threading, not new logic to unit-test). `product.twig`'s
+Twig `if`/`endif`/`for`/`endfor` tag counts checked balanced before and
+after (36/36, 11/11). **Not verified:** no live MySQL/Twig session in
+this environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 19
+entry.
+
 ## `upload/admin/model/catalog/product.php` / `upload/admin/controller/catalog/product.php` / `upload/admin/view/template/catalog/product_list.twig`
 
 **Reason:** Phase 16 (Bulk Editor, `MINTCART_FUNCTIONAL_SCOPE.md` §7/§17,
