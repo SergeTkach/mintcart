@@ -959,6 +959,27 @@ rationale: `docs/developer/seo/schema-org.md`. **Tests:** `php -l` clean;
 Twig tag balance checked; full `tests/mintcart/` suite (77 files) re-run
 end to end — all passing, no regressions.
 
+**Update (2026-09-19, routine run — Fixes Registry, MC-0017):**
+`index()` (the plain brand-index/`manufacturer_list` page, not `info()`)
+never assigned `heading_title`/`text_index`/`text_no_results`/
+`button_continue` to `$data` at all — the same class of bug MC-0001/
+MC-0003 already fixed on `category.php`/this controller's own `info()`
+method, found while building `mint_default`'s own `manufacturer_list.twig`
+(see the new-file entry below). Added the four missing assignments
+immediately before the existing `$data['continue'] = ...` line, same
+placement MC-0003 already used one method below. Full writeup:
+`docs/fixes/registry.md` MC-0017. **Why it can't live in the MintCart
+layer:** same reasoning as MC-0001/MC-0003 — `$data` is this controller's
+own view-data array. **Compatibility impact:** none — purely additive
+`$data` keys using strings the language file already declares; applies
+equally to the stock `default` theme (whose own `manufacturer_list.twig`
+references the same four keys) and `mint_default`. **Tests:** `php -l`
+clean; full `tests/mintcart/**/*-test.php` suite (81 files) re-run end to
+end — all passing, no regressions (no new test file needed — same
+rationale as MC-0001/MC-0003, four already-proven `language->get()`
+calls). **Not verified:** no live MySQL/Twig session in this environment
+— see `docs/MANUAL_VERIFICATION.md`'s new Phase 6 entry.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/manufacturer.php`
@@ -989,6 +1010,38 @@ fallback, `docs/adr/003-page-template-fallback-fix.md`). Mirrors
 `category.twig`'s structure minus the categories/refine section (not
 applicable — a manufacturer page lists one brand's products, not a
 category tree).
+
+---
+
+## `upload/catalog/view/theme/mint_default/template/product/manufacturer_list.twig` (new file)
+
+**Reason:** `mint_default` had no template for `product/manufacturer`'s
+plain `index()` route (the alphabetical brand-index page, distinct from
+`info()`'s single-brand product listing, which already had
+`manufacturer_info.twig` above) — the theme fell through `event/theme.php`'s
+three-tier fallback straight to the stock `default` theme's Bootstrap-3
+`manufacturer_list.twig` for this one page, the only remaining gap in this
+controller's own two-route family. Not an upstream diff — a new file
+`mint_default` ships, resolved via the same fallback chain as every other
+`mint_default` page template. Mirrors `manufacturer_info.twig`'s
+container/`mc-breadcrumb`/column layout; the brand list itself uses
+`mc-button--ghost`/`mc-button--sm` for the A-Z jump links and
+`mc-button--secondary` for each brand link (both modifiers already used
+elsewhere in this theme), replacing `default`'s bare anchor tags. Also the
+first live consumer of MC-0017's fix (see the `manufacturer.php` entry
+above) — without it, `heading_title`/`text_index`/`text_no_results`/
+`button_continue` would render blank on this new template exactly as they
+did on `default`'s own copy.
+
+**Compatibility impact:** None — a new file only `mint_default` (or a
+Mint-aware theme with no override of its own) ever resolves to; the stock
+`default` theme's own `manufacturer_list.twig` is untouched.
+
+**Tests:** `php -l` not applicable (Twig, not PHP). `{% if %}`/`{% endif %}`/
+`{% for %}`/`{% endfor %}` tag counts checked balanced (4/4, 4/4). Not
+verified: no live MySQL/Twig session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 6 entry for the full manual
+script a human should run.
 
 ---
 

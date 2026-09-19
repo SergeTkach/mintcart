@@ -514,6 +514,66 @@ component/visual test harness exists yet in this repo (same gap noted in
 every previous Phase 4/5 run) — verification here is build-compiles +
 bundled-output grep + manual review against the Definition of Done checklist.
 
+**Update (2026-09-19, routine run): `mint_default`'s missing
+`manufacturer_list.twig` + MC-0017.** `product/manufacturer`'s `info()`
+route (a single brand's product listing) already had its own
+`mint_default` template, but `index()` (the alphabetical brand-index page)
+had none — `mint_default` fell through `event/theme.php`'s fallback chain
+straight to the stock `default` theme's Bootstrap-3 template for this one
+route, the last gap in this controller's two-route family. Added
+`upload/catalog/view/theme/mint_default/template/product/manufacturer_list.twig`
+(mirrors `manufacturer_info.twig`'s container/`mc-breadcrumb`/column
+layout; `mc-button--ghost`/`--sm` for the A-Z jump links,
+`mc-button--secondary` for each brand link). While building it, found and
+fixed **MC-0017** (`docs/fixes/registry.md`): `ControllerProductManufacturer::index()`
+never assigned `heading_title`/`text_index`/`text_no_results`/
+`button_continue` to `$data` at all — the same class of bug MC-0001/
+MC-0003 already fixed on `category.php`/this controller's own `info()`
+method, silently blanking the page's `<h1>`, its "Brand Index:" label, and
+(for a store with zero manufacturers) its empty-state message/button, on
+both `default` and the new `mint_default` template alike. Full writeup:
+`docs/upstream-diff.md`'s `manufacturer.php` entry and new
+`manufacturer_list.twig` (new file) entry.
+
+Step 0 dedup check: `mcp__github__list_pull_requests` (all open, not
+filtered by branch name) returned 7 open PRs (#127-#133 — Update Manager
+`PackageExtractor`/`BackupExecutor`, Diagnostics dev-mode admin toggle,
+Related Products `McEntityPicker` field, responsive image width/height +
+lazy loading, `special_price` bulk field, Wizard Delivery step). Verified
+via each PR's own file list that none touch
+`upload/catalog/controller/product/manufacturer.php`,
+`upload/catalog/view/theme/mint_default/template/product/manufacturer_list.twig`,
+or `docs/fixes/registry.md`'s MC-0017 slot (next free ID after #131's
+already-filed MC-0015/MC-0016 references). No hot shared files (§0f:
+Homepage Builder block-type registry, homepage block list/template,
+`block.css`, plus `wizard.php`/`entity.php`/`column_left.php` per earlier
+runs' own findings) are touched by any of the 7 open PRs or by this
+increment. Also confirmed `docs/developer/seo/meta-builder.md`'s own
+"deliberately not done yet" section explicitly rules out wiring
+`MetaBuilder` into `manufacturer.php`/`search.php` (neither has an entity
+meta field to fall back from — not a remaining gap, contrary to what an
+earlier trailer note's summary implied without checking the doc's own
+reasoning first, per `CLAUDE.md` §84).
+
+Verified: `php -l` clean on `manufacturer.php`. The new template's Twig
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts checked
+balanced (4/4, 4/4). Full `tests/mintcart/**/*-test.php` suite (81 files)
+re-run end to end — all passing, no regressions (no new test file needed
+— same rationale MC-0001/MC-0003 used, four already-proven
+`language->get()` calls, no new pure-logic class added). **Not verified:**
+no live MySQL/Twig session in this sandboxed environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 6 entry for the full manual
+script a human should run.
+
+**Next candidates:** `product/manufacturer`'s two routes are now both
+covered by `mint_default` templates — a similar "does `mint_default` have
+every route its own controller uses" audit for other controllers
+(`checkout/*`, `account/*` are known large gaps, out of scope for a single
+increment) could surface further candidates like this one; the
+`search.php`/manufacturer.php` "still unwired by design" `MetaBuilder`
+note above is now double-confirmed, not a candidate; or re-check
+`gh pr list --state open` first, since this backlog moves fast.
+
 ## Phase 7 — Header / Footer / Navigation
 
 - [x] Header, Topbar, Logo, Search, Account, Cart component contracts —

@@ -1045,6 +1045,40 @@ and an information page:
    Google Search Console's sitemap report) to confirm no regression in
    acceptance.
 
+## Phase 6 — `mint_default`'s new `manufacturer_list.twig` + MC-0017, never rendered live
+
+`php -l` clean on the modified `manufacturer.php`, the new template's Twig
+tag counts checked balanced (4/4, 4/4) — but no live MySQL/Twig session in
+this environment means neither was ever actually rendered in a browser.
+On a real install with `mint_default` active:
+
+1. Go to **Catalog → Manufacturers** in admin and confirm at least two
+   manufacturers exist, with names starting with different letters (and,
+   if possible, one starting with a digit).
+2. Visit the storefront's `product/manufacturer` route (the "Brands" link,
+   wherever the active theme's header/footer links to it). Confirm:
+   - the page has a real `<h1>` (not blank) — this is MC-0017's
+     `heading_title` fix;
+   - a "Brand Index:" line above the brand list, with one small ghost
+     button per letter that has at least one manufacturer (not blank
+     labels) — MC-0017's `text_index` fix;
+   - clicking a letter button jumps to that letter's group on the same
+     page (`#letter-<LETTER>` anchor);
+   - each manufacturer under a letter renders as a real secondary-style
+     button linking to that manufacturer's `info()` page, not a bare
+     text link — confirm clicking one navigates correctly.
+3. Temporarily disable/delete every manufacturer (or test against a fresh
+   install with none configured) and reload `product/manufacturer`.
+   Confirm a real "no brands to list" message appears (not blank) and a
+   working "Continue" button navigates back to the homepage — both are
+   MC-0017's `text_no_results`/`button_continue` fixes.
+4. Confirm the legacy `default` theme's own `manufacturer_list.twig`
+   (untouched by this change) also now shows the same non-blank
+   heading/index label/empty-state text on the same store, since
+   MC-0017's `$data` fix applies to every theme, not just `mint_default`.
+5. Confirm `product/manufacturer/info` (an individual brand's product
+   listing, already shipped) is unaffected — this change only touches the
+   sibling `index()` method and adds a new template for a different route.
 ## Phase 19 — Responsive image `width`/`height` + lazy loading, never rendered in a browser
 
 `category.php`/`product.php`/`home.php`'s new `thumb_width`/`thumb_height`/
