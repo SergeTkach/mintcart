@@ -1127,3 +1127,54 @@ in a browser. On a real `mint_default`-themed install:
    this increment only ever changes `mint_default`'s own templates plus the
    controllers' `$data` arrays, and `default`'s templates never read the
    new keys.
+
+## Phase 7 — MintCart's own asset bundle enqueued on the storefront, never validated in a browser
+
+`ControllerCommonHeader::index()` now calls
+`$this->document->addStyle()`/`addScript()` for
+`assets/dist/css/components.min.css`/`assets/dist/js/catalog.min.js`
+(`docs/upstream-diff.md`'s `header.php` entry,
+`docs/developer/admin/asset-enqueue.md`'s "Storefront:
+`ControllerCommonHeader`" section). `php -l`, the full `tests/mintcart/`
+suite (84 files) and `npm run build`/`npm run dev` all pass, but this
+environment has no MySQL/browser session, so none of the following was
+ever actually observed on a rendered page — before this run, it wasn't
+even possible to check, since nothing linked any `assets/dist/` file on
+the storefront at all. On a real `mint_default`-configured install, with
+the release process (or a manual copy, per `.gitignore`'s own comment on
+`upload/assets/`) having placed a built `assets/dist/` next to `catalog/`/
+`admin/`/`system/` at the site's webroot:
+
+1. Open any storefront page (home, a category, a product). Open the
+   browser's Network tab and confirm two new requests succeed with a `200`
+   status: `.../assets/dist/css/components.min.css` and
+   `.../assets/dist/js/catalog.min.js`. Confirm the existing Bootstrap 3/
+   jQuery/Font Awesome/`common.js` requests are all still present and
+   unchanged (same file, same order, before the two new ones) — this
+   change is additive only.
+2. On a category/search/manufacturer/special listing page (any page
+   rendering `mc-product-card`), click a product card's "Add to Cart"
+   button. Confirm it actually adds the item (a toast/cart update, per
+   `docs/developer/commerce/cart-client.md`'s `mc:cart:updated` contract)
+   instead of doing nothing — before this change, this button was `<button
+   type="button">` with no `<form>` and no JS listening for
+   `data-mc-action="add-to-cart"`, so clicking it visibly did nothing at
+   all.
+3. Click a product card's "Quick Order" button (where shown). Confirm the
+   `mc-modal` Quick Order dialog actually opens (`docs/developer/commerce/quick-order-service.md`)
+   — again, previously inert with no bundle loaded.
+4. Click the heart ("wishlist") icon on a product card. Confirm it toggles
+   `aria-pressed` and visibly changes state.
+5. Confirm the page still looks and behaves correctly outside `mc-*`
+   markup: legacy Bootstrap-3-driven widgets (the stock cart dropdown,
+   any third-party module still using jQuery/Bootstrap-3 markup),
+   `common.js`-driven behavior, and account/checkout pages all work
+   exactly as they did before this change — `components.min.css`
+   deliberately excludes Bootstrap 5's own reset/grid/utility layer for
+   exactly this reason (see the doc references above), so nothing already
+   on the page should visibly shift, shrink, or overlap the way the
+   earlier, reverted `index.min.css` attempt did.
+6. Confirm a store configured with the legacy `default` theme (not
+   `mint_default`) shows **no** new network requests for either file —
+   the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
+   nothing.
