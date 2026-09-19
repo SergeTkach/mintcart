@@ -97,23 +97,32 @@ OpenCart's own `event/theme.php` three-tier fallback resolves the
 (same mechanism `docs/adr/003-page-template-fallback-fix.md` fixed for
 `product/category.twig`).
 
-### Known gap: MintCart's own asset bundle is not enqueued yet
+### Known gap (partially resolved): MintCart's own asset bundle
 
-The wrapper's `<head>` deliberately keeps the *exact same* asset stack
-`default/template/common/header.twig` loads today — Bootstrap 3, jQuery
-3.7.1, Font Awesome, `catalog/view/javascript/common.js` — rather than
-switching to `assets/dist/{css,js}/index.min.css`/`catalog.min.js`.
-`common.js` (and several other OpenCart core scripts — cart AJAX, form
-validation on account/checkout pages) depend on jQuery being loaded
-globally; swapping the asset stack safely needs a full call-site audit of
-every page/widget that assumes it, per `CLAUDE.md` §10/§84 ("never modify
-an existing OpenCart flow based only on memory... determine
-backward-compatibility risk... only then implement"). That is a separate,
-larger increment than this Header component, tracked as a follow-up in
-`docs/IMPLEMENTATION_STATUS.md`. In the meantime, `mc-*` component CSS
-(`mc-header`, `mc-product-card`, ...) has no effect on a live page yet —
-nothing links `assets/dist/css/index.min.css` anywhere — a real visual
-verification of any Mint component still needs that link added first.
+The wrapper's `<head>` still deliberately keeps the *exact same* legacy
+asset stack `default/template/common/header.twig` loads — Bootstrap 3,
+jQuery 3.7.1, Font Awesome, `catalog/view/javascript/common.js` — rather
+than replacing it. `common.js` (and several other OpenCart core scripts —
+cart AJAX, form validation on account/checkout pages) depend on jQuery
+being loaded globally; *replacing* that stack safely still needs a full
+call-site audit of every page/widget that assumes it, per `CLAUDE.md`
+§10/§84 ("never modify an existing OpenCart flow based only on memory...
+determine backward-compatibility risk... only then implement"). That
+remains a separate, larger, not-yet-attempted increment.
+
+What a later run did resolve: `ControllerCommonHeader::index()` now
+*additionally* enqueues `assets/dist/css/components.min.css` +
+`assets/dist/js/catalog.min.js` (not `index.min.css` — see
+`docs/developer/admin/asset-enqueue.md`'s "Storefront:
+`ControllerCommonHeader`" section for the full writeup, including why
+those two specific files and not the ones this note used to name). Before
+that, `mc-*` component CSS (`mc-header`, `mc-product-card`, ...) had no
+effect on a live page at all, and no `data-mc-action` hook (`add-to-cart`,
+`quick-order`, ...) had any JS listening for it — nothing linked any
+`assets/dist/` file anywhere on the storefront. A real visual/functional
+verification of any Mint component on a live install is still outstanding
+(no MySQL/browser session in this environment), but the link itself is no
+longer the blocker.
 
 ## Contract
 
@@ -226,10 +235,15 @@ this component never reimplements grid/flex math of its own.
       dropdown, no topbar/search widgets), still `"parent": null` in its
       `theme.json`; `component-renderer-test.php` scenario 11 proves both
       fallback directions against the real shipped files
+- [x] MintCart's own asset bundle gets enqueued on a Mint-aware storefront
+      theme — `components.min.css`/`catalog.min.js`, see "Known gap
+      (partially resolved)" above
 - [ ] **Not fully verified end-to-end**: this environment has no MySQL
       server/`vendor/twig/twig`, so no live rendered page was observed —
       same pre-existing gap as every earlier Phase 6/7/8 component. A human
       should confirm a real `mint_default`-configured install's header
       renders correctly, a `test_theme`-configured install shows the
-      distinct header DOM, and that MintCart's own asset bundle gets
-      enqueued (see "Known gap" above) before this is production-ready.
+      distinct header DOM, and that the now-enqueued bundle actually loads
+      (network tab, 200 response) and makes `mc-product-card`'s Add to
+      Cart/Quick Order/wishlist buttons respond to a click, before this is
+      production-ready.

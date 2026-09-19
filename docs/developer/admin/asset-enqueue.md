@@ -149,3 +149,72 @@ the natural next one to bridge the same way once a Media UX screen
   natural trigger to extract it — most likely as a small trait, not a new
   base `Controller` subclass, once there's a second call site to compare
   against.
+- ~~Swapping the storefront's own asset stack~~ — a later run did enqueue
+  this same `components.min.css`/`catalog.min.js` pair on the storefront;
+  see "Storefront: `ControllerCommonHeader`" below. That is still not the
+  same thing as *swapping* the legacy stack out (Bootstrap 3/jQuery/
+  `common.js` all still load exactly as before) — the full call-site audit
+  `docs/developer/components/header.md`'s "Known gap" section describes
+  remains a separate, larger, not-yet-attempted piece of work.
+
+## Storefront: `ControllerCommonHeader`
+
+The exact same two-bundle split above applies to the storefront, not just
+admin — `mint_default`'s `common/header.twig` wraps every storefront page
+in the identical Bootstrap-3/jQuery/`common.js` stack every stock
+OpenCart 3 admin screen already runs on, so the same conflict and the same
+fix apply. Until a later run added this, the storefront enqueued *nothing*
+from `assets/dist/` at all — meaning every `data-mc-action` hook
+`mc-product-card`/`mc-header`/etc. render (`add-to-cart`, `quick-order`,
+`toggle-wishlist`, `open-modal`, ...) had no JS listening for it on a real
+page, and every `mc-*` class had no matching CSS rule — the entire
+Phase 4-15 component/commerce JS layer was inert on a live install
+regardless of how well each piece was unit/build-tested in isolation.
+
+`ControllerCommonHeader::index()` (`upload/catalog/controller/common/header.php`)
+now calls:
+
+```php
+$this->document->addStyle($server . 'assets/dist/css/components.min.css');
+$this->document->addScript($server . 'assets/dist/js/catalog.min.js');
+```
+
+gated behind the same `\MintCart\Design\ActiveTheme::isMintAware()` check
+`mc_header`/`mc_schema_organization` already use in that file, so a store
+on the legacy `default` theme (or an unrelated third-party theme) pays no
+extra request for a bundle its own templates never reference. Placed
+*before* `$data['styles'] = $this->document->getStyles();`/
+`$data['scripts'] = $this->document->getScripts('header')` a few lines
+below — `Document::getStyles()`/`getScripts()` return a snapshot at the
+moment they're called, so an `addStyle()`/`addScript()` call made *after*
+that snapshot has already been assigned to `$data` would silently have no
+effect on the current page's `<head>` (this is not hypothetical — it's
+exactly why this couldn't just be added next to the existing
+`$mint_render_header` block further down in the same file, which runs
+after that snapshot; the theme-awareness check was moved up instead of
+duplicated, see that file's own comments). `HTTP_CATALOG` (the constant
+the admin-side fix above uses) doesn't exist in the catalog/storefront
+context — `$server` (`config_url`/`config_ssl`, already computed a few
+lines above for the exact same "site root, not this subfolder" reason) is
+this controller's own equivalent, already used by every other
+`$server . '...'` link in this same file.
+
+**What this doesn't fix by itself:** nothing about *this* increment
+changes `default/template/common/header.twig` or any other legacy
+theme/template — only themes whose `theme.json` makes them Mint-aware
+(`mint_default`, `test_theme`) get the bundle, and only `mint_default`
+today actually ships its own `common/header.twig` page wrapper that reads
+`mc_header`/uses `mc-*` markup at the page-chrome level (`test_theme` has
+no `common/header.twig` of its own yet — a separate, pre-existing gap, see
+`docs/IMPLEMENTATION_STATUS.md`'s Phase 8/9 notes on `test_theme`, not
+attempted here).
+
+**Not yet verified live** — same pre-existing gap as every other
+increment in this file: no MySQL/browser session in this environment. A
+human should confirm, on a real `mint_default`-configured install: the
+network tab shows `components.min.css`/`catalog.min.js` loading on a
+storefront page with a 200 response; a product-card's Add to Cart/Quick
+Order/wishlist-toggle buttons actually respond to a click (they visibly
+did not before this change, per the "Root cause" note above); and that
+the legacy Bootstrap-3/jQuery-driven parts of the same page (account
+pages, `common/cart.info` AJAX, `common.js`) still work unmodified.

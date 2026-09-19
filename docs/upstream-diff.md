@@ -873,6 +873,78 @@ for what a human should confirm once installed (checkout/account pages
 render `content="noindex, follow"`; ordinary catalog pages render
 `content="index, follow"`).
 
+**Update (2026-09-19, routine run): enqueue MintCart's own
+`components.min.css`/`catalog.min.js` bundle.** Resolves the standing
+"Known gap" every Phase 4-15 component doc has carried since it was
+written (`docs/developer/components/header.md`, referenced from dozens of
+other component docs): nothing in this codebase had ever linked any file
+under `assets/dist/` on the storefront, so every `mc-*` component CSS rule
+and every `data-mc-action` JS hook (`add-to-cart`, `quick-order`,
+`toggle-wishlist`, `open-modal`, ...) this project has built across many
+prior runs was inert on a live page — present in the DOM, styled by
+nothing, listened to by nothing. Two new lines inside the existing
+`isMintAware()` theme-awareness check this file already computes for
+`mc_header`/`mc_schema_organization`:
+
+```php
+$this->document->addStyle($server . 'assets/dist/css/components.min.css');
+$this->document->addScript($server . 'assets/dist/js/catalog.min.js');
+```
+
+Deliberately `components.min.css` (`assets/src/css/components.css`), not
+`index.min.css` — the same two-bundle split
+`docs/developer/admin/asset-enqueue.md` already proved safe on
+Bootstrap-3-legacy admin screens applies identically here, since
+`mint_default`'s `common/header.twig` wraps every storefront page in that
+same Bootstrap-3/jQuery stack (the exact page where `index.min.css` was
+tried directly and reverted, per that file's own now-updated comment).
+`catalog.min.js`, unlike `admin.min.js`, was not previously enqueued
+anywhere at all (admin's `components.min.css`/`admin.min.js` pair only
+ever reached `ControllerCatalogProduct::getForm()`). One structural
+change beyond the two new lines: `$mint_theme`/`$mint_render_header` are
+now computed once, right after `$server`, instead of being recomputed
+lower down immediately before the `$mint_header`/`mc_schema_organization`
+block — required because `Document::getStyles()`/`getScripts()` (a few
+lines below the new calls) return a snapshot at call time, and that
+snapshot already ran before the file's *original* theme-awareness check
+further down, so adding the two new calls there instead would have
+silently had no effect on the current page's `<head>`. The later block
+now reuses the same two variables instead of recomputing them — no
+behavioral change to anything it already did. Full design rationale,
+including why this is not the same thing as the still-not-attempted "swap
+the legacy stack out entirely": `docs/developer/admin/asset-enqueue.md`'s
+new "Storefront: `ControllerCommonHeader`" section.
+
+**Compatibility impact:** None for the legacy `default` theme or any
+unrelated third-party theme — same `isMintAware()` gate as `mc_header`, so
+neither pays for or receives the two new tags. For `mint_default`
+(`test_theme` too, though it has no `common/header.twig` of its own yet to
+render the resulting `<head>` — pre-existing, separate gap): two new
+`<link>`/`<script>` tags via the existing `styles`/`scripts` loops
+`common/header.twig` already had; the legacy Bootstrap-3/jQuery/
+`common.js`/Font-Awesome stack on the same page is completely untouched,
+same as every other increment gated by this check.
+
+**Tests:** `php -l` clean. `npm install` (0 vulnerabilities), `npm run
+build` and `npm run dev` both compile cleanly — this increment touches no
+JS/CSS source file, only which two already-existing build outputs get
+referenced from PHP/Twig, so the bundles themselves are byte-identical to
+before. Twig `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag count
+unchanged (4/4/4/4) after the comment-only template edit. Full
+`tests/mintcart/**/*-test.php` suite re-run end to end (84 files) — all
+passing, no regressions (no PHP test exercises `ControllerCommonHeader`
+directly — it has a full-`\Registry` OpenCart dependency with no test
+double in this repo, same pre-existing gap as this controller's every
+earlier entry above). **Not verified live** — no MySQL/browser session in
+this environment; see `docs/developer/components/header.md`'s "Known gap
+(partially resolved)" section and `docs/MANUAL_VERIFICATION.md` for what a
+human should confirm on a real install (network tab shows both files
+loading with a 200 response on a storefront page; `mc-product-card`'s Add
+to Cart/Quick Order/wishlist-toggle buttons actually respond to a click,
+which they visibly did not before this change; the legacy Bootstrap-3/
+jQuery-driven parts of the same page — account pages, `common/cart.info`
+AJAX, `common.js` — still work unmodified).
+
 ---
 
 ## `upload/catalog/controller/product/manufacturer.php`

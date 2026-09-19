@@ -16,27 +16,37 @@
 <meta name="robots" content="{{ mc_robots_content }}" />
 {% endif %}
 {#
-    MintCart's own compiled assets/dist/{css,js} bundle is not enqueued
-    here yet - this wrapper deliberately keeps the exact same asset stack
-    `default/template/common/header.twig` loads (Bootstrap 3, jQuery,
-    Font Awesome, common.js) rather than silently swapping it. Doing that
-    safely needs a full call-site audit of every page/widget that depends
-    on jQuery/common.js/Bootstrap-3 markup (cart AJAX, form validation,
-    account pages, checkout) per CLAUDE.md §10/§84 - out of scope for this
-    Header component increment. See docs/developer/components/header.md
-    "Known gap: MintCart's own asset bundle is not enqueued yet".
+    MintCart's own compiled assets/dist/{css,js} bundle: this wrapper
+    deliberately keeps the exact same legacy asset stack
+    `default/template/common/header.twig` loads below (Bootstrap 3,
+    jQuery, Font Awesome, common.js) rather than replacing it - swapping
+    it out safely still needs the full call-site audit of every page/
+    widget that depends on jQuery/common.js/Bootstrap-3 markup (cart AJAX,
+    form validation, account pages, checkout) per CLAUDE.md §10/§84, not
+    attempted here. See docs/developer/components/header.md "Known gap:
+    MintCart's own asset bundle is not enqueued yet" for that remaining
+    piece.
 
-    Tried enqueueing assets/dist/css/index.min.css directly on
-    2026-08-24 (live install check) - confirmed broken: it bundles full
-    Bootstrap 5 CSS (`@import 'bootstrap/dist/css/bootstrap.css'` in
+    What *is* enqueued now (`ControllerCommonHeader::index()`, added via
+    the `styles`/`scripts` loops right below, gated behind the same
+    isMintAware() check `mc_header` uses - see that controller for the
+    full writeup): `assets/dist/css/components.min.css` +
+    `assets/dist/js/catalog.min.js`. Not `index.min.css` - that one was
+    tried directly on 2026-08-24 (live install check) and confirmed
+    broken: it bundles full Bootstrap 5 CSS
+    (`@import 'bootstrap/dist/css/bootstrap.css'` in
     assets/src/css/index.css), and loading that alongside the Bootstrap 3
-    stack below is exactly the conflict CLAUDE.md §10 warns about, not a
-    theoretical one - it visibly shrank body text, broke the
-    `.navbar-nav`/dropdown menus, and made the search widget overlap the
-    cart widget on a real page. Reverted. A real fix needs either scoping
-    mc-* CSS to not pull in Bootstrap 5's global reboot/base layer, or the
-    full legacy call-site migration this comment already flagged - not a
-    one-line enqueue.
+    stack below redefines `.container`/`.row`/`.btn`/`.modal`/etc. out
+    from under it - not theoretical, it visibly shrank body text, broke
+    the `.navbar-nav`/dropdown menus, and made the search widget overlap
+    the cart widget on a real page. `components.min.css`
+    (docs/developer/admin/asset-enqueue.md) is the same bundle with only
+    that Bootstrap 5 import removed - every remaining `mc-*`/`--mc-*`
+    selector was grepped and confirmed to never touch a bare element or a
+    Bootstrap class name, so it coexists with the Bootstrap 3 stack below
+    without reverting or reworking any of it. `catalog.min.js` is plain ES
+    modules with no jQuery coupling, so it does not collide with
+    common.js/jQuery/Bootstrap 3's own bootstrap.min.js either.
 #}
 <script src="catalog/view/javascript/jquery/jquery-3.7.1.min.js" type="text/javascript"></script>
 <link href="catalog/view/javascript/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen" />

@@ -746,22 +746,44 @@ DOM) on a real install before this is considered fully closed end-to-end.
 **Phase 7 is functionally complete** for the component-contract/Theme-API
 story (both Header and Footer have a real `mint_default` implementation,
 live controller wiring, and a `test_theme` override proving a different
-DOM with 0 OCMOD). Two things remain, tracked as follow-ups rather than
+DOM with 0 OCMOD). One thing remains, tracked as a follow-up rather than
 blocking Phase 7 itself:
 - **Mobile Navigation** — no dedicated pattern yet (see above).
-- **MintCart's own compiled asset bundle (`assets/dist/{css,js}`) is still
-  not enqueued on any live page** — `mint_default/template/common/header.twig`
-  deliberately keeps the exact same Bootstrap 3/jQuery/Font Awesome/
-  `common.js` stack `default`'s header.twig loads, because swapping it
-  safely needs a full call-site audit of every page/widget that depends on
-  jQuery/`common.js` (cart AJAX, form validation, account/checkout pages)
-  per `CLAUDE.md` §10/§84 — out of scope for a single component increment.
-  Practical effect: **no `mc-*` component CSS has any visible effect on a
-  real page yet**, since nothing links `index.min.css`. This is the single
-  most important next piece of plumbing before any component's live
-  rendering can be visually verified — see
-  `docs/developer/components/header.md` "Known gap" for detail. A natural
-  next-run candidate.
+
+**Resolved (2026-09-19, routine run): MintCart's own compiled asset bundle
+is now enqueued on the storefront.** `ControllerCommonHeader::index()`
+calls `$this->document->addStyle()`/`addScript()` for
+`assets/dist/css/components.min.css`/`assets/dist/js/catalog.min.js` (not
+`index.min.css` — that one still bundles the full Bootstrap 5 reset/grid/
+utility layer that conflicts with the Bootstrap 3 stack this page still
+also loads; `components.min.css` is the same bundle with only that one
+`@import` line removed, already proven safe on Bootstrap-3-legacy admin
+screens by an earlier run — see `docs/developer/admin/asset-enqueue.md`).
+Gated by the same `isMintAware()` check `mc_header`/`mc_schema_organization`
+already use, so the legacy `default` theme and any third-party theme pay
+nothing. Before this, **no `mc-*` component CSS or `data-mc-*` JS hook had
+any live effect on any page** — every Add to Cart/Quick Order/wishlist
+button `mc-product-card` renders had no click handler at all. `default`'s
+Bootstrap-3/jQuery/`common.js` stack is completely untouched — this is an
+addition, not the swap `CLAUDE.md` §10/§84 still requires a full call-site
+audit before attempting (unchanged, still not attempted, still a Phase 7
+follow-up if ever prioritized — see `docs/developer/components/header.md`'s
+"Known gap (partially resolved)"). Full writeup:
+`docs/upstream-diff.md`'s `header.php` entry. Verified: `php -l` clean;
+`npm install` (0 vulnerabilities), `npm run build`/`npm run dev` both
+compile cleanly (no JS/CSS source touched, only which two pre-existing
+build outputs get referenced); Twig tag balance re-checked (4/4/4/4); full
+`tests/mintcart/**/*-test.php` suite re-run end to end (84 files) — all
+passing, no regressions. **Not verified live** — no MySQL/browser session
+in this environment; see `docs/MANUAL_VERIFICATION.md`'s new Phase 7
+section for what a human should confirm (network tab shows both files
+loading; product-card buttons actually respond to clicks now). **Next
+candidates:** the still-open Mobile Navigation follow-up above; the actual
+call-site audit needed to eventually replace (not just add to) the legacy
+Bootstrap-3/jQuery stack; wiring a Mint-native checkout UI now that the JS
+bundle can reach the storefront at all (Phase 15's `CheckoutTotalsService`
+has no consumer yet); or re-check `list_pull_requests`/`gh pr list --state
+open` first.
 
 ## Phase 8 — Theme resolver
 
