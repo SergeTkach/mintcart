@@ -86,24 +86,27 @@ path missing from its `$existingFiles` map.
 - **Disk-space pre-flight.** `BackupPlanner::hasEnoughDiskSpace()` already
   answers "is there room" and is meant to run *before* this class does any
   I/O. This class does not re-check free space itself.
-- **Wiring into `UpdateOrchestrator::apply()`.** That would add a `backup`
-  step between `verify` and `maintenance`, changing `apply()`'s own
-  tested signature/behavior — a separate, focused increment, same
-  reasoning `PackageExtractor`'s own doc gives for not wiring itself into
-  `apply()` either. (Both `PackageExtractor` and `BackupExecutor` now
-  await the same kind of `apply()` signature change — a natural candidate
-  to do together in one follow-up increment rather than two separate
-  signature changes to the same method.)
+- ~~Wiring into `UpdateOrchestrator::apply()`.~~ **Done** — `apply()` now
+  takes an optional `BackupPlanner`+`BackupExecutor` constructor argument
+  pair (see `docs/developer/update/update-orchestrator.md`; passing only
+  one of the pair throws immediately). When both are injected, `apply()`
+  resolves which manifest-declared paths currently exist under `$destRoot`
+  (and their sizes), builds the plan, and snapshots it between `verify` and
+  `maintenance` — exactly the ordering this note originally named. When
+  omitted (the default), no snapshot is taken, so every caller written
+  against the original signature keeps working unchanged. `PackageExtractor`
+  was wired into the same method, in the same increment, per the note this
+  replaces.
 - **Retention/cleanup of old snapshots.** Functional Scope §21 names
   "retention policy" as an open research question; nothing here deletes a
   snapshot directory other than the one it is directly replacing.
 
 ## What's deliberately not done yet
 
-- No caller wires `BackupPlanner` + `BackupExecutor` into
-  `UpdateOrchestrator::apply()` (see above).
 - No restore/rollback execution (see above).
-- No admin controller/`mintcart/update/*` route calls any of this yet.
+- No admin controller/`mintcart/update/*` route calls any of this yet
+  (`UpdateOrchestrator::apply()` now wires this pair in — see above — but
+  nothing calls `apply()` itself from a real admin screen).
 
 Verified: `php -l` clean;
 `tests/mintcart/update/backup-executor-test.php` (6 scenarios — backing up

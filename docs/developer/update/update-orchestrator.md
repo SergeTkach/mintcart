@@ -39,35 +39,31 @@ class).
 
 ## What's deliberately still out of scope
 
-- **`check`/`compatibility`/`backup`.** These are earlier decision points a
-  caller makes *before* deciding to apply a specific manifest at all — e.g.
+- **`check`/`compatibility`.** These are earlier decision points a caller
+  makes *before* deciding to apply a specific manifest at all — e.g.
   showing an admin user "an update is available and compatible" via
-  `UpdateChecker` and letting them confirm, or calling `BackupPlanner::plan()`
-  followed by `MintCart\Update\BackupExecutor::backup()`
-  (`docs/developer/update/backup-executor.md`) to actually snapshot files
-  before anything is fetched. Both planning and execution now exist as
-  standalone, tested primitives, but neither is called from `apply()`
-  itself — wiring a `backup` step in between `verify` and `maintenance`
-  would change `apply()`'s own tested signature/behavior, the same
-  deliberately-deferred reasoning `PackageExtractor`'s doc gives for not
-  wiring itself into `apply()` either. `apply()` starts from "the operator
-  has already decided to apply this exact manifest, and a backup (if any)
-  has already been taken," the same way `PackageVerifier`/
-  `PackageFileInstaller` already assume their own inputs are already
-  resolved rather than re-deciding them one level up.
-- **Archive extraction.** ~~No extractor exists anywhere in this codebase
-  yet~~ — `MintCart\Update\PackageExtractor`
-  (`docs/developer/update/package-extractor.md`) now exists as a
-  standalone, tested primitive, but `apply()` still takes an
-  already-extracted directory (`$extractedDir`) as a plain input
-  parameter, exactly like `PackageVerifier::missingFiles()`/
-  `PackageFileInstaller::install()` already do — wiring `PackageExtractor`
-  into `apply()` itself (between `download` and `verify`) would change
-  this method's own signature and is deliberately deferred to its own
-  focused increment (see `package-extractor.md`'s "Deliberately not
-  attempted here"). A real caller today is expected to call
-  `PackageExtractor::extract()` on the archive `download` just wrote to
-  `$downloadPath` before calling `apply()`.
+  `UpdateChecker` and letting them confirm. `apply()` still starts from
+  "the operator has already decided to apply this exact manifest."
+- ~~Archive extraction.~~ **Wired in (optional).** `MintCart\Update\PackageExtractor`
+  (`docs/developer/update/package-extractor.md`) is now an optional 7th
+  constructor argument. When injected, `apply()` calls `extract($downloadPath,
+  $extractedDir)` between `download` and `verify`, populating `$extractedDir`
+  from the archive itself. When omitted (`null`, the default), `apply()`
+  behaves exactly as before: `$extractedDir` is assumed already populated by
+  the caller.
+- ~~`backup`.~~ **Wired in (optional).** `MintCart\Update\BackupPlanner`
+  (8th constructor argument) and `MintCart\Update\BackupExecutor`
+  (`docs/developer/update/backup-executor.md`, 9th argument) are injected as
+  a pair — passing only one throws `\InvalidArgumentException` at
+  construction time, since a half-configured backup is a caller bug, not a
+  "skip this step" signal. When both are provided, `apply()` resolves which
+  of the manifest's declared paths currently exist under `$destRoot` (and
+  their sizes), builds a plan via `BackupPlanner::plan()` using an
+  injectable `$timestampFactory` (10th argument, defaults to
+  `date('YmdHis')`), and snapshots them via `BackupExecutor::backup()`
+  between `verify` and `maintenance` — before anything is overwritten, and
+  before the store is even put into maintenance mode. When omitted, no
+  snapshot is taken, exactly as before.
 - **The `mc_installed_file` ledger** (ADR 005 decision #1). `apply()`'s
   result carries every installed file's sha256 under `files.installed[]`
   (from `PackageFileInstaller::install()`) — the exact input that ledger
@@ -88,20 +84,26 @@ $orchestrator = new UpdateOrchestrator(
     new PackageFileInstaller(),
     new MigrationManager($db, DB_PREFIX, $migrationsPath),
     new CacheInvalidator([$cache, 'delete']),   // optional
-    new HealthCheck()                            // optional
+    new HealthCheck(),                            // optional
+    new PackageExtractor(),                       // optional — extract download archive
+    new BackupPlanner(),                          // optional, must pair with BackupExecutor
+    new BackupExecutor()                          // optional, must pair with BackupPlanner
 );
 
 $result = $orchestrator->apply(
     $manifest,
     'https://updates.example.com/mint_default-1.1.0.zip',
     DIR_SYSTEM . 'storage/download/mint_default-1.1.0.zip', // download destination
-    DIR_SYSTEM . 'storage/download/mint_default-1.1.0/',    // already-extracted source
+    DIR_SYSTEM . 'storage/download/mint_default-1.1.0/',    // extraction destination
     DIR_APPLICATION . '..',                                  // live install root
     $healthSignals                                           // optional, passed to HealthCheck::evaluate()
 );
 
 // $result['status'] === 'done' | 'failed'
-// $result['completed_steps'] === ['download', 'verify', 'maintenance', 'files', 'migrations', 'cache_clear', 'health_check', 'done']
+// $result['completed_steps'] === ['download', 'extract', 'verify', 'backup', 'maintenance', 'files', 'migrations', 'cache_clear', 'health_check', 'done']
+// (with PackageExtractor/BackupPlanner+BackupExecutor omitted, 'extract'/'backup' are
+// simply absent from completed_steps and $extractedDir is assumed already populated —
+// the exact same 8-step sequence this class always produced)
 ```
 
 - **Stops at the first failed step.** Every step already completed stays in
@@ -122,6 +124,14 @@ $result = $orchestrator->apply(
   as `false` (nothing to invalidate) rather than pretending a clear
   happened, and the `health_check` result key is simply absent rather than
   a fabricated result.
+- **`extractor`/`backupPlanner`+`backupExecutor` are also optional
+  constructor arguments**, but unlike `cache`/`healthCheck` (always
+  recorded in `completed_steps`, whether skipped or not), an omitted
+  `extract`/`backup` step is not inserted into `completed_steps` at all —
+  the step structurally does not apply to that call, rather than running
+  as a no-op. `backupPlanner`/`backupExecutor` must be passed together
+  (both `null` or both set); passing only one throws
+  `\InvalidArgumentException` at construction time.
 - **No OpenCart dependency of its own.** Every dependency is injected —
   `MigrationManager`'s `$db` still only needs to duck-type OpenCart's
   `\DB` (`query()`/`escape()`), `MaintenanceMode` needs a `SettingsAdapter`,
@@ -130,23 +140,36 @@ $result = $orchestrator->apply(
 
 ## Verified
 
-`php -l` clean on the new file and across the full `upload`/`tests` tree.
-New `tests/mintcart/update/update-orchestrator-test.php` (7 scenarios — full
-happy path in step order; a store already in maintenance mode before
-`apply()` stays in maintenance mode after a successful run; a checksum
-mismatch fails at `verify` before maintenance mode is ever touched; an
-extracted package missing a declared file also fails at `verify`; a
-mid-flow failure during `files` leaves the store in maintenance mode
-rather than reopening it; a rejected download URL scheme fails at
-`download` with nothing else touched; omitting the optional `cache`/
-`healthCheck` dependencies skips those two steps without fabricating a
-result) — all passing, reusing the exact same in-memory `FakeDb`
+`php -l` clean on the modified file and across the full `upload`/`tests`
+tree. `tests/mintcart/update/update-orchestrator-test.php` (10 scenarios,
+up from 7 — full happy path in step order; a store already in maintenance
+mode before `apply()` stays in maintenance mode after a successful run; a
+checksum mismatch fails at `verify` before maintenance mode is ever
+touched; an extracted package missing a declared file also fails at
+`verify`; a mid-flow failure during `files` leaves the store in
+maintenance mode rather than reopening it; a rejected download URL scheme
+fails at `download` with nothing else touched; omitting the optional
+`cache`/`healthCheck` dependencies skips those two steps without
+fabricating a result; **new:** injecting a real `PackageExtractor` extracts
+a real zip fixture (built with `ZipArchive`, same technique
+`package-extractor-test.php` uses) into `$extractedDir` before `verify`,
+with `extract` inserted into `completed_steps` between `download` and
+`verify`; **new:** injecting `BackupPlanner`+`BackupExecutor` together
+snapshots a pre-existing file about to be overwritten into
+`system/storage/mintcart/backup/<package>/<timestamp>/` before
+`maintenance` runs, verified by reading the snapshotted content back off
+disk and confirming it holds the *pre-update* value while the live file
+holds the *post-update* value; **new:** passing only one of
+`backupPlanner`/`backupExecutor` throws `\InvalidArgumentException` at
+construction) — all passing, reusing the exact same in-memory `FakeDb`
 (`tests/mintcart/core/migration-manager-test.php`) and `FakeSettingModel`
 (`tests/mintcart/update/maintenance-mode-test.php`) doubles those sibling
 tests already established. Full `tests/mintcart/**/*-test.php` suite
-re-run end to end (81 files, up from 80) — all passing, no regressions.
+re-run end to end (83 files) — all passing, no regressions.
 
 **Not verified:** no live MySQL/filesystem/HTTP in this environment, same
 pre-existing gap every other Update Manager primitive in this codebase
-carries — there is no real download/extraction/admin-controller pipeline
-yet for this orchestrator to run against on a live install.
+carries — there is no real download/admin-controller pipeline yet for this
+orchestrator to run against on a live install (extraction and backup
+themselves are now exercised end to end against real files, same as
+`PackageExtractor`'s/`BackupExecutor`'s own tests already were).
