@@ -1830,11 +1830,12 @@ question is resolved — see the ADR's "Consequences" section.
       manufacturers, attributes, options, information pages, customers) —
       **category and manufacturer are done** (manufacturer this run), see
       below; the other five entity types still need their own.
-- [~] Live wiring into an actual admin screen/field — **category and
-      manufacturer are both done** (`product_form.twig`'s Category field
-      in an earlier run, its Manufacturer field this run — see the
-      "Manufacturer field live-wired" update below); product/information/
-      attribute/option/customer backends still have no live consumer.
+- [~] Live wiring into an actual admin screen/field — **category,
+      manufacturer and product are now done** (`product_form.twig`'s
+      Category and Manufacturer fields in earlier runs, its Related
+      Products field this run — see the "Related Products field
+      live-wired" update below); information/attribute/option/customer
+      backends still have no live consumer.
 - [ ] Create-new flow via drawer/modal — not attempted.
 
 **Update (this run): the category `fetchItems` backend is done.**
@@ -2141,6 +2142,58 @@ library code changed). **Not verified:** no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for the
 full manual script.
 
+**Update (2026-09-18, routine run): Related Products field live-wired,
+closing out the product backend's own "identified first consumer" note.**
+Step 0 dedup check: `list_pull_requests` (all open, not filtered by
+branch name) returned three open PRs — `#127` (`PackageExtractor`, Update
+Manager archive extraction), `#128` (`BackupExecutor`, Update Manager
+backup execution) and `#129` (admin toggle for `mintcart_dev_mode`,
+System → Diagnostics). Verified via each PR's own file list: none touch
+`product_form.twig`, `ControllerCatalogProduct`, or
+`upload/admin/language/en-gb/catalog/product.php` — `#127`/`#128` are
+scoped entirely to `upload/system/library/mintcart/update/**` + their own
+docs/tests, and `#129` is scoped to a new
+`upload/admin/controller/mintcart/settings/diagnostics.php` +
+`column_left.php`. All three do touch `docs/IMPLEMENTATION_STATUS.md`,
+but different sections (Phase 11 (Technical Plan) / Phase 10 (Technical
+Plan) vs. this Phase 12 section) — a normal sibling-PR merge point, not a
+collision. No hot shared files (§0f — the Homepage Builder block-type
+registry, homepage block list/template, `block.css`) are touched by any
+of the three or by this run.
+
+`product_form.twig`'s Related Products field (`#input-related`/
+`product_related[]`) gains the same "Browse products" button +
+`.mc-entity-picker` panel pattern the Category field already established
+— **multi-select** (`multiple: true`, same as Category, since a product
+can have many related products), against the already-shipped,
+previously-consumer-less `mintcart/entity/product` backend. Confirming a
+selection appends into the exact same `#product-related{id}` well markup
+(minus-circle icon + name + a `product_related[]` hidden input) the
+existing jQuery UI `autocomplete()`'s own `'select'` handler already
+produces, so `ControllerCatalogProduct::validateForm()`/`addProduct()`/
+`editProduct()`'s handling of `product_related[]` needs no change at
+all. No controller change was needed — this screen's
+`enqueueMintAssets()` already covers the whole form (added for Category).
+Six new `text_related_picker_*` language keys, same file/pattern as
+Category's/Manufacturer's own six. Full writeup:
+`docs/developer/components/entity-picker.md`'s "Product backend" section,
+`docs/upstream-diff.md`'s new entry appended to the
+`product.php`/`product_form.twig` block, `docs/MANUAL_VERIFICATION.md`'s
+new entry.
+
+**Verified:** `php -l` clean across the full `upload`/`tests` tree
+(language file is the only PHP touched — no `upload/system/library/mintcart/*`
+class changed, reusing the already-tested `ProductPickerProvider`/
+`ControllerMintcartEntity::product()` backend as-is). Twig
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts re-checked
+balanced (38/38, 37/37, unchanged — this only added a comment block and
+non-conditional markup). New inline `<script>` block extracted and
+checked with `node --check` (valid syntax). Full `tests/mintcart/**/*-test.php`
+suite (81 files) re-run end to end — all passing, no regressions (no
+library code changed). **Not verified:** no live MySQL/admin session in
+this environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for the
+full manual script.
+
 **Architectural fork identified, not resolved (Phase 17):** live
 drag-and-drop wiring for `catalog/category` needs a product decision on
 how the flat, cross-parent, paginated category list should represent
@@ -2156,11 +2209,13 @@ live UI wiring; the backend (`ControllerCatalogCategory::move()`,
 ready to consume whichever UI shape is chosen.
 
 **Next candidates:** the remaining Phase 12 entity types still need live
-wiring (product's Related Products field, information/attribute/option/
-customer — each has an identified first consumer already documented in
-`docs/developer/components/entity-picker.md`); resolving the Phase 17
-category-list fork above (needs a product decision first); or re-check
-`gh pr list --state open` first, since this backlog moves fast.
+wiring (information/attribute/option/customer — none has an identified
+first consumer yet, per their own backend write-ups above, so picking one
+means choosing a real admin screen/field first, not guessing one);
+resolving the Phase 17 category-list fork above (needs a product decision
+first); Entity Picker Filters/Create-new-flow (neither has a real
+requirement yet); or re-check `gh pr list --state open` first, since this
+backlog moves fast.
 
 ## Phase 13 — Setup Wizard
 
@@ -3527,8 +3582,11 @@ tracked once each.)*
       still-open PR #76 as of this run, not yet on this branch's base.
       (`category.php` blank language strings) and MC-0002 (`search.php`
       missing canonical/prev/next links, this run)
-- [ ] Diagnostics dev mode (query count, DB time, render time, cache status) —
-      an open PR (#75) covers this; not yet on `master`
+- [~] Diagnostics dev mode (query count, DB time, render time, cache status) —
+      collection + `ComponentRenderer` wiring + HTML-comment surface +
+      admin toggle (`System → Diagnostics`) all land on `master` as of
+      2026-09-18; only real DB query counting remains open (see the Phase
+      10/Phase 19 sections above and `docs/developer/core/diagnostics.md`)
 - [x] Cache invalidation API — `MintCart\Core\Cache\CacheInvalidator`
       (`upload/system/library/mintcart/core/cache/cacheinvalidator.php`), a
       domain → cache-key-prefix registry (`catalog`/`localization`/
@@ -3553,7 +3611,8 @@ tracked once each.)*
       language strings), and MC-0004 (`tool/backup`'s user/user_group
       restore safety-stop hardcoded a byte-length instead of deriving it
       from `DB_PREFIX`, this run — see below)
-- [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
+- [~] Diagnostics dev mode (query count, DB time, render time, cache status) —
+      see the entry above; admin toggle added 2026-09-18
 - [~] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
@@ -3984,6 +4043,32 @@ manufacturer, special) may have their own `<img>` tags worth the same
 re-check `gh pr list --state open` first, since `#127`-`#130` may have
 merged by the time a future run starts, un-blocking Update Manager's
 `apply()` wiring.
+      **Update (2026-09-18, routine run): admin UI toggle for
+      `mintcart_dev_mode`.** Every `ComponentRenderer` call site was already
+      wired (above); the flag itself could still only be set by writing
+      directly to `oc_setting`. Added `ControllerMintcartSettingsDiagnostics`
+      (`upload/admin/controller/mintcart/settings/diagnostics.php`, route
+      `mintcart/settings/diagnostics`) — one checkbox, one Save, same
+      thin-facade-over-`ModelSettingSetting` shape as
+      `ControllerMintcartSeoSystemPages`/`ControllerMintcartBusinessContacts`.
+      Stores the flag under its own settings code group (`mintcart_dev_mode`,
+      same key) rather than merging into `config`, to avoid
+      `ModelSettingSetting::editSetting()`'s "delete-then-reinsert wipes the
+      rest of the group" trap for a group it doesn't own. Menu entry added
+      to the existing `System` group in
+      `upload/admin/controller/common/column_left.php` (see
+      `docs/upstream-diff.md`'s entry) — step 0 confirmed neither open PR at
+      the time (#127 "PackageExtractor", #128 "BackupExecutor") touches
+      `column_left.php` or any admin `mintcart/settings/*` path. Full
+      writeup: `docs/developer/core/diagnostics.md`. Verified: `php -l`
+      clean on all four new/changed PHP files; full `tests/mintcart/` suite
+      (81 files) re-run end to end, all passing, no regressions — no new
+      test file needed (a thin controller wrapping an already-tested
+      setting-storage pattern, same as its sibling admin screens, none of
+      which have their own controller-level test in this repo). Only real
+      DB query counting remains open for this checklist item now.
+- [ ] Measured performance improvements (lazy loading, responsive images, asset
+      minification, cache invalidation API — no mandatory Redis)
 
 Fix Registry mechanism is established and has four real entries on this
 branch (MC-0001, MC-0002, MC-0003, MC-0006); the rest of this phase
@@ -4096,6 +4181,36 @@ Definition of Done checklist for exactly what's still open).
       expected to run those first, see the new doc), no archive extractor
       exists anywhere in this codebase, no `mc_installed_file` ledger, and
       no admin controller/`mintcart/update/*` route calls any of this yet.
+      **Update (2026-09-18, routine run):** `BackupPlanner::plan()` only
+      ever decided *what* to snapshot — nothing in this codebase actually
+      performed that copy. `MintCart\Update\BackupExecutor`
+      (`upload/system/library/mintcart/update/backupexecutor.php`,
+      `docs/developer/update/backup-executor.md`) is that missing
+      execution half: given a `BackupPlanner::plan()` result and the live
+      install root, atomically copies every still-existing planned file
+      into the snapshot directory (temp-dir-then-rename, same pattern
+      `PackageExtractor` established for archive extraction). Still not
+      wired into `UpdateOrchestrator::apply()` (would add a `backup` step
+      between `verify`/`maintenance`, changing that method's own tested
+      signature — deliberately deferred, same reasoning as
+      `PackageExtractor`'s own non-wiring). No restore/rollback execution,
+      no admin controller/route. (Note: `MintCart\Update\PackageExtractor`
+      itself, referenced above, was added on a separate branch/PR #127,
+      not yet merged as of this run — this increment does not depend on
+      it and does not touch any of its files.)
+      **Update (2026-09-17, routine run):** ~~no archive extractor exists~~
+      **done** — `MintCart\Update\PackageExtractor`
+      (`upload/system/library/mintcart/update/packageextractor.php`,
+      `docs/developer/update/package-extractor.md`) extracts a downloaded
+      zip archive into a directory, with zip-slip protection (rejects `..`
+      and absolute-path entry names before writing anything) and atomic
+      temp-dir-then-rename replacement, same shape as
+      `PackageDownloader`/`PackageFileInstaller`'s own atomic-write
+      patterns. Deliberately not wired into `UpdateOrchestrator::apply()`
+      itself yet (would change that method's own signature — a separate,
+      focused increment per the new doc's "Deliberately not attempted
+      here"). Still not done: that orchestrator wiring, the
+      `mc_installed_file` ledger, and any admin controller/route.
 - [x] Theme/extension rollback — **research/design only, no code** (RESEARCH
       item per Functional Scope §21): `docs/adr/005-theme-extension-update-rollback.md`
       answers all seven of §21's open questions (change detection, manifest
@@ -5979,3 +6094,64 @@ its first four live consumers (`category.php`/`manufacturer.php`/
 writeup. 6 open PRs (#110-#115) existed at the start of this run, none
 overlapping this increment's files. Re-check `gh pr list --state open`
 before picking the next step.
+
+**Trailer note (2026-09-18, routine run):** `list_pull_requests` returned
+exactly two open PRs at the start of this run — #127 ("Consolidate
+unmerged MintCart work" — actual remaining diff is
+`MintCart\Update\PackageExtractor` only) and #128
+("`MintCart\Update\BackupExecutor`") — both pure Phase 11 (Update Manager)
+work, neither touching `column_left.php`, any `mintcart/settings/*` path,
+or the Homepage Builder hot files (§0f: block-type registry, `block.css`).
+Picked a different, unclaimed Phase 10/19 item instead of Update Manager
+(both open PRs' own "next candidates" point at wiring their new classes
+into `UpdateOrchestrator::apply()`, which needs both to merge first — not
+started here to avoid duplicating in-flight work). Added the admin UI
+toggle for `mintcart_dev_mode` (`System → Diagnostics`) that
+`docs/developer/core/diagnostics.md`'s "Next step" section had named as
+the one remaining Diagnostics gap besides real query counting — see the
+Phase 10 (Technical Plan) section above for the full writeup. `php -l`
+clean; full `tests/mintcart/` suite (81 files) re-run end to end, all
+passing, no regressions. **Next candidates:** real DB query counting for
+`MintCart\Core\Diagnostics` (still needs the `\DB\MySQLi`-hooking
+upstream-diff decision); a structured JSON diagnostics endpoint as an
+alternative to the HTML-comment surface; wiring `PackageExtractor`/
+`BackupExecutor` into `UpdateOrchestrator::apply()` once #127/#128 merge;
+or re-check `gh pr list --state open` first.
+exactly one open PR at the start of this run, #127 ("Consolidate unmerged
+MintCart work"), whose actual diff against current `master`
+(`gh pr view 127 --json files`) is scoped entirely to
+`MintCart\Update\PackageExtractor` (new file
+`upload/system/library/mintcart/update/packageextractor.php`, its test,
+its own doc, and small "done" edits to `package-downloader.md`/
+`package-verifier.md`/`update-orchestrator.md`) plus this same
+`IMPLEMENTATION_STATUS.md` file — no overlap with any file this run
+touched. This run added `MintCart\Update\BackupExecutor` — see the Phase
+11 (Technical Plan) section above and
+`docs/developer/update/backup-executor.md` for the full writeup: the
+"performing the copy is the flow's own `files` step" gap `BackupPlanner`'s
+own docblock named was never actually filled anywhere in this codebase,
+so this fills it, independently of and with zero file overlap against
+`#127`'s `PackageExtractor` work. No hot shared files (§0f in the routine
+prompt — the Homepage Builder block-type registry/`block.css`) are
+touched by this increment. `php -l` clean on both new files; the new
+`tests/mintcart/update/backup-executor-test.php` (6 scenarios) passes
+standalone. **Next candidates:** now that both `PackageExtractor` (once
+#127 merges) and `BackupExecutor` exist as standalone primitives,
+`UpdateOrchestrator::apply()`'s signature change to actually call them
+(between `download`→`verify` for extraction, and `verify`→`maintenance`
+for backup) is a single natural follow-up increment, per both classes'
+own "deliberately not attempted here" notes; the `mc_installed_file`
+ledger; an admin controller/`mintcart/update/*` route; or re-check
+`gh pr list --state open` first, since this backlog moves fast.
+**Trailer note (2026-09-17, routine run):** `list_pull_requests` returned
+zero open PRs at the start of this run, so no dedup/hot-shared-file check
+was needed. Added `MintCart\Update\PackageExtractor` — see the Phase 11
+(Technical Plan) section above and `docs/developer/update/package-extractor.md`
+for the full writeup (the archive-extraction gap every other `Update\*`
+primitive's docblock had named). `php -l` clean; full `tests/mintcart/`
+suite (82 files, up from 81) re-run end to end, all passing. **Next
+candidates:** wire `PackageExtractor` into `UpdateOrchestrator::apply()`
+itself (a deliberately separate increment — changes that method's
+signature); the `mc_installed_file` ledger; an admin
+controller/`mintcart/update/*` route; or re-check `gh pr list --state
+open` first.

@@ -91,10 +91,11 @@ PackageVerifier::verifyChecksum('/tmp/mintcart-update/mint_default-1.2.0.zip', $
   (`docs/developer/update/update-orchestrator.md`) now chains
   `download → verify → maintenance → files → migrations → cache clear →
   health check` end to end. Still no admin controller/route calling it.
-- **No archive extraction.** `PackageVerifier::missingFiles()` already
-  expects an *extracted* directory — extraction (zip/tar handling) is a
-  separate concern for whichever step calls both classes in sequence, not
-  this one.
+- ~~**No archive extraction.**~~ **Done** — `MintCart\Update\PackageExtractor`
+  (`docs/developer/update/package-extractor.md`) now extracts the archive
+  this class downloads into the directory `PackageVerifier::missingFiles()`
+  expects. Not yet wired into `UpdateOrchestrator::apply()` itself — see
+  that class's own doc.
 - **No progress reporting / resumable downloads.** A future orchestrator
   that needs to show download progress in an admin UI can swap the
   injected transport for one that streams and reports progress — this

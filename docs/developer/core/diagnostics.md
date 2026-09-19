@@ -43,8 +43,23 @@ related-products `ComponentRenderer` never runs), so `mark()`/the
 HTML-comment summary still cover the rest of the product page's render
 time. Every listing/detail page that builds a `ComponentRenderer` is now
 wired. Still **not** built: real DB query counting (see the DoD checklist
-below), and an admin UI to toggle `mintcart_dev_mode` (today it can only
-be set directly in `oc_setting`).
+below).
+
+**Admin UI toggle (2026-09-18, routine run): `System → Diagnostics`.**
+`ControllerMintcartSettingsDiagnostics`
+(`upload/admin/controller/mintcart/settings/diagnostics.php`, route
+`mintcart/settings/diagnostics`) — one checkbox, one Save, gated by
+`mintcart/settings/diagnostics` `access`/`modify` permission like every
+other MintCart admin screen. Persists the flag under its own settings
+code group (`mintcart_dev_mode`, same key), not merged into the stock
+`config` group — see the controller's own docblock for why
+(`ModelSettingSetting::editSetting()`'s key-must-start-with-code
+constraint, and the "delete-then-reinsert wipes the rest of the group"
+trap `ControllerMintcartBusinessContacts::save()` already documents for
+`config`). Menu entry added to the existing `System` group in
+`upload/admin/controller/common/column_left.php` (see
+`docs/upstream-diff.md`'s entry). `mintcart_dev_mode` no longer requires
+a direct `oc_setting` write to turn on.
 
 ## Design
 
@@ -132,12 +147,15 @@ order.
       `ComponentRenderer` call site is now wired (see above)
 - [x] A "dev mode" setting gating `$enabled` — `mintcart_dev_mode`,
       standard OpenCart setting (`$this->config->get('mintcart_dev_mode')`
-      in `ControllerProductCategory`); no admin UI toggle yet, must be set
-      directly in `oc_setting` today
+      in `ControllerProductCategory`); admin UI toggle now exists (see
+      below)
 - [x] A visible surface — an HTML comment
       (`<!-- mintcart-diagnostics {...} -->`) appended to
       `product/category`'s and `product/product`'s response body when
       `mintcart_dev_mode` is on
+- [x] An admin UI toggle for `mintcart_dev_mode` — `System → Diagnostics`
+      (`ControllerMintcartSettingsDiagnostics`, see above); no longer
+      requires a direct `oc_setting` write
 - [ ] Live verification against a real install — this environment has no
       MySQL server (same pre-existing gap noted throughout
       `docs/IMPLEMENTATION_STATUS.md`)
@@ -151,9 +169,6 @@ order.
 - Every `ComponentRenderer` call site (Category, Search, Manufacturer,
   Special, Product) is now wired with `Diagnostics` — no remaining bare
   call sites for this pattern.
-- An admin UI toggle for `mintcart_dev_mode` (Business/Settings facade, or
-  a small Advanced/Settings field) instead of requiring a direct
-  `oc_setting` write.
 - A structured JSON endpoint (same shape as `mintcart/readiness`) as an
   alternative surface to the HTML comment, for tooling that would rather
   fetch diagnostics than scrape a page's markup.

@@ -1353,6 +1353,20 @@ group immediately below it). `docs/developer/onboarding/business-delivery-paymen
 has the full design writeup. Purely additive; no existing menu entry or
 permission check touched. **Tests:** `php -l` clean.
 
+**Update (2026-09-18, routine run — `System → Diagnostics`):** adds one
+entry to the existing `$system` menu array, right after the stock
+"Settings" entry, gated by
+`$this->user->hasPermission('access', 'mintcart/settings/diagnostics')` —
+same conditional-push shape every sibling entry in this file already
+uses. Points at the new `ControllerMintcartSettingsDiagnostics`
+(`upload/admin/controller/mintcart/settings/diagnostics.php`), an admin UI
+toggle for the `mintcart_dev_mode` setting that
+`docs/developer/core/diagnostics.md`'s "Next step" section named as still
+missing (the flag could previously only be set by writing directly to
+`oc_setting`). Purely additive; no existing menu entry, permission check,
+or route touched. **Tests:** `php -l` clean; full `tests/mintcart/`
+suite (81 files) re-run end to end, all passing, no regressions.
+
 ---
 
 ## `upload/admin/model/catalog/category.php` / `upload/admin/controller/catalog/category.php`
@@ -1968,6 +1982,51 @@ entry for the full manual script. Same pre-existing "trimmed repository"
 label-blank gap noted above applies identically to the six new
 `text_manufacturer_picker_*` keys — not a new gap this change
 introduces.
+
+**Update (this run — Phase 12, Entity Picker): Related Products field
+wired into the same admin screen, closing out the entity-picker backend's
+own "identified first consumer" note.** `product_form.twig`'s Related
+Products field (`#input-related`/`product_related[]`, previously only a
+jQuery UI `autocomplete()` field against `catalog/product/autocomplete`)
+gains the same "Browse products" button + hidden `.mc-entity-picker`
+panel pattern as the Category field above, against the already-shipped,
+previously-consumer-less `mintcart/entity/product` backend
+(`docs/developer/components/entity-picker.md` "Product backend"). Like
+Category (not Manufacturer), this is **multi-select** (`multiple: true`)
+since a product can have many related products: confirming a selection
+appends into the exact same `#product-related{id}`/`product_related[]`
+hidden-input well markup the autocomplete's own `select` handler already
+produces, so `ControllerCatalogProduct::validateForm()`/`addProduct()`/
+`editProduct()`'s handling of `product_related[]` is completely
+untouched. No controller change was needed this run — this screen's
+`enqueueMintAssets()` already covers the whole form (added for Category).
+Six new `text_related_picker_*` language keys were added, same
+file/pattern as Category's/Manufacturer's own six.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+the Category/Manufacturer entries above — this is the one true owner of
+the product edit screen's form.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, or `$data` key changed; the existing jQuery autocomplete still
+works exactly as before.
+
+**Tests:** `php -l` clean on the language file (no PHP changed in the
+controller or any `upload/system/library/mintcart/*` class — this is
+Twig/JS/language-file only, reusing the already-tested
+`ProductPickerProvider`/`ControllerMintcartEntity::product()` backend
+as-is). Twig `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag
+counts checked balanced before and after (38/38, 37/37, unchanged — this
+change adds no new conditional/loop tags). The new inline script was
+extracted and checked with `node --check` (valid syntax), same approach
+as the Category/Manufacturer entries, since there is no live browser in
+this environment to exercise it. Full `tests/mintcart/**/*-test.php`
+suite (81 files) re-run end to end — all passing, no regressions (no PHP
+library code changed here). **Not verified:** no live MySQL/admin session
+in this environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for
+the full manual script. Same pre-existing "trimmed repository"
+label-blank gap noted above applies identically to the six new
+`text_related_picker_*` keys — not a new gap this change introduces.
 ## `upload/system/library/db.php`
 
 **Reason:** MC-0006 (`docs/fixes/registry.md`) — `DB::connected()` called
