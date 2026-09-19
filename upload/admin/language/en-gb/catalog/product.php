@@ -33,6 +33,14 @@ $_['text_manufacturer_picker_prev']    = 'Previous';
 $_['text_manufacturer_picker_next']    = 'Next';
 $_['text_manufacturer_picker_confirm'] = 'Select';
 
+// Text - Related Products picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
+$_['text_related_picker_browse']  = 'Browse products';
+$_['text_related_picker_search']  = 'Search products';
+$_['text_related_picker_empty']   = 'No products found.';
+$_['text_related_picker_prev']    = 'Previous';
+$_['text_related_picker_next']    = 'Next';
+$_['text_related_picker_confirm'] = 'Add selected';
+
 // Text - Bulk Editor (MintCart Phase 16, MINTCART_FUNCTIONAL_SCOPE.md §7/§17)
 $_['text_bulk_update']       = 'Bulk update';
 $_['text_bulk_field_status']   = 'Status';
@@ -40,6 +48,7 @@ $_['text_bulk_field_quantity'] = 'Quantity';
 $_['text_bulk_field_price']    = 'Price';
 $_['text_bulk_field_manufacturer'] = 'Manufacturer';
 $_['text_bulk_field_stock_status'] = 'Stock Status';
+$_['text_bulk_field_special'] = 'Special Price';
 
 // Column
 $_['column_name']            = 'Product Name';

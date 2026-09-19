@@ -650,7 +650,15 @@ class ControllerCommonHome extends Controller {
 			'body'           => $settings['body'],
 			'image'          => $image,
 			'image_alt'      => $settings['image_alt'],
-			'image_position' => $settings['image_position']
+			'image_position' => $settings['image_position'],
+			// MintCart: threaded through so text-image.twig can render
+			// explicit <img width>/<height> (Functional Scope §19
+			// "responsive images; width/height"), same convention
+			// banner-grid/gallery blocks already use. Only meaningful
+			// alongside $image - a null image means the template never
+			// reads them.
+			'image_width'    => $settings['image_width'],
+			'image_height'   => $settings['image_height']
 		));
 	}
 

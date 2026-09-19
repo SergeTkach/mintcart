@@ -13,6 +13,23 @@ than silently fixing and forgetting to update this file.
 
 ---
 
+## Phase 13 — Wizard Delivery step never rendered live
+
+No MySQL/OpenCart admin session in this environment. Confirm on a real
+install: `mintcart/wizard?step=delivery` lists every installed shipping
+extension with its real enabled/disabled state; clicking Enable/Disable
+(`mintcart/wizard.toggleDelivery`) flips only that extension's
+`shipping_<code>_status` key and leaves its other settings (cost, tax
+class, geo zone, ...) untouched — the same check
+`docs/developer/onboarding/business-delivery-payments.md`'s own
+`Business → Delivery` entry already asks for, now against a second call
+site; "Manage delivery methods" links to a working `mintcart/business/delivery`
+page; a store with zero shipping extensions installed shows the empty
+state instead of an empty list; and clicking Continue with nothing enabled
+still advances to the Ready step (no required-field validation for this
+step), while the Ready step's own checklist correctly still shows
+"shipping" as outstanding until at least one method is enabled.
+
 ## Phase 13 — Wizard Language & currency step never rendered live
 
 No MySQL/OpenCart admin session in this environment. Confirm on a real
@@ -383,6 +400,47 @@ instead of multi-select. On a real install:
    pre-populated in both the text input and the picker's underlying
    state.
 8. Confirm labels on the new UI render as real text, not blank — same
+   pre-existing "trimmed repository" caveat as the Category picker's own
+   step 10 above; not a new gap.
+
+## `product_form.twig`'s Related Products `McEntityPicker`, never exercised end to end
+
+Same asset-enqueue mechanism as the Category/Manufacturer pickers above
+(already loaded on this same form — no separate enqueue to verify), and
+**multi-select** like Category (not single-select like Manufacturer). On
+a real install:
+
+1. Go to **Catalog → Products → Edit** (or **Add**) any product, open the
+   **Links** tab.
+2. Confirm the existing Related Products autocomplete input still works
+   exactly as before (type a few letters, pick a suggestion, confirm it
+   appears in the well below with a red minus-circle icon) — this change
+   must not have altered that at all.
+3. Confirm a new "Browse products" button appears below the Related
+   Products well, styled as an `mc-button`.
+4. Click it — confirm a search box + product list appears (with
+   thumbnails for products that have an image, `null`/no image
+   otherwise), paginates via Previous/Next, and that typing filters
+   results (debounced, ~250ms). Unlike Category/Manufacturer's PHP-side
+   paging, this list pages at the SQL level — confirm page 2 shows the
+   *next* set of products, not a repeat or a skip.
+5. Select two or three products (multi-select, same interaction as the
+   Category picker), click "Add selected" — confirm the panel closes and
+   every selected product appears in the well below (`#product-related`),
+   each with its own hidden `product_related[]` input, without disturbing
+   any product already added via the old autocomplete.
+6. Re-open the picker and select a product already present in the well —
+   confirm it does not create a duplicate row (the existing row is
+   replaced, same de-dupe behavior the Category picker's own step
+   verifies).
+7. Remove a related product via the well's minus-circle icon (either one
+   added by the picker or by the old autocomplete) — confirm removal
+   works identically regardless of which UI added it.
+8. Save the product — confirm every `product_related[]` value is saved
+   correctly regardless of whether it was added via the old autocomplete
+   or the new picker, and re-opening the edit form shows the same
+   products pre-populated in the well.
+9. Confirm labels on the new UI render as real text, not blank — same
    pre-existing "trimmed repository" caveat as the Category picker's own
    step 10 above; not a new gap.
 
@@ -853,6 +911,18 @@ specials:
    throwing a fatal error.
 6. Confirm the legacy Delete/Copy buttons still behave exactly as before
    (this increment must not have changed their behavior).
+7. Choose "Special Price" and type a number (e.g. `9.99`), submit, and
+   confirm: (a) the selected products' **Data** tab now shows a Special
+   row at that price for the default customer group with no date range,
+   and (b) for a product that already had one or more existing Special
+   rows (set via the normal edit form, especially one with a non-default
+   customer group or a date range), those rows are fully **replaced** by
+   the single new flat-price row, not appended to. Then bulk-update the
+   same products again with "Special Price" left **blank** and confirm
+   the Special row(s) are removed entirely (product reverts to its normal
+   Price). Also submit "Special Price" with an invalid value (e.g. `-1`)
+   and confirm the same rejection-warning behavior as the other numeric
+   fields.
 
 ## Phase 14 — `menu-mintcart-business` merge fix, never seen rendered live
 
@@ -1009,3 +1079,51 @@ On a real install with `mint_default` active:
 5. Confirm `product/manufacturer/info` (an individual brand's product
    listing, already shipped) is unaffected — this change only touches the
    sibling `index()` method and adds a new template for a different route.
+## Phase 19 — Responsive image `width`/`height` + lazy loading, never rendered in a browser
+
+`category.php`/`product.php`/`home.php`'s new `thumb_width`/`thumb_height`/
+`image_width`/`image_height` values are simple config-value threading (no
+new logic), and `php -l` plus the full `tests/mintcart/` suite (81 files)
+pass, and every touched `.twig` file's `if`/`endif`/`for`/`endfor` tag
+counts were re-checked balanced — but no live MySQL/Twig session in this
+environment means none of this was ever actually rendered and inspected
+in a browser. On a real `mint_default`-themed install:
+
+1. Open a category page for a category that has its own image configured
+   (`Catalog → Categories → Edit → Data → Image`). Confirm the category
+   thumbnail (`img-fluid rounded`, next to the description) has explicit
+   `width`/`height` attributes matching
+   `Design → Theme` (or `Settings → Store` per‑theme) settings'
+   "Category Image" width/height, and that the layout does not visibly
+   shift once the image finishes loading (throttle the network in dev
+   tools to see the reserved space hold before the image paints).
+2. Open a product detail page for a product with at least one additional
+   image (`Catalog → Products → Edit → Links/Images` — the "Additional
+   Images" tab). Confirm:
+   - the main gallery image (`mc-product-gallery__main`) has explicit
+     `width`/`height` matching the theme's "Thumb Image" size, and has
+     **no** `loading="lazy"` attribute (it should load eagerly — it's the
+     page's largest above-the-fold image);
+   - every thumbnail in the strip below it (`mc-product-gallery__thumb-image`,
+     including the first one that duplicates the main image) has both
+     explicit `width`/`height` matching the theme's "Additional Image"
+     size **and** `loading="lazy"`;
+   - clicking a thumbnail still swaps the main image via the existing
+     `data-mc-action="gallery-thumb"` JS exactly as before — this change
+     only adds attributes to already-existing `<img>` tags, no markup
+     structure or JS behavior changed.
+3. Open a homepage that has a Homepage Builder "Text + Image" (or plain
+   "Text") block configured with an image. Confirm the block's `<img>` now
+   has explicit `width`/`height` (defaulting to 800×600 when the block's
+   own settings don't override them — `MintCart\Blocks\TextImageBlockProvider`'s
+   defaults) and `loading="lazy"`, matching the Banner Grid/Gallery blocks'
+   already-existing images on the same page. Confirm a "Text + Image"
+   block with **no** image configured still renders correctly (title/body
+   only, no broken `<img>` tag, no layout regression) — this change only
+   threads values through when an image exists, per `renderTextImageBlock()`'s
+   own `$image === null` short-circuit.
+4. Confirm the legacy `default` theme's `category.twig`/`product.twig`
+   (neither of which this change touches) render byte-identical to before —
+   this increment only ever changes `mint_default`'s own templates plus the
+   controllers' `$data` arrays, and `default`'s templates never read the
+   new keys.

@@ -330,8 +330,18 @@ class ControllerProductProduct extends Controller {
 				$data['popup'] = '';
 			}
 
+			// MintCart: width/height alongside each resized image so
+			// product.twig can render explicit <img width>/<height>
+			// (Functional Scope §19 "responsive images; width/height" —
+			// prevents layout shift while the gallery loads), same
+			// convention ProductViewProvider already uses for
+			// product.image_width/product.image_height on the listing
+			// product card.
+			$data['thumb_width'] = (int)$this->config->get('theme_' . $this->config->get('config_theme') . '_image_thumb_width');
+			$data['thumb_height'] = (int)$this->config->get('theme_' . $this->config->get('config_theme') . '_image_thumb_height');
+
 			if ($product_info['image']) {
-				$data['thumb'] = $this->model_tool_image->resize($product_info['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_thumb_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_thumb_height'));
+				$data['thumb'] = $this->model_tool_image->resize($product_info['image'], $data['thumb_width'], $data['thumb_height']);
 			} else {
 				$data['thumb'] = '';
 			}
@@ -340,10 +350,15 @@ class ControllerProductProduct extends Controller {
 
 			$results = $this->model_catalog_product->getProductImages($this->request->get['product_id']);
 
+			$additional_width = (int)$this->config->get('theme_' . $this->config->get('config_theme') . '_image_additional_width');
+			$additional_height = (int)$this->config->get('theme_' . $this->config->get('config_theme') . '_image_additional_height');
+
 			foreach ($results as $result) {
 				$data['images'][] = array(
-					'popup' => $this->model_tool_image->resize($result['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_popup_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_popup_height')),
-					'thumb' => $this->model_tool_image->resize($result['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_additional_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_additional_height'))
+					'popup'        => $this->model_tool_image->resize($result['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_popup_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_popup_height')),
+					'thumb'        => $this->model_tool_image->resize($result['image'], $additional_width, $additional_height),
+					'thumb_width'  => $additional_width,
+					'thumb_height' => $additional_height
 				);
 			}
 

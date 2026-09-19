@@ -279,6 +279,30 @@ own page/limit/total arithmetic. **Tests:** `php -l` clean;
 existing) covers the builder itself; full `tests/mintcart/` suite (78
 files) re-run end to end — all passing, no regressions.
 
+**Update (2026-09-18, routine run — Performance, responsive images):**
+`$data['thumb']`'s resize call already reads
+`theme_<theme>_image_category_width`/`_height` from config — this run
+just also stores those two ints as `$data['thumb_width']`/
+`$data['thumb_height']` so `mint_default/template/product/category.twig`
+can render explicit `<img width>`/`<height>` on the category thumbnail
+(`MINTCART_FUNCTIONAL_SCOPE.md` §19 "responsive images; width/height" —
+prevents layout shift while the image loads), the same convention
+`ProductViewProvider` already established for the listing product card's
+`product.image_width`/`product.image_height`. No resize behavior change:
+the same two config values are passed into `resize()` as before, just
+captured into named variables first instead of being read from
+`$this->config->get()` twice. **Why it can't live in the MintCart layer:**
+`$data` is this controller's own view-data array; there is no other place
+to add these two keys. **Compatibility impact:** none — purely additive
+keys, no existing key/behavior changed; the stock `default` theme's own
+`category.twig` is untouched and never reads these new keys. **Tests:**
+`php -l` clean; full `tests/mintcart/` suite (81 files) re-run end to
+end — all passing, no regressions (no new test file needed — this is
+config-value threading, not new logic to unit-test). `category.twig`'s
+Twig `if`/`endif`/`for`/`endfor` tag counts checked balanced before and
+after (13/13, 5/5). **Not verified:** no live MySQL/Twig session in this
+environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 19 entry.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/category.php`
@@ -1260,6 +1284,31 @@ Settings → Store's meta fields are filled in) that the homepage renders
 `<title>{store name}</title>` instead of an empty tag (see
 `docs/MANUAL_VERIFICATION.md`'s Phase 18 section).
 
+**Update (2026-09-18, routine run — Performance, responsive images):**
+`renderTextImageBlock()` already resolves the block's image via
+`model_tool_image->resize($settings['image'], $settings['image_width'],
+$settings['image_height'])` — `TextImageBlockProvider::build()` has
+always computed those two ints (defaulting to 800x600) — but the render
+array passed to `mint/blocks/text-image.twig` never included them, so the
+template had no way to render `<img width>`/`<height>` at all. This run
+adds `'image_width'`/`'image_height'` to that render array; the template
+change lives in the `mint_default` theme entry below, not here (this file
+only tracks OpenCart-side controller changes, and `home.php` — unlike
+`category.php`/`product.php` above — is itself already a MintCart-owned,
+fully-additive controller method with no stock OpenCart behavior to stay
+compatible with). **Why it can't live in the MintCart layer:** the
+provider already computed the right values; the gap was purely in this
+controller forgetting to pass them through to the renderer, no different
+in kind from a typo. **Compatibility impact:** none — an unused key added
+to an array only this block's own template reads. **Tests:** `php -l`
+clean; full `tests/mintcart/` suite (81 files) re-run end to end — all
+passing, no regressions (no new test file needed — `TextImageBlockProvider`
+already unit-tests `image_width`/`image_height`'s own value, this is
+wiring-only). `text-image.twig`'s Twig `if`/`endif` tag counts checked
+balanced before and after (8/8). **Not verified:** no live MySQL/Twig
+session in this environment — see `docs/MANUAL_VERIFICATION.md`'s new
+Phase 19 entry.
+
 ---
 
 ## `upload/catalog/view/theme/mint_default/template/common/home.twig` (new file)
@@ -1356,6 +1405,20 @@ shape every other menu group in this file already uses (see the Marketing
 group immediately below it). `docs/developer/onboarding/business-delivery-payments.md`
 has the full design writeup. Purely additive; no existing menu entry or
 permission check touched. **Tests:** `php -l` clean.
+
+**Update (2026-09-18, routine run — `System → Diagnostics`):** adds one
+entry to the existing `$system` menu array, right after the stock
+"Settings" entry, gated by
+`$this->user->hasPermission('access', 'mintcart/settings/diagnostics')` —
+same conditional-push shape every sibling entry in this file already
+uses. Points at the new `ControllerMintcartSettingsDiagnostics`
+(`upload/admin/controller/mintcart/settings/diagnostics.php`), an admin UI
+toggle for the `mintcart_dev_mode` setting that
+`docs/developer/core/diagnostics.md`'s "Next step" section named as still
+missing (the flag could previously only be set by writing directly to
+`oc_setting`). Purely additive; no existing menu entry, permission check,
+or route touched. **Tests:** `php -l` clean; full `tests/mintcart/`
+suite (81 files) re-run end to end, all passing, no regressions.
 
 ---
 
@@ -1972,6 +2035,51 @@ entry for the full manual script. Same pre-existing "trimmed repository"
 label-blank gap noted above applies identically to the six new
 `text_manufacturer_picker_*` keys — not a new gap this change
 introduces.
+
+**Update (this run — Phase 12, Entity Picker): Related Products field
+wired into the same admin screen, closing out the entity-picker backend's
+own "identified first consumer" note.** `product_form.twig`'s Related
+Products field (`#input-related`/`product_related[]`, previously only a
+jQuery UI `autocomplete()` field against `catalog/product/autocomplete`)
+gains the same "Browse products" button + hidden `.mc-entity-picker`
+panel pattern as the Category field above, against the already-shipped,
+previously-consumer-less `mintcart/entity/product` backend
+(`docs/developer/components/entity-picker.md` "Product backend"). Like
+Category (not Manufacturer), this is **multi-select** (`multiple: true`)
+since a product can have many related products: confirming a selection
+appends into the exact same `#product-related{id}`/`product_related[]`
+hidden-input well markup the autocomplete's own `select` handler already
+produces, so `ControllerCatalogProduct::validateForm()`/`addProduct()`/
+`editProduct()`'s handling of `product_related[]` is completely
+untouched. No controller change was needed this run — this screen's
+`enqueueMintAssets()` already covers the whole form (added for Category).
+Six new `text_related_picker_*` language keys were added, same
+file/pattern as Category's/Manufacturer's own six.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+the Category/Manufacturer entries above — this is the one true owner of
+the product edit screen's form.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, or `$data` key changed; the existing jQuery autocomplete still
+works exactly as before.
+
+**Tests:** `php -l` clean on the language file (no PHP changed in the
+controller or any `upload/system/library/mintcart/*` class — this is
+Twig/JS/language-file only, reusing the already-tested
+`ProductPickerProvider`/`ControllerMintcartEntity::product()` backend
+as-is). Twig `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag
+counts checked balanced before and after (38/38, 37/37, unchanged — this
+change adds no new conditional/loop tags). The new inline script was
+extracted and checked with `node --check` (valid syntax), same approach
+as the Category/Manufacturer entries, since there is no live browser in
+this environment to exercise it. Full `tests/mintcart/**/*-test.php`
+suite (81 files) re-run end to end — all passing, no regressions (no PHP
+library code changed here). **Not verified:** no live MySQL/admin session
+in this environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for
+the full manual script. Same pre-existing "trimmed repository"
+label-blank gap noted above applies identically to the six new
+`text_related_picker_*` keys — not a new gap this change introduces.
 ## `upload/system/library/db.php`
 
 **Reason:** MC-0006 (`docs/fixes/registry.md`) — `DB::connected()` called
@@ -2369,6 +2477,38 @@ already covers this exact shape, no new test file needed; full
 regressions. **Not verified:** no live MySQL/Twig session in this
 environment — see `docs/fixes/registry.md` MC-0016 for the manual step a
 human should run.
+
+**Update (2026-09-18, routine run — Performance, responsive images):**
+`$data['thumb']` (main product image) and each `$data['images'][]` entry's
+`'thumb'` (gallery strip thumbnail) already resize via
+`theme_<theme>_image_thumb_width`/`_height` and
+`theme_<theme>_image_additional_width`/`_height` config respectively —
+this run captures those same values into `$data['thumb_width']`/
+`$data['thumb_height']` and each image's own `'thumb_width'`/
+`'thumb_height'` so `mint_default/template/product/product.twig` can
+render explicit `<img width>`/`<height>` (`MINTCART_FUNCTIONAL_SCOPE.md`
+§19 "responsive images; width/height" — prevents layout shift), same
+convention as the `category.php` entry above. No resize behavior change —
+the same config values are passed into `resize()` as before, just also
+captured into named variables/array keys. The gallery thumbnail strip
+(`mc-product-gallery__thumb-image`, small below/beside the main image)
+also gains `loading="lazy"`; the main gallery image
+(`mc-product-gallery__main`, the page's LCP candidate) deliberately does
+not, matching `product-card.twig`'s own already-established convention of
+never lazy-loading the primary above-the-fold image. **Why it can't live
+in the MintCart layer:** `$data`/`$data['images']` are this controller's
+own view-data arrays; there is no other place to add these keys.
+**Compatibility impact:** none — purely additive keys/attribute, no
+existing key/behavior changed; the legacy `default` theme's own
+`product.twig` is untouched and never reads these new keys. **Tests:**
+`php -l` clean; full `tests/mintcart/` suite (81 files) re-run end to
+end — all passing, no regressions (no new test file needed — this is
+config-value threading, not new logic to unit-test). `product.twig`'s
+Twig `if`/`endif`/`for`/`endfor` tag counts checked balanced before and
+after (36/36, 11/11). **Not verified:** no live MySQL/Twig session in
+this environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 19
+entry.
+
 ## `upload/admin/model/catalog/product.php` / `upload/admin/controller/catalog/product.php` / `upload/admin/view/template/catalog/product_list.twig`
 
 **Reason:** Phase 16 (Bulk Editor, `MINTCART_FUNCTIONAL_SCOPE.md` §7/§17,
@@ -2450,6 +2590,51 @@ coverage, including the rejection cases); full `tests/mintcart/` suite
 the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
 section.
+
+**Update (2026-09-18, routine run — Phase 16, Bulk Editor):** added
+`special_price` as a sixth whitelisted bulk-update field.
+`BulkProductUpdateValidator::FIELDS` gains the entry (blank = remove the
+special, or a non-negative number). Unlike every prior field,
+`special_price` does not map to an `oc_product` column — it lives in
+`oc_product_special` — so `ModelCatalogProduct::updateProductField()`
+gained a dedicated branch for it instead of a `$columns` map entry:
+delete every existing `oc_product_special` row for the product, then (only
+if a non-blank value was given) insert exactly one row at the store's
+default customer group (`config_customer_group_id`), `priority = 1`, no
+date range (`date_start`/`date_end` both `'0000-00-00'`) — a deliberate
+simplification of the full product-edit form's multi-row/date-ranged
+Special support, the simplest thing a single `bulk_value` text input can
+express (full reasoning: `docs/developer/catalog/bulk-editor.md`, "Why a
+new model method, not `editProduct()`"). `product_list.twig`'s toolbar
+`<select>` gains a "Special Price" option (plus its
+`text_bulk_field_special` language key). `category_ids` remains
+deliberately excluded from this whitelist — see the same doc's "Next
+step" for why (it needs a multi-select control this single-text-input
+toolbar doesn't have, and is already validated separately by
+`MintCart\Catalog\BulkProductUpdatePlanner`).
+
+**Why it can't live in the MintCart layer:** same reasoning as the two
+entries above — `oc_product`/`oc_product_special` stay OpenCart core
+storage; extending the existing model/controller/template keeps the
+product's special price under one true owner instead of forking it into a
+second, Mint-only table.
+
+**Compatibility impact:** none — purely additive. No existing method
+signature, column, or `editProduct()`/product-edit-form behavior changed;
+a bulk special-price update only touches `oc_product_special` rows for
+the exact products the merchant selected in this action.
+
+**Tests:** `php -l` clean on all touched/added files. `tests/mintcart/catalog/bulk-product-update-validator-test.php`
+grows from 41 to 46 assertions (special_price whitelist + value-validation
+coverage including blank-is-valid and the rejection cases); full
+`tests/mintcart/**/*-test.php` suite (81 files) re-run end to end — all
+passing, no regressions. `product_list.twig`'s tag counts re-checked
+balanced (14/14, 2/2) after the new `<option>`. Same pre-existing gap: no
+live MySQL/admin session in this environment — a human should confirm a
+bulk special-price update replaces (not adds to) any existing
+`oc_product_special` row(s) for a product, including one previously set
+via the normal edit form with a non-default customer group or a date
+range — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16 section.
 
 ## `upload/catalog/controller/extension/feed/google_sitemap.php`
 

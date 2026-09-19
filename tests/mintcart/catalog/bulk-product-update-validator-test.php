@@ -42,6 +42,7 @@ assertTrue($validator->isValidField('quantity'), 'isValidField: quantity is vali
 assertTrue($validator->isValidField('price'), 'isValidField: price is valid', $failures);
 assertTrue($validator->isValidField('manufacturer_id'), 'isValidField: manufacturer_id is valid', $failures);
 assertTrue($validator->isValidField('stock_status_id'), 'isValidField: stock_status_id is valid', $failures);
+assertTrue($validator->isValidField('special_price'), 'isValidField: special_price is valid', $failures);
 assertTrue(!$validator->isValidField('category_ids'), 'isValidField: category_ids is not (yet) a whitelisted field', $failures);
 assertTrue(!$validator->isValidField(''), 'isValidField: blank is not valid', $failures);
 
@@ -89,6 +90,14 @@ assertTrue($validator->validateValue('stock_status_id', '2.5') !== null, 'stock_
 assertTrue($validator->validateValue('stock_status_id', 'instock') !== null, 'stock_status_id: a non-numeric value is rejected', $failures);
 assertTrue($validator->validateValue('stock_status_id', '') !== null, 'stock_status_id: blank is rejected', $failures);
 
+// --- validateValue() - special_price ---
+
+assertSame(null, $validator->validateValue('special_price', ''), 'special_price: blank (remove special) is valid', $failures);
+assertSame(null, $validator->validateValue('special_price', '0'), 'special_price: 0 is valid', $failures);
+assertSame(null, $validator->validateValue('special_price', '9.99'), 'special_price: a decimal is valid', $failures);
+assertTrue($validator->validateValue('special_price', '-1') !== null, 'special_price: a negative number is rejected', $failures);
+assertTrue($validator->validateValue('special_price', 'free') !== null, 'special_price: a non-numeric value is rejected', $failures);
+
 // --- validateValue() - unknown field, defensive ---
 
 assertTrue($validator->validateValue('category_ids', '5') !== null, 'validateValue: an unwhitelisted field always errors, defensively', $failures);
@@ -108,5 +117,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BulkProductUpdateValidator smoke test (41 scenarios)\n";
+echo "PASS: BulkProductUpdateValidator smoke test (46 scenarios)\n";
 exit(0);
