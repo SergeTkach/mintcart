@@ -457,6 +457,17 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			// MintCart\Core\Diagnostics admin toggle for the
+			// 'mintcart_dev_mode' setting (MINTCART_FUNCTIONAL_SCOPE.md
+			// §19, docs/developer/core/diagnostics.md's "Next step").
+			if ($this->user->hasPermission('access', 'mintcart/settings/diagnostics')) {
+				$system[] = array(
+					'name'	   => $this->language->get('text_mintcart_settings_diagnostics'),
+					'href'     => $this->url->link('mintcart/settings/diagnostics', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			// Users
 			$user = array();
 

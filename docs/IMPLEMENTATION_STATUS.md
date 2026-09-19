@@ -3527,8 +3527,11 @@ tracked once each.)*
       still-open PR #76 as of this run, not yet on this branch's base.
       (`category.php` blank language strings) and MC-0002 (`search.php`
       missing canonical/prev/next links, this run)
-- [ ] Diagnostics dev mode (query count, DB time, render time, cache status) —
-      an open PR (#75) covers this; not yet on `master`
+- [~] Diagnostics dev mode (query count, DB time, render time, cache status) —
+      collection + `ComponentRenderer` wiring + HTML-comment surface +
+      admin toggle (`System → Diagnostics`) all land on `master` as of
+      2026-09-18; only real DB query counting remains open (see the Phase
+      10/Phase 19 sections above and `docs/developer/core/diagnostics.md`)
 - [x] Cache invalidation API — `MintCart\Core\Cache\CacheInvalidator`
       (`upload/system/library/mintcart/core/cache/cacheinvalidator.php`), a
       domain → cache-key-prefix registry (`catalog`/`localization`/
@@ -3553,7 +3556,8 @@ tracked once each.)*
       language strings), and MC-0004 (`tool/backup`'s user/user_group
       restore safety-stop hardcoded a byte-length instead of deriving it
       from `DB_PREFIX`, this run — see below)
-- [ ] Diagnostics dev mode (query count, DB time, render time, cache status)
+- [~] Diagnostics dev mode (query count, DB time, render time, cache status) —
+      see the entry above; admin toggle added 2026-09-18
 - [~] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
@@ -3891,6 +3895,30 @@ this phase (diagnostics, measured performance work) is not started.
       `docs/upstream-diff.md`'s `product.php` entry. Verified: `php -l`
       clean; full `tests/mintcart/` suite (77 files) re-run end to end —
       all passing, no regressions.
+      **Update (2026-09-18, routine run): admin UI toggle for
+      `mintcart_dev_mode`.** Every `ComponentRenderer` call site was already
+      wired (above); the flag itself could still only be set by writing
+      directly to `oc_setting`. Added `ControllerMintcartSettingsDiagnostics`
+      (`upload/admin/controller/mintcart/settings/diagnostics.php`, route
+      `mintcart/settings/diagnostics`) — one checkbox, one Save, same
+      thin-facade-over-`ModelSettingSetting` shape as
+      `ControllerMintcartSeoSystemPages`/`ControllerMintcartBusinessContacts`.
+      Stores the flag under its own settings code group (`mintcart_dev_mode`,
+      same key) rather than merging into `config`, to avoid
+      `ModelSettingSetting::editSetting()`'s "delete-then-reinsert wipes the
+      rest of the group" trap for a group it doesn't own. Menu entry added
+      to the existing `System` group in
+      `upload/admin/controller/common/column_left.php` (see
+      `docs/upstream-diff.md`'s entry) — step 0 confirmed neither open PR at
+      the time (#127 "PackageExtractor", #128 "BackupExecutor") touches
+      `column_left.php` or any admin `mintcart/settings/*` path. Full
+      writeup: `docs/developer/core/diagnostics.md`. Verified: `php -l`
+      clean on all four new/changed PHP files; full `tests/mintcart/` suite
+      (81 files) re-run end to end, all passing, no regressions — no new
+      test file needed (a thin controller wrapping an already-tested
+      setting-storage pattern, same as its sibling admin screens, none of
+      which have their own controller-level test in this repo). Only real
+      DB query counting remains open for this checklist item now.
 - [ ] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis)
 
@@ -5920,6 +5948,27 @@ overlapping this increment's files. Re-check `gh pr list --state open`
 before picking the next step.
 
 **Trailer note (2026-09-18, routine run):** `list_pull_requests` returned
+exactly two open PRs at the start of this run — #127 ("Consolidate
+unmerged MintCart work" — actual remaining diff is
+`MintCart\Update\PackageExtractor` only) and #128
+("`MintCart\Update\BackupExecutor`") — both pure Phase 11 (Update Manager)
+work, neither touching `column_left.php`, any `mintcart/settings/*` path,
+or the Homepage Builder hot files (§0f: block-type registry, `block.css`).
+Picked a different, unclaimed Phase 10/19 item instead of Update Manager
+(both open PRs' own "next candidates" point at wiring their new classes
+into `UpdateOrchestrator::apply()`, which needs both to merge first — not
+started here to avoid duplicating in-flight work). Added the admin UI
+toggle for `mintcart_dev_mode` (`System → Diagnostics`) that
+`docs/developer/core/diagnostics.md`'s "Next step" section had named as
+the one remaining Diagnostics gap besides real query counting — see the
+Phase 10 (Technical Plan) section above for the full writeup. `php -l`
+clean; full `tests/mintcart/` suite (81 files) re-run end to end, all
+passing, no regressions. **Next candidates:** real DB query counting for
+`MintCart\Core\Diagnostics` (still needs the `\DB\MySQLi`-hooking
+upstream-diff decision); a structured JSON diagnostics endpoint as an
+alternative to the HTML-comment surface; wiring `PackageExtractor`/
+`BackupExecutor` into `UpdateOrchestrator::apply()` once #127/#128 merge;
+or re-check `gh pr list --state open` first.
 exactly one open PR at the start of this run, #127 ("Consolidate unmerged
 MintCart work"), whose actual diff against current `master`
 (`gh pr view 127 --json files`) is scoped entirely to
