@@ -4711,6 +4711,39 @@ extraction (still unbuilt anywhere in this codebase); or wiring
 `UpdateChecker`/`BackupPlanner` as the decision point before a caller
 invokes this orchestrator — or re-check `gh pr list --state open` first.
 
+---
+
+**Update (2026-09-19, routine run): the `mc_installed_file` ledger
+(ADR 005 decision #1) is built and wired in.** `list_pull_requests`
+returned zero open PRs at the start of this run. New migration
+`202609191200_create_mc_installed_file.php` (InnoDB/utf8mb4, `UNIQUE KEY`
+on `(package_name, file_path)`) and new `MintCart\Update\InstalledFileLedger`
+(`record()`/`forPackage()`) — wired into `UpdateOrchestrator::apply()` as
+a 11th, independently-optional constructor argument (same pattern as
+`$cache`/`$healthCheck`), calling `record()` with the manifest's own
+package name and the `files` step's own `installed[]` right after that
+step succeeds. Full writeup: `docs/developer/update/installed-file-ledger.md`;
+updated "not done yet" notes in `update-orchestrator.md`,
+`package-file-installer.md`, `package-manifest.md`, and ADR 005's own
+Consequences section. `php -l` clean on all touched files; new
+`tests/mintcart/update/installed-file-ledger-test.php` (6 scenarios) plus
+a new `UpdateOrchestrator` scenario (11 total, up from 10);
+`tests/mintcart/core/mc-block-migrations-test.php` updated for the new
+migration now discovered alongside the Homepage Builder ones. Full
+`tests/mintcart/**/*-test.php` suite re-run end to end (84 files, up from
+83) — all passing, no regressions. Not verified: no live MySQL in this
+environment, same pre-existing gap every other Mint-owned table carries.
+
+**Next candidates:** a real admin controller/route (`mintcart/update/*`)
+that actually builds a `PackageManifest`, resolves a download URL, and
+calls `apply()` on a real install (still the biggest remaining gap —
+nothing calls `apply()` outside tests, even though every constituent step
+including `PackageExtractor`/`BackupPlanner`+`BackupExecutor`/
+`InstalledFileLedger` now exists and is wired into `apply()` itself); the
+"changed since install" comparison itself (current on-disk sha256 vs. the
+ledger's recorded value) once a rollback consumer exists to justify it; or
+re-check `gh pr list --state open` first.
+
 ## Phase 12 — Early Access
 
 - [ ] 10–30 real users/developers
@@ -6362,3 +6395,14 @@ actually builds a `PackageManifest`, resolves a download URL, and calls
 the `mc_installed_file` ledger (needs a new migration); `UpdateChecker`
 wiring for the `check`/`compatibility` steps `apply()` still leaves to the
 caller; or re-check `gh pr list --state open` first.
+
+**Trailer note (2026-09-19, later routine run):** the `mc_installed_file`
+ledger named just above is now built — `list_pull_requests` returned zero
+open PRs at the start of this run. See the Phase 11 (Technical Plan)
+section above (the entry right before "Phase 12 — Early Access") for the
+full writeup: new migration, new `MintCart\Update\InstalledFileLedger`,
+wired into `UpdateOrchestrator::apply()` as an optional 11th constructor
+argument. **Next candidates:** the admin controller/`mintcart/update/*`
+route (still the only remaining gap before a real install can run
+`apply()`); the "changed since install" comparison itself; or re-check
+`gh pr list --state open` first.

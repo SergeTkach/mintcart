@@ -122,6 +122,13 @@ permission group.
   `PackageManifest`. Neither is added by this ADR — this document exists so
   that increment doesn't have to re-derive these seven answers from
   scratch, per Functional Scope §21's own gate.
+  **Update (2026-09-19):** both are now done — `removes` shipped alongside
+  `BackupPlanner`; the table (migration
+  `202609191200_create_mc_installed_file.php`) and its writer
+  (`MintCart\Update\InstalledFileLedger`, wired into
+  `UpdateOrchestrator::apply()`) ship in this increment. Still not built:
+  the "changed since install" comparison itself and any restore/rollback
+  action — see `docs/developer/update/installed-file-ledger.md`.
 - Rollback is confirmed to be its own action/service layered on top of the
   Update Manager's `files` step, not a step inside the main Update Manager
   flow itself — consistent with Functional Scope §21 calling it out as a

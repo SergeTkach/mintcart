@@ -64,12 +64,17 @@ class).
   between `verify` and `maintenance` — before anything is overwritten, and
   before the store is even put into maintenance mode. When omitted, no
   snapshot is taken, exactly as before.
-- **The `mc_installed_file` ledger** (ADR 005 decision #1). `apply()`'s
-  result carries every installed file's sha256 under `files.installed[]`
-  (from `PackageFileInstaller::install()`) — the exact input that ledger
-  needs — but this class does not persist it. No table exists yet; adding
-  one is a Migration Manager change for whoever builds the admin screen
-  around this orchestrator, not this class's job.
+- ~~The `mc_installed_file` ledger.~~ **Wired in (optional).**
+  `MintCart\Update\InstalledFileLedger`
+  (`docs/developer/update/installed-file-ledger.md`, 11th constructor
+  argument) is injected the same independently-optional way as
+  `cache`/`healthCheck`. When provided, `apply()` calls
+  `InstalledFileLedger::record($manifest->name(), $result['files']['installed'])`
+  right after the `files` step succeeds — the exact input
+  `PackageFileInstaller::install()`'s own docblock named as "the exact
+  input the future `mc_installed_file` ledger needs once a real caller
+  writes it." When omitted (the default), no ledger write is attempted,
+  exactly as before this wiring existed.
 - **Any admin controller/route.** No `mintcart/update/*` route exists yet.
   This class is the flow's orchestration primitive; wiring a real admin
   screen (upload a package, show progress, call `apply()`) around it is
@@ -87,7 +92,9 @@ $orchestrator = new UpdateOrchestrator(
     new HealthCheck(),                            // optional
     new PackageExtractor(),                       // optional — extract download archive
     new BackupPlanner(),                          // optional, must pair with BackupExecutor
-    new BackupExecutor()                          // optional, must pair with BackupPlanner
+    new BackupExecutor(),                         // optional, must pair with BackupPlanner
+    null,                                          // $timestampFactory — optional, defaults to date('YmdHis')
+    new InstalledFileLedger($db, DB_PREFIX)       // optional — records files-step sha256s
 );
 
 $result = $orchestrator->apply(
@@ -132,6 +139,12 @@ $result = $orchestrator->apply(
   as a no-op. `backupPlanner`/`backupExecutor` must be passed together
   (both `null` or both set); passing only one throws
   `\InvalidArgumentException` at construction time.
+- **`installedFiles` (`InstalledFileLedger`) is independently optional**,
+  same as `cache`/`healthCheck` — but its call is not a named flow step of
+  its own (it is not one of the `check → ... → done` sequence names), so it
+  never appears in `completed_steps`; a failure while recording surfaces as
+  a `migrations`-step failure (the next named step after `files`), since
+  the ledger write happens between the two.
 - **No OpenCart dependency of its own.** Every dependency is injected —
   `MigrationManager`'s `$db` still only needs to duck-type OpenCart's
   `\DB` (`query()`/`escape()`), `MaintenanceMode` needs a `SettingsAdapter`,
@@ -141,8 +154,13 @@ $result = $orchestrator->apply(
 ## Verified
 
 `php -l` clean on the modified file and across the full `upload`/`tests`
-tree. `tests/mintcart/update/update-orchestrator-test.php` (10 scenarios,
-up from 7 — full happy path in step order; a store already in maintenance
+tree. `tests/mintcart/update/update-orchestrator-test.php` (11 scenarios,
+up from 10 — **new:** injecting an `InstalledFileLedger` records the
+files step's own `path`/`sha256` under the manifest's own package name,
+verified against a `FakeLedgerDb2` double that parses the `INSERT`
+statement's own values, same technique
+`tests/mintcart/update/installed-file-ledger-test.php` uses for the class
+itself. Earlier scenarios unchanged: full happy path in step order; a store already in maintenance
 mode before `apply()` stays in maintenance mode after a successful run; a
 checksum mismatch fails at `verify` before maintenance mode is ever
 touched; an extracted package missing a declared file also fails at
@@ -165,7 +183,10 @@ construction) — all passing, reusing the exact same in-memory `FakeDb`
 (`tests/mintcart/core/migration-manager-test.php`) and `FakeSettingModel`
 (`tests/mintcart/update/maintenance-mode-test.php`) doubles those sibling
 tests already established. Full `tests/mintcart/**/*-test.php` suite
-re-run end to end (83 files) — all passing, no regressions.
+re-run end to end (84 files, up from 83) — all passing, no regressions.
+`tests/mintcart/core/mc-block-migrations-test.php` was updated for the
+new `202609191200_create_mc_installed_file.php` migration now discovered
+alongside the Homepage Builder ones it was already asserting on.
 
 **Not verified:** no live MySQL/filesystem/HTTP in this environment, same
 pre-existing gap every other Update Manager primitive in this codebase

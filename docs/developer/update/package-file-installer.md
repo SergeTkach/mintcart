@@ -66,11 +66,13 @@ $result = $installer->install($manifest, '/tmp/mint_default-extracted', DIR_APPL
   `\InvalidArgumentException` before anything is touched — a
   manifest-authoring bug, not a normal "file missing" outcome.
 - **Returns per-file sha256.** Each `installed` entry carries the sha256
-  of the file actually written to the destination — the exact input the
-  future `mc_installed_file` ledger (ADR 005 decision #1) needs once a
-  real caller writes it via the Migration Manager. This class does not
-  write that ledger itself — no table exists yet (`CLAUDE.md` §85: no API
-  ahead of a real consumer).
+  of the file actually written to the destination — exactly what
+  `MintCart\Update\InstalledFileLedger::record()`
+  (`docs/developer/update/installed-file-ledger.md`) now persists, called
+  by `UpdateOrchestrator::apply()` right after this class's `install()`
+  succeeds. This class still does not write that ledger itself — it only
+  produces the sha256, the same "resolved values in, normalized contract
+  out" shape as every other primitive in this flow.
 
 ## `missingRemoves()`
 
@@ -95,10 +97,13 @@ Deliberately has no OpenCart dependency (no `\Registry`, no `\DB`) — same
   as its `files` step, between `maintenance` and `migrations`. Still no
   admin controller or `mintcart/update/*` route calling the orchestrator
   itself.
-- No `mc_installed_file` ledger write — `install()` computes and returns
-  each file's sha256 but does not persist it. The ledger table (ADR 005
-  decision #1) is added via the Migration Manager once a real admin
-  controller exists to call it after a successful `UpdateOrchestrator::apply()`.
+- ~~No `mc_installed_file` ledger write~~ **Done** —
+  `MintCart\Update\InstalledFileLedger::record()` now persists every
+  `installed` entry's sha256, called by `UpdateOrchestrator::apply()`
+  right after this class's `install()` succeeds (see
+  `docs/developer/update/installed-file-ledger.md`). `install()` itself
+  still does not write the ledger — it only computes and returns the
+  sha256, unchanged.
 - ~~No `migrations`/`cache clear`/`health check` steps~~ **Done** — the
   orchestrator wires `MintCart\Core\Migration\MigrationManager` (Phase 1),
   `MintCart\Core\Cache\CacheInvalidator` and `MintCart\Core\HealthCheck` in

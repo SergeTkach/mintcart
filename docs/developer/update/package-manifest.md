@@ -231,11 +231,16 @@ caller resolves which paths exist and their sizes (e.g. via `file_exists()`/
   today, and nothing calls `BackupPlanner::plan()` against a live
   install's files. `UpdateChecker` exists but nothing calls it outside its
   own test yet.
-- No `mc_installed_file` ledger (per-file change detection via sha256,
-  ADR 005 decision #1) — `BackupPlanner` only knows what a manifest
-  declares, not whether an installed file was hand-edited since its last
-  install. That needs the Migration Manager to add the table once a real
-  `files` step exists to write to it.
+- ~~No `mc_installed_file` ledger~~ **Table + writer done, consumer still
+  missing.** `MintCart\Update\InstalledFileLedger`
+  (`docs/developer/update/installed-file-ledger.md`) now records every
+  file's sha256, called by `UpdateOrchestrator::apply()` after its `files`
+  step. `BackupPlanner` itself is unchanged: it still only knows what a
+  manifest declares, not whether an installed file was hand-edited since
+  its last install — per-file change detection (ADR 005 decision #1,
+  comparing current on-disk sha256 against the ledger's last recorded
+  value) has no consumer yet; that is rollback's own future increment, not
+  `BackupPlanner`'s job.
 - No actual file copy/restore — `plan()` only decides *what* to copy;
   performing the copy (and a restore action on top of a stored snapshot)
   is later work, once the `files` step itself exists.
