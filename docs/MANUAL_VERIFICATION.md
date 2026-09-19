@@ -13,6 +13,23 @@ than silently fixing and forgetting to update this file.
 
 ---
 
+## Phase 13 — Wizard Delivery step never rendered live
+
+No MySQL/OpenCart admin session in this environment. Confirm on a real
+install: `mintcart/wizard?step=delivery` lists every installed shipping
+extension with its real enabled/disabled state; clicking Enable/Disable
+(`mintcart/wizard.toggleDelivery`) flips only that extension's
+`shipping_<code>_status` key and leaves its other settings (cost, tax
+class, geo zone, ...) untouched — the same check
+`docs/developer/onboarding/business-delivery-payments.md`'s own
+`Business → Delivery` entry already asks for, now against a second call
+site; "Manage delivery methods" links to a working `mintcart/business/delivery`
+page; a store with zero shipping extensions installed shows the empty
+state instead of an empty list; and clicking Continue with nothing enabled
+still advances to the Ready step (no required-field validation for this
+step), while the Ready step's own checklist correctly still shows
+"shipping" as outstanding until at least one method is enabled.
+
 ## Phase 13 — Wizard Language & currency step never rendered live
 
 No MySQL/OpenCart admin session in this environment. Confirm on a real
