@@ -1,21 +1,21 @@
 # Setup Wizard (Phase 13)
 
 `MINTCART_FUNCTIONAL_SCOPE.md` §2, `MINTCART_IMPLEMENTATION_GUIDE.md` §54.
-Five working steps so far — **Welcome**, **Store**, **Contacts**,
-**Language & currency**, and **Ready** (the Store Readiness checklist,
-Phase 14's `StoreReadiness` service surfaced inside the Wizard flow rather
-than only as a standalone dashboard widget). The rest of the flow
-(`delivery` → `payment` → `design` → `first_product`) is listed in the step
-nav as a roadmap but has no real content yet — visiting or submitting any
-of those steps falls back to the live resume point (`CLAUDE.md` §85: no UI
-ahead of a real, working consumer). Note `ready` sits last in
-`WizardProgress::STEPS` but is implemented ahead of the steps before it in
-the canonical order — `IMPLEMENTED_STEPS` doesn't have to be a strict
-prefix of `STEPS`, it only has to list which steps have real content today;
-`currentStep()` walks `IMPLEMENTED_STEPS` in its own order, so completing
-`language_currency` advances straight to `ready`, skipping the
-unimplemented steps between them, same as it already skipped nothing when
-only `welcome`/`store`/`contacts`/`language_currency` existed.
+Six working steps so far — **Welcome**, **Store**, **Contacts**,
+**Language & currency**, **Delivery**, and **Ready** (the Store Readiness
+checklist, Phase 14's `StoreReadiness` service surfaced inside the Wizard
+flow rather than only as a standalone dashboard widget). The rest of the
+flow (`payment` → `design` → `first_product`) is listed in the step nav as
+a roadmap but has no real content yet — visiting or submitting any of those
+steps falls back to the live resume point (`CLAUDE.md` §85: no UI ahead of
+a real, working consumer). `currentStep()` walks `IMPLEMENTED_STEPS` in its
+own order (`['welcome', 'store', 'contacts', 'language_currency',
+'delivery', 'ready']`), which today happens to be a strict prefix of
+`STEPS` minus the still-unimplemented `payment`/`design`/`first_product` —
+it doesn't have to be a prefix in general (an earlier revision of this file
+had `ready` implemented ahead of `contacts`/`language_currency`/`delivery`
+for a time), it only has to list which steps have real content, in the
+order a store should complete them.
 
 PHP:
 - `upload/system/library/mintcart/onboarding/wizardprogress.php` —
@@ -27,7 +27,7 @@ Language: `upload/admin/language/en-gb/mintcart/wizard.php`
 
 Twig: `upload/admin/view/template/mintcart/wizard.twig`
 
-Test: `tests/mintcart/onboarding/wizard-progress-test.php` (10 scenarios)
+Test: `tests/mintcart/onboarding/wizard-progress-test.php` (11 scenarios)
 
 Fully additive — no existing OpenCart controller, model or template is
 modified. Same "0 controller patches" shape as `ControllerMintcartCart`
@@ -164,6 +164,54 @@ doesn't itself enforce.
 The step's `<select>` options come from the same `getLanguages()`/
 `getCurrencies()` calls `Settings → Store` uses, keyed by `code`.
 
+## The Delivery step reuses Business → Delivery's data, not a second toggle system
+
+`Delivery` shows the store's installed shipping extensions
+(`ModelSettingExtension::getInstalled('shipping')`, filtered to extensions
+that still have a real controller file on disk — the same defensive check
+`ControllerMintcartBusinessDelivery::getExtensionRows()` established in
+Phase 14) with each one's enabled state read from the exact
+`shipping_<code>_status` config key every stock shipping extension
+controller already saves under. A "Manage delivery methods" link points at
+the full `Business → Delivery` screen (`mintcart/business/delivery`) for
+anyone who wants the complete list/experience outside the Wizard; cost, tax
+class, geo zone and every other per-extension setting still live only on
+that extension's own `extension/shipping/<code>` screen — this step
+(like `Business → Delivery` before it) never becomes a second shipping
+subsystem (`MINTCART_TECHNICAL_PLAN.md` §23).
+
+Enabling/disabling a method happens through its own dedicated action,
+`toggleDelivery()` (route `mintcart/wizard.toggleDelivery`, POST, redirects
+back to `?step=delivery`) — a small, deliberate duplicate of
+`ControllerMintcartBusinessDelivery::toggle()`'s merge-then-save logic
+(`getSetting('shipping_<code>')`, flip the `_status` key, `editSetting()`
+the merged result — never a bare `editSetting('shipping_<code>',
+['..._status' => ...])`, which would wipe the extension's other settings,
+the same `editSetting()` partial-write trap documented above for `config`).
+This mirrors the project's own precedent for `Business → Delivery` vs.
+`Business → Payments` themselves — `docs/developer/onboarding/business-delivery-payments.md`
+explicitly chose two small near-duplicate controllers over a shared base
+class for this exact shape of logic (`CLAUDE.md` §17) — extended here to a
+third call site rather than introducing a shared service three controllers
+would depend on for one method's worth of logic.
+
+One deliberate behavioral difference from `ControllerMintcartBusinessDelivery::toggle()`:
+that action has its own explicit `hasPermission('modify', 'mintcart/business/delivery')`
+check; `toggleDelivery()` does not, matching the rest of
+`ControllerMintcartWizard` having no `hasPermission()` gate anywhere (see
+below) rather than partially adopting Business → Delivery's stricter
+posture for just this one action.
+
+Submitting the step itself (`POST step=delivery`, the "Continue" button)
+has **no required fields and nothing of its own to save** — enabling a
+shipping method is a side effect of `toggleDelivery()`, not something the
+Continue submission collects, and Functional Scope §2 explicitly allows
+"optional steps" to be skipped, so a store that hasn't enabled any shipping
+method yet can still continue past this step. The Ready step's own
+`StoreReadiness` checklist (`shipping`) is what actually surfaces "no
+shipping method enabled yet" as outstanding, independent of whether this
+Wizard step itself has been marked completed.
+
 ## The `ready` step reuses `StoreReadiness`, it doesn't recompute it
 
 `ControllerMintcartWizard::loadReadiness()` calls the exact same
@@ -191,11 +239,11 @@ step=ready`) has no fields to validate/save (unlike `store`) — it only
 marks `ready` completed, the same generic `withCompleted()` path every
 step (including the still-unimplemented ones) will eventually use.
 
-The pre-existing terminal "You're off to a great start" screen
-(`is_ready` — shown once every *implemented* step, `ready` included, is
-completed) is intentionally left as-is: its "the rest of the Setup Wizard
-... is coming in a future update" copy remains accurate (`contacts`
-through `first_product` are still unimplemented), and it is not
+The terminal "You're off to a great start" screen (`is_ready` — shown once
+every *implemented* step, `ready` included, is completed) had its copy
+updated this run to drop `delivery` from the "coming in a future update"
+list (it's implemented now) — it still names `payment`/`design`/
+`first_product`, the steps still genuinely unimplemented. It is not
 redundant with the `ready` step's own checklist — one is "here is how
 ready your real store is today", the other is "there is no more Wizard
 content to show you right now, go to your dashboard".
@@ -256,9 +304,13 @@ done) is allowed, for review; skipping ahead is not.
 
 ## What's explicitly not done yet, by design
 
-- The `delivery`/`payment`/`design`/`first_product` steps — each needs its
-  own real form + save logic, following the same shape
-  `store`/`contacts`/`language_currency`/`ready` established.
+- The `payment`/`design`/`first_product` steps — `payment` in particular
+  is a near-mechanical follow-up to this run's `delivery` step: same
+  shape, swap `ModelSettingExtension::getInstalled('shipping')`/
+  `shipping_<code>_status` for `'payment'`/`payment_<code>_status`, and a
+  new `toggleServicePayment()`/`mintcart/business/payments` pair in place
+  of `toggleDelivery()`/`mintcart/business/delivery`. `design` and
+  `first_product` need their own real form/save logic instead.
 - Store step's **logo** upload (Functional Scope §2 lists it under Store) —
   deferred; needs `McMediaPicker` (Phase 11, already shipped) wired to a
   real upload endpoint, which doesn't exist yet.

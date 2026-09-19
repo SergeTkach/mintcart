@@ -2339,6 +2339,62 @@ already asks for its four fields.
 - `assets/dist/js/admin.min.js` is still not enqueued anywhere (this page
   is CSS-only) — same pre-existing gap as the rest of the admin.
 
+**Update (2026-09-19, routine run): the Delivery step is done.**
+`WizardProgress::IMPLEMENTED_STEPS` gains `delivery`, inserted between
+`language_currency` and `ready` (matching canonical `STEPS` order, same
+"reconciled back to canonical order" precedent `contacts`/
+`language_currency` themselves already set when they were added after
+`ready`). `ControllerMintcartWizard`'s `delivery` step lists installed
+shipping extensions (`ModelSettingExtension::getInstalled('shipping')`,
+same data source and stale-extension guard `ControllerMintcartBusinessDelivery`
+already established in Phase 14) with a real enabled/disabled badge and a
+per-extension Enable/Disable toggle (`toggleDelivery()`, route
+`mintcart/wizard.toggleDelivery`, the same merge-then-save
+`shipping_<code>_status` write `ControllerMintcartBusinessDelivery::toggle()`
+already uses, duplicated rather than shared per that class's own precedent
+of choosing two near-duplicate controllers over a shared base class), plus
+a "Manage delivery methods" link to the full `mintcart/business/delivery`
+screen. No fields to validate/save on the step's own Continue submission —
+enabling a method is `toggleDelivery()`'s job, not Continue's, and per
+Functional Scope §2 a store can continue with zero shipping methods
+enabled (the Ready step's own `StoreReadiness` checklist is what actually
+flags that as outstanding). Full writeup:
+`docs/developer/onboarding/setup-wizard.md`'s new "Delivery step" section.
+
+Step 0 dedup check: `list_pull_requests` (all open, not filtered by branch
+name) returned 6 open PRs at the start of this run — `#127`
+(`MintCart\Update\PackageExtractor`), `#128` (`MintCart\Update\BackupExecutor`),
+`#129` (admin toggle for `mintcart_dev_mode`), `#130` (Related Products
+`McEntityPicker` field), `#131` (responsive image width/height + lazy
+loading), `#132` (`special_price` bulk-editable field) — verified via each
+PR's own file list that none touch `wizard.php`, `wizardprogress.php`,
+`wizard.twig`, the wizard language file, or
+`upload/admin/controller/mintcart/business/*`. No hot shared files (§0f:
+Homepage Builder block-type registry, homepage block list/template,
+`block.css`) are touched by any of the 6 open PRs or by this increment.
+
+Verified: `php -l` clean across the full `upload/`/`tests/` tree.
+`tests/mintcart/onboarding/wizard-progress-test.php` grows from 10 to 11
+scenarios (the new `delivery` step's place in the resume sequence, its
+`isImplemented()` check, and the "not yet implemented" check moved from
+`delivery` to `payment`). Full `tests/mintcart/**/*-test.php` suite (81
+files) re-run end to end — all passing, no regressions. `wizard.twig`'s
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts checked
+balanced (46/46, 5/5) after the new step block. **Not verified:** no live
+MySQL/admin session in this sandboxed environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 13 "Wizard Delivery step" entry
+for the full manual script a human should run, including the
+`editSetting()`-partial-write-safety check against a shipping extension's
+other settings.
+
+**Next steps for a future session:**
+- The `payment` step, a near-mechanical follow-up to this one (see the
+  "not done yet" list above and the doc's own note on the exact shape).
+- `design`/`first_product` steps — need their own real form/save logic,
+  no existing facade to lean on the way `delivery`/`payment` can.
+- Re-check `gh pr list --state open` before picking the next increment —
+  this backlog moves fast.
+
 ## Phase 14 — Store Readiness / Business Settings
 
 - [x] `MintCart\Onboarding\StoreReadiness` service (computed, not hardcoded,
