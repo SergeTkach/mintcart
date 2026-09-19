@@ -31,6 +31,7 @@ require __DIR__ . '/../../../upload/system/library/mintcart/update/backupplanner
 require __DIR__ . '/../../../upload/system/library/mintcart/update/backupexecutor.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/update/maintenancemode.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/update/packagefileinstaller.php';
+require __DIR__ . '/../../../upload/system/library/mintcart/update/installedfileledger.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/update/updateorchestrator.php';
 
 use MintCart\Compatibility\OpenCart3\SettingsAdapter;
@@ -39,6 +40,7 @@ use MintCart\Core\HealthCheck;
 use MintCart\Core\Migration\MigrationManager;
 use MintCart\Update\BackupExecutor;
 use MintCart\Update\BackupPlanner;
+use MintCart\Update\InstalledFileLedger;
 use MintCart\Update\MaintenanceMode;
 use MintCart\Update\PackageDownloader;
 use MintCart\Update\PackageExtractor;
@@ -437,6 +439,73 @@ try {
 assertTrue($threwForPartialBackupPair, 'partial backup pair: constructor throws InvalidArgumentException', $failures);
 rrmdir($workspace);
 
+// 11. InstalledFileLedger wired in: apply() records the files step's own
+//     `installed` entries (path + sha256) right after that step succeeds —
+//     no ledger call at all when the dependency is omitted (scenario 1-10
+//     never pass one, and already pass without a ledger double).
+final class FakeLedgerDb2
+{
+    /** @var array<int, array{package_name: string, file_path: string, sha256: string}> */
+    public array $recorded = [];
+
+    public function query(string $sql): object
+    {
+        if (str_starts_with(trim($sql), 'INSERT INTO')) {
+            preg_match(
+                "/VALUES \(\s*'((?:[^'\\\\]|\\\\.)*)',\s*'((?:[^'\\\\]|\\\\.)*)',\s*'((?:[^'\\\\]|\\\\.)*)',/s",
+                $sql,
+                $matches
+            );
+            $this->recorded[] = [
+                'package_name' => stripslashes($matches[1] ?? ''),
+                'file_path' => stripslashes($matches[2] ?? ''),
+                'sha256' => stripslashes($matches[3] ?? ''),
+            ];
+        }
+
+        $result = new stdClass();
+        $result->rows = [];
+        $result->row = [];
+        $result->num_rows = 0;
+
+        return $result;
+    }
+
+    public function escape(string $value): string
+    {
+        return addslashes($value);
+    }
+}
+
+$workspace = fresh_workspace();
+file_put_contents($workspace . '/source/theme.json', 'hello');
+$manifest = PackageManifest::fromArray(['name' => 'mint_default', 'version' => '1.0.0', 'files' => ['theme.json']]);
+$settingModel5 = new FakeSettingModel();
+$maintenance5 = new MaintenanceMode(new SettingsAdapter($settingModel5));
+$migrations5 = new MigrationManager(new FakeDb(), 'oc_', $workspace . '/migrations');
+$ledgerDb = new FakeLedgerDb2();
+$ledger = new InstalledFileLedger($ledgerDb, 'oc_');
+$orchestratorWithLedger = new UpdateOrchestrator(
+    new PackageDownloader(static fn (string $url): string => 'bytes'),
+    $maintenance5,
+    new PackageFileInstaller(),
+    $migrations5,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    $ledger
+);
+$result = $orchestratorWithLedger->apply($manifest, 'https://example.test/pkg.zip', $workspace . '/downloads/pkg.zip', $workspace . '/source', $workspace . '/dest');
+assertSame('done', $result['status'], 'ledger wired in: status is done', $failures);
+assertSame(1, count($ledgerDb->recorded), 'ledger wired in: exactly one file recorded', $failures);
+assertSame('mint_default', $ledgerDb->recorded[0]['package_name'] ?? null, 'ledger wired in: recorded under the manifest\'s own package name', $failures);
+assertSame('theme.json', $ledgerDb->recorded[0]['file_path'] ?? null, 'ledger wired in: recorded the installed file\'s path', $failures);
+assertSame($result['files']['installed'][0]['sha256'], $ledgerDb->recorded[0]['sha256'] ?? null, 'ledger wired in: recorded the exact sha256 the files step reported', $failures);
+rrmdir($workspace);
+
 if ($failures) {
     fwrite(STDERR, count($failures) . " failure(s):\n");
     foreach ($failures as $failure) {
@@ -445,5 +514,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: UpdateOrchestrator smoke test (10 scenarios)\n";
+echo "PASS: UpdateOrchestrator smoke test (11 scenarios)\n";
 exit(0);

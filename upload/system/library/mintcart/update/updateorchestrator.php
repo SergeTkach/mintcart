@@ -37,14 +37,19 @@ use MintCart\Core\Migration\MigrationManager;
  * letting them confirm — this class still starts from "the operator has
  * already decided to apply this exact manifest."
  *
+ * The `mc_installed_file` ledger (ADR 005 decision #1) is wired in as
+ * another **optional** step: an `?InstalledFileLedger $installedFiles`
+ * constructor argument, defaulting to `null`. When injected, `apply()`
+ * calls `InstalledFileLedger::record()` with the `files` step's own
+ * `installed` entries right after that step succeeds — the exact input
+ * `PackageFileInstaller::install()`'s docblock already named as "the exact
+ * input the future `mc_installed_file` ledger needs once a real caller
+ * writes it." When omitted, behavior is unchanged from before this ledger
+ * existed.
+ *
  * Deliberately out of scope, same as every constituent step already
  * documents:
  *
- * - The `mc_installed_file` ledger (ADR 005 decision #1). `apply()`'s
- *   result carries every installed file's sha256 (from
- *   `PackageFileInstaller::install()`), the exact input that ledger needs,
- *   but this class does not write it — no table exists yet, and adding one
- *   is a Migration Manager change, not this class's job.
  * - Any admin controller/route. No `mintcart/update/*` route exists yet —
  *   this class is the flow's orchestration primitive; wiring an admin
  *   screen around it is later work.
@@ -88,6 +93,8 @@ final class UpdateOrchestrator
 
     private ?BackupExecutor $backupExecutor;
 
+    private ?InstalledFileLedger $installedFiles;
+
     /** @var callable(): string */
     private $timestampFactory;
 
@@ -99,7 +106,9 @@ final class UpdateOrchestrator
      * independently optional). `$timestampFactory` (default: `date('YmdHis')`)
      * is injectable so `BackupPlanner::plan()`'s snapshot directory name is
      * deterministic in tests, the same reason `PackageDownloader`'s
-     * transport is injectable.
+     * transport is injectable. `$installedFiles` is independently optional
+     * (like `$cache`/`$healthCheck`) — no ledger write is attempted when
+     * omitted.
      */
     public function __construct(
         PackageDownloader $downloader,
@@ -111,7 +120,8 @@ final class UpdateOrchestrator
         ?PackageExtractor $extractor = null,
         ?BackupPlanner $backupPlanner = null,
         ?BackupExecutor $backupExecutor = null,
-        ?callable $timestampFactory = null
+        ?callable $timestampFactory = null,
+        ?InstalledFileLedger $installedFiles = null
     ) {
         if (($backupPlanner === null) !== ($backupExecutor === null)) {
             throw new \InvalidArgumentException(
@@ -129,6 +139,7 @@ final class UpdateOrchestrator
         $this->backupPlanner = $backupPlanner;
         $this->backupExecutor = $backupExecutor;
         $this->timestampFactory = $timestampFactory ?? static fn (): string => date('YmdHis');
+        $this->installedFiles = $installedFiles;
     }
 
     /**
@@ -228,6 +239,10 @@ final class UpdateOrchestrator
         try {
             $result['files'] = $this->installer->install($manifest, $extractedDir, $destRoot);
             $result['completed_steps'][] = self::STEP_FILES;
+
+            if ($this->installedFiles !== null) {
+                $this->installedFiles->record($manifest->name(), $result['files']['installed']);
+            }
 
             $result['migrations'] = $this->migrations->run();
             $result['completed_steps'][] = self::STEP_MIGRATIONS;
