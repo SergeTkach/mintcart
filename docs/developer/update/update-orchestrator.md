@@ -47,15 +47,19 @@ class).
   operator has already decided to apply this exact manifest," the same way
   `PackageVerifier`/`PackageFileInstaller` already assume their own inputs
   are already resolved rather than re-deciding them one level up.
-- **Archive extraction.** No extractor exists anywhere in this codebase yet
-  — both `PackageDownloader`'s and `PackageFileInstaller`'s docblocks
-  already named this the same open gap. `apply()` takes an
-  already-extracted directory (`$extractedDir`) as a plain input parameter,
-  exactly like `PackageVerifier::missingFiles()`/`PackageFileInstaller::install()`
-  already do. A real caller is expected to extract the archive
-  `download` just wrote to `$downloadPath` before calling `apply()` — how
-  (ZipArchive vs. something else, streaming vs. full extract) is its own
-  design decision, deliberately not made here.
+- **Archive extraction.** ~~No extractor exists anywhere in this codebase
+  yet~~ — `MintCart\Update\PackageExtractor`
+  (`docs/developer/update/package-extractor.md`) now exists as a
+  standalone, tested primitive, but `apply()` still takes an
+  already-extracted directory (`$extractedDir`) as a plain input
+  parameter, exactly like `PackageVerifier::missingFiles()`/
+  `PackageFileInstaller::install()` already do — wiring `PackageExtractor`
+  into `apply()` itself (between `download` and `verify`) would change
+  this method's own signature and is deliberately deferred to its own
+  focused increment (see `package-extractor.md`'s "Deliberately not
+  attempted here"). A real caller today is expected to call
+  `PackageExtractor::extract()` on the archive `download` just wrote to
+  `$downloadPath` before calling `apply()`.
 - **The `mc_installed_file` ledger** (ADR 005 decision #1). `apply()`'s
   result carries every installed file's sha256 under `files.installed[]`
   (from `PackageFileInstaller::install()`) — the exact input that ledger
