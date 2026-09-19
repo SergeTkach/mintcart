@@ -2918,6 +2918,57 @@ Business menu group / Contacts facade at the time of this run, so a
 Delivery/Payments facade risks a `column_left.php` collision until it
 lands).
 
+**Update (2026-09-19, routine run): `mc-search-box` wired into both
+themes' headers.** `list_pull_requests --state open` returned zero open
+PRs at the start of this run, so no dedup/hot-shared-file check was
+needed. Did exactly the "Next step" named above, first bullet:
+`mint_default/template/mint/components/header.twig` now renders
+`mc-search-box`'s documented markup contract in place of the legacy
+`{{ widgets.search|raw }}` fragment; `test_theme`'s header override
+renders the same component in a different placement, proving the
+override-fallback story for it too. `header.php` gained one new
+`text_search` key in the existing `$header_view + array(...)` merge (no
+new language file work — the string already existed). `widgets.search`
+itself is untouched in `HeaderViewProvider`'s contract, still computed and
+available to any theme that wants the legacy fragment instead. Full
+writeup: `docs/upstream-diff.md`'s new entries for `header.php` (the
+`text_search` addition) and both `header.twig` files;
+`docs/developer/components/search-box.md`'s "Wired into `mint_default`'s
+and `test_theme`'s header" section; `docs/developer/components/header.md`'s
+"Why widgets stay legacy fragments" section.
+
+**Bug caught while verifying, fixed in the same run:**
+`assets/src/css/components.css` — the Bootstrap-5-reset-free bundle
+`header.php` actually enqueues on the storefront as `components.min.css`
+— was missing three `@import` lines `index.css` already had
+(`product-gallery.css`, `quick-order.css`, `search-box.css`), despite this
+file's own docblock saying to keep the two lists identical. Without the
+fix, `mc-search-box` (and, latently, the product gallery and quick-order
+components) would have shipped markup with zero CSS on any live
+storefront page. Fixed by adding the three missing imports in the same
+order `index.css` uses. See `docs/upstream-diff.md`'s `components.css`
+entry for the full writeup and the regression check
+(`grep -c mc-search-box assets/dist/css/components.min.css`: 0 → 1).
+
+Verified: `php -l` clean on `header.php`; both changed `.twig` files'
+`if`/`for` tag counts re-balanced (10/10 and 3/3); full
+`tests/mintcart/**/*-test.php` suite re-run end to end (84 files,
+unaffected by this increment) — all passing; `npm install` (0
+vulnerabilities), `npm run build` compiles cleanly; `npm test`
+(preset-token contract checks, unaffected) still passing. **Not verified
+live** — no MySQL/browser session in this environment; see
+`docs/MANUAL_VERIFICATION.md`'s Phase 15 `mc-search-box` entry (now
+updated with two more checks: the legacy fragment is actually gone from
+`mint_default`, and `test_theme`'s own override works independently).
+
+**Next candidates:** `QuickOrderService`/`CheckoutService` (still the
+genuinely large item, unchanged from the note above);
+`Business → Delivery`/`Business → Payments` facades (re-check
+`gh pr list --state open` first, same `column_left.php` collision risk
+noted above); a Mint-native Navigation component (still no second real
+consumer per `CLAUDE.md` §85); or re-check `gh pr list --state open`
+first, since this backlog can move fast.
+
 In progress.
 
 ## Phase 16 — Bulk Editor
@@ -6428,3 +6479,11 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-09-19, later routine run, PR #138):** `mc-search-box`
+is now wired into both `mint_default`'s and `test_theme`'s headers (Phase
+15 section above has the full writeup), plus a real bug fix in
+`assets/src/css/components.css` (three missing component CSS imports
+found while verifying). Zero open PRs at the start of this run. **Next
+candidates:** see the Phase 15 section's own "Next candidates" above, or
+re-check `gh pr list --state open` first.

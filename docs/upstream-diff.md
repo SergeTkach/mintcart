@@ -945,6 +945,111 @@ which they visibly did not before this change; the legacy Bootstrap-3/
 jQuery-driven parts of the same page — account pages, `common/cart.info`
 AJAX, `common.js` — still work unmodified).
 
+**Update (2026-09-19, routine run): `text_search` added to the
+`$header_view + array(...)` merge.** One new key, same array, same pattern
+as the existing `text_account`/`text_menu`/`text_close`/... entries — no
+other line changed. Consumed by `mint_default`'s and `test_theme`'s
+`header.twig` for `mc-search-box`'s `placeholder`/`aria-label` (see those
+two files' own entries below and
+`docs/developer/components/search-box.md`). `text_search` already exists
+in `catalog/language/en-gb/common/header.php` (no new language file
+change needed). **Tests:** `php -l` clean; full `tests/mintcart/` suite
+(84 files) re-run end to end, unaffected (no class touched) — still
+passing.
+
+---
+
+## `upload/catalog/view/theme/mint_default/template/mint/components/header.twig` (this entry, 2026-09-19 routine run)
+
+**Reason:** Replaces the `{% if widgets.search %}<div class="mc-legacy">
+{{ widgets.search|raw }}</div>{% endif %}` block (the legacy jQuery-
+autocomplete `common/search` fragment) with `mc-search-box`'s documented
+markup contract (`docs/developer/components/search-box.md`) — the
+component's JS/CSS have existed since an earlier Phase 15 increment with
+no live template consumer; this was the explicitly-named "next step" in
+`docs/IMPLEMENTATION_STATUS.md`'s Phase 15 section, unblocked once
+`components.min.css`/`catalog.min.js` were enqueued on the storefront
+(see this file's `header.php` entry above, "Update ... own compiled asset
+bundle").
+
+**Why it can't live in the MintCart layer instead:** It is Twig markup for
+one specific theme's specific component template — by definition theme
+content, not platform code.
+
+**Compatibility impact:** None outside `mint_default` — this is a template
+file, not shared code. `HeaderViewProvider`'s `widgets.search` key is
+untouched (still computed by `header.php`, still exposed in the contract);
+`mint_default` simply stopped reading it. A theme that copies
+`mint_default` as a starting point and still wants the legacy fragment can
+render `widgets.search` itself — the key did not disappear.
+
+**Tests:** `if`/`for` tag counts re-balanced (10/10, `for` unused) after
+the edit. Full `tests/mintcart/` suite (84 files) re-run end to end,
+unaffected (no PHP class touched) — still passing. **Not verified live**
+— no MySQL/browser session in this environment; see
+`docs/MANUAL_VERIFICATION.md`'s Phase 15 entry.
+
+---
+
+## `upload/catalog/view/theme/test_theme/template/mint/components/header.twig` (this entry, 2026-09-19 routine run)
+
+**Reason:** Adds the same `mc-search-box` markup contract in a different
+placement (directly after the branding link, before the account/cart
+widgets, rather than `mint_default`'s topbar-adjacent `mc-header__widgets`
+slot) — proving the Theme API's override-fallback story for this
+component too, the same way `test_theme`'s product-card/header/footer
+overrides already proved it for theirs (`CLAUDE.md` §19/§45).
+
+**Why it can't live in the MintCart layer instead:** Same as above — this
+is theme content, by definition theme-owned.
+
+**Compatibility impact:** None outside `test_theme`, which exists solely
+as the second reference theme proving Theme API fallback (never a
+production theme).
+
+**Tests:** `if`/`for` tag counts re-balanced (3/3) after the edit. Same
+`tests/mintcart/` suite re-run as above, unaffected.
+
+---
+
+## `assets/src/css/components.css` (this entry, 2026-09-19 routine run)
+
+**Reason:** Bug fix, found while verifying the `mc-search-box` wiring
+above. This file (the Bootstrap-5-reset-free bundle `ControllerCommonHeader`
+actually enqueues on the storefront as `components.min.css`, deliberately
+*not* `index.min.css` — see the `header.php` entry above) was missing
+three `@import` lines `index.css` already had:
+`./components/product-gallery.css`, `./components/quick-order.css`, and
+`./components/search-box.css`. This file's own docblock says to "keep this
+list's imports (order included) identical to `index.css` any time
+`index.css` gains or reorders one" — that instruction was not followed
+when those three component CSS files were added to `index.css` in earlier
+increments, so none of their styling ever reached a live page (only
+`index.min.css`, which nothing on the storefront enqueues, had it). Fixed
+by adding the three missing imports, in the same relative order
+`index.css` uses.
+
+**Why it can't live in the MintCart layer instead:** Build-pipeline
+config, not application code — there is no "MintCart layer" for a CSS
+entry-point file.
+
+**Compatibility impact:** Additive only — `components.min.css` grows by
+the CSS these three component files already contribute to `index.min.css`
+(none of which redeclares a bare `body`/`html`/`*`/element selector, per
+this file's own docblock guarantee — re-checked for all three before
+adding). No existing selector changed. Confirmed none of the three
+introduces a Bootstrap-structural dependency (`.modal`/`.offcanvas`/
+`.toast`/`.dropdown`) this bundle deliberately excludes — the one `.modal-body`
+selector in `quick-order.css` only styles content nested inside a modal
+that `mc-modal.css` (already imported here) already documents as
+unstyled-without-`index.css` chrome, an existing, unrelated limitation
+this change does not widen.
+
+**Tests:** `npm install` (0 vulnerabilities), `npm run build` compiles
+cleanly. `grep -c mc-search-box assets/dist/css/components.min.css` went
+from 0 to 1 after the fix — the actual regression test for this bug.
+`npm test` (preset-token contract checks, unaffected) still passing.
+
 ---
 
 ## `upload/catalog/controller/product/manufacturer.php`
