@@ -4370,6 +4370,41 @@ Definition of Done checklist for exactly what's still open).
       focused increment per the new doc's "Deliberately not attempted
       here"). Still not done: that orchestrator wiring, the
       `mc_installed_file` ledger, and any admin controller/route.
+      **Update (2026-09-19, routine run):** ~~`PackageExtractor`/
+      `BackupPlanner`+`BackupExecutor` not wired into
+      `UpdateOrchestrator::apply()`~~ **done** — both are now optional
+      constructor arguments (7th/8th+9th, plus a 10th `$timestampFactory`
+      for the backup snapshot's timestamp). Omitted (`null`, the default),
+      `apply()`'s behavior and tested signature are byte-for-byte unchanged
+      from before this run. Injected, `extract` runs between `download` and
+      `verify`, and `backup` (a new `resolveExistingFiles()` helper resolves
+      which manifest-declared paths currently exist under `$destRoot` and
+      their sizes, then `BackupPlanner::plan()` + `BackupExecutor::backup()`)
+      runs between `verify` and `maintenance` — exactly the ordering
+      `docs/developer/update/backup-executor.md`'s own "Deliberately not
+      attempted here" note named. Passing only one of `backupPlanner`/
+      `backupExecutor` throws `\InvalidArgumentException` at construction
+      (a half-configured backup is a caller bug, not a "skip this step"
+      signal). Full writeup: `docs/developer/update/update-orchestrator.md`
+      (rewritten "what's out of scope"/usage/Verified sections),
+      `docs/developer/update/package-extractor.md` and
+      `docs/developer/update/backup-executor.md` (their own "wiring into
+      apply()" notes marked done). Still not done: `check`/`compatibility`
+      wiring (a caller's own pre-decision, per the class's own docblock),
+      the `mc_installed_file` ledger, and any admin controller/route.
+      Step 0 dedup check: `mcp__github__list_pull_requests` returned zero
+      open PRs at the start of this run, so no dedup/hot-shared-file check
+      applied. Verified: `php -l` clean; 3 new scenarios in
+      `tests/mintcart/update/update-orchestrator-test.php` (10, up from 7 —
+      extraction wired in against a real zip fixture, backup wired in with
+      a snapshot read back off disk to confirm pre- vs post-update content,
+      and the partial-pair constructor throw) plus the 7 pre-existing
+      scenarios, all passing; full `tests/mintcart/**/*-test.php` suite
+      re-run end to end (83 files) — all passing, no regressions. **Not
+      verified:** no live MySQL/filesystem/HTTP in this environment, same
+      pre-existing gap — extraction/backup themselves ARE exercised against
+      real files/real zip archives in this run's new scenarios, only the
+      admin-controller/live-install pipeline around `apply()` is unverified.
 - [x] Theme/extension rollback — **research/design only, no code** (RESEARCH
       item per Functional Scope §21): `docs/adr/005-theme-extension-update-rollback.md`
       answers all seven of §21's open questions (change detection, manifest
@@ -6314,3 +6349,16 @@ itself (a deliberately separate increment — changes that method's
 signature); the `mc_installed_file` ledger; an admin
 controller/`mintcart/update/*` route; or re-check `gh pr list --state
 open` first.
+
+**Trailer note (2026-09-19, later routine run):** `PackageExtractor` and
+`BackupPlanner`+`BackupExecutor` are now both wired into
+`UpdateOrchestrator::apply()` as optional constructor arguments (`null`
+by default, preserving the exact previously-tested behavior/signature) —
+see the Phase 11 (Technical Plan) section above for the full writeup.
+`list_pull_requests` returned zero open PRs at the start of this run.
+**Next candidates:** an admin controller/`mintcart/update/*` route that
+actually builds a `PackageManifest`, resolves a download URL, and calls
+`apply()` on a real install (still nothing calls `apply()` outside tests);
+the `mc_installed_file` ledger (needs a new migration); `UpdateChecker`
+wiring for the `check`/`compatibility` steps `apply()` still leaves to the
+caller; or re-check `gh pr list --state open` first.

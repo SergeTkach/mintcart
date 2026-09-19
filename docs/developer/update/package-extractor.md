@@ -78,15 +78,12 @@ one.
   archive path and a destination directory — exactly like
   `PackageDownloader` only knows about a URL and a destination file. It
   takes no `PackageManifest` argument.
-- **Wiring into `UpdateOrchestrator::apply()`.** The orchestrator's
-  `apply()` still takes an already-extracted `$extractedDir` as a plain
-  parameter (see `docs/developer/update/update-orchestrator.md`) — this
-  class fills the gap that parameter's own docblock named, but changing
-  `apply()`'s signature to call this class internally (between `download`
-  and `verify`) is a separate, deliberately deferred increment: it would
-  change a public method signature `tests/mintcart/update/update-orchestrator-test.php`
-  already exercises, which deserves its own focused change rather than
-  being folded into this primitive's first commit.
+- ~~Wiring into `UpdateOrchestrator::apply()`.~~ **Done** — `apply()` now
+  takes an optional `PackageExtractor` constructor argument (see
+  `docs/developer/update/update-orchestrator.md`). When injected, `extract()`
+  runs between `download` and `verify`; when omitted (the default),
+  `$extractedDir` is still assumed already populated, so every caller
+  written against the original signature keeps working unchanged.
 
 ## Why `ZipArchive` directly, not an injectable transport
 
@@ -105,10 +102,9 @@ shared hosting, no new PHP extension requirement).
 
 ## What's deliberately not done yet
 
-- No wiring into `UpdateOrchestrator::apply()` (see above) — the natural
-  next increment once this primitive exists, but a deliberately separate
-  one.
-- No admin controller/`mintcart/update/*` route calls any of this yet.
+- No admin controller/`mintcart/update/*` route calls any of this yet
+  (`UpdateOrchestrator::apply()` now does — see above — but nothing calls
+  `apply()` itself from a real admin screen).
 - Only zip archives are supported (`ZipArchive`) — no tar/gzip handling.
   Nothing in this codebase's manifest format or `PackageDownloader`
   assumes a specific archive format, but zip is what OpenCart's own

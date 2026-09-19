@@ -26,6 +26,9 @@ require __DIR__ . '/../../../upload/system/library/mintcart/core/healthcheck.php
 require __DIR__ . '/../../../upload/system/library/mintcart/update/packagemanifest.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/update/packagedownloader.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/update/packageverifier.php';
+require __DIR__ . '/../../../upload/system/library/mintcart/update/packageextractor.php';
+require __DIR__ . '/../../../upload/system/library/mintcart/update/backupplanner.php';
+require __DIR__ . '/../../../upload/system/library/mintcart/update/backupexecutor.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/update/maintenancemode.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/update/packagefileinstaller.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/update/updateorchestrator.php';
@@ -34,8 +37,11 @@ use MintCart\Compatibility\OpenCart3\SettingsAdapter;
 use MintCart\Core\Cache\CacheInvalidator;
 use MintCart\Core\HealthCheck;
 use MintCart\Core\Migration\MigrationManager;
+use MintCart\Update\BackupExecutor;
+use MintCart\Update\BackupPlanner;
 use MintCart\Update\MaintenanceMode;
 use MintCart\Update\PackageDownloader;
+use MintCart\Update\PackageExtractor;
 use MintCart\Update\PackageFileInstaller;
 use MintCart\Update\PackageManifest;
 use MintCart\Update\UpdateOrchestrator;
@@ -130,6 +136,21 @@ function rrmdir(string $dir): void
     }
 
     rmdir($dir);
+}
+
+/**
+ * @param array<string, string> $entries relative path => file contents
+ */
+function makeZip(string $zipPath, array $entries): void
+{
+    $zip = new \ZipArchive();
+    $zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+
+    foreach ($entries as $name => $contents) {
+        $zip->addFromString($name, $contents);
+    }
+
+    $zip->close();
 }
 
 function fresh_workspace(): string
@@ -319,6 +340,103 @@ assertSame(false, $result['cache_clear'], 'no optional deps: cache_clear reports
 assertTrue(!array_key_exists('health_check', $result), 'no optional deps: health_check key is absent, not a fabricated result', $failures);
 rrmdir($workspace);
 
+// 8. PackageExtractor wired in: a real zip archive downloaded to
+//    $downloadPath is extracted into $extractedDir before verify runs
+//    (rather than $extractedDir being assumed pre-populated), using the
+//    same real-zip-fixture technique package-extractor-test.php uses.
+$workspace = fresh_workspace();
+$zipSourceDir = $workspace . '/zip-source';
+mkdir($zipSourceDir, 0777, true);
+$zipPath = $zipSourceDir . '/pkg.zip';
+makeZip($zipPath, ['theme.json' => 'hello']);
+$zipBytes = (string) file_get_contents($zipPath);
+$manifest = PackageManifest::fromArray(['name' => 'x', 'version' => '1.0.0', 'files' => ['theme.json']]);
+$settingModel3 = new FakeSettingModel();
+$maintenance3 = new MaintenanceMode(new SettingsAdapter($settingModel3));
+$migrations3 = new MigrationManager(new FakeDb(), 'oc_', $workspace . '/migrations');
+$orchestratorWithExtractor = new UpdateOrchestrator(
+    new PackageDownloader(static fn (string $url): string => $zipBytes),
+    $maintenance3,
+    new PackageFileInstaller(),
+    $migrations3,
+    null,
+    null,
+    new PackageExtractor()
+);
+$result = $orchestratorWithExtractor->apply($manifest, 'https://example.test/pkg.zip', $workspace . '/downloads/pkg.zip', $workspace . '/extracted', $workspace . '/dest');
+assertSame('done', $result['status'], 'extraction wired in: status is done', $failures);
+assertSame(
+    ['download', 'extract', 'verify', 'maintenance', 'files', 'migrations', 'cache_clear', 'health_check', 'done'],
+    $result['completed_steps'],
+    'extraction wired in: extract step inserted between download and verify',
+    $failures
+);
+assertSame(['theme.json'], $result['extract'] ?? null, "extraction wired in: extract() returned the archive's file entries", $failures);
+assertSame('hello', @file_get_contents($workspace . '/dest/theme.json'), 'extraction wired in: files step copied the file the real archive provided (not a pre-populated dir)', $failures);
+rrmdir($workspace);
+
+// 9. BackupPlanner+BackupExecutor wired in: a file about to be overwritten
+//    is snapshotted right after verify, before maintenance mode is entered
+//    (BackupExecutor's own doc: "between verify and maintenance").
+$workspace = fresh_workspace();
+file_put_contents($workspace . '/source/theme.json', 'new-contents');
+file_put_contents($workspace . '/dest/theme.json', 'old-contents'); // already installed, about to be overwritten
+$manifest = PackageManifest::fromArray(['name' => 'mint_default', 'version' => '1.1.0', 'files' => ['theme.json']]);
+$settingModel4 = new FakeSettingModel();
+$maintenance4 = new MaintenanceMode(new SettingsAdapter($settingModel4));
+$migrations4 = new MigrationManager(new FakeDb(), 'oc_', $workspace . '/migrations');
+$orchestratorWithBackup = new UpdateOrchestrator(
+    new PackageDownloader(static fn (string $url): string => 'bytes'),
+    $maintenance4,
+    new PackageFileInstaller(),
+    $migrations4,
+    null,
+    null,
+    null,
+    new BackupPlanner(),
+    new BackupExecutor(),
+    static fn (): string => '20260919120000'
+);
+$result = $orchestratorWithBackup->apply($manifest, 'https://example.test/pkg.zip', $workspace . '/downloads/pkg.zip', $workspace . '/source', $workspace . '/dest');
+assertSame('done', $result['status'], 'backup wired in: status is done', $failures);
+assertSame(
+    ['download', 'verify', 'backup', 'maintenance', 'files', 'migrations', 'cache_clear', 'health_check', 'done'],
+    $result['completed_steps'],
+    'backup wired in: backup step inserted between verify and maintenance',
+    $failures
+);
+assertSame(['theme.json'], $result['backup']['backed_up'] ?? null, 'backup wired in: backed up the one pre-existing overwritten file', $failures);
+assertSame(
+    'old-contents',
+    @file_get_contents($workspace . '/dest/system/storage/mintcart/backup/mint_default/20260919120000/theme.json'),
+    'backup wired in: snapshot holds the PRE-update file content',
+    $failures
+);
+assertSame('new-contents', @file_get_contents($workspace . '/dest/theme.json'), 'backup wired in: the live file was then overwritten by the files step as normal', $failures);
+rrmdir($workspace);
+
+// 10. Passing only one half of the backup pair (planner without executor) is
+//     a caller bug, not a "skip this step" signal — the constructor throws
+//     immediately rather than silently running with backups half-configured.
+$workspace = fresh_workspace();
+$threwForPartialBackupPair = false;
+try {
+    new UpdateOrchestrator(
+        new PackageDownloader(static fn (string $url): string => 'bytes'),
+        new MaintenanceMode(new SettingsAdapter(new FakeSettingModel())),
+        new PackageFileInstaller(),
+        new MigrationManager(new FakeDb(), 'oc_', $workspace . '/migrations'),
+        null,
+        null,
+        null,
+        new BackupPlanner()
+    );
+} catch (\InvalidArgumentException $e) {
+    $threwForPartialBackupPair = true;
+}
+assertTrue($threwForPartialBackupPair, 'partial backup pair: constructor throws InvalidArgumentException', $failures);
+rrmdir($workspace);
+
 if ($failures) {
     fwrite(STDERR, count($failures) . " failure(s):\n");
     foreach ($failures as $failure) {
@@ -327,5 +445,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: UpdateOrchestrator smoke test (7 scenarios)\n";
+echo "PASS: UpdateOrchestrator smoke test (10 scenarios)\n";
 exit(0);
