@@ -95,8 +95,10 @@ $missing = PackageVerifier::missingFiles('/tmp/mint_default-extracted', $manifes
 
 ## What's deliberately not done yet
 
-- No archive extraction — `missingFiles()` assumes a caller has already
-  extracted the package (that's the `download` step's job, not `verify`'s).
+- ~~No archive extraction~~ **Done** — `MintCart\Update\PackageExtractor`
+  (`docs/developer/update/package-extractor.md`) now produces the
+  extracted directory `missingFiles()` assumes as input. Not yet wired
+  into `UpdateOrchestrator::apply()` itself — see that class's own doc.
 - No signature/PKI verification — `PackageManifest` still carries no
   signing metadata beyond the opaque `checksum` string; this class checks
   exactly what that field is (a hash), nothing more.
