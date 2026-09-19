@@ -43,10 +43,18 @@ class).
   caller makes *before* deciding to apply a specific manifest at all — e.g.
   showing an admin user "an update is available and compatible" via
   `UpdateChecker` and letting them confirm, or calling `BackupPlanner::plan()`
-  to snapshot files before anything is fetched. `apply()` starts from "the
-  operator has already decided to apply this exact manifest," the same way
-  `PackageVerifier`/`PackageFileInstaller` already assume their own inputs
-  are already resolved rather than re-deciding them one level up.
+  followed by `MintCart\Update\BackupExecutor::backup()`
+  (`docs/developer/update/backup-executor.md`) to actually snapshot files
+  before anything is fetched. Both planning and execution now exist as
+  standalone, tested primitives, but neither is called from `apply()`
+  itself — wiring a `backup` step in between `verify` and `maintenance`
+  would change `apply()`'s own tested signature/behavior, the same
+  deliberately-deferred reasoning `PackageExtractor`'s doc gives for not
+  wiring itself into `apply()` either. `apply()` starts from "the operator
+  has already decided to apply this exact manifest, and a backup (if any)
+  has already been taken," the same way `PackageVerifier`/
+  `PackageFileInstaller` already assume their own inputs are already
+  resolved rather than re-deciding them one level up.
 - **Archive extraction.** ~~No extractor exists anywhere in this codebase
   yet~~ — `MintCart\Update\PackageExtractor`
   (`docs/developer/update/package-extractor.md`) now exists as a
