@@ -61,22 +61,28 @@ $afterLanguageCurrency = new WizardProgress($afterContacts->withCompleted('langu
 assertSame('delivery', $afterLanguageCurrency->currentStep(), 'after language_currency: currentStep is delivery', $failures);
 assertTrue(!$afterLanguageCurrency->isReady(), 'after language_currency: not ready yet - delivery still pending', $failures);
 
-// 3d. Completing delivery advances to the ready step (the Store Readiness
+// 3d. Completing delivery advances to payment (not yet "ready" - payment
+// and ready are also implemented today).
+$afterDelivery = new WizardProgress($afterLanguageCurrency->withCompleted('delivery'));
+assertSame('payment', $afterDelivery->currentStep(), 'after delivery: currentStep is payment', $failures);
+assertTrue(!$afterDelivery->isReady(), 'after delivery: not ready yet - payment still pending', $failures);
+
+// 3e. Completing payment advances to the ready step (the Store Readiness
 // checklist) - not straight to null, since 'ready' is itself an implemented
 // step now.
-$afterDelivery = new WizardProgress($afterLanguageCurrency->withCompleted('delivery'));
-assertSame('ready', $afterDelivery->currentStep(), 'after delivery: currentStep is ready', $failures);
-assertTrue(!$afterDelivery->isReady(), 'after delivery: isReady is still false (ready step itself not completed yet)', $failures);
+$afterPayment = new WizardProgress($afterDelivery->withCompleted('payment'));
+assertSame('ready', $afterPayment->currentStep(), 'after payment: currentStep is ready', $failures);
+assertTrue(!$afterPayment->isReady(), 'after payment: isReady is still false (ready step itself not completed yet)', $failures);
 
-// 3e. Completing the ready step too is "ready" (nothing left to do today).
-$afterReady = new WizardProgress($afterDelivery->withCompleted('ready'));
+// 3f. Completing the ready step too is "ready" (nothing left to do today).
+$afterReady = new WizardProgress($afterPayment->withCompleted('ready'));
 assertSame(null, $afterReady->currentStep(), 'after ready: currentStep is null (all implemented steps done)', $failures);
 assertTrue($afterReady->isReady(), 'after ready: isReady is true', $failures);
 
 // 4. withCompleted() is idempotent - completing an already-completed step changes nothing.
 assertSame(
     $afterReady->withCompleted('ready'),
-    ['welcome', 'store', 'contacts', 'language_currency', 'delivery', 'ready'],
+    ['welcome', 'store', 'contacts', 'language_currency', 'delivery', 'payment', 'ready'],
     'idempotent: re-completing ready keeps the same completed list',
     $failures
 );
@@ -91,10 +97,10 @@ assertTrue($dirty->isCompleted('design'), 'dirty input: design is a real (if uni
 
 // 6. Completed-step storage is reordered to canonical STEPS order regardless
 // of the order it was stored in (e.g. a hand-edited setting row).
-$outOfOrder = new WizardProgress(['ready', 'contacts', 'store', 'welcome', 'language_currency', 'delivery']);
+$outOfOrder = new WizardProgress(['ready', 'contacts', 'store', 'welcome', 'language_currency', 'delivery', 'payment']);
 assertTrue($outOfOrder->isReady(), 'reorder: out-of-order storage still reads as ready', $failures);
 assertSame(
-    ['welcome', 'store', 'contacts', 'language_currency', 'delivery', 'ready'],
+    ['welcome', 'store', 'contacts', 'language_currency', 'delivery', 'payment', 'ready'],
     $outOfOrder->withCompleted('ready'),
     'reorder: completed list normalizes to canonical STEPS order',
     $failures
@@ -106,8 +112,9 @@ assertTrue($progress->isImplemented('store'), 'isImplemented: store is implement
 assertTrue($progress->isImplemented('contacts'), 'isImplemented: contacts is implemented', $failures);
 assertTrue($progress->isImplemented('language_currency'), 'isImplemented: language_currency is implemented', $failures);
 assertTrue($progress->isImplemented('delivery'), 'isImplemented: delivery is implemented', $failures);
+assertTrue($progress->isImplemented('payment'), 'isImplemented: payment is implemented', $failures);
 assertTrue($progress->isImplemented('ready'), 'isImplemented: ready is implemented', $failures);
-assertTrue(!$progress->isImplemented('payment'), 'isImplemented: payment is not implemented yet', $failures);
+assertTrue(!$progress->isImplemented('design'), 'isImplemented: design is not implemented yet', $failures);
 
 // 8. steps() exposes the full roadmap, not just the implemented subset.
 assertSame(WizardProgress::STEPS, $progress->steps(), 'steps: returns the full canonical roadmap', $failures);
@@ -121,5 +128,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: WizardProgress smoke test (' . 11 . " scenarios)\n";
+echo 'PASS: WizardProgress smoke test (' . 12 . " scenarios)\n";
 exit(0);
