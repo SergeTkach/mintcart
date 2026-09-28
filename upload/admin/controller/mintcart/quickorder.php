@@ -31,8 +31,6 @@
  * this repo gives.
  */
 class ControllerMintcartQuickorder extends Controller {
-	private $error = array();
-
 	public function index() {
 		$this->load->language('mintcart/quickorder');
 
