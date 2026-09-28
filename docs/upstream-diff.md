@@ -1608,10 +1608,12 @@ prose. The new inline `<script>` block was checked for JS syntax errors
 with a standalone Node harness (Twig `{{ }}` output substituted with a
 placeholder string first) — parses cleanly. Full `tests/mintcart/**/*-test.php`
 suite (82 files) re-run end to end — all passing, no regressions (this
-change adds no new PHP class, so no new test file). No JS/CSS in `assets/`
-touched — `npm run build`/`npm test` not re-run (nothing for them to
-rebuild; this reuses the already-built `components.min.css`/`admin.min.js`
-bundle `enqueueMintAssets()` on `product.php` already proved works).
+change adds no new PHP class, so no new test file). Verifying this
+increment surfaced a real boot-timing bug in `assets/src/js/admin.js`/
+`catalog.js` (both MintCart-owned, not OpenCart core, so tracked in
+`docs/developer/catalog/category-drag-drop.md`'s "Boot timing bug found
+while verifying this increment" section, not here) — `npm install && npm
+run build` now re-run and compiles cleanly, `npm test` still passes.
 **Not verified live** — same pre-existing no-MySQL/no-browser-session gap
 as every other admin-screen increment in this repo (see
 `docs/MANUAL_VERIFICATION.md`'s Phase 17 section for what a human should

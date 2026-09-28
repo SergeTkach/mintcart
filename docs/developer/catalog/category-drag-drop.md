@@ -206,6 +206,57 @@ admin at that column instead — reordering rows while they're displayed
 alphabetically by name would visually scramble that order with no clear
 meaning, so this increment does not attempt it.
 
+## Boot timing bug found while verifying this increment
+
+Wiring `mc-sortable`'s real drag behavior into a live admin page (the
+first time any `[data-mc-sortable]` markup has actually shipped on a
+page that also enqueues `admin.min.js`) surfaced a real, pre-existing,
+cross-cutting bug: `enqueueMintAssets()` queues this bundle via
+`$this->document->addStyle()`/`addScript()`
+(`docs/developer/admin/asset-enqueue.md`), and every admin/storefront
+`header.twig` renders `{% for script in scripts %}` **inside `<head>`**
+as a plain classic `<script src="...">` — no `defer`, `async`, or
+`type="module"`. A classic script like that executes the instant the
+HTML parser reaches it, **before `<body>` (and this page's own table)
+exists in the DOM at all.**
+
+`assets/src/js/admin.js`/`catalog.js` called every `init*()` at their
+module's top level, with no readiness guard. `initAlertDismiss()`'s pure
+event-delegation (one `document.addEventListener('click', ...)`, needing
+no element to exist yet) happened to work anyway despite this, which is
+why the bug went unnoticed — but `initSortableLists()`
+(`docs/developer/components/sortable.md`: "Initializes a SortableJS
+instance on every `[data-mc-sortable]` container found ... **at call
+time**") does an eager `document.querySelectorAll(...)` that would have
+found nothing, silently leaving `category_list.twig`'s drag behavior
+never mounted. The same shape affects `initModalTriggers()`/
+`initDrawerTriggers()`/`initToastTriggers()`/`initTabsTriggers()`'s
+relay-listener setup, `initProgressBars()`, and — on the storefront —
+`initSearchBoxes()` (the just-wired-in-#138 `mc-search-box`, same eager
+`querySelectorAll` shape), whichever of those happen to already be on a
+page when its bundle loads.
+
+**Fix (this run):** both `admin.js` and `catalog.js` now wrap their
+existing, unmodified `init*()` call sequence in a `boot()` function
+deferred with the standard `document.readyState === 'loading'` /
+`DOMContentLoaded` guard. Behavior for every existing (delegation-based)
+consumer is unchanged; every eager-query consumer listed above now
+actually finds its elements. `assets/src/js/admin.js`/`catalog.js` are
+MintCart-owned files, not OpenCart core, so this fix has no
+`docs/upstream-diff.md` entry — it isn't a modification to stock
+OpenCart.
+
+**Verified:** `node --check` on both files; `npm install && npm run build`
+compiles both bundles cleanly (`assets/dist/js/admin.min.js`/
+`catalog.min.js`, confirmed to contain `DOMContentLoaded`); `npm test`
+(preset-token contract checks, unaffected by this change) still passes.
+**Not verified live** — same pre-existing no-browser-session gap as
+everything else in this repo; a human should confirm on a real install
+that (before this fix) a fresh page load genuinely failed to mount
+drag/relay/progress behavior and that (after) it does — see
+`docs/MANUAL_VERIFICATION.md`'s Phase 17 entries, which already exercise
+this path via the Categories drag & drop UI itself.
+
 ## Not done yet, by design
 
 - **Re-parenting via drag** — see the "Resolves the Architectural fork..."

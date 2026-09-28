@@ -3250,17 +3250,39 @@ fails. No category is ever re-parented from this UI.
 
 Six new language keys (`text_drag_hint`, `text_move_up`, `text_move_down`,
 `text_order_saved`, `text_order_failed`, `text_sort_by_order_first`).
+
+**Bonus fix, found while verifying this was actually going to work:**
+`assets/src/js/admin.js`/`catalog.js` called every `init*()` (including
+`initSortableLists()`) at module top level with no DOM-readiness guard,
+while every `header.twig` renders the enqueued bundle as a classic
+`<script>` inside `<head>` — meaning it always ran *before* `<body>`
+existed. Delegated-listener inits (`initAlertDismiss()`) happened to work
+by accident; eager-`querySelectorAll()` inits
+(`initSortableLists()`/`initModalTriggers()`/`initDrawerTriggers()`/
+`initToastTriggers()`/`initTabsTriggers()`/`initProgressBars()`, and on
+the storefront `initSearchBoxes()`) silently found nothing. Without this
+fix, `category_list.twig`'s new drag behavior — the entire point of this
+increment — would never have mounted on a real page. Both files now defer
+their unchanged `init*()` sequence behind a `document.readyState`/
+`DOMContentLoaded` guard. Full writeup:
+`docs/developer/catalog/category-drag-drop.md`'s "Boot timing bug found
+while verifying this increment" section. `assets/src/js/*` are
+MintCart-owned, not OpenCart core, so no `docs/upstream-diff.md` entry.
+
 Verified: `php -l` clean on `category.php`/`en-gb/catalog/category.php`;
 `category_list.twig`'s `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}`
 tag counts balanced (12/12, 2/2); the new inline `<script>` checked with a
 standalone Node harness (Twig `{{ }}` output substituted with a
 placeholder first) — parses cleanly. Full `tests/mintcart/**/*-test.php`
 suite (82 files) re-run end to end — all passing, no regressions (no new
-PHP class, so no new test file). No `assets/` source touched, so
-`npm run build`/`npm test` not re-run. **Not verified live** — same
-pre-existing no-MySQL/no-browser-session gap as every other admin-screen
-increment in this repo; see `docs/MANUAL_VERIFICATION.md`'s new "Live drag
-& drop UI" entries, including a dedicated mixed-parent-page safety check.
+PHP class, so no new test file). `admin.js`/`catalog.js`: `node --check`
+clean; `npm install && npm run build` compiles both bundles cleanly
+(confirmed `DOMContentLoaded` present in both `assets/dist/js/admin.min.js`/
+`catalog.min.js`); `npm test` (preset-token contract checks, unaffected)
+still passes. **Not verified live** — same pre-existing no-MySQL/
+no-browser-session gap as every other admin-screen increment in this
+repo; see `docs/MANUAL_VERIFICATION.md`'s new "Live drag & drop UI"
+entries, including a dedicated mixed-parent-page safety check.
 
 **Next candidates:** full drag-to-re-parent (a tree/drill-down list view —
 still a real, separate, larger increment, unlike the reordering solved
