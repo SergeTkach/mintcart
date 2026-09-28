@@ -143,6 +143,8 @@ class ControllerCatalogCategory extends Controller {
 	}
 
 	protected function getList() {
+		$this->enqueueMintAssets();
+
 		if (isset($this->request->get['sort'])) {
 			$sort = $this->request->get['sort'];
 		} else {
@@ -191,6 +193,15 @@ class ControllerCatalogCategory extends Controller {
 		$data['delete'] = $this->url->link('catalog/category/delete', 'user_token=' . $this->session->data['user_token'] . $url, true);
 		$data['repair'] = $this->url->link('catalog/category/repair', 'user_token=' . $this->session->data['user_token'] . $url, true);
 
+		/**
+		 * MintCart Phase 17 (Categories drag & drop,
+		 * MINTCART_TECHNICAL_PLAN.md §30, MINTCART_IMPLEMENTATION_GUIDE.md
+		 * §64) - the AJAX endpoint category_list.twig's McSortable-driven
+		 * rows POST to. `ControllerCatalogCategory::move()` already existed
+		 * (backend-only, unwired); this is its first live caller.
+		 */
+		$data['move'] = $this->url->link('catalog/category.move', 'user_token=' . $this->session->data['user_token'], true);
+
 		$data['categories'] = array();
 
 		$filter_data = array(
@@ -209,6 +220,7 @@ class ControllerCatalogCategory extends Controller {
 				'category_id' => $result['category_id'],
 				'name'        => $result['name'],
 				'sort_order'  => $result['sort_order'],
+				'parent_id'   => $result['parent_id'],
 				'edit'        => $this->url->link('catalog/category/edit', 'user_token=' . $this->session->data['user_token'] . '&category_id=' . $result['category_id'] . $url, true),
 				'delete'      => $this->url->link('catalog/category/delete', 'user_token=' . $this->session->data['user_token'] . '&category_id=' . $result['category_id'] . $url, true)
 			);
@@ -272,11 +284,36 @@ class ControllerCatalogCategory extends Controller {
 		$data['sort'] = $sort;
 		$data['order'] = $order;
 
+		$data['text_drag_hint'] = $this->language->get('text_drag_hint');
+		$data['text_move_up'] = $this->language->get('text_move_up');
+		$data['text_move_down'] = $this->language->get('text_move_down');
+		$data['text_order_saved'] = $this->language->get('text_order_saved');
+		$data['text_order_failed'] = $this->language->get('text_order_failed');
+		$data['text_sort_by_order_first'] = $this->language->get('text_sort_by_order_first');
+
 		$data['header'] = $this->load->controller('common/header');
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 
 		$this->response->setOutput($this->load->view('catalog/category_list', $data));
+	}
+
+	/**
+	 * MintCart Phase 12/17 (Entity Picker / Categories drag & drop,
+	 * MINTCART_FUNCTIONAL_SCOPE.md §8/§6, MINTCART_TECHNICAL_PLAN.md
+	 * §20/§30) - enqueues MintCart's own compiled bundle for this screen's
+	 * McSortable-driven category list below. Same "components" bundle
+	 * (not "index" - avoids the Bootstrap 3/5 conflict, see
+	 * docs/developer/admin/asset-enqueue.md) and the same
+	 * $this->document->addStyle()/addScript() mechanism
+	 * ControllerCatalogProduct::enqueueMintAssets() already established as
+	 * this repo's first consumer - duplicated here verbatim rather than
+	 * shared via a trait/base controller (CLAUDE.md §85/§86: no
+	 * abstraction ahead of a third real call site to compare against).
+	 */
+	protected function enqueueMintAssets() {
+		$this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
+		$this->document->addScript(HTTP_CATALOG . 'assets/dist/js/admin.min.js');
 	}
 
 	protected function getForm() {

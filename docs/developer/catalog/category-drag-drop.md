@@ -2,9 +2,10 @@
 
 `MINTCART_TECHNICAL_PLAN.md` §30, `MINTCART_IMPLEMENTATION_GUIDE.md` §64:
 move a category to a new parent and/or reorder it among its new siblings via
-`McSortable` (Phase 11), through SortableJS. This increment ships the
-transactional move backend; live drag & drop UI wiring is a follow-up (see
-"Not done yet" below).
+`McSortable` (Phase 11), through SortableJS. The transactional move backend
+and the live drag & drop UI wiring (`category_list.twig`) are both done —
+see "Live UI wiring" below for what the UI covers and deliberately does
+not.
 
 ## Files
 
@@ -115,19 +116,109 @@ POST index.php?route=catalog/category.move&user_token=…
 Response: `{"success": "..."}` or `{"error": "..."}` (permission denied,
 category/parent not found, or the cycle-prevention message).
 
+## Live UI wiring
+
+`ControllerCatalogCategory::getList()` now calls a new
+`enqueueMintAssets()` (verbatim copy of
+`ControllerCatalogProduct::enqueueMintAssets()` —
+`docs/developer/admin/asset-enqueue.md`'s "components" bundle, not
+"index", to avoid the Bootstrap 3/5 conflict; not shared via a trait yet,
+per `CLAUDE.md` §85/§86 — two call sites isn't a strong enough signal to
+extract one, a natural follow-up once a third appears) and passes
+`$data['move']` (the `catalog/category.move` URL) and `parent_id` per row
+into `category_list.twig`.
+
+The template mounts the **real** `mc-sortable` behavior
+(`assets/src/js/components/sortable.js`, auto-initialized by
+`admin.min.js` — `docs/developer/components/sortable.md`) directly on the
+existing Bootstrap 3 `<table>`/`<tbody>`/`<tr>` markup: `data-mc-sortable`/
+`data-mc-sortable-handle`/`data-mc-sortable-item`/`data-mc-action` are
+`mc-sortable`'s documented **behavior** hooks (`CLAUDE.md` §14), and don't
+require its `mc-sortable`/`mc-sortable__item` **CSS** classes, which are
+flex-list-only and would break table-row layout. This page's own existing
+Bootstrap 3 table/button classes supply the visuals; the JS behavior
+(SortableJS drag + keyboard move-up/move-down buttons +
+`mc:sortable:reorder` event) is unchanged from any other `mc-sortable`
+consumer.
+
+An inline (non-module, matching every other admin Twig template's
+`<script>` convention) listener on the `mc:sortable:reorder` event POSTs
+the new order straight to `catalog/category.move` via `fetch` —
+immediately, no "Save Order" button/page reload, unlike the Homepage
+Builder's block list (which deliberately stayed at a lighter, non-`mc-
+sortable` HTML5-drag-plus-manual-save implementation for a different
+reason — no bundle was enqueued on that screen at the time; see that
+template's own comment). On failure (network error or `{"error": ...}`),
+the row order is restored client-side and the reason is announced via a
+visually-hidden `aria-live="polite"` region — no page reload either way.
+
+**Resolves the "Architectural fork identified, not resolved (Phase 17)"
+note in `docs/IMPLEMENTATION_STATUS.md`'s Phase 12 section** — not by
+picking one of its three brainstormed options (a parent-scoped
+drill-down/tree view, same-parent-only drag with reject-and-snap-back, or
+a "Manage order for: [parent]" filter), but with a fourth, purely
+mechanical one that note didn't consider: **decompose the new visible
+order back into per-parent groups before saving, instead of changing what
+the admin is allowed to drag.**
+
+`category_list.twig` is a flat, paginated table spanning every parent
+(stock OpenCart 3 behavior, unmodified — sorted by name or `sort_order`
+across the *entire* tree, not grouped by parent), while
+`moveCategory()`'s `order[]` contract is sibling-scoped ("the full new
+sibling order under `parent_id`", and it blindly applies `sort_order` to
+every id given regardless of that id's real parent — see
+`moveCategory()`'s "what it does not touch" section above). Naively
+sending the *whole* visible page's new order in one request — one flat
+list mixing however many different parents happen to share this page —
+would let two categories under different parents that simply ended up
+adjacent after a drag receive interleaved `sort_order` values relative to
+each other's *actual*, off-page siblings, silently scrambling menu/listing
+order the admin never saw or intended to touch. That was the real risk
+the "not resolved" note flagged, not a missing feature.
+
+The reorder handler in `category_list.twig` avoids it without any UI
+redesign: on `mc:sortable:reorder`, it groups the new visible `order[]`
+by each row's own `data-mc-category-parent` (read once at page load — no
+category is ever re-parented from this screen; `moveCategory()`'s
+`parent_id` write always re-targets the same value it already had, a
+harmless no-op subtree rebuild), **preserving each group's relative
+order** exactly as it appears in the new full sequence, and fires one
+`move()` request per group — never mixing one parent's numbering with
+another's. A group with only one visible member is **skipped entirely**:
+with nothing else from that parent on the page to compare it against,
+saving it anyway would reset that one category's `sort_order` to `0` even
+though the admin never touched its real siblings (most of which simply
+aren't on this page). This means an admin is free to drag *any* row
+anywhere on the page — including across what looks like a different
+parent's rows — with no rejected drops or snap-back surprises; the save
+step is what stays safe, not the drag gesture.
+
+Full drag-to-*re-parent* (moving a category onto a different branch of
+the tree) is a separate, materially bigger UI — a nested tree/drill-down
+view, one of this note's original three options — and is explicitly left
+for a future increment; nothing above attempts it.
+
+**Gated to `sort == 'sort_order'`.** The drag handle, move-up/move-down
+buttons, and `data-mc-sortable*` attributes only render when the list is
+sorted by the Sort Order column (click the "Sort Order" header first).
+When sorted by Name, a plain hint (`text_sort_by_order_first`) points the
+admin at that column instead — reordering rows while they're displayed
+alphabetically by name would visually scramble that order with no clear
+meaning, so this increment does not attempt it.
+
 ## Not done yet, by design
 
-- **No live UI.** `admin/view/template/catalog/category_list.twig` does not
-  call `McSortable` (`createEntityPicker`'s admin-only sibling component,
-  Phase 11) yet, and nothing POSTs to `catalog/category.move`. Wiring that
-  in needs MintCart's own compiled bundle (`assets/dist/{css,js}`) enqueued
-  on an admin page — which, as of this run, **nothing enqueues on any admin
-  screen yet** (the same blocker `docs/developer/components/entity-picker.md`
-  "Admin backends" flagged for wiring `McEntityPicker` into
-  `product_form.twig`'s Category field). Shipping unverifiable, possibly-
-  broken drag markup on a real admin screen would be worse than shipping a
-  tested, additive backend and leaving the UI for once that enqueue problem
-  is solved.
+- **Re-parenting via drag** — see the "Resolves the Architectural fork..."
+  section above; needs a tree-structured list view, a materially larger
+  increment.
+- **Not atomic across parent groups.** When a single drag/keyboard move
+  produces more than one save-worthy parent group (rare — only when the
+  admin's one gesture happened to change the relative order of rows from
+  two or more different parents at once), each group is saved with its
+  own independent `move()` request (`Promise.all`). If one succeeds and
+  another fails, the successful one's write is not rolled back even
+  though the UI reverts to the pre-drag order and reports failure — a
+  human should re-drag to retry rather than assume nothing was saved.
 - **No live end-to-end request test.** This environment has no MySQL server,
   so `moveCategory()`/`rebuildCategoryPath()` and the `move()` action were
   never exercised against a real database — the same pre-existing gap noted
@@ -136,6 +227,10 @@ category/parent not found, or the cycle-prevention message).
 - Multi-store category visibility, category status, and any other
   `category_list.twig` column are untouched — this increment is scoped to
   the move/reorder write path only.
+- `enqueueMintAssets()` is duplicated verbatim on `ControllerCatalogCategory`
+  and `ControllerCatalogProduct` — extracting a shared trait is a natural,
+  low-risk cleanup once a third admin screen needs the same bundle,
+  deliberately not done here (`CLAUDE.md` §85/§86).
 
 ## Definition of Done
 
@@ -146,10 +241,10 @@ category/parent not found, or the cycle-prevention message).
       OpenCart core model/controller per `CLAUDE.md` §39)
 - [x] Transactional (`CLAUDE.md` §12 — critical multi-step operations use
       transactions)
-- [ ] Keyboard-usable, non-mouse drag alternative — deferred to the live UI
-      wiring step; `McSortable` (Phase 11) already ships
-      `sortable-move-up`/`sortable-move-down` buttons for this
-      (`MINTCART_IMPLEMENTATION_GUIDE.md` §68), so the requirement is
-      already met by the component this feature will mount once wired.
+- [x] Keyboard-usable, non-mouse drag alternative — `mc-sortable`'s
+      `sortable-move-up`/`sortable-move-down` buttons
+      (`MINTCART_IMPLEMENTATION_GUIDE.md` §68), rendered per row alongside
+      the drag handle.
+- [x] Live UI wired (`category_list.twig` + `ControllerCatalogCategory`)
 - [ ] Live-verified on a real install — blocked on this environment's
       no-MySQL gap (see above)
