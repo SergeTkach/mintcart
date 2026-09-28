@@ -891,7 +891,9 @@ specials:
    Copy/Delete), confirm the dialog, and confirm the redirect lands back
    on the same filtered/sorted/paged list with a success message and the
    selected products' Quantity column updated to the new value.
-3. Repeat for "Status" (value `0` or `1`), "Price" (a decimal value),
+3. Repeat for "Status" (choose "Enabled"/"Disabled" from the value
+   `<select>` that now appears in place of the number input — see step 8),
+   "Price" (a decimal value),
    "Manufacturer" (an existing `manufacturer_id`, and separately `0` for
    "no manufacturer"), and "Stock Status" (an existing `stock_status_id`
    from **Settings → Stock Statuses**, e.g. the ID shown for "In Stock")
@@ -923,6 +925,17 @@ specials:
    Price). Also submit "Special Price" with an invalid value (e.g. `-1`)
    and confirm the same rejection-warning behavior as the other numeric
    fields.
+8. Change the bulk-update field `<select>` between "Status" and every
+   other option and confirm the value control swaps correctly each time:
+   an Enabled/Disabled `<select>` shows (and the number input hides) only
+   when "Status" is selected; a plain number input shows for every other
+   field, accepting only whole numbers for Quantity/Manufacturer/Stock
+   Status (the browser's own spinner/step behavior) and decimals for
+   Price/Special Price. Confirm via the browser's dev tools that whichever
+   control is hidden is also `disabled` (so only one `bulk_value` is ever
+   sent), and that switching the field back and forth several times before
+   submitting still posts the value currently visible, not a stale one
+   from an earlier selection.
 
 ## Phase 14 — `menu-mintcart-business` merge fix, never seen rendered live
 

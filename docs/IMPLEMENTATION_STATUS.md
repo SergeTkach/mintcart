@@ -3135,6 +3135,49 @@ multi-select/picker UI, a bigger lift than every field so far); a
 friendlier per-field value control (`<select>` for Status,
 `type="number"` elsewhere); or re-check `gh pr list --state open` first.
 
+**Update (2026-09-28, routine run): per-field-typed `bulk_value` control
+built.** Step 0 dedup check: 2 open PRs at the start of this run (#138
+`mc-search-box` header wiring, #139 admin Quick Order Requests list, both
+`ROUTINE-STATUS: DONE`), neither touching `product_list.twig` or any
+`upload/admin/**`/`upload/system/library/mintcart/catalog/**` file this
+run touches; no hot shared files (§0f, Homepage Builder block
+registry/`block.css`) touched by either. This was the last remaining item
+on this doc's own "Next candidates" list not requiring a bigger lift
+(`category_ids` still needs a real multi-select/picker control, a larger
+increment). `product_list.twig`'s single generic `bulk_value` text
+`<input>` is now two controls sharing that same `name` — an
+Enabled/Disabled `<select>` for `status`, a `type="number"` input (whole
+numbers for quantity/manufacturer_id/stock_status_id, `step="any"` for
+price/special_price) for everything else — toggled by a small inline
+`<script>` block on `#input-bulk-field`'s `change` event, which also
+`disabled`s the non-active control so only one `bulk_value` ever reaches
+the POST body. No PHP changed — `BulkProductUpdateValidator`/
+`ControllerCatalogProduct::bulkUpdate()` already read `bulk_value` as a
+plain string regardless of which control produced it, and still do all
+the real validation. Full writeup: `docs/developer/catalog/bulk-editor.md`
+(rewritten "Value input" section, updated Verified/Next step).
+
+Verified: `product_list.twig`'s `{% if %}`/`{% for %}` tag counts
+unchanged and balanced (14/14, 2/2 — no `{% %}` tag touched, only plain
+HTML/inline `<script>`); all three of the file's inline `<script>` blocks
+(including the new toggle) checked for JS syntax errors with a standalone
+Node harness (Twig `{{ }}` substituted with a placeholder string) — all
+parse cleanly. No PHP touched, so `tests/mintcart/**/*-test.php` was not
+re-run (nothing it covers changed). No JS/CSS in `assets/` touched —
+`npm run build`/`npm test` not re-run (this screen stays on the legacy
+admin Bootstrap 3/jQuery stack, no MintCart asset bundle involved). **Not
+verified live** — no MySQL/admin session in this environment, same
+pre-existing gap; a human should confirm the select/number swap actually
+happens on `#input-bulk-field` change, that submitting each field type
+posts the right value shape, and that the previous six fields' bulk
+updates still work exactly as before (see
+`docs/MANUAL_VERIFICATION.md`'s Phase 16 entry). **Next candidates:**
+`category_ids` as a further bulk-editable field (still needs a real
+multi-select/picker control — the one remaining item this doc's Bulk
+Editor "Next step" list has not yet closed); chunked/resumable AJAX batch
+jobs for very large selections; true inline edit in the product list
+table; or re-check `gh pr list --state open` first.
+
 ## Phase 17 — Categories drag & drop
 
 - [x] SortableJS-based category move backend (transaction, cycle prevention,
