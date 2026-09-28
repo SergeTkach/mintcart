@@ -174,7 +174,7 @@ class ControllerMintcartQuickorder extends Controller {
 				'email'          => $result['email'],
 				'status'         => $result['status'],
 				'date_added'     => date($this->language->get('date_format_short'), strtotime($result['date_added'])),
-				'action'         => $this->url->link('mintcart/quickorder.status', 'user_token=' . $this->session->data['user_token'], true)
+				'action'         => $this->url->link('mintcart/quickorder.status', 'user_token=' . $this->session->data['user_token'] . $url, true)
 			);
 		}
 
