@@ -39,6 +39,71 @@ Legend: `[x]` done, `[~]` in progress / partially done, `[ ]` not started.
 
 Phase 0 is **complete**.
 
+**Update (2026-09-29, routine run): repo-integrity fix — missing `Config`
+engine class restored.** Step 0 dedup check: `list_pull_requests` returned
+15 open PRs (`#138`-`#152`) at the start of this run; none touch
+`.gitignore`, `upload/system/library/config.php`, or any file this
+increment adds — read every title, and confirmed the closest ones
+(`#149` admin update route, `#144` Diagnostics JSON surface) don't overlap.
+None of the hot shared files from §0f (Homepage Builder block-type
+registry, `block.css`) are touched either.
+
+While investigating a genuinely separate next-step candidate (wiring
+`MintCart\Seo\HreflangBuilder` — see that class's own "Why no live wiring
+yet" section — which needs `Config::set()`/`get()` to build a
+per-language alternate URL), tracing `system/framework.php`'s `new
+Config()` call turned up that `upload/system/library/config.php` (stock
+OpenCart's `Config` engine class) does not exist anywhere in this
+repository, was never committed even in the initial Phase 0 baseline, and
+is not merely absent from this checkout — `git log --all` has no history
+of it at all. Root cause: `.gitignore`'s `upload/**/config.php` rule
+(intended only for the two installer-generated,
+DB-credential-holding files, `upload/config.php`/`upload/admin/config.php`)
+also matches this one stock framework class file — the exact same
+false-positive-glob class already caught and fixed twice before for
+`upload/**/test*` (`test_theme/`, then `testimonialsblockprovider.php`/
+`testimonials.twig` — see the Phase 8/10 sections above). Every request
+would fatal on `new Config()` in `system/framework.php` on a real install;
+this had gone unnoticed because no environment used by any routine run so
+far has a live PHP/MySQL server to actually boot the app (the same
+"not verified live" gap noted throughout this file).
+
+**Fix:** added a fourth targeted `!upload/system/library/config.php`
+negation to `.gitignore`, alongside the existing three. Restored the file
+byte-for-byte from `https://raw.githubusercontent.com/opencart/opencart/3.0.5.1/upload/system/library/config.php`
+(the documented upstream baseline tag, `docs/audit.md` §1) rather than
+reconstructing it from memory (`CLAUDE.md` §10/§84) — confirmed via `git
+diff`-equivalent that stock, already-present, unmodified sibling files in
+the same directory (`url.php`) already match that same tag's content, so
+the tag itself is the right reference. Checked every other stock
+`config.php` path under `upload/` against the same tag
+(`system/config/default.php`/`admin.php`/`catalog.php` are not literally
+named `config.php` so unaffected; `upload/config.php`/`upload/admin/config.php`
+don't exist in the source tag either, since OpenCart's installer generates
+them — correctly still gitignored) — confirmed `system/library/config.php`
+was the only victim. This is a repository-integrity fix, not an OpenCart
+bug, so it is documented here and in `docs/audit.md`'s "Correction" note
+rather than `docs/fixes/registry.md` (reserved for OpenCart-side bugs per
+`CLAUDE.md` §13) or `docs/upstream-diff.md` (reserved for deliberate core
+*modifications*; this restores stock content unmodified).
+
+Verified: `php -l` clean on the restored file and across the entire
+`upload/` tree (no other file referenced a symbol this file's absence
+would have hidden a second failure behind); `git check-ignore -v
+upload/system/library/config.php` now correctly reports it as *not*
+ignored. **Not verified:** no live PHP/MySQL environment here to actually
+boot `index.php`/`admin/index.php` and confirm the fatal is gone in
+practice — a human should do that smoke check on a real install before
+trusting this beyond static inspection, same pre-existing gap as every
+other increment in this file. **Next candidates:** the `HreflangBuilder`
+per-language URL resolver this investigation was originally headed toward
+(now unblocked from a "can I even trust `Config::set()` exists" standpoint,
+though the resolver itself is still separate, real work — see that class's
+own doc's "Why no live wiring yet"); the per-store variant of `Design →
+System Pages` (`#146`'s own next-candidates note); the admin
+`mintcart/update/*` route (`#149`, already open); or re-check `gh pr list
+--state open` first, since this backlog moves fast.
+
 ## Phase 1 — Foundation
 
 - [x] Create MintCart PHP namespace/bootstrap (`MintCart\`) — `MintCart\Core\Bootstrap`,

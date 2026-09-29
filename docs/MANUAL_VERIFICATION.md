@@ -13,6 +13,22 @@ than silently fixing and forgetting to update this file.
 
 ---
 
+## Phase 0 — restored `Config` engine class never booted live
+
+`upload/system/library/config.php` (OpenCart's core `Config` class) was
+missing from this repository entirely until this run (a `.gitignore`
+false positive silently excluded it since the initial baseline commit —
+see `docs/IMPLEMENTATION_STATUS.md`'s Phase 0 section and `docs/audit.md`'s
+"Correction" note for the full writeup). It has been restored
+byte-for-byte from the upstream OpenCart `3.0.5.1` tag and passes `php -l`,
+but no environment used by any routine run so far has live PHP/MySQL to
+actually boot `index.php`/`admin/index.php`. Confirm on a real install:
+both the storefront and admin now load past `system/framework.php`
+without a fatal on `new Config()` (they would have fatal'd on every single
+request before this fix), and that a page depending on
+`Config::set()`/`Config::has()` (e.g. anything reading
+`config_theme`/`config_language_id`) behaves normally.
+
 ## Phase 13 — Wizard Delivery step never rendered live
 
 No MySQL/OpenCart admin session in this environment. Confirm on a real
