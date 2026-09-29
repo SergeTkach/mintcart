@@ -4766,6 +4766,39 @@ including `PackageExtractor`/`BackupPlanner`+`BackupExecutor`/
 ledger's recorded value) once a rollback consumer exists to justify it; or
 re-check `gh pr list --state open` first.
 
+---
+
+**Update (2026-09-29, routine run): the "changed since install"
+comparison named just above is now built.** `list_pull_requests` returned
+6 open PRs (#138-#144, this run's dedup check found 6 at the time — see
+this run's PR description for the exact list and file-overlap check);
+none touch `upload/system/library/mintcart/update/*`,
+`tests/mintcart/update/*`, or `docs/developer/update/*`, so this increment
+was uncontended. New `MintCart\Update\ChangedFileDetector`
+(`detect()`/`hasChanges()`) — a pure primitive taking
+`InstalledFileLedger::forPackage()`'s own (file_path => sha256) snapshot
+shape and comparing it against a live directory's current file hashes,
+same "pure, OpenCart-independent primitive first" pattern `PackageVerifier`
+already established. Full writeup: `docs/developer/update/changed-file-detector.md`;
+`docs/developer/update/installed-file-ledger.md`'s "not attempted here"
+note updated to point at it. No OpenCart core file touched — fully
+additive, no `docs/upstream-diff.md` entry needed. `php -l` clean; new
+`tests/mintcart/update/changed-file-detector-test.php` (15 scenarios);
+full `tests/mintcart/**/*-test.php` suite re-run end to end (85 files, up
+from 84) — all passing, no regressions. No live-install verification gap
+to flag in `docs/MANUAL_VERIFICATION.md` — pure PHP against temp-directory
+fixtures, same reasoning `PackageVerifier`'s own doc gives for not needing
+an entry there.
+
+**Next candidates:** the real admin controller/route
+(`mintcart/update/*`) remains the biggest remaining gap in this flow — it
+needs a product/architecture decision on where a package manifest/download
+URL comes from (flagged by earlier runs, not attempted here); wiring
+`ChangedFileDetector` into that future route or a dedicated rollback
+screen once it exists; ADR 005 decision #2 (manifest-diff classification)
+or decision #3 (`removes()` field on `PackageManifest`) as separate future
+increments; or re-check `gh pr list --state open` first.
+
 ## Phase 12 — Early Access
 
 - [ ] 10–30 real users/developers
