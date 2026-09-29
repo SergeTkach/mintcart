@@ -1027,13 +1027,57 @@ would mean a hardcoded color, a component bug), and whether both presets apply
 cleanly to `test_theme`'s different DOM. All five items are listed in
 `docs/MANUAL_VERIFICATION.md`'s new Phase 9 section.
 
-**Not wired yet, by design:** nothing writes `data-mc-preset` onto `<html>` at
-runtime — Mint Default's page templates don't emit it and no admin UI selects
-it. That belongs with theme settings (`MINTCART_FUNCTIONAL_SCOPE.md` §9) and
-its declarative `settings.json` schema (Implementation Guide §31), neither of
-which exists; building the writer ahead of the form that sets the value would
-be API ahead of a consumer (`CLAUDE.md` §85). Until then a preset is inspected
-by setting the attribute by hand.
+**Not wired yet, by design (superseded 2026-09-29 — see below):** nothing
+wrote `data-mc-preset` onto `<html>` at runtime — Mint Default's page
+templates didn't emit it and no admin UI selected it. That belonged with
+theme settings (`MINTCART_FUNCTIONAL_SCOPE.md` §9) and its declarative
+`settings.json` schema (Implementation Guide §31), neither of which
+existed; building the writer ahead of the form that sets the value would
+have been API ahead of a consumer (`CLAUDE.md` §85). Until then a preset
+was inspected by setting the attribute by hand.
+
+**Update (2026-09-29, routine run): `Design → Styles` closes this gap —
+a real consumer for `data-mc-preset` now exists.** New
+`ControllerMintcartDesignStyles` (route `mintcart/design/styles`, menu
+entry under `Design`, right after "Theme"): reads the *active* theme's own
+`theme.json` `presets` array (never hardcoded) and lets an admin pick one,
+stored as the single `mintcart_design_preset` setting (own isolated code
+group, same shape `mintcart_dev_mode` already uses). `ControllerCommonHeader::index()`
+now reads that setting, re-validates it against the active theme's own
+declared presets a second time, and passes `$data['mc_preset']` through;
+`mint_default/template/common/header.twig`'s `<html>` tag renders
+`data-mc-preset="{{ mc_preset }}"` only when non-blank. This is
+deliberately the smallest real slice of the future Theme Settings screen
+(Implementation Guide §31) — one setting, not a `settings.json`-driven
+schema for arbitrary theme options — since that broader schema still has
+no second real consumer to justify it (`CLAUDE.md` §85/§86). Full writeup:
+`docs/developer/theme-api/presets.md`'s "Wired: `Design → Styles`"
+section; `docs/upstream-diff.md`'s `header.php` and `common/column_left.php`
+entries. Step 0 dedup check: 13 open PRs at the start of this run
+(`#138`-`#150`), confirmed via each PR's own file list that none touch
+`upload/catalog/controller/common/header.php`,
+`upload/admin/controller/common/column_left.php` (contended only by
+`#139`'s unrelated `Sale` menu-group addition — a different array, no
+shared line), `upload/catalog/view/theme/mint_default/template/common/header.twig`
+(distinct from the `mint/components/header.twig` file `#138` touches), or
+any file under `upload/admin/controller/mintcart/design/`; no Homepage
+Builder hot files (§0f) touched. Verified: `php -l` clean on all touched/
+added PHP files; both changed Twig files' `{% if %}`/`{% for %}` tag
+counts checked balanced (5/5, 2/2 for the new `styles.twig`; unchanged
+5/5, 4/4 for `mint_default`'s `common/header.twig`, only its `<html>` tag
+line changed); full `tests/mintcart/**/*-test.php` suite (84 files)
+re-run end to end — all passing, no regressions (no new pure PHP class
+added — this is thin controller/setting wiring, same shape
+`ControllerMintcartSettingsDiagnostics` already has no dedicated test
+file for). **Not verified:** no live MySQL/browser session in this
+environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 9/31 section
+for the full manual script. **Not done yet:** `test_theme` has no
+`common/header.twig` override of its own (falls back to the legacy
+`default` theme's, a pre-existing gap unrelated to this change) so it
+never renders `data-mc-preset` regardless of its own (empty) presets
+list; the wider `settings.json`-driven Theme Settings schema for options
+beyond "which preset" remains a separate, larger increment; ADR 008's
+live-preview mechanism remains documentation-only.
 
 **Theme live preview (`MINTCART_FUNCTIONAL_SCOPE.md` §31) — RESEARCH item
 resolved, not yet implemented.** `docs/adr/008-theme-live-preview.md` fixes
@@ -6428,3 +6472,19 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-09-29, routine run):** `list_pull_requests` returned
+13 open PRs at the start of this run (`#138`-`#150`, all `DONE` except
+`#148` `IN-PROGRESS`) — see the Phase 9 (Presets) section above for the
+per-file overlap check. Built `Design → Styles`
+(`ControllerMintcartDesignStyles`), the first real admin consumer for
+Phase 9's `data-mc-preset` mechanism, and wired it into
+`ControllerCommonHeader`/`mint_default`'s `common/header.twig` — see that
+section for the full writeup. **Next candidates:** the remaining Entity
+Picker backends needing live wiring (information/attribute/customer);
+`OrderAdapter` (still no duplicated inline order-lookup call site in
+Mint-owned code to justify one); the two-overlapping-Bulk-Editor fork
+(`BulkProductUpdateValidator` vs. `BulkProductUpdatePlanner`, still a
+human decision, not attempted); a wider Theme Settings `settings.json`
+schema (needs a second real theme option beyond "which preset" first); or
+re-check `gh pr list --state open` first, since this backlog moves fast.

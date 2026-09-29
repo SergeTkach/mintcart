@@ -236,6 +236,35 @@ class ControllerCommonHeader extends Controller {
 			(new \MintCart\Core\Logger())->error('RobotsBuilder failed to build robots meta content: ' . $e->getMessage());
 		}
 
+		// Design → Styles (MINTCART_FUNCTIONAL_SCOPE.md §9, Phase 9/31,
+		// docs/developer/theme-api/presets.md) - writes data-mc-preset onto
+		// <html> from the store's own choice, once ControllerMintcartDesignStyles
+		// exists to make that choice from. Not gated by $mint_render_header
+		// like mc_header above: this is a plain CSS attribute selector any
+		// theme's `<html>` tag can carry (mint_default's is the only one
+		// that does today; a legacy/third-party theme's own header.twig
+		// simply never reads $data['mc_preset']). Re-validated here against
+		// the *active* theme's own declared presets (not merely "is this a
+		// non-empty string") so a stale setting left over from a since-
+		// switched theme, or from a theme that dropped a preset code, never
+		// emits a data-mc-preset value no loaded CSS actually declares a
+		// :root block for.
+		$mc_preset = (string)$this->config->get('mintcart_design_preset');
+
+		if ($mc_preset !== '') {
+			$manifest_path = rtrim(DIR_TEMPLATE, '/') . '/' . $mint_theme . '/theme.json';
+
+			$manifest = is_file($manifest_path) ? json_decode((string)file_get_contents($manifest_path), true) : null;
+
+			$available_presets = (is_array($manifest) && isset($manifest['presets']) && is_array($manifest['presets'])) ? $manifest['presets'] : array();
+
+			if (!in_array($mc_preset, $available_presets, true)) {
+				$mc_preset = '';
+			}
+		}
+
+		$data['mc_preset'] = $mc_preset;
+
 		return $this->load->view('common/header', $data);
 	}
 }
