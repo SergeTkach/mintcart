@@ -251,6 +251,12 @@ class ControllerProductSearch extends Controller {
 					$image = $this->model_tool_image->resize('placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'));
 				}
 
+				// 2x variant for a high-DPI srcset - see category.php's
+				// identical comment (docs/developer/commerce/product-view-provider.md
+				// "Image dimensions").
+				$image_2x = $this->model_tool_image->resize($result['image'] ? $result['image'] : 'placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width') * 2, $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height') * 2);
+				$image_srcset = $image . ' 1x, ' . $image_2x . ' 2x';
+
 				if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
 					$price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
 				} else {
@@ -299,6 +305,7 @@ class ControllerProductSearch extends Controller {
 							'name'                        => $result['name'],
 							'url'                         => $href,
 							'image'                       => $image,
+							'image_srcset'                => $image_srcset,
 							'image_width'                 => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'),
 							'image_height'                => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'),
 							'price'                       => $price,
