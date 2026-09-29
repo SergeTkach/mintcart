@@ -4007,6 +4007,41 @@ human should confirm the rendered `<img>` tags carry the expected
 page. Responsive images (`srcset`), WebP/modern formats and asset
 minification-beyond-esbuild's-defaults remain untouched.
 
+**Update (2026-09-29, routine run): responsive `srcset` is done for the
+four Product Listing Pipeline consumers.** `category.php`/`search.php`/
+`manufacturer.php`/`special.php` each now build a second, 2x
+`model_tool_image->resize()` call next to their existing 1x one and pass
+`image_srcset` (`"<1x> 1x, <2x> 2x"`) through
+`MintCart\Commerce\ProductViewProvider` into both `product-card.twig`
+files (`mint_default`, `test_theme`) — see
+`docs/developer/commerce/product-view-provider.md`'s new "Image srcset
+(responsive images)" section and `docs/developer/components/product-card.md`'s
+new "Image srcset (responsive images)" section for the full writeup.
+Deliberately scoped to just `srcset` for the Product Listing Pipeline's
+already-shared `product-card.twig` contract — the Homepage Products block
+(no `resize()` call site found in `ProductsBlockProvider` itself; it must
+delegate elsewhere, not investigated further this run) and WebP/modern
+formats are separate, larger increments, still untouched. Step 0 dedup
+check: 12 open PRs at the time (`#138`-`#149`), confirmed via each PR's
+own file list that none touch `category.php`/`search.php`/
+`manufacturer.php`/`special.php`/`productviewprovider.php`/either
+`product-card.twig` (`#144`'s open, unmerged diagnostics-JSON change does
+touch the same four controller files, but at a different point in each
+`index()` method — confirmed no shared line via the diff shown in its own
+PR body); no Homepage Builder hot files (§0f) touched. Verified: `php -l`
+clean on all 5 touched PHP files; `tests/mintcart/commerce/product-view-provider-test.php`
+extended (10 → 11 scenarios); full `tests/mintcart/**/*-test.php` suite
+re-run end to end (84 files) — all passing, no regressions; both
+`product-card.twig` files' tag counts re-checked balanced. **Not
+verified:** no live MySQL/browser session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new "Phase 10/19 —
+`mc-product-card` responsive `srcset`" section. **Next candidates:**
+WebP/modern-format generation (needs a real "does a WebP variant exist"
+decision, a larger increment); the Homepage Products block's own image
+pipeline (needs tracing where `ProductsBlockProvider` actually resizes
+images first); asset minification beyond esbuild's defaults; or re-check
+`gh pr list --state open` first, since this backlog moves fast.
+
 Step 0 dedup check for this run: `gh`/GitHub MCP `list_pull_requests
 --state open` showed 30 open PRs (`#52`–`#82`) at the start of this run,
 covering nearly every other unstarted phase in this file (SEO Core's five
@@ -6428,3 +6463,17 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-09-29, routine run):** responsive image `srcset` is
+now done for Category/Search/Manufacturer/Special — see the Phase 10
+(Technical Plan §36 Performance) section above (the entry right after the
+`width`/`height`+lazy-loading update) for the full writeup. 12 open PRs
+existed at the start of this run (`#138`-`#149`); none overlapped this
+increment's files. **A repeated caution for the next run:** several
+sections of this file (Phase 7's old "Mobile Navigation" note, Phase 14's
+Dashboard widget checklist, Phase 11's Release packaging script line)
+were found stale — marked as `[ ]`/"not started" while the real repo
+already had the feature — during this run's own search for unclaimed
+work; verify against actual code (`grep`/`find`, not this file's own
+checklist markers) before assuming something is missing. Re-check `gh pr
+list --state open` before picking the next step.
