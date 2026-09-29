@@ -181,7 +181,7 @@ that extension's own `extension/shipping/<code>` screen — this step
 subsystem (`MINTCART_TECHNICAL_PLAN.md` §23).
 
 Enabling/disabling a method happens through its own dedicated action,
-`toggleDelivery()` (route `mintcart/wizard.toggleDelivery`, POST, redirects
+`toggleDelivery()` (route `mintcart/wizard/toggleDelivery`, POST, redirects
 back to `?step=delivery`) — a small, deliberate duplicate of
 `ControllerMintcartBusinessDelivery::toggle()`'s merge-then-save logic
 (`getSetting('shipping_<code>')`, flip the `_status` key, `editSetting()`
