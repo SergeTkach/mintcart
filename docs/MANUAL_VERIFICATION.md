@@ -1178,3 +1178,34 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    `mint_default`) shows **no** new network requests for either file —
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
+
+## Phase 10 (Technical Plan) — Diagnostics `mintcart_diagnostics=json` surface, never fetched live
+
+`docs/developer/core/diagnostics.md`'s "JSON diagnostics surface" section:
+every controller already wired to `MintCart\Core\Diagnostics`
+(`product/category`, `product/search`, `product/special`,
+`product/manufacturer` info, `product/product`) now also recognizes
+`&mintcart_diagnostics=json`. No MySQL/browser session in this
+environment to fetch it against. On a real install with
+`mintcart_dev_mode` turned on (`System → Diagnostics`):
+
+1. Request a category page normally (e.g.
+   `index.php?route=product/category&path=20`) and confirm the response is
+   still the full HTML page with the `<!-- mintcart-diagnostics {...} -->`
+   comment appended, exactly as before this change.
+2. Request the same URL with `&mintcart_diagnostics=json` appended and
+   confirm the response is now a bare `application/json` body containing
+   just the summary object (`enabled`/`elapsed_ms`/`marks`/`counters`/
+   `durations`), with no HTML at all, and that the `Content-Type` response
+   header is `application/json`.
+3. Confirm the JSON body's contents match what the HTML-comment surface
+   would have shown for an equivalent request (same marks, same
+   `view_rendered` entry) — the two are the same `summary()` call, just
+   returned through a different response path.
+4. Repeat steps 1-3 for `product/search`, `product/special`,
+   `product/manufacturer` (route `product/manufacturer.info`), and
+   `product/product`.
+5. Turn `mintcart_dev_mode` off and confirm `&mintcart_diagnostics=json`
+   is now ignored — the page renders its normal full HTML with no
+   diagnostics comment and no JSON short-circuit, exactly as a request
+   without the parameter would.
