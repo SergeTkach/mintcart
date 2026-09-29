@@ -4427,6 +4427,29 @@ Definition of Done checklist for exactly what's still open).
       pre-existing gap — extraction/backup themselves ARE exercised against
       real files/real zip archives in this run's new scenarios, only the
       admin-controller/live-install pipeline around `apply()` is unverified.
+      **Update (2026-09-29, routine run):** ~~no admin controller/route~~
+      **partially done** — `ControllerMintcartUpdate::check()`
+      (`upload/admin/controller/mintcart/update.php`, route
+      `mintcart/update/check`, POST) is the flow's `check` step's first
+      real admin consumer, wired to `PackageManifest` + `UpdateChecker`
+      against the installed MintCart Core version. Deliberately does
+      **not** call `UpdateOrchestrator::apply()` (real file writes/
+      migrations, a separate later increment) or fetch a manifest from a
+      remote server (paste-based JSON, same scope decision
+      `ControllerMintcartCompatibility` made for `install.xml`). No admin
+      menu entry yet (reachable by direct URL only, same reasoning
+      `ControllerMintcartCompatibility`/`ControllerMintcartWizard`/
+      `ControllerMintcartReadiness` already used). Full writeup:
+      `docs/developer/update/update-check-controller.md`. Verified:
+      `php -l` clean; full `tests/mintcart/**/*-test.php` suite (84 files)
+      re-run end to end, all passing, no regressions (no new test file —
+      thin controller wiring over already-tested `PackageManifest`/
+      `UpdateChecker` logic). **Not verified:** no live OpenCart admin
+      bootstrap in this environment, same pre-existing gap every other
+      `ControllerMintcart*` class has — see
+      `docs/MANUAL_VERIFICATION.md`'s new entry for the manual script.
+      **Still not done:** `apply()` wiring into an admin action, an admin
+      menu entry, and a real update-server manifest fetch.
 - [x] Theme/extension rollback — **research/design only, no code** (RESEARCH
       item per Functional Scope §21): `docs/adr/005-theme-extension-update-rollback.md`
       answers all seven of §21's open questions (change detection, manifest
@@ -6428,3 +6451,16 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-09-29, routine run):** `list_pull_requests` returned
+11 open PRs at the start of this run (#138–#148; #148 `IN-PROGRESS`, the
+rest `DONE`), none covering an Update Manager admin controller/route (see
+PR #149's own body for the full per-PR scope check). Added
+`ControllerMintcartUpdate::check()` (route `mintcart/update/check`) — see
+the Phase 11 (Technical Plan) section above for the full writeup. **Next
+candidates:** wiring `UpdateOrchestrator::apply()` into an admin action
+(real file writes/migrations — needs its own careful, separate
+increment); an admin menu entry for `mintcart/update` once
+`common/column_left.php` isn't contended; a real update-server manifest
+fetch; or re-check `gh pr list --state open` first, since this backlog
+moves fast.
