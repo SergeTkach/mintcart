@@ -486,6 +486,26 @@ theme-independent):
    corresponding `seo_url` row is deleted (visible in **Design → SEO
    URL**'s own list) and `/cart` no longer resolves (falls back to
    `index.php?route=checkout/cart`).
+9. **Multi-language (new):** install a second language under
+   **System → Localisation → Languages** and enable it. Reload
+   **Design → System Pages** and confirm a second alias column appears,
+   labeled with the new language's name. Set the "Shopping Cart" row's
+   alias for the *second* language to `warenkorb` (different text from
+   the first language's `cart`) and Save; confirm both languages' aliases
+   round-trip independently on reload.
+10. Set the "Checkout" row's alias for the *second* language to the exact
+    same text (`cart`) already used by the *first* language's "Shopping
+    Cart" row. Confirm this saves without a validation error (uniqueness
+    is per-language, not store-wide — see the doc's "Multi-language"
+    section for why this is safe) — then switch the storefront to each
+    language in turn and confirm `/cart` resolves to the correct page for
+    that language in both directions (visiting the URL, and a
+    generated link's `href`).
+11. Disable the second language again and confirm its alias column
+    disappears from the form (its `seo_url` rows are left untouched, not
+    deleted — re-enabling the language should bring the same aliases
+    back).
+
 ## Phase 14 — `Business → Delivery`/`Payments` facades, never exercised end to end
 
 `ControllerMintcartBusinessDelivery`/`...Payments` are `php -l` clean and

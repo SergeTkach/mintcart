@@ -3405,9 +3405,14 @@ since this backlog moves fast.
       request decode already worked with zero core changes). Full
       writeup: `docs/developer/seo/system-route-aliases.md`,
       `docs/upstream-diff.md`'s `startup/seo_url.php` entry. Test:
-      `tests/mintcart/seo/system-routes-test.php` (8 scenarios). Known
-      limitation: scoped to the main store + storefront default language
-      only, no multi-store/multi-language variant yet.
+      `tests/mintcart/seo/system-routes-test.php` (8 scenarios). **Update
+      (2026-09-29, routine run):** per-language variant done — one alias
+      field per (route, enabled language) pair, safe because MC-0009
+      already makes incoming decode/outgoing `rewrite()` resolve per the
+      request's actual language; no core file change needed for this part.
+      See `docs/developer/seo/system-route-aliases.md`'s "Multi-language"
+      section. Known limitation now: single store only (multi-store still
+      deferred, no real multi-store MintCart consumer yet).
 
 **Update (this run):** started this phase with System route URL aliases —
 at the time this run began, PR #62 (also open, unmerged) had already
@@ -6428,3 +6433,24 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-09-29, routine run):** `list_pull_requests` returned
+7 open PRs at the start of this run (#138–#145), none touching
+`upload/admin/controller/mintcart/seo/*`, `upload/admin/view/template/mintcart/seo/*`,
+or `upload/admin/model/design/seo_url.php`. Added the per-language variant
+to `Design → System Pages` (Phase 18 section above has the full writeup) —
+`ControllerMintcartSeoSystemPages` now manages one alias per (route,
+enabled language) pair instead of only the storefront's default language,
+made safe by the already-merged MC-0009 fix. No core file touched. `php -l`
+clean across the full `upload/` tree; full `tests/mintcart/**/*-test.php`
+suite (84 files) re-run end to end, all passing, no regressions (no new
+pure class added, so no new test file). **Next candidates:** the
+per-*store* variant of the same screen (still deferred, no real
+multi-store MintCart consumer yet); `HreflangBuilder` still has no live
+consumer (needs a per-language URL resolver — this run's `languages()`
+helper in `ControllerMintcartSeoSystemPages` could inform that resolver's
+design, but building it is a separate increment); the admin
+`mintcart/update/*` route flagged by several prior runs; the
+two-overlapping-Bulk-Editor-implementations fork flagged in PR #143's own
+notes (still needs a human decision, not attempted here); or re-check
+`gh pr list --state open` first, since this backlog moves fast.
