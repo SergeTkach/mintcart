@@ -2558,17 +2558,8 @@ other settings.
       service (CLAUDE.md §85); fully additive, zero existing OpenCart file
       touched, zero upstream diff. Language file:
       `upload/admin/language/en-gb/mintcart/readiness.php`.
-- [~] `Business → Contacts`, `Business → Delivery`, `Business → Payments` UI façades
-      over standard OpenCart storage/extensions — **Delivery and Payments
-      done this run** (see below); Contacts is separately in flight as an
-      open PR — check `docs/IMPLEMENTATION_STATUS.md`'s current state
-      before assuming it's still unclaimed.
-- [ ] Dashboard widget rendering the checklist — not started on `master`
-      as of this run; `mintcart/readiness` is a JSON endpoint only, no
-      admin menu entry or Twig template yet. May already be in flight on
-      an open PR — check before starting one.
-      over standard OpenCart storage/extensions — **Contacts done**
-      (see below); Delivery/Payments not started.
+- [x] `Business → Contacts`, `Business → Delivery`, `Business → Payments` UI façades
+      over standard OpenCart storage/extensions — all three done (see below).
 - [x] Dashboard widget rendering the checklist — done, see below.
 
 **Sub-step (a previous run):** `StoreReadiness` service + `mintcart/readiness`
@@ -4436,7 +4427,6 @@ Definition of Done checklist for exactly what's still open).
       no rollback action/service exist yet — deferred until the Update
       Manager's own `files`/`backup` steps exist to hang a snapshot off of
       (`CLAUDE.md` §85: no API ahead of a real consumer).
-- [ ] Theme/extension rollback (RESEARCH item per Functional Scope §21)
 - [x] Compatibility Checker (`install.xml` analysis, heuristic warnings only) —
       `MintCart\Compatibility\InstallManifestParser` +
       `MintCart\Compatibility\CompatibilityChecker`
@@ -4450,25 +4440,25 @@ Definition of Done checklist for exactly what's still open).
       `docs/developer/compatibility/compatibility-checker.md`. No admin
       menu entry yet (`column_left.php` contended by 3 other open PRs at
       the time of this run — see the doc's "Why no admin menu entry yet").
-- [ ] **Release packaging script** — open PR at the time of this run (see
-      "Next step" below); not yet merged to this checklist.
+- [x] **Release packaging script** — `scripts/release.js` (`npm run
+      release`) + `docs/release.md`. Builds the frontend, stages the
+      committed (`git archive HEAD`) `upload/` tree, copies the built
+      `assets/dist/{css,js}` into `upload/assets/{css,js}`, and zips it
+      into `release/mintcart-<version>.zip`. Re-verified this run
+      (2026-09-29, routine): `npm install` (0 vulnerabilities), `npm run
+      release` ran end to end and produced a real
+      `release/mintcart-0.1.0-dev.zip` (14.66 MB). The two stale bullets
+      this replaced (this one, previously marked "open PR"/"TODO, not
+      started", plus a duplicate `[ ]` Compatibility Checker bullet just
+      above) were merge-conflict debris from an earlier run —
+      corrected here per `CLAUDE.md` §84 ("verify against the actual
+      repository, not memory or a stale note, before assuming something
+      is missing").
 
 Compatibility Checker is done for what a heuristic, non-blocking analyzer
 needs (parser + checker + a real JSON consumer, fully unit-tested, zero
 existing OpenCart file touched). Update Manager and rollback remain not
-started. Release packaging script's status is tracked by its own PR, not
-rewritten here to avoid conflicting with it.
-- [ ] Compatibility Checker (`install.xml` analysis, heuristic warnings only)
-- [ ] **Release packaging script (TODO, not started).** Node/npm (`npm install`
-      && `npm run build`) and the PHP vendor libraries already committed
-      under `upload/system/**/vendor/` are dev/release-time tooling only —
-      the end user installing MintCart must never need Node or Composer.
-      Need a documented/scripted step that runs the frontend build and
-      packages `upload/` (with `assets/dist/` already generated and
-      included) into an installable zip, the same way OpenCart itself ships
-      a pre-built `upload/`. Natural home: alongside Update Manager package
-      manifest work (Technical Plan §33), or a standalone `docs/release.md`
-      if it's needed before Update Manager exists.
+started. Release packaging script is also done — see above.
 
 In progress. Verified (this run): `php -l` clean on every touched/added
 PHP file; new `tests/mintcart/update/package-verifier-test.php` (12
@@ -6428,3 +6418,42 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-09-29, routine run): documentation-accuracy fix, no
+code change.** Step 0 found 16 open PRs (`#138`-`#153`); a first attempt
+at a code increment (Homepage Products block `srcset`, mirroring `#150`'s
+work on the four listing controllers) was abandoned mid-way once it became
+clear it would need the exact same `productviewprovider.php`/
+`product-card.twig` edits `#150` already carries — a direct file-level
+collision with in-flight, uncontended work, not a genuine independent
+increment (the routine's own step 0f principle, applied one level more
+specifically than its literal Homepage-Builder-only wording). Reverted
+that attempt cleanly before it was ever committed. While investigating,
+running `scripts/release.js`/`npm run release` end to end (to sanity-check
+whether the still-`[ ]`-marked "Release packaging script" checklist item
+was really unimplemented) surfaced two confirmed cases of stale
+merge-conflict debris in this file: the Phase 14 section had duplicated,
+contradictory bullets for the `Business → Contacts` facade and the
+Store-Readiness dashboard widget (one copy said "not started", another
+said "done" — both already exist in the repo: `upload/admin/controller/mintcart/business/contacts.php`
+and `upload/admin/controller/extension/dashboard/mintcart_readiness.php`),
+and the Phase 11 section had two stale `[ ]` bullets each for
+Compatibility Checker and the Release packaging script, again duplicating
+an already-`[x]` entry each. Corrected all four per `CLAUDE.md` §84 (verify
+against the actual repository, not a stale note, before assuming something
+is missing) — see the Phase 14 and Phase 11 sections above for the
+corrected bullets. No PHP/JS/Twig file touched; full
+`tests/mintcart/**/*-test.php` suite (84 files) re-run end to end — all
+passing (expected, since nothing but this doc changed). Also confirmed,
+independently, that `#153`'s fix (the missing
+`upload/system/library/config.php`) is real and severe: a packaged release
+zip built from current `master` has no `Config` class at all, so every
+request would fatal — not re-implemented here since `#153` already covers
+it; this is corroborating evidence for prioritizing that PR's merge.
+**Next candidates:** re-check `gh pr list --state open` first — 16 PRs is
+a lot of concurrent in-flight scope, and several (`#138`, `#144`, `#150`,
+`#151`, `#139`) already touch shared page-chrome files
+(`common/header.php`, `common/column_left.php`) or the shared
+`ProductViewProvider`/`product-card.twig` contract; a future run should
+prefer an area none of the currently-open PRs touch at all, the same
+check this run applied before backing out of the `srcset` attempt.
