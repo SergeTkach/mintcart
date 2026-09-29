@@ -208,7 +208,36 @@ class ControllerMintcartEntity extends Controller {
 
 		$provider = new \MintCart\Design\OptionPickerProvider();
 
-		$this->respond($provider->build($rows, $page, $limit));
+		$result = $provider->build($rows, $page, $limit);
+
+		// OptionPickerProvider is deliberately OpenCart-independent, so it
+		// can't call ModelCatalogOption::getOptionValues() itself - that
+		// per-row DB call happens here instead, only for the types
+		// product_form.twig's Option tab actually needs a value list for
+		// (select/radio/checkbox/image; text/textarea/file/date/time/
+		// datetime options have no oc_option_value rows at all). Same
+		// value-type filter catalog/option.php's own autocomplete() action
+		// already uses. Only `option_value_id`/`name` are kept - the only
+		// two fields the tab-building JS actually reads (unlike the legacy
+		// autocomplete's response, this list has no per-value image
+		// thumbnail to build, since nothing consumes one).
+		$value_types = array('select', 'radio', 'checkbox', 'image');
+
+		foreach ($result['items'] as &$item) {
+			$item['option_value'] = array();
+
+			if (in_array($item['type'], $value_types, true)) {
+				foreach ($this->model_catalog_option->getOptionValues($item['id']) as $option_value) {
+					$item['option_value'][] = array(
+						'option_value_id' => $option_value['option_value_id'],
+						'name'            => strip_tags(html_entity_decode((string)$option_value['name'], ENT_QUOTES, 'UTF-8'))
+					);
+				}
+			}
+		}
+		unset($item);
+
+		$this->respond($result);
 	}
 
 	// route=mintcart/entity/customer - GET filter_name, page, limit

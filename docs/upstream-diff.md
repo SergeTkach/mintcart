@@ -2152,6 +2152,74 @@ in this environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for
 the full manual script. Same pre-existing "trimmed repository"
 label-blank gap noted above applies identically to the six new
 `text_related_picker_*` keys — not a new gap this change introduces.
+
+**Update (this run — Phase 12, Entity Picker): Option field wired into
+the same admin screen, closing out the entity-picker backend's own
+"identified first consumer" note for Option.** `product_form.twig`'s
+Option tab (`#input-option`, previously only a jQuery UI `autocomplete()`
+field against `catalog/option/autocomplete`) gains the same "Browse
+options" button + hidden `.mc-entity-picker` panel pattern as the
+Category/Manufacturer/Related fields above, against the
+`mintcart/entity/option` backend
+(`docs/developer/components/entity-picker.md` "Option backend"). Like
+Manufacturer (not Category/Related), this is **single-select**
+(`multiple: false`) since a single confirmed pick adds one new option
+tab. Unlike every other picker above, selecting an option can't just
+overwrite/append a couple of fields — it needs to build a whole new
+type-specific tab-pane (required/value fields differ per option type,
+plus a value table for `select`/`radio`/`checkbox`/`image` types). Rather
+than duplicating that construction, the existing jQuery autocomplete's
+`'select': function(item) { ... }` handler body was extracted into a
+named `selectOption(item)` function (called unchanged by both the
+autocomplete and the new picker's `onConfirm`), so
+`ControllerCatalogProduct::validateForm()`/`addProduct()`/
+`editProduct()`'s handling of `product_option[]` stays completely
+untouched and there is exactly one tab-construction code path, not two.
+
+Two small, additive backend changes support this (both fully described in
+`docs/developer/components/entity-picker.md`'s updated "Option backend"
+section): `MintCart\Design\OptionPickerProvider::build()` now also
+returns `type` per item (free — already present on every
+`ModelCatalogOption::getOptions()` row), and
+`ControllerMintcartEntity::option()` layers an `option_value` array onto
+each item for the four types that need one, via one extra
+`ModelCatalogOption::getOptionValues()` call per row of the *current
+page* (not the full filtered set) — mirroring, at smaller scope, what
+`catalog/option.php`'s own `autocomplete()` action already does for its
+5 results. Six new `text_option_picker_*` language keys were added, same
+file/pattern as Category's/Manufacturer's/Related's own six.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+the Category/Manufacturer/Related entries above — this is the one true
+owner of the product edit screen's form; the `option_value` lookup is
+MintCart-owned code (`ControllerMintcartEntity`), not a fork of the
+option model's own storage.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, or `$data` key changed; the existing jQuery autocomplete still
+works exactly as before, unmodified in behavior (its `'select'` callback
+now delegates to `selectOption()` instead of inlining the same body, with
+zero behavior change). `OptionPickerProvider`'s new `type` item field and
+`ControllerMintcartEntity::option()`'s new `option_value` item field are
+additive JSON keys on a response with no other live consumer yet, so
+nothing existing could depend on their absence.
+
+**Tests:** `php -l` clean across the entire `upload/` tree. Twig
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts checked
+balanced before and after (38/38, 37/37, unchanged — this change adds no
+new conditional/loop tags, only plain HTML/JS). All 10 inline `<script>`
+blocks in `product_form.twig` (not just the two touched by this change)
+extracted and checked with `node --check` (Twig `{{ }}`/`{% %}` tags
+substituted with a placeholder first) — all parse cleanly. Full
+`tests/mintcart/**/*-test.php` suite (84 files) re-run end to end — all
+passing, no regressions;
+`tests/mintcart/design/option-picker-provider-test.php` itself extended
+(6 scenarios, two new `type` pass-through assertions added to an existing
+scenario) and re-run standalone. **Not verified:** no live MySQL/admin
+session in this environment — see `docs/MANUAL_VERIFICATION.md`'s new
+entry for the full manual script. Same pre-existing "trimmed repository"
+label-blank gap noted above applies identically to the six new
+`text_option_picker_*` keys — not a new gap this change introduces.
 ## `upload/system/library/db.php`
 
 **Reason:** MC-0006 (`docs/fixes/registry.md`) — `DB::connected()` called

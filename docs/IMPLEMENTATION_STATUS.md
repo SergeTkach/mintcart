@@ -1913,11 +1913,12 @@ question is resolved — see the ADR's "Consequences" section.
       **category and manufacturer are done** (manufacturer this run), see
       below; the other five entity types still need their own.
 - [~] Live wiring into an actual admin screen/field — **category,
-      manufacturer and product are now done** (`product_form.twig`'s
-      Category and Manufacturer fields in earlier runs, its Related
-      Products field this run — see the "Related Products field
-      live-wired" update below); information/attribute/option/customer
-      backends still have no live consumer.
+      manufacturer, product and option are now done**
+      (`product_form.twig`'s Category and Manufacturer fields in earlier
+      runs, its Related Products field in a later run, its **Option tab
+      this run** — see the "Option field live-wired" update below);
+      information/attribute/customer backends still have no live
+      consumer.
 - [ ] Create-new flow via drawer/modal — not attempted.
 
 **Update (this run): the category `fetchItems` backend is done.**
@@ -2290,14 +2291,42 @@ live UI wiring; the backend (`ControllerCatalogCategory::move()`,
 `CategoryMoveValidator`, `moveCategory()`) is unaffected and remains
 ready to consume whichever UI shape is chosen.
 
+**Update (this run — Phase 12, Entity Picker): Option field live-wired,
+the entity-picker backend's fourth (of seven) live consumer.**
+`product_form.twig`'s Option tab (`#input-option`, previously only a
+jQuery UI `autocomplete()` field against `catalog/option/autocomplete`)
+gains the same "Browse options" button + hidden `.mc-entity-picker` panel
+pattern as Category/Manufacturer/Related, single-select like Manufacturer
+(`docs/developer/components/entity-picker.md` "Option backend"; full
+writeup in `docs/upstream-diff.md`'s `product.php`/`product_form.twig`/
+language-file entry). Unlike the three pickers before it, selecting an
+option needs to build a whole new type-specific tab-pane, not just
+overwrite/append a couple of fields — so rather than duplicating that
+construction, the existing autocomplete's `'select'` handler body was
+extracted into a named `selectOption(item)` function both the
+autocomplete and the picker's `onConfirm` now call, keeping exactly one
+tab-construction code path.
+
+Two small, additive backend changes support this:
+`MintCart\Design\OptionPickerProvider::build()` now also returns `type`
+per item (free — already on every `getOptions()` row), and
+`ControllerMintcartEntity::option()` layers an `option_value` array onto
+each item for the four types that need one (`select`/`radio`/`checkbox`/
+`image`), via one extra `ModelCatalogOption::getOptionValues()` call per
+row of the current page. `ControllerCatalogProduct`'s own
+`validateForm()`/`addProduct()`/`editProduct()` handling of
+`product_option[]` is completely unchanged — purely additive.
+
 **Next candidates:** the remaining Phase 12 entity types still need live
-wiring (information/attribute/option/customer — none has an identified
-first consumer yet, per their own backend write-ups above, so picking one
-means choosing a real admin screen/field first, not guessing one);
-resolving the Phase 17 category-list fork above (needs a product decision
-first); Entity Picker Filters/Create-new-flow (neither has a real
-requirement yet); or re-check `gh pr list --state open` first, since this
-backlog moves fast.
+wiring (information/attribute/customer — none has an identified first
+consumer yet, per their own backend write-ups above, so picking one means
+choosing a real admin screen/field first, not guessing one); resolving
+the Phase 17 category-list fork above (needs a product decision first —
+note a newer, not-yet-merged run may have already resolved this, check
+`gh pr list --state open` and re-read this section against the latest
+`master` before assuming it's still open); Entity Picker Filters/
+Create-new-flow (neither has a real requirement yet); or re-check `gh pr
+list --state open` first, since this backlog moves fast.
 
 ## Phase 13 — Setup Wizard
 
@@ -6428,3 +6457,13 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-09-29, routine run):** `list_pull_requests` returned
+10 open PRs at the start of this run (#138–#147, all `ROUTINE-STATUS:
+DONE`) — none touching `product_form.twig`, `catalog/option.php`, or any
+`upload/system/library/mintcart/design/*` file. Wired the Phase 12 Entity
+Picker's Option backend into `product_form.twig`'s Option tab — see the
+Phase 12 section above ("Option field live-wired") for the full writeup.
+**Next candidates:** the remaining Phase 12 entity types still needing
+live wiring (information/attribute/customer); or re-check `gh pr list
+--state open` first, since this backlog moves fast.

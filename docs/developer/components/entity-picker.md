@@ -526,8 +526,8 @@ wraps `ModelCatalogOption::getOptions()` (never queries the database
 directly) and normalizes rows via `MintCart\Design\OptionPickerProvider`
 (`upload/system/library/mintcart/design/optionpickerprovider.php`, no
 OpenCart dependency, unit-tested in
-`tests/mintcart/design/option-picker-provider-test.php`) into the same
-`{items: [{id, name, image}], total}` shape. Same reason for a new route
+`tests/mintcart/design/option-picker-provider-test.php`) into
+`{items: [{id, name, image, type}], total}`. Same reason for a new route
 instead of reshaping `catalog/option.php`'s own `autocomplete()` action
 (an existing `product_form.twig` consumer with no pagination), and for
 paging in PHP rather than SQL (`ModelCatalogOption` has
@@ -539,19 +539,45 @@ support).
 (individual `oc_option_value` rows can carry one, but an *option* — the
 group, e.g. "Size" — cannot), same reasoning as category.
 
+`type` (`select`/`radio`/`checkbox`/`image`/`text`/`textarea`/`file`/
+`date`/`time`/`datetime`) is the one field this backend adds beyond the
+plain category/manufacturer shape — `OptionPickerProvider` passes it
+through from `o.type` (already present on every `getOptions()` row, no
+extra query) since `product_form.twig`'s Option tab needs it to decide
+which type-specific fields to build for a newly-added option.
+
+For the four types that carry a value list (`select`/`radio`/`checkbox`/
+`image`), the controller layers an `option_value: [{option_value_id, name}]`
+array onto each item after calling the provider, via
+`ModelCatalogOption::getOptionValues()` — one extra query per row of the
+current page (not per row of the full filtered set), same reasoning
+`OptionPickerProvider`'s own docblock gives for why this can't live in
+the OpenCart-independent provider itself. Every other type gets an empty
+`option_value` array. Unlike the legacy `catalog/option/autocomplete`
+action, no per-value image thumbnail is built here — the tab-building JS
+below only ever reads `option_value_id`/`name` from this list.
+
 `filter_name` prefix-matches (`LIKE '…%'`), same as manufacturer, not
 category's substring match — inherited unchanged from
 `ModelCatalogOption::getOptions()`.
 
-Same permission requirement (`mintcart/entity` **Access**) and the same
-"not done yet, by design" live-wiring gap as category/manufacturer: no
-admin screen calls this endpoint yet, for the identical reason
-(MintCart's asset bundle still isn't enqueued on any admin page — see
-above). `product_form.twig`'s **Option** tab (`#input-option`, the
-jQuery UI `autocomplete()` block using `catalog/option/autocomplete`) is
-this backend's identified first real consumer — already
-search-as-you-type, so a future `McEntityPicker` swap is a shape match,
-not a new pattern.
+Same permission requirement (`mintcart/entity` **Access**) as every other
+backend above. **Wired into `product_form.twig`'s Option tab** as an
+*additional* way to add an option, alongside the existing jQuery UI
+`autocomplete()` input (kept as-is, not replaced — same "additive, not a
+swap" reasoning the Category/Manufacturer/Related pickers above already
+used, and the same reason no attempt was made here to also replace
+`catalog/option/autocomplete` as the attribute picker's search source).
+The confirm handler maps the picker's `{id, name, type, option_value}`
+item into the exact `{value, label, type, option_value}` shape the
+autocomplete's own `'select'` handler already expects, and calls that
+same handler (extracted into a named `selectOption()` function so both
+paths share it) — so it builds the exact same tab-pane markup
+(type-specific value fields, the value table for `select`/`radio`/
+`checkbox`/`image` types, tooltip/datetimepicker initialization) with no
+duplicated tab-construction logic. `ControllerCatalogProduct`'s own
+`validateForm()`/`addProduct()`/`editProduct()` handling of
+`product_option[]` is completely unchanged.
 
 ## Customer backend
 
