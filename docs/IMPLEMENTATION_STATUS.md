@@ -2299,6 +2299,31 @@ first); Entity Picker Filters/Create-new-flow (neither has a real
 requirement yet); or re-check `gh pr list --state open` first, since this
 backlog moves fast.
 
+**Update (2026-09-30, routine run): Customer backend wired into
+`sale/order_form.twig`.** The "customer" item in the "still needs live
+wiring" list above is done — `ControllerSaleOrder::enqueueMintAssets()`
+(mirrors `ControllerCatalogProduct`'s own) plus a "Browse customers"
+picker next to the existing jQuery-autocomplete Customer field. Unlike
+Category/Manufacturer, confirming a selection also needs
+`customer_group_id`/firstname/lastname/email/telephone/address data the
+picker's own `{id, name, image}` shape doesn't carry — solved by
+re-querying the existing `customer/customer/autocomplete` endpoint a
+second time (filtered by name, matched by `customer_id`) rather than
+widening the shared provider contract or touching OpenCart core. Known,
+documented limitation: saved `custom_field` *values* are not re-applied
+(only field *visibility* for the picked group). Full writeup:
+`docs/upstream-diff.md`'s new `sale/order.php` entry,
+`docs/developer/components/entity-picker.md`'s updated "Customer backend"
+section (which also corrected a stale claim that no consumer field
+existed), `docs/MANUAL_VERIFICATION.md`'s new entry. Verified: `php -l`
+clean; new inline script extracted and `node --check`-clean; full
+`tests/mintcart/**/*-test.php` suite (84 files) re-run end to end, all
+passing, no regressions. Not verified: no live MySQL/admin
+session/browser in this environment. **Next candidates:** information/
+attribute/option backends still need a first live consumer (attribute has
+none identified at all — would be new UI, not a drop-in swap); or
+re-check `gh pr list --state open` first.
+
 ## Phase 13 — Setup Wizard
 
 - [~] Welcome → Store → Contacts → Language/Currency → Delivery → Payment → Design →
@@ -6428,3 +6453,11 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-09-30, routine run):** 25 open PRs (#138–#162)
+existed at the start of this run — a background file-collision audit of
+all of them found zero overlap with `sale/order.php`/`order_form.twig`/
+its language file, so this run wired Phase 12's Customer Entity Picker
+backend into `sale/order_form.twig` (see the Phase 12 section above for
+the full writeup) — PR #163. Re-check `gh pr list --state open` before
+picking anything new; this backlog moves fast and is large right now.
