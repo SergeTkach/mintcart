@@ -2708,6 +2708,74 @@ bulk special-price update replaces (not adds to) any existing
 via the normal edit form with a non-default customer group or a date
 range — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16 section.
 
+**Update (2026-09-30, routine run — Phase 16, Bulk Editor): `category_ids`
+added as a sixth bulk-editable field** — the last one this section's own
+"Next step" (`docs/developer/catalog/bulk-editor.md`) had flagged as
+genuinely different from the five scalar fields above (a list, not a
+single value). Full design writeup: `docs/developer/catalog/bulk-editor.md`
+"Value input" and "Why a new model method" sections (both updated this
+run).
+
+1. **Validator:** `MintCart\Catalog\BulkProductUpdateValidator::FIELDS`
+   gains `category_ids`; two new methods, `validateCategoryIds(array
+   $categoryIds): ?string` and `normalizeCategoryIds(array
+   $rawCategoryIds): array`, kept separate from the existing
+   `validateValue(string $field, string $value): ?string` (which stays
+   typed for the five scalar fields) rather than widening that method's
+   signature to also accept a list.
+2. **Model:** `ModelCatalogProduct::updateProductField()` gains a
+   `category_ids` branch — `DELETE FROM oc_product_to_category WHERE
+   product_id = ...` then one `INSERT` per category id, the same
+   delete-then-reinsert shape `editProduct()`'s own `product_category`
+   relation already uses, just scoped to this one relation. An empty list
+   clears every category (matches `special_price`'s own "blank removes"
+   semantics).
+3. **Controller:** `validateBulkUpdate()`/`bulkUpdate()` branch on
+   `$field === 'category_ids'` to read `$this->request->post['bulk_value']`
+   as an array (`bulk_value[]`, from the new entity-picker markup) instead
+   of casting it to a string like every other field. `getList()` now also
+   calls the existing `enqueueMintAssets()` helper (previously only called
+   from `getForm()`) so this screen's new picker has
+   `window.MintCart.createEntityPicker` available —
+   `docs/developer/admin/asset-enqueue.md`'s `components.min.css` bundle,
+   not `index.min.css`, so no Bootstrap 3/5 conflict.
+4. **View:** `product_list.twig`'s `bulk_field` `<select>` gains a
+   "Category" `<option>`; a new hidden `#bulk-category-field` block (a
+   `window.MintCart.createEntityPicker` reusing the existing
+   `mintcart/entity/category` endpoint unchanged, appending
+   `bulk_value[]` hidden inputs into `#bulk-category-list`) replaces
+   `#input-bulk-value` when "Category" is chosen, via a new plain-JS
+   (not jQuery, per `CLAUDE.md` §7) `<script>` block mirroring
+   `product_form.twig`'s own Category-field picker wiring almost exactly.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+every entry above in this section — `oc_product_to_category` is OpenCart
+core storage; extending the existing model/controller/template keeps the
+table's one true owner in one place.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+column, route, or `editProduct()`/product-edit-form behavior changed; the
+new `category_ids` branch and picker only run when a merchant explicitly
+chooses "Category" in the bulk-update toolbar. `getList()` now enqueues
+two additional `<link>`/`<script>` tags on this one admin screen (already
+proven safe on the product edit form since Phase 12).
+
+**Tests:** `php -l` clean on all touched/added files.
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` grows from
+46 to 57 assertions (`category_ids` field whitelist,
+`validateCategoryIds()`/`normalizeCategoryIds()` coverage including the
+empty-list-is-valid and one-bad-entry-rejects-the-whole-list cases); full
+`tests/mintcart/**/*-test.php` suite (84 files) re-run end to end — all
+passing, no regressions. `product_list.twig`'s tag counts re-checked
+balanced (14/14, 2/2 — no `{% %}` tag touched, only plain HTML/inline
+`<script>`); all 3 of the file's inline `<script>` blocks (including the
+new toggle/picker wiring) checked for JS syntax errors with a standalone
+Node harness. Same pre-existing gap: no live MySQL/admin session in this
+environment — a human should confirm the picker actually renders and a
+bulk category update replaces (not merges into) each selected product's
+existing categories — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
+section.
+
 ## `upload/catalog/controller/extension/feed/google_sitemap.php`
 
 **Reason:** Phase 18 (SEO Core, `MINTCART_FUNCTIONAL_SCOPE.md` §16 /
