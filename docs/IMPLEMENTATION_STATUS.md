@@ -4782,10 +4782,11 @@ Not started.
 
 ## Documentation (Functional Scope §33 / Technical Plan §40)
 
-- [~] User docs (`docs/user/`) — **install and Setup Wizard guides done this
-      run**; products/delivery/payments/design/homepage/orders/SEO basics
-      guides not started (most of those features aren't built far enough
-      yet to document accurately — see each one's own Phase section above).
+- [~] User docs (`docs/user/`) — **install, Setup Wizard and Products guides
+      done** (Products this run — see below); delivery/payments/design/
+      homepage/orders/SEO basics guides not started (most of those features
+      aren't built far enough yet to document accurately — see each one's
+      own Phase section above).
 - [ ] Developer architecture overview (`docs/developer/architecture/`,
       Technical Plan §40's third `docs/` subtree) — not started; the
       `docs/developer/{components,blocks,commerce,theme-api,onboarding,catalog,update}/`
@@ -4833,6 +4834,34 @@ section once more Phase 13 Wizard steps/Phase 14 Business Settings façades
 land and can be documented accurately. Low collision risk either way
 (pure Markdown, `docs/` only) — re-check `docs/user/` isn't newly claimed
 by another open PR before starting, same as any other increment.
+
+**Update (2026-09-30, routine run): `docs/user/products.md` added.** Step 0
+found 18 open PRs at the start of this run — a survey of every one's
+changed-files list (via `pull_request_read`'s `get_files`) confirmed *none*
+touch anything under `docs/user/`, so this was genuinely unclaimed, pure
+Markdown, zero code collision risk (the same reasoning the `install.md`/
+`setup-wizard.md` run above used). Documents `Catalog → Products`
+(`catalog/product`) as it behaves on `master` today: OpenCart's stock
+list/form, the already-merged six-field Bulk Editor toolbar
+(`MintCart\Catalog\BulkProductUpdateValidator::FIELDS`), and the three
+fields (Manufacturer/Category/Related Products) that already have a
+`mc-entity-picker` "Browse" button alongside their original OpenCart input
+— cross-checked directly against `product_list.twig`/`product_form.twig`/
+`bulkproductupdatevalidator.php` rather than assumed from the Functional
+Scope doc. Deliberately does not describe the Attribute/Option pickers or
+the per-field-typed bulk-value control, since those exist only in
+currently-open, unmerged PRs (`#148`/`#152` and the bulk-value-control PR)
+and are not yet true of `master`. Verified: no code touched (Markdown
+only), so `php -l`/`npm run build`/`tests/mintcart/` don't apply; every
+concrete claim (bulk field list and value rules, tab names, which three
+fields have a picker) was re-read from the actual source file, not memory.
+**Next candidates:** re-check `gh pr list --state open` first (18+ open
+PRs at the time of this run — an unusually large backlog); once some of
+that backlog merges, a `delivery.md`/`payments.md` user guide (Business →
+Delivery/Payments façades already exist and are stable) or `docs/adr/`
+entries for decisions currently only justified inline across several
+per-feature docs (`CLAUDE.md` §15) are both similarly low-risk,
+documentation-only next steps.
 
 ---
 
