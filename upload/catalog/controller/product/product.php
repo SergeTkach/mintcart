@@ -274,6 +274,7 @@ class ControllerProductProduct extends Controller {
 			$data['text_badge_out_of_stock'] = $this->language->get('text_badge_out_of_stock');
 			$data['text_added_to_cart'] = $this->language->get('text_added_to_cart');
 			$data['text_add_to_cart_error'] = $this->language->get('text_add_to_cart_error');
+			$data['text_wishlist_error'] = $this->language->get('text_wishlist_error');
 
 			// Plain field labels product/product.php's own language file
 			// already defines but this controller never assigned to $data
@@ -588,7 +589,8 @@ class ControllerProductProduct extends Controller {
 							'text_add_to_cart'       => $this->language->get('button_cart'),
 							'text_quick_order'       => $this->language->get('text_quick_order'),
 							'text_added_to_cart'     => $this->language->get('text_added_to_cart'),
-							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error')
+							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error'),
+							'text_wishlist_error'    => $this->language->get('text_wishlist_error')
 						),
 						function (\Throwable $e, array $failed_product) {
 							// Same "log and disable for the rest of this

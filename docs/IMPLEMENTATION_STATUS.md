@@ -2717,6 +2717,39 @@ already share.
       correctly returned `{error, redirect}` and added nothing — confirmed
       via a follow-up `refresh()` that the cart's item count matched only
       the five successful adds.
+- [x] `MintCart\Commerce\WishlistService` + Wishlist JS client
+      (`add/remove/refresh`) + `mc:wishlist:updated` event contract —
+      `upload/system/library/mintcart/commerce/wishlistservice.php` +
+      `upload/catalog/controller/mintcart/wishlist.php`
+      (`ControllerMintcartWishlist`, route `mintcart/wishlist/*`, fully
+      additive — zero existing OpenCart file modified) +
+      `assets/src/js/commerce/wishlist-client.js`. Wraps OpenCart's
+      existing wishlist storage (`ModelAccountWishlist` for a logged-in
+      customer, session for a guest — the same split stock
+      `ControllerAccountWishList::add()` already uses), no new Mint table
+      (`CLAUDE.md` §39/§6). First real consumer: `mc-product-card`'s
+      `toggle-wishlist` button (`product-card.js`'s `initWishlistToggle()`),
+      which previously only flipped its own visual state — this is that
+      documented "future Wishlist/Compare service, not built yet" gap,
+      filled for wishlist (Compare intentionally left UI-only — no
+      Compare-specific requirement identified yet). `text_wishlist_error`
+      added to the five listing controllers' own language files
+      (category/search/manufacturer/special/product), same per-controller
+      pattern `text_add_to_cart_error` already established. Docs:
+      `docs/developer/commerce/wishlist-service.md`,
+      `docs/developer/components/product-card.md` (updated). Test:
+      `tests/mintcart/commerce/wishlist-service-test.php` (12 scenarios).
+      **Not yet verified live** — this environment has no MySQL/browser
+      (same pre-existing gap noted throughout this file); a human should
+      click the wishlist button on a real install (logged-in and guest)
+      per `docs/MANUAL_VERIFICATION.md`. **Not built**: a header
+      wishlist-count live update listening for `mc:wishlist:updated`
+      (`HeaderViewProvider` already carries `wishlist_count`, sourced from
+      OpenCart's stock header controller, but nothing refreshes it
+      client-side after a toggle yet — natural next consumer, same role
+      `header-cart.js` plays for `mc:cart:updated`); an "already
+      wishlisted" initial `aria-pressed` state on page load; a Compare
+      service.
 - [x] `MintCart\Commerce\SearchService` + AJAX Search normalized endpoint —
       `upload/system/library/mintcart/commerce/searchservice.php` +
       `upload/catalog/controller/mintcart/search.php`
