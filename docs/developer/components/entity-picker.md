@@ -588,12 +588,36 @@ style as category (not manufacturer's prefix match).
 
 `image` is always `null` — customers have no image concept in OpenCart.
 
-Live wiring **not** attempted — same reason category/manufacturer left it
-undone: MintCart's asset bundle still isn't enqueued on any admin page. No
-single obvious first live consumer has been identified yet for this one
-either (there is no existing customer-autocomplete field on any admin
-template to replace, unlike category/manufacturer/product) — documented
-here rather than guessed at, per `CLAUDE.md` §85.
+**Live wiring: now done.** `sale/order_form.twig`'s **Customer** field
+(`#input-customer`, the jQuery UI `autocomplete()` block using
+`customer/customer/autocomplete`) does have a matching single-select
+picker after all — the "no existing customer-autocomplete field on any
+admin template" premise this section previously stated was wrong; it
+exists, this backend's consumer just hadn't been built yet.
+`ControllerSaleOrder::enqueueMintAssets()` (same `components.min.css` +
+`admin.min.js` pairing `ControllerCatalogProduct` already uses, see
+`docs/developer/admin/asset-enqueue.md` — the asset-enqueue blocker this
+paragraph used to cite is resolved for this screen too now) enqueues the
+bundle, and a "Browse customers" button next to the existing autocomplete
+input opens an `McEntityPicker` backed by this endpoint.
+
+Confirming a selection is **not** a plain id/name overwrite like
+category/manufacturer, because the legacy autocomplete's own `'select'`
+handler on this same field also repopulates `customer_group_id`/
+`firstname`/`lastname`/`email`/`telephone`/the payment and shipping
+address dropdowns — data this backend's `{id, name, image}` shape doesn't
+carry. Rather than widen `CustomerPickerProvider`'s contract (every other
+consumer of that shape would gain unused fields) or touch
+`customer/customer.php` (an OpenCart core controller), the picker's
+`onConfirm` re-queries the *existing* `customer/customer/autocomplete`
+endpoint a second time, filtered by the exact picked name, and matches the
+right row back by `customer_id` — reusing the same full-detail response
+the legacy handler already consumes, with zero core changes. **Known,
+deliberate limitation:** the customer's saved `custom_field` values are
+not re-applied this way (only the field *visibility* for the newly picked
+customer's group, via the native `change` event the existing jQuery
+`customer_group_id` handler already listens for) — see the JS comment in
+`sale/order_form.twig` for the full rationale.
 
 Same permission requirement as every other backend above (`mintcart/entity`
 **Access** must be granted to a user group first).

@@ -2791,3 +2791,72 @@ coverage, including the rejection cases); full `tests/mintcart/` suite
 the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
 section.
+
+## `upload/admin/controller/sale/order.php` / `upload/admin/view/template/sale/order_form.twig` / `upload/admin/language/en-gb/sale/order.php`
+
+**Reason:** the same Entity Picker live-wiring gap `product.php`'s entry
+above closed for Category/Manufacturer — `docs/developer/components/entity-picker.md`'s
+"Customer backend" section had `MintCart\Design\CustomerPickerProvider`
+and its `mintcart/entity/customer` endpoint fully built and unit-tested
+but with zero live consumer, incorrectly noting "no existing
+customer-autocomplete field on any admin template to replace" (it does —
+`sale/order_form.twig`'s Customer field, same shape as the Category/
+Manufacturer fields the previous entry wired).
+
+1. **Controller:** new `enqueueMintAssets()` method (byte-identical
+   pattern to `ControllerCatalogProduct`'s own), called at the top of the
+   existing `getForm()` (shared by `add()`/`edit()`).
+   `$this->document->addStyle()`/`addScript()` with
+   `assets/dist/css/components.min.css`/`assets/dist/js/admin.min.js`.
+   Nothing else in `getForm()` changed.
+2. **View:** `order_form.twig`'s Customer `form-group` gained a "Browse
+   customers" button + a hidden `.mc-entity-picker` panel, additive
+   alongside the existing jQuery-autocomplete input (not a replacement).
+   A new inline `<script>` block (plain vanilla JS, not jQuery, per
+   `CLAUDE.md` §7) calls `window.MintCart.createEntityPicker()` against
+   the existing `mintcart/entity/customer` backend. Unlike Category/
+   Manufacturer, confirming a selection cannot just overwrite the name/id
+   fields — this same screen's legacy autocomplete `'select'` handler
+   also fills `customer_group_id`/`firstname`/`lastname`/`email`/
+   `telephone`/the payment and shipping address `<select>` options, none
+   of which `CustomerPickerProvider`'s `{id, name, image}` shape carries.
+   Rather than widen that shared provider contract or touch
+   `customer/customer.php` (OpenCart core), the picker's `onConfirm`
+   re-queries the *existing*, untouched `customer/customer/autocomplete`
+   endpoint a second time (filtered by the exact picked name, matched
+   back by `customer_id`) and reuses its full-detail response to fill the
+   same fields the legacy handler already does. Known, documented
+   limitation: the customer's saved `custom_field` values are not
+   re-applied (only the field *visibility* for the newly picked
+   customer's group, via a native `change` event the existing jQuery
+   `customer_group_id` handler already listens for) — see the in-template
+   comment and `docs/developer/components/entity-picker.md`'s updated
+   "Customer backend" section.
+3. **Language:** six new `text_customer_picker_*` keys, same
+   file/pattern/count as `product.php`'s `text_manufacturer_picker_*`.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+the `product.php` entry above — `order_form.twig`/`ControllerSaleOrder`
+are the one true owner of the manual-order screen's form/save logic;
+the picker is additive markup/script inside the existing form, not a new
+page, and the fallback fetch reuses OpenCart's own existing customer
+search endpoint rather than duplicating its data access.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, or `$data` key changed; the legacy jQuery autocomplete on the same
+field is completely untouched and still works exactly as before.
+
+**Tests:** `php -l` clean on `order.php` and the language file. The new
+inline script was extracted (Twig `{{ … }}` interpolations replaced with
+a placeholder string) and checked with `node --check` (valid syntax),
+same method the `product.php` entry above used, since there is no live
+browser in this environment to exercise it. Full `tests/mintcart/` suite
+(84 files) re-run end to end — no PHP library code changed here (only a
+controller method that delegates to two already-tested OpenCart core
+calls), so no regressions expected or found. **Not verified:** no live
+MySQL/admin session in this environment — a human should confirm the
+picker opens, searches, paginates, and that confirming a selection fills
+the Customer, Customer Group, First/Last Name, E-Mail, Telephone and
+Address fields correctly for an existing customer, and that the existing
+autocomplete field is unaffected (see `docs/MANUAL_VERIFICATION.md`'s new
+Phase 12 "Customer Entity Picker" entry).
