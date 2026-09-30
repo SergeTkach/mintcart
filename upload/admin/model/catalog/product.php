@@ -332,8 +332,27 @@ class ModelCatalogProduct extends Model {
 	 * of editProduct()'s full multi-row/date-ranged product_special
 	 * support, not a redesign of it. Blank $value removes the special
 	 * (no row) rather than writing a 0 price row.
+	 *
+	 * `category_ids` is not a plain oc_product column either - it replaces
+	 * (not merges into) oc_product_to_category, the exact same
+	 * delete-then-reinsert pattern editProduct()'s own product_category
+	 * relation above uses, just scoped to this one relation instead of a
+	 * full product-form save. An empty array clears every category from
+	 * the product, matching special_price's own "blank removes" semantics.
 	 */
 	public function updateProductField($product_id, $field, $value) {
+		if ($field === 'category_ids') {
+			$this->db->query("DELETE FROM " . DB_PREFIX . "product_to_category WHERE product_id = '" . (int)$product_id . "'");
+
+			foreach ((array)$value as $category_id) {
+				$this->db->query("INSERT INTO " . DB_PREFIX . "product_to_category SET product_id = '" . (int)$product_id . "', category_id = '" . (int)$category_id . "'");
+			}
+
+			$this->cache->delete('product');
+
+			return;
+		}
+
 		if ($field === 'special_price') {
 			$this->db->query("DELETE FROM " . DB_PREFIX . "product_special WHERE product_id = '" . (int)$product_id . "'");
 
