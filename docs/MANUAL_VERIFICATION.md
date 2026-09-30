@@ -1164,7 +1164,9 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    `mc-modal` Quick Order dialog actually opens (`docs/developer/commerce/quick-order-service.md`)
    — again, previously inert with no bundle loaded.
 4. Click the heart ("wishlist") icon on a product card. Confirm it toggles
-   `aria-pressed` and visibly changes state.
+   `aria-pressed` and visibly changes state — see the dedicated "Phase 15
+   — Wishlist persistence" section below for the full round-trip check
+   (this step predates that increment).
 5. Confirm the page still looks and behaves correctly outside `mc-*`
    markup: legacy Bootstrap-3-driven widgets (the stock cart dropdown,
    any third-party module still using jQuery/Bootstrap-3 markup),
@@ -1178,3 +1180,44 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    `mint_default`) shows **no** new network requests for either file —
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
+
+## Phase 15 — Wishlist persistence (`MintCart\Commerce\WishlistService`), never hit end to end
+
+`WishlistService` is covered by a standalone unit test, but with no live
+MySQL/browser in this environment, `mintcart/wishlist/add`/`remove`/
+`refresh` have never actually run, and `product-card.js`'s
+`initWishlistToggle()` has never been clicked in a real browser. See
+`docs/developer/commerce/wishlist-service.md` for the full contract. A
+human should, on a real install:
+
+1. As a **guest** (not logged in), click the heart icon on a product card.
+   Confirm `aria-pressed` flips to `true` and stays that way (no revert/
+   error toast). Reload the page and open `index.php?route=account/wishlist`
+   — nothing should be listed yet (guest membership lives in the session,
+   the stock `account/wishlist` page only reads the DB table), but
+   `$this->session->data['wishlist']` should contain the product id (check
+   via a debug dump or the PHP session file).
+2. Click the same heart icon again to un-wishlist. Confirm `aria-pressed`
+   flips back to `false`.
+3. **Log in**, then click the heart icon on a product card. Confirm it
+   flips to `true`, then open `index.php?route=account/wishlist` — the
+   product should now actually appear on the stock wishlist page (proving
+   `ModelAccountWishlist::addWishlist()` was really called, not just the
+   session path).
+4. From the stock `account/wishlist` page, remove that product via its own
+   "Remove" link, then reload the product card page — confirm
+   `aria-pressed` is back to `false` for it (today's known gap: this
+   requires a page reload, since there is no "already wishlisted" initial
+   state wired into `ProductViewProvider` yet — see the doc's "Not done
+   yet").
+5. Simulate a failed request (e.g. temporarily rename
+   `mintcart/wishlist/add`'s route, or block the request in DevTools) and
+   click the heart icon — confirm the optimistic `aria-pressed` toggle
+   reverts and an error toast appears, reading the translated
+   `text_wishlist_error` string (not a hardcoded English fallback) on a
+   page rendered by `mint_default`.
+6. Confirm the product detail page's own heart icon (not just a listing
+   card's) behaves the same way — it uses the same `data-mc-action`/
+   `initWishlistToggle()` code path via `product.twig`.
+7. Confirm `test_theme` renders **no** wishlist icon at all (by design —
+   see `docs/adr/002-theme-api-milestone-proof.md`) and does not error.
