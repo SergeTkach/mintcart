@@ -303,6 +303,31 @@ Twig `if`/`endif`/`for`/`endfor` tag counts checked balanced before and
 after (13/13, 5/5). **Not verified:** no live MySQL/Twig session in this
 environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 19 entry.
 
+**Update (2026-09-30, routine run — Technical Plan §15C/§15E, `SortOptionsBuilder`/`LimitOptionsBuilder`):**
+the `$data['sorts']`/`$data['limits']` blocks (nine-or-seven inline
+`array()` pushes gated by `config_review_status`, then an
+`array_unique()`+`sort()` limit merge) are replaced with calls to two new
+pure classes, `MintCart\Catalog\SortOptionsBuilder` and
+`MintCart\Catalog\LimitOptionsBuilder`
+(`docs/developer/catalog/product-listing-options.md`). This controller
+still owns the `$this->language->get()` lookup and `$this->url->link()`
+href building for each option — the builders only decide the list, its
+order, and the review-status gate. Behavior is byte-for-byte unchanged:
+both builders were extracted from, and tested against, this exact
+controller's own prior inline arithmetic. **Why it can't live in the
+MintCart layer alone:** the language lookup and route/href building are
+inherently OpenCart-controller concerns (`$this->language`, `$this->url`)
+that the pure builder deliberately does not take a dependency on, same
+reasoning as `CanonicalUrlBuilder`'s entry above. **Compatibility
+impact:** none — `$data['sorts']`/`$data['limits']` keep the exact same
+shape (`text`/`value`/`href` per entry) and the exact same values;
+`category.twig` is untouched. **Tests:** `php -l` clean;
+`tests/mintcart/catalog/sort-options-builder-test.php` (new, 3 scenarios)
+and `tests/mintcart/catalog/limit-options-builder-test.php` (new, 5
+scenarios) cover the builders themselves; full `tests/mintcart/` suite (86
+files, up from 84) re-run end to end — all passing, no regressions. **Not
+verified:** no live MySQL/Twig session in this environment.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/category.php`
