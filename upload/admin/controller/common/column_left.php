@@ -468,6 +468,19 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			// MintCart\Compatibility\CompatibilityChecker admin entry
+			// (MINTCART_FUNCTIONAL_SCOPE.md §29, docs/developer/compatibility/
+			// compatibility-checker.md's "Why no admin menu entry yet" -
+			// column_left.php is no longer contended by the PRs that note
+			// referenced).
+			if ($this->user->hasPermission('access', 'mintcart/compatibility')) {
+				$system[] = array(
+					'name'	   => $this->language->get('text_mintcart_compatibility'),
+					'href'     => $this->url->link('mintcart/compatibility', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			// Users
 			$user = array();
 

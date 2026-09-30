@@ -1178,3 +1178,37 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    `mint_default`) shows **no** new network requests for either file —
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
+
+## Phase 19 (Functional Scope §29) — `System → Compatibility Checker`, never exercised end to end
+
+`ControllerMintcartCompatibility::index()`
+(`docs/developer/compatibility/compatibility-checker.md`) is `php -l`
+clean and its underlying `analyze()` logic is fully unit-tested, but the
+rendered admin screen has never been hit end to end. On a real install:
+
+1. Grant `mintcart/compatibility` **Access** (`System → Users → User
+   Groups`).
+2. Go to **System → Compatibility Checker**. Confirm the menu entry
+   appears right after **Diagnostics**, and the page loads with an empty
+   textarea and no results panel.
+3. Paste a small, valid OCMOD `install.xml` (e.g. one `<modification>`
+   with a `<file path="catalog/controller/product/category.php">`
+   containing a `<search>`/`<add>` block whose text includes `panel-body`)
+   and click **Check**. Confirm the page re-renders with the same
+   textarea content still filled in, a results panel showing the file
+   with type "Controller", a "Potential conflict" flag (that path is in
+   `CompatibilityChecker::KNOWN_MINTCART_MODIFIED_FILES`), a Bootstrap 3
+   assumptions warning naming `panel-body`, and a summary line with the
+   right counts.
+4. Submit an empty textarea — confirm `error_empty` renders as a danger
+   alert, no results panel.
+5. Submit malformed XML (e.g. `not xml`) — confirm the parser's
+   `\InvalidArgumentException` message renders as a danger alert, not a
+   PHP fatal/500.
+6. Confirm a user without `mintcart/compatibility` **Access** permission
+   sees `error_permission` and no form/results, whether they navigate to
+   the menu entry or POST directly to `mintcart/compatibility`.
+7. Separately, confirm `mintcart/compatibility/check` (the JSON API) still
+   returns the exact same shape as before this run — this increment only
+   added a second consumer (`index()`), it did not change `check()`'s own
+   behavior.

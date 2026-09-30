@@ -4447,18 +4447,21 @@ Definition of Done checklist for exactly what's still open).
       `bootstrap3-shim.css`'s own marker list), and potential conflicts
       against `docs/upstream-diff.md`'s known-modified-file list — never
       blocks (Functional Scope §29). Full writeup:
-      `docs/developer/compatibility/compatibility-checker.md`. No admin
-      menu entry yet (`column_left.php` contended by 3 other open PRs at
-      the time of this run — see the doc's "Why no admin menu entry yet").
+      `docs/developer/compatibility/compatibility-checker.md`.
+      **Update (2026-09-30, routine run):** admin screen + menu entry
+      done — `ControllerMintcartCompatibility::index()` (route
+      `mintcart/compatibility`, GET/POST) renders a form/results page
+      over the legacy admin theme, menu entry under `System →
+      Compatibility Checker`. `check()`'s own JSON API is unchanged; both
+      now share one `analyze()` helper. See the doc's "Admin screen and
+      menu entry" section.
 - [ ] **Release packaging script** — open PR at the time of this run (see
       "Next step" below); not yet merged to this checklist.
 
-Compatibility Checker is done for what a heuristic, non-blocking analyzer
-needs (parser + checker + a real JSON consumer, fully unit-tested, zero
-existing OpenCart file touched). Update Manager and rollback remain not
-started. Release packaging script's status is tracked by its own PR, not
-rewritten here to avoid conflicting with it.
-- [ ] Compatibility Checker (`install.xml` analysis, heuristic warnings only)
+Compatibility Checker is done, including its admin screen + menu entry
+(see the `[x]` entry above, updated 2026-09-30). Update Manager and
+rollback remain not started. Release packaging script's status is tracked
+by its own PR, not rewritten here to avoid conflicting with it.
 - [ ] **Release packaging script (TODO, not started).** Node/npm (`npm install`
       && `npm run build`) and the PHP vendor libraries already committed
       under `upload/system/**/vendor/` are dev/release-time tooling only —
@@ -6428,3 +6431,35 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-09-30, routine run):** `list_pull_requests` returned
+24 open PRs at the start of this run (#138–#161, one `IN-PROGRESS`: #148).
+Picked the Phase 19/Compatibility Checker "admin menu entry" gap several
+earlier trailer notes had named but never claimed — `column_left.php`'s
+`System` array was uncontended (checked the PRs most likely to touch
+admin navigation directly; see `docs/upstream-diff.md`'s `column_left.php`
+entry for the exact check). Added `ControllerMintcartCompatibility::index()`
+(route `mintcart/compatibility`, GET/POST) — a rendered form/results page
+over the legacy admin theme, reusing `check()`'s existing, already-tested
+`InstallManifestParser`/`CompatibilityChecker` pipeline via a new shared
+`analyze()` helper (extract-method refactor, `check()`'s own JSON
+contract unchanged) — plus the `System → Compatibility Checker` menu
+entry. Full writeup: the Phase 11 (Technical Plan) Compatibility Checker
+entry above, `docs/developer/compatibility/compatibility-checker.md`'s
+"Admin screen and menu entry" section, `docs/upstream-diff.md`'s
+`column_left.php` entry, `docs/MANUAL_VERIFICATION.md`'s new Phase 19
+section. Verified: `php -l` clean across the full `upload/`/`tests` tree;
+new `compatibility.twig`'s `{% if %}`/`{% for %}` tags balanced (12/12);
+full `tests/mintcart/**/*-test.php` suite (84 files) re-run end to end —
+all passing, no regressions (no new pure class, so no new test file). Not
+verified: no live MySQL/admin session in this environment, same
+pre-existing gap every other `ControllerMintcart*` screen has. **Next
+candidates:** the still-unclaimed admin `mintcart/update/*` `apply()`
+wiring (flagged repeatedly as needing its own careful increment — real
+file writes/migrations against a live install, plus a genuine
+"where does a package manifest/download URL come from" product/
+architecture question per `CLAUDE.md` §20, not a mechanical wiring step);
+an upload-based (not paste-based) Compatibility Checker flow; the
+remaining Entity Picker live-wiring gaps (information/customer backends);
+or re-check `gh pr list --state open` first, since this backlog moves
+fast.
