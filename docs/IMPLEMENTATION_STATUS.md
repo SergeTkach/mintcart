@@ -358,39 +358,69 @@ consumer).
       `--bs-toast-zindex` is retinted directly (like `mc-drawer.css` did for
       `.offcanvas-backdrop`) since it's a plain wrapping element, never a
       descendant of `.mc-toast`. Doc: `docs/developer/components/toast.md`
-- [ ] `mc-select` (dedicated component beyond `mc-field__control`'s shared
-      select styling — not attempted; see "Next step" below)
+- [x] `mc-select` — `assets/src/css/components/select.css`; standalone
+      select applied directly to a `<select>` used outside a labeled
+      `.mc-field` wrapper (e.g. a sort-order/per-page-limit control next to
+      a product listing — `MINTCART_TECHNICAL_PLAN.md` §15E's
+      `SortOptionsBuilder`/`LimitOptionsBuilder`, currently an open,
+      unmerged PR at the time of this run — see "Sub-step" below); sizes
+      (`--sm`/`--lg`, matching `mc-button`'s naming/scale), `[multiple]`
+      handling (drops the chevron/right padding, adds a min-height for the
+      listbox look), `has-error` transient state, disabled. Doc:
+      `docs/developer/components/select.md`
 - [x] Each shipped component so far: CSS contract (no Twig yet — no theme/
       renderer exists until Phase 8, per CLAUDE.md §85), JS only where
       actually needed (`mc-alert`'s dismiss, `mc-quantity`'s stepper,
       `mc-modal`'s open/close triggers), a11y states, doc example with a
       Definition-of-Done checklist
 
-**Phase 4 is complete** except for the intentionally-deferred `mc-select`
-(15 of 16 components done: `mc-button`, `mc-alert`, `mc-field`,
-`mc-checkbox`, `mc-radio`, `mc-badge`, `mc-price`, `mc-quantity`,
-`mc-rating`, `mc-breadcrumb`, `mc-pagination`, `mc-card`, `mc-modal`,
-`mc-drawer`, `mc-toast`). Verified with `npm install` (0 vulnerabilities —
-this run's environment needed a fresh install, all packages resolved from
-the committed lockfile with no version drift), `npm run build` (minified)
-and `npm run dev` (sourcemapped), both compiling cleanly — the bundled CSS
-contains `.mc-toast`/`.mc-toast__title`/`.mc-toast__message`/
-`.mc-toast__close`/`.mc-toast--success|danger|warning|info` and a second
-`toast-container{--bs-toast-zindex: var(--mc-z-toast)}` rule overriding
-Bootstrap's own default, and the bundled JS contains the
-`open-toast`/`close-toast`/`mc:toast:shown`/`mc:toast:hidden` strings in
-both `catalog.min.js` and `admin.min.js` (spot-checked with `grep -o`
-against `assets/dist/{css,js}/*`). No PHP files were touched in this
-increment, so the Phase 1 PHP `tests/mintcart/` suite is not applicable. No
-automated component/visual test harness exists yet in this repo — this
-increment's verification is build-compiles + bundled-output grep + manual
-code review only, same gap noted in previous Phase 4 runs (not new).
+**Phase 4 is complete** (16 of 16 components done: `mc-button`, `mc-alert`,
+`mc-field`, `mc-select`, `mc-checkbox`, `mc-radio`, `mc-badge`, `mc-price`,
+`mc-quantity`, `mc-rating`, `mc-breadcrumb`, `mc-pagination`, `mc-card`,
+`mc-modal`, `mc-drawer`, `mc-toast`). Verified with `npm install` (0
+vulnerabilities — this run's environment needed a fresh install, all
+packages resolved from the committed lockfile with no version drift),
+`npm run build` (minified) and `npm run dev` (sourcemapped), both compiling
+cleanly for both the full `index.css`/`index.min.css` bundle and the
+Bootstrap-3-safe `components.css`/`components.min.css` bundle — the
+bundled CSS contains `.mc-select`, `.mc-select--sm`/`--lg` and the
+`--mc-select-*` custom properties in both (spot-checked with `grep -o`
+against `assets/dist/css/*`). No PHP files were touched in this increment,
+so the Phase 1 PHP `tests/mintcart/` suite is not applicable. No automated
+component/visual test harness exists yet in this repo — this increment's
+verification is build-compiles + bundled-output grep + manual code review
+only, same gap noted in previous Phase 4 runs (not new).
 
-**Next step:** `mc-select` remains intentionally deferred — no real
-consumer beyond what `mc-field__control`'s shared `<select>` styling
-already covers (searchable/multi-select would be the trigger to revisit
-it, per CLAUDE.md §85). With `mc-toast` landed, the next run should move to
-**Phase 5 — Layout conventions**.
+**Sub-step (this run): `mc-select`.** Previous runs had left this
+intentionally deferred pending "a real consumer beyond what
+`mc-field__control`'s shared `<select>` styling already covers." Step 0
+dedup check against the 27 open PRs at the start of this run (`#138`–`#164`)
+found none building `mc-select`/`select.css`, and none touching
+`assets/src/css/index.css`, `components.css` or any `components/*.css`
+file — genuinely unclaimed, implementable as new files only (plus two
+one-line `@import` additions). The concrete trigger for revisiting the
+deferral: `MINTCART_TECHNICAL_PLAN.md` §15E names
+`SortOptionsBuilder`/`LimitOptionsBuilder` as reusable actions Category/
+Search/Manufacturer/Specials listings all need, and one is already an open
+PR (`#157`, "Phase 8/15C/15E: SortOptionsBuilder + LimitOptionsBuilder,
+wired into `category.php`") building exactly the kind of standalone,
+label-less sort/limit `<select>` `mc-field__control` isn't designed for
+(no room for `.mc-field`'s label/help/error markup next to a listing
+toolbar). This component gives that in-flight need a component to land on
+without duplicating it here — `select.css` has no PHP/Twig, so it doesn't
+collide with `#157`'s files either way. `MINTCART_IMPLEMENTATION_GUIDE.md`
+§45 lists `mc-select` by name in the required Phase 4 set, same as every
+other already-shipped sibling component, none of which had a live
+Twig/theme consumer at ship time either (Phase 8 gate, CLAUDE.md §85) —
+so this isn't a new abstraction invented "just in case," it is finishing
+the named Phase 4 list against a concrete, already-scoped near-term
+caller.
+
+**Next step:** wire `mc-select` into `#157`'s sort/limit control markup
+once that PR merges (or into this run's own follow-up if it doesn't land
+first — re-check `gh pr list --state open`/`list_pull_requests` before
+assuming which). With all 16 Phase 4 components done, the next run should
+move to **Phase 5 — Layout conventions**.
 
 ## Phase 5 — Layout conventions
 
