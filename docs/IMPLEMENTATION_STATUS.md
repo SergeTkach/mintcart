@@ -3689,6 +3689,51 @@ re-checking whether `SchemaOrgBuilder::product()` can now be wired into
 robots/sitemap centralization and System route URL aliases remain
 unclaimed; or re-check `gh pr list --state open` first.
 
+**Update (2026-09-30, routine run): `mintcart/seo/sitemap` — always-on
+XML sitemap route, no `Extensions > Feeds > Google Sitemap` install
+required.** Closes the "genuinely first-class MintCart-owned
+`mintcart/seo/sitemap.xml` route" gap `MintCart\Seo\SitemapBuilder`'s own
+docblock and `docs/developer/seo/sitemap.md`'s "Not done yet" section had
+both named as the real remaining piece — the stock
+`ControllerExtensionFeedGoogleSitemap` only works when a merchant finds
+and enables that extension and its `feed_google_sitemap_status` setting,
+exactly the kind of technical decision `MINTCART_PRODUCT_VISION.md` §5
+says a shop owner should not have to make. New
+`ControllerMintcartSeoSitemap` (`upload/catalog/controller/mintcart/seo/sitemap.php`,
+route `mintcart/seo/sitemap`) reuses the exact same
+`model_catalog_product`/`model_catalog_category`/
+`model_catalog_manufacturer`/`model_catalog_information` enumeration and
+`SitemapBuilder::urlset()` XML assembly the stock extension already uses
+— same entries, same escaping, always on, no admin extension install.
+Step 0 found 21 open PRs (20 `DONE`, one `IN-PROGRESS` — #148, unrelated
+`product_form.twig` Option picker wiring); none touch any `MintCart\Seo\*`
+file, `mintcart/seo/*`, or the Homepage Builder hot files (§0f — block-type
+registry, `block.css`). Full writeup: `docs/developer/seo/sitemap.md`
+(updated "Not done yet" section). Verified: `php -l` clean on the new
+file and the full `upload`/`tests` tree; full `tests/mintcart/**/*-test.php`
+suite re-run end to end (84 files) — all passing, no regressions (no new
+test file needed — this is a live-DB controller wiring a pure,
+already-tested `SitemapBuilder`, same reasoning every other Phase 18
+controller-wiring increment in this section used). Not verified: no live
+MySQL/Twig session in this environment — a human should confirm on a real
+install that `index.php?route=mintcart/seo/sitemap` returns a well-formed
+`<urlset>` XML document listing every enabled product/category/
+manufacturer/information page (see `docs/MANUAL_VERIFICATION.md`'s Phase
+18 section, new "MintCart sitemap route" entry). **Deliberately not done**
+(unchanged from `docs/developer/seo/sitemap.md`'s own list, just now
+scoped to what remains): `sitemapIndex()`-based paging once a catalog
+exceeds `SitemapBuilder::MAX_URLS_PER_SITEMAP` (`urlset()` already
+truncates safely, same as the stock extension does today — no
+regression, just no multi-file split yet); self-registering a `Sitemap:`
+line in `robots.txt` (OpenCart ships no `robots.txt` management at all
+today, a separate, larger feature); per-language `hreflang` alternate
+links (`HreflangBuilder` still has no consumer). **Next candidates:**
+`robots.txt` management/self-registration; `sitemapIndex()` paging for
+large catalogs; hreflang's per-language route resolver; System route URL
+aliases (still the one remaining `[ ]` item in this section's own
+checklist above); or re-check `gh pr list --state open` first, since this
+backlog moves fast.
+
 ## Modern Editor (Functional Scope §24, P2/RESEARCH)
 
 - [x] Research step: verify whether the rich-text editor needs replacing —
