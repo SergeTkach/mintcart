@@ -4782,8 +4782,9 @@ Not started.
 
 ## Documentation (Functional Scope §33 / Technical Plan §40)
 
-- [~] User docs (`docs/user/`) — **install and Setup Wizard guides done this
-      run**; products/delivery/payments/design/homepage/orders/SEO basics
+- [~] User docs (`docs/user/`) — install, Setup Wizard, Delivery and
+      Payments guides done; products (open as PR #156 at the time of this
+      entry — check its merge status), design/homepage/orders/SEO basics
       guides not started (most of those features aren't built far enough
       yet to document accurately — see each one's own Phase section above).
 - [ ] Developer architecture overview (`docs/developer/architecture/`,
@@ -4833,6 +4834,54 @@ section once more Phase 13 Wizard steps/Phase 14 Business Settings façades
 land and can be documented accurately. Low collision risk either way
 (pure Markdown, `docs/` only) — re-check `docs/user/` isn't newly claimed
 by another open PR before starting, same as any other increment.
+
+**Update (2026-09-30, routine run): `docs/user/delivery.md` and
+`docs/user/payments.md` added.** Step 0 checked all 22 open PRs at the
+time (#138–#159); `#156` ("Docs: add `docs/user/products.md`") was the
+only other in-flight `docs/user/` work and does not overlap two new,
+independent files. Both new docs describe `Business → Delivery`/
+`Business → Payments` (`ControllerMintcartBusinessDelivery`/`...Payments`,
+Phase 14, already documented for developers in
+`docs/developer/onboarding/business-delivery-payments.md`) from a
+merchant's point of view: what the screen lists, what "Configure"/"Manage"
+do, and what toggling does/doesn't touch.
+
+While cross-checking the toggle action against the actual OpenCart 3
+routing engine (`upload/system/engine/action.php`'s `Action::__construct()`,
+per `CLAUDE.md` §84 — never assume routing from memory), found that its
+`preg_replace('/[^a-zA-Z0-9_\/]/', '', $route)` strips the `.` out of any
+dot-notation route before splitting on `/`, so the exact
+`mintcart/business/delivery.toggle`/`mintcart/business/payments.toggle`
+links these two controllers link to
+(confirmed with a standalone PHP repro: `mintcart/business/delivery.toggle`
+becomes the parts `['mintcart','business','deliverytoggle']`, which never
+resolves to a controller file) are currently broken on `master` — clicking
+Enable/Disable produces a routing error, not a status change. This is the
+same class of bug open PR `#147` ("Fix broken dot-notation admin AJAX
+toggle routes") already targets for the Wizard's Delivery step and (per
+its own title) these same two Business screens — so the *fix* is already
+claimed there and was deliberately **not** duplicated here; both new docs
+instead document the toggle as a known, currently-broken gap (with
+"Configure → Status field" as the working alternative in the meantime),
+matching this file's established practice (`setup-wizard.md`'s own "Known
+gaps" section) of describing what's actually true today rather than the
+intended end state. No hot shared file (§0f — Homepage Builder block
+registry/`block.css`) touched; no code file touched at all.
+
+Verified: no code changed (two new Markdown files only), so `php -l`/
+`npm run build`/`tests/mintcart/` don't apply. Every concrete claim
+(screen contents, button labels, language keys, the routing-bug repro)
+was cross-checked against the actual source
+(`upload/admin/controller/mintcart/business/{delivery,payments}.php`,
+their `.twig` templates and language files, and a live `php -r` repro of
+`Action::__construct()`'s regex) rather than written from memory.
+
+**Next step:** once `#147` merges and the toggle actually works, update
+both docs' "Known gaps" section to drop that note; `design.md`/
+`homepage.md`/`orders.md`/`seo-basics.md` remain unwritten user guides
+(same "not built far enough to document accurately" reasoning as before)
+once their underlying features stabilize; re-check `docs/user/` isn't
+newly claimed before starting either.
 
 ---
 
