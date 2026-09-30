@@ -320,6 +320,41 @@ extension and one payment extension enabled:
 4. Repeat step 3 with **no** shipping method selected yet in session —
    confirm the `shipping` line is simply absent (matches
    `extension/total/shipping.php`'s own guard), not an error.
+
+## Phase 15 — Shipping method quote endpoint, never exercised against a real DB
+
+`docs/developer/compatibility/shipping-quote-adapter.md` and
+`docs/developer/commerce/shipping-method-service.md` have the full design
+writeup. No MySQL/OpenCart session in this environment.
+`MintCart\Compatibility\OpenCart3\ShippingQuoteAdapter` and
+`MintCart\Commerce\ShippingMethodService` are unit-tested in isolation
+against fakes; neither `checkout/shipping_method.php` (untouched) nor the
+new `ControllerMintcartCheckout::shippingMethods()` action was ever
+actually run against a real cart/extension. On a real install, with at
+least one shipping extension enabled (e.g. Flat Shipping Rate, configured
+with a geo zone that matches a real country/zone combination):
+
+1. Request `index.php?route=mintcart/checkout/shipping_methods&country_id=<id>&zone_id=<id>`
+   (GET) with a `country_id`/`zone_id` pair that matches the enabled
+   extension's configured geo zone — confirm a JSON `{methods: [{method,
+   options: [{id, title, text}]}]}` response listing that extension, with
+   `options[0].text` matching the price it would show on the real
+   `checkout/shipping_method` page for the same address.
+2. Repeat with a `country_id`/`zone_id` pair that does **not** match any
+   configured geo zone — confirm `methods` is an empty list, not an error.
+3. Take an `options[].id` value from step 1's response (e.g. `flat.flat`)
+   and POST it as `shipping_method` to the existing, unmodified
+   `index.php?route=checkout/shipping_method.save` (with a real session
+   that already has `shipping_address` set to a matching address) —
+   confirm it is accepted exactly as if the value had come from the
+   original `checkout/shipping_method` page's own radio buttons (this is
+   the "no translation layer needed" claim `shipping-method-service.md`
+   makes; worth confirming it actually holds).
+4. Confirm `checkout/shipping_method.php`'s own page still renders
+   identically to before this change (this class touches no existing
+   file, so this should trivially still be true — worth a quick sanity
+   check anyway).
+
 ## Admin asset-enqueue fix + `product_form.twig`'s Category `McEntityPicker`, never exercised end to end
 
 `docs/developer/admin/asset-enqueue.md` has the full design writeup. No
