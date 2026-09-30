@@ -570,6 +570,44 @@ as `category.php`'s entry. **Tests:** `php -l` clean; full
 `tests/mintcart/` suite (78 files) re-run end to end — all passing, no
 regressions.
 
+**Update (this run — Phase 18, SEO Core, `RobotsBuilder` `$hasResults`
+registry bridge):** resolves the `header.php`-side "Known limitation"
+`docs/developer/seo/robots.md` documented. A new
+`$mint_search_has_results` local, initialized `true` before the
+`isset($this->request->get['search']) || isset($this->request->get['tag'])`
+guard (a bare `product/search` request with neither param never runs the
+query below — the plain search form, not a "no results" page — so it keeps
+the same `true` default `RobotsBuilder` already uses), is set to
+`($product_total > 0)` right after `$product_total` is computed inside
+that guard. Immediately before the existing
+`$data['header'] = $this->load->controller('common/header');` call, a new
+line writes it to the registry:
+`$this->registry->set(\MintCart\Seo\RobotsBuilder::HAS_RESULTS_REGISTRY_KEY, $mint_search_has_results);`
+— the same `$this->registry->set()`/`->get()` bridge
+`upload/system/engine/startup/startup.php` already uses to hand
+`session`/`customer`/`cart` between stages of a single request; no new
+table, session key or event. **Why it can't live in the MintCart layer:**
+`RobotsBuilder` itself deliberately has no `\Registry` dependency (see its
+own docblock) — only a controller that already knows both "did this
+specific search run" and "is this the point where header.php is about to
+be invoked" can produce and hand off this value at the right moment.
+**Compatibility impact:** None. The registry key is new and MintCart-only;
+no existing `$data` key, template variable, or return value changes. A
+`product/search` request that never sets `search`/`tag` behaves exactly as
+before (`true`, i.e. `header.php` renders `index, follow` for it, same as
+every route that never touches this key at all). **Tests:** `php -l`
+clean on `search.php`/`header.php`/`robotsbuilder.php`.
+`tests/mintcart/seo/robots-builder-test.php` gained two assertions (76,
+up from 74) checking the new `HAS_RESULTS_REGISTRY_KEY` constant's shape —
+`directives()`/`metaContent()`'s own logic is unchanged, so no new
+behavioral test was needed there. Full `tests/mintcart/**/*-test.php`
+suite re-run end to end (84 files) — all passing, no regressions. Same
+pre-existing no-live-request gap as every earlier Phase 18 entry — a human
+should confirm on a real install that a `product/search` query with zero
+matches renders `<meta name="robots" content="noindex, follow">` while one
+with matches still renders `content="index, follow"` (see
+`docs/MANUAL_VERIFICATION.md`'s Phase 18 section).
+
 ---
 
 ## `upload/catalog/language/en-gb/product/search.php`
@@ -837,19 +875,15 @@ cost. Same catch-and-log failure handling as the two blocks above it. `<head>`
 output added to `mint_default/template/common/header.twig` right after the
 existing `keywords` meta tag.
 
-**Known limitation (deliberate, see `docs/developer/seo/robots.md`):**
-`RobotsBuilder::metaContent()`'s second parameter, `$hasResults` (only
-meaningful for `product/search`), is left at its default (`true`) here —
-header.php has no way to know whether the current request's search
-actually matched anything, since it renders as a sibling sub-controller of
-`ControllerProductSearch`, not that controller itself. Threading a real
-`hasResults` signal across that boundary (registry/session) is a separate,
-slightly larger follow-up; today every `product/search` page, including an
-empty-results one, renders `index, follow` rather than the `noindex,
-follow` `RobotsBuilder` is capable of producing. Every other route
-(the full `NOINDEX_ROUTES` checkout/account whitelist, and every ordinary
-catalog/information/home route) is unaffected by this limitation and
-behaves exactly as `RobotsBuilder`'s own test suite already verifies.
+**Update (this run): `product/search` `$hasResults` now threaded via a
+registry bridge — see `docs/developer/seo/robots.md`.** Reads
+`$this->registry->get(\MintCart\Seo\RobotsBuilder::HAS_RESULTS_REGISTRY_KEY)`
+(falling back to `RobotsBuilder`'s own default, `true`, when unset) instead
+of always passing the implicit default, so `metaContent()`'s second
+argument is now real for `product/search` and unchanged for every other
+route (which never writes that registry key). See
+`upload/catalog/controller/product/search.php`'s own entry below for the
+write side of this bridge.
 
 **Compatibility impact:** None for the legacy `default` theme or any
 unrelated third-party theme (their own header templates never read

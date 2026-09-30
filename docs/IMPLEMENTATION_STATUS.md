@@ -6331,6 +6331,37 @@ still has no consumer, needs a per-language URL resolver first per its own
 doc); or re-check `gh pr list --state open` first, since this backlog moves
 fast.
 
+**Update (2026-09-30, routine run): Phase 18 — `product/search`'s
+`$hasResults` is now threaded into `RobotsBuilder`, closing the "next
+candidate" named just above.** Step 0 found 20 open PRs, one
+`IN-PROGRESS` (#148, `product_form.twig` Option entity picker wiring) and
+19 `DONE`-but-unmerged; none touch `header.php`, `search.php`, or any
+`MintCart\Seo\*` file, and none touch the Homepage Builder hot files
+(§0f — block-type registry, `block.css`). `RobotsBuilder` gained a public
+`HAS_RESULTS_REGISTRY_KEY` constant; `ControllerProductSearch::index()`
+now writes the real "did this search match anything" flag to
+`$this->registry` right before its existing
+`$this->load->controller('common/header')` call, and
+`ControllerCommonHeader::index()` reads it back (falling back to
+`RobotsBuilder`'s own `true` default when unset, i.e. every route other
+than `product/search`) — the same `$this->registry->set()`/`->get()`
+bridge `startup/startup.php` already uses between request stages, no new
+table/session/event (`CLAUDE.md` §17, no over-abstraction). Full writeup:
+`docs/developer/seo/robots.md` (the former "Known limitation" section, now
+resolved), `docs/upstream-diff.md`'s `header.php` and `product/search.php`
+entries, `docs/MANUAL_VERIFICATION.md`'s Phase 18 section (steps 3-4 now
+cover both the empty- and matching-search cases). Verified: `php -l` clean
+across the full `upload`/`tests` tree; `tests/mintcart/seo/robots-builder-test.php`
+gained 2 assertions for the new constant (76, up from 74); full
+`tests/mintcart/**/*-test.php` suite re-run end to end (84 files) — all
+passing, no regressions. Not verified: no live MySQL/Twig session in this
+environment, same pre-existing gap — a human should confirm the two new
+manual-verification steps on a real install. **Next candidates:** wire
+`MetaBuilder`/`CanonicalUrlBuilder` into `category.php`/`home.php` (still
+flagged uncontended a few runs ago — re-check current open PRs first);
+hreflang live wiring (`HreflangBuilder` still has no consumer); or re-check
+`gh pr list --state open` first, since this backlog moves fast.
+
 **Update (2026-09-15, routine run):** MC-0015 filed — `MintCart\Seo\MetaBuilder`
 wired into `category.php`/`home.php` (blank meta title fallback;
 blank descriptions are preserved). See the Phase 18 section above for the full writeup. Step 0
