@@ -296,6 +296,11 @@ class ControllerProductProduct extends Controller {
 			$data['text_discount'] = $this->language->get('text_discount');
 			$data['text_option'] = $this->language->get('text_option');
 			$data['text_related'] = $this->language->get('text_related');
+			// mc-viewed-products (MINTCART_FUNCTIONAL_SCOPE.md §11) heading
+			// label - the strip's items themselves come from
+			// mintcart/viewed/products (JSON) and are rendered client-side,
+			// same split product_cards/text_related already uses above.
+			$data['text_viewed'] = $this->language->get('text_viewed');
 			$data['text_tags'] = $this->language->get('text_tags');
 			$data['tab_description'] = $this->language->get('tab_description');
 			$data['tab_attribute'] = $this->language->get('tab_attribute');

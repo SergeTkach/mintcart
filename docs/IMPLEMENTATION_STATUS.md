@@ -2777,6 +2777,9 @@ already share.
       order creation at all).
 - [x] Mint-native search-box UI component (`mc-search-box`) calling
       `mintcart/search/suggest` — see "Update (this run)" below.
+- [x] Viewed products (`MINTCART_FUNCTIONAL_SCOPE.md` §11, Commerce
+      Essentials, P0) — `mc-viewed-products` storefront widget, see "Update
+      (this run): mc-viewed-products" below.
 - [ ] `QuickOrderService`, `CheckoutService` — not started.
 - [ ] Quick Order component — not started; `mc-product-card`'s
       `data-mc-action="quick-order"` stays hook-only.
@@ -2903,6 +2906,67 @@ environment — a human should confirm keyboard navigation, the
 debounce/abort behavior under fast typing, and the "View all results"
 link once this component's markup lands in a real template; see
 `docs/MANUAL_VERIFICATION.md`'s new Phase 15 entry.
+
+**Update (this run): `mc-viewed-products` — a "Recently viewed" storefront
+strip (`MINTCART_FUNCTIONAL_SCOPE.md` §11 "viewed products", Commerce
+Essentials, priority P0).** New, fully-additive
+`ControllerMintcartViewed::products()` (route `mintcart/viewed/products`,
+`upload/catalog/controller/mintcart/viewed.php`) resolves up to 12
+client-supplied product IDs via the existing
+`model_catalog_product->getProduct()` (same status/date_available/store
+visibility rule every product page already applies, so a since-disabled or
+deleted product silently drops out) and returns the same lightweight
+`{id, name, url, image, price, special}` item shape `mintcart/search/suggest`
+already established — no `ProductViewProvider` contract needed for a
+link-through strip with no actions.
+
+`assets/src/js/components/viewed-products.js` (`recordViewedProduct()`,
+`renderViewedProducts()`, `initViewedProducts()`, wired into `catalog.js`
+only) needed **zero PHP/Twig change** to learn the current page's product
+id: it reads the existing `[data-mc-product-form] [data-mc-action="add-to-cart"][data-product-id]`
+hook already rendered for the add-to-cart flow itself, and records it into a
+capped, deduplicated `localStorage` history (`mc:viewed:product_ids`, max
+12). One small, deliberate Twig/controller pair *was* touched to wire the
+render side into a real template (unlike `mc-search-box`, which shipped
+undocked): `product/product.php` now also assigns `$data['text_viewed']`
+(new `text_viewed` language key, `en-gb/product/product.php`), and
+`mint_default/template/product/product.twig` gained one new, initially
+`hidden` section after the existing "Related Products" block
+(`data-mc-viewed-products`/`data-mc-viewed-products-list`) — the widget
+fetches and un-hides it only when the visitor's history (minus the current
+product) actually has items, same empty-state approach `mc-search-box`
+uses for its own results panel. Neither `product.php` nor `product.twig`
+was touched by any of the 30 open PRs checked in step 0 (see the trailer
+note below). CSS reuses `mc-product-card__media`/`__body`/`__title`/
+`mc-price` in full (`MINTCART_IMPLEMENTATION_GUIDE.md` §9) with no
+`__actions` block (this item shape has no add-to-cart/wishlist/compare
+data) — `assets/src/css/components/viewed-products.css` only adds the
+`[hidden]` empty-state guard. Docs:
+`docs/developer/commerce/viewed-products.md`. Upstream diff: appended to
+the existing `product/product.php` entry in `docs/upstream-diff.md` (same
+file/reason pair Phase 6 already documented).
+
+Verified: `php -l` clean on all three touched/added PHP files; `npm install`
+(0 vulnerabilities) and `npm run build` both compile cleanly; `mc-viewed-products`
+confirmed present in the bundled `catalog.min.js`/`index.min.css`/
+`components.min.css` and **absent** from `admin.min.js` (storefront-only,
+`grep -c`, same scoping `search-box`/`product-card` use); `npm test`
+(preset-token contract checks, unaffected) still passing; full
+`tests/mintcart/**/*-test.php` suite re-run end to end (84 files) — all
+passing, no regressions (no pure-logic class was extracted for this
+controller — same as `ControllerMintcartSearch::suggest()`'s own precedent
+of inline GET-param handling with no dedicated unit test). **Not verified:**
+no live browser/MySQL session in this environment — a human should confirm
+on a real install that visiting two or three products populates the strip
+on a third, that a since-disabled product silently drops out, and that the
+section stays hidden for a first-time visitor with no history yet; see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 15 entry.
+
+**Explicitly deferred, not forgotten:** wiring the same strip into
+`category`/`cart` pages (today's increment only wires `product/product.php`);
+reusing the full `ProductViewProvider` contract (rating/badges/stock) instead
+of the smaller search-suggest-style shape, if a future consumer needs it —
+no such consumer exists yet (`CLAUDE.md` §85).
 
 **Next step:** wire `mc-search-box`'s markup contract into
 `mint_default/template/common/header.twig` (and `test_theme`'s header
@@ -6428,3 +6492,28 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-09-30, routine run): `mc-viewed-products`.** Step 0
+found 30 open PRs (`#138`-`#167`); a background research pass fetched every
+one's changed-file list and cross-referenced it against this file's
+unchecked items. Hot/contended files identified: `catalog/controller/common/header.php`
+(`#138`/`#151`/`#158`), `admin/controller/common/column_left.php` (`#139`/
+`#151`/`#162`), `catalog/controller/product/{category,search,manufacturer,special}.php`
+(`#144`/`#150`/`#157`/`#158`), `admin/view/template/catalog/product_list.twig`
+(`#140`/`#166`), `admin/view/template/catalog/product_form.twig` (`#148`/
+`#152`), `admin/language/en-gb/catalog/product.php` (`#148`/`#152`/`#166`),
+`admin/controller/mintcart/wizard.php` (`#142`/`#147`), and
+`assets/src/css/{components,index}.css` (`#138`/`#164`/`#165`, append-only
+— same low-risk pattern this run's own append to those two files follows).
+None of the 30 PRs touched `catalog/controller/product/product.php`,
+`catalog/language/en-gb/product/product.php`,
+`mint_default/template/product/product.twig`, or any
+`catalog/controller/mintcart/*.php` file — the area this run's Phase 15
+"Viewed products" increment lives in (full writeup in the Phase 15 section
+above). **Next candidates:** wire `mc-search-box`'s markup into
+`header.twig` once `#138`/`#151`/`#158` (all touching `header.php`) settle
+(the admin "Quick Order requests" list is already claimed by `#139` —
+don't duplicate it); `CheckoutService` (still genuinely large/risky,
+unclaimed); or re-check `gh pr list --state open` first, since with 30+
+open PRs this backlog needs a human merge pass before too much more
+independent work piles up further.
