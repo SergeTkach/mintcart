@@ -4304,6 +4304,33 @@ re-run. No live-wiring gap to flag in `docs/MANUAL_VERIFICATION.md` — there
 is no live request path yet for a human to exercise (see the doc's
 Definition of Done checklist for exactly what's still open).
 
+**Update (2026-10-01, routine run) — MC-0019 added (Fixes Registry):**
+`DB\PDO::query()` had no reconnect-on-dropped-connection handling at all —
+the sibling adaptor `DB\MySQLi::query()` already got this under MC-0011,
+this closes the gap for `DB\PDO`. See `docs/fixes/registry.md`'s MC-0019
+entry and `docs/upstream-diff.md`'s `upload/system/library/db/pdo.php`
+entry for the full writeup. Step 0 dedup check: `list_pull_requests`
+returned 41 open PRs at the start of this run (`#138`–`#177`); none touch
+`system/library/db/*` or any Fixes Registry entry (the closest, `#174`,
+claims `MC-0018` in a different file). No Homepage Builder hot files
+(§0f: block-type registry, homepage block list/template, `block.css`)
+touched by this increment. Verified: `php -l` clean on the modified
+`pdo.php` and the new `tests/mintcart/fixes/mc-0019-pdo-reconnect-test.php`
+(7 scenarios); full `tests/mintcart/**/*-test.php` suite re-run end to end
+(85 files, up from 84) — all passing, no regressions. No JS/CSS touched.
+**Not verified:** no live MySQL server or real `DB_DRIVER=pdo` install in
+this environment — see the registry entry's "Not verified" note. **Next
+candidates:** `OrderAdapter` (`MintCart\Compatibility\OpenCart3`) is the
+one adapter CLAUDE.md §38's list still lacks, but has no real consumer
+yet (confirmed via grep — nothing in `mintcart/*` code touches
+`model_sale_order`), so per CLAUDE.md §85 it should wait for one; Demo
+Data (Functional Scope §30) is unimplemented and can be built as a
+standalone admin screen decoupled from the in-flight Setup Wizard Payment
+step (`#142`) — a real next candidate; or re-check `gh pr list --state
+open` first, since this backlog moves fast (41 open PRs at the time of
+this run — see this routine's own step 0f guidance on hot shared files
+before picking a Homepage Builder block-type increment).
+
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
 - [~] Update Manager (check → compatibility → backup → download → verify →
