@@ -24,6 +24,7 @@ import { initHeaderCartRefresh } from './components/header-cart.js';
 import { initProductGalleries } from './components/product-gallery.js';
 import { initQuickOrderActions } from './components/quick-order.js';
 import { initSearchBoxes } from './components/search-box.js';
+import { initReviews } from './components/reviews.js';
 
 // MintCart-owned catalog behavior modules are added here as components ship
 // (Phase 4 onward).
@@ -42,3 +43,4 @@ initHeaderCartRefresh();
 initProductGalleries();
 initQuickOrderActions();
 initSearchBoxes();
+initReviews();

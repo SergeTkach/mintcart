@@ -301,6 +301,10 @@ class ControllerProductProduct extends Controller {
 			$data['tab_attribute'] = $this->language->get('tab_attribute');
 			$data['text_no_reviews'] = $this->language->get('text_no_reviews');
 			$data['entry_qty'] = $this->language->get('entry_qty');
+			// MC-0020 (docs/fixes/registry.md): button_continue was never
+			// assigned here, so the Write a review form's submit button
+			// rendered with no visible label.
+			$data['button_continue'] = $this->language->get('button_continue');
 
 			$this->load->model('catalog/review');
 
@@ -774,6 +778,10 @@ class ControllerProductProduct extends Controller {
 		}
 
 		$data['reviews'] = array();
+
+		// MC-0021 (docs/fixes/registry.md): text_no_reviews was never
+		// assigned here, so the empty-review-list message rendered blank.
+		$data['text_no_reviews'] = $this->language->get('text_no_reviews');
 
 		$review_total = $this->model_catalog_review->getTotalReviewsByProductId($this->request->get['product_id']);
 

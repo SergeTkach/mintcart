@@ -226,7 +226,55 @@
                     {% endif %}
 
                     <div class="mc-tabs__panel tab-pane fade py-3" id="pane-review" role="tabpanel" aria-labelledby="tab-review" tabindex="0">
-                        <p>{{ text_no_reviews }}</p>
+                        <div class="mc-reviews" data-mc-reviews data-mc-reviews-product-id="{{ product_id }}">
+                            <div class="mc-reviews__list" data-mc-reviews-list aria-live="polite">
+                                <p class="mc-reviews__empty">{{ text_no_reviews }}</p>
+                            </div>
+
+                            <div class="mc-reviews__form-wrapper">
+                                <p class="mc-reviews__form-title">{{ text_write }}</p>
+
+                                {% if review_guest %}
+                                    <form class="mc-reviews__form" data-mc-reviews-form novalidate>
+                                        <div class="mc-field mb-3">
+                                            <label class="mc-field__label" for="input-review-name">{{ entry_name }}</label>
+                                            <input type="text" name="name" value="{{ customer_name }}" id="input-review-name" class="mc-field__control" required minlength="3" maxlength="25">
+                                        </div>
+
+                                        <div class="mc-field mb-3">
+                                            <label class="mc-field__label" for="input-review-text">{{ entry_review }}</label>
+                                            <textarea name="text" rows="5" id="input-review-text" class="mc-field__control" required minlength="25" maxlength="1000"></textarea>
+                                            <p class="mc-field__help">{{ text_note|raw }}</p>
+                                        </div>
+
+                                        <fieldset class="mc-rating-input mb-3">
+                                            <legend class="mc-field__label">{{ entry_rating }}</legend>
+                                            <div class="mc-rating-input__stars">
+                                                {% for value in [5, 4, 3, 2, 1] %}
+                                                    <input type="radio" class="mc-rating-input__control visually-hidden" name="rating" id="input-review-rating-{{ value }}" value="{{ value }}" required>
+                                                    <label class="mc-rating-input__star" for="input-review-rating-{{ value }}">
+                                                        <span class="visually-hidden">
+                                                            {% if value == 1 %}1 - {{ entry_bad }}{% elseif value == 5 %}5 - {{ entry_good }}{% else %}{{ value }}{% endif %}
+                                                        </span>
+                                                        <span aria-hidden="true">★</span>
+                                                    </label>
+                                                {% endfor %}
+                                            </div>
+                                        </fieldset>
+
+                                        {% if captcha %}
+                                            <div class="mc-field mb-3">{{ captcha|raw }}</div>
+                                        {% endif %}
+
+                                        <div data-mc-reviews-message></div>
+
+                                        <button type="submit" class="mc-button mc-button--primary" data-mc-reviews-submit>{{ button_continue }}</button>
+                                    </form>
+                                {% else %}
+                                    <p>{{ text_login|raw }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
