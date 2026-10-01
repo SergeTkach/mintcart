@@ -4450,25 +4450,25 @@ Definition of Done checklist for exactly what's still open).
       `docs/developer/compatibility/compatibility-checker.md`. No admin
       menu entry yet (`column_left.php` contended by 3 other open PRs at
       the time of this run — see the doc's "Why no admin menu entry yet").
-- [ ] **Release packaging script** — open PR at the time of this run (see
-      "Next step" below); not yet merged to this checklist.
+- [x] **Release packaging script** — `scripts/release.js` (`npm run
+      release`) builds the frontend assets, stages the *committed*
+      (`git archive HEAD`) `upload/` tree, copies the built
+      `assets/dist/{css,js}` into `upload/assets/{css,js}`, and zips the
+      result into `release/mintcart-<version>.zip` (version read from
+      `MintCart\Core\Version::VERSION`, never re-typed). Merged in PR #87,
+      alongside `docs/release.md` — see that doc for full usage, what it
+      deliberately doesn't do yet (no version bump, no compatibility
+      check/backup/migration runner, no `install/` removal), and the
+      manual verification that was run against this repo's own `HEAD`
+      while building it. This bullet was previously (and incorrectly)
+      marked not-started below; corrected by a later routine run once it
+      noticed the two bullets contradicted each other and the code/docs
+      were already on `master`.
 
 Compatibility Checker is done for what a heuristic, non-blocking analyzer
 needs (parser + checker + a real JSON consumer, fully unit-tested, zero
 existing OpenCart file touched). Update Manager and rollback remain not
-started. Release packaging script's status is tracked by its own PR, not
-rewritten here to avoid conflicting with it.
-- [ ] Compatibility Checker (`install.xml` analysis, heuristic warnings only)
-- [ ] **Release packaging script (TODO, not started).** Node/npm (`npm install`
-      && `npm run build`) and the PHP vendor libraries already committed
-      under `upload/system/**/vendor/` are dev/release-time tooling only —
-      the end user installing MintCart must never need Node or Composer.
-      Need a documented/scripted step that runs the frontend build and
-      packages `upload/` (with `assets/dist/` already generated and
-      included) into an installable zip, the same way OpenCart itself ships
-      a pre-built `upload/`. Natural home: alongside Update Manager package
-      manifest work (Technical Plan §33), or a standalone `docs/release.md`
-      if it's needed before Update Manager exists.
+started. Release packaging script is also done — see above.
 
 In progress. Verified (this run): `php -l` clean on every touched/added
 PHP file; new `tests/mintcart/update/package-verifier-test.php` (12
@@ -4782,10 +4782,14 @@ Not started.
 
 ## Documentation (Functional Scope §33 / Technical Plan §40)
 
-- [~] User docs (`docs/user/`) — **install and Setup Wizard guides done this
-      run**; products/delivery/payments/design/homepage/orders/SEO basics
-      guides not started (most of those features aren't built far enough
-      yet to document accurately — see each one's own Phase section above).
+- [~] User docs (`docs/user/`) — **install, Setup Wizard and Homepage
+      Builder guides merged to `master`**; a `products.md` guide and
+      `delivery.md`/`payments.md` guides each existed as their own open,
+      not-yet-merged PR as of this update (check `gh pr list --state open`
+      before adding another one); `design.md`, `orders.md` and an SEO
+      basics guide are not started (Design → Styles isn't on `master` yet
+      as of this update — see Phase 9's preset-picker open PR — so a
+      `design.md` guide would currently describe unmerged UI).
 - [ ] Developer architecture overview (`docs/developer/architecture/`,
       Technical Plan §40's third `docs/` subtree) — not started; the
       `docs/developer/{components,blocks,commerce,theme-api,onboarding,catalog,update}/`
@@ -4826,13 +4830,46 @@ route) was cross-checked against the actual source file it describes
 `upload/admin/controller/mintcart/wizard.php`) rather than written from
 memory.
 
-**Next step:** a `products.md` user guide is the natural next one to add
-(Store → Products already has a stable, complete admin screen in stock
-OpenCart, unlike most of the Wizard's remaining steps) — or continue this
-section once more Phase 13 Wizard steps/Phase 14 Business Settings façades
-land and can be documented accurately. Low collision risk either way
-(pure Markdown, `docs/` only) — re-check `docs/user/` isn't newly claimed
-by another open PR before starting, same as any other increment.
+**Update (routine run): `docs/user/homepage.md`.** Step 0 dedup check
+found 31 open PRs (`#138`-`#168`); none touched `docs/user/*` except
+`#156` (`products.md`) and `#160` (`delivery.md`/`payments.md`) — neither
+overlapping a `homepage.md` guide. Separately, mapping every open PR's
+changed-files list surfaced a real, broader hot zone this run avoided
+entirely: `upload/catalog/controller/product/{category,manufacturer,
+search,special,product}.php` are each touched by 3-4 different open PRs
+(`#144`,`#150`,`#157`,`#158`,`#167`,`#168`), and `wizard.php`/
+`column_left.php`/`product_list.twig`/`product_form.twig` each by 2-3
+more (`#142`/`#147`, `#139`/`#151`/`#162`, `#140`/`#166`, `#148`/`#152`)
+— a smaller-scale rerun of the exact Homepage-Builder-block pile-up this
+routine's own instructions warn about, just in different files. Picking a
+pure-Markdown, zero-code increment sidestepped all of it. Documents
+**Design → Homepage** (all 15 shipped block types, add/edit/enable-disable/
+reorder, the JSON-items-list fields and their per-type examples, the
+image-path-not-picker gap, and the known limitations — no drag-and-drop
+yet, Homepage-only) exactly as `ControllerDesignHomepage`'s `TYPES`/
+`FIELD_SCHEMA`/language file behave today, cross-checked against those
+three files rather than written from memory (`CLAUDE.md` §84). Also
+corrected this file's own Phase 11 (Technical Plan) section, which had
+two stale/contradictory bullets claiming the release packaging script was
+still a TODO behind an open PR — `scripts/release.js`/`docs/release.md`
+were in fact already merged (PR #87); see that section above.
+
+Verified: no code touched (Markdown only); every concrete claim in
+`homepage.md` (block type list, field names/labels, JSON item-list shape
+and per-type examples, "no image picker" gap, reordering via Sort Order
+not drag-and-drop) cross-checked against
+`upload/admin/controller/design/homepage.php`,
+`upload/admin/language/en-gb/design/homepage.php` and
+`upload/system/library/mintcart/blocks/*.php` rather than assumed.
+
+**Next step:** a `design.md` guide once Design → Styles' preset picker
+merges; an `orders.md` guide (stock OpenCart order admin — low risk,
+not yet attempted); an SEO basics guide (canonical/meta/sitemap/robots/
+Schema.org are all implemented per Phase 18 above, genuinely documentable
+today); or continue once Phase 13's remaining Wizard steps land. Low
+collision risk either way (pure Markdown, `docs/` only) — re-check
+`gh pr list --state open` for newly claimed `docs/user/*` files before
+starting, same as any other increment.
 
 ---
 
