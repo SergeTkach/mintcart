@@ -2532,6 +2532,65 @@ other settings.
 - Re-check `gh pr list --state open` before picking the next increment —
   this backlog moves fast.
 
+**Update (2026-10-01, routine run): the `first_product` step is done.**
+`WizardProgress::IMPLEMENTED_STEPS` gains `first_product`, inserted between
+`delivery` and `ready` (matching canonical `STEPS` order — the same
+"reconciled to canonical order" shape `contacts`/`language_currency`/
+`delivery` themselves already set). `ControllerMintcartWizard`'s
+`first_product` step collects only `product_name` + `price` (required)
+plus optional `quantity`/`description`, then calls the real, unmodified
+`ModelCatalogProduct::addProduct()` — every other field that model
+requires gets a safe default (today's `date_available`, the store's own
+`config_weight_class_id`/`config_length_class_id`, `status = 1`, stock
+status resolved by name rather than a hardcoded id — see
+`loadDefaultStockStatusId()`). A "Skip for now" button
+(`first_product_action=skip`) bypasses validation/creation entirely and
+just marks the step completed, per Functional Scope §2's optional-step
+skipping (same precedent `delivery` already set). This closes
+`MintCart\Onboarding\StoreReadiness`'s own `first_product` signal gap —
+completing this step with a real product now flips that checklist item
+from "Not yet" to "Done" on the very same Ready step this Wizard already
+renders. Full writeup: `docs/developer/onboarding/setup-wizard.md`'s new
+"The First product step writes a real, ordinary product" section.
+
+Step 0 dedup check: `list_pull_requests` returned 42 open PRs (#138-#180)
+at the start of this run. Exactly one, `#142` ("Setup Wizard Payment
+step"), touches the same four files this increment touches
+(`wizard.php`/`wizardprogress.php`/`wizard.twig`/the wizard language
+file) — same accepted-risk shape this file's own `contacts`/
+`language_currency` entries already documented and reconciled twice
+before (both were developed in parallel against diverging bases, then
+merged back to canonical order by hand). `#142`'s own diff adds the
+`payment` step; this increment adds `first_product` — both are
+append-only changes to the same arrays/switch statements/template `{% if
+step == ... %}` blocks, which is exactly the shape prior reconciliations
+in this file handled cleanly, not the kind of same-feature duplicate step
+0d warns about. No Homepage Builder hot file (§0f — block-type registry,
+`block.css`) is touched by either PR.
+
+Verified: `php -l` clean across the full `upload/`/`tests/` tree.
+`tests/mintcart/onboarding/wizard-progress-test.php` grows from 11 to 12
+scenarios (the new `first_product` step's place in the resume sequence,
+its `isImplemented()` check, and the reorder/idempotent scenarios'
+expected lists updated). Full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end — all passing, no regressions. `wizard.twig`'s
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts checked
+balanced (53/53, 5/5) after the new step block. **Not verified:** no live
+MySQL/admin session in this sandboxed environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 13 "Wizard First product step"
+entry for the full manual script a human should run, including the
+Ready step's checklist actually flipping to "Done" after a real product
+is created (not merely after the step is marked completed via Skip).
+
+**Next candidates:** reconcile `IMPLEMENTED_STEPS`' order once `#142`
+(Payment step) merges — canonical order is `..., delivery, payment,
+design, first_product, ready`, so a future run should move `payment`
+between `delivery` and `first_product` rather than leaving it appended
+wherever each PR's own diff happens to land it; the `design` step (needs
+a real form/save target, likely the preset picker once it has a live
+admin consumer); Store step's logo upload; or re-check `gh pr list
+--state open` first, since this backlog moves fast.
+
 ## Phase 14 — Store Readiness / Business Settings
 
 - [x] `MintCart\Onboarding\StoreReadiness` service (computed, not hardcoded,

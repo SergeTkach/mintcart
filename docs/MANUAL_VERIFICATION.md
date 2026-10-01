@@ -30,6 +30,21 @@ still advances to the Ready step (no required-field validation for this
 step), while the Ready step's own checklist correctly still shows
 "shipping" as outstanding until at least one method is enabled.
 
+## Phase 13 — Wizard First product step never rendered live
+
+No MySQL/OpenCart admin session in this environment. Confirm on a real
+install: `mintcart/wizard?step=first_product` renders the form; submitting
+with a blank name or a blank/negative/non-numeric price shows the
+corresponding field error and does not create a product; submitting with
+just a name + price creates a real, enabled product visible in
+`Catalog → Products` and on the storefront immediately (weight/length
+class match the store's `Settings → Option` defaults, stock status reads
+"In Stock"); a blank quantity defaults to 100; clicking "Skip for now"
+(`first_product_action=skip`) advances to the Ready step without creating
+any product; and the Ready step's own `first_product` checklist item
+correctly flips from "Not yet" to "Done" only after a real enabled product
+exists (not merely after the step is marked completed via Skip).
+
 ## Phase 13 — Wizard Language & currency step never rendered live
 
 No MySQL/OpenCart admin session in this environment. Confirm on a real
