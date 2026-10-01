@@ -4782,10 +4782,12 @@ Not started.
 
 ## Documentation (Functional Scope §33 / Technical Plan §40)
 
-- [~] User docs (`docs/user/`) — **install and Setup Wizard guides done this
-      run**; products/delivery/payments/design/homepage/orders/SEO basics
-      guides not started (most of those features aren't built far enough
-      yet to document accurately — see each one's own Phase section above).
+- [~] User docs (`docs/user/`) — install, Setup Wizard and **SEO basics**
+      guides done; products/delivery/payments/homepage/orders guides are
+      claimed by other open PRs in the backlog as of this run (re-check
+      `gh pr list --state open` before assuming); design guide not started
+      (Design → Styles preset picker is still only an open PR, not on
+      `master`, so nothing to document accurately yet).
 - [ ] Developer architecture overview (`docs/developer/architecture/`,
       Technical Plan §40's third `docs/` subtree) — not started; the
       `docs/developer/{components,blocks,commerce,theme-api,onboarding,catalog,update}/`
@@ -6428,3 +6430,22 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-10-01, routine run):** added `docs/user/seo.md` (the
+"SEO basics" user guide the Documentation section above had left as the
+last unclaimed `docs/user/` gap). `list_pull_requests` returned 34 open
+PRs at the start of this run (#138–#171); none touched documentation
+content or any file this run touched (pure new Markdown file plus this
+status file). Every concrete claim in the new doc (which SEO pieces are
+actually wired into which controller, which are theme-gated via
+`isMintAware()`, and that `HreflangBuilder` has zero live consumers
+anywhere in `upload/`) was cross-checked directly against
+`docs/developer/seo/*.md` and the relevant controllers rather than
+written from memory (`CLAUDE.md` §84). No code touched, so `php -l`/
+`tests/mintcart/` don't apply. **Next candidates:** `docs/user/design.md`
+(still blocked on the Design → Styles preset picker actually landing on
+`master` — PR #151 has it, unmerged); re-check which of
+products/delivery/payments/homepage/orders guides have actually merged
+before starting another one; or re-check `gh pr list --state open` first,
+since this backlog moves fast and is unusually large right now (34 open
+PRs) — a human merge pass is likely overdue.
