@@ -1913,11 +1913,15 @@ question is resolved — see the ADR's "Consequences" section.
       **category and manufacturer are done** (manufacturer this run), see
       below; the other five entity types still need their own.
 - [~] Live wiring into an actual admin screen/field — **category,
-      manufacturer and product are now done** (`product_form.twig`'s
-      Category and Manufacturer fields in earlier runs, its Related
-      Products field this run — see the "Related Products field
-      live-wired" update below); information/attribute/option/customer
-      backends still have no live consumer.
+      manufacturer, product and information are now done**
+      (`product_form.twig`'s Category and Manufacturer fields in earlier
+      runs, its Related Products field in a later run — see the "Related
+      Products field live-wired" update below; `setting/store_form.twig`'s
+      Account/Checkout Terms fields this run — see the "Information field
+      live-wired" update below); attribute/option/customer backends each
+      have open, unmerged PRs building their own live wiring at the time
+      of this update — re-check `gh pr list --state open` before
+      assuming their status here is current.
 - [ ] Create-new flow via drawer/modal — not attempted.
 
 **Update (this run): the category `fetchItems` backend is done.**
@@ -2290,14 +2294,57 @@ live UI wiring; the backend (`ControllerCatalogCategory::move()`,
 `CategoryMoveValidator`, `moveCategory()`) is unaffected and remains
 ready to consume whichever UI shape is chosen.
 
-**Next candidates:** the remaining Phase 12 entity types still need live
-wiring (information/attribute/option/customer — none has an identified
-first consumer yet, per their own backend write-ups above, so picking one
-means choosing a real admin screen/field first, not guessing one);
-resolving the Phase 17 category-list fork above (needs a product decision
-first); Entity Picker Filters/Create-new-flow (neither has a real
-requirement yet); or re-check `gh pr list --state open` first, since this
-backlog moves fast.
+**Update (2026-10-01, routine run): Information field live-wired.** Step 0
+dedup check: `list_pull_requests` returned 32 open PRs (`#138`-`#169`,
+all `ROUTINE-STATUS: DONE` except `#148` `IN-PROGRESS`). Fetched every
+open PR's changed-file list (`pull_request_read` `get_files`) rather than
+just reading titles — `#148`/`#152`/`#163` already claim the Option/
+Attribute/Customer entity-picker live-wiring gaps this section used to
+list as unclaimed (each wires a different `product_form.twig`/
+`sale/order_form.twig` field; none touches `setting/store.php` or
+`setting/store_form.twig`). The one Phase 12 entity type with no open PR
+and no identified consumer anywhere in this file was Information —
+`docs/developer/components/entity-picker.md`'s "Information page backend"
+section had deliberately left its first consumer unguessed (`CLAUDE.md`
+§85) rather than inventing one. Reading `setting/store_form.twig` directly
+(`CLAUDE.md` §84, not from memory) found a real one: its **Account
+Terms**/**Checkout Terms** fields (`config_account_id`/`config_checkout_id`,
+`Settings → Store → Edit`) are plain `<select>` elements listing every
+information page — the same kind of single-value field Category/
+Manufacturer's pickers already replaced on `product_form.twig`.
+
+`ControllerSettingStore` gained its own `enqueueMintAssets()` (same
+`components.min.css`/`admin.min.js` pairing every other MintCart admin
+screen uses), called from `getForm()`. Each `<select>` gained a "Browse
+pages" button + hidden `.mc-entity-picker` panel, additive alongside the
+native `<select>` (kept as-is, not replaced). Two independent
+single-select `McEntityPicker` instances (one per field — only ever two
+of these fields, not a dynamic row list, so no shared/delegated instance
+like Attribute's was needed); confirming a pick just sets the matching
+`<select>`'s `.value` — no new `<option>` needed client-side, since every
+page already has one rendered server-side. Full writeup:
+`docs/upstream-diff.md`'s new `setting/store.php` entry,
+`docs/developer/components/entity-picker.md`'s updated "Information page
+backend" section, `docs/MANUAL_VERIFICATION.md`'s new entry. Verified:
+`php -l` clean on `store.php` and the language file; the new inline
+`<script>` extracted and `node --check`-clean; `store_form.twig`'s
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts checked
+balanced before and after (40/40, 12/12 — no `{% %}` tag touched); full
+`tests/mintcart/**/*-test.php` suite (84 files) re-run end to end, all
+passing, no regressions (no PHP library class changed — only a controller
+method delegating to the already-tested `ControllerMintcartEntity::information()`/
+`InformationPickerProvider`). Not verified: no live MySQL/admin session in
+this environment. **Next candidates:** `attribute`/`option`/`customer`
+live-wiring status depends on `#148`/`#152`/`#163` merging — re-check `gh
+pr list --state open` before touching any of `product_form.twig`'s
+Attribute/Option tabs or `sale/order_form.twig`'s Customer field; `Settings
+→ Settings` (`setting/setting.php`/`setting.twig`) has the same
+Account/Checkout Terms pair for a single-store install, unwired, as a
+natural follow-up over the exact same pattern; Entity Picker Filters/
+Create-new-flow (neither has a real requirement yet); resolving the Phase
+17 category-list fork above (needs a product decision first); or re-check
+`gh pr list --state open` first, since this backlog moves fast and is
+very large right now (32 open PRs).
 
 ## Phase 13 — Setup Wizard
 
@@ -6428,3 +6475,15 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-10-01, routine run):** wired the Phase 12 Entity
+Picker's Information backend into `setting/store_form.twig`'s Account/
+Checkout Terms fields (`Settings → Store → Edit`) — see the Phase 12
+section above for the full writeup. 32 open PRs existed at the start of
+this run; per-PR file lists (not just titles) were checked to confirm
+`#148`/`#152`/`#163` already claim the Option/Attribute/Customer
+entity-picker live-wiring gaps, and none touch `setting/store.php`/
+`store_form.twig`. `php -l`/`node --check` clean; full `tests/mintcart/`
+suite (84 files) re-run end to end, all passing. Re-check `gh pr list
+--state open` before picking the next step — this backlog is very large
+right now (32 open PRs) and moves fast.
