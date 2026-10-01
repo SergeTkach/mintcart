@@ -1059,11 +1059,10 @@ their own Functional Scope RESEARCH items (rollback, autosave, editor).
       (`MINTCART_IMPLEMENTATION_GUIDE.md` §51) is now done (see "Sub-step 2",
       `docs/developer/blocks/hero.md`, `docs/developer/blocks/categories.md`,
       "Sub-step 3" below)
-- [~] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
-      `mc_block` rows) — see "Sub-step 3" below. Reordering uses a plain
-      per-row `sort_order` number input, **not** SortableJS/`McSortable` drag-
-      and-drop — see that sub-step for why, and the real architectural
-      question this run is flagging rather than guessing at.
+- [x] Homepage Builder admin editor (add/edit/delete/enable-disable/reorder
+      `mc_block` rows) — see "Sub-step 3" below. Reordering now uses a real
+      `McSortable` (`data-mc-sortable`) list — see "Sub-step 4 (routine
+      run, 2026-10-01)" below for the full writeup.
 
 In progress. PR #16 (storage), a previous run (Provider/Renderer + Products
 block, merged to `master`), this run (Sub-step 3: the admin editor).
@@ -1716,13 +1715,62 @@ was exercised — a human should insert an `mc_block` row
 (`type = 'gallery'`) pointing at a real image on a real install and
 confirm the homepage renders it.
 
-**Next step:** the full first-wave block catalog
-(`MINTCART_IMPLEMENTATION_GUIDE.md` §51) is now done and merged to
-`master`. Remaining Phase 10 work: wiring each block type into
-`ControllerDesignHomepage::TYPES` (settings-form support in the admin
-editor — currently only `products` has one), and the Homepage
-drag-and-drop editor (admin UI to actually reorder `mc_page`/`mc_block`
-rows via `McSortable` — currently a plain `sort_order` number input).
+**Sub-step 4 (routine run, 2026-10-01): Homepage Builder's block list now
+uses real `McSortable` drag-and-drop.** Step 0 found 38 open PRs; none
+touched `upload/admin/controller/design/homepage.php`,
+`upload/admin/view/template/design/homepage_list.twig`, `block.css`, or any
+other Homepage Builder file (the step-0f "hot shared files" check was
+clear). `docs/developer/admin/asset-enqueue.md` (a later run than
+Sub-step 3 above) had already resolved the "real architectural question"
+Sub-step 3 flagged — not by migrating the admin shell, but by shipping a
+second, Bootstrap-5-free CSS bundle (`components.min.css`) proven safe to
+layer on the legacy admin theme's Bootstrap 3, with
+`ControllerCatalogProduct::getForm()` as its first consumer. This run is
+that pattern's **second** consumer:
+`ControllerDesignHomepage::enqueueMintAssets()` (called from `getList()`
+only) queues `components.min.css` + `admin.min.js`, and
+`homepage_list.twig`'s block list is now a real `<ul class="mc-sortable"
+data-mc-sortable data-mc-sortable-handle>` (drag handle, keyboard-usable
+move-up/move-down buttons, hidden `order[<block_id>]` inputs recomputed on
+`mc:sortable:reorder`) instead of a plain `<input type="number">` per row —
+`docs/developer/components/sortable.md`'s "Homepage Builder's block list"
+expected-first-consumer note is now true.
+`ControllerDesignHomepage::saveOrder()`/`ModelDesignHomepage::updateSortOrder()`
+are both unchanged — their existing `order[<block_id>]` contract already
+covered this. Full writeup:
+`docs/developer/blocks/homepage-admin.md`'s "Reordering now uses
+`McSortable`" section, `docs/developer/admin/asset-enqueue.md`'s "Second
+consumer" section. **Known interim limitation found and documented, not
+fixed here (different file, see below):** `admin.min.js` loads as a classic
+`<script>` in `header.twig`'s `<head>`, before this screen's own markup
+exists, so `McSortable`'s eager `Sortable.create()` init silently does not
+run until `admin.js` defers its boot sequence until `DOMContentLoaded` —
+independently found here but already being fixed as part of Phase 17's
+Categories drag-and-drop work (a separate open PR touching the same shared
+`admin.js`, not duplicated here to avoid a collision). The keyboard
+move-up/move-down buttons are unaffected (delegated `document` listener,
+timing-independent), so reordering stays possible either way. Verified:
+`php -l` clean on every touched/added PHP file; full `tests/mintcart/`
+suite (85 files, up from 84, including the new
+`tests/mintcart/design/homepage-asset-enqueue-test.php`) re-run end to end,
+all passing, no regressions; no JS/CSS file was touched (both bundles
+already included `sortable.css`/`sortable.js`), so `npm run build` was not
+re-run for this increment. Not verified: no live MySQL/browser session in
+this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 10
+entry.
+
+**Next step:** extract `enqueueMintAssets()`'s now-twice-copy-pasted body
+into a small shared trait once Phase 17's category drag-and-drop PR lands
+as a third call site (not attempted here per `CLAUDE.md` §85/86 — see
+`docs/developer/admin/asset-enqueue.md`'s "What this run deliberately did
+not attempt"); wiring each remaining block type into
+`ControllerDesignHomepage::TYPES`'s settings-form support was already done
+by earlier runs (`TYPES`/`fieldSchema()` now cover all 15 shipped types);
+replacing the five `items`-repeater block types' raw-JSON textareas with a
+real add/remove-row JS UI (`docs/developer/blocks/homepage-admin.md`'s "The
+five `items`-repeater types") is the one remaining Homepage Builder gap
+that no longer has an asset-enqueue question blocking it; or re-check
+`gh pr list --state open` first, since this backlog moves fast.
 
 ## Phase 11 — Mint Admin primitives
 
@@ -6428,3 +6476,19 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+**Trailer note (2026-10-01, routine run):** 38 open PRs existed at the
+start of this run (`#138`-`#175`); none touched any Homepage Builder file.
+Picked Phase 10's long-standing "Reordering uses a plain `sort_order`
+number input, not McSortable" gap — `docs/developer/admin/asset-enqueue.md`
+(a later run than the one that originally flagged it) had already resolved
+the underlying admin-shell blocker, just not yet applied to this screen —
+see the Phase 10 (Technical Plan numbering, "Sub-step 4") section above for
+the full writeup. Also independently found, but deliberately left to the
+in-flight Phase 17 Categories PR to fix (same shared `admin.js` file): a
+boot-timing bug where `McSortable`'s pointer-drag init runs before the
+page's own markup exists in the DOM. **Next candidates:** extracting
+`enqueueMintAssets()` into a shared trait once a third call site exists;
+the five Homepage Builder `items`-repeater types' raw-JSON-textarea →
+real-repeater follow-up (no longer blocked on asset-enqueue); or re-check
+`gh pr list --state open` first, since this backlog moves fast.

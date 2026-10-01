@@ -1178,3 +1178,40 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    `mint_default`) shows **no** new network requests for either file —
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
+
+## Phase 10 — Homepage Builder block list now uses `McSortable`, never rendered live
+
+`ControllerDesignHomepage::enqueueMintAssets()` (`docs/developer/admin/asset-enqueue.md`'s
+"Second consumer") and `homepage_list.twig`'s new `data-mc-sortable` list
+(`docs/developer/blocks/homepage-admin.md`'s "Reordering now uses
+`McSortable`") replace the previous plain `<input type="number">` per row.
+`php -l`, the full `tests/mintcart/` suite (85 files) all pass, but this
+environment has no MySQL/browser session, so none of the following was
+ever actually observed on a rendered page. On a real install with at least
+three blocks on `Design > Homepage`:
+
+1. Open `Design > Homepage`. Confirm the Network tab shows two new
+   requests succeed with a `200` status:
+   `.../assets/dist/css/components.min.css` and
+   `.../assets/dist/js/admin.min.js` — the first screen in this repo other
+   than `catalog/product`'s add/edit form to load either.
+2. Confirm the block list renders as a bordered, spaced list (not the old
+   bordered `<table>`) with a drag-handle glyph, a checkbox, the block's
+   type/title/status, and Move Up/Move Down buttons plus an Edit button on
+   each row.
+3. Click a row's Move Down button (or Move Up on a lower row). Confirm the
+   row visibly moves and the button's own focus stays on it (no focus
+   loss). Confirm the first row's Move Up and the last row's Move Down are
+   disabled.
+4. Try dragging a row by its handle glyph. **Known interim limitation**
+   (`docs/developer/blocks/homepage-admin.md`): this depends on
+   `assets/src/js/admin.js` deferring its init-call sequence until
+   `DOMContentLoaded` — check that file's own header comment for whether
+   that landed yet (a separate, in-flight Phase 17 change). If it has not,
+   dragging will silently do nothing; the Move Up/Move Down buttons from
+   step 3 are the fallback either way, so reordering is never blocked on
+   this.
+5. After reordering by either path, click "Save Order". Confirm the
+   storefront homepage reflects the new block order on reload.
+6. Confirm the "Add Block"/"Delete"/checkbox-select-all/breadcrumb/alert
+   behavior above the list is all unchanged from before this change.

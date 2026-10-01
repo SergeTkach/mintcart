@@ -112,6 +112,23 @@ and `docs/upstream-diff.md`'s new
 what it unblocked: `product_form.twig`'s Category field can now mount a
 real `McEntityPicker` against the `mintcart/entity/category` backend.
 
+## Second consumer
+
+`ControllerDesignHomepage::enqueueMintAssets()` (a later run) — same
+two-line body, copy-pasted rather than shared yet (`CLAUDE.md` §85/86: a
+trait/helper extraction is a natural follow-up now that a second real call
+site exists to compare against, not attempted here to avoid touching
+`admin/controller/catalog/product.php` in the same change). Called from
+`getList()` only. See `docs/developer/blocks/homepage-admin.md`'s
+"Reordering now uses `McSortable`" section for the full writeup: the
+Homepage Builder block list is now a real `data-mc-sortable` list instead
+of a plain `<input type="number">` per row — `McSortable`'s own
+"Homepage Builder's block list" expected-first-consumer note
+(`docs/developer/components/sortable.md`) is finally true. That same
+section documents a known interim limitation (`admin.js`'s init-call
+timing — see "What this run deliberately did not attempt" below) that
+affects pointer/touch drag specifically, not keyboard reordering.
+
 ## Calling `createEntityPicker`/`createMediaPicker` from a legacy template
 
 Admin Twig templates (`product_form.twig` included) use plain non-module
@@ -141,14 +158,30 @@ the natural next one to bridge the same way once a Media UX screen
   once a human confirms the picker works on a real install is a natural,
   low-risk follow-up.
 - **A generic "enqueue on every Mint-touching admin screen" helper** (e.g.
-  a shared trait/base controller method) — `enqueueMintAssets()` lives on
-  `ControllerCatalogProduct` only for now, one real consumer, per
-  `CLAUDE.md` §85/§86 ("no abstraction ahead of a second real consumer").
-  The next admin screen that needs the bundle (Phase 17's category
-  drag-and-drop reorder, Phase 11's Homepage Builder repeaters) is the
-  natural trigger to extract it — most likely as a small trait, not a new
+  a shared trait/base controller method) — `enqueueMintAssets()` is still
+  copy-pasted onto each of its two current consumers
+  (`ControllerCatalogProduct`, `ControllerDesignHomepage`) rather than
+  shared, per `CLAUDE.md` §85/§86 ("no abstraction ahead of a second real
+  consumer" — now that a second one exists, extracting one is a natural,
+  self-contained follow-up that was not attempted here specifically to
+  avoid touching both controllers' files in the same change). Phase 17's
+  category drag-and-drop reorder (in flight separately) is a likely third
+  call site once it lands. Most likely a small trait, not a new
   base `Controller` subclass, once there's a second call site to compare
   against.
+- **Fixing `admin.js`'s init-call timing** — `admin.min.js` is enqueued as
+  a plain classic `<script src="...">` inside `header.twig`'s `<head>`
+  (no `defer`/`async`/`type="module"`), so it runs before this screen's own
+  `<body>` markup exists in the DOM. `initSortableLists()`'s eager
+  `querySelectorAll('[data-mc-sortable]')` call (needed to initialize
+  pointer/touch drag) therefore finds nothing on
+  `ControllerDesignHomepage`'s list screen — see
+  `docs/developer/blocks/homepage-admin.md`'s "Known interim limitation"
+  for the consumer-side symptom. The same bug was independently found and
+  is being fixed (a `document.readyState`-gated `boot()` wrapper in
+  `admin.js`) as part of Phase 17's Categories drag-and-drop work, a
+  separate change from this one, since both land in the same shared
+  `admin.js` file — not duplicated here.
 - ~~Swapping the storefront's own asset stack~~ — a later run did enqueue
   this same `components.min.css`/`catalog.min.js` pair on the storefront;
   see "Storefront: `ControllerCommonHeader`" below. That is still not the
