@@ -55,6 +55,7 @@
 @import './components/banner-grid.css';
 @import './components/gallery.css';
 @import './components/entity-picker.css';
+@import './components/admin-search.css';
 @import './components/search-box.css';
 @import './components/media-picker.css';
 @import './components/progress.css';

@@ -20,6 +20,7 @@ import { initSortableLists } from './components/sortable.js';
 import { initTabsTriggers } from './components/tabs.js';
 import { initProgressBars } from './components/progress.js';
 import { createEntityPicker } from './components/entity-picker.js';
+import { initAdminSearch } from './components/admin-search.js';
 
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
@@ -68,6 +69,7 @@ initToastTriggers();
 initSortableLists();
 initTabsTriggers();
 initProgressBars();
+initAdminSearch();
 
 // `setProgress()` (assets/src/js/components/progress.js) has no
 // declarative trigger to wire here - it's an imperative API called by a

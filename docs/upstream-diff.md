@@ -2791,3 +2791,58 @@ coverage, including the rejection cases); full `tests/mintcart/` suite
 the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
 section.
+
+## `upload/admin/controller/common/header.php` + `admin/view/template/common/header.twig` + `admin/language/en-gb/common/header.php`
+
+**Reason:** Two independent changes to the one admin controller/template
+every logged-in admin page renders, both from the same run
+(`docs/developer/admin/settings-search.md`):
+
+1. **MC-0018 fix** (`docs/fixes/registry.md`) — `header.php` loaded its
+   own `common/header` language file but never assigned any of the eight
+   keys `header.twig` references (`heading_title`/`text_profile`/
+   `text_store`/`text_help`/`text_homepage`/`text_support`/
+   `text_documentation`/`text_logout`) to `$data`, so they rendered blank
+   on every admin page. Added the eight missing `$this->language->get(...)`
+   assignments, same explicit per-key shape MC-0001/MC-0003/MC-0017
+   already established in other controllers.
+2. **Admin quick settings search** (`MINTCART_FUNCTIONAL_SCOPE.md` §23,
+   P1) — `header.php` now calls a new `enqueueMintAssets()` (copy-pasted
+   per-controller, same shape as `ControllerCatalogProduct`'s own) and
+   builds `$data['mc_admin_search_url']`; `header.twig` gains a new
+   `<li class="mc-admin-search" data-mc-admin-search ...>` inside the
+   existing `{% if logged %}` block (no new `{% %}` tag);
+   `admin/language/en-gb/common/header.php` gains two new keys
+   (`text_mc_admin_search_placeholder`/`text_mc_admin_search_empty`). Full
+   design writeup: `docs/developer/admin/settings-search.md`.
+
+**Why it can't live in the MintCart layer instead:** `header.php`/
+`header.twig` are the one existing OpenCart admin layout pair every admin
+controller already renders through `{{ header }}` — there is no separate
+"layout" controller/event to hook into instead, and the blank-language-
+string bug can only be fixed at its own source (the controller that loads
+the language file and is supposed to assign it).
+
+**Compatibility impact:** MC-0018 is purely additive (eight previously-blank
+`$data` keys now carry real values; nothing that already worked changes).
+The search box is new markup inside the existing `{% if logged %}` block
+only — nothing for a logged-out visitor (the login page) changes, and no
+existing `$data` key, route, or template block was removed or renamed.
+`enqueueMintAssets()` adds two `<link>`/`<script>` tags to every logged-in
+admin page's `<head>` — already proven safe on other admin screens since
+Phase 12 (`docs/developer/admin/asset-enqueue.md`).
+
+**Tests:** `php -l` clean on all three touched files plus the two new
+files (`upload/system/library/mintcart/admin/settingssearchindex.php`,
+`upload/admin/controller/mintcart/adminsearch.php`). New
+`tests/mintcart/admin/settings-search-index-test.php` (pure PHP, no
+OpenCart dependency). `header.twig`'s `{% if %}`/`{% endif %}`/`{% for %}`/
+`{% endfor %}` tag counts checked balanced (3/3, 4/4) before and after.
+`npm run build` — `mc-admin-search` confirmed present in both
+`assets/dist/css/index.min.css` and `assets/dist/css/components.min.css`;
+`initAdminSearch`/`data-mc-admin-search` confirmed present in
+`assets/dist/js/admin.min.js`. Full `tests/mintcart/**/*-test.php` suite
+re-run end to end (85 files, was 84) — all passing, no regressions. **Not
+verified:** no live MySQL/admin session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 9 Productivity entry and
+`docs/fixes/registry.md`'s MC-0018 entry for what a human should confirm.
