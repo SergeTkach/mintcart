@@ -553,6 +553,45 @@ product configured:
    `test_theme`'s own distinct `product-card.twig` DOM in the Related
    Products grid — the same per-component-name fallback independence
    `component-renderer-test.php` already proves at the unit level.
+
+## Reviews UI (Functional Scope §11), never hit end to end
+
+`mint_default/template/product/review.twig` and the write-review form in
+`product.twig` are new this run (`docs/developer/components/reviews.md`);
+`assets/src/js/components/reviews.js` has never run against a live page.
+On a `config_theme=mint_default` install with `config_review_status`
+enabled:
+
+1. Open a product with zero approved reviews — confirm the Reviews tab
+   shows a real "No reviews yet" message (not blank — this is exactly
+   MC-0021's fix; a regression here would mean it's back to blank).
+2. As a guest (with `config_review_guest` enabled) and separately as a
+   logged-in customer, fill in name/review text/star rating and submit —
+   confirm: the star picker is operable with mouse hover, click, and
+   keyboard (Tab to the group, Arrow keys to change selection, confirm the
+   visual fill follows); the submit button shows real text ("Continue" —
+   MC-0020's fix, previously blank); on submit, a success `mc-alert`
+   appears and the form resets.
+3. In Admin → Catalog → Reviews, approve the submitted review, then reload
+   the product page — confirm it now appears in the list with the correct
+   author/text/star rating/date.
+4. With `config_review_guest` disabled and not logged in, confirm the form
+   is replaced by the login/register prompt (`text_login`) instead.
+5. With more than 5 approved reviews on one product, confirm the
+   pagination links at the bottom of the list page correctly (clicking
+   re-fetches without a full page reload) and the "Showing X to Y of Z"
+   summary text is accurate.
+6. Submit with a too-short name/review or without selecting a rating —
+   confirm the server's single validation message renders as a danger
+   `mc-alert` (client-side `required`/`minlength` should also block most of
+   these before the request even fires — confirm the browser's own native
+   validation UI appears first).
+7. Switch to the stock `default` theme and confirm its own (untouched)
+   Reviews tab still works exactly as before, and that its own "Write a
+   review" submit button and empty-reviews message now show real text
+   too (both were silently blank before MC-0020/MC-0021 — this is a
+   bugfix, not a regression, confirm it's the *improved* behavior).
+
 ## Phase 15 — Quick Order, never hit end to end
 
 `MintCart\Commerce\QuickOrderService` and the

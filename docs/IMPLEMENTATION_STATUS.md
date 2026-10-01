@@ -574,6 +574,57 @@ increment) could surface further candidates like this one; the
 note above is now double-confirmed, not a candidate; or re-check
 `gh pr list --state open` first, since this backlog moves fast.
 
+**Update (2026-10-01, routine run): Reviews UI closes the product page's
+last deferred gap.** Step 0 dedup check: `list_pull_requests` returned 41
+open PRs (`#138`-`#178`) — none touch `catalog/controller/product/product.php`,
+any `product/review*.twig` path, or `assets/src/{css,js}/components/reviews.*`;
+genuinely unclaimed. No hot shared files (§0f) touched either way. One
+likely-duplicate pair noted but not resolved here (not this increment's
+files): `#177`/`#170` both appear to wire the Information Entity Picker
+into a Settings "Terms" field under slightly different titles — flagged
+for human attention in the PR description, not acted on.
+
+This run's own "Update (this run)" entry above (the product detail page)
+had explicitly deferred the Reviews tab as "a read-only placeholder... a
+separate, self-contained increment" — this is that increment
+(`MINTCART_FUNCTIONAL_SCOPE.md` §11 "integration-ready reviews area"). New
+`mint_default/template/product/review.twig` (the AJAX-loaded review-list
+fragment stock `ControllerProductProduct::review()` already renders —
+`mint_default` had no override before, zero new backend route); the
+Reviews tab panel in `product.twig` now renders a live list container plus
+a write-review form; new `mc-rating-input` CSS component
+(`assets/src/css/components/reviews.css` — the interactive star picker
+`docs/developer/components/rating.md` deferred "until a real consumer
+existed", this form is that consumer); new
+`assets/src/js/components/reviews.js` (`initReviews`, vanilla JS, wired
+into `catalog.js` only). Also fixes **MC-0020**/**MC-0021**
+(`docs/fixes/registry.md`): `product.php` never assigned `button_continue`
+(main `index()`) or `text_no_reviews` (the separate `review()` action) —
+same blank-string bug class as MC-0001/MC-0003/MC-0017, found while
+wiring the templates that reference them; both also silently affected the
+stock `default` theme, now fixed there too. Full writeup:
+`docs/upstream-diff.md`'s `product.php` entry,
+`docs/developer/components/reviews.md` (new),
+`docs/MANUAL_VERIFICATION.md`'s new "Reviews UI" entry.
+
+Verified: `php -l` clean across the full `upload`/`tests` tree (1316
+files). Full `tests/mintcart/**/*-test.php` suite (84 files) re-run end to
+end — all passing, no regressions (no new test file — Twig/JS/CSS plus
+two trivial additive `$data` assigns, same rationale MC-0001/MC-0003/
+MC-0017 used). `npm install` (0 vulnerabilities) + `npm run build` compile
+cleanly; `mc-reviews`/`mc-rating-input`/`data-mc-reviews-list` confirmed
+present in `catalog.min.js` and both `index.min.css`/`components.min.css`,
+**absent** from `admin.min.js`. `product.twig`/`review.twig` Twig tag
+counts checked balanced (39/39 if/endif, 12/12 for/endfor; 1/1, 1/1).
+**Not verified:** no live MySQL/`vendor/twig/twig` session in this
+environment.
+
+**Next candidates:** a real reviews moderation/notification touchpoint is
+out of scope (stock Admin → Catalog → Reviews already covers approval, no
+gap there); the `checkout/*`/`account/*` "does `mint_default` have every
+route" audit flagged above remains open; or re-check
+`gh pr list --state open` first, since this backlog moves fast.
+
 ## Phase 7 — Header / Footer / Navigation
 
 - [x] Header, Topbar, Logo, Search, Account, Cart component contracts —

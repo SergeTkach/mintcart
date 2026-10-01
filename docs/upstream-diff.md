@@ -2581,6 +2581,58 @@ after (36/36, 11/11). **Not verified:** no live MySQL/Twig session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 19
 entry.
 
+**Update (this run — Reviews UI, Functional Scope §11):** closes out the
+"Reviews tab is a read-only placeholder" gap this same entry's "Update
+(this run)" paragraph above explicitly deferred as "a separate,
+self-contained increment". Two changes:
+
+1. **Controller:** two one-line additive `$data` assignments —
+   `button_continue` in `index()`'s success branch and `text_no_reviews`
+   in the separate `review()` AJAX action — both pre-existing stock
+   OpenCart gaps of the exact same class the rest of this file's
+   `MC-00XX` entries already fix, found while wiring the new templates
+   below that reference them. See `docs/fixes/registry.md`'s MC-0020/
+   MC-0021 for the full writeup. No other controller change.
+2. **View:** new
+   `catalog/view/theme/mint_default/template/product/review.twig` (the
+   AJAX-loaded review-list fragment stock `ControllerProductProduct::review()`
+   already renders via `$this->load->view('product/review', $data)` —
+   `mint_default` had no override before, same gap `manufacturer_list.twig`
+   closed under MC-0017/ADR 003). `product.twig`'s Reviews tab panel now
+   renders a live `mc-reviews__list` container (populated client-side) and
+   a write-review form (name/text/rating/captcha) in place of the
+   previous static `{{ text_no_reviews }}` placeholder.
+
+New JS: `assets/src/js/components/reviews.js` (`initReviews`) talks
+directly to the stock, unmodified `product/product/review` (GET, HTML
+fragment — injected via `innerHTML`, not re-parsed/re-rendered, so
+`Pagination::render()`'s own markup doesn't need reimplementing in JS)
+and `product/product/write` (POST, JSON) actions — no new MintCart
+backend route. New CSS: `assets/src/css/components/reviews.css`, including
+`mc-rating-input` (`docs/developer/components/rating.md`'s own
+"interactive rating... has no consumer yet" note — this form is that
+consumer).
+
+**Why it can't live in the MintCart layer instead:** the controller
+assignments are consumed by these specific theme templates and there is
+no other place in a MintCart layer to put a `$data[...] =` call OpenCart's
+own `index()`/`review()` methods own. **Compatibility impact:** the two
+`$data` assignments are purely additive (new keys only); the stock
+`default` theme's own `product.twig`/`review.twig` already reference both
+keys, so this fixes the same blank-label/blank-message bug there too,
+with no behavior regression (previously-blank text now renders real
+text). **Tests:** `php -l` clean; full `tests/mintcart/**/*-test.php`
+suite (84 files) re-run end to end — all passing, no regressions (no new
+test file — this is Twig/JS/CSS plus two trivial additive `$data`
+assigns, not new logic to unit-test). `product.twig`'s Twig tag counts
+checked balanced (39/39 if/endif, 12/12 for/endfor); `review.twig`'s (1/1,
+1/1). `npm install` (0 vulnerabilities) + `npm run build` compile
+cleanly; `mc-reviews`/`mc-rating-input` confirmed present in
+`catalog.min.js` and both `index.min.css`/`components.min.css`, absent
+from `admin.min.js`. **Not verified:** no live MySQL/`vendor/twig/twig`
+session in this environment — see `docs/MANUAL_VERIFICATION.md`'s new
+Reviews UI entry for what a human should confirm on a real install.
+
 ## `upload/admin/model/catalog/product.php` / `upload/admin/controller/catalog/product.php` / `upload/admin/view/template/catalog/product_list.twig`
 
 **Reason:** Phase 16 (Bulk Editor, `MINTCART_FUNCTIONAL_SCOPE.md` §7/§17,
