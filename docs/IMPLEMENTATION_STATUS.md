@@ -4782,10 +4782,12 @@ Not started.
 
 ## Documentation (Functional Scope §33 / Technical Plan §40)
 
-- [~] User docs (`docs/user/`) — **install and Setup Wizard guides done this
-      run**; products/delivery/payments/design/homepage/orders/SEO basics
-      guides not started (most of those features aren't built far enough
-      yet to document accurately — see each one's own Phase section above).
+- [~] User docs (`docs/user/`) — **install.md and setup-wizard.md merged to
+      `master`; orders.md added this run** (see "Update" below);
+      products/delivery/payments/design/homepage/SEO-basics guides each
+      existed as their own open, not-yet-merged PR as of this update
+      (re-check `gh pr list --state open` before adding another one, same
+      as any other increment).
 - [ ] Developer architecture overview (`docs/developer/architecture/`,
       Technical Plan §40's third `docs/` subtree) — not started; the
       `docs/developer/{components,blocks,commerce,theme-api,onboarding,catalog,update}/`
@@ -4826,13 +4828,45 @@ route) was cross-checked against the actual source file it describes
 `upload/admin/controller/mintcart/wizard.php`) rather than written from
 memory.
 
-**Next step:** a `products.md` user guide is the natural next one to add
-(Store → Products already has a stable, complete admin screen in stock
-OpenCart, unlike most of the Wizard's remaining steps) — or continue this
-section once more Phase 13 Wizard steps/Phase 14 Business Settings façades
-land and can be documented accurately. Low collision risk either way
-(pure Markdown, `docs/` only) — re-check `docs/user/` isn't newly claimed
-by another open PR before starting, same as any other increment.
+**Update (2026-10-01, routine run): `docs/user/orders.md`.** Step 0 dedup
+check: `list_pull_requests` returned 33 open PRs (`#138`-`#170`) at the
+start of this run; none of their titles mentioned `orders.md`, an "SEO
+basics" guide, or any `docs/user/*` file beyond `products.md` (`#156`),
+`delivery.md`/`payments.md` (`#160`) and `homepage.md` (`#169`) — none
+overlapping an Orders guide. Given the sheer size of this backlog (33
+open PRs spanning nearly every phase, many already colliding on shared
+hot files per several PRs' own trailer notes — `product_form.twig`,
+`product_list.twig`, `column_left.php`, `category.php`/`search.php`/
+`manufacturer.php`/`special.php`/`product.php`, `catalog.js`/`index.css`/
+`components.css`), this run deliberately picked a pure-Markdown,
+zero-code increment to add zero new collision risk on top of an already
+large unmerged queue. Documents **Sale → Orders** (list/filter/sort,
+View vs. Edit, the History panel's status/notify/override/comment flow,
+Returns as a separate feature) exactly as `ControllerSaleOrder`/
+`order_info.twig`/`order_list.twig` behave in this repo today — stock
+OpenCart 3, unmodified except for the one real MintCart addition
+(`sale/order_form.twig`'s Customer `McEntityPicker`, documented in
+`docs/developer/components/entity-picker.md`) — cross-checked directly
+against `upload/admin/controller/sale/order.php`,
+`upload/admin/view/template/sale/order_info.twig` and
+`upload/admin/language/en-gb/sale/order.php` rather than written from
+memory (`CLAUDE.md` §84).
+
+Verified: no code touched (Markdown only); every concrete claim
+(filter fields, View vs. Edit split, History form fields including the
+Override checkbox's anti-fraud-override purpose, invoice/shipping-list
+exports, Returns being a separate menu item) cross-checked against the
+three files named above.
+
+**Next step:** a `products.md` guide and `delivery.md`/`payments.md`
+guides each already exist as their own open PR (`#156`, `#160`) — don't
+duplicate them; an SEO basics guide (canonical/meta/sitemap/robots/
+Schema.org are all implemented per Phase 18 above, genuinely documentable
+today) is the next unclaimed one; `design.md` still needs Design →
+Styles' preset picker (`#151`) to merge first. Low collision risk either
+way (pure Markdown, `docs/` only) — re-check `gh pr list --state open`
+for newly claimed `docs/user/*` files before starting, since this backlog
+is very large right now (33 open PRs) and moves fast.
 
 ---
 
