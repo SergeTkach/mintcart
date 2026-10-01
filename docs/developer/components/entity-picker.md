@@ -453,15 +453,37 @@ large store), so this isn't a real cost today — same reasoning that already
 justified PHP-side paging alone for category and manufacturer.
 
 Same permission requirement (`mintcart/entity` **Access** must be granted to
-a user group first) and the same "not done yet, by design" live-wiring gap:
-no admin screen calls this endpoint yet, blocked on the same admin
-asset-enqueue problem as category and manufacturer (see above). There is no
-single obvious first consumer the way `product_form.twig`'s Category/
-Manufacturer fields are for the other two — information pages are picked in
-several places (`information_form.twig`'s own layout/link settings and any
-future "related pages" style field), so the first real consumer should be
-identified when one of those screens is actually being migrated to
-`McEntityPicker`, not guessed at here.
+a user group first).
+
+**Live wiring done.** `setting/setting.twig`'s **Account Terms**,
+**Checkout Terms**, **Affiliate Terms** and **Return Terms** fields
+(`#input-account`/`config_account_id`, `#input-checkout`/`config_checkout_id`,
+`#input-affiliate`/`config_affiliate_id`, `#input-return`/`config_return_id`
+— native `<select>` elements listing every information page, used by
+`Settings → Settings` to pick the page a customer must agree to before
+registering/checking out, or shown on the affiliate/return flows) are the
+first real consumers, found by reading `setting.twig` directly (`CLAUDE.md`
+§84) rather than guessing — the "no single obvious first consumer" this
+section previously described was about *inventing* one, not about there
+being none at all. Each `<select>` gets a "Browse pages" button + hidden
+`.mc-entity-picker` panel, additive alongside the native `<select>` (kept
+as-is, not replaced). Confirming a pick just sets the matching `<select>`'s
+`.value`, since every information page already has an `<option>` rendered
+server-side — no new option needs to be created client-side. Four
+independent `McEntityPicker` instances (one per field, not a shared/
+delegated instance), all `multiple: false`.
+
+`ControllerSettingSetting` gained its own `enqueueMintAssets()` (same
+`components.min.css` + `admin.min.js` pairing every other MintCart admin
+screen uses, see `docs/developer/admin/asset-enqueue.md`), called at the
+top of `index()` (this controller has no separate `getForm()` — everything
+lives in one `index()` method, unlike `setting/store.php`).
+
+Note this is `Settings → Settings` (`setting/setting.php`/`setting.twig`,
+the single store-wide config form), not `Settings → Store → Edit`
+(`setting/store.php`/`store_form.twig`), which has a near-identical
+Account/Checkout Terms pair of its own — a different file, a different
+screen, wired independently if/when that screen is addressed.
 
 ## Attribute backend
 
