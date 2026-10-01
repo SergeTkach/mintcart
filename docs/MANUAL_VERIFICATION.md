@@ -852,6 +852,20 @@ never rendered on a real page or run through an actual validator. On a
    detail page), but nothing on it calls `SchemaOrgBuilder::product()` yet
    — nothing to verify live until that wiring lands.
 
+**(2026-10-01, routine run): `product.php`'s own `BreadcrumbList` wiring is
+new this run** — step 2 above only covered category/search/manufacturer/
+special; `product.php` now also builds `$data['mc_schema_breadcrumb']` from
+its own (pre-existing, real) `$data['breadcrumbs']` trail (Home → category
+path or Brand/manufacturer or Search → product name, matching whichever
+way the product page was reached), rendered as a second JSON-LD block in
+`product.twig` right after the existing `mc_schema_product` one. Load a
+product page on `mint_default` reached via a category link, via a
+manufacturer link, and via a search result, and for each confirm the
+`BreadcrumbList`'s `itemListElement` matches that specific visible
+breadcrumb trail (not a generic/fixed one) and validates cleanly in the
+Rich Results Test, same as step 3 above. Not yet rendered live in this
+environment (no MySQL/`vendor/twig/twig`).
+
 ## Phase 18 — `RobotsBuilder` meta tag, never validated against a real page
 
 `RobotsBuilder` is unit-tested in isolation (74 assertions), but its

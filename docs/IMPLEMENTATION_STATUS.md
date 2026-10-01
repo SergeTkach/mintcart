@@ -3689,6 +3689,39 @@ re-checking whether `SchemaOrgBuilder::product()` can now be wired into
 robots/sitemap centralization and System route URL aliases remain
 unclaimed; or re-check `gh pr list --state open` first.
 
+**Update (2026-10-01, routine run): `product.php`'s `BreadcrumbList`
+wiring is done.** Step 0 found 37 open PRs (#138-#174); none touched
+`upload/catalog/controller/product/product.php`,
+`upload/catalog/view/theme/mint_default/template/product/product.twig`,
+or any Homepage Builder hot file (§0f — block-type registry, `block.css`).
+`product.php` already builds a real, meaningful `$data['breadcrumbs']`
+trail (Home → category path, or Home → Brand → manufacturer, or
+Home → Search, then the product itself — not a placeholder), the same
+shape `category.php`/`search.php`/`manufacturer.php`/`special.php` already
+turn into `mc_schema_breadcrumb` — `product.php` was the one of those five
+pages still missing that wiring (this file's own Phase 18 narrative above
+and `docs/developer/seo/schema-org.md` had both said otherwise, which was
+stale — the breadcrumbs array has existed in this controller since Phase
+6/8). Added the same `isMintAware()`-gated try/catch block (a fresh
+`SchemaOrgBuilder` instance, independent of the adjacent Product-schema
+block's own instance) right after the existing `mc_schema_product` wiring,
+and the matching `{% if mc_schema_breadcrumb %}` block in `product.twig`.
+Full writeup: `docs/developer/seo/schema-org.md`'s "BreadcrumbList" and
+"Product: live-wired" sections. Verified: `php -l` clean on
+`product.php`; Twig `{% if %}`/`{% endif %}` tag count balanced (37/37) on
+`product.twig`; full `tests/mintcart/` suite (84 files) re-run end to
+end — all passing, no regressions (no new test needed — `breadcrumbList()`
+itself is pure and already covered by `schema-org-builder-test.php`; this
+increment is wiring-only, same rationale MC-0001-style fixes use). Not
+verified: no live MySQL/Twig session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 18 dated note for the human
+script (load a product page reached via category/manufacturer/search and
+confirm the `BreadcrumbList` matches that specific trail). **Next
+candidates:** Product schema's own remaining gap (hreflang still needs its
+per-language route resolver; robots/sitemap centralization and System
+route URL aliases remain unclaimed); or re-check `gh pr list --state open`
+first, since this backlog moves fast.
+
 ## Modern Editor (Functional Scope §24, P2/RESEARCH)
 
 - [x] Research step: verify whether the rich-text editor needs replacing —
