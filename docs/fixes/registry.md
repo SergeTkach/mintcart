@@ -1452,6 +1452,123 @@ stock `default` theme and `mint_default` (see
 
 ---
 
+## MC-0019 — `DB\PDO::query()` never recovers from a dropped connection
+
+**Problem:** `system/library/db/pdo.php`'s `query()` prepared and executed
+`$sql` once and, on any failure, either threw (if a `PDOException`
+happened to surface) or silently fell through to an empty-result
+`stdClass` — this class never sets `PDO::ATTR_ERRMODE`, so PHP's real
+default (`PDO::ERRMODE_SILENT`) applies in production and `execute()`
+normally just returns `false` on error rather than throwing. Either way,
+there was no classification of *why* the query failed: driver error code
+2006 ("MySQL server has gone away") and 2013 ("Lost connection to MySQL
+server during query") both mean the underlying TCP connection was
+dropped (idle `wait_timeout`, server restart, ...), not that `$sql`
+itself is bad — exactly `DB\MySQLi`'s MC-0011 bug, in the sibling PDO
+adaptor. Squarely the same Known Fix Research Queue "database connection
+/ reconnect issues" category (`MINTCART_FUNCTIONAL_SCOPE.md` §18) MC-0011
+already covered for `DB\MySQLi`; this closes the gap for `DB\PDO`, the
+other adaptor `system/library/db.php` can instantiate by `DB_DRIVER`
+name.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale
+as MC-0011 (no second checkout available to diff against, and the fix
+only adds a narrowly-scoped retry path around behavior that is otherwise
+unchanged).
+
+**Source:** Discovered directly in this repository while re-checking the
+Known Fix Research Queue's "database connection / reconnect issues" item
+now that MC-0011 only covered one of the two DB adaptors that ship a
+reconnect-relevant `query()` method (`pgsql.php`, the third adaptor,
+doesn't share this shape — PostgreSQL's `pg_query()` wrapper fails
+differently and is out of scope here). Not an imported historical
+community patch. Reproduced by reading `query()`: exactly one
+`$this->connection->prepare($sql)` / `$statement->execute($params)` pair,
+no error-code classification of any kind.
+
+**Reproduced on MintCart baseline:** Yes — by inspection (no live MySQL
+server in this environment to force a real `wait_timeout` disconnect) and
+via `tests/mintcart/fixes/mc-0019-pdo-reconnect-test.php`, which drives
+the exact pre-fix code path with fake connection/statement objects
+returning driver error code 2006/2013 (both via a silent `execute() ===
+false` and via a thrown `PDOException`) and confirms (against the
+reverted code, checked by hand) that neither path reconnects — the silent
+path falls straight through to the empty-result fallback and the thrown
+path's `catch` immediately rethrows as a generic `\Exception`.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Mirrors MC-0011's shape in the sibling adaptor.
+Extracted the constructor's connection-setup body into a new `connect()`
+method (verbatim, no behavior change — stores `$hostname`/`$username`/
+`$password`/`$database`/`$port` as properties, newly added, so `connect()`
+can be called again later), then split `query()` into a public entry
+point and a private `runQuery($sql, $params, $allowReconnect)`. On
+failure, if `$allowReconnect` is true and the driver error code (read
+from `$statement->errorInfo()[1]` on a silent `false` return, or from
+`$exception->errorInfo[1]` in the `catch` block — PDO always populates
+`errorInfo` regardless of `ATTR_ERRMODE`, unlike `PDOException::getCode()`,
+which is the SQLSTATE string, not the driver errno) is exactly `2006` or
+`2013` (`RECOVERABLE_ERRNOS`, same two values as MC-0011), it calls
+`connect()` again and retries the *same* `$sql`/`$params` once, with
+`$allowReconnect = false` on the retry — so a connection that drops twice
+in a row still behaves exactly as before this fix (silent fallback or
+thrown exception, matching whichever path it took), instead of
+reconnecting forever. Any other error code takes the exact pre-fix
+path, completely unchanged. `connect()` is `protected` rather than
+`private`, and the class itself is no longer `final` (it was before this
+fix) — both purely to let a test override `connect()` with a fake
+connection, the same reasoning MC-0011 used; nothing in this codebase
+subclassed `DB\PDO` before or depends on it staying `final`. The
+two-argument `prepare()`/`bindParam()`/`execute()` API (`DB\PDO`'s other,
+unused public surface — `system/library/db.php`'s `DB` facade only ever
+calls the one-shot `query($sql)`) is untouched.
+
+**Tests:** `tests/mintcart/fixes/mc-0019-pdo-reconnect-test.php` (new, 7
+scenarios) — `DB\TestablePDO` overrides the now-`protected` `connect()` to
+pop a fake, duck-typed connection object (which in turn hands out a fake
+statement object) off a queue instead of opening a real `\PDO` socket (no
+live MySQL server in this environment, same as MC-0011's test):
+1. no error → returns the result, `connect()` called exactly once
+   (constructor only), no retry;
+2. driver error 2006 via a silent `execute() === false` on the first
+   attempt, success on the retry → returns the retry's result, `connect()`
+   called exactly twice;
+3. driver error 2013 via the same silent path → same as #2 for the other
+   recoverable code;
+4. driver error 2006 on *both* the original attempt and the retry (both
+   silent) → falls through to the pre-existing empty-result fallback
+   (does not reconnect a third time), `connect()` called exactly twice;
+5. a non-recoverable driver error (1146, "table doesn't exist") via the
+   silent path → falls through to the empty-result fallback immediately,
+   `connect()` called exactly once, no reconnect attempted;
+6. driver error 2006 surfaced as a thrown `PDOException` instead (the
+   `ERRMODE_EXCEPTION` path, covered defensively even though this class
+   never sets that mode) → same reconnect-and-retry as #2, `connect()`
+   called exactly twice;
+7. a non-recoverable driver error (1146) thrown as a `PDOException` →
+   still throws (unchanged pre-fix behavior for that path), `connect()`
+   called exactly once.
+
+`php -l` clean on the modified `pdo.php` and the new test file. Full
+`tests/mintcart/**/*-test.php` suite re-run end to end — all passing, no
+regressions (file count check: see this run's `IMPLEMENTATION_STATUS.md`
+trailer note for the exact before/after count). **Not verified:** no live
+MySQL server in this environment to force a real `wait_timeout`/restart
+disconnect and confirm the reconnect against an actual socket, and no
+install in this environment actually configures `DB_DRIVER=pdo` (OpenCart
+defaults to `mysqli`) — a human running MintCart with the PDO adaptor
+selected should confirm a long-running operation survives a mid-run
+disconnect instead of silently returning empty results or fataling.
+
+---
+
 ## MC-0021 — `special.php` never assigns `heading_title` to `$data`
 
 **Problem:** `catalog/view/theme/default/template/product/special.twig`
