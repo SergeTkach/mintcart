@@ -507,13 +507,27 @@ the start of the name only), the same as manufacturer, not category's
 `LIKE '%…%'` substring match. Pre-existing OpenCart behavior, not
 introduced here.
 
-Same permission requirement and the same "not done yet, by design"
-live-wiring gap as category/manufacturer above. No obvious first live
-consumer has been identified yet for this one — unlike category/
-manufacturer, there is no existing single-select attribute autocomplete
-field on `product_form.twig` to swap out; a future consumer would be a
-*new* UI affordance (e.g. searching attributes by name when adding one to
-a product), not a drop-in replacement of something that already exists.
+Same permission requirement as category/manufacturer above.
+
+**Live wiring done.** `product_form.twig`'s Attribute tab (`#attribute`) is
+the identified first consumer — as predicted above, a *new* affordance, not
+a drop-in replacement, since attribute rows are added dynamically
+(`addAttribute()`) rather than being a single static field. One shared
+`#attribute-picker` `McEntityPicker` instance (single-select) is reused
+across every row via event delegation on the `#attribute` table
+(`Implementation Guide` §14): each row gets its own
+`data-mc-action="browse-attribute" data-mc-attribute-row="N"` button;
+clicking it records which row is active, and `onConfirm` writes the chosen
+attribute's `name`/`id` into that row's `[data-mc-attribute-name]`/
+`[data-mc-attribute-id]` fields — the exact same fields
+`attributeautocomplete()`'s own jQuery UI `'select'` handler already
+writes to (kept as-is, not replaced, same reasoning as category/
+manufacturer/related above), so `ControllerCatalogProduct`'s save logic
+needs no change. A per-row picker instance was deliberately avoided (would
+mean N `fetch` wire-ups and N DOM subtrees for what is nearly always a
+handful of rows) in favor of one instance plus delegation, the same
+"reuse by responsibility, not by copying" principle `CLAUDE.md` §38E
+names for controllers, applied here to a client-side widget.
 
 ## Option backend
 

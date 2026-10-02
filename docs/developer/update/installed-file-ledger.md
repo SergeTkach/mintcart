@@ -51,11 +51,13 @@ $ledger->forPackage('mint_default');
 
 ## What's deliberately not attempted here
 
-- **No "changed since install" comparison.** `forPackage()` returns the
-  ledger's own recorded state; comparing it against a live file's current
-  sha256 (decision #1's actual detection logic) has no real consumer yet —
-  that is rollback's own future increment (`CLAUDE.md` §85: no API ahead of
-  a real consumer).
+- ~~No "changed since install" comparison~~ **Done** —
+  `MintCart\Update\ChangedFileDetector`
+  (`docs/developer/update/changed-file-detector.md`) now takes exactly
+  `forPackage()`'s own return shape and compares it against a live file's
+  current sha256 (decision #1's actual detection logic). No caller wires
+  it into an admin screen yet — see that class's own "What's deliberately
+  not done yet."
 - **No restore/rollback.** This class only ever writes/reads the ledger
   table, never touches a live file. Restoring from a snapshot remains a
   separate, not-yet-built capability per the ADR.

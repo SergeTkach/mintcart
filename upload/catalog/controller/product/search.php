@@ -190,6 +190,14 @@ class ControllerProductSearch extends Controller {
 
 		$data['products'] = array();
 
+		// MintCart\Seo\RobotsBuilder (MINTCART_FUNCTIONAL_SCOPE.md §16,
+		// Phase 18) - "did this search actually match anything" for the
+		// registry bridge below. Defaults to true (the RobotsBuilder
+		// default too) for a bare `product/search` request with no
+		// `search`/`tag` param at all, which never runs the query below -
+		// that's the plain search form, not a "no results" page.
+		$mint_search_has_results = true;
+
 		// MintCart\Design\ProductCardListRenderer (which composes
 		// MintCart\Commerce\ProductViewProvider + ComponentRenderer) wiring
 		// (MINTCART_TECHNICAL_PLAN.md §11/§15C-D) - the second real listing
@@ -241,6 +249,8 @@ class ControllerProductSearch extends Controller {
 			);
 
 			$product_total = $this->model_catalog_product->getTotalProducts($filter_data);
+
+			$mint_search_has_results = ($product_total > 0);
 
 			$results = $this->model_catalog_product->getProducts($filter_data);
 
@@ -621,6 +631,17 @@ class ControllerProductSearch extends Controller {
 		$data['content_top'] = $this->load->controller('common/content_top');
 		$data['content_bottom'] = $this->load->controller('common/content_bottom');
 		$data['footer'] = $this->load->controller('common/footer');
+
+		// MintCart\Seo\RobotsBuilder (MINTCART_FUNCTIONAL_SCOPE.md §16,
+		// Phase 18) - registry bridge closing the "Known limitation"
+		// docs/developer/seo/robots.md documented: common/header.php runs
+		// as our sibling sub-controller (loaded below, after this search
+		// has already run), with no other way to learn whether this
+		// specific search matched anything. See RobotsBuilder::
+		// HAS_RESULTS_REGISTRY_KEY's own docblock for why this is a plain
+		// registry value, not a new table/session/event.
+		$this->registry->set(\MintCart\Seo\RobotsBuilder::HAS_RESULTS_REGISTRY_KEY, $mint_search_has_results);
+
 		$data['header'] = $this->load->controller('common/header');
 
 		// MintCart\Seo\SchemaOrgBuilder BreadcrumbList JSON-LD
