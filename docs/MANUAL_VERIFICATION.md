@@ -1091,6 +1091,33 @@ and an information page:
    Google Search Console's sitemap report) to confirm no regression in
    acceptance.
 
+## Phase 18 — MintCart sitemap route (`mintcart/seo/sitemap`), never exercised end to end
+
+New `ControllerMintcartSeoSitemap::index()`
+(`upload/catalog/controller/mintcart/seo/sitemap.php`, route
+`mintcart/seo/sitemap`) always-on XML sitemap — no
+`feed_google_sitemap_status`/extension install required, unlike the Google
+Sitemap section just above. `php -l` clean, and the full `tests/mintcart/`
+suite passes, but no live MySQL/OpenCart bootstrap in this environment
+means the route was never actually requested. On a real install with
+existing products (at least one with a product image), categories,
+manufacturers, and an information page:
+
+1. Load `index.php?route=mintcart/seo/sitemap` directly — no extension
+   install or admin setting required, unlike the Google Sitemap route
+   above.
+2. Confirm the response's `Content-Type: application/xml` header, and
+   validate the document is well-formed (e.g. `xmllint --noout`).
+3. Confirm it lists the same set of product/category/manufacturer/
+   information URLs the Google Sitemap extension's own feed lists (enable
+   that extension too, for a real install, and diff the two — they should
+   agree on every entry, since both enumerate via the same OpenCart
+   models).
+4. Confirm a product **without** an image still produces a `<url>` block
+   with no `<image:image>` child.
+5. Confirm this route is unaffected by `feed_google_sitemap_status` being
+   disabled — it should still return a full sitemap either way.
+
 ## Phase 6 — `mint_default`'s new `manufacturer_list.twig` + MC-0017, never rendered live
 
 `php -l` clean on the modified `manufacturer.php`, the new template's Twig
