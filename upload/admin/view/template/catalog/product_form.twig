@@ -551,7 +551,28 @@
                     {% set attribute_row = 0 %}
                     {% for product_attribute in product_attributes %}
                       <tr id="attribute-row{{ attribute_row }}">
-                        <td class="text-left" style="width: 40%;"><input type="text" name="product_attribute[{{ attribute_row }}][name]" value="{{ product_attribute.name }}" placeholder="{{ entry_attribute }}" class="form-control" style="position:relative;"/> <input type="hidden" name="product_attribute[{{ attribute_row }}][attribute_id]" value="{{ product_attribute.attribute_id }}"/></td>
+                        <td class="text-left" style="width: 40%;"><input type="text" name="product_attribute[{{ attribute_row }}][name]" value="{{ product_attribute.name }}" placeholder="{{ entry_attribute }}" class="form-control" style="position:relative;" data-mc-attribute-name/> <input type="hidden" name="product_attribute[{{ attribute_row }}][attribute_id]" value="{{ product_attribute.attribute_id }}" data-mc-attribute-id/>
+                          {#
+                            MintCart Phase 12 (Entity Picker) - a searchable,
+                            paginated browser as an additional way to fill this
+                            row's name/attribute_id fields, alongside the
+                            jQuery autocomplete input above (kept as-is, not
+                            replaced - this environment has no live MySQL/
+                            admin session to visually verify a full swap; see
+                            docs/developer/admin/asset-enqueue.md). Unlike
+                            category/manufacturer/related, there is no
+                            existing attribute autocomplete browser to
+                            reshape - this is a new affordance, one shared
+                            picker instance reused across every dynamically
+                            added row (docs/developer/components/entity-picker.md
+                            "Attribute backend"). Confirming a selection
+                            writes into the same [data-mc-attribute-name]/
+                            [data-mc-attribute-id] fields the autocomplete's
+                            own 'select' handler below already writes to, so
+                            ControllerCatalogProduct's save logic needs no
+                            change at all.
+                          #}
+                          <button type="button" class="mc-button mc-button--secondary" data-mc-action="browse-attribute" data-mc-attribute-row="{{ attribute_row }}" aria-controls="attribute-picker" aria-expanded="false">{{ text_attribute_picker_browse }}</button></td>
                         <td class="text-left">{% for language in languages %}
                             <div class="input-group"><span class="input-group-addon"><img src="language/{{ language.code }}/{{ language.code }}.png" title="{{ language.name }}"/></span> <textarea name="product_attribute[{{ attribute_row }}][product_attribute_description][{{ language.language_id }}][text]" rows="5" placeholder="{{ entry_text }}" class="form-control">{{ product_attribute.product_attribute_description[language.language_id] ? product_attribute.product_attribute_description[language.language_id].text }}</textarea>
                             </div>
@@ -569,6 +590,19 @@
                     </tr>
                   </tfoot>
                 </table>
+                <div class="mc-entity-picker" id="attribute-picker" hidden style="margin-top: 8px;">
+                  <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_attribute_picker_search }}" placeholder="{{ text_attribute_picker_search }}">
+                  <ul class="mc-entity-picker__list" role="listbox" aria-label="{{ entry_attribute }}" data-mc-entity-picker-list></ul>
+                  <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_attribute_picker_empty }}</p>
+                  <div class="mc-entity-picker__pager">
+                    <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_attribute_picker_prev }}</button>
+                    <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+                    <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_attribute_picker_next }}</button>
+                  </div>
+                  <div class="mc-entity-picker__footer">
+                    <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_attribute_picker_confirm }}</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="tab-pane" id="tab-option">
@@ -1619,7 +1653,7 @@
 
   function addAttribute() {
 	  html = '<tr id="attribute-row' + attribute_row + '">';
-	  html += '  <td class="text-left" style="width: 40%;"><input type="text" name="product_attribute[' + attribute_row + '][name]" value="" placeholder="{{ entry_attribute }}" class="form-control" style="position:relative;" /><input type="hidden" name="product_attribute[' + attribute_row + '][attribute_id]" value="" /></td>';
+	  html += '  <td class="text-left" style="width: 40%;"><input type="text" name="product_attribute[' + attribute_row + '][name]" value="" placeholder="{{ entry_attribute }}" class="form-control" style="position:relative;" data-mc-attribute-name /><input type="hidden" name="product_attribute[' + attribute_row + '][attribute_id]" value="" data-mc-attribute-id /> <button type="button" class="mc-button mc-button--secondary" data-mc-action="browse-attribute" data-mc-attribute-row="' + attribute_row + '" aria-controls="attribute-picker" aria-expanded="false">{{ text_attribute_picker_browse }}</button></td>';
 	  html += '  <td class="text-left">';
     {% for language in languages %}
 	  html += '<div class="input-group"><span class="input-group-addon"><img src="language/{{ language.code }}/{{ language.code }}.png" title="{{ language.name }}" /></span><textarea name="product_attribute[' + attribute_row + '][product_attribute_description][{{ language.language_id }}][text]" rows="5" placeholder="{{ entry_text }}" class="form-control"></textarea></div>';
@@ -1662,6 +1696,92 @@
   $('#attribute tbody tr').each(function(index, element) {
 	  attributeautocomplete(index);
   });
+
+  // MintCart Phase 12 (Entity Picker) - Attribute row's McEntityPicker, the
+  // single-select sibling of the Manufacturer field's picker above (plain
+  // vanilla JS, not jQuery, per CLAUDE.md §7). Unlike category/manufacturer/
+  // related, attribute rows are added dynamically (addAttribute() above), so
+  // this uses one shared picker instance plus event delegation on the
+  // '#attribute' table (Implementation Guide §14) rather than a picker per
+  // row - the button that opened it (read from data-mc-attribute-row) tells
+  // onConfirm which row's [data-mc-attribute-name]/[data-mc-attribute-id]
+  // fields to write into, the exact same fields attributeautocomplete()'s
+  // own 'select' handler above already writes to, so
+  // ControllerCatalogProduct's save logic needs no change at all - see the
+  // {# ... #} comment above the row markup.
+  (function () {
+	  var table = document.getElementById('attribute');
+	  var pickerRoot = document.getElementById('attribute-picker');
+
+	  if (!table || !pickerRoot || !window.MintCart || !window.MintCart.createEntityPicker) {
+		  return;
+	  }
+
+	  var activeRow = null;
+
+	  var picker = window.MintCart.createEntityPicker(pickerRoot, {
+		  fetchItems: function (options) {
+			  var params = new URLSearchParams({
+				  filter_name: options.query,
+				  page: options.page,
+				  limit: options.pageSize
+			  });
+
+			  return fetch('index.php?route=mintcart/entity/attribute&user_token={{ user_token }}&' + params, {
+				  signal: options.signal
+			  }).then(function (response) {
+				  return response.json();
+			  });
+		  },
+		  multiple: false,
+		  onConfirm: function (selected) {
+			  var item = selected[0];
+			  var row = activeRow !== null ? document.getElementById('attribute-row' + activeRow) : null;
+
+			  if (item && row) {
+				  var nameInput = row.querySelector('[data-mc-attribute-name]');
+				  var idInput = row.querySelector('[data-mc-attribute-id]');
+
+				  if (nameInput) {
+					  nameInput.value = item.name;
+				  }
+
+				  if (idInput) {
+					  idInput.value = item.id;
+				  }
+			  }
+
+			  picker.clear();
+			  pickerRoot.hidden = true;
+
+			  var trigger = activeRow !== null ? table.querySelector('[data-mc-action="browse-attribute"][data-mc-attribute-row="' + activeRow + '"]') : null;
+
+			  if (trigger) {
+				  trigger.setAttribute('aria-expanded', 'false');
+				  trigger.focus();
+			  }
+		  }
+	  });
+
+	  table.addEventListener('click', function (event) {
+		  var trigger = event.target.closest('[data-mc-action="browse-attribute"]');
+
+		  if (!trigger) {
+			  return;
+		  }
+
+		  activeRow = trigger.getAttribute('data-mc-attribute-row');
+
+		  var opening = pickerRoot.hidden;
+
+		  pickerRoot.hidden = !pickerRoot.hidden;
+		  trigger.setAttribute('aria-expanded', String(opening));
+
+		  if (opening) {
+			  picker.refresh();
+		  }
+	  });
+  })();
   //--></script>
   <script type="text/javascript"><!--
   var option_row = {{ option_row }};

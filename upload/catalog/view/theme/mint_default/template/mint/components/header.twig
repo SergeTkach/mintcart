@@ -69,9 +69,26 @@
             </div>
 
             <div class="mc-header__widgets">
-                {% if widgets.search %}
-                    <div class="mc-header__widget mc-header__widget--search mc-legacy">{{ widgets.search|raw }}</div>
-                {% endif %}
+                <div class="mc-header__widget mc-header__widget--search">
+                    <div class="mc-search-box" data-mc-search-box>
+                        <input
+                            type="search"
+                            name="search"
+                            class="mc-search-box__input mc-field__control"
+                            data-mc-search-box-input
+                            placeholder="{{ text_search }}"
+                            aria-label="{{ text_search }}"
+                        >
+
+                        <div class="mc-search-box__results" data-mc-search-box-results hidden>
+                            <ul class="mc-search-box__list" role="listbox" data-mc-search-box-list></ul>
+
+                            <p class="mc-search-box__empty" data-mc-search-box-empty hidden></p>
+
+                            <a class="mc-search-box__view-all" data-mc-search-box-view-all hidden></a>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="mc-header__actions">

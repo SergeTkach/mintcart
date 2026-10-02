@@ -49,6 +49,14 @@ $_['text_option_picker_prev']    = 'Previous';
 $_['text_option_picker_next']    = 'Next';
 $_['text_option_picker_confirm'] = 'Add option';
 
+// Text - Attribute picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
+$_['text_attribute_picker_browse']  = 'Browse';
+$_['text_attribute_picker_search']  = 'Search attributes';
+$_['text_attribute_picker_empty']   = 'No attributes found.';
+$_['text_attribute_picker_prev']    = 'Previous';
+$_['text_attribute_picker_next']    = 'Next';
+$_['text_attribute_picker_confirm'] = 'Select';
+
 // Text - Bulk Editor (MintCart Phase 16, MINTCART_FUNCTIONAL_SCOPE.md §7/§17)
 $_['text_bulk_update']       = 'Bulk update';
 $_['text_bulk_field_status']   = 'Status';
