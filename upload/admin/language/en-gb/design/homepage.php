@@ -75,7 +75,7 @@ $_['entry_gallery_items']     = 'Items (JSON)';
 // Help
 $_['help_category_id']  = 'Leave blank to show products from any category.';
 $_['help_parent_id']    = 'Leave at 0 to show top-level categories.';
-$_['help_image']        = 'Path relative to image/, e.g. catalog/banner1.jpg. There is no image picker on this screen yet - upload the file first (e.g. via Catalog > Products\' image manager) and type its path here.';
+$_['help_image']        = 'Path relative to image/, e.g. catalog/banner1.jpg. Use the Browse button to pick an existing image or upload a new one, or type/paste a path directly.';
 $_['help_body']         = 'Basic HTML is allowed and rendered as-is (rich text editor not wired up yet).';
 $_['help_html']         = 'Raw HTML, rendered as-is - only paste markup you trust (embed codes, etc.).';
 $_['help_action']       = 'Leave blank to hide the subscribe form and show only the title/text as an announcement.';
@@ -91,6 +91,15 @@ $_['help_brand_items_content']        = 'Same order as the Items list in Setting
 $_['help_faq_items']                  = 'Example: [{"question": "Do you ship internationally?", "answer": "Yes, worldwide."}]';
 $_['help_gallery_items_settings']     = 'One object per photo. Example: [{"image": "catalog/photo1.jpg", "image_width": 600, "image_height": 600}]';
 $_['help_gallery_items_content']      = 'Same order as the Items list in Settings. Example: [{"alt": "Store front", "caption": "Our flagship location"}]';
+
+// Text - Media picker (MintCart Phase 11/25, MINTCART_FUNCTIONAL_SCOPE.md §25)
+$_['text_media_picker_browse']  = 'Browse';
+$_['text_media_picker_search']  = 'Search images';
+$_['text_media_picker_empty']   = 'No images found.';
+$_['text_media_picker_prev']    = 'Previous';
+$_['text_media_picker_next']    = 'Next';
+$_['text_media_picker_confirm'] = 'Select';
+$_['text_media_picker_upload']  = 'Upload';
 
 // Button
 $_['button_save_order']   = 'Save Order';

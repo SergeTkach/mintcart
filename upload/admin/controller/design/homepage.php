@@ -3,25 +3,23 @@
  * Homepage Builder admin editor (MINTCART_FUNCTIONAL_SCOPE.md §10,
  * MINTCART_TECHNICAL_PLAN.md §17, MINTCART_IMPLEMENTATION_GUIDE.md §33).
  *
- * Deliberately built on the existing legacy OpenCart admin theme
- * (Bootstrap 3 markup — `.panel`/`.btn`/`form-horizontal`, the same shape
- * `design/banner.php` and `extension/module/latest.php` already use), not
- * MintCart's own `mc-*`/Bootstrap 5 admin primitives (`McSortable`
- * included, despite it existing specifically for this screen per its own
- * doc comment). Reason: the shared admin `header`/`column_left`/`footer`
- * chrome wraps every admin screen, this one included, and has never had
- * MintCart's asset bundle (`assets/dist/css/index.min.css` /
- * `assets/dist/js/admin.min.js`) enqueued into it anywhere in this repo.
- * Enqueuing that bundle's Bootstrap 5 CSS here would load it globally
- * across every other (Bootstrap-3-based) admin screen too, which
- * `CLAUDE.md` §10 explicitly forbids. Whether to migrate the whole admin
- * shell to Bootstrap 5, scope MintCart's own screens some other isolated
- * way, or keep new MintCart admin screens on the legacy theme until a
- * dedicated Mint Admin Shell phase is a real architectural decision this
- * run does not guess at (`CLAUDE.md` §20) — still flagged for the project
- * owner. Reordering therefore uses a plain per-row `sort_order` number
- * input (the same pattern `banner_image` rows already use in
- * `design/banner_form.twig`), not McSortable drag-and-drop.
+ * Built on the existing legacy OpenCart admin theme (Bootstrap 3 markup —
+ * `.panel`/`.btn`/`form-horizontal`, the same shape `design/banner.php` and
+ * `extension/module/latest.php` already use) for its overall page chrome —
+ * the shared admin `header`/`column_left`/`footer` wraps every admin
+ * screen, this one included, and still only ever loads Bootstrap 3/jQuery.
+ *
+ * The add/edit form's `image`-type settings fields (Hero/Text+Image), below,
+ * do now mount `mc-media-picker` (`docs/developer/components/media-picker.md`,
+ * Functional Scope §25): `enqueueMintAssets()` queues
+ * `assets/dist/css/components.min.css` (the Bootstrap-5-free trim of
+ * `index.css` — safe to layer on top of the legacy theme's Bootstrap 3,
+ * `docs/developer/admin/asset-enqueue.md`'s "The fix: two bundles, pick the
+ * right one") and `assets/dist/js/admin.min.js`, the same pattern
+ * `ControllerCatalogProduct::getForm()` already established as this
+ * repo's first consumer. Reordering on the list screen is a separate
+ * question (not touched by this change) and still uses a plain per-row
+ * `sort_order` number input.
  *
  * `TYPES` now lists all fifteen shipped block types (Products through
  * Gallery, MINTCART_IMPLEMENTATION_GUIDE.md §51's full first-wave catalog)
@@ -37,15 +35,13 @@
  * Five types (Banner Grid, Benefits, Testimonials, Brands, Gallery) have a
  * repeatable `items` list — each item's own structural fields (image path,
  * url, ...) and localized fields (alt, caption, ...). Building a real
- * dynamic add/remove-row JS UI for that needs the same admin asset-enqueue
- * fix the class docblock above flags as still-undecided (no JS bundle is
- * loaded on this screen at all yet), so `items` is deliberately a single
- * raw-JSON textarea per list for now — a real, working escape hatch (an
- * admin can configure any of these blocks today) rather than a half-built
- * repeater. Each such field's `help_key` shows the exact JSON shape.
- * Replacing it with a proper repeater is flagged in
- * `docs/IMPLEMENTATION_STATUS.md` as follow-up work once the asset-enqueue
- * question is resolved.
+ * dynamic add/remove-row JS UI for that is a separate increment from this
+ * one (now that the asset bundle is enqueued here, it no longer needs to
+ * resolve an asset-enqueue question of its own, just build the repeater
+ * UI itself) — `items` stays a single raw-JSON textarea per list for now, a
+ * real, working escape hatch (an admin can configure any of these blocks
+ * today) rather than a half-built repeater. Each such field's `help_key`
+ * shows the exact JSON shape.
  */
 class ControllerDesignHomepage extends Controller {
 	private $error = array();
@@ -101,7 +97,7 @@ class ControllerDesignHomepage extends Controller {
 			),
 			'hero' => array(
 				'settings' => array(
-					array('name' => 'image', 'type' => 'text', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
+					array('name' => 'image', 'type' => 'image', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
 					array('name' => 'image_width', 'type' => 'number', 'default' => 1920, 'min' => 1, 'label_key' => 'entry_image_width'),
 					array('name' => 'image_height', 'type' => 'number', 'default' => 600, 'min' => 1, 'label_key' => 'entry_image_height'),
 					array('name' => 'cta_url', 'type' => 'text', 'default' => '', 'label_key' => 'entry_cta_url')
@@ -165,7 +161,7 @@ class ControllerDesignHomepage extends Controller {
 			),
 			'text-image' => array(
 				'settings' => array(
-					array('name' => 'image', 'type' => 'text', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
+					array('name' => 'image', 'type' => 'image', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
 					array('name' => 'image_width', 'type' => 'number', 'default' => 800, 'min' => 1, 'label_key' => 'entry_image_width'),
 					array('name' => 'image_height', 'type' => 'number', 'default' => 600, 'min' => 1, 'label_key' => 'entry_image_height'),
 					array('name' => 'image_position', 'type' => 'select', 'default' => 'right', 'label_key' => 'entry_image_position', 'options' => array('left' => 'Left', 'right' => 'Right'))
@@ -398,7 +394,34 @@ class ControllerDesignHomepage extends Controller {
 		$this->response->setOutput($this->load->view('design/homepage_list', $data));
 	}
 
+	/**
+	 * Queues MintCart's own admin bundle (`docs/developer/admin/asset-enqueue.md`)
+	 * so this form's `image`-type settings fields (Hero/Text+Image) can
+	 * mount `mc-media-picker` below. `components.min.css` (not
+	 * `index.min.css`) deliberately excludes Bootstrap 5's reset/grid/
+	 * utility layer, so it is safe to load alongside the legacy admin
+	 * theme's Bootstrap 3 — see that doc's "The fix: two bundles, pick the
+	 * right one" for why, and `ControllerCatalogProduct::getForm()` for the
+	 * pattern this copies verbatim (`$this->document->addStyle()`/
+	 * `addScript()` is OpenCart's own standard per-page asset mechanism,
+	 * no template change needed).
+	 *
+	 * NOTE for whoever merges this alongside another open PR touching this
+	 * class: at the time of this run, a second open PR independently added
+	 * an identically-named/identically-bodied `enqueueMintAssets()` here,
+	 * called only from `getList()` (for `McSortable` on the block list
+	 * screen) — see this file's class docblock history. If both land, keep
+	 * one copy of the method and call it from both `getList()` and
+	 * `getForm()`; the two additions do not actually disagree on anything.
+	 */
+	protected function enqueueMintAssets() {
+		$this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
+		$this->document->addScript(HTTP_CATALOG . 'assets/dist/js/admin.min.js');
+	}
+
 	protected function getForm() {
+		$this->enqueueMintAssets();
+
 		$data['text_form'] = !isset($this->request->get['block_id']) ? $this->language->get('text_add') : $this->language->get('text_edit');
 
 		$data['error_warning'] = isset($this->error['warning']) ? $this->error['warning'] : '';
