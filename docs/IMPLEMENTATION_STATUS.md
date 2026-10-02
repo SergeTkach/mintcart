@@ -76,7 +76,20 @@ Phase 0 is **complete**.
       table exists yet so the migrations directory is currently empty; covered by
       `tests/mintcart/core/migration-manager-test.php` (in-memory DB double — no
       MySQL server available in this environment; real-DB verification is still
-      needed before this is exercised against a live install)
+      needed before this is exercised against a live install). **(this run,
+      PR #185):** added `docs/developer/core/migration-manager.md` — the
+      architecture doc for this runner (Implementation Guide §71's
+      "Migrations" developer-doc topic), covering its two real consumers
+      (`HealthCheck`'s `pending_migrations` signal,
+      `UpdateOrchestrator`'s `migrations` step). No code changed. The
+      "Slots"/"Events" doc topics from the same §71 list are intentionally
+      still unwritten — neither has an implementation in the codebase yet
+      (checked via `grep -rn "data-mc-slot\|mc_slot" upload/`, no matches),
+      and per `CLAUDE.md` §85 a doc should not describe a speculative API
+      ahead of a real consumer. A future increment's natural next step is
+      implementing one concrete Theme API slot with a real template call
+      site (e.g. `product.after_actions`, Technical Plan §15) before either
+      doc is written.
 - [x] Version information — `MintCart\Core\Version`
 - [x] Basic logging — `MintCart\Core\Logger` (wraps OpenCart's `\Log`, writes to a
       dedicated `mintcart.log`)
