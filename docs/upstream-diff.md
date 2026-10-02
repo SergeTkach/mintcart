@@ -570,6 +570,44 @@ as `category.php`'s entry. **Tests:** `php -l` clean; full
 `tests/mintcart/` suite (78 files) re-run end to end — all passing, no
 regressions.
 
+**Update (this run — Phase 18, SEO Core, `RobotsBuilder` `$hasResults`
+registry bridge):** resolves the `header.php`-side "Known limitation"
+`docs/developer/seo/robots.md` documented. A new
+`$mint_search_has_results` local, initialized `true` before the
+`isset($this->request->get['search']) || isset($this->request->get['tag'])`
+guard (a bare `product/search` request with neither param never runs the
+query below — the plain search form, not a "no results" page — so it keeps
+the same `true` default `RobotsBuilder` already uses), is set to
+`($product_total > 0)` right after `$product_total` is computed inside
+that guard. Immediately before the existing
+`$data['header'] = $this->load->controller('common/header');` call, a new
+line writes it to the registry:
+`$this->registry->set(\MintCart\Seo\RobotsBuilder::HAS_RESULTS_REGISTRY_KEY, $mint_search_has_results);`
+— the same `$this->registry->set()`/`->get()` bridge
+`upload/system/engine/startup/startup.php` already uses to hand
+`session`/`customer`/`cart` between stages of a single request; no new
+table, session key or event. **Why it can't live in the MintCart layer:**
+`RobotsBuilder` itself deliberately has no `\Registry` dependency (see its
+own docblock) — only a controller that already knows both "did this
+specific search run" and "is this the point where header.php is about to
+be invoked" can produce and hand off this value at the right moment.
+**Compatibility impact:** None. The registry key is new and MintCart-only;
+no existing `$data` key, template variable, or return value changes. A
+`product/search` request that never sets `search`/`tag` behaves exactly as
+before (`true`, i.e. `header.php` renders `index, follow` for it, same as
+every route that never touches this key at all). **Tests:** `php -l`
+clean on `search.php`/`header.php`/`robotsbuilder.php`.
+`tests/mintcart/seo/robots-builder-test.php` gained two assertions (76,
+up from 74) checking the new `HAS_RESULTS_REGISTRY_KEY` constant's shape —
+`directives()`/`metaContent()`'s own logic is unchanged, so no new
+behavioral test was needed there. Full `tests/mintcart/**/*-test.php`
+suite re-run end to end (84 files) — all passing, no regressions. Same
+pre-existing no-live-request gap as every earlier Phase 18 entry — a human
+should confirm on a real install that a `product/search` query with zero
+matches renders `<meta name="robots" content="noindex, follow">` while one
+with matches still renders `content="index, follow"` (see
+`docs/MANUAL_VERIFICATION.md`'s Phase 18 section).
+
 ---
 
 ## `upload/catalog/language/en-gb/product/search.php`
@@ -837,19 +875,15 @@ cost. Same catch-and-log failure handling as the two blocks above it. `<head>`
 output added to `mint_default/template/common/header.twig` right after the
 existing `keywords` meta tag.
 
-**Known limitation (deliberate, see `docs/developer/seo/robots.md`):**
-`RobotsBuilder::metaContent()`'s second parameter, `$hasResults` (only
-meaningful for `product/search`), is left at its default (`true`) here —
-header.php has no way to know whether the current request's search
-actually matched anything, since it renders as a sibling sub-controller of
-`ControllerProductSearch`, not that controller itself. Threading a real
-`hasResults` signal across that boundary (registry/session) is a separate,
-slightly larger follow-up; today every `product/search` page, including an
-empty-results one, renders `index, follow` rather than the `noindex,
-follow` `RobotsBuilder` is capable of producing. Every other route
-(the full `NOINDEX_ROUTES` checkout/account whitelist, and every ordinary
-catalog/information/home route) is unaffected by this limitation and
-behaves exactly as `RobotsBuilder`'s own test suite already verifies.
+**Update (this run): `product/search` `$hasResults` now threaded via a
+registry bridge — see `docs/developer/seo/robots.md`.** Reads
+`$this->registry->get(\MintCart\Seo\RobotsBuilder::HAS_RESULTS_REGISTRY_KEY)`
+(falling back to `RobotsBuilder`'s own default, `true`, when unset) instead
+of always passing the implicit default, so `metaContent()`'s second
+argument is now real for `product/search` and unchanged for every other
+route (which never writes that registry key). See
+`upload/catalog/controller/product/search.php`'s own entry below for the
+write side of this bridge.
 
 **Compatibility impact:** None for the legacy `default` theme or any
 unrelated third-party theme (their own header templates never read
@@ -944,6 +978,111 @@ to Cart/Quick Order/wishlist-toggle buttons actually respond to a click,
 which they visibly did not before this change; the legacy Bootstrap-3/
 jQuery-driven parts of the same page — account pages, `common/cart.info`
 AJAX, `common.js` — still work unmodified).
+
+**Update (2026-09-19, routine run): `text_search` added to the
+`$header_view + array(...)` merge.** One new key, same array, same pattern
+as the existing `text_account`/`text_menu`/`text_close`/... entries — no
+other line changed. Consumed by `mint_default`'s and `test_theme`'s
+`header.twig` for `mc-search-box`'s `placeholder`/`aria-label` (see those
+two files' own entries below and
+`docs/developer/components/search-box.md`). `text_search` already exists
+in `catalog/language/en-gb/common/header.php` (no new language file
+change needed). **Tests:** `php -l` clean; full `tests/mintcart/` suite
+(84 files) re-run end to end, unaffected (no class touched) — still
+passing.
+
+---
+
+## `upload/catalog/view/theme/mint_default/template/mint/components/header.twig` (this entry, 2026-09-19 routine run)
+
+**Reason:** Replaces the `{% if widgets.search %}<div class="mc-legacy">
+{{ widgets.search|raw }}</div>{% endif %}` block (the legacy jQuery-
+autocomplete `common/search` fragment) with `mc-search-box`'s documented
+markup contract (`docs/developer/components/search-box.md`) — the
+component's JS/CSS have existed since an earlier Phase 15 increment with
+no live template consumer; this was the explicitly-named "next step" in
+`docs/IMPLEMENTATION_STATUS.md`'s Phase 15 section, unblocked once
+`components.min.css`/`catalog.min.js` were enqueued on the storefront
+(see this file's `header.php` entry above, "Update ... own compiled asset
+bundle").
+
+**Why it can't live in the MintCart layer instead:** It is Twig markup for
+one specific theme's specific component template — by definition theme
+content, not platform code.
+
+**Compatibility impact:** None outside `mint_default` — this is a template
+file, not shared code. `HeaderViewProvider`'s `widgets.search` key is
+untouched (still computed by `header.php`, still exposed in the contract);
+`mint_default` simply stopped reading it. A theme that copies
+`mint_default` as a starting point and still wants the legacy fragment can
+render `widgets.search` itself — the key did not disappear.
+
+**Tests:** `if`/`for` tag counts re-balanced (10/10, `for` unused) after
+the edit. Full `tests/mintcart/` suite (84 files) re-run end to end,
+unaffected (no PHP class touched) — still passing. **Not verified live**
+— no MySQL/browser session in this environment; see
+`docs/MANUAL_VERIFICATION.md`'s Phase 15 entry.
+
+---
+
+## `upload/catalog/view/theme/test_theme/template/mint/components/header.twig` (this entry, 2026-09-19 routine run)
+
+**Reason:** Adds the same `mc-search-box` markup contract in a different
+placement (directly after the branding link, before the account/cart
+widgets, rather than `mint_default`'s topbar-adjacent `mc-header__widgets`
+slot) — proving the Theme API's override-fallback story for this
+component too, the same way `test_theme`'s product-card/header/footer
+overrides already proved it for theirs (`CLAUDE.md` §19/§45).
+
+**Why it can't live in the MintCart layer instead:** Same as above — this
+is theme content, by definition theme-owned.
+
+**Compatibility impact:** None outside `test_theme`, which exists solely
+as the second reference theme proving Theme API fallback (never a
+production theme).
+
+**Tests:** `if`/`for` tag counts re-balanced (3/3) after the edit. Same
+`tests/mintcart/` suite re-run as above, unaffected.
+
+---
+
+## `assets/src/css/components.css` (this entry, 2026-09-19 routine run)
+
+**Reason:** Bug fix, found while verifying the `mc-search-box` wiring
+above. This file (the Bootstrap-5-reset-free bundle `ControllerCommonHeader`
+actually enqueues on the storefront as `components.min.css`, deliberately
+*not* `index.min.css` — see the `header.php` entry above) was missing
+three `@import` lines `index.css` already had:
+`./components/product-gallery.css`, `./components/quick-order.css`, and
+`./components/search-box.css`. This file's own docblock says to "keep this
+list's imports (order included) identical to `index.css` any time
+`index.css` gains or reorders one" — that instruction was not followed
+when those three component CSS files were added to `index.css` in earlier
+increments, so none of their styling ever reached a live page (only
+`index.min.css`, which nothing on the storefront enqueues, had it). Fixed
+by adding the three missing imports, in the same relative order
+`index.css` uses.
+
+**Why it can't live in the MintCart layer instead:** Build-pipeline
+config, not application code — there is no "MintCart layer" for a CSS
+entry-point file.
+
+**Compatibility impact:** Additive only — `components.min.css` grows by
+the CSS these three component files already contribute to `index.min.css`
+(none of which redeclares a bare `body`/`html`/`*`/element selector, per
+this file's own docblock guarantee — re-checked for all three before
+adding). No existing selector changed. Confirmed none of the three
+introduces a Bootstrap-structural dependency (`.modal`/`.offcanvas`/
+`.toast`/`.dropdown`) this bundle deliberately excludes — the one `.modal-body`
+selector in `quick-order.css` only styles content nested inside a modal
+that `mc-modal.css` (already imported here) already documents as
+unstyled-without-`index.css` chrome, an existing, unrelated limitation
+this change does not widen.
+
+**Tests:** `npm install` (0 vulnerabilities), `npm run build` compiles
+cleanly. `grep -c mc-search-box assets/dist/css/components.min.css` went
+from 0 to 1 after the fix — the actual regression test for this bug.
+`npm test` (preset-token contract checks, unaffected) still passing.
 
 ---
 
@@ -2170,6 +2309,63 @@ in this environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for
 the full manual script. Same pre-existing "trimmed repository"
 label-blank gap noted above applies identically to the six new
 `text_related_picker_*` keys — not a new gap this change introduces.
+
+**Update (this run — Phase 12, Entity Picker): Attribute tab wired into
+the same admin screen.** `product_form.twig`'s Attribute tab (`#attribute`,
+previously only a jQuery UI `autocomplete()` field per dynamically-added
+row) gains a "Browse" button + hidden `.mc-entity-picker` panel, against
+the already-shipped, previously-consumer-less `mintcart/entity/attribute`
+backend (`docs/developer/components/entity-picker.md` "Attribute
+backend"). Unlike Category/Manufacturer/Related, attribute rows are added
+dynamically (`addAttribute()`), so this is **one shared picker instance**
+(single-select, `multiple: false`) reused across every row via event
+delegation on the `#attribute` table, not a picker-per-field: each row's
+new "Browse" button carries `data-mc-action="browse-attribute"
+data-mc-attribute-row="N"`; clicking it records which row is active, and
+`onConfirm` writes into that row's new `[data-mc-attribute-name]`/
+`[data-mc-attribute-id]` hooks. Both the initial Twig-rendered rows
+(`{% for product_attribute in product_attributes %}`) and the
+JS-generated row markup (`addAttribute()`'s own HTML-string template)
+were updated identically so a row added via either path behaves the same.
+Confirming a selection writes into the exact same fields
+`attributeautocomplete()`'s own jQuery UI `select` handler already writes
+to, so `ControllerCatalogProduct::validateForm()`/`addProduct()`/
+`editProduct()`'s handling of `product_attribute[]` is completely
+untouched. No controller change was needed — this screen's
+`enqueueMintAssets()` already covers the whole form (added for Category).
+Six new `text_attribute_picker_*` language keys were added, same
+file/pattern as Category's/Manufacturer's/Related's own six.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+the Category/Manufacturer/Related entries above — this is the one true
+owner of the product edit screen's form.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, or `$data` key changed; the existing jQuery autocomplete still
+works exactly as before, on every row regardless of whether it was
+present at page load or added afterward.
+
+**Tests:** `php -l` clean on the language file (no PHP changed in the
+controller or any `upload/system/library/mintcart/*` class — this is
+Twig/JS/language-file only, reusing the already-tested
+`AttributePickerProvider`/`ControllerMintcartEntity::attribute()` backend
+as-is). Twig `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag
+counts checked balanced before and after (38/38, 37/37, unchanged — this
+change adds no new conditional/loop tags). Both modified inline
+`<script>` blocks (and all 8 other, untouched ones) extracted and checked
+with `node --check` (all pass), same approach as the Category/
+Manufacturer/Related entries, since there is no live browser in this
+environment to exercise it. Full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end — all passing, no regressions (no PHP library
+code changed here). **Not verified:** no live MySQL/admin session in this
+environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for the full
+manual script, which specifically covers the multi-row/shared-instance
+behavior this field introduces (browsing into the correct row, resetting
+search state between rows, surviving row removal/re-add) that the
+single-field Category/Manufacturer/Related pickers didn't need to check.
+Same pre-existing "trimmed repository" label-blank gap noted above
+applies identically to the six new `text_attribute_picker_*` keys — not a
+new gap this change introduces.
 ## `upload/system/library/db.php`
 
 **Reason:** MC-0006 (`docs/fixes/registry.md`) — `DB::connected()` called
@@ -2725,6 +2921,35 @@ bulk special-price update replaces (not adds to) any existing
 `oc_product_special` row(s) for a product, including one previously set
 via the normal edit form with a non-default customer group or a date
 range — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16 section.
+
+**Update (2026-09-28, routine run — Phase 16, Bulk Editor):** the toolbar's
+single generic `bulk_value` text `<input>` is now two controls sharing
+that `name` — an Enabled/Disabled `<select>` for the `status` field, a
+`type="number"` input (whole numbers for quantity/manufacturer_id/
+stock_status_id, decimals for price/special_price) for every other field
+— toggled by a small inline `<script>` block on `#input-bulk-field`'s
+`change` event, which `disabled`s whichever control is not the active
+one. This touches only `product_list.twig`; no PHP file in this section
+changed — `BulkProductUpdateValidator`/`ControllerCatalogProduct::bulkUpdate()`
+already read `bulk_value` as a plain string regardless of which HTML
+control produced it, and their validation is unchanged.
+
+**Why it can't live in the MintCart layer:** it is admin-form UX for one
+specific pre-existing OpenCart template, not platform code.
+
+**Compatibility impact:** none — a disabled form control is excluded from
+the browser's own POST body, so the controller still only ever receives a
+single `bulk_value`, exactly as before; the six existing fields' bulk
+updates are otherwise untouched.
+
+**Tests:** no PHP touched, so `tests/mintcart/` was not re-run (nothing it
+covers changed). `product_list.twig`'s `{% if %}`/`{% for %}` tag counts
+unchanged and re-checked balanced (14/14, 2/2 — no `{% %}` tag touched).
+The file's three inline `<script>` blocks (including the new toggle)
+checked for JS syntax errors with a standalone Node harness (Twig `{{ }}`
+output substituted with a placeholder string) — all parse cleanly. **Not
+verified live** — no MySQL/admin session in this environment; see
+`docs/MANUAL_VERIFICATION.md`'s updated Phase 16 section (new step 8).
 
 ## `upload/catalog/controller/extension/feed/google_sitemap.php`
 
