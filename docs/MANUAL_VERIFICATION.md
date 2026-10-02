@@ -1331,3 +1331,33 @@ checking specifically once a bundle is loaded on `catalog/product/form`:
    actually persisted — `ControllerCatalogProduct`'s save logic reads the
    same `product_attribute[N][name]`/`[attribute_id]` fields regardless of
    which UI filled them in, so this should need no special-casing.
+
+## Theme API — `product.after_actions` slot, never rendered through a real Twig
+
+`MintCart\Design\SlotRegistry` is fully covered by a standalone unit test
+(`tests/mintcart/design/slot-registry-test.php`, no OpenCart dependency),
+and `ProductCardListRenderer`'s optional `SlotRegistry` argument is
+exercised up to (but not through) the point where `ComponentRenderer`
+would hand its output to Twig (`docs/developer/theme-api/slots.md`) — this
+environment has no `vendor/twig/twig`, so the `{% if slots[...] %}` branch
+in either `product-card.twig` has never actually executed. On a real
+install, once a future increment wires a real `SlotRegistry` with a
+registered listener into one of the listing controllers
+(`category.php`/`search.php`/`manufacturer.php`/`special.php`/`product.php`):
+
+1. With no listener registered anywhere (today's actual state everywhere
+   in this repo), confirm every product-card grid on the storefront is
+   byte-for-byte unchanged from before this increment — no empty
+   `<div class="mc-product-card__slot ...">` wrapper should ever appear in
+   the rendered HTML (the `{% if %}` guard should suppress it entirely when
+   `slots['product.after_actions']` is falsy/unset).
+2. Register a listener on `product.after_actions` returning a small fixed
+   HTML fragment (e.g. `<p>Test slot</p>`). Confirm it appears inside every
+   rendered `mc-product-card` on that page, positioned after the add-to-cart/
+   quick-order buttons (`mint_default`) or after the add-to-cart button
+   (`test_theme`, which has no separate actions wrapper).
+3. Confirm the fragment appears identically on both `mint_default` and
+   `test_theme` — the slot is part of the component contract both themes
+   share, not something either theme's own DOM has to opt into separately.
+4. Register a second listener on the same slot and confirm both fragments
+   render, concatenated, neither silently replacing the other.
