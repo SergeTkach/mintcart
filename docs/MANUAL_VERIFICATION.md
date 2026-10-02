@@ -13,6 +13,22 @@ than silently fixing and forgetting to update this file.
 
 ---
 
+## Phase 0 — restored `Config` engine class never booted live
+
+`upload/system/library/config.php` (OpenCart's core `Config` class) was
+missing from this repository entirely until this run (a `.gitignore`
+false positive silently excluded it since the initial baseline commit —
+see `docs/IMPLEMENTATION_STATUS.md`'s Phase 0 section and `docs/audit.md`'s
+"Correction" note for the full writeup). It has been restored
+byte-for-byte from the upstream OpenCart `3.0.5.1` tag and passes `php -l`,
+but no environment used by any routine run so far has live PHP/MySQL to
+actually boot `index.php`/`admin/index.php`. Confirm on a real install:
+both the storefront and admin now load past `system/framework.php`
+without a fatal on `new Config()` (they would have fatal'd on every single
+request before this fix), and that a page depending on
+`Config::set()`/`Config::has()` (e.g. anything reading
+`config_theme`/`config_language_id`) behaves normally.
+
 ## Phase 13 — Wizard Delivery step never rendered live
 
 No MySQL/OpenCart admin session in this environment. Confirm on a real
@@ -799,11 +815,15 @@ actually submitted. On a real install:
 ## Phase 15 — `mc-search-box` component, never exercised in a browser
 
 `assets/src/js/components/search-box.js` is bundle-verified (present in
-`catalog.min.js`, absent from `admin.min.js`) but has no live template to
-mount against yet (`docs/developer/components/search-box.md`). Once a
-future increment drops its markup contract into a real page (most likely
-`mint_default/template/common/header.twig`, replacing or sitting alongside
-the legacy search fragment):
+`catalog.min.js`, absent from `admin.min.js`) and, as of 2026-09-19, is
+live in both `mint_default/template/mint/components/header.twig` (the
+`mc-header__widgets` slot, replacing the legacy `widgets.search` fragment)
+and `test_theme/template/mint/components/header.twig` (next to the
+branding link) — see `docs/developer/components/search-box.md` "Wired
+into `mint_default`'s and `test_theme`'s header". Still never exercised in
+an actual browser (no MySQL/browser session in this environment). On a
+`config_theme=mint_default` (and separately, `config_theme=test_theme`)
+install:
 
 1. Type a 1-character query and confirm no network request fires (open the
    browser's network tab) and the dropdown stays closed.
@@ -824,6 +844,17 @@ the legacy search fragment):
    search for a term matching 8 or fewer and confirm it does not appear.
 6. Click outside the dropdown and confirm it closes without clearing the
    typed query.
+7. Confirm the header no longer renders the legacy jQuery-autocomplete
+   search box (no `#search` element, no `common/search` fragment in the
+   page source) on `mint_default` — only the new `.mc-search-box`. Confirm
+   the network tab shows `components.min.css` (not `index.min.css`)
+   loading with the `mc-search-box` rules actually present (this was
+   broken before the `assets/src/css/components.css` import fix landed —
+   worth double-checking the box is visually styled, not just
+   functional).
+8. Switch `config_theme` to `test_theme` and repeat steps 1-2 against its
+   own `.mc-search-box` (different placement — next to the branding link)
+   to confirm both themes' overrides work independently.
 
 ## Phase 18 — Schema.org JSON-LD, never validated against a real page
 
@@ -874,9 +905,10 @@ never rendered on a real page or run through an actual validator. On a
 
 ## Phase 18 — `RobotsBuilder` meta tag, never validated against a real page
 
-`RobotsBuilder` is unit-tested in isolation (74 assertions), but its
-`ControllerCommonHeader` wiring (2026-09-15) was never rendered on a real
-page. On a `config_theme=mint_default` install:
+`RobotsBuilder` is unit-tested in isolation (76 assertions), but its
+`ControllerCommonHeader` wiring (2026-09-15, `$hasResults` registry bridge
+added in a later run) was never rendered on a real page. On a
+`config_theme=mint_default` install:
 
 1. Load the homepage, a category page, and a product page; confirm
    `<meta name="robots" content="index, follow">` appears in `<head>`.
@@ -885,12 +917,13 @@ page. On a `config_theme=mint_default` install:
    `account/wishlist`; confirm each instead renders
    `<meta name="robots" content="noindex, follow">`.
 3. Load `product/search` with a query that matches nothing (e.g. a random
-   string); confirm it currently still renders `content="index, follow"`
-   — this is the documented, deliberate known limitation (see
-   `docs/developer/seo/robots.md` "Known limitation"), not a bug: a real
-   fix needs `$hasResults` threaded from `ControllerProductSearch` into
-   `ControllerCommonHeader`, not yet built.
-4. Confirm the tag does **not** appear at all on the legacy `default`
+   string); confirm it now renders `content="noindex, follow"` — the
+   `ControllerProductSearch` → `ControllerCommonHeader` registry bridge
+   (`RobotsBuilder::HAS_RESULTS_REGISTRY_KEY`, see
+   `docs/developer/seo/robots.md`) should have closed this gap.
+4. Load `product/search` with a query that matches at least one product;
+   confirm it still renders `content="index, follow"`.
+5. Confirm the tag does **not** appear at all on the legacy `default`
    theme (this wiring is not gated by `isMintAware()`, but `default`'s own
    `common/header.twig` never reads `$data['mc_robots_content']`, so it
    should render unchanged).
@@ -911,7 +944,9 @@ specials:
    Copy/Delete), confirm the dialog, and confirm the redirect lands back
    on the same filtered/sorted/paged list with a success message and the
    selected products' Quantity column updated to the new value.
-3. Repeat for "Status" (value `0` or `1`), "Price" (a decimal value),
+3. Repeat for "Status" (choose "Enabled"/"Disabled" from the value
+   `<select>` that now appears in place of the number input — see step 8),
+   "Price" (a decimal value),
    "Manufacturer" (an existing `manufacturer_id`, and separately `0` for
    "no manufacturer"), and "Stock Status" (an existing `stock_status_id`
    from **Settings → Stock Statuses**, e.g. the ID shown for "In Stock")
@@ -943,6 +978,17 @@ specials:
    Price). Also submit "Special Price" with an invalid value (e.g. `-1`)
    and confirm the same rejection-warning behavior as the other numeric
    fields.
+8. Change the bulk-update field `<select>` between "Status" and every
+   other option and confirm the value control swaps correctly each time:
+   an Enabled/Disabled `<select>` shows (and the number input hides) only
+   when "Status" is selected; a plain number input shows for every other
+   field, accepting only whole numbers for Quantity/Manufacturer/Stock
+   Status (the browser's own spinner/step behavior) and decimals for
+   Price/Special Price. Confirm via the browser's dev tools that whichever
+   control is hidden is also `disabled` (so only one `bulk_value` is ever
+   sent), and that switching the field back and forth several times before
+   submitting still posts the value currently visible, not a stale one
+   from an earlier selection.
 
 ## Phase 14 — `menu-mintcart-business` merge fix, never seen rendered live
 
@@ -1198,3 +1244,33 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    `mint_default`) shows **no** new network requests for either file —
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
+
+## Phase 12 — Attribute field's `McEntityPicker`, never exercised end to end
+
+Same underlying gap as the other Entity Picker fields above (no admin
+bundle enqueued yet, per `docs/developer/admin/asset-enqueue.md`), plus
+this is the first Entity Picker field with *multiple, dynamically added*
+rows sharing one picker instance, so it has its own failure modes worth
+checking specifically once a bundle is loaded on `catalog/product/form`:
+
+1. Grant `mintcart/entity` **Access** if not already done for the other
+   Entity Picker endpoints (same permission covers all seven routes).
+2. Open a product's **Attribute** tab. Click "Add Attribute" twice, so two
+   empty rows exist. Click the new "Browse" button on the *second* row,
+   search for and select an attribute, and confirm it fills the *second*
+   row's name/attribute_id fields — not the first row's, and not a third,
+   not-yet-added row.
+3. Repeat on the first row. Confirm the picker's search box/page/results
+   reset (not left over from the previous row's search) and the selection
+   lands in the first row this time.
+4. Confirm the legacy jQuery UI autocomplete on each row's name `<input>`
+   still works unmodified — type a partial attribute name and select it
+   from the browser's native autocomplete dropdown; confirm it still fills
+   the same fields the picker does, and neither interferes with the other.
+5. Remove a row (the red minus button), add a new one, and confirm its
+   "Browse" button opens the picker and writes into the *new* row, not a
+   stale reference to the removed one's DOM node.
+6. Save the product and confirm the attribute (added via the picker) is
+   actually persisted — `ControllerCatalogProduct`'s save logic reads the
+   same `product_attribute[N][name]`/`[attribute_id]` fields regardless of
+   which UI filled them in, so this should need no special-casing.
