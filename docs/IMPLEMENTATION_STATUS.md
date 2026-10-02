@@ -2854,11 +2854,14 @@ already share.
 - [~] `QuickOrderService` — open PR #52-#87 backlog includes one (Phase 15
       item, not yet merged as of this update — check `gh pr list --state
       open` before starting a second one).
-- [~] `CheckoutService` — first increment this run:
-      `MintCart\Commerce\CheckoutTotalsService` +
+- [~] `CheckoutService` — two increments so far: `MintCart\Commerce\CheckoutTotalsService` +
       `MintCart\Compatibility\OpenCart3\TotalsAdapter` + the
-      `mintcart/checkout/totals` AJAX endpoint (recomputed order totals,
-      no address/shipping/payment mutation yet). See the writeup below.
+      `mintcart/checkout/totals` AJAX endpoint (recomputed order totals);
+      and (this run) `MintCart\Commerce\ShippingMethodService` +
+      `MintCart\Compatibility\OpenCart3\ShippingQuoteAdapter` + the
+      `mintcart/checkout/shipping_methods` AJAX endpoint (normalized
+      shipping method quote preview for a given address). Still no
+      address/payment mutation, no order creation. See the writeups below.
 - [x] `MintCart\Commerce\QuickOrderService` + Quick Order component (this
       run) — `upload/system/library/mintcart/commerce/quickorderservice.php`
       + `upload/catalog/controller/mintcart/quickorder.php`
@@ -2884,15 +2887,13 @@ already share.
       (natural next consumer of `mc_quick_order`), and lead → order
       conversion — both deliberately deferred, see the doc's "Not done
       yet".
-- [ ] `CheckoutService` — not started; still genuinely large/risky without
-      live MySQL to verify `addOrder()`'s full field list against (same
-      reasoning `QuickOrderService` above sidestepped by not touching
-      order creation at all).
+- [~] `CheckoutService` — totals + shipping-method-quote previews exist
+      (see above); order creation (`addOrder()`) itself remains genuinely
+      large/risky without live MySQL to verify its full field list against
+      (same reasoning `QuickOrderService` above sidestepped by not
+      touching order creation at all) — still not attempted.
 - [x] Mint-native search-box UI component (`mc-search-box`) calling
       `mintcart/search/suggest` — see "Update (this run)" below.
-- [ ] `QuickOrderService`, `CheckoutService` — not started.
-- [ ] Quick Order component — not started; `mc-product-card`'s
-      `data-mc-action="quick-order"` stays hook-only.
 - [ ] Modern checkout UI over existing shipping/payment extensions/totals/order model — not started.
 
 **Update (this run): `CheckoutTotalsService` + `TotalsAdapter` — first
@@ -2937,6 +2938,56 @@ increment: no MySQL/OpenCart bootstrap in this environment — see
 `docs/MANUAL_VERIFICATION.md`'s new Phase 15 entry for what a human should
 confirm on a real install (same payment methods/amounts as before the
 refactor, correct `oc_order.total`, and the new endpoint's JSON shape).
+
+**Update (2026-09-30, routine run): `ShippingMethodService` +
+`ShippingQuoteAdapter` — second `CheckoutService` increment.** Step 0
+dedup check found 23 open PRs (`#138`-`#160`, all `ROUTINE-STATUS: DONE`
+except `#148` `IN-PROGRESS`) — none touch
+`upload/catalog/controller/mintcart/checkout.php`,
+`upload/catalog/controller/checkout/shipping_method.php`, or anything
+under `compatibility/opencart3/`/`commerce/` named `shipping*`. The
+busiest hot zone (`category.php`/`search.php`/`manufacturer.php`/
+`special.php`/`product.php`, touched by 4 of the open PRs) and the
+Homepage Builder block-registry/`block.css` files (untouched by any open
+PR, but the known historical pile-up risk per this routine's own
+instructions) were both avoided entirely by this increment's file list.
+
+Extracted `checkout/shipping_method.php::index()`'s shipping-quote loop
+into `MintCart\Compatibility\OpenCart3\ShippingQuoteAdapter`
+(`docs/developer/compatibility/shipping-quote-adapter.md`) — unlike
+`TotalsAdapter`, this loop is **not** duplicated anywhere else in this
+codebase, so `checkout/shipping_method.php` itself is left completely
+untouched (zero upstream diff, no `docs/upstream-diff.md` entry needed).
+Normalized via the new `MintCart\Commerce\ShippingMethodService`
+(`docs/developer/commerce/shipping-method-service.md`) into a new
+`ControllerMintcartCheckout::shippingMethods()` action (route
+`mintcart/checkout/shipping_methods`, GET, JSON) — a pure preview endpoint
+that takes the address as request parameters and does not read or write
+`$this->session->data['shipping_address']`/`['shipping_methods']`, unlike
+the legacy controller. `options[].id` in the response is built as exactly
+`"<method_code>.<quote_key>"`, the same string
+`checkout/shipping_method.php::save()` already expects, so a future
+checkout UI can post it straight through with no translation layer.
+
+Verified: `php -l` clean on all three touched/new PHP files; two new test
+files (`tests/mintcart/compatibility/opencart3/shipping-quote-adapter-test.php`,
+5 scenarios; `tests/mintcart/commerce/shipping-method-service-test.php`, 4
+scenarios); full `tests/mintcart/**/*-test.php` suite re-run end to end
+(86 files, up from 84) — all passing, no regressions. Not verified: no
+live MySQL/OpenCart session in this environment, same pre-existing gap —
+see `docs/MANUAL_VERIFICATION.md`'s new Phase 15 "Shipping method quote
+endpoint" section for what a human should confirm on a real install.
+
+**Next candidates:** a `mintcart/checkout/payment_methods` preview
+endpoint (the same pattern applied to `checkout/payment_method.php`'s
+payment-extension loop, which already routes through `TotalsAdapter` for
+totals but still inlines its own `getMethod($address, $total)` loop for
+listing available payment methods); a Mint-native checkout UI Twig/JS
+component that actually calls `totals()`/`shippingMethods()` (still
+nothing does — see both docs' "What this is not"); `CheckoutService`'s
+order-creation step itself (still deliberately not attempted, same
+`addOrder()` field-list risk noted above); or re-check `gh pr list --state
+open` first, since this backlog moves fast.
 
 **Update (this run): the header's legacy cart dropdown now reacts to
 `mc:cart:updated`.** `assets/src/js/components/header-cart.js`
