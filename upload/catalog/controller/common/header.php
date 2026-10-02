@@ -172,7 +172,8 @@ class ControllerCommonHeader extends Controller {
 					'text_logout' => $this->language->get('text_logout'),
 					'text_wishlist' => $data['text_wishlist'],
 					'text_menu' => $this->language->get('text_menu'),
-					'text_close' => $this->language->get('text_close')
+					'text_close' => $this->language->get('text_close'),
+					'text_search' => $this->language->get('text_search')
 				));
 			} catch (\Throwable $e) {
 				// Same rationale as ControllerCommonFooter's own catch: a
@@ -220,18 +221,27 @@ class ControllerCommonHeader extends Controller {
 		// isset() guarded the same defensive way content_top.php does it,
 		// since header.php runs as a sub-controller of every page and an
 		// unset route is not expected to happen on a real page render.
-		// $hasResults is deliberately left at its default (true) for every
-		// route including product/search: threading the real "did this
-		// search match anything" flag from search.php into header.php needs
-		// a registry/session bridge between two sibling controllers, a
-		// separate, slightly larger wiring task - see
-		// docs/developer/seo/robots.md "Known limitation" for the follow-up.
+		// $hasResults: for product/search only, threaded from
+		// ControllerProductSearch::index() via the registry (it runs
+		// before this sub-controller and has no other way to hand us "did
+		// this search match anything" - see RobotsBuilder::
+		// HAS_RESULTS_REGISTRY_KEY's own docblock). Every other route
+		// never sets this key, so the registry read is null and this
+		// falls back to RobotsBuilder's own default (true), unchanged for
+		// every route except product/search - see
+		// docs/developer/seo/robots.md for the full writeup.
 		try {
 			$route = isset($this->request->get['route']) ? (string)$this->request->get['route'] : '';
 
 			$robots_builder = new \MintCart\Seo\RobotsBuilder();
 
-			$data['mc_robots_content'] = $robots_builder->metaContent($route);
+			$mint_search_has_results = $this->registry->get(\MintCart\Seo\RobotsBuilder::HAS_RESULTS_REGISTRY_KEY);
+
+			if ($mint_search_has_results === null) {
+				$mint_search_has_results = true;
+			}
+
+			$data['mc_robots_content'] = $robots_builder->metaContent($route, (bool)$mint_search_has_results);
 		} catch (\Throwable $e) {
 			(new \MintCart\Core\Logger())->error('RobotsBuilder failed to build robots meta content: ' . $e->getMessage());
 		}

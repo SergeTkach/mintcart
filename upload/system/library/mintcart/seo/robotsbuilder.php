@@ -26,6 +26,23 @@ namespace MintCart\Seo;
 final class RobotsBuilder
 {
     /**
+     * The `\Registry` key `ControllerProductSearch::index()` writes the
+     * "did this search actually match anything" flag to before calling
+     * `$this->load->controller('common/header')`, and the key
+     * `ControllerCommonHeader::index()` reads it back from. A plain
+     * request-scoped registry value, not a new table/session/event — the
+     * same `$this->registry->set()`/`->get()` bridge OpenCart's own
+     * `startup/startup.php` uses to hand `session`/`customer`/`cart` from
+     * one stage of the request to the next, and the smallest bridge that
+     * closes the "Known limitation" `docs/developer/seo/robots.md`
+     * documented (this class has no `\Registry` dependency itself — only
+     * the two call sites reference this constant).
+     *
+     * @var string
+     */
+    public const HAS_RESULTS_REGISTRY_KEY = 'mc_seo_search_has_results';
+
+    /**
      * Utility/account/checkout routes that carry no unique public content a
      * search engine should ever list — every visitor's cart, checkout flow
      * and account pages are functionally identical (or behind a login
