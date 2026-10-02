@@ -3016,3 +3016,47 @@ coverage, including the rejection cases); full `tests/mintcart/` suite
 the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
 section.
+
+## `upload/system/library/db/pdo.php`
+
+**Reason:** MC-0019 (`docs/fixes/registry.md`) — `query()` had no
+reconnect handling at all: under this class's real default
+(`PDO::ATTR_ERRMODE_SILENT`, never explicitly set), a dropped connection
+(driver error 2006/2013) just made `execute()` return `false`, silently
+producing an empty result; if a `PDOException` happened to surface
+instead, it was rethrown immediately with no retry. The sibling adaptor
+(`DB\MySQLi`) already got this fix under MC-0011; this closes the same
+gap for `DB\PDO`. Extracted the constructor's connection setup into a
+`connect()` method and added a bounded (max one) reconnect-and-retry path
+for exactly those two driver error codes, read from `errorInfo()` (which
+PDO populates regardless of `ATTR_ERRMODE`) on both the silent-`false`
+and the thrown-exception path; every other error code still behaves
+exactly as before, unretried.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+MC-0011's `mysqli.php` entry — `DB\PDO` is a concrete adaptor OpenCart's
+core `DB` class instantiates by class name (`system/library/db.php`'s
+`new $class(...)`) when `DB_DRIVER=pdo`; there is no MintCart-owned seam
+between `DB` and the adaptor to intercept a query and retry it without
+either modifying this file or replacing OpenCart's whole DB bootstrap.
+
+**Compatibility impact:** every existing success/error path is unchanged
+for every driver error code *except* 2006/2013, which previously either
+silently returned an empty result or threw, and now transparently retry
+once before falling back to that exact same pre-fix behavior if the retry
+also fails. No public method signature changed. Two visibility/structural
+changes, both with no other effect since nothing in this codebase
+subclassed `DB\PDO` before: `connect()` is a new `protected` method
+(extracted from the constructor, not exposed as a new public API) so a
+test can override it with a fake connection, and the class is no longer
+`final`, to allow that same test subclass. OpenCart itself never installs
+with `DB_DRIVER=pdo` by default (`mysqli` is the stock choice), so this
+adaptor has no live exercise in this environment beyond the unit test
+below.
+
+**Tests:** `php -l` clean. New
+`tests/mintcart/fixes/mc-0019-pdo-reconnect-test.php` (7 scenarios) — see
+the MC-0019 registry entry for full detail. Full `tests/mintcart/` suite
+re-run end to end — all pass, no regressions. Not verified against a real
+MySQL server or a real `DB_DRIVER=pdo` install (neither available in this
+environment) — see the registry entry's "Not verified" note.
