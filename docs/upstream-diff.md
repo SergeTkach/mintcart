@@ -2813,6 +2813,35 @@ bulk special-price update replaces (not adds to) any existing
 via the normal edit form with a non-default customer group or a date
 range — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16 section.
 
+**Update (2026-09-28, routine run — Phase 16, Bulk Editor):** the toolbar's
+single generic `bulk_value` text `<input>` is now two controls sharing
+that `name` — an Enabled/Disabled `<select>` for the `status` field, a
+`type="number"` input (whole numbers for quantity/manufacturer_id/
+stock_status_id, decimals for price/special_price) for every other field
+— toggled by a small inline `<script>` block on `#input-bulk-field`'s
+`change` event, which `disabled`s whichever control is not the active
+one. This touches only `product_list.twig`; no PHP file in this section
+changed — `BulkProductUpdateValidator`/`ControllerCatalogProduct::bulkUpdate()`
+already read `bulk_value` as a plain string regardless of which HTML
+control produced it, and their validation is unchanged.
+
+**Why it can't live in the MintCart layer:** it is admin-form UX for one
+specific pre-existing OpenCart template, not platform code.
+
+**Compatibility impact:** none — a disabled form control is excluded from
+the browser's own POST body, so the controller still only ever receives a
+single `bulk_value`, exactly as before; the six existing fields' bulk
+updates are otherwise untouched.
+
+**Tests:** no PHP touched, so `tests/mintcart/` was not re-run (nothing it
+covers changed). `product_list.twig`'s `{% if %}`/`{% for %}` tag counts
+unchanged and re-checked balanced (14/14, 2/2 — no `{% %}` tag touched).
+The file's three inline `<script>` blocks (including the new toggle)
+checked for JS syntax errors with a standalone Node harness (Twig `{{ }}`
+output substituted with a placeholder string) — all parse cleanly. **Not
+verified live** — no MySQL/admin session in this environment; see
+`docs/MANUAL_VERIFICATION.md`'s updated Phase 16 section (new step 8).
+
 ## `upload/catalog/controller/extension/feed/google_sitemap.php`
 
 **Reason:** Phase 18 (SEO Core, `MINTCART_FUNCTIONAL_SCOPE.md` §16 /
