@@ -1052,6 +1052,30 @@ rationale as MC-0001/MC-0003, four already-proven `language->get()`
 calls). **Not verified:** no live MySQL/Twig session in this environment
 — see `docs/MANUAL_VERIFICATION.md`'s new Phase 6 entry.
 
+**Update (this run — Phase 1/15B, `MintCart\Core\Stage`):** `index()` (the
+plain brand-index page, not `info()`) now fires
+`catalog.manufacturer.breadcrumbs.before`/`.after` around its breadcrumb
+build and `catalog.manufacturer.listing.before`/`.after` around its A–Z
+manufacturer-list build, via the new `MintCart\Core\Stage` helper
+(`docs/developer/core/stage.md`). Picked `index()` over `info()` because
+it's short and already a single, clearly-bounded pair of stages, and over
+`category.php` (Technical Plan §15B's own worked example) because PR #157
+was open and modifying `category.php` at the time of this run. **Why it
+can't live in the MintCart layer:** `Stage::run()` itself already does —
+it's a pure, `\Registry`-free class. What's controller-specific is exactly
+where to draw the stage boundaries for *this* method's two meaningful
+steps. **Compatibility impact:** none — `$data['breadcrumbs']`/
+`$data['categories']` are built with byte-identical logic, just wrapped in
+a closure passed to `Stage::run()`; no existing behavior changes unless a
+store or extension explicitly registers a listener on one of the two new
+event names (which nothing does by default). **Tests:** `php -l` clean;
+full `tests/mintcart/**/*-test.php` suite (85 files, including the new
+`stage-test.php`) re-run
+end to end — all passing, no regressions. **Not verified:** no live
+MySQL/admin-Events-screen session in this environment to confirm a
+registered extension listener actually receives `$data` by reference as
+documented — see `docs/developer/core/stage.md`'s DoD checklist.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/manufacturer.php`

@@ -181,6 +181,55 @@ clean on the new class/test and the full `upload`/`tests` tree; new
 full `tests/mintcart/**/*-test.php` suite re-run end to end (36 files, was
 35) — all passing, no regressions (no existing PHP file touched).
 
+### Controller Decomposition & Fine-grained Events (Technical Plan §15A-§15F, Implementation Guide §38A-§38B)
+
+- [~] Lightweight stage/pipeline helper (`$this->stage('breadcrumbs', fn () => ...)`
+      per Technical Plan §15B's own worked example) — `MintCart\Core\Stage`
+      (this run), wrapping OpenCart's existing `Event::trigger()` mechanism
+      with a dot-separated naming convention
+      (`catalog.manufacturer.breadcrumbs.before`/`.after`) distinct from
+      OpenCart's own slash-separated route-level event names. No
+      OpenCart-engine dependency (duck-typed against a `trigger()` method),
+      6-scenario test. See `docs/developer/core/stage.md`.
+- [~] First live consumer — `ControllerProductManufacturer::index()`'s
+      `breadcrumbs`/`listing` stages (this run). `category.php` (Technical
+      Plan §15B's own worked example) was deliberately skipped — PR #157
+      was open and modifying it at the time; `info()` (same controller, the
+      larger per-manufacturer product listing) is the natural next
+      consumer. See `docs/upstream-diff.md`'s `manufacturer.php` entry.
+- [ ] Controller decomposition into named stage methods
+      (`initialize()`/`loadContext()`/`buildBreadcrumbs()`/`buildListing()`/
+      `render()`, Implementation Guide §38A) — not attempted; this run only
+      wrapped existing inline code in closures passed to `Stage::run()`,
+      it did not restructure `index()` into separate named methods.
+- [ ] Documented catalog of all `Stage`-fired event names — not worth
+      creating for a single consumer yet (`CLAUDE.md` §85); revisit once
+      `category.php`/`search.php`/`special.php`/`product.php` each have at
+      least one stage wired.
+- [ ] Product Listing reuse (`ProductListingService`, Technical Plan §15C)
+      and a single `ProductViewProvider` (§15D) consolidating the
+      duplicated per-row product-array-building logic already present in
+      `category.php`/`search.php`/`manufacturer.php`/`special.php` — not
+      attempted; a separate, larger increment (each controller's inline
+      `$data['products'][] = [...]` block would need to be extracted
+      without changing any of the four controllers' current output).
+
+**Sub-step (this run): `MintCart\Core\Stage` + first live consumer.** Step 0
+dedup check against 44 open PRs (`#138`–`#187`) found none touching Slots,
+fine-grained events, or `MintCart\Core\Stage` by title — genuinely
+unclaimed. `category.php` (the Technical Plan's own worked example) was
+skipped as a wiring target because PR #157 was open and modifying it;
+`ControllerProductManufacturer::index()` was picked instead — short,
+uncontended, and already a clean two-stage shape (breadcrumbs, then
+listing). Full writeup: `docs/developer/core/stage.md`,
+`docs/upstream-diff.md`'s `manufacturer.php` entry. Verified: `php -l`
+clean across every `.php` file in `upload/` and `tests/`; full
+`tests/mintcart/**/*-test.php` suite re-run end to end (85 files, up from
+84) — all passing, no regressions. **Next candidates:** wire `Stage` into
+`ControllerProductManufacturer::info()` (same controller, larger method);
+decompose `category.php` into named stage methods once PR #157 merges;
+or re-check `gh pr list --state open` first, since this backlog moves fast.
+
 ## Phase 2 — Frontend foundation
 
 - [x] `package.json` + `package-lock.json`
