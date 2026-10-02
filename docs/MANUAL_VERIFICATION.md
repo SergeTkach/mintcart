@@ -779,11 +779,15 @@ actually submitted. On a real install:
 ## Phase 15 — `mc-search-box` component, never exercised in a browser
 
 `assets/src/js/components/search-box.js` is bundle-verified (present in
-`catalog.min.js`, absent from `admin.min.js`) but has no live template to
-mount against yet (`docs/developer/components/search-box.md`). Once a
-future increment drops its markup contract into a real page (most likely
-`mint_default/template/common/header.twig`, replacing or sitting alongside
-the legacy search fragment):
+`catalog.min.js`, absent from `admin.min.js`) and, as of 2026-09-19, is
+live in both `mint_default/template/mint/components/header.twig` (the
+`mc-header__widgets` slot, replacing the legacy `widgets.search` fragment)
+and `test_theme/template/mint/components/header.twig` (next to the
+branding link) — see `docs/developer/components/search-box.md` "Wired
+into `mint_default`'s and `test_theme`'s header". Still never exercised in
+an actual browser (no MySQL/browser session in this environment). On a
+`config_theme=mint_default` (and separately, `config_theme=test_theme`)
+install:
 
 1. Type a 1-character query and confirm no network request fires (open the
    browser's network tab) and the dropdown stays closed.
@@ -804,6 +808,17 @@ the legacy search fragment):
    search for a term matching 8 or fewer and confirm it does not appear.
 6. Click outside the dropdown and confirm it closes without clearing the
    typed query.
+7. Confirm the header no longer renders the legacy jQuery-autocomplete
+   search box (no `#search` element, no `common/search` fragment in the
+   page source) on `mint_default` — only the new `.mc-search-box`. Confirm
+   the network tab shows `components.min.css` (not `index.min.css`)
+   loading with the `mc-search-box` rules actually present (this was
+   broken before the `assets/src/css/components.css` import fix landed —
+   worth double-checking the box is visually styled, not just
+   functional).
+8. Switch `config_theme` to `test_theme` and repeat steps 1-2 against its
+   own `.mc-search-box` (different placement — next to the branding link)
+   to confirm both themes' overrides work independently.
 
 ## Phase 18 — Schema.org JSON-LD, never validated against a real page
 
