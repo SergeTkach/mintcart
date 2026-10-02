@@ -28,11 +28,25 @@
  *       <span data-mc-entity-picker-page-info></span>
  *       <button type="button" data-mc-action="entity-picker-next"></button>
  *     </div>
+ *     <div class="mc-entity-picker__create" data-mc-entity-picker-create hidden>
+ *       <input type="text" class="mc-field__control" data-mc-entity-picker-create-input>
+ *       <button type="button" data-mc-action="entity-picker-create"></button>
+ *     </div>
  *     <div class="mc-entity-picker__footer">
  *       <span data-mc-entity-picker-selected-count></span>
  *       <button type="button" data-mc-action="entity-picker-confirm"></button>
  *     </div>
  *   </div>
+ *
+ * The `__create` block (`MINTCART_FUNCTIONAL_SCOPE.md` §8's "create-new
+ * flow via drawer/modal") is optional markup: it only does anything when
+ * the host supplies a `createItem` option below, and is force-`hidden`
+ * otherwise, exactly like `__footer`'s confirm button is hidden when no
+ * `onConfirm` is supplied. It is deliberately an inline row inside this
+ * same panel, not a second nested drawer/modal — the picker already
+ * knows how to insert/select a new row, so reusing that instead of
+ * opening a second dialog on top of the first keeps the interaction (and
+ * the markup) simpler (`CLAUDE.md` §86).
  *
  * Item rows are rendered by this module (their content is always data-
  * driven), as `<li role="option" aria-selected="…" data-id="…">`, styled by
@@ -54,6 +68,8 @@ const SELECTORS = {
     empty: '[data-mc-entity-picker-empty]',
     pageInfo: '[data-mc-entity-picker-page-info]',
     selectedCount: '[data-mc-entity-picker-selected-count]',
+    create: '[data-mc-entity-picker-create]',
+    createInput: '[data-mc-entity-picker-create-input]',
 };
 
 export function createEntityPicker(root, {
@@ -67,6 +83,7 @@ export function createEntityPicker(root, {
     getImage = (item) => item.image ?? null,
     onChange = null,
     onConfirm = null,
+    createItem = null,
 } = {}) {
     if (typeof fetchItems !== 'function') {
         throw new TypeError('createEntityPicker() requires a fetchItems(...) data source');
@@ -80,6 +97,9 @@ export function createEntityPicker(root, {
     const pageInfoEl = root.querySelector(SELECTORS.pageInfo);
     const selectedCountEl = root.querySelector(SELECTORS.selectedCount);
     const confirmButton = root.querySelector('[data-mc-action="entity-picker-confirm"]');
+    const createSection = root.querySelector(SELECTORS.create);
+    const createInput = root.querySelector(SELECTORS.createInput);
+    const createButton = root.querySelector('[data-mc-action="entity-picker-create"]');
 
     if (!listEl) {
         throw new Error('createEntityPicker() requires a [data-mc-entity-picker-list] element in root');
@@ -284,6 +304,70 @@ export function createEntityPicker(root, {
         }, debounceMs);
     }
 
+    async function handleCreate() {
+        if (typeof createItem !== 'function' || !createInput) {
+            return;
+        }
+
+        const name = createInput.value.trim();
+
+        if (!name) {
+            createInput.focus();
+            return;
+        }
+
+        if (createButton) {
+            createButton.disabled = true;
+        }
+
+        try {
+            const item = await createItem(name);
+
+            if (destroyed || !item) {
+                return;
+            }
+
+            const id = String(getId(item));
+
+            knownItems.set(id, item);
+
+            if (!multiple) {
+                selectedIds.clear();
+            }
+
+            selectedIds.add(id);
+
+            createInput.value = '';
+
+            // Re-query by the new item's own name rather than just
+            // reloading the current page: sort order (usually by name)
+            // may place it outside page 1, and this is the one query that
+            // is guaranteed to find it regardless (CLAUDE.md §86 - no new
+            // "jump to the page containing id X" pagination feature needed
+            // just for this).
+            query = getLabel(item);
+            page = 1;
+
+            if (searchInput) {
+                searchInput.value = query;
+            }
+
+            await load();
+            notifyChange();
+        } finally {
+            if (!destroyed && createButton) {
+                createButton.disabled = false;
+            }
+        }
+    }
+
+    function handleCreateKeydown(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            handleCreate();
+        }
+    }
+
     function handleRootClick(event) {
         if (event.target.closest('[data-mc-action="entity-picker-prev"]') && page > 1) {
             page -= 1;
@@ -300,11 +384,16 @@ export function createEntityPicker(root, {
         if (event.target.closest('[data-mc-action="entity-picker-confirm"]') && typeof onConfirm === 'function') {
             onConfirm(itemsById(selectedIds));
         }
+
+        if (event.target.closest('[data-mc-action="entity-picker-create"]')) {
+            handleCreate();
+        }
     }
 
     listEl.addEventListener('click', handleListClick);
     listEl.addEventListener('keydown', handleListKeydown);
     searchInput?.addEventListener('input', handleSearchInput);
+    createInput?.addEventListener('keydown', handleCreateKeydown);
     root.addEventListener('click', handleRootClick);
 
     if (selectedCountEl) {
@@ -313,6 +402,10 @@ export function createEntityPicker(root, {
 
     if (confirmButton && typeof onConfirm !== 'function') {
         confirmButton.hidden = true;
+    }
+
+    if (createSection) {
+        createSection.hidden = typeof createItem !== 'function';
     }
 
     return {
@@ -351,6 +444,7 @@ export function createEntityPicker(root, {
             listEl.removeEventListener('click', handleListClick);
             listEl.removeEventListener('keydown', handleListKeydown);
             searchInput?.removeEventListener('input', handleSearchInput);
+            createInput?.removeEventListener('keydown', handleCreateKeydown);
             root.removeEventListener('click', handleRootClick);
         },
     };
