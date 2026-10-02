@@ -2001,8 +2001,13 @@ question is resolved — see the ADR's "Consequences" section.
 - [x] List primitive shipped (Phase 11 — `McEntityPicker`, see above):
       search, pagination, images, multi-select, keyboard nav, selected
       state, all against a caller-supplied data source.
-- [ ] Filters (beyond search text) — not attempted; no real per-entity
-      filter requirement identified yet.
+- [~] Filters (beyond search text) — `McEntityPicker` now supports a
+      generic `[data-mc-entity-picker-filter="<key>"]` hook
+      (`entity-picker.js`) and the Product backend
+      (`ControllerMintcartEntity::product()`) accepts a real
+      `filter_status` param; no template renders a filter element yet
+      (see Product backend's own "Filters" update below) — Category/
+      Manufacturer have no requirement/backend support identified yet.
 - [x] Real `fetchItems` backends per entity type (products, categories,
       manufacturers, attributes, options, information pages, customers) —
       **category and manufacturer are done** (manufacturer this run), see
