@@ -6428,3 +6428,51 @@ argument. **Next candidates:** the admin controller/`mintcart/update/*`
 route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
+
+---
+
+**Trailer note (2026-10-02, routine run — MC-0021 fix, Fixes Registry/
+Phase 10 (Technical Plan)).** Step 0 found 49 open PRs (`#138`–`#186`) at
+the start of this run, spanning nearly every tracked phase (Entity
+Picker, Setup Wizard steps, Bulk Editor fields, Update Manager primitives,
+SEO wiring, Compatibility Checker UI, Reviews UI, wishlist persistence,
+seven `docs/user/*` guides, and the `IMPLEMENTATION_STATUS.md`
+merge-conflict-debris cleanup itself in `#154` — deliberately not touched
+by this run for exactly that reason). The `Phase 10 (Technical Plan) — SEO
+/ Fixes / Performance` section above (starting at its `## Phase 10
+(Technical Plan)` heading) is itself the accumulated merge-conflict debris
+`#154` is already fixing — not edited here to avoid colliding with that
+in-flight cleanup; this note is appended standalone instead.
+
+This run audited the one `product/*` listing controller
+(`category.php`/`search.php`/`manufacturer.php` already each had a
+`heading_title`-family fix under MC-0001/MC-0003/MC-0017) that had not yet
+been checked for the same bug class: `special.php`. Confirmed
+`ControllerProductSpecial::index()` never assigns `$data['heading_title']`
+— only `$this->document->setTitle(...)` gets it — while both
+`special.twig`s (`default` and `mint_default`) render a top-level
+`{{ heading_title }}` page heading. Filed **MC-0021** and applied the
+one-line fix (`docs/fixes/registry.md`'s new MC-0021 entry,
+`docs/upstream-diff.md`'s `special.php` entry has a matching "Update"
+block). No open PR title mentions `special.php`, and none of the 49 touch
+it per `gh pr view <n> --name-only`'s spot checks on the ones most likely
+to (none of the SEO/Diagnostics/listing PRs touch this file). Verified:
+`php -l` clean on the modified file; full repo-wide lint
+(`find upload tests -name '*.php'`, matching `.github/workflows/ci.yml`'s
+`php-lint` job) clean; full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end exactly as `ci.yml`'s `php-tests` job does — all
+passing, no regressions. Not verified: no live MySQL/Twig session in this
+environment (same pre-existing gap noted throughout this file) — a human
+should confirm the Special Offers page's heading is no longer blank on a
+real install, on both the stock `default` theme and `mint_default`.
+
+**Next candidates:** once `#154` merges, the `Phase 10 (Technical Plan)`
+section's actual next-free Fix Registry ID should be re-derived from
+`docs/fixes/registry.md` directly (now MC-0022, since `#174`/`#178`/`#182`
+still hold MC-0018/MC-0019/MC-0020 as open, unmerged PRs); a fresh
+Known-Fix-Research-Queue candidate (`MINTCART_FUNCTIONAL_SCOPE.md` §18 —
+e.g. the classic OpenCart pagination "`?page=1`" duplicate-URL issue on
+the in-page sort/limit links themselves, as opposed to the `<link
+rel="canonical">` tag MC-0002 already covers) would need careful
+reproduction before filing, not attempted here for lack of time; or
+re-check `gh pr list --state open` first, since this backlog moves fast.

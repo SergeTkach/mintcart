@@ -686,6 +686,22 @@ call site. Full design rationale: `docs/developer/seo/schema-org.md`.
 **Tests:** `php -l` clean; Twig tag balance checked; full `tests/mintcart/`
 suite (77 files) re-run end to end — all passing, no regressions.
 
+**Update (2026-10-02, routine run — MC-0021 fix, Fixes Registry):** added
+`$data['heading_title'] = $this->language->get('heading_title');`
+immediately after the existing `$this->document->setTitle(...)` call.
+Both `special.twig`s (`default` and `mint_default`) render a top-level
+`{{ heading_title }}` for the page heading, but `index()` only ever passed
+that string to `setTitle()` (the `<title>` tag), never to `$data` — the
+same missing-`$data`-assignment bug class as MC-0001/MC-0003/MC-0017,
+found by auditing this one remaining listing controller for the same
+pattern. **Why it can't live in the MintCart layer:** it's a one-line
+`$data[...] = $this->language->get(...)` gap in stock controller logic,
+the exact shape MC-0001/MC-0003/MC-0017 already established belongs here,
+not behind an adapter. **Compatibility impact:** none — purely additive
+`$data` key, no existing key changed, no template change, same for the
+stock `default` theme and `mint_default`. **Tests:** `php -l` clean. Full
+writeup: `docs/fixes/registry.md`'s MC-0021 entry.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/special.php`
