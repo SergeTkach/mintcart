@@ -5026,13 +5026,26 @@ Not started.
       run**; products/delivery/payments/design/homepage/orders/SEO basics
       guides not started (most of those features aren't built far enough
       yet to document accurately — see each one's own Phase section above).
-- [ ] Developer architecture overview (`docs/developer/architecture/`,
-      Technical Plan §40's third `docs/` subtree) — not started; the
-      `docs/developer/{components,blocks,commerce,theme-api,onboarding,catalog,update}/`
-      per-feature docs already exist and are kept current per-PR, but there
-      is no single overview doc tying the layers together for a new
-      contributor (`CLAUDE.md`'s own §90 "Final principle" diagram is the
-      closest thing that exists today, inside `CLAUDE.md` itself).
+- [x] Developer architecture overview (`docs/developer/architecture/`,
+      Technical Plan §40's third `docs/` subtree) — **this run**:
+      `docs/developer/architecture/overview.md`. Maps each
+      `MintCart\*` namespace/layer (Compatibility, Core, Design, Commerce,
+      Blocks, SEO, Update, Onboarding, Catalog helpers, admin UI
+      primitives) to the classes/routes that actually exist on `master`
+      today, cross-checked file-by-file rather than written from memory
+      (`CLAUDE.md` §84) — e.g. confirmed `MintCart\Core\Cache\CacheInvalidator`,
+      `MintCart\Onboarding\SocialProfileLinks`, and
+      `mint_default/template/mint/blocks/products.twig` all exist exactly
+      as named before citing them. Points to the existing per-feature docs
+      under `docs/developer/{admin,blocks,catalog,commerce,compatibility,
+      components,core,design,onboarding,seo,theme-api,update}/*.md` for
+      depth rather than duplicating them, and explicitly does not track
+      implementation status (that stays `docs/IMPLEMENTATION_STATUS.md`'s
+      job, since it changes too fast for a hand-written overview to track
+      without going stale). Includes one concrete top-to-bottom request
+      trace (a Homepage Products block render) illustrating the
+      `Theme → MintCart API → OpenCart Adapter → OpenCart` dependency
+      direction from `CLAUDE.md` §90.
 
 **This run:** `docs/user/install.md` and `docs/user/setup-wizard.md` — this
 repository had **zero** files under `docs/user/` despite it being an
@@ -5073,6 +5086,23 @@ section once more Phase 13 Wizard steps/Phase 14 Business Settings façades
 land and can be documented accurately. Low collision risk either way
 (pure Markdown, `docs/` only) — re-check `docs/user/` isn't newly claimed
 by another open PR before starting, same as any other increment.
+
+**Update (2026-09-29, routine run):** the Developer architecture overview
+named above is now done — see the checklist entry just above for the
+full writeup. Step 0 checked all 17 open PRs at the start of this run
+(`#138`-`#154`, all `ROUTINE-STATUS: DONE` except `#148` `IN-PROGRESS`);
+none touch `docs/user/` or `docs/developer/architecture/` (confirmed via
+`git diff --name-only` against every open PR's branch, not just their
+titles), so this was genuinely unclaimed and, being pure Markdown with no
+code, carried zero collision risk. Verified: no code touched, so
+`php -l`/`npm run build`/`tests/mintcart/` don't apply; every class name,
+namespace, file path and Twig path cited in `overview.md` was grepped
+against the actual `upload/system/library/mintcart/**` tree before being
+written down, not recalled from memory. **Next candidates:** a
+`docs/user/products.md` guide (see the "Next step" note above, still
+valid); `docs/adr/` entries for decisions currently only justified inline
+across several per-feature docs (`CLAUDE.md` §15); or re-check
+`gh pr list --state open` first, since this backlog moves fast.
 
 ---
 
