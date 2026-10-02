@@ -110,27 +110,37 @@ document.addEventListener('mc:search-box:results', (event) => {
   `detail: { query, count, items }`) fires on `root` after every successful
   fetch, empty or not.
 
-## Not wired into any live template yet
+## Wired into `mint_default`'s and `test_theme`'s header (2026-09-19)
 
-`mint_default`'s header still renders the legacy jQuery-autocomplete search
-fragment (`docs/developer/components/header.md` "Why widgets stay legacy
-fragments") — same reason Navigation/Cart(partially)/Account still do.
-`initSearchBoxes()` is nonetheless already called from `catalog.js` now:
-it only ever activates against a `[data-mc-search-box]` root, and none
-exists in any shipped template yet, so this is inert until a future header
-increment drops the markup contract above into
-`mint_default/template/common/header.twig` — the same "ship the component
-behind a real Twig contract, wire the template later" approach `mc-quantity`/
-`mc-modal` already took in Phase 4, and `mc-product-card`/`CartService` took
-in Phase 6/15 before `ComponentRenderer` existed to render them.
+`mint_default/template/mint/components/header.twig`'s `mc-header__widgets`
+slot now renders the markup contract above directly, replacing the legacy
+`{{ widgets.search|raw }}` jQuery-autocomplete fragment outright.
+`test_theme/template/mint/components/header.twig` renders the same
+component in a different placement/DOM (next to the branding link, before
+the account/cart widgets), proving the same override-fallback story
+Product Card/Header/Footer already proved for this component too.
+`initSearchBoxes()` (already called unconditionally from `catalog.js`)
+picks both up with no JS change needed — this was purely a Twig-and-CSS
+change. `HeaderViewProvider`'s `widgets.search` key is untouched: it is
+still computed and still exposed in the contract for any third-party theme
+that wants the legacy fragment instead; `mint_default` simply stopped
+reading it.
 
-Replacing the legacy fragment outright (rather than composing it) also
-needs the same admin/storefront asset-enqueue decision every other
-Commerce/Theme-API JS increment since Phase 7 has flagged as the real
-blocker for *visual* verification (`docs/developer/components/header.md`
-"Known gap") — this component's fetch/render/keyboard logic is real and
-independently testable (see "Not verified" below), but nothing will look
-styled on a live page until that decision is made.
+This was blocked on the same admin/storefront asset-enqueue decision every
+other Commerce/Theme-API JS increment since Phase 7 had flagged as the
+real blocker for *visual* verification — resolved by enqueuing
+`components.min.css`/`catalog.min.js` on the storefront
+(`docs/developer/components/header.md` "Known gap (partially resolved)").
+
+**Bug found and fixed while wiring this in:** `assets/src/css/components.css`
+(the bundle `header.php` actually enqueues on the storefront, specifically
+*because* it excludes the Bootstrap 5 reset that conflicts with the
+Bootstrap 3 stack still also loaded there) was missing this file's own
+`@import './components/search-box.css'` line — along with
+`product-gallery.css` and `quick-order.css` — despite `index.css` already
+having all three. Without that fix, this component's markup would have
+reached the header with zero CSS. See `docs/IMPLEMENTATION_STATUS.md`'s
+Phase 15 entry for the full writeup.
 
 ## Definition of Done checklist (`MINTCART_IMPLEMENTATION_GUIDE.md` §79)
 
@@ -148,12 +158,14 @@ styled on a live page until that decision is made.
       widths
 - [x] No Bootstrap 3 dependency
 - [x] No OCMOD required
-- [ ] Theme override checked — deferred; no live template renders this
-      component's markup yet (see "Not wired into any live template yet")
+- [x] Theme override checked — `mint_default` and `test_theme` both render
+      it, in genuinely different placements (see "Wired into
+      `mint_default`'s and `test_theme`'s header" above)
 - [ ] Live data verified end to end — this environment has no MySQL server
       (same pre-existing gap noted throughout `docs/IMPLEMENTATION_STATUS.md`);
       a human should confirm the dropdown renders/navigates correctly
-      against a real catalog once a template renders the markup contract
+      against a real catalog now that a template renders the markup
+      contract
 
 ## Verified
 
@@ -170,6 +182,15 @@ styled on a live page until that decision is made.
 
 **Not verified:** no live browser/MySQL session in this environment — a
 human should confirm keyboard navigation, the debounce/abort behavior under
-fast typing, and the "View all results" link once this component's markup
-lands in a real template. See `docs/MANUAL_VERIFICATION.md`'s new Phase 15
-entry.
+fast typing, and the "View all results" link now that this component's
+markup is live in both themes' headers. See `docs/MANUAL_VERIFICATION.md`'s
+Phase 15 entry.
+
+**Verified (2026-09-19, wiring increment):** `mc-search-box` confirmed
+present in `assets/dist/css/components.min.css` after the `components.css`
+import fix above (0 occurrences before the fix, 1 after) — this is the
+bundle that actually reaches the storefront, so this was the real
+regression test for the CSS fix, not just `index.min.css` (which already
+had it). Both `header.twig` files' `if`/`for` tag counts checked balanced.
+Full `tests/mintcart/**/*-test.php` suite re-run end to end (84 files,
+unaffected — no PHP class touched) — still passing.
