@@ -885,9 +885,10 @@ never rendered on a real page or run through an actual validator. On a
 
 ## Phase 18 — `RobotsBuilder` meta tag, never validated against a real page
 
-`RobotsBuilder` is unit-tested in isolation (74 assertions), but its
-`ControllerCommonHeader` wiring (2026-09-15) was never rendered on a real
-page. On a `config_theme=mint_default` install:
+`RobotsBuilder` is unit-tested in isolation (76 assertions), but its
+`ControllerCommonHeader` wiring (2026-09-15, `$hasResults` registry bridge
+added in a later run) was never rendered on a real page. On a
+`config_theme=mint_default` install:
 
 1. Load the homepage, a category page, and a product page; confirm
    `<meta name="robots" content="index, follow">` appears in `<head>`.
@@ -896,12 +897,13 @@ page. On a `config_theme=mint_default` install:
    `account/wishlist`; confirm each instead renders
    `<meta name="robots" content="noindex, follow">`.
 3. Load `product/search` with a query that matches nothing (e.g. a random
-   string); confirm it currently still renders `content="index, follow"`
-   — this is the documented, deliberate known limitation (see
-   `docs/developer/seo/robots.md` "Known limitation"), not a bug: a real
-   fix needs `$hasResults` threaded from `ControllerProductSearch` into
-   `ControllerCommonHeader`, not yet built.
-4. Confirm the tag does **not** appear at all on the legacy `default`
+   string); confirm it now renders `content="noindex, follow"` — the
+   `ControllerProductSearch` → `ControllerCommonHeader` registry bridge
+   (`RobotsBuilder::HAS_RESULTS_REGISTRY_KEY`, see
+   `docs/developer/seo/robots.md`) should have closed this gap.
+4. Load `product/search` with a query that matches at least one product;
+   confirm it still renders `content="index, follow"`.
+5. Confirm the tag does **not** appear at all on the legacy `default`
    theme (this wiring is not gated by `isMintAware()`, but `default`'s own
    `common/header.twig` never reads `$data['mc_robots_content']`, so it
    should render unchanged).
