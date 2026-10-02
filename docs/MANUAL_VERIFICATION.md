@@ -1206,3 +1206,33 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    `mint_default`) shows **no** new network requests for either file —
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
+
+## Phase 12 — Attribute field's `McEntityPicker`, never exercised end to end
+
+Same underlying gap as the other Entity Picker fields above (no admin
+bundle enqueued yet, per `docs/developer/admin/asset-enqueue.md`), plus
+this is the first Entity Picker field with *multiple, dynamically added*
+rows sharing one picker instance, so it has its own failure modes worth
+checking specifically once a bundle is loaded on `catalog/product/form`:
+
+1. Grant `mintcart/entity` **Access** if not already done for the other
+   Entity Picker endpoints (same permission covers all seven routes).
+2. Open a product's **Attribute** tab. Click "Add Attribute" twice, so two
+   empty rows exist. Click the new "Browse" button on the *second* row,
+   search for and select an attribute, and confirm it fills the *second*
+   row's name/attribute_id fields — not the first row's, and not a third,
+   not-yet-added row.
+3. Repeat on the first row. Confirm the picker's search box/page/results
+   reset (not left over from the previous row's search) and the selection
+   lands in the first row this time.
+4. Confirm the legacy jQuery UI autocomplete on each row's name `<input>`
+   still works unmodified — type a partial attribute name and select it
+   from the browser's native autocomplete dropdown; confirm it still fills
+   the same fields the picker does, and neither interferes with the other.
+5. Remove a row (the red minus button), add a new one, and confirm its
+   "Browse" button opens the picker and writes into the *new* row, not a
+   stale reference to the removed one's DOM node.
+6. Save the product and confirm the attribute (added via the picker) is
+   actually persisted — `ControllerCatalogProduct`'s save logic reads the
+   same `product_attribute[N][name]`/`[attribute_id]` fields regardless of
+   which UI filled them in, so this should need no special-casing.

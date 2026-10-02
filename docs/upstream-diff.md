@@ -2257,6 +2257,63 @@ in this environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for
 the full manual script. Same pre-existing "trimmed repository"
 label-blank gap noted above applies identically to the six new
 `text_related_picker_*` keys — not a new gap this change introduces.
+
+**Update (this run — Phase 12, Entity Picker): Attribute tab wired into
+the same admin screen.** `product_form.twig`'s Attribute tab (`#attribute`,
+previously only a jQuery UI `autocomplete()` field per dynamically-added
+row) gains a "Browse" button + hidden `.mc-entity-picker` panel, against
+the already-shipped, previously-consumer-less `mintcart/entity/attribute`
+backend (`docs/developer/components/entity-picker.md` "Attribute
+backend"). Unlike Category/Manufacturer/Related, attribute rows are added
+dynamically (`addAttribute()`), so this is **one shared picker instance**
+(single-select, `multiple: false`) reused across every row via event
+delegation on the `#attribute` table, not a picker-per-field: each row's
+new "Browse" button carries `data-mc-action="browse-attribute"
+data-mc-attribute-row="N"`; clicking it records which row is active, and
+`onConfirm` writes into that row's new `[data-mc-attribute-name]`/
+`[data-mc-attribute-id]` hooks. Both the initial Twig-rendered rows
+(`{% for product_attribute in product_attributes %}`) and the
+JS-generated row markup (`addAttribute()`'s own HTML-string template)
+were updated identically so a row added via either path behaves the same.
+Confirming a selection writes into the exact same fields
+`attributeautocomplete()`'s own jQuery UI `select` handler already writes
+to, so `ControllerCatalogProduct::validateForm()`/`addProduct()`/
+`editProduct()`'s handling of `product_attribute[]` is completely
+untouched. No controller change was needed — this screen's
+`enqueueMintAssets()` already covers the whole form (added for Category).
+Six new `text_attribute_picker_*` language keys were added, same
+file/pattern as Category's/Manufacturer's/Related's own six.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+the Category/Manufacturer/Related entries above — this is the one true
+owner of the product edit screen's form.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, or `$data` key changed; the existing jQuery autocomplete still
+works exactly as before, on every row regardless of whether it was
+present at page load or added afterward.
+
+**Tests:** `php -l` clean on the language file (no PHP changed in the
+controller or any `upload/system/library/mintcart/*` class — this is
+Twig/JS/language-file only, reusing the already-tested
+`AttributePickerProvider`/`ControllerMintcartEntity::attribute()` backend
+as-is). Twig `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag
+counts checked balanced before and after (38/38, 37/37, unchanged — this
+change adds no new conditional/loop tags). Both modified inline
+`<script>` blocks (and all 8 other, untouched ones) extracted and checked
+with `node --check` (all pass), same approach as the Category/
+Manufacturer/Related entries, since there is no live browser in this
+environment to exercise it. Full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end — all passing, no regressions (no PHP library
+code changed here). **Not verified:** no live MySQL/admin session in this
+environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for the full
+manual script, which specifically covers the multi-row/shared-instance
+behavior this field introduces (browsing into the correct row, resetting
+search state between rows, surviving row removal/re-add) that the
+single-field Category/Manufacturer/Related pickers didn't need to check.
+Same pre-existing "trimmed repository" label-blank gap noted above
+applies identically to the six new `text_attribute_picker_*` keys — not a
+new gap this change introduces.
 ## `upload/system/library/db.php`
 
 **Reason:** MC-0006 (`docs/fixes/registry.md`) — `DB::connected()` called

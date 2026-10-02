@@ -1913,11 +1913,12 @@ question is resolved — see the ADR's "Consequences" section.
       **category and manufacturer are done** (manufacturer this run), see
       below; the other five entity types still need their own.
 - [~] Live wiring into an actual admin screen/field — **category,
-      manufacturer and product are now done** (`product_form.twig`'s
+      manufacturer, product and attribute are now done** (`product_form.twig`'s
       Category and Manufacturer fields in earlier runs, its Related
-      Products field this run — see the "Related Products field
-      live-wired" update below); information/attribute/option/customer
-      backends still have no live consumer.
+      Products field and now its Attribute tab — see the "Attribute field
+      live-wired" update below); information/option/customer backends
+      still have no live consumer (option is in progress in an open PR at
+      the time of this note — re-check before picking it up).
 - [ ] Create-new flow via drawer/modal — not attempted.
 
 **Update (this run): the category `fetchItems` backend is done.**
@@ -2298,6 +2299,53 @@ resolving the Phase 17 category-list fork above (needs a product decision
 first); Entity Picker Filters/Create-new-flow (neither has a real
 requirement yet); or re-check `gh pr list --state open` first, since this
 backlog moves fast.
+
+**Update (2026-09-29, routine run): Attribute field live-wired.** Step 0
+found 14 open PRs (`#138`-`#151`, all `ROUTINE-STATUS: DONE` except `#148`
+`IN-PROGRESS` — "wire Entity Picker Option backend into
+`product_form.twig`"). None of them touch the Attribute tab of
+`product_form.twig` (`#148` is scoped to the separate Option tab further
+down the same file — different tab, non-overlapping lines); none of the
+Homepage Builder hot shared files (§0f — block-type registry, `block.css`)
+are touched by any open PR. `product_form.twig`'s Attribute tab
+(`#attribute`) is `AttributePickerProvider`/`ControllerMintcartEntity::attribute()`'s
+first live consumer — exactly the "new UI affordance" the "Attribute
+backend" section of `docs/developer/components/entity-picker.md` predicted
+(unlike category/manufacturer/related, there was no existing single-select
+attribute autocomplete field to swap out, since attribute rows are added
+dynamically via `addAttribute()`). One shared `#attribute-picker`
+`McEntityPicker` instance (single-select) is reused across every
+dynamically-added row via event delegation on the `#attribute` table: each
+row's new "Browse" button carries `data-mc-attribute-row="N"`; clicking it
+records the active row, and `onConfirm` writes into that row's new
+`[data-mc-attribute-name]`/`[data-mc-attribute-id]` hooks — the same
+fields `attributeautocomplete()`'s own jQuery UI `select` handler already
+writes to (kept as-is, not replaced, same reasoning as category/
+manufacturer/related), so `ControllerCatalogProduct`'s save logic needs no
+change. New language strings in
+`upload/admin/language/en-gb/catalog/product.php`
+(`text_attribute_picker_*`, same shape as the manufacturer/related picker
+strings). Full rationale in `docs/developer/components/entity-picker.md`'s
+"Attribute backend" section (now updated from "not attempted" to "done").
+**Verified:** `php -l` clean across the full `upload`/`tests` tree (only
+the language file is PHP — no library class changed, reusing the
+already-tested `AttributePickerProvider`/`ControllerMintcartEntity::attribute()`
+backend as-is); Twig `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}`
+tag counts unchanged and balanced (38/38, 37/37 — no new conditional/loop
+tags added, only markup/comments/`{{ }}` output and new inline
+`<script>` statements); the two modified inline `<script>` blocks (and
+all 8 other, untouched ones) extracted and checked with `node --check`
+(all pass); full `tests/mintcart/**/*-test.php` suite (84 files) re-run
+end to end — all passing, no regressions. **Not verified:** no live
+MySQL/admin session in this environment to click through the actual
+picker UI — see `docs/MANUAL_VERIFICATION.md` for the standing manual
+script this falls under. **Next candidates:** the remaining entity types
+needing live wiring — information and customer (option is claimed by open
+PR `#148` at the time of this note — re-check `gh pr list --state open`
+before touching its tab); Entity Picker Filters/Create-new-flow (neither
+has a real requirement yet); resolving the Phase 17 category-list fork
+above (needs a product decision first); or re-check `gh pr list --state
+open` first, since this backlog moves fast.
 
 ## Phase 13 — Setup Wizard
 
