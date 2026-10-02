@@ -1918,7 +1918,47 @@ question is resolved — see the ADR's "Consequences" section.
       Products field this run — see the "Related Products field
       live-wired" update below); information/attribute/option/customer
       backends still have no live consumer.
-- [ ] Create-new flow via drawer/modal — not attempted.
+- [~] Create-new flow via drawer/modal — the generic `createItem` support
+      now exists on `createEntityPicker()` itself, with its first real
+      backend + consumer (**manufacturer**, in `product_form.twig`) — see
+      the new update below. Every other entity type still has no
+      create-new flow.
+
+**Update (2026-10-02, routine run): Entity Picker create-new flow
+(generic + Manufacturer).** Step 0 found 48 open PRs (#138-#185), none
+touching `McEntityPicker`'s create-new flow or the Homepage Builder hot
+files (§0f). `assets/src/js/components/entity-picker.js`/`entity-picker.css`
+gained an optional `createItem(name)` callback + inline `.mc-entity-picker__create`
+row (hidden unless supplied, same pattern `onConfirm`'s button already
+uses); on success the new item is selected and the list re-queries by the
+item's own name (not just the current page) so it's visible regardless of
+sort order. First real backend + consumer: `ControllerMintcartEntity::manufacturerCreate()`
+(route `mintcart/entity/manufacturerCreate`, POST `name`, wraps
+`ModelCatalogManufacturer::addManufacturer()` behind the real
+`catalog/manufacturer` modify permission) wired into `product_form.twig`'s
+Manufacturer picker — picked because it needs only a name, the smallest
+required-field set of any entity type here. Full writeup:
+`docs/developer/components/entity-picker.md`'s new "Create-new flow"
+section and its Manufacturer-backend update; `docs/upstream-diff.md`'s
+`product_form.twig` entry; `docs/MANUAL_VERIFICATION.md`'s new "Create-new
+flow" subsection. Verified: `php -l` clean across the full `upload`/`tests`
+tree; `node --check` clean on `entity-picker.js` and on the extracted
+`product_form.twig` inline scripts; `npm run build` clean, with the built
+`admin.min.js`/`components.min.css` grepped to confirm the new hooks/classes
+are present; Twig `{% if %}`/`{% for %}` tag counts unchanged (38/38,
+37/37); full `tests/mintcart/**/*-test.php` suite re-run end to end (84
+files) — all passing, no regressions (no pure-PHP logic changed; the new
+controller action is thin wiring around already-tested model code, same
+"no new unit test" precedent every other `ControllerMintcartEntity` GET
+action already set). **Not verified:** no live MySQL/admin session in this
+environment — see `docs/MANUAL_VERIFICATION.md` for the full manual script,
+including granting `catalog/manufacturer` **Modify** before testing.
+**Next candidates:** a create-new flow for another entity type (category
+is the next-smallest, but needs a `parent_id` decision unlike manufacturer
+— see the doc's own note); filters beyond search text; live wiring for the
+information/attribute/option/customer backends (re-check open PRs first —
+several of #148/#152/#163/#170/#177 may already cover these); or re-check
+`gh pr list --state open` first, since this backlog moves fast.
 
 **Update (this run): the category `fetchItems` backend is done.**
 `upload/admin/controller/mintcart/entity.php`

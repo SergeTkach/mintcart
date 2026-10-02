@@ -149,6 +149,74 @@ drawerEl.addEventListener('mc:entity-picker:change', (event) => {
 - `destroy()` — remove all listeners (call if the host drawer/modal is
   removed from the DOM)
 
+## Create-new flow
+
+`MINTCART_FUNCTIONAL_SCOPE.md` §8 lists "create-new flow via drawer/modal"
+as part of the Entity Picker requirement. This is the generic primitive
+support for it — an optional `createItem(name)` callback, and an inline
+`.mc-entity-picker__create` row (search input's sibling, inside the same
+panel):
+
+```html
+<div class="mc-entity-picker__create" data-mc-entity-picker-create hidden>
+    <input type="text" class="mc-field__control" data-mc-entity-picker-create-input>
+    <button type="button" data-mc-action="entity-picker-create">Add new</button>
+</div>
+```
+
+The row is force-`hidden` by `createEntityPicker()` itself unless the
+caller supplies `createItem` — the same pattern the `__footer` confirm
+button already uses for `onConfirm`, so a host page can include this
+markup unconditionally without an extra `{% if %}` in its own template.
+
+```js
+createEntityPicker(root, {
+    fetchItems: /* … */,
+    createItem(name) {
+        return fetch('index.php?route=mintcart/entity/manufacturerCreate&user_token=…', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ name }),
+        })
+            .then((response) => response.json())
+            .then((json) => json.item ?? null); // null signals failure, no item inserted
+    },
+});
+```
+
+On success (`createItem` resolves to a truthy item), the picker:
+
+1. Adds the item to `knownItems` and selects it (replacing any previous
+   selection when `multiple: false`).
+2. Clears the create input.
+3. **Re-queries by the new item's own `getLabel(item)` value** rather than
+   just reloading the current page — a freshly-created row may sort
+   outside page 1 (manufacturer/category lists sort by name), and a
+   name-filtered search is the one query guaranteed to surface it
+   regardless of where it landed. This deliberately does not add a
+   "jump to the page containing id X" pagination feature just to solve
+   this (`CLAUDE.md` §86) — reusing the existing search/filter path is
+   simpler and already exercised by every other query.
+4. Fires `mc:entity-picker:change` same as any other selection change.
+
+Returning a falsy value (e.g. `null` after showing the caller's own error
+UI) is a no-op — no item is inserted, no row re-query happens, and the
+create input is left as-is so the user can correct and retry.
+
+**Why no second drawer/modal:** the picker already knows how to insert
+and select a new row from a successful fetch; opening a second dialog on
+top of the first to collect "just a name" would duplicate that machinery
+for no benefit (`CLAUDE.md` §86). A field that genuinely needs more than
+one input to create (image, SEO URL, …) can still supply a richer
+`createItem` — e.g. one that itself opens a second `mc-modal` requesting
+the extra fields before resolving — without this primitive needing to
+know about that.
+
+**First real backend + consumer:** manufacturer, see "Manufacturer
+backend" below — picked because `ModelCatalogManufacturer::addManufacturer()`
+has the smallest required-field set of any entity type here (only
+`name`). Every other entity type's create-new flow is still unclaimed.
+
 ## Not auto-initialized — exposed on `window.MintCart` for legacy templates
 
 `createEntityPicker` still isn't auto-initialized the way `initModalTriggers()`
@@ -268,9 +336,14 @@ real install is a natural, low-risk follow-up — not attempted this run for
 the same no-live-verification reason.
 
 **Still not done, by design:**
-- Filters beyond search text, and the create-new-flow (add a category
-  inline from the picker) — no requirement identified yet for this
+- Filters beyond search text — no requirement identified yet for this
   consumer.
+- The create-new flow (add a category inline from the picker) — the
+  generic primitive support now exists (see "Create-new flow" above),
+  but category's own backend has no `createCategory`-shaped action yet
+  (unlike manufacturer, a new category also needs at least a `parent_id`
+  decision, so it isn't the same "just a name" minimal case) — not
+  attempted this run.
 - Every other entity type is now done — **manufacturer**, **product**,
   **information pages**, **attributes**, **options** and **customers**,
   see below.
@@ -347,6 +420,29 @@ mechanisms write the identical `input-manufacturer`/`manufacturer_id`
 fields, so `product.php`'s save logic needed no change. Removing the old
 autocomplete field is the same natural, low-risk, not-yet-attempted
 follow-up as Category's.
+
+**Create-new flow (a later run):** `ControllerMintcartEntity::manufacturerCreate()`
+(route `mintcart/entity/manufacturerCreate`, POST `name`) wraps
+`ModelCatalogManufacturer::addManufacturer()` — picked as the first entity
+type for "Create-new flow" (see that section above) because it's the only
+one here whose `add*()` model method needs nothing beyond a name.
+Mirrors `ControllerCatalogManufacturer::validateForm()`'s own 1-64
+character name-length rule exactly, and checks the real
+`catalog/manufacturer` `modify` permission (not a new `mintcart/entity`
+"modify" grant) in addition to `mintcart/entity` `access` — creating a
+manufacturer is gated by the same ACL the stock add/edit screen already
+uses, independent of who may merely browse manufacturers for picking.
+Defaults `manufacturer_store` to `array(0)`, matching
+`ControllerCatalogManufacturer::getForm()`'s own default for a brand-new
+manufacturer (the default store pre-checked) — a human can assign
+additional stores, an image, or SEO URLs later from the manufacturer's
+own edit screen; the quick-create's job is only to unblock product
+creation without leaving the page. `product_form.twig`'s Manufacturer
+picker now passes this as its `createItem` option.
+
+**Not done:** no uniqueness check on `name` — matches
+`ControllerCatalogManufacturer::validateForm()`'s own behavior (stock
+OpenCart allows duplicate manufacturer names; this isn't a new gap).
 
 ## Product backend
 
