@@ -34,7 +34,7 @@ request before this fix), and that a page depending on
 No MySQL/OpenCart admin session in this environment. Confirm on a real
 install: `mintcart/wizard?step=delivery` lists every installed shipping
 extension with its real enabled/disabled state; clicking Enable/Disable
-(`mintcart/wizard.toggleDelivery`) flips only that extension's
+(`mintcart/wizard/toggleDelivery`) flips only that extension's
 `shipping_<code>_status` key and leaves its other settings (cost, tax
 class, geo zone, ...) untouched — the same check
 `docs/developer/onboarding/business-delivery-payments.md`'s own
@@ -46,6 +46,21 @@ still advances to the Ready step (no required-field validation for this
 step), while the Ready step's own checklist correctly still shows
 "shipping" as outstanding until at least one method is enabled.
 
+## Phase 13 — Wizard Payment step never rendered live
+
+No MySQL/OpenCart admin session in this environment. Confirm on a real
+install: `mintcart/wizard?step=payment` lists every installed payment
+extension with its real enabled/disabled state; clicking Enable/Disable
+(`mintcart/wizard.togglePayment`) flips only that extension's
+`payment_<code>_status` key and leaves its other settings untouched —
+same check as the Delivery step entry above, now against the `payment`
+extension type; "Manage payment methods" links to a working
+`mintcart/business/payments` page; a store with zero payment extensions
+installed shows the empty state instead of an empty list; and clicking
+Continue with nothing enabled still advances to the Ready step (no
+required-field validation for this step), while the Ready step's own
+checklist correctly still shows "payment" as outstanding until at least
+one method is enabled.
 ## Phase 13 — Wizard First product step never rendered live
 
 No MySQL/OpenCart admin session in this environment. Confirm on a real
@@ -641,6 +656,26 @@ theme-independent):
    corresponding `seo_url` row is deleted (visible in **Design → SEO
    URL**'s own list) and `/cart` no longer resolves (falls back to
    `index.php?route=checkout/cart`).
+9. **Multi-language (new):** install a second language under
+   **System → Localisation → Languages** and enable it. Reload
+   **Design → System Pages** and confirm a second alias column appears,
+   labeled with the new language's name. Set the "Shopping Cart" row's
+   alias for the *second* language to `warenkorb` (different text from
+   the first language's `cart`) and Save; confirm both languages' aliases
+   round-trip independently on reload.
+10. Set the "Checkout" row's alias for the *second* language to the exact
+    same text (`cart`) already used by the *first* language's "Shopping
+    Cart" row. Confirm this saves without a validation error (uniqueness
+    is per-language, not store-wide — see the doc's "Multi-language"
+    section for why this is safe) — then switch the storefront to each
+    language in turn and confirm `/cart` resolves to the correct page for
+    that language in both directions (visiting the URL, and a
+    generated link's `href`).
+11. Disable the second language again and confirm its alias column
+    disappears from the form (its `seo_url` rows are left untouched, not
+    deleted — re-enabling the language should bring the same aliases
+    back).
+
 ## Phase 14 — `Business → Delivery`/`Payments` facades, never exercised end to end
 
 `ControllerMintcartBusinessDelivery`/`...Payments` are `php -l` clean and
@@ -734,6 +769,18 @@ browser. A human should, on a real install:
    button, tab through the fields, submit via Enter, and that focus
    returns to the triggering button when the modal closes (Bootstrap
    `Modal`'s own focus-management, not custom code here).
+6. In Mint Admin, go to **Sale → Quick Order Requests** — confirm the
+   request submitted in step 2 appears in the list with the right
+   product/quantity/contact/date, and `status` shows "New". Change its
+   status via the row's `<select>` + Save, confirm the page reloads with
+   the new status shown and a success message, and that the same status
+   persists after a fresh page load (i.e. it was actually written to
+   `mc_quick_order`, not just reflected from the POST). Filter the list by
+   each status value and confirm only matching rows show. Confirm a user
+   without `mintcart/quickorder` `modify` permission gets
+   `error_permission` and no change is written if they POST directly to
+   `mintcart/quickorder.status`.
+
 ## Phase 13 — Wizard Contacts step, never exercised end to end
 
 `ControllerMintcartWizard::validateContactsStep()`/`saveContactsStep()`
@@ -1402,6 +1449,36 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
 
+## Phase 10 (Technical Plan) — Diagnostics `mintcart_diagnostics=json` surface, never fetched live
+
+`docs/developer/core/diagnostics.md`'s "JSON diagnostics surface" section:
+every controller already wired to `MintCart\Core\Diagnostics`
+(`product/category`, `product/search`, `product/special`,
+`product/manufacturer` info, `product/product`) now also recognizes
+`&mintcart_diagnostics=json`. No MySQL/browser session in this
+environment to fetch it against. On a real install with
+`mintcart_dev_mode` turned on (`System → Diagnostics`):
+
+1. Request a category page normally (e.g.
+   `index.php?route=product/category&path=20`) and confirm the response is
+   still the full HTML page with the `<!-- mintcart-diagnostics {...} -->`
+   comment appended, exactly as before this change.
+2. Request the same URL with `&mintcart_diagnostics=json` appended and
+   confirm the response is now a bare `application/json` body containing
+   just the summary object (`enabled`/`elapsed_ms`/`marks`/`counters`/
+   `durations`), with no HTML at all, and that the `Content-Type` response
+   header is `application/json`.
+3. Confirm the JSON body's contents match what the HTML-comment surface
+   would have shown for an equivalent request (same marks, same
+   `view_rendered` entry) — the two are the same `summary()` call, just
+   returned through a different response path.
+4. Repeat steps 1-3 for `product/search`, `product/special`,
+   `product/manufacturer` (route `product/manufacturer.info`), and
+   `product/product`.
+5. Turn `mintcart_dev_mode` off and confirm `&mintcart_diagnostics=json`
+   is now ignored — the page renders its normal full HTML with no
+   diagnostics comment and no JSON short-circuit, exactly as a request
+   without the parameter would.
 ## Phase 12 — Attribute field's `McEntityPicker`, never exercised end to end
 
 Same underlying gap as the other Entity Picker fields above (no admin

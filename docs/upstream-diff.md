@@ -303,6 +303,42 @@ Twig `if`/`endif`/`for`/`endfor` tag counts checked balanced before and
 after (13/13, 5/5). **Not verified:** no live MySQL/Twig session in this
 environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 19 entry.
 
+**Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
+the existing `if ($mint_diagnostics->isEnabled()) { $output .= "\n<!--
+mintcart-diagnostics ... -->"; }` block, right before `setOutput()`, now
+has a sibling branch checked first: when the request also carries
+`mintcart_diagnostics=json` (still gated by `mintcart_dev_mode` being on),
+the controller returns `$mint_diagnostics->summary()` as a standalone
+`application/json` response instead of the normal page HTML, with an
+early `return` right after `setOutput()`. This was
+`docs/developer/core/diagnostics.md`'s own "Next step" list's third
+bullet ("a structured JSON endpoint ... as an alternative surface to the
+HTML comment") — see that file's new "JSON diagnostics surface" section
+for the full writeup. The identical two-line addition was made at the
+same point in `search.php`/`special.php`/`manufacturer.php`/`product.php`
+— see each file's own entry below for its own brief note. **Why it can't
+live in the MintCart layer:** the branch has to sit exactly where the
+existing HTML-comment branch already sits, right before this specific
+controller's own `setOutput()` call — there is no shared "finish the
+response" hook these five controllers funnel through today (each already
+duplicates the HTML-comment append independently; this mirrors that same
+existing, deliberate small-duplication shape rather than introducing a
+new shared helper for a two-line addition, per `CLAUDE.md` §17/§86).
+**Compatibility impact:** none for any request without
+`mintcart_diagnostics=json` — byte-for-byte the same behavior as before,
+since the new branch's condition is simply false. For a request that does
+pass it, behavior only changes when `mintcart_dev_mode` is also on (the
+same pre-existing gate the HTML comment already uses); with dev mode off,
+`$mint_diagnostics->isEnabled()` is `false` and the whole branch is
+skipped exactly as before. **Tests:** `php -l` clean on all five touched
+files; full `tests/mintcart/**/*-test.php` suite re-run end to end — all
+passing, no regressions (no new test file needed — `Diagnostics::summary()`
+itself is already covered by `tests/mintcart/core/diagnostics-test.php`,
+and this change only threads its existing return value to a different
+response method, no new logic to unit-test). **Not verified:** no live
+MySQL/browser session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 10 entry.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/category.php`
@@ -570,6 +606,12 @@ as `category.php`'s entry. **Tests:** `php -l` clean; full
 `tests/mintcart/` suite (78 files) re-run end to end — all passing, no
 regressions.
 
+**Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
+same `mintcart_diagnostics=json` sibling branch added right before this
+file's own `setOutput()` call — see `category.php`'s entry above (the
+"Update (2026-09-29 ...)" paragraph) for the full writeup; this file's
+change is byte-for-byte the same two-line shape. **Tests:** `php -l`
+clean; full `tests/mintcart/` suite re-run end to end — all passing.
 **Update (this run — Phase 18, SEO Core, `RobotsBuilder` `$hasResults`
 registry bridge):** resolves the `header.php`-side "Known limitation"
 `docs/developer/seo/robots.md` documented. A new
@@ -724,6 +766,12 @@ call site. Full design rationale: `docs/developer/seo/schema-org.md`.
 **Tests:** `php -l` clean; Twig tag balance checked; full `tests/mintcart/`
 suite (77 files) re-run end to end — all passing, no regressions.
 
+**Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
+same `mintcart_diagnostics=json` sibling branch added right before this
+file's own `setOutput()` call — see `category.php`'s entry (the "Update
+(2026-09-29 ...)" paragraph) for the full writeup; this file's change is
+byte-for-byte the same two-line shape. **Tests:** `php -l` clean; full
+`tests/mintcart/` suite re-run end to end — all passing.
 **Update (2026-10-02, routine run — MC-0021 fix, Fixes Registry):** added
 `$data['heading_title'] = $this->language->get('heading_title');`
 immediately after the existing `$this->document->setTitle(...)` call.
@@ -1207,6 +1255,15 @@ rationale as MC-0001/MC-0003, four already-proven `language->get()`
 calls). **Not verified:** no live MySQL/Twig session in this environment
 — see `docs/MANUAL_VERIFICATION.md`'s new Phase 6 entry.
 
+**Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
+same `mintcart_diagnostics=json` sibling branch added right before this
+file's `info()` method's own `setOutput()` call — see `category.php`'s
+entry (the "Update (2026-09-29 ...)" paragraph) for the full writeup;
+this file's change is byte-for-byte the same two-line shape. `index()`'s
+plain manufacturer-list path never constructs `$mint_diagnostics` and is
+untouched. **Tests:** `php -l` clean; full `tests/mintcart/` suite re-run
+end to end — all passing.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/manufacturer.php`
@@ -1646,6 +1703,24 @@ missing (the flag could previously only be set by writing directly to
 `oc_setting`). Purely additive; no existing menu entry, permission check,
 or route touched. **Tests:** `php -l` clean; full `tests/mintcart/`
 suite (81 files) re-run end to end, all passing, no regressions.
+
+**Update (2026-09-28, routine run — `Sale → Quick Order Requests`):** adds
+one entry to the existing `$sale` menu array, right after the stock
+"Orders" entry and before "Order Recurring", gated by
+`$this->user->hasPermission('access', 'mintcart/quickorder')` — same
+conditional-push shape every sibling entry in this file already uses.
+Points at the new `ControllerMintcartQuickorder` (admin-side,
+`upload/admin/controller/mintcart/quickorder.php` — a distinct class from
+the pre-existing catalog-side controller of the same name, which lives in
+a separate MVC tree), the admin list
+`docs/developer/commerce/quick-order-service.md`'s "Not done yet" section
+named as the natural next consumer of the `mc_quick_order` table. One new
+key added to `upload/admin/language/en-gb/common/column_left.php`
+(`text_mintcart_quickorder`), right after `text_order_status`, matching
+every other menu-label key already in that file. Purely additive; no
+existing menu entry, permission check, or route touched. **Tests:**
+`php -l` clean on both changed files; full `tests/mintcart/` suite
+re-run end to end, all passing, no regressions.
 
 ---
 
@@ -2909,6 +2984,16 @@ Twig `if`/`endif`/`for`/`endfor` tag counts checked balanced before and
 after (36/36, 11/11). **Not verified:** no live MySQL/Twig session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 19
 entry.
+
+**Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
+same `mintcart_diagnostics=json` sibling branch added right before this
+file's own `setOutput()` call (the related-products `$mint_diagnostics`
+instance) — see `category.php`'s entry above (the "Update (2026-09-29
+...)" paragraph) for the full writeup; this file's change is
+byte-for-byte the same two-line shape. **Tests:** `php -l` clean; full
+`tests/mintcart/` suite re-run end to end — all passing.
+
+---
 
 ## `upload/admin/model/catalog/product.php` / `upload/admin/controller/catalog/product.php` / `upload/admin/view/template/catalog/product_list.twig`
 
