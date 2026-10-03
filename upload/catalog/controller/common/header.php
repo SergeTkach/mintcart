@@ -172,7 +172,8 @@ class ControllerCommonHeader extends Controller {
 					'text_logout' => $this->language->get('text_logout'),
 					'text_wishlist' => $data['text_wishlist'],
 					'text_menu' => $this->language->get('text_menu'),
-					'text_close' => $this->language->get('text_close')
+					'text_close' => $this->language->get('text_close'),
+					'text_search' => $this->language->get('text_search')
 				));
 			} catch (\Throwable $e) {
 				// Same rationale as ControllerCommonFooter's own catch: a
@@ -220,21 +221,59 @@ class ControllerCommonHeader extends Controller {
 		// isset() guarded the same defensive way content_top.php does it,
 		// since header.php runs as a sub-controller of every page and an
 		// unset route is not expected to happen on a real page render.
-		// $hasResults is deliberately left at its default (true) for every
-		// route including product/search: threading the real "did this
-		// search match anything" flag from search.php into header.php needs
-		// a registry/session bridge between two sibling controllers, a
-		// separate, slightly larger wiring task - see
-		// docs/developer/seo/robots.md "Known limitation" for the follow-up.
+		// $hasResults: for product/search only, threaded from
+		// ControllerProductSearch::index() via the registry (it runs
+		// before this sub-controller and has no other way to hand us "did
+		// this search match anything" - see RobotsBuilder::
+		// HAS_RESULTS_REGISTRY_KEY's own docblock). Every other route
+		// never sets this key, so the registry read is null and this
+		// falls back to RobotsBuilder's own default (true), unchanged for
+		// every route except product/search - see
+		// docs/developer/seo/robots.md for the full writeup.
 		try {
 			$route = isset($this->request->get['route']) ? (string)$this->request->get['route'] : '';
 
 			$robots_builder = new \MintCart\Seo\RobotsBuilder();
 
-			$data['mc_robots_content'] = $robots_builder->metaContent($route);
+			$mint_search_has_results = $this->registry->get(\MintCart\Seo\RobotsBuilder::HAS_RESULTS_REGISTRY_KEY);
+
+			if ($mint_search_has_results === null) {
+				$mint_search_has_results = true;
+			}
+
+			$data['mc_robots_content'] = $robots_builder->metaContent($route, (bool)$mint_search_has_results);
 		} catch (\Throwable $e) {
 			(new \MintCart\Core\Logger())->error('RobotsBuilder failed to build robots meta content: ' . $e->getMessage());
 		}
+
+		// Design → Styles (MINTCART_FUNCTIONAL_SCOPE.md §9, Phase 9/31,
+		// docs/developer/theme-api/presets.md) - writes data-mc-preset onto
+		// <html> from the store's own choice, once ControllerMintcartDesignStyles
+		// exists to make that choice from. Not gated by $mint_render_header
+		// like mc_header above: this is a plain CSS attribute selector any
+		// theme's `<html>` tag can carry (mint_default's is the only one
+		// that does today; a legacy/third-party theme's own header.twig
+		// simply never reads $data['mc_preset']). Re-validated here against
+		// the *active* theme's own declared presets (not merely "is this a
+		// non-empty string") so a stale setting left over from a since-
+		// switched theme, or from a theme that dropped a preset code, never
+		// emits a data-mc-preset value no loaded CSS actually declares a
+		// :root block for.
+		$mc_preset = (string)$this->config->get('mintcart_design_preset');
+
+		if ($mc_preset !== '') {
+			$manifest_path = rtrim(DIR_TEMPLATE, '/') . '/' . $mint_theme . '/theme.json';
+
+			$manifest = is_file($manifest_path) ? json_decode((string)file_get_contents($manifest_path), true) : null;
+
+			$available_presets = (is_array($manifest) && isset($manifest['presets']) && is_array($manifest['presets'])) ? $manifest['presets'] : array();
+
+			if (!in_array($mc_preset, $available_presets, true)) {
+				$mc_preset = '';
+			}
+		}
+
+		$data['mc_preset'] = $mc_preset;
 
 		return $this->load->view('common/header', $data);
 	}

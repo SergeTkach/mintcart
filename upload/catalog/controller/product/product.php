@@ -274,6 +274,7 @@ class ControllerProductProduct extends Controller {
 			$data['text_badge_out_of_stock'] = $this->language->get('text_badge_out_of_stock');
 			$data['text_added_to_cart'] = $this->language->get('text_added_to_cart');
 			$data['text_add_to_cart_error'] = $this->language->get('text_add_to_cart_error');
+			$data['text_wishlist_error'] = $this->language->get('text_wishlist_error');
 
 			// Plain field labels product/product.php's own language file
 			// already defines but this controller never assigned to $data
@@ -296,11 +297,20 @@ class ControllerProductProduct extends Controller {
 			$data['text_discount'] = $this->language->get('text_discount');
 			$data['text_option'] = $this->language->get('text_option');
 			$data['text_related'] = $this->language->get('text_related');
+			// mc-viewed-products (MINTCART_FUNCTIONAL_SCOPE.md §11) heading
+			// label - the strip's items themselves come from
+			// mintcart/viewed/products (JSON) and are rendered client-side,
+			// same split product_cards/text_related already uses above.
+			$data['text_viewed'] = $this->language->get('text_viewed');
 			$data['text_tags'] = $this->language->get('text_tags');
 			$data['tab_description'] = $this->language->get('tab_description');
 			$data['tab_attribute'] = $this->language->get('tab_attribute');
 			$data['text_no_reviews'] = $this->language->get('text_no_reviews');
 			$data['entry_qty'] = $this->language->get('entry_qty');
+			// MC-0022 (docs/fixes/registry.md): button_continue was never
+			// assigned here, so the Write a review form's submit button
+			// rendered with no visible label.
+			$data['button_continue'] = $this->language->get('button_continue');
 
 			$this->load->model('catalog/review');
 
@@ -588,7 +598,8 @@ class ControllerProductProduct extends Controller {
 							'text_add_to_cart'       => $this->language->get('button_cart'),
 							'text_quick_order'       => $this->language->get('text_quick_order'),
 							'text_added_to_cart'     => $this->language->get('text_added_to_cart'),
-							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error')
+							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error'),
+							'text_wishlist_error'    => $this->language->get('text_wishlist_error')
 						),
 						function (\Throwable $e, array $failed_product) {
 							// Same "log and disable for the rest of this
@@ -676,6 +687,27 @@ class ControllerProductProduct extends Controller {
 				} catch (\Throwable $e) {
 					(new \MintCart\Core\Logger())->error('SchemaOrgBuilder failed to build Product schema: ' . $e->getMessage());
 				}
+
+				// MintCart\Seo\SchemaOrgBuilder BreadcrumbList JSON-LD
+				// (MINTCART_FUNCTIONAL_SCOPE.md §16, Phase 18) - the wiring
+				// the comment above already anticipated ("same reasoning as
+				// category.php/search.php's BreadcrumbList wiring") but
+				// never added. $data['breadcrumbs'] is complete by this
+				// point (built at the top of this method and appended to
+				// throughout, same as category.php/search.php/
+				// manufacturer.php/special.php), same try/catch-and-log
+				// pattern as the Product schema block just above so a
+				// malformed value can't fatal the page. A fresh builder
+				// instance is used (not the Product schema block's
+				// `$schema_builder`) so this block never depends on that
+				// block having reached its own `new` statement first.
+				try {
+					$breadcrumb_schema_builder = new \MintCart\Seo\SchemaOrgBuilder();
+
+					$data['mc_schema_breadcrumb'] = $breadcrumb_schema_builder->toJsonLd($breadcrumb_schema_builder->breadcrumbList($data['breadcrumbs']));
+				} catch (\Throwable $e) {
+					(new \MintCart\Core\Logger())->error('SchemaOrgBuilder failed to build BreadcrumbList schema: ' . $e->getMessage());
+				}
 			}
 
 			$mint_diagnostics->mark('view_rendered');
@@ -683,7 +715,15 @@ class ControllerProductProduct extends Controller {
 			$output = $this->load->view('product/product', $data);
 
 			// Functional Scope §19: "Production UI не повинен показувати
-			// sensitive debug data" - see category.php's identical comment.
+			// sensitive debug data" - see category.php's identical comment,
+			// including the `&mintcart_diagnostics=json` alternative surface.
+			if ($mint_diagnostics->isEnabled() && isset($this->request->get['mintcart_diagnostics']) && $this->request->get['mintcart_diagnostics'] === 'json') {
+				$this->response->addHeader('Content-Type: application/json');
+				$this->response->setOutput(json_encode($mint_diagnostics->summary()));
+
+				return;
+			}
+
 			if ($mint_diagnostics->isEnabled()) {
 				$output .= "\n<!-- mintcart-diagnostics " . json_encode($mint_diagnostics->summary()) . " -->";
 			}
@@ -774,6 +814,10 @@ class ControllerProductProduct extends Controller {
 		}
 
 		$data['reviews'] = array();
+
+		// MC-0023 (docs/fixes/registry.md): text_no_reviews was never
+		// assigned here, so the empty-review-list message rendered blank.
+		$data['text_no_reviews'] = $this->language->get('text_no_reviews');
 
 		$review_total = $this->model_catalog_review->getTotalReviewsByProductId($this->request->get['product_id']);
 

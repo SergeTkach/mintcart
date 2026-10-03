@@ -62,6 +62,7 @@ those values into consistent `stock` / `badges` / `actions` fields.
 | `image_alt` | | `?string` | Defaults to `name` |
 | `image_width` | | `?int` | Pixel width `image`/`secondary_image` were resized to (the same value already passed to `model_tool_image->resize()`). Defaults to `null` |
 | `image_height` | | `?int` | Pixel height, same source as `image_width`. Defaults to `null` |
+| `image_srcset` | | `?string` | `"<1x url> 1x, <2x url> 2x"` — see "Image srcset (responsive images)" below. Defaults to `null` |
 | `price` | | `string\|false` | Already currency-formatted, or `false` if hidden (customer-group price restriction) |
 | `special` | | `string\|false` | Already currency-formatted, or `false` |
 | `tax` | | `string\|false` | Already currency-formatted tax-inclusive price, or `false` |
@@ -83,6 +84,7 @@ missing or empty.
 product
   id, name, url, image, secondary_image, image_alt
   image_width, image_height   (nullable — see "Image dimensions" below)
+  image_srcset   (nullable — see "Image srcset (responsive images)" below)
   price, special, tax, rating
   stock: { in_stock: bool, label: ?string }
   badges: [ { type: 'sale'|'out-of-stock'|'new', label: ?string }, ... ]
@@ -146,6 +148,34 @@ the `product-card.twig` contract so the template can set the `<img>`'s
 for a caller that doesn't supply them (a hand-built test fixture, or a
 future consumer with no fixed resize size) — the template guards on this
 and omits the attribute entirely rather than rendering `width=""`.
+
+### Image srcset (responsive images)
+
+`image_srcset` is the same "already built upstream, just threaded
+through" shape as `image_width`/`image_height` above, one level further:
+Category/Search/Manufacturer/Special each call
+`model_tool_image->resize()` a **second** time, at double the configured
+width/height, right next to the existing 1x call, and build a
+`"<1x url> 1x, <2x url> 2x"` string before calling `build()` —
+`MINTCART_FUNCTIONAL_SCOPE.md` §19's "responsive images" Performance item
+(`MINTCART_TECHNICAL_PLAN.md` §67/`MINTCART_IMPLEMENTATION_GUIDE.md` §67
+both name `srcset`/WebP as remaining Performance work; this is the
+`srcset` half — WebP/modern-format generation is a separate, larger
+increment: it needs a real "does this format exist for this image"
+decision that a plain double-size resize doesn't). This class never
+derives it — it only threads the string through, exactly like
+`image_width`/`image_height` — and defaults to `null` when a caller
+doesn't supply one (a hand-built test fixture, or a future consumer with
+no 2x variant), which `product-card.twig` guards on to omit the `srcset`
+attribute entirely rather than render `srcset=""`.
+
+A cost worth naming: this is one extra `model_tool_image->resize()` call
+per product per page render. OpenCart's own resize already caches its
+output to `image/cache/...` on first generation (an existing behavior,
+unchanged by this work) — so the real cost is a one-time cache-miss GD
+render per product per configured size, the same cost the *first* 1x
+resize already pays today, not a new category of cost this doubles
+indefinitely.
 
 ### `options_summary`
 

@@ -103,6 +103,32 @@ A fresh `ProductCardListRenderer` instance always starts enabled — nothing
 here is static or shared across requests, so one broken product on one
 request never affects the next.
 
+## Extension slot wiring (optional 3rd constructor argument)
+
+```php
+$renderer = new \MintCart\Design\ProductCardListRenderer(
+    $componentRenderer,
+    null,   // $productViewProvider - null uses the default instance
+    $slotRegistry  // MintCart\Design\SlotRegistry, or omit/null entirely
+);
+```
+
+`$slotRegistry` (`MintCart\Design\SlotRegistry`,
+`docs/developer/theme-api/slots.md`) is `null` by default, matching every
+existing call site byte-for-byte — no `slots` key is added to the
+template data unless a caller explicitly passes one. When non-null,
+`render()` adds `$productView['slots']['product.after_actions']` (the
+result of `$slotRegistry->render('product.after_actions', $productView['product'])`)
+before handing the data to `ComponentRenderer` — `product-card.twig`'s own
+documented `product.after_actions` slot
+(`docs/developer/components/product-card.md`) is the one real consumer
+today.
+
+No controller constructs a `SlotRegistry` yet (`CLAUDE.md` §85 — no real
+extension needs one registered yet); this argument exists so the mechanism
+is proven end to end at the template level, ready for the first real
+caller.
+
 ## Consumers
 
 - `ControllerProductCategory` (`upload/catalog/controller/product/category.php`)

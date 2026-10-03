@@ -21,6 +21,7 @@
  *
  *   <div class="mc-entity-picker">
  *     <input type="search" class="mc-field__control" data-mc-entity-picker-search>
+ *     <select data-mc-entity-picker-filter="status">...optional, see below...</select>
  *     <ul class="mc-entity-picker__list" role="listbox" data-mc-entity-picker-list></ul>
  *     <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden></p>
  *     <div class="mc-entity-picker__pager">
@@ -55,6 +56,17 @@
  * focused row's selection - the same interaction a mouse click gives, so
  * there is no non-keyboard-only affordance (Functional Scope §27).
  *
+ * Filters (beyond search text) are optional: any element inside `root`
+ * carrying `data-mc-entity-picker-filter="<key>"` (an `input`/`select`, any
+ * element with a `.value`) has its current value read into a plain
+ * `filters` object (`{ [key]: value }`) passed to `fetchItems()` alongside
+ * `query`/`page`/`pageSize` - this module never interprets what a filter
+ * key/value means, exactly like it never interprets `query`. Its `change`
+ * event resets to page 1 and re-fetches, the same behavior the search
+ * input's `input` event already has. A host page that adds no such element
+ * gets `filters: {}` on every call - this is purely additive, so every
+ * existing `fetchItems` caller keeps working unchanged.
+ *
  * `mc:entity-picker:change` (bubbling, `detail: { selected: Item[] }`) fires
  * on `root` every time the selection changes, so a host form field can stay
  * in sync without polling `getSelected()`.
@@ -70,6 +82,7 @@ const SELECTORS = {
     selectedCount: '[data-mc-entity-picker-selected-count]',
     create: '[data-mc-entity-picker-create]',
     createInput: '[data-mc-entity-picker-create-input]',
+    filter: '[data-mc-entity-picker-filter]',
 };
 
 export function createEntityPicker(root, {
@@ -100,6 +113,7 @@ export function createEntityPicker(root, {
     const createSection = root.querySelector(SELECTORS.create);
     const createInput = root.querySelector(SELECTORS.createInput);
     const createButton = root.querySelector('[data-mc-action="entity-picker-create"]');
+    const filterEls = [...root.querySelectorAll(SELECTORS.filter)];
 
     if (!listEl) {
         throw new Error('createEntityPicker() requires a [data-mc-entity-picker-list] element in root');
@@ -117,6 +131,20 @@ export function createEntityPicker(root, {
 
     function itemsById(ids) {
         return [...ids].map((id) => knownItems.get(id)).filter(Boolean);
+    }
+
+    function readFilters() {
+        const filters = {};
+
+        filterEls.forEach((el) => {
+            const key = el.dataset.mcEntityPickerFilter;
+
+            if (key) {
+                filters[key] = el.value;
+            }
+        });
+
+        return filters;
     }
 
     function notifyChange() {
@@ -219,6 +247,7 @@ export function createEntityPicker(root, {
                 query,
                 page,
                 pageSize,
+                filters: readFilters(),
                 signal: abortController.signal,
             });
 
@@ -368,6 +397,11 @@ export function createEntityPicker(root, {
         }
     }
 
+    function handleFilterChange() {
+        page = 1;
+        load();
+    }
+
     function handleRootClick(event) {
         if (event.target.closest('[data-mc-action="entity-picker-prev"]') && page > 1) {
             page -= 1;
@@ -394,6 +428,7 @@ export function createEntityPicker(root, {
     listEl.addEventListener('keydown', handleListKeydown);
     searchInput?.addEventListener('input', handleSearchInput);
     createInput?.addEventListener('keydown', handleCreateKeydown);
+    filterEls.forEach((el) => el.addEventListener('change', handleFilterChange));
     root.addEventListener('click', handleRootClick);
 
     if (selectedCountEl) {
@@ -445,6 +480,7 @@ export function createEntityPicker(root, {
             listEl.removeEventListener('keydown', handleListKeydown);
             searchInput?.removeEventListener('input', handleSearchInput);
             createInput?.removeEventListener('keydown', handleCreateKeydown);
+            filterEls.forEach((el) => el.removeEventListener('change', handleFilterChange));
             root.removeEventListener('click', handleRootClick);
         },
     };

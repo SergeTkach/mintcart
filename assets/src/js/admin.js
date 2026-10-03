@@ -7,6 +7,33 @@
  * New MintCart admin screens use vanilla JS (see CLAUDE.md §7 and
  * docs/MINTCART_IMPLEMENTATION_GUIDE.md §3). Legacy OpenCart admin screens
  * keep using jQuery independently of this bundle.
+ *
+ * Boot timing (Phase 17, found while wiring category_list.twig's drag &
+ * drop): `enqueueMintAssets()` (docs/developer/admin/asset-enqueue.md)
+ * queues this bundle via `$this->document->addScript()`, and every admin
+ * `header.twig` renders `{% for script in scripts %}` inside `<head>`, as
+ * a plain classic `<script src="...">` with no `defer`/`async`/
+ * `type="module"`. A classic script like that runs the moment the parser
+ * reaches it - before `<body>` (and this page's own markup) exists in the
+ * DOM at all. `initAlertDismiss()`'s pure event-delegation (a single
+ * `document.addEventListener('click', ...)`, needing no element to exist
+ * yet) happened to work anyway, which is why this went unnoticed, but
+ * every init*() below that does an eager `root.querySelectorAll(...)` at
+ * call time to wire up *already-existing* elements
+ * (`initSortableLists()` - `docs/developer/components/sortable.md` "1.
+ * Initializes a SortableJS instance on every [data-mc-sortable] container
+ * found ... at call time" - plus `initModalTriggers()`/
+ * `initDrawerTriggers()`/`initToastTriggers()`/`initTabsTriggers()`'s
+ * relay-listener setup and `initProgressBars()`) found nothing and
+ * silently did nothing. `boot()` below defers the same, unmodified call
+ * sequence until the DOM is actually ready, the standard fix for a
+ * classic script loaded in `<head>` (`document.readyState === 'loading'`
+ * covers the `<head>` case; the `else` branch keeps this file safe to
+ * also load after `DOMContentLoaded` has already fired, e.g. injected
+ * dynamically). See `docs/developer/catalog/category-drag-drop.md`'s
+ * "Boot timing bug found while verifying this increment" section for the
+ * full writeup (this file and `catalog.js` are MintCart-owned, not
+ * OpenCart core, so this isn't a `docs/upstream-diff.md` entry).
  */
 
 import 'bootstrap';
@@ -20,6 +47,8 @@ import { initSortableLists } from './components/sortable.js';
 import { initTabsTriggers } from './components/tabs.js';
 import { initProgressBars } from './components/progress.js';
 import { createEntityPicker } from './components/entity-picker.js';
+import { createMediaPicker } from './components/media-picker.js';
+import { initAdminSearch } from './components/admin-search.js';
 
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
@@ -48,10 +77,14 @@ window.MintCart = window.MintCart || {};
 window.MintCart.createEntityPicker = createEntityPicker;
 //
 // mc-media-picker (McMediaPicker) shipped the same way in
-// `./components/media-picker.js` as `createMediaPicker(root, options)`: it
-// needs a caller-supplied `fetchItems`/`fetchFolders`/`uploadFiles`/
-// `deleteItems` data source and a real Media UX consumer (Functional Scope
-// §25 - Product/Category/Blocks image fields), neither of which exist yet.
+// `./components/media-picker.js` as `createMediaPicker(root, options)`:
+// bridged here for the identical reason - plain inline `<script>` blocks on
+// legacy admin Twig templates cannot `import` an ES module directly. First
+// live consumer: `design/homepage_form.twig`'s Hero/Text+Image `image`
+// settings fields (Functional Scope §25), wired against the
+// `design/media/list`/`/folders`/`/upload`/`/delete` backend
+// (`ControllerDesignMedia`/`ModelDesignMedia`).
+window.MintCart.createMediaPicker = createMediaPicker;
 //
 // mc-confirm (McConfirm) shipped in `./components/confirm.js` as an
 // exported `mcConfirm()` function, not imported here: it has no boot-time
@@ -60,14 +93,23 @@ window.MintCart.createEntityPicker = createEntityPicker;
 // needs a confirm prompt (e.g. Bulk Editor mass delete, Phase 16) imports
 // `mcConfirm` directly. Bundling it here with no caller would just be dead
 // code (CLAUDE.md §85: no wiring ahead of a real consumer).
-initAlertDismiss();
-initQuantityStepper();
-initModalTriggers();
-initDrawerTriggers();
-initToastTriggers();
-initSortableLists();
-initTabsTriggers();
-initProgressBars();
+function boot() {
+    initAlertDismiss();
+    initQuantityStepper();
+    initModalTriggers();
+    initDrawerTriggers();
+    initToastTriggers();
+    initSortableLists();
+    initTabsTriggers();
+    initProgressBars();
+    initAdminSearch();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+} else {
+    boot();
+}
 
 // `setProgress()` (assets/src/js/components/progress.js) has no
 // declarative trigger to wire here - it's an imperative API called by a

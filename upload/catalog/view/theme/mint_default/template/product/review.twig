@@ -1,0 +1,44 @@
+{#
+    mint_default's AJAX-loaded review list fragment.
+
+    Rendered directly by `ControllerProductProduct::review()`
+    (`$this->load->view('product/review', $data)`) - same stock OpenCart
+    mechanism `default` theme's own `product/review.twig` uses, not routed
+    through `MintCart\Design\ComponentRenderer` (this is a plain per-theme
+    template override, same as `product.twig`/`category.twig` itself, not
+    an `mc-*` component contract with a fallback chain).
+
+    `$data` contract (unchanged from stock `review()` - see
+    `docs/developer/components/reviews.md`):
+      reviews[]    - {author, text, rating, date_added}, text already
+                     nl2br()'d server-side
+      pagination   - pre-rendered HTML from the `Pagination` class
+      results      - plain-text "Showing X to Y of Z" summary
+      text_no_reviews - MC-0023
+#}
+{% if reviews %}
+    {% for review in reviews %}
+        <article class="mc-reviews__item">
+            <header class="mc-reviews__item-header">
+                <strong class="mc-reviews__author">{{ review.author }}</strong>
+                <span class="mc-reviews__date">{{ review.date_added }}</span>
+            </header>
+
+            <div class="mc-rating mc-rating--sm" style="--mc-rating-value: {{ (review.rating / 5 * 100)|round }}%" role="img" aria-label="{{ review.rating }}/5">
+                <span class="mc-rating__stars" aria-hidden="true">
+                    <span class="mc-rating__stars-empty">★★★★★</span>
+                    <span class="mc-rating__stars-filled">★★★★★</span>
+                </span>
+            </div>
+
+            <p class="mc-reviews__text">{{ review.text|raw }}</p>
+        </article>
+    {% endfor %}
+
+    <div class="mc-reviews__pagination">
+        <div class="mc-reviews__pagination-links" data-mc-reviews-pagination>{{ pagination|raw }}</div>
+        <p class="mc-reviews__pagination-summary">{{ results }}</p>
+    </div>
+{% else %}
+    <p class="mc-reviews__empty">{{ text_no_reviews }}</p>
+{% endif %}
