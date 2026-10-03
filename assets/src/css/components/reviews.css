@@ -1,0 +1,112 @@
+/**
+ * mc-reviews / mc-rating-input
+ *
+ * Product page Reviews tab (Functional Scope §11 "integration-ready
+ * reviews area") - list of approved reviews (`mc-reviews`, AJAX-loaded
+ * into `[data-mc-reviews-list]` from the stock `product/product/review`
+ * route, see `assets/src/js/components/reviews.js`) plus a write-review
+ * form.
+ *
+ * `mc-rating-input` is a separate component from the read-only `mc-rating`
+ * (`components/rating.css`) - its own doc explicitly deferred an
+ * interactive picker until a real consumer existed
+ * (docs/developer/components/rating.md "interactive rating" note); this
+ * form is that consumer. Classic radio-group star-picker: inputs are
+ * authored 5..1 in source order and the container is reversed so the
+ * visual left-to-right order reads 1..5, letting `~` highlight every
+ * lower-value star when a higher one is hovered/checked.
+ *
+ * Contract: docs/developer/components/reviews.md
+ */
+
+.mc-reviews__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-4);
+    margin-bottom: var(--mc-space-6);
+}
+
+.mc-reviews__item {
+    padding-bottom: var(--mc-space-4);
+    border-bottom: var(--mc-border-width) solid var(--mc-border);
+}
+
+.mc-reviews__item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.mc-reviews__item-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--mc-space-3);
+    margin-bottom: var(--mc-space-1);
+}
+
+.mc-reviews__author {
+    color: var(--mc-text);
+}
+
+.mc-reviews__date,
+.mc-reviews__pagination-summary {
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-reviews__text {
+    margin-top: var(--mc-space-2);
+    margin-bottom: 0;
+}
+
+.mc-reviews__empty {
+    color: var(--mc-muted);
+}
+
+.mc-reviews__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-3);
+    flex-wrap: wrap;
+}
+
+.mc-reviews__form-title {
+    font-weight: 600;
+    margin-bottom: var(--mc-space-3);
+}
+
+.mc-reviews__form {
+    max-width: 40rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* mc-rating-input                                                        */
+/* ---------------------------------------------------------------------- */
+
+.mc-rating-input__stars {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: var(--mc-space-1);
+    width: fit-content;
+}
+
+.mc-rating-input__star {
+    cursor: pointer;
+    font-size: var(--mc-font-size-xl);
+    line-height: 1;
+    color: var(--mc-color-gray-300);
+}
+
+.mc-rating-input__control:focus-visible + .mc-rating-input__star {
+    outline: var(--mc-border-width-thick) solid var(--mc-primary);
+    outline-offset: 2px;
+    border-radius: var(--mc-radius-sm);
+}
+
+.mc-rating-input__control:checked ~ .mc-rating-input__star,
+.mc-rating-input__star:hover,
+.mc-rating-input__star:hover ~ .mc-rating-input__star {
+    color: var(--mc-color-amber-500);
+}

@@ -9,17 +9,19 @@
  * the shared admin `header`/`column_left`/`footer` wraps every admin
  * screen, this one included, and still only ever loads Bootstrap 3/jQuery.
  *
- * The add/edit form's `image`-type settings fields (Hero/Text+Image), below,
- * do now mount `mc-media-picker` (`docs/developer/components/media-picker.md`,
- * Functional Scope §25): `enqueueMintAssets()` queues
+ * The list screen's reordering now uses `McSortable`
+ * (`assets/src/js/components/sortable.js`, see
+ * `docs/developer/components/sortable.md`), and the add/edit form's
+ * `image`-type settings fields (Hero/Text+Image) mount `mc-media-picker`
+ * (`docs/developer/components/media-picker.md`, Functional Scope §25):
+ * `enqueueMintAssets()` below, called from both `getList()` and
+ * `getForm()`, queues
  * `assets/dist/css/components.min.css` (the Bootstrap-5-free trim of
  * `index.css` — safe to layer on top of the legacy theme's Bootstrap 3,
  * `docs/developer/admin/asset-enqueue.md`'s "The fix: two bundles, pick the
  * right one") and `assets/dist/js/admin.min.js`, the same pattern
  * `ControllerCatalogProduct::getForm()` already established as this
- * repo's first consumer. Reordering on the list screen is a separate
- * question (not touched by this change) and still uses a plain per-row
- * `sort_order` number input.
+ * repo's first consumer.
  *
  * `TYPES` now lists all fifteen shipped block types (Products through
  * Gallery, MINTCART_IMPLEMENTATION_GUIDE.md §51's full first-wave catalog)
@@ -301,10 +303,13 @@ class ControllerDesignHomepage extends Controller {
 	}
 
 	/**
-	 * Persists the list screen's per-row `sort_order` number inputs
-	 * (`order[<block_id>]`). Plain form POST + redirect, no AJAX — see this
-	 * file's header comment for why (McSortable needs an asset bundle
-	 * that's never been enqueued into the admin theme).
+	 * Persists the list screen's per-row `order[<block_id>]` values. Plain
+	 * form POST + redirect, still no AJAX — `homepage_list.twig`'s
+	 * `McSortable` list keeps one hidden `order[<block_id>]` input per row
+	 * (recomputed client-side on every `mc:sortable:reorder` event) inside
+	 * the same `<form>`/"Save Order" button this always had, so this
+	 * method's own contract (accept an `order` array, persist it, guarded
+	 * by `page_id`) did not need to change to support drag-and-drop.
 	 */
 	public function saveOrder() {
 		$this->load->language('design/homepage');
@@ -331,7 +336,26 @@ class ControllerDesignHomepage extends Controller {
 		return $this->model_design_homepage->addPage(self::PAGE_CODE, $this->language->get('text_home_page_name'));
 	}
 
+	/**
+	 * Queues MintCart's own admin bundle (`docs/developer/admin/asset-enqueue.md`)
+	 * so the block list's drag-and-drop reordering (`McSortable`,
+	 * `data-mc-sortable` markup in `homepage_list.twig`) actually has CSS/JS
+	 * behind it, and the add/edit form's `image`-type settings fields
+	 * (Hero/Text+Image) can mount `mc-media-picker`. `components.min.css`
+	 * (not `index.min.css`) deliberately excludes Bootstrap 5's
+	 * reset/grid/utility layer, so it is safe to load
+	 * alongside the legacy admin theme's Bootstrap 3 — see that doc's "The
+	 * fix: two bundles, pick the right one" for why. Called from both
+	 * `getList()` and `getForm()`.
+	 */
+	protected function enqueueMintAssets() {
+		$this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
+		$this->document->addScript(HTTP_CATALOG . 'assets/dist/js/admin.min.js');
+	}
+
 	protected function getList() {
+		$this->enqueueMintAssets();
+
 		$page_id = $this->getPageId();
 
 		$data['breadcrumbs'] = array();
@@ -392,31 +416,6 @@ class ControllerDesignHomepage extends Controller {
 		$data['footer'] = $this->load->controller('common/footer');
 
 		$this->response->setOutput($this->load->view('design/homepage_list', $data));
-	}
-
-	/**
-	 * Queues MintCart's own admin bundle (`docs/developer/admin/asset-enqueue.md`)
-	 * so this form's `image`-type settings fields (Hero/Text+Image) can
-	 * mount `mc-media-picker` below. `components.min.css` (not
-	 * `index.min.css`) deliberately excludes Bootstrap 5's reset/grid/
-	 * utility layer, so it is safe to load alongside the legacy admin
-	 * theme's Bootstrap 3 — see that doc's "The fix: two bundles, pick the
-	 * right one" for why, and `ControllerCatalogProduct::getForm()` for the
-	 * pattern this copies verbatim (`$this->document->addStyle()`/
-	 * `addScript()` is OpenCart's own standard per-page asset mechanism,
-	 * no template change needed).
-	 *
-	 * NOTE for whoever merges this alongside another open PR touching this
-	 * class: at the time of this run, a second open PR independently added
-	 * an identically-named/identically-bodied `enqueueMintAssets()` here,
-	 * called only from `getList()` (for `McSortable` on the block list
-	 * screen) — see this file's class docblock history. If both land, keep
-	 * one copy of the method and call it from both `getList()` and
-	 * `getForm()`; the two additions do not actually disagree on anything.
-	 */
-	protected function enqueueMintAssets() {
-		$this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
-		$this->document->addScript(HTTP_CATALOG . 'assets/dist/js/admin.min.js');
 	}
 
 	protected function getForm() {
