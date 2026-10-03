@@ -73,7 +73,7 @@ template is:
 <article class="mc-product-card{% if display.action_variant == 'compact' %} mc-product-card--compact{% endif %}">
     <div class="mc-product-card__media">
         <a class="mc-product-card__media-link" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
-            <img class="mc-product-card__image" src="{{ product.image }}" alt="{{ product.image_alt }}" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
+            <img class="mc-product-card__image" src="{{ product.image }}"{% if product.image_srcset %} srcset="{{ product.image_srcset }}"{% endif %} alt="{{ product.image_alt }}" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
             {% if display.show_secondary_image and product.secondary_image %}
                 <img class="mc-product-card__image mc-product-card__image--secondary" src="{{ product.secondary_image }}" alt="" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
             {% endif %}
@@ -261,6 +261,18 @@ attribute, since a `null` value (a caller that doesn't supply one) would
 otherwise emit an invalid `width=""`. See
 `docs/developer/commerce/product-view-provider.md`'s "Image dimensions"
 section for the full contract.
+
+## Image srcset (responsive images)
+
+The main `<img>` (not the secondary/hover image — no controller builds a
+2x variant for it) also renders `srcset` from `product.image_srcset` when
+supplied, `"<1x url> 1x, <2x url> 2x"` — same guarded-`{% if %}` shape as
+`width`/`height` above, so a `null` value (no listing controller wired it,
+or a hand-built fixture) omits the attribute rather than rendering
+`srcset=""`. `product.image` still fills `src` as the fallback a browser
+without `srcset` support (or one that picks the 1x descriptor) uses. See
+`docs/developer/commerce/product-view-provider.md`'s "Image srcset
+(responsive images)" section for where the string comes from.
 
 ## Clickable title, not clickable card
 
