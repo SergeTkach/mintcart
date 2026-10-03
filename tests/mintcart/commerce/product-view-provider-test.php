@@ -182,6 +182,32 @@ $view = $provider->build([
 assertSame(null, $view['product']['image_width'], 'image dimensions: image_width defaults to null', $failures);
 assertSame(null, $view['product']['image_height'], 'image dimensions: image_height defaults to null', $failures);
 
+// 11. image_srcset passes through when the caller supplies it (every
+// listing controller - Category, Search, Manufacturer, Special - already
+// builds a "1x, 2x" string from a second model_tool_image->resize() call
+// before calling this - MINTCART_FUNCTIONAL_SCOPE.md §19 Performance,
+// "responsive images"), and defaults to null when omitted (a hand-built
+// test fixture, or a future consumer with no 2x variant) - the template
+// guards on this and omits the srcset attribute entirely.
+$view = $provider->build([
+    'id' => 9,
+    'name' => 'Product Nine',
+    'url' => '#',
+    'image' => 'x.jpg',
+    'image_srcset' => 'x.jpg 1x, x-2x.jpg 2x',
+]);
+
+assertSame('x.jpg 1x, x-2x.jpg 2x', $view['product']['image_srcset'], 'image srcset: passes through when supplied', $failures);
+
+$view = $provider->build([
+    'id' => 10,
+    'name' => 'Product Ten',
+    'url' => '#',
+    'image' => 'x.jpg',
+]);
+
+assertSame(null, $view['product']['image_srcset'], 'image srcset: defaults to null when omitted', $failures);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -190,5 +216,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ProductViewProvider smoke test (' . 10 . " scenarios)\n";
+echo 'PASS: ProductViewProvider smoke test (' . 11 . " scenarios)\n";
 exit(0);

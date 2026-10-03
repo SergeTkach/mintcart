@@ -71,7 +71,7 @@
 
                 <div class="col-md-7">
                     <div class="d-flex gap-2 mb-3">
-                        <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-wishlist" data-product-id="{{ product_id }}" aria-pressed="false" aria-label="{{ text_wishlist }}">♥</button>
+                        <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-wishlist" data-product-id="{{ product_id }}" data-mc-text-wishlist-error="{{ text_wishlist_error }}" aria-pressed="false" aria-label="{{ text_wishlist }}">♥</button>
                         <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-compare" data-product-id="{{ product_id }}" aria-pressed="false" aria-label="{{ text_compare }}">⇄</button>
                     </div>
 
@@ -250,6 +250,11 @@
                     {% endfor %}
                 </div>
             {% endif %}
+
+            <div class="mc-viewed-products" data-mc-viewed-products data-mc-viewed-products-exclude="{{ product_id }}" hidden>
+                <h2 class="h4 mb-3">{{ text_viewed }}</h2>
+                <div class="row g-4" data-mc-viewed-products-list></div>
+            </div>
 
             {{ content_bottom }}
         </div>
