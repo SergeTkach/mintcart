@@ -178,6 +178,44 @@
       </form>
       {% endif %}
 
+      {% if step == 'first_product' %}
+      <h2 class="mc-card__title">{{ first_product_title }}</h2>
+      <p class="mc-card__text">{{ first_product_text }}</p>
+      <form action="{{ action }}" method="post" novalidate>
+        <input type="hidden" name="step" value="first_product" />
+        <input type="hidden" name="first_product_action" value="add" />
+
+        <div class="mc-field mb-3 {% if error.product_name %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-product-name">{{ entry_product_name }}</label>
+          <input type="text" id="input-product-name" name="product_name" value="{{ product_name }}" class="mc-field__control" {% if error.product_name %}aria-invalid="true" aria-describedby="error-product-name"{% endif %} />
+          {% if error.product_name %}<p class="mc-field__error" id="error-product-name" role="alert">{{ error.product_name }}</p>{% endif %}
+        </div>
+
+        <div class="mc-field mb-3 {% if error.price %}has-error{% endif %}">
+          <label class="mc-field__label" for="input-price">{{ entry_price }}</label>
+          <input type="text" inputmode="decimal" id="input-price" name="price" value="{{ price }}" class="mc-field__control" {% if error.price %}aria-invalid="true" aria-describedby="error-price"{% endif %} />
+          {% if error.price %}<p class="mc-field__error" id="error-price" role="alert">{{ error.price }}</p>{% endif %}
+        </div>
+
+        <div class="mc-field mb-3">
+          <label class="mc-field__label" for="input-quantity">{{ entry_quantity }}</label>
+          <input type="number" min="0" id="input-quantity" name="quantity" value="{{ quantity }}" placeholder="100" class="mc-field__control" />
+        </div>
+
+        <div class="mc-field mb-4">
+          <label class="mc-field__label" for="input-description">{{ entry_description }}</label>
+          <textarea id="input-description" name="description" class="mc-field__control">{{ description }}</textarea>
+        </div>
+
+        <button type="submit" class="mc-button mc-button--primary w-100 mb-2">{{ button_add_product }}</button>
+      </form>
+      <form action="{{ action }}" method="post">
+        <input type="hidden" name="step" value="first_product" />
+        <input type="hidden" name="first_product_action" value="skip" />
+        <button type="submit" class="mc-button mc-button--ghost w-100">{{ button_skip }}</button>
+      </form>
+      {% endif %}
+
       {% if step == 'ready' %}
       <h2 class="mc-card__title">{{ readiness_title }}</h2>
       <p class="mc-card__text">{{ readiness_text }}</p>

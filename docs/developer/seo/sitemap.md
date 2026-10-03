@@ -126,24 +126,45 @@ $xml = $builder->sitemapIndex([
 ]);
 ```
 
+## Live wiring: `mintcart/seo/sitemap`
+
+`ControllerMintcartSeoSitemap`
+(`upload/catalog/controller/mintcart/seo/sitemap.php`, route
+`mintcart/seo/sitemap`) is now the "genuinely first-class MintCart-owned
+route" this section previously deferred: always available, no
+`feed_google_sitemap_status` gate and no `Extensions > Feeds > Google
+Sitemap` install required. It reuses the exact same
+`model_catalog_product`/`model_catalog_category`/
+`model_catalog_manufacturer`/`model_catalog_information` enumeration
+`ControllerExtensionFeedGoogleSitemap` already does (same entries, same
+recursion shape for nested categories) and the same `SitemapBuilder::urlset()`
+XML assembly — a merchant with the stock extension also enabled sees the
+same output from both routes, they just never disagree on what a "page"
+is. Deliberately a new, fully-additive controller under `mintcart/seo/`
+(matching `admin/controller/mintcart/seo/system_pages.php`'s namespacing
+on the admin side) rather than a modification of the extension it
+parallels — the same "new controller, not a patch" rationale
+`ControllerMintcartSearch`/`ControllerMintcartCart` already established.
+
 ## Not done yet (a future run's or a human's next step)
 
-The Google Sitemap extension only covers products/categories/manufacturers/
-information pages that OpenCart's own `getProducts()`/`getCategories()`/
-`getManufacturers()`/`getInformations()` models already enumerate for it —
-it is still gated behind `feed_google_sitemap_status`/its own admin
-extension install, not a first-class always-on MintCart feature, and it
-does not (and still does not, after this run) apply the
-`Design → System Pages` URL aliases (`MintCart\Seo\SystemRoutes`) to any
-of its entries, nor split into `sitemapIndex()` pages once a catalog
-exceeds `MAX_URLS_PER_SITEMAP` (its non-sitemapIndex-aware single-file
-shape is unchanged from before this run). A genuinely first-class
-MintCart-owned `mintcart/seo/sitemap.xml` route — always available, no
-extra extension install, honoring System Page aliases, with
-`sitemapIndex()` support for large catalogs, and registering itself in
-`robots.txt` (which OpenCart ships no management for at all today) —
-remains a real, larger follow-up, not attempted here. A human with a real
-install should pick this up as its own follow-up.
+The Google Sitemap extension (`extension/feed/google_sitemap.php`) is
+unchanged and still gated behind `feed_google_sitemap_status`/its own
+admin extension install — left alone deliberately, since a merchant may
+already have it enabled and pointed at a search-console submission.
+Neither route (the extension, or the new `mintcart/seo/sitemap` above)
+applies the `Design → System Pages` URL aliases
+(`MintCart\Seo\SystemRoutes`) to any entry — not a real gap in practice,
+since `$this->url->link()` already applies any `seo_url` keyword
+automatically when `config_seo_url` is enabled, the same mechanism every
+other entry's `loc` already benefits from — nor splits into
+`sitemapIndex()` pages once a catalog exceeds `MAX_URLS_PER_SITEMAP`
+(`urlset()` truncates safely at that limit instead, same as the stock
+extension already does — no regression, just no multi-file split yet).
+Registering a `Sitemap:` line in `robots.txt` (OpenCart ships no
+`robots.txt` management at all today) remains a separate, larger
+follow-up, not attempted here. A human with a real install should pick
+these up as their own follow-ups.
 
 ## Verified
 
@@ -165,3 +186,16 @@ install should pick this up as its own follow-up.
   extension's feed output is unchanged (aside from the `<loc>`/
   `<image:loc>` escaping fix) — see `docs/MANUAL_VERIFICATION.md`'s new
   Phase 18 "Google Sitemap" section.
+
+**Update (`mintcart/seo/sitemap` live wiring):** `php -l` clean on
+`upload/catalog/controller/mintcart/seo/sitemap.php`. No new test file —
+this controller only enumerates rows via existing OpenCart models and
+hands them to the already-tested `SitemapBuilder::urlset()`, the same
+"live-DB controller wiring a pure primitive" shape every other Phase 18
+controller wiring in this backlog used, with no new pure logic to unit
+test. Full `tests/mintcart/**/*-test.php` suite re-run end to end (84
+files) — all passing, no regressions. **Not verified:** no live
+MySQL/OpenCart bootstrap in this environment — a human should confirm on
+a real install that `index.php?route=mintcart/seo/sitemap` returns a
+well-formed `<urlset>` XML document (see `docs/MANUAL_VERIFICATION.md`'s
+Phase 18 section, "MintCart sitemap route" entry).
