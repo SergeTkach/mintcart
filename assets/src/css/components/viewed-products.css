@@ -1,0 +1,22 @@
+/**
+ * mc-viewed-products
+ *
+ * "Recently viewed" storefront strip chrome
+ * (`MINTCART_FUNCTIONAL_SCOPE.md` §11). All fetch/localStorage/render logic
+ * lives in `assets/src/js/components/viewed-products.js`. The strip's items
+ * reuse the existing `mc-product-card` look in full
+ * (`components/product-card.css` - media/body/title/price, including its
+ * `height: 100%` equal-height-card behavior inside a Bootstrap `.row`) with
+ * no `__actions`/quick-actions block, since this item shape has no
+ * add-to-cart/wishlist/compare data - so this file only needs the root's
+ * `[hidden]` empty state, same defensive rule
+ * `components/entity-picker.css` already declares for its own root
+ * (`MINTCART_IMPLEMENTATION_GUIDE.md` §9 - don't duplicate an existing
+ * component's look).
+ *
+ * Contract: docs/developer/components/viewed-products.md
+ */
+
+.mc-viewed-products[hidden] {
+    display: none;
+}

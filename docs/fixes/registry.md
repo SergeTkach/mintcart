@@ -1452,6 +1452,98 @@ stock `default` theme and `mint_default` (see
 
 ---
 
+## MC-0018 — `admin/controller/common/header.php` never assigns its own loaded language strings to `$data`
+
+**Problem:** `admin/view/template/common/header.twig` — the header every
+single logged-in admin page renders — references eight variables:
+`heading_title` (the logo `alt`/`title`), `text_profile`, `text_store`,
+`text_help`, `text_homepage`, `text_support`, `text_documentation` and
+`text_logout` (all in the top-right user dropdown menu). All eight are
+defined in `admin/language/en-gb/common/header.php`, and
+`ControllerCommonHeader::index()` does call
+`$this->load->language('common/header')` — but it never assigns any of
+the eight to `$data` afterward. Same class of bug as MC-0001
+(`category.php`), MC-0003 (`manufacturer.php`'s `info()`) and MC-0017
+(`manufacturer.php`'s `index()`): Twig's default
+`strict_variables => false` renders an undefined variable as an empty
+string instead of throwing, so the admin logo's `alt`/`title`, the "Your
+Profile" link, the "Stores" section heading, the "Help" section heading,
+and the "OpenCart Homepage"/"Documentation"/"Support Forum"/"Logout" link
+text are all silently blank — on every admin screen, not just one
+controller's page, making this the highest-traffic instance of this bug
+class found in this repository so far.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale
+as MC-0001/MC-0003/MC-0017 (no second checkout available to diff against,
+and the fix only adds `$data` keys the template already expects).
+
+**Source:** Discovered directly in this repository while building the
+admin "quick settings search" feature (`MINTCART_FUNCTIONAL_SCOPE.md`
+§23) into this same controller/template pair — not an imported historical
+community patch. Reproduced by grepping
+`admin/view/template/common/header.twig` for every `{{ text_* }}`/
+`{{ heading_title }}` reference and cross-referencing every `$data[...] =`
+assignment in `ControllerCommonHeader::index()`: none of the eight appear
+on the left-hand side anywhere in the file, even though
+`$this->load->language('common/header')` is called and its return value
+is discarded (not captured into a variable, not merged into `$data`).
+
+**Reproduced on MintCart baseline:** Yes — confirmed against
+`upload/admin/view/template/common/header.twig` (stock, unmodified prior
+to this fix, references all eight keys) and
+`upload/admin/controller/common/header.php`'s actual `$data[...] =`
+assignment list (see above). All eight underlying language keys already
+exist and load correctly in
+`upload/admin/language/en-gb/common/header.php` — so, like
+MC-0001/MC-0003/MC-0017, this is purely a missing
+`$data[...] = $this->language->get(...)` call, not a missing translation.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Added the eight missing assignments to
+`ControllerCommonHeader::index()`, immediately after the existing
+`$this->load->language('common/header');` call and before the pre-existing
+`$data['text_logged'] = sprintf(...)` line — explicit per-key
+`$this->language->get(...)` calls, the same shape MC-0001/MC-0003/MC-0017
+already established, rather than a blanket
+`array_merge($data, $this->load->language(...))`: `Language::load()`
+returns its *entire* accumulated registry (every language file loaded so
+far in the request, not just `common/header`'s own keys — confirmed by
+reading `system/library/language.php`'s `load()`), so a blanket merge
+would also pull in unrelated keys from whichever page controller loaded
+its own language file earlier in the same request. No new language
+strings, no template change, no change to `$data['stores']` or any other
+existing key.
+
+**Compatibility impact:** Purely additive — eight previously-blank
+`$data` keys now carry their real values; nothing that previously had a
+value changes. No other controller/template reads these exact keys from
+`ControllerCommonHeader`'s own `$data` (each is scoped to this one
+`load->view('common/header', $data)` call).
+
+**Tests:** `php -l` clean on the modified `header.php`. No dedicated
+regression test added — same rationale as MC-0001/MC-0003/MC-0017: the
+fix is eight `$this->language->get()` calls already unit-proven correct
+by ten other identical call sites across this codebase (including this
+same file's own pre-existing `$this->language->get('code')`/
+`$this->language->get('direction')`/`$this->language->get('text_logged')`
+calls two lines below); a controller-level test would need a live
+OpenCart bootstrap this environment can't provide (no MySQL server, same
+pre-existing gap noted throughout `docs/upstream-diff.md`). A human should
+confirm on a real install that the admin header's logo has real
+alt/title text, and that its user-profile dropdown menu (top-right corner,
+any logged-in admin page) shows real text for "Your Profile", "Stores",
+"Help", "OpenCart Homepage", "Documentation", "Support Forum" and
+"Logout" instead of blank menu items.
+
+---
+
 ## MC-0019 — `DB\PDO::query()` never recovers from a dropped connection
 
 **Problem:** `system/library/db/pdo.php`'s `query()` prepared and executed
@@ -1569,6 +1661,132 @@ disconnect instead of silently returning empty results or fataling.
 
 ---
 
+## MC-0020 — `DB\PgSQL::query()` never recovers from a dropped connection, and crashes with a TypeError on any other query error
+
+**Problem:** `DB\PgSQL::query()` (`system/library/db/pgsql.php`) called
+`pg_query($this->connection, $sql)` once and, on any failure
+(`pg_query()` returning `false`), immediately threw — including the case
+where the underlying TCP connection to PostgreSQL was dropped (idle past
+the server's timeout, a server restart, a network blip), not just a
+genuine SQL error. This is the same "database connection / reconnect
+issues" Known Fix Research Queue category (`MINTCART_FUNCTIONAL_SCOPE.md`
+§18) MC-0011 (`DB\MySQLi`) and MC-0019 (`DB\PDO`) already fixed for
+MintCart's other two DB adaptors — `PgSQL` was the one sibling left with
+the exact same gap, since OpenCart's `DB` class
+(`system/library/db.php`) picks between all three by configured engine
+name with an identical contract.
+
+On top of that, the failure branch's own error-reporting call was itself
+broken: `throw new \Exception('Error: ' . pg_result_error($resource) ...)`
+passes `$resource` — which is the boolean `false` `pg_query()` just
+returned, not a result handle — to `pg_result_error()`. Under PHP 8,
+`pg_result_error(PgSql\Result $result): string|false` requires an actual
+`PgSql\Result`; passing `false` throws a `TypeError` ("must be of type
+PgSql\Result, bool given") instead of the intended, informative
+`\Exception`. Every query failure on this adaptor — recoverable or not —
+was one `TypeError` away from masking the real error with a confusing
+crash, squarely `MINTCART_FUNCTIONAL_SCOPE.md` §18's "PHP 8.x
+compatibility problems" category.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline). Not independently
+checked against other 3.x point releases — same rationale as every other
+Fix Registry entry (no second checkout available in this environment to
+diff against, and the fix only adds a narrowly-scoped retry path plus a
+corrected error-message call around behavior that is otherwise
+unchanged).
+
+**Source:** Discovered directly in this repository while completing the
+Known Fix Research Queue's DB-adaptor reconnect sweep MC-0011/MC-0019
+started — not an imported historical community patch. Reproduced by
+reading `query()`: exactly one `pg_query()` call, no connection-health
+check of any kind on failure, and the `pg_result_error($resource)` call
+inspected against PHP 8's `pgsql` extension signature (unlike `mysqli`,
+`pgsql` exposes no per-connection `errno`; `pg_connection_status()` is the
+only way to distinguish "the connection itself is bad" from "the query
+was bad").
+
+**Reproduced on MintCart baseline:** Yes — by inspection (no PostgreSQL
+server in this environment to force a real dropped-connection scenario)
+and via `tests/mintcart/fixes/mc-0020-pgsql-reconnect-test.php`, which
+intercepts every `pg_*()` call `DB\PgSQL` makes by defining fake
+`DB\pg_connect()`/`DB\pg_query()`/`DB\pg_connection_status()`/
+`DB\pg_fetch_assoc()`/`DB\pg_free_result()`/`DB\pg_last_error()` functions
+in the same `DB` namespace `pgsql.php` itself lives in (PHP resolves an
+unqualified function call against the current namespace before falling
+back to the global one) — no real `pgsql` extension connection required,
+and confirms against the reverted code (checked by hand) that a dropped
+connection threw with no retry, and that a query failure's exception
+message construction was the broken `pg_result_error($resource)` call.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Extracted the constructor's connection-setup body
+into a new `connect()` method (verbatim, no behavior change — stores
+`$hostname`/`$username`/`$password`/`$database`/`$port` as properties so
+`connect()` can be called again later), then split `query()` into a
+public entry point and a private `runQuery($sql, $allowReconnect)`, the
+same shape MC-0011/MC-0019 already established. On a failed query, if
+`$allowReconnect` is true and `pg_connection_status($this->connection)`
+reports `PGSQL_CONNECTION_BAD` (pgsql's only connection-health signal —
+there is no errno to inspect, unlike `mysqli`/`PDO`), it calls `connect()`
+again and retries the *same* `$sql` once, with `$allowReconnect = false`
+on the retry — so a connection that drops twice in a row (or a server
+that's genuinely down) still throws, instead of reconnecting forever. Any
+other failure (connection status still OK — a genuine SQL error, missing
+table, permission, ...) still throws immediately on the first attempt,
+unretried. Separately, the exception message now reads
+`pg_last_error($this->connection)` instead of the broken
+`pg_result_error($resource)` call — `pg_last_error()` takes the
+connection (always available) rather than a nonexistent result handle, so
+the failure branch now actually produces the intended `\Exception` with a
+real message instead of crashing with an unrelated `TypeError`.
+`connect()` is `protected` rather than `private` for the same reason
+MC-0011 made `DB\MySQLi::connect()` `protected` (a future test could
+subclass it), though this test's mechanism ended up being the
+namespace-function-shadowing approach above instead, since `pgsql`'s API
+is procedural rather than object-method-based like `mysqli`/`PDO`.
+
+**Compatibility impact:** Every existing success/error path is unchanged
+except: (1) a query that fails because the connection is genuinely
+`PGSQL_CONNECTION_BAD` now transparently reconnects and retries once
+before falling back to the exact same throw behavior if the retry also
+fails; (2) the exception thrown on any query failure now carries a real
+`pg_last_error()` message instead of crashing with a `TypeError` before
+the `\Exception` could even be constructed. No public method signature
+changed. Nothing in this codebase subclasses `DB\PgSQL` today, so the
+visibility change from implicit-constructor-only to a named `protected`
+`connect()` method has no other effect.
+
+**Tests:** `tests/mintcart/fixes/mc-0020-pgsql-reconnect-test.php` (new, 5
+scenarios, 9 assertions): (1) no error → returns the rows, `pg_connect()`
+called exactly once, no retry; (2) connection reports `PGSQL_CONNECTION_BAD`
+on the first attempt, success on the retry → returns the retry's result,
+`pg_connect()` called exactly twice; (3) `PGSQL_CONNECTION_BAD` on *both*
+the original attempt and the retry → throws (does not reconnect a third
+time / loop forever), `pg_connect()` called exactly twice, the exception
+message carries the scripted `pg_last_error()` text; (4) a non-recoverable
+failure (connection status stays OK, e.g. a SQL syntax error) → throws
+immediately using `pg_last_error()`'s text, `pg_connect()` called exactly
+once, no reconnect attempted — confirms the `pg_result_error($resource)`
+`TypeError` path is gone; (5) `pg_connect()` itself failing at
+construction time still throws the same "could not make a database link"
+`\Exception` as before the fix. `php -l` clean on the modified
+`pgsql.php` and the new test file. Full `tests/mintcart/**/*-test.php`
+suite re-run end to end (85 files, was 84) — all passing, no regressions.
+**Not verified:** no PostgreSQL server in this environment to force a
+real dropped-connection/`wait_timeout`-style disconnect against an actual
+socket — a human running MintCart against a PostgreSQL backend should
+confirm a long-running operation survives a mid-run disconnect instead of
+fataling, the same manual-verification gap MC-0011/MC-0019 already note
+for their own DB adaptors.
+
+---
+
 ## MC-0021 — `special.php` never assigns `heading_title` to `$data`
 
 **Problem:** `catalog/view/theme/default/template/product/special.twig`
@@ -1642,3 +1860,126 @@ throughout `docs/upstream-diff.md`). A human should confirm on a real
 install that the Special Offers page (`product/special`) shows a real
 page heading instead of a blank one, on both the stock `default` theme
 and `mint_default`.
+
+---
+
+## MC-0022 — `product.php`'s main `index()` never assigns `button_continue` to `$data`
+
+**Problem:** `catalog/view/theme/default/template/product/product.twig`
+(and, as of this run, the new `mint_default/template/product/product.twig`
+write-review form) references `{{ button_continue }}` for the "Write a
+review" form's submit button, but `ControllerProductProduct::index()`
+never assigns it to `$data` anywhere in the method. Same class of bug as
+MC-0001/MC-0003/MC-0017: Twig's default `strict_variables => false`
+renders an undefined variable as an empty string instead of throwing, so
+the submit button has rendered with no visible label on every stock
+OpenCart 3.0.5.1 install, on both the `default` theme and (before this
+run) would have on `mint_default` too had its review form existed yet.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline). Not independently
+checked against other 3.x point releases — same rationale as
+MC-0001/MC-0003/MC-0017 (no second checkout available to diff against,
+and the fix only adds a `$data` key the template already expects).
+
+**Source:** Discovered directly in this repository while building
+`mint_default/template/product/product.twig`'s write-review form (this
+run) and cross-referencing every `$data[...] =` assignment in `index()`:
+`button_continue` appears nowhere in the method, even though the
+`default` theme's own stock `product.twig` has referenced it since
+OpenCart 3.0.5.1 shipped. Not an imported historical community patch.
+
+**Reproduced on MintCart baseline:** Yes — confirmed against
+`upload/catalog/view/theme/default/template/product/product.twig` (stock,
+references `button_continue` on its own write-review submit button) and
+`ControllerProductProduct::index()`'s actual method body (no assignment
+anywhere). The key itself is not missing a translation — `button_continue`
+is defined in the global `catalog/language/en-gb/en-gb.php` (auto-loaded
+on every page, same as MC-0003's/MC-0017's finding for this exact key),
+so this is purely a missing `$data['button_continue'] = $this->language->get('button_continue');`
+call.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Added the single missing assignment to
+`ControllerProductProduct::index()`'s success branch, immediately after
+the existing `$data['entry_qty']` assignment (the same group of
+`tab_*`/`text_*` labels the Reviews/Specification tabs already read). No
+new language strings, no change to any existing `$data` key/value.
+Applies equally to the stock `default` theme (whose write-review button
+now also gets a real label, previously blank) and the new
+`mint_default/template/product/product.twig` write-review form added
+alongside this fix.
+
+**Tests:** `php -l` clean on the modified `product.php`. No dedicated
+regression test added — same rationale as MC-0001/MC-0003/MC-0017: the
+fix is one `$this->language->get()` call, already unit-proven correct by
+every other controller's identical use of the same global key. A human
+should confirm on a real install that the product page's "Write a review"
+button shows real text (see `docs/MANUAL_VERIFICATION.md`'s new Reviews
+UI entry).
+
+---
+
+## MC-0023 — `product.php`'s `review()` action never assigns `text_no_reviews` to `$data`
+
+**Problem:** `catalog/view/theme/default/template/product/review.twig`
+(and the new `mint_default/template/product/review.twig` this run)
+references `{{ text_no_reviews }}` for the empty-state message shown when
+a product has zero approved reviews, but `ControllerProductProduct::review()`
+— the separate AJAX action that renders this specific fragment — never
+assigns it to `$data`. Note this is a *different* method than the one
+MC-0022 fixes above: the main `index()` action already assigns
+`text_no_reviews` (used by its own placeholder before any AJAX fragment
+loads), but `review()` is a standalone action with its own `$data` array
+that doesn't inherit anything from `index()`, and it was missed. Same
+blank-string bug class as MC-0001/MC-0003/MC-0017/MC-0022.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline). Not independently
+checked against other 3.x point releases — same rationale as the other
+entries in this family.
+
+**Source:** Discovered directly in this repository while building the new
+`mint_default/template/product/review.twig` AJAX fragment (this run) and
+cross-referencing every `$data[...] =` assignment in `review()`: only
+`reviews`/`pagination`/`results` are assigned; `text_no_reviews` appears
+nowhere in this method (it is assigned in the sibling `index()` method,
+which does not share scope with this one). Not an imported historical
+community patch.
+
+**Reproduced on MintCart baseline:** Yes — confirmed against
+`upload/catalog/view/theme/default/template/product/review.twig` (stock,
+references `text_no_reviews` in its `{% else %}` branch) and
+`ControllerProductProduct::review()`'s actual method body (no assignment
+anywhere). `text_no_reviews` is defined in
+`catalog/language/en-gb/product/product.php`, already loaded by this same
+method's own `$this->load->language('product/product');` call at the top
+— purely a missing `$data[...] = $this->language->get(...)` call, not a
+missing translation.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1).
+
+**MintCart solution:** Added the single missing assignment to
+`ControllerProductProduct::review()`, immediately before the existing
+`$review_total = ...` line. No new language strings, no change to any
+existing `$data` key/value. Applies equally to the stock `default` theme
+(whose empty-review-list message now also renders real text, previously
+blank — only ever visible on a product with zero approved reviews, which
+is why this went unnoticed) and the new
+`mint_default/template/product/review.twig` fragment added alongside this
+fix.
+
+**Tests:** `php -l` clean on the modified `product.php`. No dedicated
+regression test added — same rationale as the rest of this family: the
+fix is one `$this->language->get()` call already unit-proven correct
+elsewhere in the same file (MC-0022, above). A human should confirm on a
+real install that a product with zero approved reviews shows a real
+empty-state message in the Reviews tab (see
+`docs/MANUAL_VERIFICATION.md`'s new Reviews UI entry).

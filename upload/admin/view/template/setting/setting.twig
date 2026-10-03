@@ -630,15 +630,45 @@
                   <label class="col-sm-2 control-label" for="input-account"><span data-toggle="tooltip" title="{{ help_account }}">{{ entry_account }}</span></label>
                   <div class="col-sm-10">
                     <select name="config_account_id" id="input-account" class="form-control">
-                      <option value="0">{{ text_none }}</option>                      
+                      <option value="0">{{ text_none }}</option>
                       {% for information in informations %}
-                      {% if information.information_id == config_account_id %}                      
-                      <option value="{{ information.information_id }}" selected="selected">{{ information.title }}</option>                      
-                      {% else %}                      
-                      <option value="{{ information.information_id }}">{{ information.title }}</option>                      
+                      {% if information.information_id == config_account_id %}
+                      <option value="{{ information.information_id }}" selected="selected">{{ information.title }}</option>
+                      {% else %}
+                      <option value="{{ information.information_id }}">{{ information.title }}</option>
                       {% endif %}
-                      {% endfor %}                    
+                      {% endfor %}
                     </select>
+                    {#
+                      MintCart Phase 12 (Entity Picker) - a searchable,
+                      paginated, single-select browser as an additional way
+                      to choose this page, alongside the native <select>
+                      above (kept as-is, not replaced, same reasoning as
+                      setting/store_form.twig's own Account/Checkout Terms
+                      pickers - see docs/developer/admin/asset-enqueue.md).
+                      Confirming a selection just sets #input-account's
+                      value to the picked page's id - the native <select>
+                      already has an <option> for every information page,
+                      so no new option needs to be created.
+                    #}
+                    <div class="mc-entity-picker-field">
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="browse-account-information" aria-controls="account-information-picker" aria-expanded="false">
+                        {{ text_information_picker_browse }}
+                      </button>
+                      <div class="mc-entity-picker" id="account-information-picker" hidden>
+                        <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_information_picker_search }}" placeholder="{{ text_information_picker_search }}">
+                        <ul class="mc-entity-picker__list" role="listbox" aria-label="{{ entry_account }}" data-mc-entity-picker-list></ul>
+                        <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_information_picker_empty }}</p>
+                        <div class="mc-entity-picker__pager">
+                          <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_information_picker_prev }}</button>
+                          <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+                          <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_information_picker_next }}</button>
+                        </div>
+                        <div class="mc-entity-picker__footer">
+                          <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_information_picker_confirm }}</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </fieldset>
@@ -692,15 +722,34 @@
                   <label class="col-sm-2 control-label" for="input-checkout"><span data-toggle="tooltip" title="{{ help_checkout }}">{{ entry_checkout }}</span></label>
                   <div class="col-sm-10">
                     <select name="config_checkout_id" id="input-checkout" class="form-control">
-                      <option value="0">{{ text_none }}</option>                      
+                      <option value="0">{{ text_none }}</option>
                       {% for information in informations %}
-                      {% if information.information_id == config_checkout_id %}                      
-                      <option value="{{ information.information_id }}" selected="selected">{{ information.title }}</option>                      
-                      {% else %}                      
-                      <option value="{{ information.information_id }}">{{ information.title }}</option>                      
+                      {% if information.information_id == config_checkout_id %}
+                      <option value="{{ information.information_id }}" selected="selected">{{ information.title }}</option>
+                      {% else %}
+                      <option value="{{ information.information_id }}">{{ information.title }}</option>
                       {% endif %}
-                      {% endfor %}                    
+                      {% endfor %}
                     </select>
+                    {# MintCart Phase 12 (Entity Picker) - same shape as the Account Terms picker above. #}
+                    <div class="mc-entity-picker-field">
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="browse-checkout-information" aria-controls="checkout-information-picker" aria-expanded="false">
+                        {{ text_information_picker_browse }}
+                      </button>
+                      <div class="mc-entity-picker" id="checkout-information-picker" hidden>
+                        <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_information_picker_search }}" placeholder="{{ text_information_picker_search }}">
+                        <ul class="mc-entity-picker__list" role="listbox" aria-label="{{ entry_checkout }}" data-mc-entity-picker-list></ul>
+                        <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_information_picker_empty }}</p>
+                        <div class="mc-entity-picker__pager">
+                          <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_information_picker_prev }}</button>
+                          <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+                          <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_information_picker_next }}</button>
+                        </div>
+                        <div class="mc-entity-picker__footer">
+                          <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_information_picker_confirm }}</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="form-group">
@@ -907,15 +956,34 @@
                   <label class="col-sm-2 control-label" for="input-affiliate"><span data-toggle="tooltip" title="{{ help_affiliate }}">{{ entry_affiliate }}</span></label>
                   <div class="col-sm-10">
                     <select name="config_affiliate_id" id="input-affiliate" class="form-control">
-                      <option value="0">{{ text_none }}</option>                      
+                      <option value="0">{{ text_none }}</option>
                       {% for information in informations %}
-                      {% if information.information_id == config_affiliate_id %}                      
-                      <option value="{{ information.information_id }}" selected="selected">{{ information.title }}</option>                      
-                      {% else %}                      
-                      <option value="{{ information.information_id }}">{{ information.title }}</option>                      
+                      {% if information.information_id == config_affiliate_id %}
+                      <option value="{{ information.information_id }}" selected="selected">{{ information.title }}</option>
+                      {% else %}
+                      <option value="{{ information.information_id }}">{{ information.title }}</option>
                       {% endif %}
-                      {% endfor %}                    
+                      {% endfor %}
                     </select>
+                    {# MintCart Phase 12 (Entity Picker) - same shape as the Account Terms picker above. #}
+                    <div class="mc-entity-picker-field">
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="browse-affiliate-information" aria-controls="affiliate-information-picker" aria-expanded="false">
+                        {{ text_information_picker_browse }}
+                      </button>
+                      <div class="mc-entity-picker" id="affiliate-information-picker" hidden>
+                        <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_information_picker_search }}" placeholder="{{ text_information_picker_search }}">
+                        <ul class="mc-entity-picker__list" role="listbox" aria-label="{{ entry_affiliate }}" data-mc-entity-picker-list></ul>
+                        <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_information_picker_empty }}</p>
+                        <div class="mc-entity-picker__pager">
+                          <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_information_picker_prev }}</button>
+                          <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+                          <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_information_picker_next }}</button>
+                        </div>
+                        <div class="mc-entity-picker__footer">
+                          <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_information_picker_confirm }}</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </fieldset>
@@ -925,15 +993,34 @@
                   <label class="col-sm-2 control-label" for="input-return"><span data-toggle="tooltip" title="{{ help_return }}">{{ entry_return }}</span></label>
                   <div class="col-sm-10">
                     <select name="config_return_id" id="input-return" class="form-control">
-                      <option value="0">{{ text_none }}</option>                      
+                      <option value="0">{{ text_none }}</option>
                       {% for information in informations %}
-                      {% if information.information_id == config_return_id %}                      
-                      <option value="{{ information.information_id }}" selected="selected">{{ information.title }}</option>                      
-                      {% else %}                      
-                      <option value="{{ information.information_id }}">{{ information.title }}</option>                      
+                      {% if information.information_id == config_return_id %}
+                      <option value="{{ information.information_id }}" selected="selected">{{ information.title }}</option>
+                      {% else %}
+                      <option value="{{ information.information_id }}">{{ information.title }}</option>
                       {% endif %}
-                      {% endfor %}                    
+                      {% endfor %}
                     </select>
+                    {# MintCart Phase 12 (Entity Picker) - same shape as the Account Terms picker above. #}
+                    <div class="mc-entity-picker-field">
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="browse-return-information" aria-controls="return-information-picker" aria-expanded="false">
+                        {{ text_information_picker_browse }}
+                      </button>
+                      <div class="mc-entity-picker" id="return-information-picker" hidden>
+                        <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_information_picker_search }}" placeholder="{{ text_information_picker_search }}">
+                        <ul class="mc-entity-picker__list" role="listbox" aria-label="{{ entry_return }}" data-mc-entity-picker-list></ul>
+                        <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_information_picker_empty }}</p>
+                        <div class="mc-entity-picker__pager">
+                          <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_information_picker_prev }}</button>
+                          <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+                          <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_information_picker_next }}</button>
+                        </div>
+                        <div class="mc-entity-picker__footer">
+                          <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_information_picker_confirm }}</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="form-group">
@@ -1343,4 +1430,68 @@ $('select[name=\'config_country_id\']').on('change', function() {
 
 $('select[name=\'config_country_id\']').trigger('change');
 //--></script></div>
+<script type="text/javascript">
+// MintCart Phase 12 (Entity Picker) - Account/Checkout/Affiliate/Return
+// Terms' McEntityPicker, the single-select Information-page sibling of
+// setting/store_form.twig's own Account/Checkout Terms pickers (plain
+// vanilla JS, not jQuery, per CLAUDE.md §7). Confirming a selection just
+// sets the matching native <select>'s value - every information page
+// already has an <option> rendered server-side, so there is nothing to
+// synthesize client-side, unlike a text+hidden field pair.
+(function () {
+	function initInformationPicker(browseSelector, pickerSelector, selectEl) {
+		var browseButton = document.querySelector(browseSelector);
+		var pickerRoot = document.querySelector(pickerSelector);
+
+		if (!browseButton || !pickerRoot || !selectEl || !window.MintCart || !window.MintCart.createEntityPicker) {
+			return;
+		}
+
+		var picker = window.MintCart.createEntityPicker(pickerRoot, {
+			fetchItems: function (options) {
+				var params = new URLSearchParams({
+					filter_name: options.query,
+					page: options.page,
+					limit: options.pageSize
+				});
+
+				return fetch('index.php?route=mintcart/entity/information&user_token={{ user_token }}&' + params, {
+					signal: options.signal
+				}).then(function (response) {
+					return response.json();
+				});
+			},
+			multiple: false,
+			onConfirm: function (selected) {
+				var item = selected[0];
+
+				if (item) {
+					selectEl.value = item.id;
+				}
+
+				picker.clear();
+				pickerRoot.hidden = true;
+				browseButton.setAttribute('aria-expanded', 'false');
+				browseButton.focus();
+			}
+		});
+
+		browseButton.addEventListener('click', function () {
+			var opening = pickerRoot.hidden;
+
+			pickerRoot.hidden = !pickerRoot.hidden;
+			browseButton.setAttribute('aria-expanded', String(opening));
+
+			if (opening) {
+				picker.refresh();
+			}
+		});
+	}
+
+	initInformationPicker('[data-mc-action="browse-account-information"]', '#account-information-picker', document.getElementById('input-account'));
+	initInformationPicker('[data-mc-action="browse-checkout-information"]', '#checkout-information-picker', document.getElementById('input-checkout'));
+	initInformationPicker('[data-mc-action="browse-affiliate-information"]', '#affiliate-information-picker', document.getElementById('input-affiliate'));
+	initInformationPicker('[data-mc-action="browse-return-information"]', '#return-information-picker', document.getElementById('input-return'));
+})();
+</script>
 {{ footer }} 

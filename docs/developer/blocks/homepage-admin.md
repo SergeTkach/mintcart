@@ -31,80 +31,75 @@ field-schema handling — every type's schema is well-formed, every
 round-trips flat and JSON-items types correctly, `validateForm()` catches
 malformed JSON)
 
-## Why this screen uses the legacy admin theme, not `mc-*`/Bootstrap 5
+## Why this screen's overall chrome still uses the legacy admin theme
 
-MintCart's Phase 11 admin primitives (`McSortable` in particular — see
-`docs/developer/components/sortable.md`, which names "Homepage Builder's
-block list" as its expected first consumer) were built with this exact
-screen in mind, but this run does **not** use them here.
+This screen's page chrome (breadcrumbs, panel, buttons, alerts) is still
+built on the legacy Bootstrap 3 admin conventions every stock OpenCart
+admin screen already uses (`design/banner.php`/`banner_list.twig`/
+`banner_form.twig` and `extension/module/latest.php`/`latest.twig` are its
+closest structural templates), because the shared admin `header`/
+`column_left`/`footer` wraps *every* admin screen and still only ever
+loads Bootstrap 3/jQuery unconditionally — migrating that shell wholesale
+to Bootstrap 5 remains a separate, larger product/architectural decision
+(`CLAUDE.md` §20) this doc does not speak for.
 
-The reason: `assets/dist/css/index.min.css` and `assets/dist/js/admin.min.js`
-(the built bundle every `mc-*` component/`McSortable` ships in) have never
-been enqueued into the admin theme's shared `header`/`column_left`/
-`footer` chrome, anywhere in this repository. That chrome wraps *every*
-admin screen, not just this one — enqueuing MintCart's Bootstrap 5 CSS
-bundle here would load it globally alongside the legacy admin theme's
-Bootstrap 3 CSS (`view/stylesheet/bootstrap.css`, loaded unconditionally
-in `admin/view/template/common/header.twig`) on every other admin screen
-too, which `CLAUDE.md` §10 explicitly forbids ("Do not globally load
-Bootstrap 3 and Bootstrap 5 together" — `.btn`/`.container`/`.modal`/
-`.dropdown`/`.alert` all collide between the two versions).
+## Reordering now uses `McSortable`
 
-Resolving that — migrate the whole admin shell to Bootstrap 5, scope
-MintCart's own screens some other CSS-isolated way, or keep new
-MintCart-owned admin screens on the legacy admin theme's conventions
-until a dedicated "Mint Admin Shell" phase replaces `header`/
-`column_left`/`footer` wholesale — is a real product/architectural
-decision (`CLAUDE.md` §20), not something this increment guesses at. It
-is flagged for the project owner in this change's pull request
-description and in `docs/IMPLEMENTATION_STATUS.md`'s Phase 10 entry.
+`docs/developer/admin/asset-enqueue.md` ("The fix: two bundles, pick the
+right one") resolved the blocker the previous version of this section used
+to flag: `assets/dist/css/components.min.css` (unlike `index.min.css`)
+deliberately excludes Bootstrap 5's reset/grid/utility layer, so it's safe
+to enqueue on a page that already runs Bootstrap 3 — `admin/controller/
+catalog/product.php::enqueueMintAssets()` proved this first.
+`ControllerDesignHomepage::enqueueMintAssets()` is this pattern's second
+consumer (called from `getList()` only — the add/edit form doesn't render
+any `mc-*` markup yet), queuing that same `components.min.css` plus
+`assets/dist/js/admin.min.js`.
 
-Until that's decided, this screen is built on the exact same legacy
-Bootstrap 3 admin conventions every stock OpenCart admin screen already
-uses (`design/banner.php`/`banner_list.twig`/`banner_form.twig` and
-`extension/module/latest.php`/`latest.twig` are its closest structural
-templates) — including how it solves reordering:
+The blocks list (`homepage_list.twig`) is now a real `McSortable` list
+(`docs/developer/components/sortable.md`, which named this exact screen as
+its expected first consumer): `<ul class="mc-sortable" data-mc-sortable
+data-mc-sortable-handle>`, one `<li class="mc-sortable__item"
+data-mc-sortable-item="<block_id>">` per block, each with a drag handle,
+keyboard-usable move-up/move-down buttons, and a hidden `<input
+type="hidden" name="order[<block_id>]">` recomputed on every
+`mc:sortable:reorder` event (a small inline `<script>`, same plain
+non-module convention every admin Twig template follows). The same "Save
+Order" button/`<form>`/`ControllerDesignHomepage::saveOrder()` request this
+screen always had still submits those `order[<block_id>]` values exactly
+as before — `saveOrder()`'s own contract (accept an `order` array, persist
+it, guarded by `page_id`) did not need to change, exactly as the previous
+version of this doc predicted.
 
-## Reordering without `McSortable`
+The visible, directly-editable `<input type="number">` per row (this
+screen's previous non-pointer reordering path) is gone — `mc-sortable`'s
+own move-up/move-down buttons are the current non-pointer alternative
+(`MINTCART_IMPLEMENTATION_GUIDE.md` §68), and they do not depend on
+`McSortable`'s own `Sortable.create()` call succeeding (see the known
+limitation right below), only on `admin.js`'s delegated `document`-level
+click listener having been registered at all.
 
-The blocks list (`homepage_list.twig`) shows one `<input type="number"
-name="order[<block_id>]">` per row (the exact same pattern
-`design/banner_form.twig` already uses for `banner_image` rows'
-`sort_order` fields) — the base mechanism, always present, always
-directly editable. A "Save Order" button (`formaction="{{ save_order }}"`,
-sharing the same `<form>` the bulk-select checkboxes and "Delete" button
-already use, via HTML5's `formaction` attribute) submits every row's
-value in one request to `ControllerDesignHomepage::saveOrder()`, which
-persists them via `ModelDesignHomepage::updateSortOrder()`.
-
-`updateSortOrder()` guards each `UPDATE` with `block_id AND page_id`, so a
-crafted `order[<block_id>]` for a block on a different page (there is
-only ever one page — `home` — today, but the guard costs nothing and
-matches `mc_block`'s already page-scoped shape) is silently ignored
-rather than reassigning that block's order.
-
-**Drag-to-reorder is layered on top**, as a small inline `<script>` in
-`homepage_list.twig` using the browser's native HTML5 Drag and Drop API —
-deliberately not `McSortable`: no MintCart JS bundle is enqueued on this
-screen at all yet (same asset-enqueue question as above), so pulling in
-`assets/src/js/components/sortable.js` here isn't available without
-first resolving that. Dragging a row (`draggable="true"` on each `<tr>`,
-a `fa-bars` grip icon as the visual affordance) reorders the table in the
-DOM and renumbers the existing number inputs to match; "Save Order"
-submits exactly as before either way. Native HTML5 drag has no built-in
-keyboard path, so the always-visible, always-editable number inputs are
-this screen's non-pointer alternative (`MINTCART_IMPLEMENTATION_GUIDE.md`
-§68: a sortable operation needs one) — a keyboard-only admin reorders by
-retyping numbers, no drag gesture required.
-
-Once the Bootstrap-5-admin-shell decision above is resolved, replacing
-both the number-input column and this inline script with
-`data-mc-sortable`/`data-mc-sortable-item` markup and a listener for
-`McSortable`'s `mc:sortable:reorder` event (POSTing `detail.order` to
-`saveOrder()` instead of relying on a full-page form submit) is a
-self-contained follow-up — `saveOrder()`'s contract (accept an `order`
-array, persist it, guarded by `page_id`)
-does not need to change for that upgrade.
+**Known interim limitation — pointer/touch drag depends on `admin.js`'s
+own init-call timing.** `admin.min.js` is enqueued as a plain classic
+`<script src="...">` inside `admin/view/template/common/header.twig`'s
+`<head>`, with no `defer`/`async`/`type="module"` — it runs the moment the
+parser reaches it, before this screen's own `<body>` markup (the `<ul
+data-mc-sortable>` list included) exists in the DOM. `initSortableLists()`
+(`assets/src/js/components/sortable.js`) does an eager
+`document.querySelectorAll('[data-mc-sortable]')` at call time to call
+`Sortable.create()` on each match; if that call happens too early, it
+finds nothing, so pointer/touch drag never initializes for this screen's
+list. The move-up/move-down buttons are unaffected — `initSortableLists()`
+also registers a single delegated `document.addEventListener('click',
+...)` for them, and attaching a listener to `document` works regardless of
+whether the list's own markup exists yet, so keyboard reordering works
+either way. If `assets/src/js/admin.js` does not yet defer its `boot()`
+call sequence until `DOMContentLoaded` (check that file's own header
+comment — this exact timing bug was independently found and is being
+fixed as part of Phase 17's Categories drag-and-drop work, a separate
+change from this one, since both land in the same shared `admin.js`),
+pointer/touch drag on this screen will silently do nothing until that
+lands; retype-free reordering via the move buttons works today regardless.
 
 ## Block type registry
 
@@ -213,9 +208,13 @@ install:
    (e.g. a trailing comma) and confirm the form re-shows with an
    `error_json` message and the exact text you typed still in the
    textarea, rather than silently clearing it.
-10. With at least three blocks on the list, drag a row to a new position
-    (grip icon on the left) and confirm the "Sort Order" numbers renumber
-    to match without a page reload, then click "Save Order" and confirm
-    the storefront homepage reflects the new order. Also try reordering
-    by editing the number inputs directly (no drag) to confirm that path
-    still works unchanged.
+10. With at least three blocks on the list, confirm the Network tab shows
+    `components.min.css`/`admin.min.js` loading (200 status) on this
+    screen's list page. Try dragging a block to a new position by its grip
+    handle. If `assets/src/js/admin.js` already defers its init calls until
+    `DOMContentLoaded` (see that file's own header comment), the drag
+    should work and the list should visually reorder; if not yet (the
+    "Known interim limitation" above), dragging will silently do nothing —
+    either way, use a block's Move Up/Move Down buttons instead, confirm
+    the list reorders, then click "Save Order" and confirm the storefront
+    homepage reflects the new order.
