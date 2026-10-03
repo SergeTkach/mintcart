@@ -118,21 +118,27 @@ this button's own `formaction`).
 
 ## Value input
 
-The toolbar renders one generic `bulk_field` `<select>`
-(Status/Quantity/Price/Manufacturer/Stock Status/Special Price) and one
-generic `bulk_value` text `<input>` — not
-a per-field-typed control (e.g. a `<select>` for Status specifically).
-`BulkProductUpdateValidator::validateValue()` still enforces the right
-shape server-side (`0`/`1` for status, a non-negative whole number for
-quantity, a non-negative number for price, a non-negative whole number —
-an ID, or `0` for none — for manufacturer and stock status, blank or a
-non-negative number for special price) regardless of what the generic
-text input lets a merchant type. A friendlier per-field
-control (swapping to a `<select>` when `status` is chosen, a
-`type="number"` input otherwise) needs a small amount of new JS —
-deliberately not added this run to avoid introducing a new inline
-`<script>` block for a first increment; a natural follow-up, not a
-blocker.
+The toolbar renders one `bulk_field` `<select>`
+(Status/Quantity/Price/Manufacturer/Stock Status/Special Price) and a
+**per-field-typed** `bulk_value` control: an Enabled/Disabled `<select>`
+(`#input-bulk-value-status`, options `1`/`0`, the same `text_enabled`/
+`text_disabled` global language keys the existing Status filter `<select>`
+above it already uses) when `status` is chosen, or a `type="number"`
+`<input>` (`#input-bulk-value-number`, `min="0"`, `step="1"` for
+quantity/manufacturer_id/stock_status_id, `step="any"` for price/
+special_price) for every other field. Both controls share
+`name="bulk_value"`; a small inline `<script>` block toggles which one is
+`disabled` on `#input-bulk-field`'s `change` event — a disabled form
+control is excluded from the browser's own POST body, so
+`ControllerCatalogProduct::bulkUpdate()` still only ever receives a single
+`bulk_value`, unchanged from before. `BulkProductUpdateValidator::validateValue()`
+still does the real server-side enforcement (`0`/`1` for status, a
+non-negative whole number for quantity, a non-negative number for price, a
+non-negative whole number — an ID, or `0` for none — for manufacturer and
+stock status, blank or a non-negative number for special price); the
+per-field control is a UX improvement on top of that, not a replacement
+for it — a merchant can still type an out-of-range number into a
+`type="number"` input, and the server rejects it exactly as before.
 
 Manufacturer and stock status are entered as raw `manufacturer_id`/
 `stock_status_id` integers, the same way the other three fields are raw
@@ -164,9 +170,15 @@ meaningful bulk-update target a merchant would intentionally choose.
 - `product_list.twig`'s `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor
   %}` tag counts checked balanced (14/14, 2/2) before and after the
   toolbar addition, same script-based technique used for every other
-  `.twig` file in this repo.
+  `.twig` file in this repo; unchanged by the per-field-value-control
+  increment (no `{% %}` tags touched, only plain HTML/inline `<script>`).
+- The three inline `<script>` blocks in `product_list.twig` (including the
+  new bulk-field toggle) checked for JS syntax errors with a standalone
+  Node harness (Twig `{{ }}` output tags substituted with a placeholder
+  string first, since Node can't parse Twig) — all three parse cleanly.
 - No JS/CSS in `assets/` touched — `npm run build` not re-run for this
-  increment.
+  increment (this screen stays on the legacy admin Bootstrap 3/jQuery
+  stack, no MintCart-owned asset bundle involved).
 
 **Not verified:** no live MySQL/admin session in this environment — a
 human should confirm the toolbar renders correctly, the confirm dialog
@@ -194,8 +206,10 @@ non-default customer group via the normal edit form). See
   Delete/Copy's own existing (also synchronous) behavior, so it isn't a
   new risk this increment introduces, but it doesn't yet have progress
   reporting for a merchant bulk-updating hundreds of products at once.
-- A per-field-typed value control (see "Value input" above).
 - True inline edit (editing a value directly in the product list table
   without a separate bulk-toolbar step) — a larger UI change, likely
   blocked on the same admin asset-enqueue problem every other MintCart
   admin screen since Phase 10 has flagged.
+
+**Done (per-field-typed value control):** see "Value input" above — no
+longer a "Next step" item.
