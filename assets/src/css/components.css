@@ -66,6 +66,7 @@
 @import './components/button.css';
 @import './components/alert.css';
 @import './components/field.css';
+@import './components/select.css';
 @import './components/checkbox.css';
 @import './components/radio.css';
 @import './components/badge.css';
@@ -82,12 +83,15 @@
 @import './components/sortable.css';
 @import './components/tabs.css';
 @import './components/product-card.css';
+@import './components/product-gallery.css';
+@import './components/quick-order.css';
 @import './components/footer.css';
 @import './components/header.css';
 @import './components/block.css';
 @import './components/banner-grid.css';
 @import './components/gallery.css';
 @import './components/entity-picker.css';
+@import './components/search-box.css';
 @import './components/media-picker.css';
 @import './components/progress.css';
 @import './compatibility/bootstrap3-shim.css';

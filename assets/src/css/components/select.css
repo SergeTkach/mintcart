@@ -1,0 +1,102 @@
+/**
+ * mc-select
+ *
+ * MintCart-owned standalone select component (docs/MINTCART_IMPLEMENTATION_GUIDE.md
+ * §45, Definition of Done §79). Distinct from `mc-field__control`'s shared
+ * input/textarea/select look: `mc-select` is applied directly to a `<select>`
+ * used on its own outside a labeled `.mc-field` wrapper - e.g. a sort-order or
+ * per-page-limit control next to a product listing
+ * (MINTCART_TECHNICAL_PLAN.md §15E's SortOptionsBuilder/LimitOptionsBuilder) -
+ * so it ships its own size modifiers (matching `mc-button--sm`/`--lg`) and its
+ * own `has-error` state instead of inheriting `.mc-field`'s label/help/error
+ * markup.
+ *
+ * Contract: docs/developer/components/select.md
+ *
+ * Component-local tokens (`--mc-select-*`) follow the same three-tier token
+ * system as mc-button (MINTCART_IMPLEMENTATION_GUIDE.md §16). The chevron is
+ * the same inline SVG data URI placeholder as `mc-field__control`'s select
+ * styling (see field.css's header comment) - swap both for
+ * `{{ mc_icon('chevron-down') }}`-driven markup once the Bootstrap Icons SVG
+ * renderer lands (Phase 21, no consumer yet - CLAUDE.md §85).
+ */
+
+.mc-select {
+    --mc-select-border-color: var(--mc-border);
+    --mc-select-bg: var(--mc-surface);
+    --mc-select-color: var(--mc-text);
+    --mc-select-padding-y: var(--mc-space-2);
+    --mc-select-padding-x: var(--mc-space-3);
+    --mc-select-font-size: var(--mc-font-size-base);
+
+    display: inline-block;
+    max-width: 100%;
+    padding: var(--mc-select-padding-y) var(--mc-space-8) var(--mc-select-padding-y) var(--mc-select-padding-x);
+    border: var(--mc-border-width) solid var(--mc-select-border-color);
+    border-radius: var(--mc-radius-md);
+    background-color: var(--mc-select-bg);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23495057' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--mc-select-padding-x) center;
+    background-size: 1rem;
+    color: var(--mc-select-color);
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-select-font-size);
+    line-height: var(--mc-line-height-normal);
+    appearance: none;
+    cursor: pointer;
+    transition:
+        border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        box-shadow var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-select:focus-visible {
+    outline: none;
+    border-color: var(--mc-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-accent) 25%, transparent);
+}
+
+.mc-select:disabled,
+.mc-select[aria-disabled='true'] {
+    background-color: var(--mc-surface-alt);
+    color: var(--mc-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* A native multi-select renders as a listbox, not a single-line dropdown -
+   the chevron/right padding only make sense for the closed, single-value
+   look above. */
+.mc-select[multiple] {
+    padding-right: var(--mc-select-padding-x);
+    background-image: none;
+    min-height: 6rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Sizes (matches mc-button--sm/--lg naming)                                */
+/* ---------------------------------------------------------------------- */
+
+.mc-select--sm {
+    --mc-select-padding-y: var(--mc-space-1);
+    --mc-select-padding-x: var(--mc-space-2);
+    --mc-select-font-size: var(--mc-font-size-sm);
+}
+
+.mc-select--lg {
+    --mc-select-padding-y: var(--mc-space-3);
+    --mc-select-padding-x: var(--mc-space-4);
+    --mc-select-font-size: var(--mc-font-size-lg);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Error state (transient - CLAUDE.md §13, not a BEM modifier)             */
+/* ---------------------------------------------------------------------- */
+
+.mc-select.has-error {
+    --mc-select-border-color: var(--mc-danger);
+}
+
+.mc-select.has-error:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-danger) 25%, transparent);
+}
