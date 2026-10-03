@@ -541,7 +541,7 @@ class ControllerMintcartWizard extends Controller
 
         if ($step === 'payment') {
             $data['payment_extensions'] = $this->loadPaymentExtensions();
-            $data['toggle_payment'] = $this->url->link('mintcart/wizard.togglePayment', 'user_token=' . $this->session->data['user_token'] . '&step=payment', true);
+            $data['toggle_payment'] = $this->url->link('mintcart/wizard/togglePayment', 'user_token=' . $this->session->data['user_token'] . '&step=payment', true);
             $data['manage_payment'] = $this->url->link('mintcart/business/payments', 'user_token=' . $this->session->data['user_token'], true);
         }
 
@@ -599,7 +599,7 @@ class ControllerMintcartWizard extends Controller
     }
 
     /**
-     * route=mintcart/wizard.togglePayment - POST code. Same shape as
+     * route=mintcart/wizard/togglePayment - POST code. Same shape as
      * toggleDelivery() above for the 'payment' extension type instead of
      * 'shipping' - see that method's docblock for the full rationale
      * (duplicated rather than shared, matching
