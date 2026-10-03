@@ -13,6 +13,22 @@ than silently fixing and forgetting to update this file.
 
 ---
 
+## Phase 0 — restored `Config` engine class never booted live
+
+`upload/system/library/config.php` (OpenCart's core `Config` class) was
+missing from this repository entirely until this run (a `.gitignore`
+false positive silently excluded it since the initial baseline commit —
+see `docs/IMPLEMENTATION_STATUS.md`'s Phase 0 section and `docs/audit.md`'s
+"Correction" note for the full writeup). It has been restored
+byte-for-byte from the upstream OpenCart `3.0.5.1` tag and passes `php -l`,
+but no environment used by any routine run so far has live PHP/MySQL to
+actually boot `index.php`/`admin/index.php`. Confirm on a real install:
+both the storefront and admin now load past `system/framework.php`
+without a fatal on `new Config()` (they would have fatal'd on every single
+request before this fix), and that a page depending on
+`Config::set()`/`Config::has()` (e.g. anything reading
+`config_theme`/`config_language_id`) behaves normally.
+
 ## Phase 13 — Wizard Delivery step never rendered live
 
 No MySQL/OpenCart admin session in this environment. Confirm on a real
@@ -29,6 +45,21 @@ state instead of an empty list; and clicking Continue with nothing enabled
 still advances to the Ready step (no required-field validation for this
 step), while the Ready step's own checklist correctly still shows
 "shipping" as outstanding until at least one method is enabled.
+
+## Phase 13 — Wizard First product step never rendered live
+
+No MySQL/OpenCart admin session in this environment. Confirm on a real
+install: `mintcart/wizard?step=first_product` renders the form; submitting
+with a blank name or a blank/negative/non-numeric price shows the
+corresponding field error and does not create a product; submitting with
+just a name + price creates a real, enabled product visible in
+`Catalog → Products` and on the storefront immediately (weight/length
+class match the store's `Settings → Option` defaults, stock status reads
+"In Stock"); a blank quantity defaults to 100; clicking "Skip for now"
+(`first_product_action=skip`) advances to the Ready step without creating
+any product; and the Ready step's own `first_product` checklist item
+correctly flips from "Not yet" to "Done" only after a real enabled product
+exists (not merely after the step is marked completed via Skip).
 
 ## Phase 13 — Wizard Language & currency step never rendered live
 
@@ -180,6 +211,51 @@ user token, using an existing multi-level category tree:
    prior inline logic, not a rewrite, but this should still be re-checked
    live once MySQL is available.
 
+### Live drag & drop UI (this run)
+
+`category_list.twig` now mounts the real `mc-sortable` behavior on
+**Catalog → Categories**, gated to when the list is sorted by the
+**Sort Order** column. On a real install:
+
+5. Open **Catalog → Categories**, click the **Sort Order** column header.
+   Confirm a drag-handle icon and two arrow buttons appear on each row,
+   and a hint above the table explains dragging reorders and autosaves.
+6. Drag a row to a new position (mouse or touch). Confirm the row moves
+   immediately, an AJAX request fires to `catalog/category.move`, and no
+   page reload happens. Reload the page (still sorted by Sort Order) and
+   confirm the new order persisted.
+7. Using only the keyboard, tab to a row's "Move up"/"Move down" buttons
+   and confirm they reorder the row and save the same way as a drag (this
+   is the non-mouse path required by
+   `MINTCART_IMPLEMENTATION_GUIDE.md` §68 — confirm it actually works, not
+   just that the buttons render).
+8. With the browser's network tab open, simulate a failure (e.g. block the
+   `catalog/category.move` request) and drag a row. Confirm the row
+   snaps back to its previous position and a message is announced (check
+   with a screen reader or the accessibility tree — the status text lives
+   in a visually-hidden `aria-live="polite"` region, not visible text).
+9. Switch the sort back to **Category Name** and confirm the drag handle,
+   move buttons, and `data-mc-sortable` behavior are all gone (replaced by
+   the "sort by Sort Order first" hint) — dragging must not be possible
+   while rows are shown alphabetically.
+10. Confirm every other **Catalog → Categories** action (add, edit,
+    delete, repair, the bulk-delete checkbox row) still works exactly as
+    before — this change only added markup/columns, no existing action
+    was touched.
+11. **The mixed-parent safety check.** Set up (or find) a page of the
+    Sort-Order-sorted list where two or more different parents' children
+    are visible together (likely on any store with more than a handful of
+    categories — this list is flat and not grouped by parent). Drag a row
+    belonging to one parent so it ends up interleaved between rows
+    belonging to a different parent. Confirm: (a) only the categories that
+    actually share a parent with at least one other visible row got new
+    `sort_order` values — any category that was the *only* visible member
+    of its parent on this page keeps its original `sort_order` untouched;
+    (b) no category's `parent_id` changed in the database. This is the
+    scenario `docs/developer/catalog/category-drag-drop.md`'s "Resolves
+    the Architectural fork..." section explains and the per-parent-group
+    save logic is specifically meant to protect against.
+
 ## Phase 12 — `mintcart/entity/manufacturer` endpoint, never hit end to end
 
 Same gap as the category endpoint above, plus one thing category couldn't
@@ -320,6 +396,41 @@ extension and one payment extension enabled:
 4. Repeat step 3 with **no** shipping method selected yet in session —
    confirm the `shipping` line is simply absent (matches
    `extension/total/shipping.php`'s own guard), not an error.
+
+## Phase 15 — Shipping method quote endpoint, never exercised against a real DB
+
+`docs/developer/compatibility/shipping-quote-adapter.md` and
+`docs/developer/commerce/shipping-method-service.md` have the full design
+writeup. No MySQL/OpenCart session in this environment.
+`MintCart\Compatibility\OpenCart3\ShippingQuoteAdapter` and
+`MintCart\Commerce\ShippingMethodService` are unit-tested in isolation
+against fakes; neither `checkout/shipping_method.php` (untouched) nor the
+new `ControllerMintcartCheckout::shippingMethods()` action was ever
+actually run against a real cart/extension. On a real install, with at
+least one shipping extension enabled (e.g. Flat Shipping Rate, configured
+with a geo zone that matches a real country/zone combination):
+
+1. Request `index.php?route=mintcart/checkout/shipping_methods&country_id=<id>&zone_id=<id>`
+   (GET) with a `country_id`/`zone_id` pair that matches the enabled
+   extension's configured geo zone — confirm a JSON `{methods: [{method,
+   options: [{id, title, text}]}]}` response listing that extension, with
+   `options[0].text` matching the price it would show on the real
+   `checkout/shipping_method` page for the same address.
+2. Repeat with a `country_id`/`zone_id` pair that does **not** match any
+   configured geo zone — confirm `methods` is an empty list, not an error.
+3. Take an `options[].id` value from step 1's response (e.g. `flat.flat`)
+   and POST it as `shipping_method` to the existing, unmodified
+   `index.php?route=checkout/shipping_method.save` (with a real session
+   that already has `shipping_address` set to a matching address) —
+   confirm it is accepted exactly as if the value had come from the
+   original `checkout/shipping_method` page's own radio buttons (this is
+   the "no translation layer needed" claim `shipping-method-service.md`
+   makes; worth confirming it actually holds).
+4. Confirm `checkout/shipping_method.php`'s own page still renders
+   identically to before this change (this class touches no existing
+   file, so this should trivially still be true — worth a quick sanity
+   check anyway).
+
 ## Admin asset-enqueue fix + `product_form.twig`'s Category `McEntityPicker`, never exercised end to end
 
 `docs/developer/admin/asset-enqueue.md` has the full design writeup. No
@@ -824,11 +935,15 @@ actually submitted. On a real install:
 ## Phase 15 — `mc-search-box` component, never exercised in a browser
 
 `assets/src/js/components/search-box.js` is bundle-verified (present in
-`catalog.min.js`, absent from `admin.min.js`) but has no live template to
-mount against yet (`docs/developer/components/search-box.md`). Once a
-future increment drops its markup contract into a real page (most likely
-`mint_default/template/common/header.twig`, replacing or sitting alongside
-the legacy search fragment):
+`catalog.min.js`, absent from `admin.min.js`) and, as of 2026-09-19, is
+live in both `mint_default/template/mint/components/header.twig` (the
+`mc-header__widgets` slot, replacing the legacy `widgets.search` fragment)
+and `test_theme/template/mint/components/header.twig` (next to the
+branding link) — see `docs/developer/components/search-box.md` "Wired
+into `mint_default`'s and `test_theme`'s header". Still never exercised in
+an actual browser (no MySQL/browser session in this environment). On a
+`config_theme=mint_default` (and separately, `config_theme=test_theme`)
+install:
 
 1. Type a 1-character query and confirm no network request fires (open the
    browser's network tab) and the dropdown stays closed.
@@ -849,6 +964,17 @@ the legacy search fragment):
    search for a term matching 8 or fewer and confirm it does not appear.
 6. Click outside the dropdown and confirm it closes without clearing the
    typed query.
+7. Confirm the header no longer renders the legacy jQuery-autocomplete
+   search box (no `#search` element, no `common/search` fragment in the
+   page source) on `mint_default` — only the new `.mc-search-box`. Confirm
+   the network tab shows `components.min.css` (not `index.min.css`)
+   loading with the `mc-search-box` rules actually present (this was
+   broken before the `assets/src/css/components.css` import fix landed —
+   worth double-checking the box is visually styled, not just
+   functional).
+8. Switch `config_theme` to `test_theme` and repeat steps 1-2 against its
+   own `.mc-search-box` (different placement — next to the branding link)
+   to confirm both themes' overrides work independently.
 
 ## Phase 18 — Schema.org JSON-LD, never validated against a real page
 
@@ -899,9 +1025,10 @@ never rendered on a real page or run through an actual validator. On a
 
 ## Phase 18 — `RobotsBuilder` meta tag, never validated against a real page
 
-`RobotsBuilder` is unit-tested in isolation (74 assertions), but its
-`ControllerCommonHeader` wiring (2026-09-15) was never rendered on a real
-page. On a `config_theme=mint_default` install:
+`RobotsBuilder` is unit-tested in isolation (76 assertions), but its
+`ControllerCommonHeader` wiring (2026-09-15, `$hasResults` registry bridge
+added in a later run) was never rendered on a real page. On a
+`config_theme=mint_default` install:
 
 1. Load the homepage, a category page, and a product page; confirm
    `<meta name="robots" content="index, follow">` appears in `<head>`.
@@ -910,12 +1037,13 @@ page. On a `config_theme=mint_default` install:
    `account/wishlist`; confirm each instead renders
    `<meta name="robots" content="noindex, follow">`.
 3. Load `product/search` with a query that matches nothing (e.g. a random
-   string); confirm it currently still renders `content="index, follow"`
-   — this is the documented, deliberate known limitation (see
-   `docs/developer/seo/robots.md` "Known limitation"), not a bug: a real
-   fix needs `$hasResults` threaded from `ControllerProductSearch` into
-   `ControllerCommonHeader`, not yet built.
-4. Confirm the tag does **not** appear at all on the legacy `default`
+   string); confirm it now renders `content="noindex, follow"` — the
+   `ControllerProductSearch` → `ControllerCommonHeader` registry bridge
+   (`RobotsBuilder::HAS_RESULTS_REGISTRY_KEY`, see
+   `docs/developer/seo/robots.md`) should have closed this gap.
+4. Load `product/search` with a query that matches at least one product;
+   confirm it still renders `content="index, follow"`.
+5. Confirm the tag does **not** appear at all on the legacy `default`
    theme (this wiring is not gated by `isMintAware()`, but `default`'s own
    `common/header.twig` never reads `$data['mc_robots_content']`, so it
    should render unchanged).
@@ -936,7 +1064,9 @@ specials:
    Copy/Delete), confirm the dialog, and confirm the redirect lands back
    on the same filtered/sorted/paged list with a success message and the
    selected products' Quantity column updated to the new value.
-3. Repeat for "Status" (value `0` or `1`), "Price" (a decimal value),
+3. Repeat for "Status" (choose "Enabled"/"Disabled" from the value
+   `<select>` that now appears in place of the number input — see step 8),
+   "Price" (a decimal value),
    "Manufacturer" (an existing `manufacturer_id`, and separately `0` for
    "no manufacturer"), and "Stock Status" (an existing `stock_status_id`
    from **Settings → Stock Statuses**, e.g. the ID shown for "In Stock")
@@ -968,6 +1098,17 @@ specials:
    Price). Also submit "Special Price" with an invalid value (e.g. `-1`)
    and confirm the same rejection-warning behavior as the other numeric
    fields.
+8. Change the bulk-update field `<select>` between "Status" and every
+   other option and confirm the value control swaps correctly each time:
+   an Enabled/Disabled `<select>` shows (and the number input hides) only
+   when "Status" is selected; a plain number input shows for every other
+   field, accepting only whole numbers for Quantity/Manufacturer/Stock
+   Status (the browser's own spinner/step behavior) and decimals for
+   Price/Special Price. Confirm via the browser's dev tools that whichever
+   control is hidden is also `disabled` (so only one `bulk_value` is ever
+   sent), and that switching the field back and forth several times before
+   submitting still posts the value currently visible, not a stale one
+   from an earlier selection.
 
 ## Phase 14 — `menu-mintcart-business` merge fix, never seen rendered live
 
@@ -1089,6 +1230,33 @@ and an information page:
 6. Validate the feed against Google's sitemap requirements (e.g. via
    Google Search Console's sitemap report) to confirm no regression in
    acceptance.
+
+## Phase 18 — MintCart sitemap route (`mintcart/seo/sitemap`), never exercised end to end
+
+New `ControllerMintcartSeoSitemap::index()`
+(`upload/catalog/controller/mintcart/seo/sitemap.php`, route
+`mintcart/seo/sitemap`) always-on XML sitemap — no
+`feed_google_sitemap_status`/extension install required, unlike the Google
+Sitemap section just above. `php -l` clean, and the full `tests/mintcart/`
+suite passes, but no live MySQL/OpenCart bootstrap in this environment
+means the route was never actually requested. On a real install with
+existing products (at least one with a product image), categories,
+manufacturers, and an information page:
+
+1. Load `index.php?route=mintcart/seo/sitemap` directly — no extension
+   install or admin setting required, unlike the Google Sitemap route
+   above.
+2. Confirm the response's `Content-Type: application/xml` header, and
+   validate the document is well-formed (e.g. `xmllint --noout`).
+3. Confirm it lists the same set of product/category/manufacturer/
+   information URLs the Google Sitemap extension's own feed lists (enable
+   that extension too, for a real install, and diff the two — they should
+   agree on every entry, since both enumerate via the same OpenCart
+   models).
+4. Confirm a product **without** an image still produces a `<url>` block
+   with no `<image:image>` child.
+5. Confirm this route is unaffected by `feed_google_sitemap_status` being
+   disabled — it should still return a full sitemap either way.
 
 ## Phase 6 — `mint_default`'s new `manufacturer_list.twig` + MC-0017, never rendered live
 
@@ -1223,3 +1391,63 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    `mint_default`) shows **no** new network requests for either file —
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
+
+## Phase 12 — Attribute field's `McEntityPicker`, never exercised end to end
+
+Same underlying gap as the other Entity Picker fields above (no admin
+bundle enqueued yet, per `docs/developer/admin/asset-enqueue.md`), plus
+this is the first Entity Picker field with *multiple, dynamically added*
+rows sharing one picker instance, so it has its own failure modes worth
+checking specifically once a bundle is loaded on `catalog/product/form`:
+
+1. Grant `mintcart/entity` **Access** if not already done for the other
+   Entity Picker endpoints (same permission covers all seven routes).
+2. Open a product's **Attribute** tab. Click "Add Attribute" twice, so two
+   empty rows exist. Click the new "Browse" button on the *second* row,
+   search for and select an attribute, and confirm it fills the *second*
+   row's name/attribute_id fields — not the first row's, and not a third,
+   not-yet-added row.
+3. Repeat on the first row. Confirm the picker's search box/page/results
+   reset (not left over from the previous row's search) and the selection
+   lands in the first row this time.
+4. Confirm the legacy jQuery UI autocomplete on each row's name `<input>`
+   still works unmodified — type a partial attribute name and select it
+   from the browser's native autocomplete dropdown; confirm it still fills
+   the same fields the picker does, and neither interferes with the other.
+5. Remove a row (the red minus button), add a new one, and confirm its
+   "Browse" button opens the picker and writes into the *new* row, not a
+   stale reference to the removed one's DOM node.
+6. Save the product and confirm the attribute (added via the picker) is
+   actually persisted — `ControllerCatalogProduct`'s save logic reads the
+   same `product_attribute[N][name]`/`[attribute_id]` fields regardless of
+   which UI filled them in, so this should need no special-casing.
+
+## Theme API — `product.after_actions` slot, never rendered through a real Twig
+
+`MintCart\Design\SlotRegistry` is fully covered by a standalone unit test
+(`tests/mintcart/design/slot-registry-test.php`, no OpenCart dependency),
+and `ProductCardListRenderer`'s optional `SlotRegistry` argument is
+exercised up to (but not through) the point where `ComponentRenderer`
+would hand its output to Twig (`docs/developer/theme-api/slots.md`) — this
+environment has no `vendor/twig/twig`, so the `{% if slots[...] %}` branch
+in either `product-card.twig` has never actually executed. On a real
+install, once a future increment wires a real `SlotRegistry` with a
+registered listener into one of the listing controllers
+(`category.php`/`search.php`/`manufacturer.php`/`special.php`/`product.php`):
+
+1. With no listener registered anywhere (today's actual state everywhere
+   in this repo), confirm every product-card grid on the storefront is
+   byte-for-byte unchanged from before this increment — no empty
+   `<div class="mc-product-card__slot ...">` wrapper should ever appear in
+   the rendered HTML (the `{% if %}` guard should suppress it entirely when
+   `slots['product.after_actions']` is falsy/unset).
+2. Register a listener on `product.after_actions` returning a small fixed
+   HTML fragment (e.g. `<p>Test slot</p>`). Confirm it appears inside every
+   rendered `mc-product-card` on that page, positioned after the add-to-cart/
+   quick-order buttons (`mint_default`) or after the add-to-cart button
+   (`test_theme`, which has no separate actions wrapper).
+3. Confirm the fragment appears identically on both `mint_default` and
+   `test_theme` — the slot is part of the component contract both themes
+   share, not something either theme's own DOM has to opt into separately.
+4. Register a second listener on the same slot and confirm both fragments
+   render, concatenated, neither silently replacing the other.
