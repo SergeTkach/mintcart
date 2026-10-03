@@ -73,7 +73,8 @@ class ControllerMintcartCart extends Controller {
 		$this->load->model('catalog/product');
 
 		$product_id = isset($this->request->post['product_id']) ? (int)$this->request->post['product_id'] : 0;
-		$product_info = $this->model_catalog_product->getProduct($product_id);
+		$product_adapter = new \MintCart\Compatibility\OpenCart3\ProductAdapter($this->model_catalog_product);
+		$product_info = $product_adapter->find($product_id);
 
 		if (!$product_info) {
 			$this->respond(array('error' => $this->language->get('error_product')));

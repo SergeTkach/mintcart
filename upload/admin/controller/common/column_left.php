@@ -208,6 +208,18 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			// MintCart\Design presets facade (MINTCART_FUNCTIONAL_SCOPE.md
+			// §9, Phase 9/31) - lets an admin pick which of the active
+			// theme's own declared theme.json presets applies, writing
+			// data-mc-preset (docs/developer/theme-api/presets.md).
+			if ($this->user->hasPermission('access', 'mintcart/design/styles')) {
+				$design[] = array(
+					'name'	   => $this->language->get('text_mintcart_design_styles'),
+					'href'     => $this->url->link('mintcart/design/styles', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			if ($this->user->hasPermission('access', 'design/translation')) {
 				$design[] = array(
 					'name'	   => $this->language->get('text_language_editor'),
@@ -261,6 +273,14 @@ class ControllerCommonColumnLeft extends Controller {
 				$sale[] = array(
 					'name'	   => $this->language->get('text_order'),
 					'href'     => $this->url->link('sale/order', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($this->user->hasPermission('access', 'mintcart/quickorder')) {
+				$sale[] = array(
+					'name'	   => $this->language->get('text_mintcart_quickorder'),
+					'href'     => $this->url->link('mintcart/quickorder', 'user_token=' . $this->session->data['user_token'], true),
 					'children' => array()
 				);
 			}
