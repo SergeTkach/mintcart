@@ -61,6 +61,32 @@ trap `ControllerMintcartBusinessContacts::save()` already documents for
 `docs/upstream-diff.md`'s entry). `mintcart_dev_mode` no longer requires
 a direct `oc_setting` write to turn on.
 
+**JSON diagnostics surface (this run): `&mintcart_diagnostics=json`.**
+Every wired call site (`ControllerProductCategory`, `ControllerProductSearch`,
+`ControllerProductSpecial`, `ControllerProductManufacturer::info()`,
+`ControllerProductProduct`) now recognizes one extra, dev-mode-gated query
+parameter on the exact same route it already renders: when
+`mintcart_dev_mode` is on **and** the request carries
+`mintcart_diagnostics=json`, the controller replaces its normal HTML
+response with `application/json` containing just `$diagnostics->summary()`
+— the identical array the HTML-comment surface already appends, just
+without the surrounding page markup. This was this file's own "Next step"
+list's third bullet: tooling that wants a page's diagnostics numbers no
+longer has to render and scrape the full HTML comment out of the response
+body; it can request
+`index.php?route=product/category&path=20&mintcart_diagnostics=json` (or
+the equivalent search/manufacturer/special/product route) and parse a
+small JSON object directly, the same shape `mintcart/readiness` already
+established for a normalized JSON contract. The HTML-comment surface is
+unchanged and still the default — this is an alternative, not a
+replacement: a request without the query parameter behaves exactly as
+before.
+
+Deliberately still gated by `mintcart_dev_mode` alone, the same security
+posture the existing HTML comment already has — this is not a new,
+separately-authenticated surface; it only changes the *format* of the same
+dev-mode-gated data a store owner already opted into exposing.
+
 ## Design
 
 No OpenCart dependency — no `\Registry`, `\DB`, `\Config`, `\Template` —
@@ -150,9 +176,10 @@ order.
       in `ControllerProductCategory`); admin UI toggle now exists (see
       below)
 - [x] A visible surface — an HTML comment
-      (`<!-- mintcart-diagnostics {...} -->`) appended to
-      `product/category`'s and `product/product`'s response body when
-      `mintcart_dev_mode` is on
+      (`<!-- mintcart-diagnostics {...} -->`) appended to every wired
+      controller's response body when `mintcart_dev_mode` is on, plus a
+      `&mintcart_diagnostics=json` alternative that returns the same
+      summary as a standalone JSON response (see above)
 - [x] An admin UI toggle for `mintcart_dev_mode` — `System → Diagnostics`
       (`ControllerMintcartSettingsDiagnostics`, see above); no longer
       requires a direct `oc_setting` write
@@ -169,6 +196,9 @@ order.
 - Every `ComponentRenderer` call site (Category, Search, Manufacturer,
   Special, Product) is now wired with `Diagnostics` — no remaining bare
   call sites for this pattern.
-- A structured JSON endpoint (same shape as `mintcart/readiness`) as an
-  alternative surface to the HTML comment, for tooling that would rather
-  fetch diagnostics than scrape a page's markup.
+- ~~A structured JSON endpoint (same shape as `mintcart/readiness`) as an
+  alternative surface to the HTML comment~~ — done, see
+  "JSON diagnostics surface" above.
+- A structured diagnostics dashboard/history (storing summaries across
+  requests, not just exposing the current one) is out of scope for this
+  file — `Diagnostics` stays a per-request, stateless collector by design.
