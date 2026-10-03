@@ -277,6 +277,14 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			if ($this->user->hasPermission('access', 'mintcart/quickorder')) {
+				$sale[] = array(
+					'name'	   => $this->language->get('text_mintcart_quickorder'),
+					'href'     => $this->url->link('mintcart/quickorder', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			if ($this->user->hasPermission('access', 'sale/recurring')) {
 				$sale[] = array(
 					'name'	   => $this->language->get('text_order_recurring'),

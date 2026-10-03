@@ -35,22 +35,26 @@
             <thead>
               <tr>
                 <td>{{ entry_route }}</td>
-                <td>{{ entry_alias }}</td>
+                {% for language in languages %}
+                <td>{{ entry_alias }}{% if languages|length > 1 %} &mdash; {{ language.name }}{% endif %}</td>
+                {% endfor %}
               </tr>
             </thead>
             <tbody>
               {% for route in routes %}
               <tr>
                 <td class="text-nowrap">{{ route.label }}<div class="text-muted"><small>route={{ route.route }}</small></div></td>
+                {% for alias in route.aliases %}
                 <td>
                   <div class="input-group">
                     <span class="input-group-addon">/</span>
-                    <input type="text" name="alias_{{ route.code }}" value="{{ route.alias }}" placeholder="{{ route.code }}" class="form-control" />
+                    <input type="text" name="{{ alias.field }}" value="{{ alias.alias }}" placeholder="{{ route.code }}" class="form-control" />
                   </div>
-                  {% if route.error %}
-                  <div class="text-danger">{{ route.error }}</div>
+                  {% if alias.error %}
+                  <div class="text-danger">{{ alias.error }}</div>
                   {% endif %}
                 </td>
+                {% endfor %}
               </tr>
               {% endfor %}
             </tbody>
