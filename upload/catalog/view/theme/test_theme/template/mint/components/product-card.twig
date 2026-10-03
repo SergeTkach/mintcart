@@ -1,6 +1,6 @@
 <article class="mc-product-card mc-product-card--test">
     <a class="mc-product-card__link" href="{{ product.url }}">
-        <img class="mc-product-card__image" src="{{ product.image }}" alt="{{ product.image_alt }}" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
+        <img class="mc-product-card__image" src="{{ product.image }}"{% if product.image_srcset %} srcset="{{ product.image_srcset }}"{% endif %} alt="{{ product.image_alt }}" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
 
         {% if product.badges|length > 0 %}
             <span class="mc-badge mc-badge--{{ product.badges[0].type }}">{{ product.badges[0].label ?: text_badge[product.badges[0].type] }}</span>
@@ -23,4 +23,8 @@
     >
         {{ text_add_to_cart }}
     </button>
+
+    {% if slots is defined and slots['product.after_actions'] %}
+        <div class="mc-product-card__slot mc-product-card__slot--after-actions">{{ slots['product.after_actions']|raw }}</div>
+    {% endif %}
 </article>

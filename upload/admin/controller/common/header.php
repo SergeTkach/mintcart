@@ -29,6 +29,24 @@ class ControllerCommonHeader extends Controller {
 
 		$this->load->language('common/header');
 
+		// MC-0018 (docs/fixes/registry.md) - none of these eight keys were
+		// ever assigned to $data even though common/header.twig references
+		// all of them, so they rendered blank on every admin page. Same
+		// "loaded a language file but never assigned the keys to $data"
+		// bug class as MC-0001/MC-0003/MC-0017 (and the same explicit
+		// per-key shape, rather than a blanket array_merge() of
+		// $this->load->language()'s return value, which would also pull in
+		// every other language file already loaded earlier in this same
+		// request).
+		$data['heading_title'] = $this->language->get('heading_title');
+		$data['text_profile'] = $this->language->get('text_profile');
+		$data['text_store'] = $this->language->get('text_store');
+		$data['text_help'] = $this->language->get('text_help');
+		$data['text_homepage'] = $this->language->get('text_homepage');
+		$data['text_support'] = $this->language->get('text_support');
+		$data['text_documentation'] = $this->language->get('text_documentation');
+		$data['text_logout'] = $this->language->get('text_logout');
+
 		$data['text_logged'] = sprintf($this->language->get('text_logged'), $this->user->getUserName());
 
 		if (!isset($this->request->get['user_token']) || !isset($this->session->data['user_token']) || ($this->request->get['user_token'] != $this->session->data['user_token'])) {
@@ -41,6 +59,15 @@ class ControllerCommonHeader extends Controller {
 			$data['home'] = $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true);
 			$data['logout'] = $this->url->link('common/logout', 'user_token=' . $this->session->data['user_token'], true);
 			$data['profile'] = $this->url->link('common/profile', 'user_token=' . $this->session->data['user_token'], true);
+
+			// MintCart Functional Scope §23 (P1) - quick settings search,
+			// shown on every logged-in admin page. enqueueMintAssets()
+			// below queues the "components" bundle - see
+			// docs/developer/admin/asset-enqueue.md for why that one, not
+			// "index", on a legacy Bootstrap 3 admin screen like this one.
+			$this->enqueueMintAssets();
+
+			$data['mc_admin_search_url'] = $this->url->link('mintcart/adminsearch', 'user_token=' . $this->session->data['user_token'], true);
 
 			$this->load->model('user/user');
 
@@ -87,5 +114,22 @@ class ControllerCommonHeader extends Controller {
 		}
 
 		return $this->load->view('common/header', $data);
+	}
+
+	/**
+	 * Same copy-paste-per-controller shape every other MintCart admin
+	 * controller uses (e.g. `ControllerCatalogProduct::enqueueMintAssets()`)
+	 * rather than a shared trait/base class — see
+	 * docs/developer/admin/asset-enqueue.md for why "components", not
+	 * "index": this page already runs the full legacy Bootstrap 3 admin
+	 * theme, and `index.min.css` bundles Bootstrap 5 in full, which
+	 * conflicts with it. header.twig's existing
+	 * {% for style in styles %}/{% for script in scripts %} loops render
+	 * whatever this call queues, no template change needed for the bundle
+	 * itself.
+	 */
+	protected function enqueueMintAssets() {
+		$this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
+		$this->document->addScript(HTTP_CATALOG . 'assets/dist/js/admin.min.js');
 	}
 }

@@ -32,7 +32,7 @@ final class WizardProgress
         'ready',
     ];
 
-    public const IMPLEMENTED_STEPS = ['welcome', 'store', 'contacts', 'language_currency', 'delivery', 'ready'];
+    public const IMPLEMENTED_STEPS = ['welcome', 'store', 'contacts', 'language_currency', 'delivery', 'payment', 'first_product', 'ready'];
 
     /** @var string[] */
     private array $completed;
