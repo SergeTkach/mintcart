@@ -238,6 +238,16 @@ class ControllerProductCategory extends Controller {
 					$image = $this->model_tool_image->resize('placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'));
 				}
 
+				// 2x variant for a high-DPI srcset (MINTCART_FUNCTIONAL_SCOPE.md
+				// §19 Performance: "responsive images"). Same source/config
+				// values as $image above, width/height doubled -
+				// model_tool_image->resize() caches whatever size it's asked
+				// for, so this is one extra resize() call per product, not a
+				// new image pipeline (docs/developer/commerce/product-view-provider.md
+				// "Image dimensions").
+				$image_2x = $this->model_tool_image->resize($result['image'] ? $result['image'] : 'placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width') * 2, $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height') * 2);
+				$image_srcset = $image . ' 1x, ' . $image_2x . ' 2x';
+
 				if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
 					$price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
 				} else {
@@ -286,6 +296,7 @@ class ControllerProductCategory extends Controller {
 							'name'                        => $result['name'],
 							'url'                         => $href,
 							'image'                       => $image,
+							'image_srcset'                => $image_srcset,
 							'image_width'                 => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'),
 							'image_height'                => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'),
 							'price'                       => $price,
@@ -498,7 +509,20 @@ class ControllerProductCategory extends Controller {
 			// flag above), and only as an HTML comment appended to the
 			// final response body, never written into $data/the template
 			// itself, so no theme override can accidentally surface it in
-			// visible markup.
+			// visible markup. A `&mintcart_diagnostics=json` request (still
+			// gated by dev mode) gets the same summary back as a standalone
+			// JSON response instead of the HTML comment - same shape as
+			// `mintcart/readiness`, for tooling that would rather fetch
+			// diagnostics than scrape a page's markup
+			// (docs/developer/core/diagnostics.md "JSON diagnostics
+			// surface").
+			if ($mint_diagnostics->isEnabled() && isset($this->request->get['mintcart_diagnostics']) && $this->request->get['mintcart_diagnostics'] === 'json') {
+				$this->response->addHeader('Content-Type: application/json');
+				$this->response->setOutput(json_encode($mint_diagnostics->summary()));
+
+				return;
+			}
+
 			if ($mint_diagnostics->isEnabled()) {
 				$output .= "\n<!-- mintcart-diagnostics " . json_encode($mint_diagnostics->summary()) . " -->";
 			}
