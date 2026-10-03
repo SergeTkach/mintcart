@@ -155,6 +155,67 @@ System Pages` (`#146`'s own next-candidates note); the admin
       implementing one concrete Theme API slot with a real template call
       site (e.g. `product.after_actions`, Technical Plan §15) before either
       doc is written.
+- [x] **Theme API Slots — `MintCart\Design\SlotRegistry` (this run, closing
+      the gap PR #185 flagged just above).** `MintCart\Design\SlotRegistry`
+      (`upload/system/library/mintcart/design/slotregistry.php`) is a
+      plain, OpenCart-independent `listen()`/`has()`/`render()` registry —
+      deliberately not built on `MintCart\Core\Stage`/OpenCart's `\Event`
+      (a slot answers a template's "render here" question with markup, a
+      different concern than `Stage`'s before/after `$data`-mutation
+      hooks around a controller method). First real template consumer:
+      `product-card.twig`'s `product.after_actions` slot (both
+      `mint_default` and `test_theme` — a genuinely different DOM in each,
+      same slot contract, proving the Theme API milestone story extends to
+      slots too), wired through `MintCart\Design\ProductCardListRenderer`'s
+      new optional 3rd constructor argument (`null` by default — every
+      existing call site across Category/Search/Manufacturer/Special/
+      Product is byte-for-byte unaffected, same "optional nullable
+      collaborator" shape `ComponentRenderer`'s own `$diagnostics`
+      argument already established). No controller constructs a real
+      `SlotRegistry` yet — `render()` returns `''` for every slot in this
+      codebase today, which is the expected, documented state until a real
+      extension needs one (`CLAUDE.md` §85), not a gap. Full writeup:
+      `docs/developer/theme-api/slots.md`; contract addition documented in
+      `docs/developer/components/product-card.md` ("Extension slot:
+      `product.after_actions`") and
+      `docs/developer/theme-api/product-card-list-renderer.md`
+      ("Extension slot wiring"). **Step 0 dedup check:** `list_pull_requests`
+      returned 37 open PRs (`#139`-`#188`) at the start of this run; none
+      mention "slot"/"SlotRegistry" in their title, and none touch
+      `productcardlistrenderer.php`, either `product-card.twig`, or
+      `product-card.css` — genuinely unclaimed and uncontended. The
+      product-listing controller cluster (`category.php`/`search.php`/
+      `manufacturer.php`/`special.php`/`product.php`), `header.php`/
+      `header.twig`/`column_left.php`, and the Homepage Builder admin
+      controller were all independently confirmed hot (2+ open PRs each,
+      per `#168`'s/`#185`'s/`#186`'s own trailer notes) — deliberately
+      avoided entirely by keeping this increment inside
+      `ProductCardListRenderer`'s own optional-argument pattern rather than
+      wiring a real controller consumer, which would have required
+      touching one of those contended files. Verified: `php -l` clean
+      across the full `upload/`/`tests` tree; new
+      `tests/mintcart/design/slot-registry-test.php` (5 scenarios) and 2
+      new scenarios appended to
+      `tests/mintcart/design/product-card-list-renderer-test.php` (now 10,
+      up from 8) — proving the optional `SlotRegistry` is consulted with
+      the product's own id when supplied, and never touched at all when
+      omitted; full `tests/mintcart/**/*-test.php` suite re-run end to end
+      (89 files) — all passing, no regressions; `npm run build`/`npm test`
+      both clean, `mc-product-card__slot` confirmed present in both
+      `assets/dist/css/index.min.css` and
+      `assets/dist/css/components.min.css`. **Not verified:** no live
+      MySQL/`vendor/twig/twig` session in this environment, so the
+      `{% if slots[...] %}` Twig branch itself has never actually executed
+      — see `docs/MANUAL_VERIFICATION.md`'s new "Theme API —
+      `product.after_actions` slot" entry. **Next candidates:** a real
+      `listen()` caller (an admin "Custom HTML" settings field, or a real
+      third-party extension) once one exists; the same optional-argument
+      pattern extended to `header.before`/`header.after` via a future
+      `HeaderViewProvider` change (`header.php`/`header.twig` are
+      currently hot — re-check `gh pr list --state open` before starting
+      that one); an Events developer doc, still blocked on a real
+      dispatch call site per the same gap `#185` flagged; or re-check
+      `gh pr list --state open` first, since this backlog moves fast.
 - [x] Version information — `MintCart\Core\Version`
 - [x] Basic logging — `MintCart\Core\Logger` (wraps OpenCart's `\Log`, writes to a
       dedicated `mintcart.log`)
