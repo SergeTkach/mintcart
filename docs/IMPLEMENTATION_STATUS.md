@@ -134,6 +134,18 @@ System Pages` (`#146`'s own next-candidates note); the admin
       `docs/developer/compatibility/settings-adapter.md`. Not wired into any
       controller yet; `ProductAdapter`/`CategoryAdapter`/`OrderAdapter`/
       `CustomerAdapter`/`ExtensionAdapter` remain unstarted (no consumer yet).
+- [~] OpenCart adapter interfaces (`MintCart\Compatibility\OpenCart3\*`) —
+      `ProductAdapter` (this run) added:
+      `MintCart\Compatibility\OpenCart3\ProductAdapter`
+      (`find()`/`exists()` wrapping `getProduct()`'s "empty array = not
+      found" shape, same pattern as `CategoryAdapter`) — see
+      `docs/developer/compatibility/product-adapter.md`. Wired into the
+      two MintCart-owned controllers that had this duplicated inline:
+      `ControllerMintcartCart::add()`,
+      `ControllerMintcartQuickorder::submit()`. `OrderAdapter` remains the
+      last unstarted named adapter from `MINTCART_TECHNICAL_PLAN.md` §5
+      (`SettingsAdapter`/`ExtensionAdapter`/`CustomerAdapter`/
+      `CategoryAdapter`/`TotalsAdapter`/`ProductAdapter` are all done).
 - [x] Migration manager (`mc_migration` table, ordered/logged/apply-once migrations) —
       `MintCart\Core\Migration\MigrationManager` +
       `MintCart\Core\Migration\MigrationInterface`; naming convention and file shape
@@ -2762,6 +2774,52 @@ other settings.
 - Re-check `gh pr list --state open` before picking the next increment —
   this backlog moves fast.
 
+**Update (2026-09-28, routine run): the Payment step is done.**
+`WizardProgress::IMPLEMENTED_STEPS` gains `payment`, inserted between
+`delivery` and `ready` (canonical `STEPS` order). `ControllerMintcartWizard`'s
+`payment` step lists installed payment extensions
+(`ModelSettingExtension::getInstalled('payment')`, same stale-extension
+guard `loadShippingExtensions()` uses) with a real enabled/disabled badge
+and a per-extension Enable/Disable toggle (`togglePayment()`, route
+`mintcart/wizard.togglePayment`, the same merge-then-save
+`payment_<code>_status` write `ControllerMintcartBusinessPayments::toggle()`
+already uses), plus a "Manage payment methods" link to the full
+`mintcart/business/payments` screen. No fields to validate/save on the
+step's own Continue submission, same reasoning as `delivery`. Full
+writeup: `docs/developer/onboarding/setup-wizard.md`'s new "Payment step"
+section.
+
+Step 0 dedup check: `list_pull_requests --state open` returned 4 open PRs
+at the start of this run — `#138` (search box wiring into
+`mint_default`/`test_theme` `header.twig`), `#139` (admin "Quick Order
+requests" list), `#140` (per-field-typed `bulk_value` control), `#141`
+(Categories drag & drop live UI wiring) — verified via each PR's own file
+list that none touch `wizard.php`, `wizardprogress.php`, `wizard.twig`,
+the wizard language file, or `upload/admin/controller/mintcart/business/*`.
+No hot shared files (§0f: Homepage Builder block-type registry, homepage
+block list/template, `block.css`) are touched by any of the 4 open PRs or
+by this increment.
+
+Verified: `php -l` clean across the full `upload/`/`tests/` tree.
+`tests/mintcart/onboarding/wizard-progress-test.php` grows from 11 to 12
+scenarios (the new `payment` step's place in the resume sequence, its
+`isImplemented()` check, and the "not yet implemented" check moved from
+`payment` to `design`). Full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end — all passing, no regressions. `wizard.twig`'s
+`{% if %}`/`{% endif %}` tag counts checked balanced (50/50) after the new
+step block. **Not verified:** no live MySQL/admin session in this
+sandboxed environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 13
+"Wizard Payment step" entry for the full manual script a human should run.
+
+**Next steps for a future session:**
+- The `design`/`first_product` steps — no existing facade to mirror this
+  time; each needs its own real form/save logic (see
+  `docs/developer/onboarding/setup-wizard.md`'s updated "not done yet"
+  list for a starting sketch of each).
+- Wiring an entry point to `mintcart/wizard` somewhere in the admin UI
+  (no redirect-after-install, no dashboard link exists yet).
+- Re-check `gh pr list --state open` before picking the next increment —
+  this backlog moves fast.
 **Update (2026-10-01, routine run): the `first_product` step is done.**
 `WizardProgress::IMPLEMENTED_STEPS` gains `first_product`, inserted between
 `delivery` and `ready` (matching canonical `STEPS` order — the same
@@ -3059,6 +3117,21 @@ already share.
       scenarios), `tests/mintcart/commerce/quick-order-migration-test.php`
       (schema). **Not yet verified live** — no MySQL in this environment;
       see `docs/MANUAL_VERIFICATION.md`'s new Phase 15 section. **Not
+      built**: lead → order conversion — deliberately deferred, see the
+      doc's "Not done yet". **Update (2026-09-28, routine run): the admin
+      "Quick Order requests" list is now built** —
+      `Sale → Quick Order Requests` (`ControllerMintcartQuickorder`/
+      `ModelMintcartQuickorder`, admin-side, fully additive except one new
+      `column_left.php` menu entry) surfaces every lead with a per-row
+      status change (`new`/`contacted`/`converted`/`rejected`, via the new
+      `MintCart\Commerce\QuickOrderStatus` whitelist). See
+      `docs/developer/commerce/quick-order-service.md`'s new "Admin list"
+      section for the full writeup and `docs/upstream-diff.md`'s
+      `column_left.php` entry.
+- [ ] `CheckoutService` — not started; still genuinely large/risky without
+      live MySQL to verify `addOrder()`'s full field list against (same
+      reasoning `QuickOrderService` above sidestepped by not touching
+      order creation at all).
       built**: an admin "Quick Order requests" list to surface these leads
       (natural next consumer of `mc_quick_order`), and lead → order
       conversion — both deliberately deferred, see the doc's "Not done
@@ -4687,6 +4760,29 @@ this phase (diagnostics, measured performance work) is not started.
       `docs/upstream-diff.md`'s `product.php` entry. Verified: `php -l`
       clean; full `tests/mintcart/` suite (77 files) re-run end to end —
       all passing, no regressions.
+      **Update (2026-09-29, routine run): the JSON diagnostics surface
+      named in this file's own "Next step" list is done.** All five wired
+      controllers (`category.php`/`search.php`/`special.php`/
+      `manufacturer.php::info()`/`product.php`) now also recognize
+      `&mintcart_diagnostics=json` (still gated by `mintcart_dev_mode`): a
+      sibling branch checked right before each one's existing HTML-comment
+      append returns `$mint_diagnostics->summary()` as a standalone JSON
+      response instead, same shape `mintcart/readiness` already
+      established, for tooling that would rather fetch diagnostics than
+      scrape a page's markup. A request without the parameter is
+      byte-for-byte unaffected. Full writeup:
+      `docs/developer/core/diagnostics.md`'s new "JSON diagnostics surface"
+      section; five small per-file notes in `docs/upstream-diff.md`.
+      Verified: `php -l` clean on all five touched files; full
+      `tests/mintcart/**/*-test.php` suite (84 files) re-run end to end —
+      all passing, no regressions (no new test file needed —
+      `Diagnostics::summary()` itself is already covered by
+      `tests/mintcart/core/diagnostics-test.php`; this only threads its
+      existing return value to a different response method). **Not
+      verified:** no live MySQL/browser session in this environment — see
+      `docs/MANUAL_VERIFICATION.md`'s new Phase 10 (Technical Plan) entry.
+      Real DB query counting remains the one open item for this checklist
+      bullet (still needs the `\DB\MySQLi`-hooking upstream-diff decision).
 - [~] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis) — cache
       invalidation API and asset minification (esbuild) were already done
@@ -7126,6 +7222,84 @@ design, but building it is a separate increment); the admin
 two-overlapping-Bulk-Editor-implementations fork flagged in PR #143's own
 notes (still needs a human decision, not attempted here); or re-check
 `gh pr list --state open` first, since this backlog moves fast.
+**Trailer note (2026-09-29, routine run):** Step 0 found 6 open PRs
+(#138-#143, all `ROUTINE-STATUS: DONE`) — `#138` search-box header wiring,
+`#139` admin Quick Order Requests list, `#140` bulk-editor `bulk_value`
+control, `#141` Categories drag & drop live UI, `#142` Wizard Payment
+step, `#143` `ProductAdapter`. Confirmed via each PR's own file list that
+none touch `upload/catalog/controller/product/{category,search,special,
+manufacturer,product}.php`; no Homepage Builder hot files (§0f) touched by
+any of the 6. Added the `&mintcart_diagnostics=json` surface named in the
+Phase 10 (Technical Plan) Diagnostics section's own "Next step" — see that
+section above for the full writeup. `#143`'s own trailer note flagged two
+other candidates: `OrderAdapter` (no duplicated inline order-lookup call
+site found yet in Mint-owned code to justify one, per `CLAUDE.md` §85 —
+still not attempted) and a human decision on converging
+`BulkProductUpdateValidator`/`BulkProductUpdatePlanner` (a product
+decision, not a mechanical step — left for the project owner, not
+guessed). **Next candidates:** real DB query counting for `Diagnostics`
+(still needs the `\DB\MySQLi`-hooking decision); hreflang live wiring
+(`HreflangBuilder` still needs a per-language URL resolver first, see its
+own doc); `category_ids` as a bulk-editable field (needs a real
+multi-select/picker control); or re-check `gh pr list --state open`
+first, since this backlog moves fast.
+**Trailer note (2026-09-29, routine run):** added
+`MintCart\Compatibility\OpenCart3\ProductAdapter` (Phase 1) — see the
+Phase 1 section above and `docs/developer/compatibility/product-adapter.md`
+for the full writeup. `list_pull_requests` returned 5 open PRs (#138-#142,
+all `ROUTINE-STATUS: DONE`) at the start of this run; none touch
+`upload/catalog/controller/mintcart/cart.php`,
+`upload/catalog/controller/mintcart/quickorder.php`, or any
+`MintCart\Compatibility\OpenCart3\*` file. Homepage Builder hot shared
+files (§0f) untouched by this run and by all 5 open PRs. **Next
+candidates:** `OrderAdapter` (the last unstarted named adapter — no
+obvious already-duplicated inline call site found yet in MintCart-owned
+code; would need one identified first, per `CLAUDE.md` §85); the two
+parallel, seemingly-overlapping Bulk Editor implementations noticed while
+looking for this run's next step (`MintCart\Catalog\BulkProductUpdateValidator`,
+wired into the live `product_list.twig` toolbar/`bulkUpdate()`, vs.
+`MintCart\Catalog\BulkProductUpdatePlanner`, a separate
+plan-then-chunk-then-apply design that already validates `category_ids`
+but was deliberately left unwired — worth a human decision on whether to
+converge these into one, per `CLAUDE.md` §17/§86, rather than continuing
+to build on both); or re-check `gh pr list --state open` first.
+**Trailer note (2026-09-28, routine run):** Setup Wizard `payment` step is
+done (see the Phase 13 section above) — `IMPLEMENTED_STEPS` is now
+`['welcome', 'store', 'contacts', 'language_currency', 'delivery',
+'payment', 'ready']`; only `design`/`first_product` remain unimplemented.
+4 open PRs existed at the start of this run (#138-#141), none overlapping
+this increment's files. Re-check `gh pr list --state open` before picking
+the next step.
+**Trailer note (2026-09-28, routine run):** Step 0 found exactly one open
+PR, #138 (Phase 15 `mc-search-box` header wiring, `ROUTINE-STATUS: DONE`,
+not yet merged) — no file overlap with this run. Added the admin
+`Sale → Quick Order Requests` list — see the Phase 15 section above for
+the full writeup. While investigating, found several other "next
+candidates" this file's own trailer notes had named were already done in
+code but not reflected here (a reminder that these historical notes can
+drift stale — verify against the actual repo, not just this file, per
+`CLAUDE.md` §10/§84): `manufacturer.php`'s `info()` already has
+`SchemaOrgBuilder::breadcrumbList()` wiring (matches
+category/search/special), and `MintCart\Catalog\BulkProductUpdateValidator`
+already covers `status`/`quantity`/`price`/`manufacturer_id`/
+`stock_status_id`/`special_price` (6 fields, not the 4 an earlier trailer
+note described) with `category_ids` already validated (though not yet
+wired to a live endpoint) by the separate, still-unwired
+`BulkProductUpdatePlanner`. The admin `mintcart/update/*` route named just
+above was investigated but not attempted this run: it's the first place
+in the Update Manager flow that would need a real decision about where a
+package manifest/download URL actually comes from (no update-server
+infrastructure exists or is planned) — a product/architecture fork
+(`CLAUDE.md` §20), not a mechanical wiring step like every `Update\*`
+primitive built so far. **Next candidates:** a per-field-typed `bulk_value`
+control for the Bulk Editor toolbar (`docs/developer/catalog/bulk-editor.md`'s
+"Next step" — small, safe, explicitly deferred, not attempted this run);
+`category_ids`/SEO fields wired to a live Bulk Editor endpoint (needs the
+`BulkProductUpdatePlanner`'s chunked-AJAX-endpoint gap filled first, itself
+a larger increment); `CheckoutTotalsService`'s next step per its own doc;
+deciding the update-server/manifest-source question above (a human
+decision, not a routine-run task); or re-check `gh pr list --state open`
+first.
 **Trailer note (2026-09-28, routine run):** Phase 17's live UI wiring is
 now done (category drag & drop, `category_list.twig` + real `mc-sortable`
 behavior) — this also resolves the Phase 12 "Architectural fork
