@@ -193,7 +193,7 @@ against a real `category_path` table — only `MintCart\Catalog\CategoryMoveVali
 cycle-prevention math is unit-tested. On a real install, with an admin
 user token, using an existing multi-level category tree:
 
-1. `POST index.php?route=catalog/category.move&user_token=<token>` with
+1. `POST index.php?route=catalog/category/move&user_token=<token>` with
    `category_id`, `parent_id`, and `order[]` set to move a category under
    a new, unrelated parent. Confirm `{"success": "..."}`, then check
    **Catalog → Categories** shows the new parent and that the storefront
@@ -221,7 +221,7 @@ user token, using an existing multi-level category tree:
    Confirm a drag-handle icon and two arrow buttons appear on each row,
    and a hint above the table explains dragging reorders and autosaves.
 6. Drag a row to a new position (mouse or touch). Confirm the row moves
-   immediately, an AJAX request fires to `catalog/category.move`, and no
+   immediately, an AJAX request fires to `catalog/category/move`, and no
    page reload happens. Reload the page (still sorted by Sort Order) and
    confirm the new order persisted.
 7. Using only the keyboard, tab to a row's "Move up"/"Move down" buttons
@@ -230,7 +230,7 @@ user token, using an existing multi-level category tree:
    `MINTCART_IMPLEMENTATION_GUIDE.md` §68 — confirm it actually works, not
    just that the buttons render).
 8. With the browser's network tab open, simulate a failure (e.g. block the
-   `catalog/category.move` request) and drag a row. Confirm the row
+   `catalog/category/move` request) and drag a row. Confirm the row
    snaps back to its previous position and a message is announced (check
    with a screen reader or the accessibility tree — the status text lives
    in a visually-hidden `aria-live="polite"` region, not visible text).
@@ -700,7 +700,7 @@ browser. A human should, on a real install:
    each status value and confirm only matching rows show. Confirm a user
    without `mintcart/quickorder` `modify` permission gets
    `error_permission` and no change is written if they POST directly to
-   `mintcart/quickorder.status`.
+   `mintcart/quickorder/status`.
 
 ## Phase 13 — Wizard Contacts step, never exercised end to end
 
