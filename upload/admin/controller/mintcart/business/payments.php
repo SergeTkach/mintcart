@@ -50,7 +50,7 @@ class ControllerMintcartBusinessPayments extends Controller {
 			'href' => $this->url->link('mintcart/business/payments', 'user_token=' . $this->session->data['user_token'], true)
 		);
 
-		$data['action_toggle'] = $this->url->link('mintcart/business/payments.toggle', 'user_token=' . $this->session->data['user_token'], true);
+		$data['action_toggle'] = $this->url->link('mintcart/business/payments/toggle', 'user_token=' . $this->session->data['user_token'], true);
 		$data['manage'] = $this->url->link('extension/extension/payment', 'user_token=' . $this->session->data['user_token'], true);
 		$data['extensions'] = $this->getExtensionRows('payment');
 
@@ -61,7 +61,7 @@ class ControllerMintcartBusinessPayments extends Controller {
 		$this->response->setOutput($this->load->view('mintcart/business/payments_list', $data));
 	}
 
-	// route=mintcart/business/payments.toggle - POST code
+	// route=mintcart/business/payments/toggle - POST code
 	public function toggle() {
 		$this->load->language('mintcart/business/payments');
 		$this->load->model('setting/extension');

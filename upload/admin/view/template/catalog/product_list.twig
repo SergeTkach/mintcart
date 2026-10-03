@@ -14,9 +14,46 @@
           <option value="manufacturer_id">{{ text_bulk_field_manufacturer }}</option>
           <option value="stock_status_id">{{ text_bulk_field_stock_status }}</option>
           <option value="special_price">{{ text_bulk_field_special }}</option>
+          <option value="category_ids">{{ text_bulk_field_category }}</option>
         </select>
-        <input type="text" id="input-bulk-value" name="bulk_value" form="form-product" placeholder="{{ text_bulk_update }}" class="form-control" style="width: 8em; display: inline-block;" />
+        <select id="input-bulk-value-status" name="bulk_value" form="form-product" class="form-control" style="width: auto; display: inline-block;">
+          <option value="1">{{ text_enabled }}</option>
+          <option value="0">{{ text_disabled }}</option>
+        </select>
+        <input type="number" id="input-bulk-value-number" name="bulk_value" form="form-product" min="0" step="1" placeholder="{{ text_bulk_update }}" class="form-control" style="width: 8em; display: none;" disabled="disabled" />
         <button type="submit" form="form-product" formaction="{{ bulkupdate }}" data-toggle="tooltip" title="{{ text_bulk_update }}" class="btn btn-default" onclick="return confirm('{{ text_confirm }}');"><i class="fa fa-check-square-o"></i></button>
+      </div>
+      {#
+        MintCart Phase 16 (Bulk Editor) - category_ids bulk field
+        (docs/developer/catalog/bulk-editor.md "category_ids"). Hidden by
+        default; #input-bulk-field's change handler below shows this and
+        hides #input-bulk-value when "Category" is chosen, since
+        category_ids is a list (bulk_value[]), not the single bulk_value
+        string every other field uses. Confirming a selection in the
+        picker appends a #bulk-category-list row, the same
+        remove-icon/hidden-input shape product_form.twig's own category
+        well already uses, so this stays a plain multi-select
+        add/remove list, not a duplicate of that page's autocomplete UI.
+      #}
+      <div id="bulk-category-field" class="clearfix" hidden style="margin-top: 8px;">
+        <div id="bulk-category-list" class="well well-sm" style="min-height: 34px; max-height: 120px; overflow: auto; margin-bottom: 8px;"></div>
+        <button type="button" class="mc-button mc-button--secondary" id="button-bulk-category-picker">
+          <i class="fa fa-search"></i> {{ text_category_picker_browse }}
+        </button>
+        <div class="mc-entity-picker" id="bulk-category-picker" hidden style="margin-top: 8px;">
+          <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_category_picker_search }}" placeholder="{{ text_category_picker_search }}">
+          <ul class="mc-entity-picker__list" role="listbox" aria-multiselectable="true" aria-label="{{ entry_category }}" data-mc-entity-picker-list></ul>
+          <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_category_picker_empty }}</p>
+          <div class="mc-entity-picker__pager">
+            <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_category_picker_prev }}</button>
+            <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+            <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_category_picker_next }}</button>
+          </div>
+          <div class="mc-entity-picker__footer">
+            <span class="mc-entity-picker__selected-count" data-mc-entity-picker-selected-count></span>
+            <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_category_picker_confirm }}</button>
+          </div>
+        </div>
       </div>
       <h1>{{ heading_title }}</h1>
       <ul class="breadcrumb">
@@ -241,7 +278,30 @@ $('#button-filter').on('click', function() {
 
 	location = 'index.php?route=catalog/product&user_token={{ user_token }}' + url;
 });
-//--></script> 
+//--></script>
+  <script type="text/javascript"><!--
+// Per-field-typed bulk-update value control: a status field needs an
+// Enabled/Disabled select, every other field needs a plain number input
+// (whole numbers for quantity/manufacturer_id/stock_status_id, decimals
+// allowed for price/special_price) - see
+// docs/developer/catalog/bulk-editor.md "Value input". Both controls
+// share name="bulk_value"; only the one currently enabled is submitted
+// (a disabled form control is excluded from the POST body), so the
+// controller still only ever sees a single bulk_value.
+$('#input-bulk-field').on('change', function() {
+	var field = $(this).val();
+
+	if (field === 'status') {
+		$('#input-bulk-value-number').prop('disabled', true).css('display', 'none');
+		$('#input-bulk-value-status').prop('disabled', false).css('display', 'inline-block');
+	} else {
+		var step = (field === 'price' || field === 'special_price') ? 'any' : '1';
+
+		$('#input-bulk-value-number').attr('step', step).prop('disabled', false).css('display', 'inline-block');
+		$('#input-bulk-value-status').prop('disabled', true).css('display', 'none');
+	}
+});
+//--></script>
   <script type="text/javascript"><!--
 // IE and Edge fix!
 $('button[form=\'form-product\']').on('click', function(e) {
@@ -287,5 +347,121 @@ $('input[name=\'filter_model\']').autocomplete({
 		$('input[name=\'filter_model\']').val(item['label']);
 	}
 });
-//--></script></div>
+//--></script>
+  <script type="text/javascript">
+// MintCart Phase 16 (Bulk Editor) - category_ids bulk field
+// (docs/developer/catalog/bulk-editor.md "category_ids"). Plain vanilla
+// JS, not jQuery, per CLAUDE.md §7/§14 (new MintCart JS/behavior hooks
+// never use jQuery, even on a page that still loads it for legacy
+// autocomplete above). Mirrors product_form.twig's own Category field
+// McEntityPicker wiring almost exactly - same mintcart/entity/category
+// endpoint, same multiple:true picker - just appending into
+// #bulk-category-list/bulk_value[] instead of #product-category/
+// product_category[].
+(function () {
+	var fieldSelect = document.getElementById('input-bulk-field');
+	var categoryField = document.getElementById('bulk-category-field');
+	var browseButton = document.getElementById('button-bulk-category-picker');
+	var pickerRoot = document.getElementById('bulk-category-picker');
+	var list = document.getElementById('bulk-category-list');
+
+	if (!fieldSelect || !categoryField) {
+		return;
+	}
+
+	// The scalar bulk_value controls (#input-bulk-value-status/-number) are
+	// shown/enabled by the per-field-typed jQuery change handler above,
+	// which is registered first and so runs first; for category_ids this
+	// handler then disables/hides both of them, so only bulk_value[] is
+	// ever submitted.
+	function toggleValueControl() {
+		var isCategoryField = fieldSelect.value === 'category_ids';
+
+		categoryField.hidden = !isCategoryField;
+
+		if (isCategoryField) {
+			document.querySelectorAll('[name="bulk_value"][form="form-product"]').forEach(function (control) {
+				control.disabled = true;
+				control.style.display = 'none';
+			});
+		}
+	}
+
+	fieldSelect.addEventListener('change', toggleValueControl);
+	toggleValueControl();
+
+	if (!browseButton || !pickerRoot || !list || !window.MintCart || !window.MintCart.createEntityPicker) {
+		return;
+	}
+
+	function addCategoryToList(id, name) {
+		var existing = document.getElementById('bulk-category' + id);
+
+		if (existing) {
+			existing.remove();
+		}
+
+		var row = document.createElement('div');
+		row.id = 'bulk-category' + id;
+
+		var icon = document.createElement('i');
+		icon.className = 'fa fa-minus-circle';
+		row.appendChild(icon);
+		row.appendChild(document.createTextNode(' ' + name));
+
+		var hidden = document.createElement('input');
+		hidden.type = 'hidden';
+		hidden.name = 'bulk_value[]';
+		hidden.value = id;
+		hidden.setAttribute('form', 'form-product');
+		row.appendChild(hidden);
+
+		list.appendChild(row);
+	}
+
+	list.addEventListener('click', function (event) {
+		var icon = event.target.closest('.fa-minus-circle');
+
+		if (icon) {
+			icon.parentElement.remove();
+		}
+	});
+
+	var picker = window.MintCart.createEntityPicker(pickerRoot, {
+		fetchItems: function (options) {
+			var params = new URLSearchParams({
+				filter_name: options.query,
+				page: options.page,
+				limit: options.pageSize
+			});
+
+			return fetch('index.php?route=mintcart/entity/category&user_token={{ user_token }}&' + params, {
+				signal: options.signal
+			}).then(function (response) {
+				return response.json();
+			});
+		},
+		multiple: true,
+		onConfirm: function (selected) {
+			selected.forEach(function (item) {
+				addCategoryToList(item.id, item.name);
+			});
+
+			picker.clear();
+			pickerRoot.hidden = true;
+		}
+	});
+
+	browseButton.addEventListener('click', function () {
+		var opening = pickerRoot.hidden;
+
+		pickerRoot.hidden = !pickerRoot.hidden;
+
+		if (opening) {
+			picker.refresh();
+		}
+	});
+})();
+  </script>
+</div>
 {{ footer }} 

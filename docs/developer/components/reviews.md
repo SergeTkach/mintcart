@@ -176,7 +176,7 @@ Pure CSS radio-group star picker, no JS:
       stacked `mc-field` list, same as every other MintCart form)
 - [x] No Bootstrap 3 dependency
 - [x] No OCMOD required (two one-line additive `$data` assignments only —
-      see MC-0020/MC-0021)
+      see MC-0022/MC-0023)
 - [x] Theme override checked — `test_theme` doesn't override
       `product.twig`/`review.twig`, so both fall back to `mint_default`'s
       version via the same Theme resolver fallback chain Phase 8 already

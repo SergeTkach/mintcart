@@ -98,18 +98,29 @@ active theme (a theme/template that never reads
 `$data['mc_robots_content']`, including the legacy `default` theme, simply
 never sees the extra key).
 
-### Known limitation: `product/search` always assumes results
+### `product/search` `$hasResults` — resolved via a registry bridge
 
-`$hasResults` (the second parameter) is left at its default, `true`, in
-this wiring. `header.php` renders as a sibling sub-controller of
-`ControllerProductSearch`, not that controller itself, so it has no way to
-know whether the current search actually matched anything without a
-registry/session bridge between the two — a separate, slightly larger
-follow-up. Today a `product/search` page always renders `index, follow`,
-even when the results are empty; every other route (the full
-`NOINDEX_ROUTES` whitelist, and every ordinary catalog/information/home
-route) is unaffected and already behaves exactly as this class's own test
-suite verifies.
+Previously, `$hasResults` (the second parameter) was left at its default,
+`true`, in this wiring: `header.php` renders as a sibling sub-controller of
+`ControllerProductSearch`, not that controller itself, so it had no way to
+know whether the current search actually matched anything.
+
+This is now resolved with a plain `\Registry` value —
+`RobotsBuilder::HAS_RESULTS_REGISTRY_KEY` (`mc_seo_search_has_results`) —
+the same request-scoped `$this->registry->set()`/`->get()` bridge
+OpenCart's own `startup/startup.php` already uses to hand `session`/
+`customer`/`cart` from one stage of the request to the next (no new table,
+session key, or event). `ControllerProductSearch::index()` computes
+`$mint_search_has_results` (`true` for a bare `product/search` request with
+no `search`/`tag` param — the plain search form, not a "no results" page —
+otherwise `$product_total > 0`) and calls
+`$this->registry->set(RobotsBuilder::HAS_RESULTS_REGISTRY_KEY, $mint_search_has_results)`
+immediately before `$this->load->controller('common/header')`.
+`ControllerCommonHeader::index()` reads the same key back with
+`$this->registry->get(...)`, falling back to `RobotsBuilder`'s own default
+(`true`) when the key is unset — i.e. every route other than
+`product/search`, which never writes it. A `product/search` page with zero
+matches now renders `noindex, follow`; every other route is unaffected.
 
 ## What this is not
 
@@ -133,8 +144,9 @@ suite verifies.
       and `$hasResults` being ignored outside `product/search`
 - [x] Live controller/template wiring (`ControllerCommonHeader` +
       `mint_default/template/common/header.twig`) — see "Live wiring" above
-- [ ] `product/search` `$hasResults` threaded from `ControllerProductSearch`
-      — see "Known limitation" above (today always assumes results)
+- [x] `product/search` `$hasResults` threaded from `ControllerProductSearch`
+      — see "`product/search` `$hasResults` — resolved via a registry
+      bridge" above
 - [ ] Live verification against a real install — this environment has no
       MySQL server (same pre-existing gap noted throughout
       `docs/IMPLEMENTATION_STATUS.md`)
@@ -142,18 +154,20 @@ suite verifies.
 ## Verified
 
 - `php -l` clean on every touched/added PHP file, re-swept across the full
-  `upload/`/`tests/` tree, including `header.php` after this run's wiring.
-- `tests/mintcart/seo/robots-builder-test.php` (74 assertions: ordinary
-  route default, every `checkout/*`/`account/*` `NOINDEX_ROUTES` entry,
-  `metaContent()` formatting, `product/search` with/without results,
-  `$hasResults` ignored elsewhere, `NOINDEX_ROUTES` uniqueness and shape) —
-  unchanged by this run, since the wiring only threads this already-tested
-  function's output into `$data`, no new logic to unit-test.
-- Full `tests/mintcart/**/*-test.php` suite re-run end to end (77 files) —
+  `upload/`/`tests/` tree, including `header.php`/`search.php` after this
+  run's registry-bridge wiring.
+- `tests/mintcart/seo/robots-builder-test.php` (76 assertions, up from 74 —
+  this run added a defensive shape check for the new
+  `HAS_RESULTS_REGISTRY_KEY` constant; `directives()`/`metaContent()`'s own
+  logic is unchanged).
+- Full `tests/mintcart/**/*-test.php` suite re-run end to end (84 files) —
   all passing, no regressions.
 
 **Not verified:** no live MySQL/`vendor/twig/twig` session in this
 environment — a human should confirm that `/checkout/cart`/`/account/*`
-pages render `<meta name="robots" content="noindex, follow">` and ordinary
-catalog pages render `content="index, follow"` (see
-`docs/MANUAL_VERIFICATION.md`'s Phase 18 section).
+pages render `<meta name="robots" content="noindex, follow">`, ordinary
+catalog pages render `content="index, follow"`, and — the new part this
+run adds — a `product/search` query with zero matches renders
+`content="noindex, follow"` while one with matches still renders
+`content="index, follow"` (see `docs/MANUAL_VERIFICATION.md`'s Phase 18
+section).

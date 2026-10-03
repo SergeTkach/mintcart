@@ -209,3 +209,11 @@ $_['error_log_required']             = 'Error Log Filename required!';
 $_['error_log_invalid']              = 'Error Log Filename invalid!';
 $_['error_log_extension']            = 'Error Log Filename extension needs to be .log!';
 $_['error_encryption']               = 'Encryption Key must be between 32 and 1024 characters!';
+
+// Text - Information picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
+$_['text_information_picker_browse']  = 'Browse pages';
+$_['text_information_picker_search']  = 'Search pages';
+$_['text_information_picker_empty']   = 'No pages found.';
+$_['text_information_picker_prev']    = 'Previous';
+$_['text_information_picker_next']    = 'Next';
+$_['text_information_picker_confirm'] = 'Select';

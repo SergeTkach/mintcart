@@ -26,11 +26,13 @@ declare(strict_types=1);
 require __DIR__ . '/../../../upload/system/library/mintcart/design/activetheme.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/design/componentrenderer.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/design/productcardlistrenderer.php';
+require __DIR__ . '/../../../upload/system/library/mintcart/design/slotregistry.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/commerce/productviewprovider.php';
 
 use MintCart\Design\ActiveTheme;
 use MintCart\Design\ComponentRenderer;
 use MintCart\Design\ProductCardListRenderer;
+use MintCart\Design\SlotRegistry;
 
 function buildEmptyThemeFixture(): string
 {
@@ -189,6 +191,49 @@ assertSame__([42], $onErrorCalls, 'Scenario 7: onError is not invoked again once
 $freshListRenderer = new ProductCardListRenderer($componentRenderer);
 assertSame__(true, $freshListRenderer->isEnabled(), 'Scenario 8: a fresh renderer instance starts enabled', $failures);
 
+// 9. A SlotRegistry passed as the optional 3rd constructor argument is
+// consulted for the 'product.after_actions' slot (MINTCART_TECHNICAL_PLAN.md
+// §15) once ProductViewProvider::build() succeeds, even though
+// ComponentRenderer::render() itself still fails in this environment (no
+// vendor/twig/twig installed - same pre-existing gap scenario 6 is built
+// around). This proves the slot is consulted with the rendered product's
+// own normalized data, independently of whether Twig can actually run here.
+$slotRegistry = new SlotRegistry();
+$slotCalls = [];
+$slotRegistry->listen('product.after_actions', function (array $context) use (&$slotCalls): string {
+    $slotCalls[] = $context['id'] ?? null;
+
+    return '';
+});
+
+$listRendererWithSlots = new ProductCardListRenderer($componentRenderer, null, $slotRegistry);
+
+$card3 = $listRendererWithSlots->render(
+    ['id' => 99, 'name' => 'Widget', 'url' => 'index.php?route=product/product&product_id=99', 'image' => 'placeholder.png'],
+    [],
+    ['listing_type' => 'search', 'position' => 1],
+    []
+);
+
+assertSame__(null, $card3, "Scenario 9: still degrades to null when the component itself can't resolve/render (no behavior change from the slot wiring)", $failures);
+assertSame__([99], $slotCalls, "Scenario 9: the SlotRegistry's 'product.after_actions' listener is invoked once, with the built product's own id in context", $failures);
+
+// 10. The default (no 3rd constructor argument, `null`) behaves exactly as
+// before this change - a fresh instance built the same way every existing
+// call site (Category/Search/Manufacturer/Special/Product) already does
+// degrades identically to scenarios 6/7, with no SlotRegistry involved at
+// all. This is the byte-for-byte-unaffected guarantee the class docblock
+// promises for every pre-existing caller.
+$listRendererNoSlots = new ProductCardListRenderer($componentRenderer);
+$card4 = $listRendererNoSlots->render(
+    ['id' => 100, 'name' => 'Gizmo', 'url' => 'index.php?route=product/product&product_id=100', 'image' => 'placeholder.png'],
+    [],
+    ['listing_type' => 'search', 'position' => 1],
+    []
+);
+
+assertSame__(null, $card4, 'Scenario 10: a renderer built without a SlotRegistry still degrades to null exactly as before', $failures);
+
 removeDirectory_($root);
 
 if ($failures) {
@@ -199,5 +244,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: ActiveTheme / ProductCardListRenderer smoke test (' . 8 . " scenarios)\n";
+echo 'PASS: ActiveTheme / ProductCardListRenderer smoke test (' . 10 . " scenarios)\n";
 exit(0);

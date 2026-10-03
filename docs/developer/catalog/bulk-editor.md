@@ -5,10 +5,10 @@
 `MINTCART_IMPLEMENTATION_GUIDE.md` §62.
 
 Mass **status / quantity / price / manufacturer / stock status / special
-price** update across a multi-selected set of products, reusing the exact
-`selected[]` checkboxes `Catalog → Products`' existing Delete/Copy actions
-already provide. Category/SEO fields are natural follow-ups over the same
-shape — see "Next step" below.
+price / category** update across a multi-selected set of products, reusing
+the exact `selected[]` checkboxes `Catalog → Products`' existing
+Delete/Copy actions already provide. SEO fields are a natural follow-up
+over the same shape — see "Next step" below.
 
 PHP:
 
@@ -27,7 +27,7 @@ Language: `upload/admin/language/en-gb/catalog/product.php` (new
 `text_bulk_*`/`error_bulk_*` keys)
 
 Test: `tests/mintcart/catalog/bulk-product-update-validator-test.php`
-(46 scenarios)
+(57 scenarios)
 
 ## Why a new model method, not `editProduct()`
 
@@ -73,6 +73,18 @@ per-customer-group/date-ranged rows a product already had. A blank
 `MintCart\Catalog\BulkProductUpdatePlanner::validateNullableNonNegativeFloat()`'s
 existing `null` = "remove" semantics for the same field.
 
+`category_ids` is the other non-`oc_product`-column exception: like
+`special_price`, it lives in its own table (`oc_product_to_category`), so
+`updateProductField()` gives it the same delete-then-reinsert branch
+`ModelCatalogProduct::editProduct()`'s own `product_category` relation
+already uses (`DELETE ... WHERE product_id = ...` then one `INSERT` per
+category id) — just scoped to this single relation, not a full
+product-form save. Unlike `special_price`, there's no MVP simplification
+here: the bulk action can express exactly the same "this product's
+categories are now this exact list" as the full edit form's category
+well, because `category_ids` arrives as a real list (`bulk_value[]`), not
+a single-value text input.
+
 ## Why the same form-POST-then-redirect shape as Delete/Copy, not AJAX
 
 `ControllerCatalogProduct::delete()`/`copy()` already establish the
@@ -80,14 +92,18 @@ pattern this action follows exactly: `selected[]` checkboxes inside
 `#form-product`, a toolbar button with `form="form-product"`/
 `formaction="..."`, POST, then a redirect back to the list preserving the
 current filter/sort/page query string. `bulkUpdate()` adds a fourth
-button using the identical shape — no new AJAX/JSON endpoint, and
-critically, **no new admin asset bundle** (MintCart's own compiled
-`assets/dist/{css,js}` still isn't enqueued on any admin page — the same
-blocker `docs/developer/blocks/homepage-admin.md` and
-`docs/developer/catalog/category-drag-drop.md` already document for their
-own admin screens). This screen stays entirely on the legacy Bootstrap
-3/jQuery admin theme, same reasoning every other MintCart admin addition
-since Phase 10 has given.
+button using the identical shape — no new AJAX/JSON endpoint. The six
+scalar fields above never needed MintCart's own compiled
+`assets/dist/{css,js}` bundle at all (a plain `<select>`/`<input>` is
+native HTML); the `category_ids` field does (its picker is
+`window.MintCart.createEntityPicker`), so `getList()` now calls the same
+`enqueueMintAssets()` helper `getForm()` already used for this screen's
+edit-form Category field — see
+`docs/developer/admin/asset-enqueue.md` for why that's safe
+(`components.min.css`, not `index.min.css`, avoids the Bootstrap 3/5
+conflict every other admin screen since Phase 10 had been blocked on).
+This screen otherwise stays entirely on the legacy Bootstrap 3/jQuery
+admin theme.
 
 ## Why `type="submit"` + `onclick="return confirm(...)"`, not `type="button"` + manual `.submit()`
 
@@ -118,21 +134,51 @@ this button's own `formaction`).
 
 ## Value input
 
-The toolbar renders one generic `bulk_field` `<select>`
-(Status/Quantity/Price/Manufacturer/Stock Status/Special Price) and one
-generic `bulk_value` text `<input>` — not
-a per-field-typed control (e.g. a `<select>` for Status specifically).
-`BulkProductUpdateValidator::validateValue()` still enforces the right
-shape server-side (`0`/`1` for status, a non-negative whole number for
-quantity, a non-negative number for price, a non-negative whole number —
-an ID, or `0` for none — for manufacturer and stock status, blank or a
-non-negative number for special price) regardless of what the generic
-text input lets a merchant type. A friendlier per-field
-control (swapping to a `<select>` when `status` is chosen, a
-`type="number"` input otherwise) needs a small amount of new JS —
-deliberately not added this run to avoid introducing a new inline
-`<script>` block for a first increment; a natural follow-up, not a
-blocker.
+The toolbar renders one `bulk_field` `<select>`
+(Status/Quantity/Price/Manufacturer/Stock Status/Special Price/Category)
+and, for the six scalar fields, a **per-field-typed** `bulk_value`
+control: an Enabled/Disabled `<select>` (`#input-bulk-value-status`,
+options `1`/`0`, the same `text_enabled`/`text_disabled` global language
+keys the existing Status filter `<select>` above it already uses) when
+`status` is chosen, or a `type="number"` `<input>`
+(`#input-bulk-value-number`, `min="0"`, `step="1"` for
+quantity/manufacturer_id/stock_status_id, `step="any"` for price/
+special_price) for every other scalar field. Both controls share
+`name="bulk_value"`; a small inline jQuery `change` handler on
+`#input-bulk-field` toggles which one is `disabled` — a disabled form
+control is excluded from the browser's own POST body, so
+`ControllerCatalogProduct::bulkUpdate()` only ever receives a single
+`bulk_value`. `BulkProductUpdateValidator::validateValue()` still does the
+real server-side enforcement (`0`/`1` for status, a non-negative whole
+number for quantity, a non-negative number for price, a non-negative whole
+number — an ID, or `0` for none — for manufacturer and stock status, blank
+or a non-negative number for special price); the per-field control is a
+UX improvement on top of that, not a replacement for it.
+
+`category_ids` cannot share either scalar control at all — it is a
+*list* of category IDs, not a single scalar — so choosing "Category" in
+`#input-bulk-field` swaps in a dedicated `#bulk-category-field` block
+instead: a `window.MintCart.createEntityPicker` (the same one
+`product_form.twig`'s own Category field already uses, reusing its
+`mintcart/entity/category` search/pagination endpoint unchanged) lets a
+merchant search and multi-select categories, appending each confirmed pick
+as a `<input type="hidden" name="bulk_value[]" form="form-product">` row
+into `#bulk-category-list` (with a click-to-remove `.fa-minus-circle`
+icon, the same shape `product_form.twig`'s `#product-category` well
+already uses). A second (vanilla JS) `change` handler on
+`#input-bulk-field`, registered after the jQuery one above, shows the
+category block and `disabled`s/hides both scalar `bulk_value` controls
+while `category_ids` is chosen (switching back to a scalar field lets the
+jQuery handler re-enable the right one), so only one of `bulk_value`/`bulk_value[]` is
+ever present in the POST body — `ControllerCatalogProduct::bulkUpdate()`
+branches on `$field === 'category_ids'` to read the right one.
+`MintCart\Catalog\BulkProductUpdateValidator::validateCategoryIds()`/
+`normalizeCategoryIds()` are separate methods from `validateValue()` (kept
+string-typed for the six scalar fields) rather than widening that
+method's signature to accept a list too. An **empty** selection is valid
+and means "remove every category from the selected products" — the same
+blank-means-clear semantics `special_price` already has for its own
+field.
 
 Manufacturer and stock status are entered as raw `manufacturer_id`/
 `stock_status_id` integers, the same way the other three fields are raw
@@ -154,48 +200,53 @@ meaningful bulk-update target a merchant would intentionally choose.
 ## Verified
 
 - `php -l` clean on every touched/added PHP file.
-- `tests/mintcart/catalog/bulk-product-update-validator-test.php` (46
+- `tests/mintcart/catalog/bulk-product-update-validator-test.php` (57
   scenarios: field whitelist, per-field value validation incl. rejection
   cases for status/quantity/price/manufacturer_id/stock_status_id/
-  special_price, product-id normalization/dedup/dropping non-positive
-  ids) — passing.
-- Full `tests/mintcart/**/*-test.php` suite re-run end to end (81 files)
+  special_price, `validateCategoryIds()`/`normalizeCategoryIds()`,
+  product-id normalization/dedup/dropping non-positive ids) — passing.
+- Full `tests/mintcart/**/*-test.php` suite re-run end to end (84 files)
   — all passing, no regressions.
 - `product_list.twig`'s `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor
   %}` tag counts checked balanced (14/14, 2/2) before and after the
-  toolbar addition, same script-based technique used for every other
-  `.twig` file in this repo.
-- No JS/CSS in `assets/` touched — `npm run build` not re-run for this
-  increment.
+  `category_ids` addition (no `{% %}` tag touched, only plain HTML/inline
+  `<script>`), same script-based technique used for every other `.twig`
+  file in this repo.
+- All 3 of the file's inline `<script>` blocks (including the new
+  `category_ids` toggle/picker wiring) checked for JS syntax errors with a
+  standalone Node harness (Twig `{{ }}` output substituted with a
+  placeholder string first, since Node can't parse Twig) — all parse
+  cleanly.
+- No JS/CSS in `assets/` touched — `npm run build` not re-run (the new
+  `category_ids` field consumes the existing compiled
+  `assets/dist/{css,js}` bundle unchanged, just newly enqueued on this
+  screen).
 
 **Not verified:** no live MySQL/admin session in this environment — a
 human should confirm the toolbar renders correctly, the confirm dialog
-appears, the redirect preserves filters, and each of the six fields
-actually updates the right column/table without disturbing anything else
-(in particular: confirm a product's descriptions/options/discounts are
-unchanged after any bulk update, and that a bulk special-price update
+appears, the redirect preserves filters, and each field actually updates
+the right column/table/relation without disturbing anything else (in
+particular: confirm a product's descriptions/options/discounts are
+unchanged after any bulk update; that a bulk special-price update
 correctly replaces — not adds to — any existing `oc_product_special`
-row(s), including one a merchant had previously set with a date range or
-non-default customer group via the normal edit form). See
+row(s); and that a bulk category update correctly replaces — not merges
+into — each selected product's existing categories, including confirming
+the entity picker actually renders once `components.min.css`/
+`admin.min.js` are enqueued on this screen). See
 `docs/MANUAL_VERIFICATION.md`'s Phase 16 entry.
 
 ## Next step
 
-- `category_ids` and SEO fields as further
-  `BulkProductUpdateValidator::FIELDS` entries — `category_ids` needs a
-  multi-select/picker control the current single `bulk_value` text input
-  can't provide (see "Why a new model method, not `editProduct()`" above
-  for why `special_price` needed its own branch, the same underlying
-  constraint); `category_ids` is already validated as its own field set
-  by `MintCart\Catalog\BulkProductUpdatePlanner`, not yet wired to a live
-  endpoint.
+- SEO fields as further `BulkProductUpdateValidator::FIELDS` entries —
+  `ControllerCatalogProduct::validateForm()` enforces per-store/
+  per-language `seo_url` uniqueness against the whole table, a different,
+  store/language-keyed shape than every field here (a single value applied
+  to every selected product) and a real conflict risk across a
+  multi-product batch; needs its own design, not a mechanical addition.
 - Chunked/resumable AJAX batch jobs (`MINTCART_TECHNICAL_PLAN.md` §29)
   for very large selections — today's synchronous PHP loop mirrors
   Delete/Copy's own existing (also synchronous) behavior, so it isn't a
   new risk this increment introduces, but it doesn't yet have progress
   reporting for a merchant bulk-updating hundreds of products at once.
-- A per-field-typed value control (see "Value input" above).
 - True inline edit (editing a value directly in the product list table
-  without a separate bulk-toolbar step) — a larger UI change, likely
-  blocked on the same admin asset-enqueue problem every other MintCart
-  admin screen since Phase 10 has flagged.
+  without a separate bulk-toolbar step) — a larger UI change.
