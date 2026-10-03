@@ -116,7 +116,7 @@ a toast with the server's own translated confirmation message.
 
 ## `Sale → Quick Order Requests` — admin list
 
-`route=mintcart/quickorder` (list, GET) / `route=mintcart/quickorder.status`
+`route=mintcart/quickorder` (list, GET) / `route=mintcart/quickorder/status`
 (POST, `quick_order_id` + `status`). New admin controller/model/view/
 language file:
 
