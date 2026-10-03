@@ -1850,7 +1850,7 @@ order, commit". Two changes:
    `category_to_layout`, since a drag & drop move changes structure, not
    content.
 2. **Controller:** a new, fully-additive `move()` action (route
-   `catalog/category.move`) — permission check, `category_id`/`parent_id`
+   `catalog/category/move`) — permission check, `category_id`/`parent_id`
    existence checks via the existing `getCategory()`, cycle-prevention via
    the new `MintCart\Catalog\CategoryMoveValidator` fed by the existing
    `getCategoryPath($parent_id)` (the *same* ancestor-chain lookup
@@ -1903,12 +1903,12 @@ UI wiring" section for the full writeup.
 (verbatim copy of `ControllerCatalogProduct::enqueueMintAssets()` — the
 `components.min.css`/`admin.min.js` pair, `docs/developer/admin/asset-
 enqueue.md`) and now passes `parent_id` per row plus a new `$data['move']`
-(the `catalog/category.move` URL) into `category_list.twig`, which mounts
+(the `catalog/category/move` URL) into `category_list.twig`, which mounts
 the real `mc-sortable` behavior (`data-mc-sortable`/
 `data-mc-sortable-handle`/`data-mc-sortable-item`/`data-mc-action` — its
 documented hook contract, no CSS class dependency) directly on the
 existing Bootstrap 3 table/row markup, gated to `sort == 'sort_order'`.
-An inline `<script>` POSTs the new order to `catalog/category.move`
+An inline `<script>` POSTs the new order to `catalog/category/move`
 immediately on `mc:sortable:reorder`, keeping every row's own `parent_id`
 unchanged (reordering only — no re-parenting from this UI) and splitting
 the new visible order back into per-parent groups before saving (one
