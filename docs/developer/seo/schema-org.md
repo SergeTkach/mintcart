@@ -14,9 +14,10 @@ Test: `tests/mintcart/seo/schema-org-builder-test.php`
 Consumers: `upload/catalog/controller/common/header.php` (Organization),
 `upload/catalog/controller/product/category.php`,
 `upload/catalog/controller/product/search.php`,
-`upload/catalog/controller/product/manufacturer.php` (`info()`) and
-`upload/catalog/controller/product/special.php` (BreadcrumbList) — the
-four listing pages that build `$data['breadcrumbs']` — and
+`upload/catalog/controller/product/manufacturer.php` (`info()`),
+`upload/catalog/controller/product/special.php` and
+`upload/catalog/controller/product/product.php` (BreadcrumbList) — all five
+pages that build `$data['breadcrumbs']` — and
 `upload/catalog/controller/product/product.php` (Product) — see "Product:
 live-wired" below.
 
@@ -113,14 +114,25 @@ renders nothing rather than an empty `<script>` tag.
 
 ## BreadcrumbList: reuses each controller's existing `$data['breadcrumbs']`
 
-`category.php`, `search.php`, `manufacturer.php` (`info()`) and
-`special.php` all already build `$data['breadcrumbs']` for their own
+`category.php`, `search.php`, `manufacturer.php` (`info()`), `special.php`
+and `product.php` all already build `$data['breadcrumbs']` for their own
 visible breadcrumb nav (`mc-breadcrumb`, Phase 4) — the schema is built
 from that same array, once every entry has been appended (breadcrumb
 arrays grow incrementally through those methods, so building the schema
 too early would silently drop later entries). Rendered as a second
 `<script type="application/ld+json">` block right after `{{ header }}` in
-`category.twig`/`search.twig`/`manufacturer_info.twig`/`special.twig`.
+`category.twig`/`search.twig`/`manufacturer_info.twig`/`special.twig`/
+`product.twig`.
+
+`product.php`'s own `$data['breadcrumbs']` is the same full trail OpenCart
+has always built there (Home → category path → ... → product, or
+Home → Brand → manufacturer → product, or Home → Search → product,
+depending on how the product page was reached) — not a page-independent
+placeholder, so it is just as meaningful a `BreadcrumbList` as any listing
+page's. A fresh `SchemaOrgBuilder` instance is used for this call (rather
+than reusing the Product schema block's own instance) so the breadcrumb
+schema does not depend on that earlier block having reached its own `new`
+statement before throwing.
 
 ## Product: live-wired
 
@@ -145,10 +157,9 @@ hides pricing from a logged-out customer, matching this builder's own
 are truthy, so a product with zero reviews correctly gets none). Rendered
 as a second `<script type="application/ld+json">` block right after
 `{{ header }}` in `product.twig`, same position `category.twig` uses for
-its own `mc_schema_breadcrumb` block. `product.php` does not (yet) build a
-per-item `$data['breadcrumbs']` trail worth a `BreadcrumbList` of its own
-distinct from `category.php`'s — that remains a separate, unclaimed future
-increment, not part of this one.
+its own `mc_schema_breadcrumb` block. `product.php` also now gets its own
+`mc_schema_breadcrumb` (see "BreadcrumbList" above) — both schema blocks
+share the same `isMintAware()` gate and sit back-to-back in `product.twig`.
 
 ## Definition of Done
 
@@ -156,8 +167,8 @@ increment, not part of this one.
 - [x] `toJsonLd()` is safe to embed directly in a `<script>` tag
       (`JSON_HEX_TAG` — no manual escaping needed by a caller)
 - [x] Live-wired for Organization (header, all Mint-aware pages),
-      BreadcrumbList (category, search, manufacturer, special) and Product
-      (product detail page)
+      BreadcrumbList (category, search, manufacturer, special, product) and
+      Product (product detail page)
 - [ ] Validated against a real page with Google's Rich Results Test /
       schema.org validator (`docs/MANUAL_VERIFICATION.md`, Phase 18 entry —
       this environment has no MySQL/`vendor/twig/twig` to render a real

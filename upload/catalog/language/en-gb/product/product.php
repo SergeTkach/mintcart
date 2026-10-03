@@ -19,6 +19,7 @@ $_['text_no_reviews']          = 'There are no reviews for this product.';
 $_['text_note']                = '<span class="text-danger">Note:</span> HTML is not translated!';
 $_['text_success']             = 'Thank you for your review. It has been submitted to the webmaster for approval.';
 $_['text_related']             = 'Related Products';
+$_['text_viewed']              = 'Recently Viewed';
 $_['text_tags']                = 'Tags:';
 $_['text_error']               = 'Product not found!';
 $_['text_payment_recurring']   = 'Payment Profile';
@@ -41,6 +42,7 @@ $_['text_badge_out_of_stock']  = 'Out of Stock';
 $_['text_badge_new']           = 'New';
 $_['text_added_to_cart']       = 'Added to cart';
 $_['text_add_to_cart_error']   = 'Could not add this product to your cart';
+$_['text_wishlist_error']      = 'Could not update your wishlist';
 
 // Entry
 $_['entry_qty']                = 'Qty';

@@ -13,14 +13,20 @@
  * `document` so cards/forms rendered after page load (e.g. a listing loaded
  * via fetch()) work without re-wiring, same approach as mc-alert/mc-quantity.
  *
- * Wishlist/compare only flip the button's own pressed/visual state and
- * dispatch a bubbling `CustomEvent` carrying the product id - they do not
- * call any backend. Persisting wishlist/compare membership is Commerce API
- * territory (`MintCart\Commerce\*`, Phase 15, MINTCART_TECHNICAL_PLAN.md
- * §24/§27) which doesn't exist yet for those two; a future Wishlist/Compare
- * service listens for `mc:product-card:wishlist-toggle` /
+ * Compare only flips the button's own pressed/visual state and dispatches a
+ * bubbling `CustomEvent` carrying the product id - it does not call any
+ * backend. Persisting compare membership is Commerce API territory
+ * (`MintCart\Commerce\*`, Phase 15, MINTCART_TECHNICAL_PLAN.md §24/§27)
+ * which doesn't exist yet; a future Compare service would listen for
  * `mc:product-card:compare-toggle` on `document` instead of this module
  * reaching into a network call ahead of a real consumer (CLAUDE.md §85).
+ *
+ * `toggle-wishlist` calls `MintCart\Commerce\WishlistService` via
+ * `../commerce/wishlist-client.js`'s `addToWishlist()`/`removeFromWishlist()`
+ * - membership now actually persists (logged-in customer: DB via
+ * `ModelAccountWishlist`; guest: session), same "real backend, not just a
+ * visual toggle" upgrade `add-to-cart` already got. See
+ * `docs/developer/commerce/wishlist-service.md`.
  *
  * `add-to-cart` calls `MintCart\Commerce\CartService` via
  * `../commerce/cart-client.js`'s `addToCart()` - the first real Phase 15
@@ -37,6 +43,7 @@
  */
 
 import { addToCart } from '../commerce/cart-client.js';
+import { addToWishlist, removeFromWishlist } from '../commerce/wishlist-client.js';
 import { createToast, showToast } from './toast.js';
 
 function toggleAction(root, actionName, eventName) {
@@ -114,6 +121,54 @@ function readOptions(button) {
     return options;
 }
 
+/**
+ * Optimistically flips the button's `aria-pressed` and dispatches
+ * `mc:product-card:wishlist-toggle` exactly like the old UI-only handler
+ * did, then persists the change via `wishlist-client.js`. A failed request
+ * reverts the button's visual state and shows an error toast - the
+ * dispatched event is not un-dispatched, since any listener reacting to it
+ * (none exist yet) would need to handle a failed mutation the same way this
+ * module does.
+ */
+function initWishlistToggle(root) {
+    root.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-mc-action="toggle-wishlist"]');
+
+        if (!button || button.disabled) {
+            return;
+        }
+
+        const card = button.closest('.mc-product-card');
+        const productId = button.dataset.productId ?? null;
+        const wasPressed = button.getAttribute('aria-pressed') === 'true';
+        const nextActive = !wasPressed;
+        const errorText = button.dataset.mcTextWishlistError || 'Could not update your wishlist';
+
+        button.setAttribute('aria-pressed', String(nextActive));
+        button.disabled = true;
+
+        (card || button).dispatchEvent(
+            new CustomEvent('mc:product-card:wishlist-toggle', {
+                bubbles: true,
+                detail: { productId, active: nextActive },
+            })
+        );
+
+        try {
+            const result = nextActive ? await addToWishlist(productId) : await removeFromWishlist(productId);
+
+            if (result.error) {
+                throw new Error(result.error);
+            }
+        } catch {
+            button.setAttribute('aria-pressed', String(wasPressed));
+            showToast(createToast({ title: errorText, message: errorText, variant: 'danger' }));
+        } finally {
+            button.disabled = false;
+        }
+    });
+}
+
 function initAddToCart(root) {
     root.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-mc-action="add-to-cart"]');
@@ -152,7 +207,7 @@ function initAddToCart(root) {
 }
 
 export function initProductCardActions(root = document) {
-    toggleAction(root, 'toggle-wishlist', 'mc:product-card:wishlist-toggle');
+    initWishlistToggle(root);
     toggleAction(root, 'toggle-compare', 'mc:product-card:compare-toggle');
     initAddToCart(root);
 }
