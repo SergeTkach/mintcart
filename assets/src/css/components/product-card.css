@@ -224,6 +224,19 @@
 }
 
 /* ---------------------------------------------------------------------- */
+/* Slots (MINTCART_TECHNICAL_PLAN.md §15, MINTCART_IMPLEMENTATION_GUIDE.md */
+/* §35) - a pass-through container for whatever markup an extension's      */
+/* MintCart\Design\SlotRegistry listener renders into `product.after_actions`. */
+/* No listener exists anywhere in this codebase yet, so this rule only     */
+/* gives the wrapper the same horizontal rhythm as the rest of the card -  */
+/* it does not assume any particular content shape.                       */
+/* ---------------------------------------------------------------------- */
+
+.mc-product-card__slot {
+    padding: 0 var(--mc-product-card-padding) var(--mc-product-card-padding);
+}
+
+/* ---------------------------------------------------------------------- */
 /* Modifiers                                                                */
 /* ---------------------------------------------------------------------- */
 
