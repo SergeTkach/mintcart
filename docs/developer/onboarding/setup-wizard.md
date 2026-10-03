@@ -1,21 +1,21 @@
 # Setup Wizard (Phase 13)
 
 `MINTCART_FUNCTIONAL_SCOPE.md` §2, `MINTCART_IMPLEMENTATION_GUIDE.md` §54.
-Six working steps so far — **Welcome**, **Store**, **Contacts**,
-**Language & currency**, **Delivery**, and **Ready** (the Store Readiness
-checklist, Phase 14's `StoreReadiness` service surfaced inside the Wizard
-flow rather than only as a standalone dashboard widget). The rest of the
-flow (`payment` → `design` → `first_product`) is listed in the step nav as
-a roadmap but has no real content yet — visiting or submitting any of those
-steps falls back to the live resume point (`CLAUDE.md` §85: no UI ahead of
-a real, working consumer). `currentStep()` walks `IMPLEMENTED_STEPS` in its
-own order (`['welcome', 'store', 'contacts', 'language_currency',
-'delivery', 'ready']`), which today happens to be a strict prefix of
-`STEPS` minus the still-unimplemented `payment`/`design`/`first_product` —
-it doesn't have to be a prefix in general (an earlier revision of this file
-had `ready` implemented ahead of `contacts`/`language_currency`/`delivery`
-for a time), it only has to list which steps have real content, in the
-order a store should complete them.
+Seven working steps so far — **Welcome**, **Store**, **Contacts**,
+**Language & currency**, **Delivery**, **First product**, and **Ready**
+(the Store Readiness checklist, Phase 14's `StoreReadiness` service
+surfaced inside the Wizard flow rather than only as a standalone dashboard
+widget). The rest of the flow (`payment` → `design`) is listed in the step
+nav as a roadmap but has no real content yet — visiting or submitting
+either of those steps falls back to the live resume point (`CLAUDE.md`
+§85: no UI ahead of a real, working consumer). `currentStep()` walks
+`IMPLEMENTED_STEPS` in its own order (`['welcome', 'store', 'contacts',
+'language_currency', 'delivery', 'first_product', 'ready']`), which today
+happens to be a strict prefix of `STEPS` minus the still-unimplemented
+`payment`/`design` — it doesn't have to be a prefix in general (an earlier
+revision of this file had `ready` implemented ahead of
+`contacts`/`language_currency`/`delivery` for a time), it only has to list
+which steps have real content, in the order a store should complete them.
 
 PHP:
 - `upload/system/library/mintcart/onboarding/wizardprogress.php` —
@@ -27,7 +27,7 @@ Language: `upload/admin/language/en-gb/mintcart/wizard.php`
 
 Twig: `upload/admin/view/template/mintcart/wizard.twig`
 
-Test: `tests/mintcart/onboarding/wizard-progress-test.php` (11 scenarios)
+Test: `tests/mintcart/onboarding/wizard-progress-test.php` (12 scenarios)
 
 Fully additive — no existing OpenCart controller, model or template is
 modified. Same "0 controller patches" shape as `ControllerMintcartCart`
@@ -212,6 +212,50 @@ method yet can still continue past this step. The Ready step's own
 shipping method enabled yet" as outstanding, independent of whether this
 Wizard step itself has been marked completed.
 
+## The First product step writes a real, ordinary product
+
+`validateFirstProductStep()`/`saveFirstProductStep()` only ask for
+`product_name` (required) and `price` (required, must be numeric and
+non-negative) plus two optional fields (`quantity`, `description`) — not
+the full admin product form. Every other field
+`ModelCatalogProduct::addProduct()` requires (checked against
+`upload/admin/model/catalog/product.php` before writing this, per
+`CLAUDE.md` §84/§10) gets a safe, ordinary default: no model/SKU/barcodes,
+available from today, a physical/shippable item, sold at store 0, zero
+weight/dimensions, the store's own existing `config_weight_class_id`/
+`config_length_class_id` settings (not a new Mint-owned duplicate,
+`CLAUDE.md` §39), and `status = 1` (enabled) so the product immediately
+counts toward `MintCart\Onboarding\StoreReadiness`'s own `first_product`
+signal (`ModelMintcartReadiness::getSignals()`, `filter_status => 1`) and
+is visible on the storefront right away — the point of this step is a
+store that can actually take a test order once it's done.
+
+`product_description` is written once per installed language
+(`ModelLocalisationLanguage::getLanguages()`), all with the same
+submitted name/description — this step collects one name, not a
+per-language form, the same simplification every other single-value
+Wizard field (`config_name`, etc.) already makes; a store that needs
+per-language product copy edits it from `Catalog → Products` afterward,
+same as any other OpenCart product.
+
+`loadDefaultStockStatusId()` picks whichever installed stock status is
+actually *named* "In Stock" (never the seed data's hardcoded id `7` —
+a store that edited/reordered `Localisation → Stock Statuses` is trusted
+over the install seed), falling back to the first available row. There is
+no standard OpenCart "default stock status" config setting to reuse the
+way weight/length class have one (`Settings → Option` has no such field
+either), so this is the one genuinely new default-selection rule in this
+step.
+
+This step collects **no** image/options/categories/SEO keyword — all
+editable later from `Catalog → Products`, consistent with
+`MINTCART_PRODUCT_VISION.md` §5 ("ask only what the user actually needs
+to decide right now"). Submitting with `first_product_action=skip` (the
+"Skip for now" button) bypasses validation and saving entirely and just
+marks the step completed with no product created, per Functional Scope
+§2's "optional steps can be skipped" — the same precedent `delivery`
+already set for a step with no required outcome.
+
 ## The `ready` step reuses `StoreReadiness`, it doesn't recompute it
 
 `ControllerMintcartWizard::loadReadiness()` calls the exact same
@@ -241,9 +285,9 @@ step (including the still-unimplemented ones) will eventually use.
 
 The terminal "You're off to a great start" screen (`is_ready` — shown once
 every *implemented* step, `ready` included, is completed) had its copy
-updated this run to drop `delivery` from the "coming in a future update"
-list (it's implemented now) — it still names `payment`/`design`/
-`first_product`, the steps still genuinely unimplemented. It is not
+updated this run to drop `first_product` from the "coming in a future
+update" list too (it's implemented now) — it still names
+`payment`/`design`, the two steps still genuinely unimplemented. It is not
 redundant with the `ready` step's own checklist — one is "here is how
 ready your real store is today", the other is "there is no more Wizard
 content to show you right now, go to your dashboard".
@@ -304,13 +348,20 @@ done) is allowed, for review; skipping ahead is not.
 
 ## What's explicitly not done yet, by design
 
-- The `payment`/`design`/`first_product` steps — `payment` in particular
-  is a near-mechanical follow-up to this run's `delivery` step: same
-  shape, swap `ModelSettingExtension::getInstalled('shipping')`/
+- The `payment`/`design` steps — `payment` is a near-mechanical follow-up
+  to the `delivery` step: same shape, swap
+  `ModelSettingExtension::getInstalled('shipping')`/
   `shipping_<code>_status` for `'payment'`/`payment_<code>_status`, and a
   new `toggleServicePayment()`/`mintcart/business/payments` pair in place
-  of `toggleDelivery()`/`mintcart/business/delivery`. `design` and
-  `first_product` need their own real form/save logic instead.
+  of `toggleDelivery()`/`mintcart/business/delivery`. `design` needs its
+  own real form/save logic (likely a preset picker once
+  `docs/adr/004-design-token-presets.md`'s preset mechanism has a live
+  admin UI consumer).
+- The First product step has no image upload (same `McMediaPicker`
+  upload-endpoint gap as Store's logo field, see below) and no
+  category/manufacturer assignment — both deliberately out of scope for
+  "just enough to take a test order"; a human should edit the created
+  product from `Catalog → Products` to add either.
 - Store step's **logo** upload (Functional Scope §2 lists it under Store) —
   deferred; needs `McMediaPicker` (Phase 11, already shipped) wired to a
   real upload endpoint, which doesn't exist yet.
