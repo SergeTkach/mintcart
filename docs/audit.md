@@ -135,3 +135,21 @@ to reconcile. This means Phase 0 carries effectively no legacy-compatibility ris
 resolve before Phase 1 (Foundation) begins — the next steps are additive: MintCart
 namespace/bootstrap, migration manager, and the frontend build pipeline, exactly as
 ordered in `CLAUDE.md` §21 and `MINTCART_TECHNICAL_PLAN.md` §42.
+
+**Correction (2026-09-29, routine run):** "clean, unmodified" above was true of
+the source files present, but not complete — the very first commit that
+established this baseline never actually committed
+`upload/system/library/config.php` (OpenCart's core `Config` engine class,
+`new Config()` in `system/framework.php`), because the repository's
+`.gitignore` already carried a `upload/**/config.php` rule at that point,
+meant only to keep the *installer-generated* `upload/config.php`/
+`upload/admin/config.php` DB-credential files out of source control. The
+glob also matched this one stock framework file, so it was silently never
+tracked — every request would have fataled on `new Config()`. See
+`docs/IMPLEMENTATION_STATUS.md`'s Phase 0 section for the fix (restored the
+file verbatim from the upstream `3.0.5.1` tag, added a targeted `!`
+negation to `.gitignore`). No other `config.php` path under `upload/` was
+affected — checked every stock `config.php` location (`system/library/`,
+`system/config/*` files which are not literally named `config.php`, the two
+installer-generated ones) against the upstream tag; this was the only
+victim.

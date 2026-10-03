@@ -48,6 +48,16 @@ upload/**/test*
 # once (see that commit's message).
 !upload/system/library/mintcart/blocks/testimonialsblockprovider.php
 !upload/catalog/view/theme/mint_default/template/mint/blocks/testimonials.twig
+# ...and except OpenCart's own core `Config` engine class
+# (`upload/system/library/config.php`) - the installer-generated
+# `upload/config.php`/`upload/admin/config.php` DB-credential files are the
+# only `config.php` this rule is meant to keep out of source control; the
+# broad `upload/**/config.php` glob above swept up this stock framework
+# class file too, the same false-positive class the two negations above
+# already fixed twice for `test_theme/`/`test*`. Its absence meant every
+# request would fatal on `new Config()` in `system/framework.php` - see
+# `docs/fixes/registry.md` for the fix entry.
+!upload/system/library/config.php
 upload/shop/*
 upload/storage/*
 
