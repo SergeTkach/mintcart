@@ -125,18 +125,56 @@ tokens.
    supports it.
 4. Run `npm run build`.
 
-## Not yet wired
+## Wired: `Design → Styles` (2026-09-29)
 
-No admin UI selects a preset yet, and nothing writes `data-mc-preset` onto
-`<html>` at runtime — Mint Default's page templates don't emit it. That
-belongs with theme settings (`MINTCART_FUNCTIONAL_SCOPE.md` §9) and its
-`settings.json` schema (Implementation Guide §31), which don't exist yet;
-building the writer ahead of the form that sets the value would be API
-ahead of a consumer (`CLAUDE.md` §85).
+`ControllerMintcartDesignStyles` (`upload/admin/controller/mintcart/design/styles.php`,
+route `mintcart/design/styles`, menu entry under `Design`) is the first
+slice of the future Theme Settings screen (`MINTCART_IMPLEMENTATION_GUIDE.md`
+§31) — deliberately just the one setting this phase needed to prove the
+mechanism, not a `settings.json`-driven schema for every future theme
+option (`CLAUDE.md` §85: no API ahead of a real consumer).
 
-To see a preset today, set the attribute by hand in the browser
-(`document.documentElement.dataset.mcPreset = 'warm'`) on any page loading
-the bundled `index.min.css`.
+- **Choice list:** read live from the *active* theme's own `theme.json`
+  `presets` array (`ActiveTheme::directory()` + `DIR_CATALOG` on the admin
+  side), never hardcoded — a theme with a different preset set, or none at
+  all (`test_theme` ships `"presets": []`, the legacy `default` theme has
+  no manifest at all), gets a correct empty state instead of a broken form.
+- **Storage:** one setting, `mintcart_design_preset` (code group
+  `mintcart_design`), written via the stock `setting/setting` model — same
+  "own isolated code group, no merge needed" shape
+  `ControllerMintcartSettingsDiagnostics` already uses for
+  `mintcart_dev_mode`.
+- **Storefront wiring:** `ControllerCommonHeader::index()` reads the
+  setting and re-validates it against the active theme's own declared
+  presets a second time (a value saved while one theme was active, then
+  left stale after switching to a theme with a different preset list, must
+  never reach the page as a `data-mc-preset` no loaded CSS defines a
+  `:root` block for) before passing `$data['mc_preset']` through.
+  `mint_default/template/common/header.twig`'s `<html>` tag renders
+  `data-mc-preset="{{ mc_preset }}"` only when non-blank — an unset/blank
+  choice (the default) omits the attribute entirely, which Phase 9 already
+  established is visually identical to an explicit `clean` (`clean.css` is
+  an empty token block). Not gated behind the `isMintAware()`/
+  `$mint_render_header` check `mc_header` uses: this is a plain CSS
+  attribute selector any theme's own `<html>` tag may choose to read, not a
+  Mint component DOM contract, so a legacy/third-party theme pays nothing
+  by simply never referencing `$data['mc_preset']` in its own header
+  template (`test_theme` has no `common/header.twig` override at all yet,
+  so it is unaffected either way).
+
+Full write-ups: `docs/upstream-diff.md`'s `header.php` and
+`common/column_left.php` entries.
+
+**Not done yet:** `test_theme` never renders a `data-mc-preset` value
+today (it has no `common/header.twig` of its own — a pre-existing gap, see
+that theme's own limitations, not new to this increment); a live-preview
+mechanism (ADR 008, still documentation-only); and the wider
+`settings.json`-driven Theme Settings schema for options beyond "which
+preset" (a separate, larger increment once a real theme needs one).
+
+To see a preset without the admin form, the attribute can still be set by
+hand in the browser (`document.documentElement.dataset.mcPreset = 'warm'`)
+on any page loading the bundled `index.min.css`.
 
 ## Definition of Done checklist (`MINTCART_IMPLEMENTATION_GUIDE.md` §79)
 

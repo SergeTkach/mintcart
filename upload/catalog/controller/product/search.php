@@ -190,6 +190,14 @@ class ControllerProductSearch extends Controller {
 
 		$data['products'] = array();
 
+		// MintCart\Seo\RobotsBuilder (MINTCART_FUNCTIONAL_SCOPE.md §16,
+		// Phase 18) - "did this search actually match anything" for the
+		// registry bridge below. Defaults to true (the RobotsBuilder
+		// default too) for a bare `product/search` request with no
+		// `search`/`tag` param at all, which never runs the query below -
+		// that's the plain search form, not a "no results" page.
+		$mint_search_has_results = true;
+
 		// MintCart\Design\ProductCardListRenderer (which composes
 		// MintCart\Commerce\ProductViewProvider + ComponentRenderer) wiring
 		// (MINTCART_TECHNICAL_PLAN.md §11/§15C-D) - the second real listing
@@ -242,6 +250,8 @@ class ControllerProductSearch extends Controller {
 
 			$product_total = $this->model_catalog_product->getTotalProducts($filter_data);
 
+			$mint_search_has_results = ($product_total > 0);
+
 			$results = $this->model_catalog_product->getProducts($filter_data);
 
 			foreach ($results as $result) {
@@ -250,6 +260,12 @@ class ControllerProductSearch extends Controller {
 				} else {
 					$image = $this->model_tool_image->resize('placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'));
 				}
+
+				// 2x variant for a high-DPI srcset - see category.php's
+				// identical comment (docs/developer/commerce/product-view-provider.md
+				// "Image dimensions").
+				$image_2x = $this->model_tool_image->resize($result['image'] ? $result['image'] : 'placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width') * 2, $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height') * 2);
+				$image_srcset = $image . ' 1x, ' . $image_2x . ' 2x';
 
 				if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
 					$price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
@@ -299,6 +315,7 @@ class ControllerProductSearch extends Controller {
 							'name'                        => $result['name'],
 							'url'                         => $href,
 							'image'                       => $image,
+							'image_srcset'                => $image_srcset,
 							'image_width'                 => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'),
 							'image_height'                => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'),
 							'price'                       => $price,
@@ -614,6 +631,17 @@ class ControllerProductSearch extends Controller {
 		$data['content_top'] = $this->load->controller('common/content_top');
 		$data['content_bottom'] = $this->load->controller('common/content_bottom');
 		$data['footer'] = $this->load->controller('common/footer');
+
+		// MintCart\Seo\RobotsBuilder (MINTCART_FUNCTIONAL_SCOPE.md §16,
+		// Phase 18) - registry bridge closing the "Known limitation"
+		// docs/developer/seo/robots.md documented: common/header.php runs
+		// as our sibling sub-controller (loaded below, after this search
+		// has already run), with no other way to learn whether this
+		// specific search matched anything. See RobotsBuilder::
+		// HAS_RESULTS_REGISTRY_KEY's own docblock for why this is a plain
+		// registry value, not a new table/session/event.
+		$this->registry->set(\MintCart\Seo\RobotsBuilder::HAS_RESULTS_REGISTRY_KEY, $mint_search_has_results);
+
 		$data['header'] = $this->load->controller('common/header');
 
 		// MintCart\Seo\SchemaOrgBuilder BreadcrumbList JSON-LD
@@ -639,7 +667,15 @@ class ControllerProductSearch extends Controller {
 		$output = $this->load->view('product/search', $data);
 
 		// Functional Scope §19: "Production UI не повинен показувати
-		// sensitive debug data" - see category.php's identical comment.
+		// sensitive debug data" - see category.php's identical comment,
+		// including the `&mintcart_diagnostics=json` alternative surface.
+		if ($mint_diagnostics->isEnabled() && isset($this->request->get['mintcart_diagnostics']) && $this->request->get['mintcart_diagnostics'] === 'json') {
+			$this->response->addHeader('Content-Type: application/json');
+			$this->response->setOutput(json_encode($mint_diagnostics->summary()));
+
+			return;
+		}
+
 		if ($mint_diagnostics->isEnabled()) {
 			$output .= "\n<!-- mintcart-diagnostics " . json_encode($mint_diagnostics->summary()) . " -->";
 		}
