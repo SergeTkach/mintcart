@@ -66,6 +66,17 @@ $_['payment_text']          = 'Enable the payment methods you plan to offer. You
 $_['text_payment_empty']    = 'No payment methods are installed yet.';
 $_['button_manage_payment'] = 'Manage payment methods';
 
+// First product step
+
+$_['first_product_title']  = 'Add your first product';
+$_['first_product_text']   = 'A store needs at least one product to take an order. Fill in just enough to get started — you can add images, options and everything else from Catalog > Products any time. This step is optional — skip it for now and come back later.';
+$_['entry_product_name']   = 'Product name';
+$_['entry_price']          = 'Price';
+$_['entry_quantity']       = 'Quantity';
+$_['entry_description']    = 'Description';
+$_['button_add_product']   = 'Add product';
+$_['button_skip']          = 'Skip for now';
+
 // Ready step (Store Readiness checklist)
 
 $_['readiness_title']       = 'How ready is your store?';
@@ -77,7 +88,7 @@ $_['button_finish_setup']   = 'Finish setup';
 // Ready / more-steps-coming state (shown once every implemented step, ready included, is completed)
 
 $_['ready_title'] = 'You\'re off to a great start';
-$_['ready_text']  = 'The rest of the Setup Wizard (design and your first product) is coming in a future update. For now, head to your dashboard to keep setting up your store.';
+$_['ready_text']  = 'The rest of the Setup Wizard (design) is coming in a future update. For now, head to your dashboard to keep setting up your store.';
 $_['button_go_to_dashboard'] = 'Go to dashboard';
 
 // Errors
@@ -90,3 +101,5 @@ $_['error_address']   = 'Address must be between 3 and 256 characters!';
 $_['error_social']    = '%s must be a valid URL!';
 $_['error_language']  = 'Please choose a valid language!';
 $_['error_currency']  = 'Please choose a valid currency!';
+$_['error_product_name'] = 'Product name must be between 1 and 255 characters!';
+$_['error_price']     = 'Price must be a valid, non-negative number!';

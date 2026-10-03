@@ -126,6 +126,12 @@ class ControllerMintcartWizard extends Controller
         // step's own StoreReadiness checklist already surfaces "payment
         // configured" as outstanding).
 
+        $skippingFirstProduct = $step === 'first_product' && ($this->request->post['first_product_action'] ?? '') === 'skip';
+
+        if ($step === 'first_product' && !$skippingFirstProduct) {
+            $this->validateFirstProductStep();
+        }
+
         if ($this->error && !isset($this->error['warning'])) {
             $this->error['warning'] = $this->language->get('error_warning');
         }
@@ -146,6 +152,10 @@ class ControllerMintcartWizard extends Controller
 
         if ($step === 'language_currency') {
             $this->saveLanguageCurrencyStep();
+        }
+
+        if ($step === 'first_product' && !$skippingFirstProduct) {
+            $this->saveFirstProductStep();
         }
 
         $this->model_setting_setting->editSetting('mintcart_wizard', [
@@ -342,6 +352,137 @@ class ControllerMintcartWizard extends Controller
         $this->model_setting_setting->editSetting('config', $merged);
     }
 
+    /**
+     * Only name + price are required - everything else the product table
+     * needs (model/sku/upc/.../weight/length) gets a safe empty/zero default
+     * in saveFirstProductStep(), the same "ask only what the user actually
+     * needs to decide" principle CLAUDE.md §87 asks for (Product Vision §5:
+     * the user decides which products, not every field a full product form
+     * exposes - the rest is editable later from Catalog -> Products).
+     * Skipping the step (first_product_action=skip) bypasses this entirely,
+     * per Functional Scope §2's "optional steps can be skipped".
+     */
+    private function validateFirstProductStep(): void
+    {
+        $name = trim((string)($this->request->post['product_name'] ?? ''));
+        $price = trim((string)($this->request->post['price'] ?? ''));
+
+        if ($name === '' || utf8_strlen($name) > 255) {
+            $this->error['product_name'] = $this->language->get('error_product_name');
+        }
+
+        if ($price === '' || !is_numeric($price) || (float)$price < 0) {
+            $this->error['price'] = $this->language->get('error_price');
+        }
+    }
+
+    /**
+     * Calls the real, unmodified ModelCatalogProduct::addProduct() (checked
+     * against upload/admin/model/catalog/product.php before writing this,
+     * CLAUDE.md §84/§10) - the exact same table Catalog -> Products writes
+     * to, so the product this step creates is a completely ordinary
+     * product, editable/deletable from that screen like any other
+     * (CLAUDE.md §39: no Mint-owned duplicate of OpenCart's own catalog).
+     *
+     * Every field addProduct() requires but this step doesn't ask about
+     * gets the same safe default a brand-new product would reasonably
+     * start with: no model/SKU/barcodes, available today, shipped
+     * (physical good - the common case), sold at this store (store_id 0),
+     * zero weight/dimensions (unknown yet, not load-bearing for a test
+     * order), and the store's own configured weight/length class
+     * (config_weight_class_id/config_length_class_id - existing OpenCart
+     * settings, not invented here, same reuse this controller's own
+     * saveStoreStep()/saveLanguageCurrencyStep() already apply to 'config').
+     * Status is enabled (1) so the product counts toward
+     * MintCart\Onboarding\StoreReadiness's own 'first_product' signal
+     * (ModelMintcartReadiness::getSignals(), filter_status => 1) and is
+     * immediately visible on the storefront - the whole point of this step
+     * is a store that can take a real test order right after finishing it.
+     */
+    private function saveFirstProductStep(): void
+    {
+        $this->load->model('catalog/product');
+        $this->load->model('localisation/language');
+
+        $name = trim((string)$this->request->post['product_name']);
+        $description = trim((string)($this->request->post['description'] ?? ''));
+        $price = (float)$this->request->post['price'];
+
+        $quantity = trim((string)($this->request->post['quantity'] ?? ''));
+        $quantity = ($quantity !== '' && is_numeric($quantity) && (int)$quantity >= 0) ? (int)$quantity : 100;
+
+        $productDescription = [];
+
+        foreach ($this->model_localisation_language->getLanguages() as $language) {
+            $productDescription[$language['language_id']] = [
+                'name'             => $name,
+                'description'      => $description,
+                'tag'              => '',
+                'meta_title'       => $name,
+                'meta_description' => '',
+                'meta_keyword'     => '',
+            ];
+        }
+
+        $this->model_catalog_product->addProduct([
+            'model'               => '',
+            'sku'                 => '',
+            'upc'                 => '',
+            'ean'                 => '',
+            'jan'                 => '',
+            'isbn'                => '',
+            'mpn'                 => '',
+            'location'            => '',
+            'quantity'            => $quantity,
+            'minimum'             => 1,
+            'subtract'            => 1,
+            'stock_status_id'     => $this->loadDefaultStockStatusId(),
+            'date_available'      => date('Y-m-d'),
+            'manufacturer_id'     => 0,
+            'shipping'            => 1,
+            'price'               => $price,
+            'points'              => 0,
+            'tax_class_id'        => 0,
+            'weight'              => 0,
+            'weight_class_id'     => (int)$this->config->get('config_weight_class_id'),
+            'length'              => 0,
+            'width'               => 0,
+            'height'              => 0,
+            'length_class_id'     => (int)$this->config->get('config_length_class_id'),
+            'sort_order'          => 0,
+            'status'              => 1,
+            'product_description' => $productDescription,
+            'product_store'       => [0],
+        ]);
+    }
+
+    /**
+     * The product table's stock_status_id has no NULL/zero "unset" option
+     * that reads sensibly on a storefront, and there is no standard
+     * OpenCart 'config_stock_status_id' setting to reuse (unlike
+     * weight/length class) - Settings -> Option has no such default either.
+     * Rather than inventing a new Mint-owned setting for a one-field
+     * default, this picks whichever installed stock status is actually
+     * named "In Stock" (the stock default data's own id 7, but never
+     * hardcoded - a store that edited/reordered Localisation -> Stock
+     * Statuses is trusted over the stock seed), falling back to the first
+     * available row, then to 0 only if the table is somehow empty.
+     */
+    private function loadDefaultStockStatusId(): int
+    {
+        $this->load->model('localisation/stock_status');
+
+        $statuses = $this->model_localisation_stock_status->getStockStatuses();
+
+        foreach ($statuses as $status) {
+            if (strcasecmp((string)$status['name'], 'In Stock') === 0) {
+                return (int)$status['stock_status_id'];
+            }
+        }
+
+        return isset($statuses[0]) ? (int)$statuses[0]['stock_status_id'] : 0;
+    }
+
     private function render(?string $step, \MintCart\Onboarding\WizardProgress $progress): void
     {
         $data['heading_title'] = $this->language->get('heading_title');
@@ -402,6 +543,13 @@ class ControllerMintcartWizard extends Controller
             $data['payment_extensions'] = $this->loadPaymentExtensions();
             $data['toggle_payment'] = $this->url->link('mintcart/wizard.togglePayment', 'user_token=' . $this->session->data['user_token'] . '&step=payment', true);
             $data['manage_payment'] = $this->url->link('mintcart/business/payments', 'user_token=' . $this->session->data['user_token'], true);
+        }
+
+        if ($step === 'first_product') {
+            $data['product_name'] = $this->request->post['product_name'] ?? '';
+            $data['description'] = $this->request->post['description'] ?? '';
+            $data['price'] = $this->request->post['price'] ?? '';
+            $data['quantity'] = $this->request->post['quantity'] ?? '';
         }
 
         if ($step === 'ready') {
