@@ -16,7 +16,11 @@
           <option value="special_price">{{ text_bulk_field_special }}</option>
           <option value="category_ids">{{ text_bulk_field_category }}</option>
         </select>
-        <input type="text" id="input-bulk-value" name="bulk_value" form="form-product" placeholder="{{ text_bulk_update }}" class="form-control" style="width: 8em; display: inline-block;" />
+        <select id="input-bulk-value-status" name="bulk_value" form="form-product" class="form-control" style="width: auto; display: inline-block;">
+          <option value="1">{{ text_enabled }}</option>
+          <option value="0">{{ text_disabled }}</option>
+        </select>
+        <input type="number" id="input-bulk-value-number" name="bulk_value" form="form-product" min="0" step="1" placeholder="{{ text_bulk_update }}" class="form-control" style="width: 8em; display: none;" disabled="disabled" />
         <button type="submit" form="form-product" formaction="{{ bulkupdate }}" data-toggle="tooltip" title="{{ text_bulk_update }}" class="btn btn-default" onclick="return confirm('{{ text_confirm }}');"><i class="fa fa-check-square-o"></i></button>
       </div>
       {#
@@ -274,7 +278,30 @@ $('#button-filter').on('click', function() {
 
 	location = 'index.php?route=catalog/product&user_token={{ user_token }}' + url;
 });
-//--></script> 
+//--></script>
+  <script type="text/javascript"><!--
+// Per-field-typed bulk-update value control: a status field needs an
+// Enabled/Disabled select, every other field needs a plain number input
+// (whole numbers for quantity/manufacturer_id/stock_status_id, decimals
+// allowed for price/special_price) - see
+// docs/developer/catalog/bulk-editor.md "Value input". Both controls
+// share name="bulk_value"; only the one currently enabled is submitted
+// (a disabled form control is excluded from the POST body), so the
+// controller still only ever sees a single bulk_value.
+$('#input-bulk-field').on('change', function() {
+	var field = $(this).val();
+
+	if (field === 'status') {
+		$('#input-bulk-value-number').prop('disabled', true).css('display', 'none');
+		$('#input-bulk-value-status').prop('disabled', false).css('display', 'inline-block');
+	} else {
+		var step = (field === 'price' || field === 'special_price') ? 'any' : '1';
+
+		$('#input-bulk-value-number').attr('step', step).prop('disabled', false).css('display', 'inline-block');
+		$('#input-bulk-value-status').prop('disabled', true).css('display', 'none');
+	}
+});
+//--></script>
   <script type="text/javascript"><!--
 // IE and Edge fix!
 $('button[form=\'form-product\']').on('click', function(e) {
@@ -333,22 +360,31 @@ $('input[name=\'filter_model\']').autocomplete({
 // product_category[].
 (function () {
 	var fieldSelect = document.getElementById('input-bulk-field');
-	var valueInput = document.getElementById('input-bulk-value');
 	var categoryField = document.getElementById('bulk-category-field');
 	var browseButton = document.getElementById('button-bulk-category-picker');
 	var pickerRoot = document.getElementById('bulk-category-picker');
 	var list = document.getElementById('bulk-category-list');
 
-	if (!fieldSelect || !valueInput || !categoryField) {
+	if (!fieldSelect || !categoryField) {
 		return;
 	}
 
+	// The scalar bulk_value controls (#input-bulk-value-status/-number) are
+	// shown/enabled by the per-field-typed jQuery change handler above,
+	// which is registered first and so runs first; for category_ids this
+	// handler then disables/hides both of them, so only bulk_value[] is
+	// ever submitted.
 	function toggleValueControl() {
 		var isCategoryField = fieldSelect.value === 'category_ids';
 
 		categoryField.hidden = !isCategoryField;
-		valueInput.disabled = isCategoryField;
-		valueInput.style.display = isCategoryField ? 'none' : 'inline-block';
+
+		if (isCategoryField) {
+			document.querySelectorAll('[name="bulk_value"][form="form-product"]').forEach(function (control) {
+				control.disabled = true;
+				control.style.display = 'none';
+			});
+		}
 	}
 
 	fieldSelect.addEventListener('change', toggleValueControl);

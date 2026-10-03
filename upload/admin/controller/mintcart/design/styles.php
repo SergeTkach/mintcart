@@ -1,0 +1,190 @@
+<?php
+/**
+ * `Design → Styles` (`MINTCART_FUNCTIONAL_SCOPE.md` §9, `MINTCART_TECHNICAL_PLAN.md`
+ * §45, `MINTCART_IMPLEMENTATION_GUIDE.md` §31/§50).
+ *
+ * route=mintcart/design/styles. Fully additive — no existing OpenCart
+ * controller/model/route touched (`CLAUDE.md` §8/§37).
+ *
+ * Phase 9 (Presets) shipped `clean`/`warm` as real, tested `:root[data-mc-preset='<code>']`
+ * token blocks and each theme's `theme.json` already lists which presets it
+ * supports — but `docs/developer/theme-api/presets.md`'s own "Not yet wired"
+ * section named the gap this screen closes: nothing writes `data-mc-preset`
+ * onto `<html>` at runtime, because no admin form existed yet to choose a
+ * value from (`CLAUDE.md` §85 — no API ahead of a real consumer). This is
+ * that form, the deliberately small first slice of the future Theme
+ * Settings screen (`MINTCART_IMPLEMENTATION_GUIDE.md` §31): one setting
+ * (which preset), not a `settings.json`-driven schema for every theme
+ * option — that stays a separate, larger increment once a real theme has
+ * more than a preset code to configure.
+ *
+ * The choice list is read live from the *active* theme's own `theme.json`
+ * `presets` array (via `MintCart\Design\ActiveTheme::directory()`, the same
+ * resolver `ControllerCommonHeader`/`ControllerProductCategory`/
+ * `ControllerCommonFooter` already use) rather than a hardcoded
+ * `clean`/`warm` list — a future theme with a different preset set, or none
+ * at all, is handled correctly with no change to this file. A theme with no
+ * declared presets (the legacy `default` theme, or `test_theme`, which
+ * ships `"presets": []`) shows an explanatory empty state instead of a
+ * broken form.
+ *
+ * Deliberately its own settings code group ('mintcart_design', matching the
+ * single key it stores) rather than folding into 'config' — same
+ * "one code, one key, no merge needed" reasoning
+ * `ControllerMintcartSettingsDiagnostics` already documents for
+ * 'mintcart_dev_mode'.
+ *
+ * Built on the legacy OpenCart admin theme (Bootstrap 3 `.panel`/`.btn`/
+ * `form-horizontal` markup), same reasoning every other MintCart admin
+ * screen in this repo gives (`docs/developer/blocks/homepage-admin.md`
+ * "Why this screen uses the legacy admin theme") — MintCart's own compiled
+ * asset bundle has never been enqueued into the shared admin
+ * `header`/`column_left`/`footer` chrome anywhere in this repo
+ * (`CLAUDE.md` §10).
+ */
+class ControllerMintcartDesignStyles extends Controller {
+	private $error = array();
+
+	public function index() {
+		$this->load->language('mintcart/design/styles');
+		$this->load->model('setting/setting');
+
+		$this->document->setTitle($this->language->get('heading_title'));
+
+		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
+			$this->save();
+
+			$this->session->data['success'] = $this->language->get('text_success');
+
+			$this->response->redirect($this->url->link('mintcart/design/styles', 'user_token=' . $this->session->data['user_token'], true));
+
+			return;
+		}
+
+		$this->getForm();
+	}
+
+	protected function validate() {
+		if (!$this->user->hasPermission('modify', 'mintcart/design/styles')) {
+			$this->error['warning'] = $this->language->get('error_permission');
+		}
+
+		$preset = isset($this->request->post['mintcart_design_preset']) ? (string)$this->request->post['mintcart_design_preset'] : '';
+
+		// Blank is always valid - it means "use the theme's own default look"
+		// (Phase 9: a blank/absent data-mc-preset attribute and an explicit
+		// data-mc-preset="clean" render identically, since clean.css is an
+		// empty token block). Anything else must be one of the active
+		// theme's own declared presets - never an arbitrary string that
+		// would produce a `data-mc-preset` value no loaded CSS file
+		// actually defines a :root block for.
+		if (($preset !== '') && !in_array($preset, $this->availablePresets(), true)) {
+			$this->error['warning'] = $this->language->get('error_preset');
+		}
+
+		return !$this->error;
+	}
+
+	protected function save() {
+		$preset = isset($this->request->post['mintcart_design_preset']) ? (string)$this->request->post['mintcart_design_preset'] : '';
+
+		$this->model_setting_setting->editSetting('mintcart_design', array(
+			'mintcart_design_preset' => $preset
+		));
+	}
+
+	/**
+	 * The active theme's own declared preset codes
+	 * (`docs/developer/theme-api/presets.md` "Declaring presets in a
+	 * theme"), read live from its `theme.json` — never hardcoded, so a
+	 * future theme with a different preset set (or none) is handled
+	 * correctly with no change to this file. Empty for a theme with no
+	 * manifest (the legacy `default` theme) or an empty `presets` array
+	 * (`test_theme` today).
+	 *
+	 * @return string[]
+	 */
+	protected function availablePresets() {
+		$directory = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
+
+		$manifest_path = DIR_CATALOG . 'view/theme/' . $directory . '/theme.json';
+
+		if (!is_file($manifest_path)) {
+			return array();
+		}
+
+		$manifest = json_decode((string)file_get_contents($manifest_path), true);
+
+		if (!is_array($manifest) || !isset($manifest['presets']) || !is_array($manifest['presets'])) {
+			return array();
+		}
+
+		return array_values(array_filter($manifest['presets'], 'is_string'));
+	}
+
+	protected function getForm() {
+		$data['heading_title'] = $this->language->get('heading_title');
+		$data['text_edit'] = $this->language->get('text_edit');
+		$data['text_intro'] = $this->language->get('text_intro');
+		$data['entry_preset'] = $this->language->get('entry_preset');
+		$data['help_preset'] = $this->language->get('help_preset');
+		$data['text_default'] = $this->language->get('text_default');
+		$data['text_no_presets'] = $this->language->get('text_no_presets');
+
+		$data['error_warning'] = $this->error['warning'] ?? '';
+
+		if (isset($this->session->data['success'])) {
+			$data['success'] = $this->session->data['success'];
+
+			unset($this->session->data['success']);
+		} else {
+			$data['success'] = '';
+		}
+
+		$data['breadcrumbs'] = array();
+
+		$data['breadcrumbs'][] = array(
+			'text' => $this->language->get('text_home'),
+			'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)
+		);
+
+		$data['breadcrumbs'][] = array(
+			'text' => $this->language->get('heading_title'),
+			'href' => $this->url->link('mintcart/design/styles', 'user_token=' . $this->session->data['user_token'], true)
+		);
+
+		$data['action'] = $this->url->link('mintcart/design/styles', 'user_token=' . $this->session->data['user_token'], true);
+		$data['cancel'] = $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true);
+
+		if ($this->request->server['REQUEST_METHOD'] == 'POST') {
+			$selected = isset($this->request->post['mintcart_design_preset']) ? (string)$this->request->post['mintcart_design_preset'] : '';
+		} else {
+			$selected = (string)$this->config->get('mintcart_design_preset');
+		}
+
+		$presets = array();
+
+		foreach ($this->availablePresets() as $code) {
+			$presets[] = array(
+				'code' => $code,
+				// No per-preset language key: preset codes are an
+				// open-ended, theme-declared set (CLAUDE.md §85/§86 - no
+				// abstraction/translation table built ahead of more than
+				// two real values), so the label is derived from the code
+				// itself, the same way ControllerDesignHomepage::TYPES'
+				// language-key-per-type approach would not scale to an
+				// arbitrary per-theme list.
+				'label' => ucfirst(str_replace(array('-', '_'), ' ', $code))
+			);
+		}
+
+		$data['presets'] = $presets;
+		$data['selected'] = $selected;
+
+		$data['header'] = $this->load->controller('common/header');
+		$data['column_left'] = $this->load->controller('common/column_left');
+		$data['footer'] = $this->load->controller('common/footer');
+
+		$this->response->setOutput($this->load->view('mintcart/design/styles', $data));
+	}
+}

@@ -73,7 +73,7 @@ template is:
 <article class="mc-product-card{% if display.action_variant == 'compact' %} mc-product-card--compact{% endif %}">
     <div class="mc-product-card__media">
         <a class="mc-product-card__media-link" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
-            <img class="mc-product-card__image" src="{{ product.image }}" alt="{{ product.image_alt }}" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
+            <img class="mc-product-card__image" src="{{ product.image }}"{% if product.image_srcset %} srcset="{{ product.image_srcset }}"{% endif %} alt="{{ product.image_alt }}" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
             {% if display.show_secondary_image and product.secondary_image %}
                 <img class="mc-product-card__image mc-product-card__image--secondary" src="{{ product.secondary_image }}" alt="" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
             {% endif %}
@@ -150,6 +150,10 @@ template is:
             </button>
         {% endif %}
     </div>
+
+    {% if slots is defined and slots['product.after_actions'] %}
+        <div class="mc-product-card__slot mc-product-card__slot--after-actions">{{ slots['product.after_actions']|raw }}</div>
+    {% endif %}
 </article>
 ```
 
@@ -163,6 +167,23 @@ translated without hardcoding English in JS (every listing controller's
 language file — category/search/special/manufacturer — carries the same
 two keys, matching how the five product-card keys before them are already
 duplicated per controller).
+
+## Extension slot: `product.after_actions`
+
+`MINTCART_TECHNICAL_PLAN.md` §15 names `product.after_actions` as one of
+the Theme API's documented extension points — a place a third-party
+extension can inject markup without OCMOD-patching this template. This is
+the slot mechanism's first real wiring; see
+`docs/developer/theme-api/slots.md` for the full `MintCart\Design\SlotRegistry`
+contract (how a listener registers, what `$context` it receives, why no
+listener exists in this codebase yet).
+
+The template only renders the wrapper when `slots['product.after_actions']`
+is a non-empty string — `slots` itself may not even be set (every call site
+that doesn't pass a `SlotRegistry` to `ProductCardListRenderer` never adds
+the key at all, per that class's own optional-3rd-argument contract), so
+`slots is defined` is checked first to avoid a Twig "key does not exist"
+notice on the themes/pages that don't use it.
 
 ## Behavior hooks (`CLAUDE.md` §14)
 
@@ -240,6 +261,18 @@ attribute, since a `null` value (a caller that doesn't supply one) would
 otherwise emit an invalid `width=""`. See
 `docs/developer/commerce/product-view-provider.md`'s "Image dimensions"
 section for the full contract.
+
+## Image srcset (responsive images)
+
+The main `<img>` (not the secondary/hover image — no controller builds a
+2x variant for it) also renders `srcset` from `product.image_srcset` when
+supplied, `"<1x url> 1x, <2x url> 2x"` — same guarded-`{% if %}` shape as
+`width`/`height` above, so a `null` value (no listing controller wired it,
+or a hand-built fixture) omits the attribute rather than rendering
+`srcset=""`. `product.image` still fills `src` as the fallback a browser
+without `srcset` support (or one that picks the 1x descriptor) uses. See
+`docs/developer/commerce/product-view-provider.md`'s "Image srcset
+(responsive images)" section for where the string comes from.
 
 ## Clickable title, not clickable card
 

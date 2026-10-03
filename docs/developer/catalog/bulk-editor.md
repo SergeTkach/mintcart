@@ -136,18 +136,26 @@ this button's own `formaction`).
 
 The toolbar renders one `bulk_field` `<select>`
 (Status/Quantity/Price/Manufacturer/Stock Status/Special Price/Category)
-and one generic `bulk_value` text `<input>` for the six scalar fields —
-not a per-field-typed control (e.g. a `<select>` for Status specifically).
-`BulkProductUpdateValidator::validateValue()` still enforces the right
-shape server-side (`0`/`1` for status, a non-negative whole number for
-quantity, a non-negative number for price, a non-negative whole number —
-an ID, or `0` for none — for manufacturer and stock status, blank or a
-non-negative number for special price) regardless of what the generic
-text input lets a merchant type. A friendlier per-field control for those
-six fields (e.g. a `<select>` when `status` is chosen, a `type="number"`
-input otherwise) is still a natural follow-up, not a blocker.
+and, for the six scalar fields, a **per-field-typed** `bulk_value`
+control: an Enabled/Disabled `<select>` (`#input-bulk-value-status`,
+options `1`/`0`, the same `text_enabled`/`text_disabled` global language
+keys the existing Status filter `<select>` above it already uses) when
+`status` is chosen, or a `type="number"` `<input>`
+(`#input-bulk-value-number`, `min="0"`, `step="1"` for
+quantity/manufacturer_id/stock_status_id, `step="any"` for price/
+special_price) for every other scalar field. Both controls share
+`name="bulk_value"`; a small inline jQuery `change` handler on
+`#input-bulk-field` toggles which one is `disabled` — a disabled form
+control is excluded from the browser's own POST body, so
+`ControllerCatalogProduct::bulkUpdate()` only ever receives a single
+`bulk_value`. `BulkProductUpdateValidator::validateValue()` still does the
+real server-side enforcement (`0`/`1` for status, a non-negative whole
+number for quantity, a non-negative number for price, a non-negative whole
+number — an ID, or `0` for none — for manufacturer and stock status, blank
+or a non-negative number for special price); the per-field control is a
+UX improvement on top of that, not a replacement for it.
 
-`category_ids` cannot share that generic text input at all — it is a
+`category_ids` cannot share either scalar control at all — it is a
 *list* of category IDs, not a single scalar — so choosing "Category" in
 `#input-bulk-field` swaps in a dedicated `#bulk-category-field` block
 instead: a `window.MintCart.createEntityPicker` (the same one
@@ -157,9 +165,11 @@ merchant search and multi-select categories, appending each confirmed pick
 as a `<input type="hidden" name="bulk_value[]" form="form-product">` row
 into `#bulk-category-list` (with a click-to-remove `.fa-minus-circle`
 icon, the same shape `product_form.twig`'s `#product-category` well
-already uses). `#input-bulk-field`'s `change` handler toggles which
-control is visible *and* `disabled`s `#input-bulk-value` while
-`category_ids` is chosen, so only one of `bulk_value`/`bulk_value[]` is
+already uses). A second (vanilla JS) `change` handler on
+`#input-bulk-field`, registered after the jQuery one above, shows the
+category block and `disabled`s/hides both scalar `bulk_value` controls
+while `category_ids` is chosen (switching back to a scalar field lets the
+jQuery handler re-enable the right one), so only one of `bulk_value`/`bulk_value[]` is
 ever present in the POST body — `ControllerCatalogProduct::bulkUpdate()`
 branches on `$field === 'category_ids'` to read the right one.
 `MintCart\Catalog\BulkProductUpdateValidator::validateCategoryIds()`/
@@ -238,8 +248,5 @@ the entity picker actually renders once `components.min.css`/
   Delete/Copy's own existing (also synchronous) behavior, so it isn't a
   new risk this increment introduces, but it doesn't yet have progress
   reporting for a merchant bulk-updating hundreds of products at once.
-- A per-field-typed value control for the six scalar fields (see "Value
-  input" above — `category_ids` already got its own dedicated control
-  this run).
 - True inline edit (editing a value directly in the product list table
   without a separate bulk-toolbar step) — a larger UI change.

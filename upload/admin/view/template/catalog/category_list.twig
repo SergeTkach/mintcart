@@ -29,11 +29,18 @@
         <h3 class="panel-title"><i class="fa fa-list"></i> {{ text_list }}</h3>
       </div>
       <div class="panel-body">
+        {% if sort == 'sort_order' and categories %}
+        <p class="text-muted">{{ text_drag_hint }}</p>
+        {% elseif categories %}
+        <p class="text-muted">{{ text_sort_by_order_first }}</p>
+        {% endif %}
+        <div id="category-sortable-status" class="sr-only" aria-live="polite"></div>
         <form action="{{ delete }}" method="post" enctype="multipart/form-data" id="form-category">
           <div class="table-responsive">
-            <table class="table table-bordered table-hover">
+            <table class="table table-bordered table-hover" id="category-list-table">
               <thead>
                 <tr>
+                  <td style="width: 1px;"></td>
                   <td style="width: 1px;" class="text-center"><input type="checkbox" onclick="$('input[name*=\'selected\']').prop('checked', this.checked);" /></td>
                   <td class="text-left">{% if sort == 'name' %}
                     <a href="{{ sort_name }}" class="{{ order|lower }}">{{ column_name }}</a>
@@ -45,13 +52,17 @@
                     {% else %}
                     <a href="{{ sort_sort_order }}">{{ column_sort_order }}</a>
                     {% endif %}</td>
+                  <td style="width: 1px;"></td>
                   <td class="text-right">{{ column_action }}</td>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="category-list-body"{% if sort == 'sort_order' %} data-mc-sortable data-mc-sortable-handle{% endif %}>
                 {% if categories %}
                 {% for category in categories %}
-                <tr>
+                <tr{% if sort == 'sort_order' %} data-mc-sortable-item="{{ category.category_id }}" data-mc-category-parent="{{ category.parent_id }}"{% endif %}>
+                  <td class="text-center">{% if sort == 'sort_order' %}
+                    <button type="button" class="btn btn-link" data-mc-action="sortable-handle" aria-label="{{ text_drag_hint }}" title="{{ text_drag_hint }}"><i class="fa fa-bars text-muted"></i></button>
+                    {% endif %}</td>
                   <td class="text-center">{% if category.category_id in selected %}
                     <input type="checkbox" name="selected[]" value="{{ category.category_id }}" checked="checked" />
                     {% else %}
@@ -59,12 +70,16 @@
                     {% endif %}</td>
                   <td class="text-left">{{ category.name }}</td>
                   <td class="text-right">{{ category.sort_order }}</td>
+                  <td class="text-center">{% if sort == 'sort_order' %}
+                    <button type="button" class="btn btn-default btn-xs" data-mc-action="sortable-move-up" aria-label="{{ text_move_up }}" title="{{ text_move_up }}"><i class="fa fa-arrow-up"></i></button>
+                    <button type="button" class="btn btn-default btn-xs" data-mc-action="sortable-move-down" aria-label="{{ text_move_down }}" title="{{ text_move_down }}"><i class="fa fa-arrow-down"></i></button>
+                    {% endif %}</td>
                   <td class="text-right"><a href="{{ category.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
                 </tr>
                 {% endfor %}
                 {% else %}
                 <tr>
-                  <td class="text-center" colspan="4">{{ text_no_results }}</td>
+                  <td class="text-center" colspan="6">{{ text_no_results }}</td>
                 </tr>
                 {% endif %}
               </tbody>
@@ -80,3 +95,176 @@
   </div>
 </div>
 {{ footer }}
+{% if sort == 'sort_order' and categories %}
+<script>
+/**
+ * MintCart Phase 17 (Categories drag & drop, MINTCART_TECHNICAL_PLAN.md
+ * §30, MINTCART_IMPLEMENTATION_GUIDE.md §64) - live UI wiring for the
+ * already-tested ControllerCatalogCategory::move() backend
+ * (docs/developer/catalog/category-drag-drop.md).
+ *
+ * The real mc-sortable behavior (assets/src/js/components/sortable.js,
+ * auto-initialized by admin.min.js - see
+ * docs/developer/components/sortable.md) drives this, not a bespoke
+ * reimplementation: data-mc-sortable/data-mc-sortable-handle/
+ * data-mc-sortable-item/data-mc-action are its documented hook contract
+ * (CLAUDE.md §14 - "CSS class = presentation contract, data-mc-* =
+ * behavior contract"), so no mc-sortable BEM/CSS is used here (that
+ * component's CSS assumes a flex list, not a <table>; the hooks work on
+ * any markup shape). This page's own Bootstrap 3 table/button classes
+ * supply the visuals instead.
+ *
+ * Scope: only visible reordering (drag or the keyboard move-up/move-down
+ * buttons - MINTCART_IMPLEMENTATION_GUIDE.md §68 non-mouse requirement) on
+ * the current page, and only while sorted by Sort Order (see the Twig
+ * "sort == sort_order" condition gating this whole block and the
+ * data-mc-sortable/handle/move buttons above) - reordering while
+ * sorted by Name would visually reorder rows out of alphabetical order
+ * with no clear meaning. No category is ever re-parented from here.
+ *
+ * This admin list is flat and spans every parent on one page (stock
+ * OpenCart behavior, unmodified), while moveCategory()'s order[] is
+ * sibling-scoped. The reorder handler below splits the new visible order
+ * back into per-parent groups and saves each group separately (skipping
+ * any group with only one visible member) so a drag can never mix one
+ * parent's sort_order numbering with another's or reset an unrelated
+ * category's sort_order - see
+ * docs/developer/catalog/category-drag-drop.md "Deliberately scoped to
+ * reordering, not re-parenting" for the full reasoning.
+ */
+(function () {
+    'use strict';
+
+    var container = document.getElementById('category-list-body');
+    var status = document.getElementById('category-sortable-status');
+
+    if (!container) {
+        return;
+    }
+
+    var moveUrl = {{ move|json_encode() }};
+    var textSaved = {{ text_order_saved|json_encode() }};
+    var textFailed = {{ text_order_failed|json_encode() }};
+
+    var rowsById = {};
+    var lastKnownGoodOrder = [];
+
+    Array.prototype.forEach.call(container.querySelectorAll('[data-mc-sortable-item]'), function (row) {
+        var id = row.getAttribute('data-mc-sortable-item');
+
+        rowsById[id] = row;
+        lastKnownGoodOrder.push(id);
+    });
+
+    function announce(message) {
+        if (status) {
+            status.textContent = message;
+        }
+    }
+
+    function restoreOrder(order) {
+        order.forEach(function (id) {
+            var row = rowsById[id];
+
+            if (row) {
+                container.appendChild(row);
+            }
+        });
+    }
+
+    function saveGroup(parentId, memberIds) {
+        var body = new URLSearchParams();
+        body.append('category_id', memberIds[0]);
+        body.append('parent_id', parentId || '0');
+
+        memberIds.forEach(function (id) {
+            body.append('order[]', id);
+        });
+
+        return fetch(moveUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString()
+        }).then(function (response) {
+            return response.json();
+        });
+    }
+
+    container.addEventListener('mc:sortable:reorder', function (event) {
+        var order = (event.detail && event.detail.order) || [];
+
+        if (!order.length) {
+            return;
+        }
+
+        /**
+         * This page's list is flat and spans every parent (stock OpenCart
+         * behavior, unmodified) while moveCategory()'s order[] contract is
+         * sibling-scoped ("the full new sibling order under parent_id") -
+         * see docs/developer/catalog/category-drag-drop.md "Deliberately
+         * scoped to reordering, not re-parenting" for the full reasoning.
+         * Regardless of how freely the admin dragged rows across that flat
+         * list, splitting the new visible order back into its per-parent
+         * groups - each group keeping only its members' relative order to
+         * each other - and sending one save per group is always safe: it
+         * never mixes one parent's sort_order numbering with another's,
+         * and a group of exactly one visible member is skipped entirely
+         * (nothing to reorder it relative to, and saving it anyway would
+         * incorrectly reset that category's sort_order to 0 even though
+         * the admin never touched its real siblings, most of which are
+         * simply not on this page).
+         */
+        var groups = {};
+        var groupOrder = [];
+
+        order.forEach(function (id) {
+            var row = rowsById[id];
+            var parentId = row ? (row.getAttribute('data-mc-category-parent') || '0') : '0';
+
+            if (!groups[parentId]) {
+                groups[parentId] = [];
+                groupOrder.push(parentId);
+            }
+
+            groups[parentId].push(id);
+        });
+
+        var requests = [];
+
+        groupOrder.forEach(function (parentId) {
+            if (groups[parentId].length > 1) {
+                requests.push(saveGroup(parentId, groups[parentId]));
+            }
+        });
+
+        if (!requests.length) {
+            lastKnownGoodOrder = order;
+
+            return;
+        }
+
+        Promise.all(requests)
+            .then(function (results) {
+                var failed = results.filter(function (json) {
+                    return !json || !json.success;
+                });
+
+                if (!failed.length) {
+                    lastKnownGoodOrder = order;
+
+                    announce(textSaved);
+                } else {
+                    restoreOrder(lastKnownGoodOrder);
+
+                    announce((failed[0] && failed[0].error) || textFailed);
+                }
+            })
+            .catch(function () {
+                restoreOrder(lastKnownGoodOrder);
+
+                announce(textFailed);
+            });
+    });
+})();
+</script>
+{% endif %}

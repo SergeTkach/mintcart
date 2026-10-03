@@ -60,6 +60,19 @@ final class ProductViewProvider
                 // value through, it never re-derives it.
                 'image_width' => $product['image_width'] ?? null,
                 'image_height' => $product['image_height'] ?? null,
+                // A "1x, 2x" srcset string, same "already built upstream,
+                // just threaded through" reasoning as image_width/height
+                // above — every listing controller (Category, Search,
+                // Manufacturer, Special) already calls
+                // model_tool_image->resize() a second time at double the
+                // configured width/height and builds this exact string
+                // (MINTCART_FUNCTIONAL_SCOPE.md §19 "responsive images",
+                // see docs/developer/commerce/product-view-provider.md
+                // "Image dimensions"). Defaults to null for a caller that
+                // doesn't supply it (a hand-built test fixture, or a future
+                // consumer with no 2x variant) — the template guards on
+                // this and omits the srcset attribute entirely.
+                'image_srcset' => $product['image_srcset'] ?? null,
                 'price' => $product['price'] ?? false,
                 'special' => $product['special'] ?? false,
                 'tax' => $product['tax'] ?? false,
