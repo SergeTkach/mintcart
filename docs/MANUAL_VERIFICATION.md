@@ -46,6 +46,21 @@ still advances to the Ready step (no required-field validation for this
 step), while the Ready step's own checklist correctly still shows
 "shipping" as outstanding until at least one method is enabled.
 
+## Phase 13 — Wizard Payment step never rendered live
+
+No MySQL/OpenCart admin session in this environment. Confirm on a real
+install: `mintcart/wizard?step=payment` lists every installed payment
+extension with its real enabled/disabled state; clicking Enable/Disable
+(`mintcart/wizard.togglePayment`) flips only that extension's
+`payment_<code>_status` key and leaves its other settings untouched —
+same check as the Delivery step entry above, now against the `payment`
+extension type; "Manage payment methods" links to a working
+`mintcart/business/payments` page; a store with zero payment extensions
+installed shows the empty state instead of an empty list; and clicking
+Continue with nothing enabled still advances to the Ready step (no
+required-field validation for this step), while the Ready step's own
+checklist correctly still shows "payment" as outstanding until at least
+one method is enabled.
 ## Phase 13 — Wizard First product step never rendered live
 
 No MySQL/OpenCart admin session in this environment. Confirm on a real
@@ -690,6 +705,18 @@ browser. A human should, on a real install:
    button, tab through the fields, submit via Enter, and that focus
    returns to the triggering button when the modal closes (Bootstrap
    `Modal`'s own focus-management, not custom code here).
+6. In Mint Admin, go to **Sale → Quick Order Requests** — confirm the
+   request submitted in step 2 appears in the list with the right
+   product/quantity/contact/date, and `status` shows "New". Change its
+   status via the row's `<select>` + Save, confirm the page reloads with
+   the new status shown and a success message, and that the same status
+   persists after a fresh page load (i.e. it was actually written to
+   `mc_quick_order`, not just reflected from the POST). Filter the list by
+   each status value and confirm only matching rows show. Confirm a user
+   without `mintcart/quickorder` `modify` permission gets
+   `error_permission` and no change is written if they POST directly to
+   `mintcart/quickorder.status`.
+
 ## Phase 13 — Wizard Contacts step, never exercised end to end
 
 `ControllerMintcartWizard::validateContactsStep()`/`saveContactsStep()`
