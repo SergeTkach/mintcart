@@ -2404,14 +2404,22 @@ live UI wiring; the backend (`ControllerCatalogCategory::move()`,
 `CategoryMoveValidator`, `moveCategory()`) is unaffected and remains
 ready to consume whichever UI shape is chosen.
 
+**Resolved (later routine run) — not by picking (a)/(b)/(c) above.** A
+fourth, purely mechanical option none of these considered: the *save*
+step splits the new visible order into per-parent groups instead of
+restricting what the admin can drag. See the Phase 17 section below
+("Update (routine run): live UI wiring is done...") and
+`docs/developer/catalog/category-drag-drop.md`'s "Resolves the
+Architectural fork..." section for the full reasoning.
+
 **Next candidates:** the remaining Phase 12 entity types still need live
 wiring (information/attribute/option/customer — none has an identified
 first consumer yet, per their own backend write-ups above, so picking one
-means choosing a real admin screen/field first, not guessing one);
-resolving the Phase 17 category-list fork above (needs a product decision
-first); Entity Picker Filters/Create-new-flow (neither has a real
-requirement yet); or re-check `gh pr list --state open` first, since this
-backlog moves fast.
+means choosing a real admin screen/field first, not guessing one); full
+drag-to-re-parent for categories (a real tree/drill-down view — still
+unattempted, unlike the reordering fork resolved above); Entity Picker
+Filters/Create-new-flow (neither has a real requirement yet); or re-check
+`gh pr list --state open` first, since this backlog moves fast.
 
 **Update (2026-09-29, routine run): Attribute field live-wired.** Step 0
 found 14 open PRs (`#138`-`#151`, all `ROUTINE-STATUS: DONE` except `#148`
@@ -3504,10 +3512,11 @@ table; or re-check `gh pr list --state open` first.
 
 - [x] SortableJS-based category move backend (transaction, cycle prevention,
       category_path rebuild, sort order update) — see below
-- [ ] Live admin UI wiring (`McSortable` mounted on `category_list.twig`,
-      calling the new endpoint) — not attempted this run, see below
+- [x] Live admin UI wiring (`mc-sortable` behavior mounted on
+      `category_list.twig`'s existing table, calling the `move` endpoint) —
+      see "Live UI wiring (routine run)" below.
 
-**Move/reorder backend is done; live UI wiring is not.** Full writeup:
+**Move/reorder backend and live UI wiring are both done.** Full writeup:
 `docs/developer/catalog/category-drag-drop.md`; upstream diff entry in
 `docs/upstream-diff.md`. `MintCart\Catalog\CategoryMoveValidator`
 (`upload/system/library/mintcart/catalog/categorymovevalidator.php`) is a
@@ -3575,6 +3584,77 @@ the option set (parent-scoped tree/drill-down view; same-parent-only drag
 with reject-and-snap-back; or a "Manage order for: [parent]" filter on
 the existing list). A future run or a human should decide the list-UX
 shape first; the backend itself needs no further work.
+
+**Update (routine run): live UI wiring is done — the "not resolved" fork
+above is resolved, but not by choosing one of its three options.** A
+fourth, purely mechanical approach the earlier note didn't consider turned
+out not to need a product/UX decision at all: instead of changing what the
+admin is *allowed to drag* (a tree view, a same-parent filter, or
+reject-and-snap-back), the save step itself splits the new visible order
+back into per-parent groups and saves each group separately (skipping any
+group with only one visible member), so a drag across the flat,
+mixed-parent list can never mix one parent's `sort_order` numbering with
+another's or reset an untouched category's `sort_order`. Full writeup:
+`docs/developer/catalog/category-drag-drop.md`'s "Live UI wiring" and
+"Resolves the Architectural fork..." sections.
+
+`ControllerCatalogCategory::getList()` gained `enqueueMintAssets()`
+(verbatim copy of `ControllerCatalogProduct`'s — `docs/developer/admin/
+asset-enqueue.md`'s "components" bundle) and now passes `parent_id` per
+row plus `$data['move']` into `category_list.twig`. The template mounts
+the real `mc-sortable` **behavior** (not its CSS, which is flex-list-only
+and would break a `<table>` — `data-mc-sortable`/`data-mc-sortable-handle`/
+`data-mc-sortable-item`/`data-mc-action` are its documented hooks,
+CLAUDE.md §14) directly on the existing Bootstrap 3 table, gated to
+`sort == 'sort_order'` (dragging while sorted by Name would scramble a
+visible order that has no persisted meaning). An inline `<script>` POSTs
+to `catalog/category.move` immediately on `mc:sortable:reorder` — no
+"Save Order" button, no page reload — reverting the row order and
+announcing failure via an `aria-live="polite"` region if any group's save
+fails. No category is ever re-parented from this UI.
+
+Six new language keys (`text_drag_hint`, `text_move_up`, `text_move_down`,
+`text_order_saved`, `text_order_failed`, `text_sort_by_order_first`).
+
+**Bonus fix, found while verifying this was actually going to work:**
+`assets/src/js/admin.js`/`catalog.js` called every `init*()` (including
+`initSortableLists()`) at module top level with no DOM-readiness guard,
+while every `header.twig` renders the enqueued bundle as a classic
+`<script>` inside `<head>` — meaning it always ran *before* `<body>`
+existed. Delegated-listener inits (`initAlertDismiss()`) happened to work
+by accident; eager-`querySelectorAll()` inits
+(`initSortableLists()`/`initModalTriggers()`/`initDrawerTriggers()`/
+`initToastTriggers()`/`initTabsTriggers()`/`initProgressBars()`, and on
+the storefront `initSearchBoxes()`) silently found nothing. Without this
+fix, `category_list.twig`'s new drag behavior — the entire point of this
+increment — would never have mounted on a real page. Both files now defer
+their unchanged `init*()` sequence behind a `document.readyState`/
+`DOMContentLoaded` guard. Full writeup:
+`docs/developer/catalog/category-drag-drop.md`'s "Boot timing bug found
+while verifying this increment" section. `assets/src/js/*` are
+MintCart-owned, not OpenCart core, so no `docs/upstream-diff.md` entry.
+
+Verified: `php -l` clean on `category.php`/`en-gb/catalog/category.php`;
+`category_list.twig`'s `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}`
+tag counts balanced (12/12, 2/2); the new inline `<script>` checked with a
+standalone Node harness (Twig `{{ }}` output substituted with a
+placeholder first) — parses cleanly. Full `tests/mintcart/**/*-test.php`
+suite (82 files) re-run end to end — all passing, no regressions (no new
+PHP class, so no new test file). `admin.js`/`catalog.js`: `node --check`
+clean; `npm install && npm run build` compiles both bundles cleanly
+(confirmed `DOMContentLoaded` present in both `assets/dist/js/admin.min.js`/
+`catalog.min.js`); `npm test` (preset-token contract checks, unaffected)
+still passes. **Not verified live** — same pre-existing no-MySQL/
+no-browser-session gap as every other admin-screen increment in this
+repo; see `docs/MANUAL_VERIFICATION.md`'s new "Live drag & drop UI"
+entries, including a dedicated mixed-parent-page safety check.
+
+**Next candidates:** full drag-to-re-parent (a tree/drill-down list view —
+still a real, separate, larger increment, unlike the reordering solved
+here); `enqueueMintAssets()` is now duplicated on two controllers
+(`category.php`/`product.php`) — extracting a shared trait is a natural
+low-risk cleanup once a third consumer appears (`CLAUDE.md` §85/§86, not
+done here); or re-check `gh pr list --state open` first.
 
 ## Phase 18 — SEO Core
 
@@ -6960,6 +7040,18 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-09-28, routine run):** Phase 17's live UI wiring is
+now done (category drag & drop, `category_list.twig` + real `mc-sortable`
+behavior) — this also resolves the Phase 12 "Architectural fork
+identified, not resolved" note via a per-parent-group save split rather
+than a UI redesign. See the Phase 17 section for the full writeup. Step 0
+checked all 3 open PRs at the time (`#138`/`#139`/`#140`, all
+`ROUTINE-STATUS: DONE`, none touching `category.php`/`category_list.twig`/
+any catalog/category file). **Next candidates:** full drag-to-re-parent
+(tree/drill-down view, a separate larger increment); the
+`enqueueMintAssets()` duplication across `category.php`/`product.php`
+(trait extraction, once a third consumer appears); or re-check
+`gh pr list --state open` first.
 **Trailer note (2026-09-19, later routine run, PR #138):** `mc-search-box`
 is now wired into both `mint_default`'s and `test_theme`'s headers (Phase
 15 section above has the full writeup), plus a real bug fix in

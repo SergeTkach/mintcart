@@ -211,6 +211,51 @@ user token, using an existing multi-level category tree:
    prior inline logic, not a rewrite, but this should still be re-checked
    live once MySQL is available.
 
+### Live drag & drop UI (this run)
+
+`category_list.twig` now mounts the real `mc-sortable` behavior on
+**Catalog → Categories**, gated to when the list is sorted by the
+**Sort Order** column. On a real install:
+
+5. Open **Catalog → Categories**, click the **Sort Order** column header.
+   Confirm a drag-handle icon and two arrow buttons appear on each row,
+   and a hint above the table explains dragging reorders and autosaves.
+6. Drag a row to a new position (mouse or touch). Confirm the row moves
+   immediately, an AJAX request fires to `catalog/category.move`, and no
+   page reload happens. Reload the page (still sorted by Sort Order) and
+   confirm the new order persisted.
+7. Using only the keyboard, tab to a row's "Move up"/"Move down" buttons
+   and confirm they reorder the row and save the same way as a drag (this
+   is the non-mouse path required by
+   `MINTCART_IMPLEMENTATION_GUIDE.md` §68 — confirm it actually works, not
+   just that the buttons render).
+8. With the browser's network tab open, simulate a failure (e.g. block the
+   `catalog/category.move` request) and drag a row. Confirm the row
+   snaps back to its previous position and a message is announced (check
+   with a screen reader or the accessibility tree — the status text lives
+   in a visually-hidden `aria-live="polite"` region, not visible text).
+9. Switch the sort back to **Category Name** and confirm the drag handle,
+   move buttons, and `data-mc-sortable` behavior are all gone (replaced by
+   the "sort by Sort Order first" hint) — dragging must not be possible
+   while rows are shown alphabetically.
+10. Confirm every other **Catalog → Categories** action (add, edit,
+    delete, repair, the bulk-delete checkbox row) still works exactly as
+    before — this change only added markup/columns, no existing action
+    was touched.
+11. **The mixed-parent safety check.** Set up (or find) a page of the
+    Sort-Order-sorted list where two or more different parents' children
+    are visible together (likely on any store with more than a handful of
+    categories — this list is flat and not grouped by parent). Drag a row
+    belonging to one parent so it ends up interleaved between rows
+    belonging to a different parent. Confirm: (a) only the categories that
+    actually share a parent with at least one other visible row got new
+    `sort_order` values — any category that was the *only* visible member
+    of its parent on this page keeps its original `sort_order` untouched;
+    (b) no category's `parent_id` changed in the database. This is the
+    scenario `docs/developer/catalog/category-drag-drop.md`'s "Resolves
+    the Architectural fork..." section explains and the per-parent-group
+    save logic is specifically meant to protect against.
+
 ## Phase 12 — `mintcart/entity/manufacturer` endpoint, never hit end to end
 
 Same gap as the category endpoint above, plus one thing category couldn't

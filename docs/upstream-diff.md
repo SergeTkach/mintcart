@@ -1704,6 +1704,60 @@ gap as every earlier phase: no MySQL in this environment, so
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
 
+**Update (this run): the live UI wiring flagged as "Not done yet" above is
+now done** — see `docs/developer/catalog/category-drag-drop.md`'s new "Live
+UI wiring" section for the full writeup.
+`ControllerCatalogCategory::getList()` gained a new `enqueueMintAssets()`
+(verbatim copy of `ControllerCatalogProduct::enqueueMintAssets()` — the
+`components.min.css`/`admin.min.js` pair, `docs/developer/admin/asset-
+enqueue.md`) and now passes `parent_id` per row plus a new `$data['move']`
+(the `catalog/category.move` URL) into `category_list.twig`, which mounts
+the real `mc-sortable` behavior (`data-mc-sortable`/
+`data-mc-sortable-handle`/`data-mc-sortable-item`/`data-mc-action` — its
+documented hook contract, no CSS class dependency) directly on the
+existing Bootstrap 3 table/row markup, gated to `sort == 'sort_order'`.
+An inline `<script>` POSTs the new order to `catalog/category.move`
+immediately on `mc:sortable:reorder`, keeping every row's own `parent_id`
+unchanged (reordering only — no re-parenting from this UI) and splitting
+the new visible order back into per-parent groups before saving (one
+`move()` request per group, skipping any group with only one visible
+member) — this is also what resolves the "Architectural fork identified,
+not resolved (Phase 17)" note `docs/IMPLEMENTATION_STATUS.md`'s Phase 12
+section carried: see `docs/developer/catalog/category-drag-drop.md`'s
+"Resolves the Architectural fork..." section for why this flat,
+cross-parent list needed that grouping rather than a UI redesign. Two new
+language keys were needed beyond `error_category`: `text_drag_hint`,
+`text_move_up`, `text_move_down`, `text_order_saved`, `text_order_failed`,
+`text_sort_by_order_first` (`en-gb/catalog/category.php`).
+
+**Compatibility impact (update):** still purely additive — the existing
+`index()`/`add()`/`edit()`/`delete()`/`repair()`/`autocomplete()` actions,
+`getForm()`, and every other `getList()` data key are untouched;
+`enqueueMintAssets()` only queues two extra HTTP requests
+(`components.min.css`/`admin.min.js`) on the category list action, the
+same additive mechanism `product.php`'s `getForm()` already established.
+
+**Tests (update):** `php -l` clean on `category.php`/
+`en-gb/catalog/category.php`. `category_list.twig`'s `{% if %}`/
+`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts re-checked balanced
+(12/12, 2/2) — one early draft of this change accidentally left a literal
+`{% if %}` inside a JS doc-comment, which Twig would have parsed as a real
+(unbalanced) tag; caught by this same balance check and rewritten to plain
+prose. The new inline `<script>` block was checked for JS syntax errors
+with a standalone Node harness (Twig `{{ }}` output substituted with a
+placeholder string first) — parses cleanly. Full `tests/mintcart/**/*-test.php`
+suite (82 files) re-run end to end — all passing, no regressions (this
+change adds no new PHP class, so no new test file). Verifying this
+increment surfaced a real boot-timing bug in `assets/src/js/admin.js`/
+`catalog.js` (both MintCart-owned, not OpenCart core, so tracked in
+`docs/developer/catalog/category-drag-drop.md`'s "Boot timing bug found
+while verifying this increment" section, not here) — `npm install && npm
+run build` now re-run and compiles cleanly, `npm test` still passes.
+**Not verified live** — same pre-existing no-MySQL/no-browser-session gap
+as every other admin-screen increment in this repo (see
+`docs/MANUAL_VERIFICATION.md`'s Phase 17 section for what a human should
+confirm).
+
 ---
 
 ## `upload/catalog/controller/extension/payment/klarna_account.php` / `upload/catalog/controller/extension/payment/klarna_invoice.php`
