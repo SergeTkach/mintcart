@@ -17,12 +17,24 @@
  *
  * Deliberately scoped to store_id = 0 (the main/default store — the same
  * value `ControllerStartupSeoUrl` matches incoming requests against for a
- * single-store install) and `config_language_id` (the storefront's default
- * language). A store using OpenCart's multi-store or multi-language
- * features would need a per-store/per-language variant of this screen —
- * not attempted this run (`CLAUDE.md` §85 — no real multi-store MintCart
- * consumer yet); see `docs/developer/seo/system-route-aliases.md`'s "Known
- * limitation" section.
+ * single-store install). A store using OpenCart's multi-store feature
+ * would need a per-store variant of this screen — not attempted this run
+ * (`CLAUDE.md` §85 — no real multi-store MintCart consumer yet); see
+ * `docs/developer/seo/system-route-aliases.md`'s "Known limitation"
+ * section.
+ *
+ * Per-language, however, is handled here: one alias field per
+ * (route, enabled language) pair, keyed `alias_<code>_<language_id>`. This
+ * is safe now that MC-0009 (`docs/fixes/registry.md`) made
+ * `ControllerStartupSeoUrl::index()`'s incoming decode prefer the row
+ * saved for the request's actual resolved language before falling back to
+ * a language-agnostic match — two languages can share the same alias text
+ * for two different routes without an incoming request ever resolving to
+ * the wrong one. Outgoing link generation
+ * (`ControllerStartupSeoUrl::rewrite()`) already filtered its system-route
+ * lookup by `config_language_id`, so it already produced the correct
+ * per-language alias automatically once one existed — no core change
+ * needed for this increment, only this admin form.
  *
  * Built on the legacy OpenCart admin theme (Bootstrap 3 `.panel`/`.btn`/
  * `form-horizontal` markup), same reason `ControllerDesignHomepage` and
@@ -57,8 +69,42 @@ class ControllerMintcartSeoSystemPages extends Controller {
 		return 0;
 	}
 
-	protected function languageId(): int {
-		return (int)$this->config->get('config_language_id');
+	/**
+	 * Every enabled `oc_language` row (`admin.language` cache, the same
+	 * source `ControllerLocalisationLanguage`'s own list uses), sorted the
+	 * way OpenCart already sorts them (`sort_order`, `name`). A disabled
+	 * language is left out entirely - matches how the storefront's own
+	 * language switcher only ever offers enabled languages, so this screen
+	 * never manages an alias nobody can actually reach.
+	 *
+	 * Falls back to a single, unnamed entry for `config_language_id` in the
+	 * unreachable case of zero enabled languages (a fresh install always
+	 * has at least one), so this screen never renders an empty table.
+	 *
+	 * @return list<array{language_id: int, name: string}>
+	 */
+	protected function languages(): array {
+		$this->load->model('localisation/language');
+
+		$languages = array();
+
+		foreach ($this->model_localisation_language->getLanguages() as $language) {
+			if ((int)$language['status'] === 1) {
+				$languages[] = array(
+					'language_id' => (int)$language['language_id'],
+					'name'        => $language['name']
+				);
+			}
+		}
+
+		if (!$languages) {
+			$languages[] = array(
+				'language_id' => (int)$this->config->get('config_language_id'),
+				'name'        => ''
+			);
+		}
+
+		return $languages;
 	}
 
 	protected function validate() {
@@ -66,39 +112,48 @@ class ControllerMintcartSeoSystemPages extends Controller {
 			$this->error['warning'] = $this->language->get('error_permission');
 		}
 
+		// language_id => [alias => code], so the same alias text can be
+		// reused across different languages without tripping the
+		// duplicate-in-this-form check below.
 		$seen = array();
 
-		foreach (\MintCart\Seo\SystemRoutes::ROUTES as $code => $route) {
-			$alias = strtolower(trim((string)($this->request->post['alias_' . $code] ?? '')));
+		foreach ($this->languages() as $language) {
+			$language_id = $language['language_id'];
 
-			if (!\MintCart\Seo\SystemRoutes::isValidAlias($alias)) {
-				$this->error[$code] = $this->language->get('error_alias_format');
+			foreach (\MintCart\Seo\SystemRoutes::ROUTES as $code => $route) {
+				$field = 'alias_' . $code . '_' . $language_id;
+				$alias = strtolower(trim((string)($this->request->post[$field] ?? '')));
 
-				continue;
-			}
+				if (!\MintCart\Seo\SystemRoutes::isValidAlias($alias)) {
+					$this->error[$field] = $this->language->get('error_alias_format');
 
-			if ($alias === '') {
-				continue;
-			}
+					continue;
+				}
 
-			if (isset($seen[$alias])) {
-				$this->error[$code] = $this->language->get('error_alias_duplicate');
+				if ($alias === '') {
+					continue;
+				}
 
-				continue;
-			}
+				if (isset($seen[$language_id][$alias])) {
+					$this->error[$field] = $this->language->get('error_alias_duplicate');
 
-			$seen[$alias] = $code;
+					continue;
+				}
 
-			$existing = $this->model_design_seo_url->getSeoUrlsByKeyword($alias);
+				$seen[$language_id][$alias] = $code;
 
-			foreach ($existing as $row) {
-				// A row is only "in conflict" if it belongs to this store and
-				// isn't simply this same route's own current value (editing a
-				// route's alias to the value it already has must not error).
-				if (((int)$row['store_id'] === $this->storeId()) && ($row['query'] !== $route)) {
-					$this->error[$code] = $this->language->get('error_alias_exists');
+				$existing = $this->model_design_seo_url->getSeoUrlsByKeyword($alias);
 
-					break;
+				foreach ($existing as $row) {
+					// A row is only "in conflict" if it belongs to this
+					// store and this same language, and isn't simply this
+					// same route's own current value (editing a route's
+					// alias to the value it already has must not error).
+					if (((int)$row['store_id'] === $this->storeId()) && ((int)$row['language_id'] === $language_id) && ($row['query'] !== $route)) {
+						$this->error[$field] = $this->language->get('error_alias_exists');
+
+						break;
+					}
 				}
 			}
 		}
@@ -116,38 +171,42 @@ class ControllerMintcartSeoSystemPages extends Controller {
 	 * stock controller's own uniqueness check already uses.
 	 */
 	protected function save() {
-		foreach (\MintCart\Seo\SystemRoutes::ROUTES as $code => $route) {
-			$alias = strtolower(trim((string)($this->request->post['alias_' . $code] ?? '')));
+		foreach ($this->languages() as $language) {
+			$language_id = $language['language_id'];
 
-			$existing = null;
+			foreach (\MintCart\Seo\SystemRoutes::ROUTES as $code => $route) {
+				$alias = strtolower(trim((string)($this->request->post['alias_' . $code . '_' . $language_id] ?? '')));
 
-			foreach ($this->model_design_seo_url->getSeoUrlsByQuery($route) as $row) {
-				if (((int)$row['store_id'] === $this->storeId()) && ((int)$row['language_id'] === $this->languageId())) {
-					$existing = $row;
+				$existing = null;
 
-					break;
+				foreach ($this->model_design_seo_url->getSeoUrlsByQuery($route) as $row) {
+					if (((int)$row['store_id'] === $this->storeId()) && ((int)$row['language_id'] === $language_id)) {
+						$existing = $row;
+
+						break;
+					}
 				}
-			}
 
-			if ($alias === '') {
+				if ($alias === '') {
+					if ($existing !== null) {
+						$this->model_design_seo_url->deleteSeoUrl($existing['seo_url_id']);
+					}
+
+					continue;
+				}
+
+				$data = array(
+					'store_id'    => $this->storeId(),
+					'language_id' => $language_id,
+					'query'       => $route,
+					'keyword'     => $alias
+				);
+
 				if ($existing !== null) {
-					$this->model_design_seo_url->deleteSeoUrl($existing['seo_url_id']);
+					$this->model_design_seo_url->editSeoUrl($existing['seo_url_id'], $data);
+				} else {
+					$this->model_design_seo_url->addSeoUrl($data);
 				}
-
-				continue;
-			}
-
-			$data = array(
-				'store_id'    => $this->storeId(),
-				'language_id' => $this->languageId(),
-				'query'       => $route,
-				'keyword'     => $alias
-			);
-
-			if ($existing !== null) {
-				$this->model_design_seo_url->editSeoUrl($existing['seo_url_id'], $data);
-			} else {
-				$this->model_design_seo_url->addSeoUrl($data);
 			}
 		}
 	}
@@ -184,29 +243,44 @@ class ControllerMintcartSeoSystemPages extends Controller {
 		$data['action'] = $this->url->link('mintcart/seo/system_pages', 'user_token=' . $this->session->data['user_token'], true);
 		$data['cancel'] = $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true);
 
+		$languages = $this->languages();
+
+		$data['languages'] = $languages;
 		$data['routes'] = array();
 
 		foreach (\MintCart\Seo\SystemRoutes::ROUTES as $code => $route) {
-			if ($this->request->server['REQUEST_METHOD'] == 'POST') {
-				$alias = (string)($this->request->post['alias_' . $code] ?? '');
-			} else {
-				$alias = '';
+			$aliases = array();
 
-				foreach ($this->model_design_seo_url->getSeoUrlsByQuery($route) as $row) {
-					if (((int)$row['store_id'] === $this->storeId()) && ((int)$row['language_id'] === $this->languageId())) {
-						$alias = $row['keyword'];
+			foreach ($languages as $language) {
+				$language_id = $language['language_id'];
+				$field = 'alias_' . $code . '_' . $language_id;
 
-						break;
+				if ($this->request->server['REQUEST_METHOD'] == 'POST') {
+					$alias = (string)($this->request->post[$field] ?? '');
+				} else {
+					$alias = '';
+
+					foreach ($this->model_design_seo_url->getSeoUrlsByQuery($route) as $row) {
+						if (((int)$row['store_id'] === $this->storeId()) && ((int)$row['language_id'] === $language_id)) {
+							$alias = $row['keyword'];
+
+							break;
+						}
 					}
 				}
+
+				$aliases[] = array(
+					'field' => $field,
+					'alias' => $alias,
+					'error' => $this->error[$field] ?? ''
+				);
 			}
 
 			$data['routes'][] = array(
-				'code'  => $code,
-				'route' => $route,
-				'label' => $this->language->get(\MintCart\Seo\SystemRoutes::labelKey($code)),
-				'alias' => $alias,
-				'error' => $this->error[$code] ?? ''
+				'code'    => $code,
+				'route'   => $route,
+				'label'   => $this->language->get(\MintCart\Seo\SystemRoutes::labelKey($code)),
+				'aliases' => $aliases
 			);
 		}
 

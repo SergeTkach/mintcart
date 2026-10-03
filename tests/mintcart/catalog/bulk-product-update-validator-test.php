@@ -43,7 +43,7 @@ assertTrue($validator->isValidField('price'), 'isValidField: price is valid', $f
 assertTrue($validator->isValidField('manufacturer_id'), 'isValidField: manufacturer_id is valid', $failures);
 assertTrue($validator->isValidField('stock_status_id'), 'isValidField: stock_status_id is valid', $failures);
 assertTrue($validator->isValidField('special_price'), 'isValidField: special_price is valid', $failures);
-assertTrue(!$validator->isValidField('category_ids'), 'isValidField: category_ids is not (yet) a whitelisted field', $failures);
+assertTrue($validator->isValidField('category_ids'), 'isValidField: category_ids is valid', $failures);
 assertTrue(!$validator->isValidField(''), 'isValidField: blank is not valid', $failures);
 
 // --- validateValue() - status ---
@@ -98,9 +98,30 @@ assertSame(null, $validator->validateValue('special_price', '9.99'), 'special_pr
 assertTrue($validator->validateValue('special_price', '-1') !== null, 'special_price: a negative number is rejected', $failures);
 assertTrue($validator->validateValue('special_price', 'free') !== null, 'special_price: a non-numeric value is rejected', $failures);
 
+// --- validateValue() - category_ids is a list, not a string, so it
+// always errors defensively here; callers must use validateCategoryIds() ---
+
+assertTrue($validator->validateValue('category_ids', '5') !== null, 'validateValue: category_ids always errors here (it is a list, not a string)', $failures);
+
 // --- validateValue() - unknown field, defensive ---
 
-assertTrue($validator->validateValue('category_ids', '5') !== null, 'validateValue: an unwhitelisted field always errors, defensively', $failures);
+assertTrue($validator->validateValue('not_a_field', '5') !== null, 'validateValue: an unwhitelisted field always errors, defensively', $failures);
+
+// --- validateCategoryIds() ---
+
+assertSame(null, $validator->validateCategoryIds([]), 'validateCategoryIds: an empty list is valid (removes every category)', $failures);
+assertSame(null, $validator->validateCategoryIds(['20', 25]), 'validateCategoryIds: a list of positive IDs (mixed string/int) is valid', $failures);
+assertTrue($validator->validateCategoryIds(['0']) !== null, 'validateCategoryIds: 0 is rejected', $failures);
+assertTrue($validator->validateCategoryIds(['-1']) !== null, 'validateCategoryIds: a negative ID is rejected', $failures);
+assertTrue($validator->validateCategoryIds(['abc']) !== null, 'validateCategoryIds: a non-numeric entry is rejected', $failures);
+assertTrue($validator->validateCategoryIds(['20', 'abc']) !== null, 'validateCategoryIds: one invalid entry rejects the whole list', $failures);
+
+// --- normalizeCategoryIds() ---
+
+assertSame([], $validator->normalizeCategoryIds([]), 'normalizeCategoryIds: empty input returns empty list', $failures);
+assertSame([20, 25], $validator->normalizeCategoryIds(['20', 25]), 'normalizeCategoryIds: casts strings to int, preserves order', $failures);
+assertSame([20], $validator->normalizeCategoryIds(['20', '20', 20]), 'normalizeCategoryIds: de-duplicates', $failures);
+assertSame([3], $validator->normalizeCategoryIds(['0', '-1', 'abc', '3']), 'normalizeCategoryIds: drops zero/negative/non-numeric ids', $failures);
 
 // --- normalizeProductIds() ---
 
@@ -117,5 +138,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: BulkProductUpdateValidator smoke test (46 scenarios)\n";
+echo "PASS: BulkProductUpdateValidator smoke test (57 scenarios)\n";
 exit(0);
