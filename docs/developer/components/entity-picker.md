@@ -118,6 +118,13 @@ drawerEl.addEventListener('mc:entity-picker:change', (event) => {
 - **Search** — the `input` event on `[data-mc-entity-picker-search]` is
   debounced (250ms default, `debounceMs` option), resets to page 1, and
   re-fetches.
+- **Filters** — the `change` event on any
+  `[data-mc-entity-picker-filter="<key>"]` element resets to page 1 and
+  re-fetches, same as search (but not debounced — a `<select>`'s `change`
+  fires once per choice, not per keystroke). Every such element's current
+  `.value` is read into a `filters` object (`{ [key]: value }`) and passed
+  to `fetchItems()` alongside `query`/`page`/`pageSize`; a host page with
+  no filter element gets `filters: {}`.
 - **Pagination** — `data-mc-action="entity-picker-prev"` /
   `"entity-picker-next"`, disabled at the first/last page from the
   `total`/`pageSize` the data source reports. In-flight requests are
@@ -268,9 +275,12 @@ real install is a natural, low-risk follow-up — not attempted this run for
 the same no-live-verification reason.
 
 **Still not done, by design:**
-- Filters beyond search text, and the create-new-flow (add a category
-  inline from the picker) — no requirement identified yet for this
-  consumer.
+- Filters beyond search text (the picker now supports them generically —
+  see the Product backend's own "Filters" section below for the first
+  real consumer, `filter_status`) — Category has no analogous backend
+  filter and no requirement identified yet for this consumer; the
+  create-new-flow (add a category inline from the picker) is still
+  unattempted for every entity type.
 - Every other entity type is now done — **manufacturer**, **product**,
   **information pages**, **attributes**, **options** and **customers**,
   see below.
@@ -419,6 +429,50 @@ keys, same file/pattern as Category's/Manufacturer's own six.
 Removing the old autocomplete field is the same natural, low-risk,
 not-yet-attempted follow-up as Category's/Manufacturer's.
 
+**Filters (beyond search text): `filter_status` is done.** The "Still not
+done, by design" note under the Category backend above flagged "Filters
+beyond search text" as having no identified requirement yet — the Product
+backend's own data already makes a real one obvious: Related
+Products/Category/Manufacturer pickers all list products regardless of
+`status`, so an admin browsing for a related product has no way to tell
+an enabled product from a disabled one apart from re-opening its own edit
+screen. `createEntityPicker()` (`entity-picker.js`) now reads any
+`[data-mc-entity-picker-filter="<key>"]` element inside `root` into a
+plain `filters` object passed to `fetchItems()` alongside `query`/`page`/
+`pageSize` — generic, not product-specific, the same "this module never
+interprets what a key/value means" principle it already applies to
+`query`. `ControllerMintcartEntity::product()` accepts an optional
+`filter_status` GET param and passes it straight through to
+`getProducts()`/`getTotalProducts()` — both already support it (no model
+change, so no upstream diff entry for this). A blank/absent value means
+"every status", unchanged from today's behavior.
+
+This ships the capability and its first real backend consumer, same
+"primitive before/alongside live UI" precedent as `HreflangBuilder`
+(`docs/developer/seo/hreflang.md`) and `CheckoutTotalsService`
+(`docs/developer/commerce/checkout-totals-service.md`) — **no template
+yet renders a `data-mc-entity-picker-filter` element** (Related/Category/
+Manufacturer's existing panels all predate this and would need their own
+small follow-up to add a status `<select>`), deliberately not attempted
+in the same increment: every one of those three panels sits inside
+`product_form.twig`, a file with its own in-flight entity-picker wiring
+PRs at any given time (the Attribute/Option/Customer fields above) — a
+second, unrelated edit to that same file risks exactly the kind of
+same-file collision `CLAUDE.md`'s dedup/hot-file guidance exists to avoid.
+Adding a status filter `<select>` to one of those three panels (and its
+own `text_*_picker_filter_status_*` language strings) is the natural next
+increment once this file's own in-flight PRs have landed.
+
+Category/Manufacturer have no analogous `filter_status` support in their
+own admin models (`ModelCatalogCategory::getCategories()`/
+`ModelCatalogManufacturer::getManufacturers()` have no such parameter at
+all) — adding one would be a genuine `ModelCatalog*` core-file change for
+a single consumer, the same "not worth it yet" reasoning the Category
+backend's own "Why paging happens in PHP" section already gives for a
+different gap in the same two models. Not attempted here; `filter_status`
+stays Product-only until a second entity type has a real need for its own
+filter.
+
 ## Information page backend
 
 ```
@@ -507,13 +561,27 @@ the start of the name only), the same as manufacturer, not category's
 `LIKE '%…%'` substring match. Pre-existing OpenCart behavior, not
 introduced here.
 
-Same permission requirement and the same "not done yet, by design"
-live-wiring gap as category/manufacturer above. No obvious first live
-consumer has been identified yet for this one — unlike category/
-manufacturer, there is no existing single-select attribute autocomplete
-field on `product_form.twig` to swap out; a future consumer would be a
-*new* UI affordance (e.g. searching attributes by name when adding one to
-a product), not a drop-in replacement of something that already exists.
+Same permission requirement as category/manufacturer above.
+
+**Live wiring done.** `product_form.twig`'s Attribute tab (`#attribute`) is
+the identified first consumer — as predicted above, a *new* affordance, not
+a drop-in replacement, since attribute rows are added dynamically
+(`addAttribute()`) rather than being a single static field. One shared
+`#attribute-picker` `McEntityPicker` instance (single-select) is reused
+across every row via event delegation on the `#attribute` table
+(`Implementation Guide` §14): each row gets its own
+`data-mc-action="browse-attribute" data-mc-attribute-row="N"` button;
+clicking it records which row is active, and `onConfirm` writes the chosen
+attribute's `name`/`id` into that row's `[data-mc-attribute-name]`/
+`[data-mc-attribute-id]` fields — the exact same fields
+`attributeautocomplete()`'s own jQuery UI `'select'` handler already
+writes to (kept as-is, not replaced, same reasoning as category/
+manufacturer/related above), so `ControllerCatalogProduct`'s save logic
+needs no change. A per-row picker instance was deliberately avoided (would
+mean N `fetch` wire-ups and N DOM subtrees for what is nearly always a
+handful of rows) in favor of one instance plus delegation, the same
+"reuse by responsibility, not by copying" principle `CLAUDE.md` §38E
+names for controllers, applied here to a client-side widget.
 
 ## Option backend
 
