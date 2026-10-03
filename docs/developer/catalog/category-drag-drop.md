@@ -14,7 +14,7 @@ not.
 - `upload/admin/model/catalog/category.php` — `rebuildCategoryPath()`
   (private, extracted from `editCategory()`) and `moveCategory()`
 - `upload/admin/controller/catalog/category.php` —
-  `ControllerCatalogCategory::move()`, route `catalog/category.move`
+  `ControllerCatalogCategory::move()`, route `catalog/category/move`
 - `upload/admin/language/en-gb/catalog/category.php` — `error_category`
 - Test: `tests/mintcart/catalog/category-move-validator-test.php`
 
@@ -107,7 +107,7 @@ the existing `getCategory()`, cycle-prevention via
 `moveCategory()`. No new business logic lives in the controller itself.
 
 ```
-POST index.php?route=catalog/category.move&user_token=…
+POST index.php?route=catalog/category/move&user_token=…
   category_id=25
   parent_id=33
   order[]=25&order[]=40&order[]=12   (the full new sibling list under parent_id 33)
@@ -125,7 +125,7 @@ category/parent not found, or the cycle-prevention message).
 "index", to avoid the Bootstrap 3/5 conflict; not shared via a trait yet,
 per `CLAUDE.md` §85/§86 — two call sites isn't a strong enough signal to
 extract one, a natural follow-up once a third appears) and passes
-`$data['move']` (the `catalog/category.move` URL) and `parent_id` per row
+`$data['move']` (the `catalog/category/move` URL) and `parent_id` per row
 into `category_list.twig`.
 
 The template mounts the **real** `mc-sortable` behavior
@@ -143,7 +143,7 @@ consumer.
 
 An inline (non-module, matching every other admin Twig template's
 `<script>` convention) listener on the `mc:sortable:reorder` event POSTs
-the new order straight to `catalog/category.move` via `fetch` —
+the new order straight to `catalog/category/move` via `fetch` —
 immediately, no "Save Order" button/page reload, unlike the Homepage
 Builder's block list (which deliberately stayed at a lighter, non-`mc-
 sortable` HTML5-drag-plus-manual-save implementation for a different
