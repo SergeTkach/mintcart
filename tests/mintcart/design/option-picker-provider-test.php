@@ -45,14 +45,16 @@ assertSame(2, count($result['items']), 'one page: both rows returned', $failures
 assertSame(5, $result['items'][0]['id'], 'one page: option_id cast to int and renamed to id', $failures);
 assertSame('Size', $result['items'][0]['name'], 'one page: name passed through', $failures);
 assertSame(null, $result['items'][0]['image'], 'one page: image is always null (options have no image of their own)', $failures);
+assertSame('select', $result['items'][0]['type'], 'one page: type passed through for the first row', $failures);
+assertSame('radio', $result['items'][1]['type'], 'one page: type passed through for the second row', $failures);
 
 // 3. Paging: page 2 of a 5-row set with limit 2 returns rows 3-4, total still 5.
 $rows = [
-    ['option_id' => 1, 'name' => 'A'],
-    ['option_id' => 2, 'name' => 'B'],
-    ['option_id' => 3, 'name' => 'C'],
-    ['option_id' => 4, 'name' => 'D'],
-    ['option_id' => 5, 'name' => 'E'],
+    ['option_id' => 1, 'name' => 'A', 'type' => 'text'],
+    ['option_id' => 2, 'name' => 'B', 'type' => 'text'],
+    ['option_id' => 3, 'name' => 'C', 'type' => 'text'],
+    ['option_id' => 4, 'name' => 'D', 'type' => 'text'],
+    ['option_id' => 5, 'name' => 'E', 'type' => 'text'],
 ];
 $result = $provider->build($rows, 2, 2);
 assertSame(5, $result['total'], 'paging: total reflects the full filtered set, not just this page', $failures);
@@ -69,7 +71,7 @@ assertSame('E', $result['items'][0]['name'], 'last page: correct row', $failures
 //    category/manufacturer (option names are free text via CKEditor-less
 //    plain input, but can still carry escaped entities from legacy data).
 $rows = [
-    ['option_id' => 40, 'name' => 'Size &amp; Fit'],
+    ['option_id' => 40, 'name' => 'Size &amp; Fit', 'type' => 'select'],
 ];
 $result = $provider->build($rows, 1, 20);
 assertSame('Size & Fit', $result['items'][0]['name'], 'decode: &amp; entity decoded to plain text', $failures);
@@ -78,8 +80,8 @@ assertSame('Size & Fit', $result['items'][0]['name'], 'decode: &amp; entity deco
 //    array_slice offset or a division-by-zero on the JS side's
 //    Math.ceil(total / pageSize).
 $rows = [
-    ['option_id' => 1, 'name' => 'A'],
-    ['option_id' => 2, 'name' => 'B'],
+    ['option_id' => 1, 'name' => 'A', 'type' => 'text'],
+    ['option_id' => 2, 'name' => 'B', 'type' => 'text'],
 ];
 $result = $provider->build($rows, 0, 0);
 assertSame(1, count($result['items']), 'clamping: page 0 and limit 0 are clamped to page 1 / limit 1', $failures);

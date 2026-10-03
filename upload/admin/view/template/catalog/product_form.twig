@@ -618,6 +618,37 @@
                       <input type="text" name="option" value="" placeholder="{{ entry_option }}" id="input-option" class="form-control"/>
                     </li>
                   </ul>
+                  {#
+                    MintCart Phase 12 (Entity Picker) - a searchable,
+                    paginated, single-select browser as an additional way
+                    to add an option, alongside the jQuery autocomplete
+                    input above (kept as-is, not replaced - this
+                    environment has no live MySQL/admin session to
+                    visually verify a full swap; see
+                    docs/developer/admin/asset-enqueue.md). Confirming a
+                    selection calls the exact same selectOption() function
+                    the autocomplete's own 'select' handler below already
+                    calls, so the tab-pane it builds and
+                    ControllerCatalogProduct's save logic
+                    (validateForm()/addProduct()/editProduct()) need no
+                    change at all.
+                  #}
+                  <button type="button" class="mc-button mc-button--secondary" id="button-option-picker" style="margin-top: 8px;">
+                    <i class="fa fa-search"></i> {{ text_option_picker_browse }}
+                  </button>
+                  <div class="mc-entity-picker" id="option-picker" hidden style="margin-top: 8px;">
+                    <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_option_picker_search }}" placeholder="{{ text_option_picker_search }}">
+                    <ul class="mc-entity-picker__list" role="listbox" aria-label="{{ entry_option }}" data-mc-entity-picker-list></ul>
+                    <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_option_picker_empty }}</p>
+                    <div class="mc-entity-picker__pager">
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_option_picker_prev }}</button>
+                      <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+                      <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_option_picker_next }}</button>
+                    </div>
+                    <div class="mc-entity-picker__footer">
+                      <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_option_picker_confirm }}</button>
+                    </div>
+                  </div>
                 </div>
                 <div class="col-sm-10">
                   <div class="tab-content"> {% set option_row = 0 %}
@@ -1774,6 +1805,17 @@
 		  });
 	  },
 	  'select': function(item) {
+		  selectOption(item);
+	  }
+  });
+
+  // MintCart Phase 12 (Entity Picker) - the autocomplete 'select' handler
+  // body above, extracted into a named function so the Option field's
+  // McEntityPicker confirm handler below can build the exact same
+  // tab-pane markup from a picker-sourced item, with zero duplicated
+  // tab-construction logic (docs/developer/components/entity-picker.md
+  // "Option backend").
+  function selectOption(item) {
 		  html = '<div class="tab-pane" id="tab-option' + option_row + '">';
 		  html += '	<input type="hidden" name="product_option[' + option_row + '][product_option_id]" value="" />';
 		  html += '	<input type="hidden" name="product_option[' + option_row + '][name]" value="' + item['label'] + '" />';
@@ -1893,8 +1935,64 @@
 		  });
 
 		  option_row++;
+  }
+
+  // MintCart Phase 12 (Entity Picker) - Option field's McEntityPicker, the
+  // single-select sibling of the Manufacturer field's picker above (plain
+  // vanilla JS, not jQuery, per CLAUDE.md §7). Calls the exact same
+  // selectOption() function the autocomplete's own 'select' handler above
+  // already calls, so ControllerCatalogProduct's save logic needs no
+  // change at all - see the {# ... #} comment above the picker's markup.
+  (function () {
+	  var browseButton = document.getElementById('button-option-picker');
+	  var pickerRoot = document.getElementById('option-picker');
+
+	  if (!browseButton || !pickerRoot || !window.MintCart || !window.MintCart.createEntityPicker) {
+		  return;
 	  }
-  });
+
+	  var picker = window.MintCart.createEntityPicker(pickerRoot, {
+		  fetchItems: function (options) {
+			  var params = new URLSearchParams({
+				  filter_name: options.query,
+				  page: options.page,
+				  limit: options.pageSize
+			  });
+
+			  return fetch('index.php?route=mintcart/entity/option&user_token={{ user_token }}&' + params, {
+				  signal: options.signal
+			  }).then(function (response) {
+				  return response.json();
+			  });
+		  },
+		  multiple: false,
+		  onConfirm: function (selected) {
+			  var item = selected[0];
+
+			  if (item) {
+				  selectOption({
+					  label: item.name,
+					  value: item.id,
+					  type: item.type,
+					  option_value: item.option_value || []
+				  });
+			  }
+
+			  picker.clear();
+			  pickerRoot.hidden = true;
+		  }
+	  });
+
+	  browseButton.addEventListener('click', function () {
+		  var opening = pickerRoot.hidden;
+
+		  pickerRoot.hidden = !pickerRoot.hidden;
+
+		  if (opening) {
+			  picker.refresh();
+		  }
+	  });
+  })();
   //--></script>
   <script type="text/javascript"><!--
   var option_value_row = {{ option_value_row }};
