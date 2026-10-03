@@ -94,7 +94,7 @@ class ControllerMintcartEntity extends Controller {
 		$this->respond($provider->build($rows, $page, $limit));
 	}
 
-	// route=mintcart/entity/product - GET filter_name, page, limit
+	// route=mintcart/entity/product - GET filter_name, filter_status, page, limit
 	public function product() {
 		if (!$this->user->hasPermission('access', 'mintcart/entity')) {
 			$this->respond(array('error' => 'Permission denied'));
@@ -116,6 +116,14 @@ class ControllerMintcartEntity extends Controller {
 			$limit = 20;
 		}
 
+		// Entity Picker Filters (docs/developer/components/entity-picker.md
+		// "Filters", MINTCART_FUNCTIONAL_SCOPE.md §8) - optional, beyond
+		// filter_name. '' (not present, or present-but-blank) means "every
+		// status", matching ModelCatalogProduct::getProducts()/
+		// getTotalProducts()'s own !empty()/isset()-and-not-''-guarded
+		// filter_status handling - this endpoint passes the raw value
+		// straight through rather than re-validating it, same trust level
+		// `filter_name` already gets.
 		$filter_data = array(
 			'filter_name' => $filter_name,
 			'sort'        => 'pd.name',
@@ -124,8 +132,19 @@ class ControllerMintcartEntity extends Controller {
 			'limit'       => $limit
 		);
 
+		if (isset($this->request->get['filter_status']) && $this->request->get['filter_status'] !== '') {
+			$filter_data['filter_status'] = $this->request->get['filter_status'];
+		}
+
 		$rows = $this->model_catalog_product->getProducts($filter_data);
-		$total = (int)$this->model_catalog_product->getTotalProducts(array('filter_name' => $filter_name));
+
+		$total_filter_data = array('filter_name' => $filter_name);
+
+		if (isset($filter_data['filter_status'])) {
+			$total_filter_data['filter_status'] = $filter_data['filter_status'];
+		}
+
+		$total = (int)$this->model_catalog_product->getTotalProducts($total_filter_data);
 
 		foreach ($rows as &$row) {
 			$row['image_url'] = (!empty($row['image']) && is_file(DIR_IMAGE . $row['image']))
