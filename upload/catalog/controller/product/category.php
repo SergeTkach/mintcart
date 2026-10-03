@@ -546,7 +546,20 @@ class ControllerProductCategory extends Controller {
 			// flag above), and only as an HTML comment appended to the
 			// final response body, never written into $data/the template
 			// itself, so no theme override can accidentally surface it in
-			// visible markup.
+			// visible markup. A `&mintcart_diagnostics=json` request (still
+			// gated by dev mode) gets the same summary back as a standalone
+			// JSON response instead of the HTML comment - same shape as
+			// `mintcart/readiness`, for tooling that would rather fetch
+			// diagnostics than scrape a page's markup
+			// (docs/developer/core/diagnostics.md "JSON diagnostics
+			// surface").
+			if ($mint_diagnostics->isEnabled() && isset($this->request->get['mintcart_diagnostics']) && $this->request->get['mintcart_diagnostics'] === 'json') {
+				$this->response->addHeader('Content-Type: application/json');
+				$this->response->setOutput(json_encode($mint_diagnostics->summary()));
+
+				return;
+			}
+
 			if ($mint_diagnostics->isEnabled()) {
 				$output .= "\n<!-- mintcart-diagnostics " . json_encode($mint_diagnostics->summary()) . " -->";
 			}

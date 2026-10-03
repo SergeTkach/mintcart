@@ -76,35 +76,59 @@ no per-row add/edit/delete like the stock `design/seo_url` list+form
 screens, since the set of rows is fixed (exactly twelve, never more or
 fewer).
 
-- **Read:** for each route, looks up any existing `seo_url` row via
-  `ModelDesignSeoUrl::getSeoUrlsByQuery($route)`, filtered in PHP to
-  `store_id === 0` and `language_id === config_language_id` (see "Known
-  limitation" below), and pre-fills that row's `keyword` as the alias.
-- **Validate:** format (`SystemRoutes::isValidAlias()`), no two routes in
-  this same form sharing one alias, and no collision against any *other*
-  existing `seo_url` row for this store (`getSeoUrlsByKeyword()`) — the
-  same store-scoped uniqueness rule `ControllerDesignSeoUrl::validateForm()`
-  already enforces for the generic screen (`keyword` uniqueness is
-  store-scoped only, not language-scoped, because
-  `ControllerStartupSeoUrl::index()`'s incoming-request decode query has no
-  `language_id` filter — two languages sharing one keyword for different
-  routes would be genuinely ambiguous to decode).
-- **Save:** blank alias deletes any existing row for that route (falls
-  back to the default `index.php?route=...` link); non-blank
-  adds-or-edits, `ModelDesignSeoUrl` has no upsert of its own so this looks
-  the row up first, the same way `validate()` already did.
+- **Read:** for each (route, enabled language) pair, looks up any existing
+  `seo_url` row via `ModelDesignSeoUrl::getSeoUrlsByQuery($route)`,
+  filtered in PHP to `store_id === 0` and that language's `language_id`,
+  and pre-fills that row's `keyword` as the alias for the matching
+  `alias_<code>_<language_id>` field.
+- **Validate:** format (`SystemRoutes::isValidAlias()`), no two routes for
+  the *same language* in this form sharing one alias, and no collision
+  against any *other* existing `seo_url` row for this store **and this
+  language** (`getSeoUrlsByKeyword()`, filtered to
+  `store_id`+`language_id`) — see "Multi-language" below for why the
+  uniqueness check is scoped per-language rather than store-wide.
+- **Save:** blank alias deletes any existing row for that (route,
+  language) pair (falls back to the default `index.php?route=...` link
+  for that language); non-blank adds-or-edits, `ModelDesignSeoUrl` has no
+  upsert of its own so this looks the row up first, the same way
+  `validate()` already did.
 
-## Known limitation: single store, single language
+## Multi-language
+
+One alias field per (route, enabled language) pair —
+`ControllerMintcartSeoSystemPages::languages()` reads every `oc_language`
+row with `status = 1` (the same set the storefront's own language switcher
+offers), sorted `sort_order, name`. A single-language store still sees
+exactly one alias column, now labeled with that language's name instead
+of a bare "Alias" — no behavior change for the common case.
+
+This is safe *because* of MC-0009 (`docs/fixes/registry.md`):
+`ControllerStartupSeoUrl::index()`'s incoming decode already prefers the
+`seo_url` row saved for the request's actual resolved language before
+falling back to a language-agnostic match, so two languages sharing the
+same alias text for two *different* routes no longer resolves
+ambiguously — each language's own row wins for that language's requests.
+`rewrite()` already filtered its system-route lookup by
+`config_language_id` too, so outgoing link generation already produced
+the correct per-language alias automatically the moment one existed in
+`seo_url` — **this increment needed no core file change**, only the
+admin form gaining a field per language instead of one field per route.
+
+Uniqueness is therefore checked per `(store_id, language_id)`, not
+store-wide: the same alias text can be reused across two different
+languages for two different routes (each language decodes/generates from
+its own row), but not twice within the same language.
+
+## Known limitation: single store only
 
 Scoped to `store_id = 0` (the main/default store — the same value
 `ControllerStartupSeoUrl` matches incoming requests against on a
-single-store install) and `config_language_id` (the storefront's default
-language). A store running OpenCart's multi-store or multi-language
-features would need a per-store/per-language variant of this screen — not
-attempted this run (`CLAUDE.md` §85 — no real multi-store MintCart consumer
-yet to justify the extra UI). The underlying `seo_url` storage already
-supports per-store/per-language rows (that's what the stock generic screen
-exposes); only this friendlier facade is scoped down.
+single-store install). A store running OpenCart's multi-store feature
+would need a per-store variant of this screen — not attempted this run
+(`CLAUDE.md` §85 — no real multi-store MintCart consumer yet to justify
+the extra UI). The underlying `seo_url` storage already supports
+per-store rows (that's what the stock generic screen exposes); only this
+friendlier facade is scoped down to the main store.
 
 ## Why the legacy admin theme, not `mc-*`/Bootstrap 5
 
@@ -131,4 +155,6 @@ core changes.
       just incoming decode
 - [ ] Validated against a real page/request (`docs/MANUAL_VERIFICATION.md`
       — this environment has no MySQL to render a real page)
-- [ ] Per-store/per-language variant (deferred — see "Known limitation")
+- [x] Per-language variant — one alias field per (route, enabled
+      language) pair, see "Multi-language" above
+- [ ] Per-store variant (deferred — see "Known limitation")

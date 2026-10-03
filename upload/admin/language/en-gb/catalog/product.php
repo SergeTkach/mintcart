@@ -41,6 +41,14 @@ $_['text_related_picker_prev']    = 'Previous';
 $_['text_related_picker_next']    = 'Next';
 $_['text_related_picker_confirm'] = 'Add selected';
 
+// Text - Option picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
+$_['text_option_picker_browse']  = 'Browse options';
+$_['text_option_picker_search']  = 'Search options';
+$_['text_option_picker_empty']   = 'No options found.';
+$_['text_option_picker_prev']    = 'Previous';
+$_['text_option_picker_next']    = 'Next';
+$_['text_option_picker_confirm'] = 'Add option';
+
 // Text - Attribute picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
 $_['text_attribute_picker_browse']  = 'Browse';
 $_['text_attribute_picker_search']  = 'Search attributes';

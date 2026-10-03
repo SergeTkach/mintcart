@@ -114,29 +114,74 @@ element), populated per click from the clicked button's `data-product-id`/
 (`docs/developer/components/field.md`); success closes the modal and shows
 a toast with the server's own translated confirmation message.
 
+## `Sale → Quick Order Requests` — admin list
+
+`route=mintcart/quickorder` (list, GET) / `route=mintcart/quickorder.status`
+(POST, `quick_order_id` + `status`). New admin controller/model/view/
+language file:
+
+- `upload/admin/controller/mintcart/quickorder.php` (`ControllerMintcartQuickorder`
+  — a distinct class from the catalog-side `ControllerMintcartQuickorder`
+  above; OpenCart admin and catalog are separate MVC trees, so the two
+  never load in the same process)
+- `upload/admin/model/mintcart/quickorder.php` (`ModelMintcartQuickorder`
+  — likewise a separate class from the catalog-side write model,
+  `upload/catalog/model/mintcart/quickorder.php`)
+- `upload/admin/view/template/mintcart/quickorder_list.twig`
+- `upload/admin/language/en-gb/mintcart/quickorder.php`
+- `upload/system/library/mintcart/commerce/quickorderstatus.php`
+  (`MintCart\Commerce\QuickOrderStatus` — the `new`/`contacted`/
+  `converted`/`rejected` whitelist both the controller and the `<select>`
+  options validate/render against)
+
+Read/status-only: the list shows every submitted field (product, quantity,
+name, phone, email, date) but the only thing staff can change is `status`,
+via one `<select>` + Save button per row — a lightweight lead-tracking
+field, not an order status. Same "form-POST-then-redirect, preserve the
+current filter/sort/page" shape `ControllerCatalogProduct::bulkUpdate()`
+(Phase 16) and `ControllerCatalogReview` already established, not a new
+AJAX pattern. No new admin asset bundle enqueued — a plain `<select>` needs
+none of `assets/dist/{css,js}` (`docs/developer/admin/asset-enqueue.md`'s
+"only call this on the specific action(s) that actually need the bundle").
+
+Menu entry: `Sale → Quick Order Requests`, right after `Sale → Orders`,
+gated by `mintcart/quickorder` access/modify permissions — see
+`docs/upstream-diff.md`'s `column_left.php` entry.
+
+Lead → real-order conversion is still explicitly out of scope (see "Why a
+request is a lead, not an order" above) — this screen only lets staff
+track which leads they've followed up on.
+
 ## Not done yet
 
-- **No admin "Quick Order requests" list** — leads are recorded in
-  `mc_quick_order` but nothing in Mint Admin surfaces them yet for staff to
-  action. Natural next consumer of this table.
 - **No lead → order conversion** — turning a confirmed lead into a real
   `oc_order` (once an address/payment method is collected from the
   customer, by phone or a follow-up form) is deliberately out of scope
   here; see "Why a request is a lead, not an order" above.
+- **No bulk status change / delete** — one row at a time only, matching
+  this screen's deliberately small first-increment scope; a natural
+  follow-up once real usage shows it's needed.
 - **Not yet verified live** — this environment has no MySQL server (same
   pre-existing gap noted throughout this file); a human should confirm
   `mintcart/quickorder/submit` against a real install and click through the
-  modal in a real browser. See `docs/MANUAL_VERIFICATION.md`.
+  modal in a real browser, and that a submitted request actually appears
+  on `Sale → Quick Order Requests` with a working status change. See
+  `docs/MANUAL_VERIFICATION.md`.
 
 ## Definition of Done checklist
 
 - [x] Documented contract (this file)
 - [x] No OpenCart dependency — unit-testable in isolation
-- [x] No OCMOD, no modification to any existing OpenCart file
-- [x] Smoke test covering `validate()` (10 scenarios) and the migration's
-      `CREATE TABLE` statement
+      (`QuickOrderService`/`QuickOrderStatus`)
+- [x] No OCMOD; the only existing OpenCart file this feature set modifies
+      is `column_left.php`'s one new conditional menu entry (see
+      `docs/upstream-diff.md`) — same "no smaller diff available for an
+      admin menu entry" reasoning every other MintCart admin screen in
+      this repo already documents there
+- [x] Smoke test covering `validate()` (10 scenarios), `QuickOrderStatus`
+      (17 scenarios) and the migration's `CREATE TABLE` statement
+- [x] Admin "Quick Order requests" list — done, see above
 - [ ] Live controller wiring verified against a real install — not possible
       in this environment (no MySQL); `mintcart/cart/add`'s equivalent
       round-trip was verified this way in an earlier run, this one was not
-- [ ] Admin "Quick Order requests" list — not built yet
 - [ ] Lead → order conversion — not built yet, deliberately (see above)
