@@ -58,8 +58,43 @@
               <div class="form-group">
                 <label class="col-sm-2 control-label" for="input-customer">{{ entry_customer }}</label>
                 <div class="col-sm-10">
-                  <input type="text" name="customer" value="{{ customer }}" placeholder="{{ entry_customer }}" id="input-customer" class="form-control" />
-                  <input type="hidden" name="customer_id" value="{{ customer_id }}" />
+                  <input type="text" name="customer" value="{{ customer }}" placeholder="{{ entry_customer }}" id="input-customer" class="form-control" data-mc-customer-name />
+                  <input type="hidden" name="customer_id" value="{{ customer_id }}" data-mc-customer-id />
+                  {#
+                    MintCart Phase 12 (Entity Picker) - a searchable,
+                    paginated, single-select browser as an additional way
+                    to choose a customer, alongside the jQuery autocomplete
+                    input above (kept as-is, not replaced - same rationale
+                    as product_form.twig's Manufacturer/Category pickers,
+                    see docs/developer/admin/asset-enqueue.md). Confirming
+                    a selection re-fetches the same
+                    customer/customer/autocomplete data the legacy
+                    autocomplete's own 'select' handler below already
+                    consumes (filtered by the exact picked name, matched
+                    back by customer_id) so the same firstname/lastname/
+                    email/telephone/address fields that handler already
+                    populates get populated here too - see the JS block
+                    below for the documented "custom fields not replicated"
+                    limitation.
+                  #}
+                  <div class="mc-entity-picker-field">
+                    <button type="button" class="mc-button mc-button--secondary" data-mc-action="browse-customers" aria-controls="customer-picker" aria-expanded="false">
+                      {{ text_customer_picker_browse }}
+                    </button>
+                    <div class="mc-entity-picker" id="customer-picker" data-mc-customer-picker hidden>
+                      <input type="search" class="mc-field__control" data-mc-entity-picker-search aria-label="{{ text_customer_picker_search }}" placeholder="{{ text_customer_picker_search }}">
+                      <ul class="mc-entity-picker__list" role="listbox" aria-label="{{ entry_customer }}" data-mc-entity-picker-list></ul>
+                      <p class="mc-entity-picker__empty" data-mc-entity-picker-empty hidden>{{ text_customer_picker_empty }}</p>
+                      <div class="mc-entity-picker__pager">
+                        <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-prev">{{ text_customer_picker_prev }}</button>
+                        <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
+                        <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_customer_picker_next }}</button>
+                      </div>
+                      <div class="mc-entity-picker__footer">
+                        <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_customer_picker_confirm }}</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="form-group">
@@ -1059,6 +1094,130 @@ $('input[name=\'customer\']').autocomplete({
 		$('select[name=\'shipping_address\']').html(html);
 	}
 });
+
+// MintCart Phase 12 (Entity Picker) - Customer field's McEntityPicker, a
+// searchable/paginated alternative to the jQuery autocomplete above (plain
+// vanilla JS, not jQuery, per CLAUDE.md §7). Confirming a selection looks
+// the customer up again via the same customer/customer/autocomplete
+// endpoint the autocomplete's own 'select' handler above already calls,
+// filtered by the exact picked name and matched back by customer_id, so
+// the same customer_group_id/firstname/lastname/email/telephone/address
+// fields that handler already fills get filled here too.
+// Known, deliberate limitation (documented, not silently skipped): unlike
+// the autocomplete's 'select' handler, this does not repopulate the
+// customer's saved custom_field values - those are shown/hidden correctly
+// for the newly picked customer's group (the native 'change' event below
+// is still caught by the jQuery customer_group_id handler further down),
+// but their saved per-customer values are not re-filled. See
+// docs/developer/components/entity-picker.md's "Customer backend" section.
+(function () {
+	var browseButton = document.querySelector('[data-mc-action="browse-customers"]');
+	var pickerRoot = document.querySelector('[data-mc-customer-picker]');
+	var nameInput = document.querySelector('[data-mc-customer-name]');
+	var idInput = document.querySelector('[data-mc-customer-id]');
+
+	if (!browseButton || !pickerRoot || !nameInput || !idInput || !window.MintCart || !window.MintCart.createEntityPicker) {
+		return;
+	}
+
+	function applyCustomerDetail(detail) {
+		nameInput.value = detail.name;
+		idInput.value = detail.customer_id;
+
+		var groupSelect = document.querySelector('select[name="customer_group_id"]');
+
+		if (groupSelect) {
+			groupSelect.value = detail.customer_group_id;
+			groupSelect.dispatchEvent(new Event('change', { bubbles: true }));
+		}
+
+		['firstname', 'lastname', 'email', 'telephone'].forEach(function (field) {
+			var input = document.querySelector('#tab-customer input[name="' + field + '"]');
+
+			if (input) {
+				input.value = detail[field] || '';
+			}
+		});
+
+		var addressOptions = '<option value="0">{{ text_none }}</option>';
+
+		(detail.address || []).forEach(function (address) {
+			addressOptions += '<option value="' + address.address_id + '">' + address.firstname + ' ' + address.lastname + ', ' + address.address_1 + ', ' + address.city + ', ' + address.country + '</option>';
+		});
+
+		['payment_address', 'shipping_address'].forEach(function (name) {
+			var select = document.querySelector('select[name="' + name + '"]');
+
+			if (select) {
+				select.innerHTML = addressOptions;
+			}
+		});
+	}
+
+	function fetchCustomerDetail(item) {
+		var params = new URLSearchParams({ filter_name: item.name });
+
+		return fetch('index.php?route=customer/customer/autocomplete&user_token={{ user_token }}&' + params)
+			.then(function (response) {
+				return response.json();
+			})
+			.then(function (rows) {
+				return rows.filter(function (row) {
+					return String(row.customer_id) === String(item.id);
+				})[0] || null;
+			});
+	}
+
+	var picker = window.MintCart.createEntityPicker(pickerRoot, {
+		fetchItems: function (options) {
+			var params = new URLSearchParams({
+				filter_name: options.query,
+				page: options.page,
+				limit: options.pageSize
+			});
+
+			return fetch('index.php?route=mintcart/entity/customer&user_token={{ user_token }}&' + params, {
+				signal: options.signal
+			}).then(function (response) {
+				return response.json();
+			});
+		},
+		multiple: false,
+		onConfirm: function (selected) {
+			var item = selected[0];
+
+			if (item) {
+				fetchCustomerDetail(item).then(function (detail) {
+					if (detail) {
+						applyCustomerDetail(detail);
+					} else {
+						// Graceful degradation (e.g. a duplicate name pushed
+						// the real match past this lookup's own result cap):
+						// at least record the picked identity.
+						nameInput.value = item.name;
+						idInput.value = item.id;
+					}
+				});
+			}
+
+			picker.clear();
+			pickerRoot.hidden = true;
+			browseButton.setAttribute('aria-expanded', 'false');
+			browseButton.focus();
+		}
+	});
+
+	browseButton.addEventListener('click', function () {
+		var opening = pickerRoot.hidden;
+
+		pickerRoot.hidden = !pickerRoot.hidden;
+		browseButton.setAttribute('aria-expanded', String(opening));
+
+		if (opening) {
+			picker.refresh();
+		}
+	});
+})();
 
 // Custom Fields
 $('select[name=\'customer_group_id\']').on('change', function() {
