@@ -126,6 +126,12 @@ class ControllerProductSpecial extends Controller {
 				$image = $this->model_tool_image->resize('placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'));
 			}
 
+			// 2x variant for a high-DPI srcset - see category.php's identical
+			// comment (docs/developer/commerce/product-view-provider.md
+			// "Image dimensions").
+			$image_2x = $this->model_tool_image->resize($result['image'] ? $result['image'] : 'placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width') * 2, $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height') * 2);
+			$image_srcset = $image . ' 1x, ' . $image_2x . ' 2x';
+
 			if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
 				$price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
 			} else {
@@ -174,6 +180,7 @@ class ControllerProductSpecial extends Controller {
 						'name'                        => $result['name'],
 						'url'                         => $href,
 						'image'                       => $image,
+						'image_srcset'                => $image_srcset,
 						'image_width'                 => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'),
 						'image_height'                => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'),
 						'price'                       => $price,
@@ -200,7 +207,8 @@ class ControllerProductSpecial extends Controller {
 						'text_add_to_cart' => $this->language->get('button_cart'),
 						'text_quick_order' => $this->language->get('text_quick_order'),
 						'text_added_to_cart' => $this->language->get('text_added_to_cart'),
-						'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error')
+						'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error'),
+						'text_wishlist_error' => $this->language->get('text_wishlist_error')
 					),
 					function (\Throwable $e, array $failed_product) {
 						(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render product-card for product_id ' . $failed_product['id'] . ': ' . $e->getMessage());
@@ -400,7 +408,15 @@ class ControllerProductSpecial extends Controller {
 		$output = $this->load->view('product/special', $data);
 
 		// Functional Scope §19: "Production UI не повинен показувати
-		// sensitive debug data" - see category.php's identical comment.
+		// sensitive debug data" - see category.php's identical comment,
+		// including the `&mintcart_diagnostics=json` alternative surface.
+		if ($mint_diagnostics->isEnabled() && isset($this->request->get['mintcart_diagnostics']) && $this->request->get['mintcart_diagnostics'] === 'json') {
+			$this->response->addHeader('Content-Type: application/json');
+			$this->response->setOutput(json_encode($mint_diagnostics->summary()));
+
+			return;
+		}
+
 		if ($mint_diagnostics->isEnabled()) {
 			$output .= "\n<!-- mintcart-diagnostics " . json_encode($mint_diagnostics->summary()) . " -->";
 		}
