@@ -3,25 +3,25 @@
  * Homepage Builder admin editor (MINTCART_FUNCTIONAL_SCOPE.md §10,
  * MINTCART_TECHNICAL_PLAN.md §17, MINTCART_IMPLEMENTATION_GUIDE.md §33).
  *
- * Deliberately built on the existing legacy OpenCart admin theme
- * (Bootstrap 3 markup — `.panel`/`.btn`/`form-horizontal`, the same shape
- * `design/banner.php` and `extension/module/latest.php` already use), not
- * MintCart's own `mc-*`/Bootstrap 5 admin primitives (`McSortable`
- * included, despite it existing specifically for this screen per its own
- * doc comment). Reason: the shared admin `header`/`column_left`/`footer`
- * chrome wraps every admin screen, this one included, and has never had
- * MintCart's asset bundle (`assets/dist/css/index.min.css` /
- * `assets/dist/js/admin.min.js`) enqueued into it anywhere in this repo.
- * Enqueuing that bundle's Bootstrap 5 CSS here would load it globally
- * across every other (Bootstrap-3-based) admin screen too, which
- * `CLAUDE.md` §10 explicitly forbids. Whether to migrate the whole admin
- * shell to Bootstrap 5, scope MintCart's own screens some other isolated
- * way, or keep new MintCart admin screens on the legacy theme until a
- * dedicated Mint Admin Shell phase is a real architectural decision this
- * run does not guess at (`CLAUDE.md` §20) — still flagged for the project
- * owner. Reordering therefore uses a plain per-row `sort_order` number
- * input (the same pattern `banner_image` rows already use in
- * `design/banner_form.twig`), not McSortable drag-and-drop.
+ * Built on the existing legacy OpenCart admin theme (Bootstrap 3 markup —
+ * `.panel`/`.btn`/`form-horizontal`, the same shape `design/banner.php` and
+ * `extension/module/latest.php` already use) for its overall page chrome —
+ * the shared admin `header`/`column_left`/`footer` wraps every admin
+ * screen, this one included, and still only ever loads Bootstrap 3/jQuery.
+ *
+ * The list screen's reordering now uses `McSortable`
+ * (`assets/src/js/components/sortable.js`, see
+ * `docs/developer/components/sortable.md`), and the add/edit form's
+ * `image`-type settings fields (Hero/Text+Image) mount `mc-media-picker`
+ * (`docs/developer/components/media-picker.md`, Functional Scope §25):
+ * `enqueueMintAssets()` below, called from both `getList()` and
+ * `getForm()`, queues
+ * `assets/dist/css/components.min.css` (the Bootstrap-5-free trim of
+ * `index.css` — safe to layer on top of the legacy theme's Bootstrap 3,
+ * `docs/developer/admin/asset-enqueue.md`'s "The fix: two bundles, pick the
+ * right one") and `assets/dist/js/admin.min.js`, the same pattern
+ * `ControllerCatalogProduct::getForm()` already established as this
+ * repo's first consumer.
  *
  * `TYPES` now lists all fifteen shipped block types (Products through
  * Gallery, MINTCART_IMPLEMENTATION_GUIDE.md §51's full first-wave catalog)
@@ -37,15 +37,13 @@
  * Five types (Banner Grid, Benefits, Testimonials, Brands, Gallery) have a
  * repeatable `items` list — each item's own structural fields (image path,
  * url, ...) and localized fields (alt, caption, ...). Building a real
- * dynamic add/remove-row JS UI for that needs the same admin asset-enqueue
- * fix the class docblock above flags as still-undecided (no JS bundle is
- * loaded on this screen at all yet), so `items` is deliberately a single
- * raw-JSON textarea per list for now — a real, working escape hatch (an
- * admin can configure any of these blocks today) rather than a half-built
- * repeater. Each such field's `help_key` shows the exact JSON shape.
- * Replacing it with a proper repeater is flagged in
- * `docs/IMPLEMENTATION_STATUS.md` as follow-up work once the asset-enqueue
- * question is resolved.
+ * dynamic add/remove-row JS UI for that is a separate increment from this
+ * one (now that the asset bundle is enqueued here, it no longer needs to
+ * resolve an asset-enqueue question of its own, just build the repeater
+ * UI itself) — `items` stays a single raw-JSON textarea per list for now, a
+ * real, working escape hatch (an admin can configure any of these blocks
+ * today) rather than a half-built repeater. Each such field's `help_key`
+ * shows the exact JSON shape.
  */
 class ControllerDesignHomepage extends Controller {
 	private $error = array();
@@ -101,7 +99,7 @@ class ControllerDesignHomepage extends Controller {
 			),
 			'hero' => array(
 				'settings' => array(
-					array('name' => 'image', 'type' => 'text', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
+					array('name' => 'image', 'type' => 'image', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
 					array('name' => 'image_width', 'type' => 'number', 'default' => 1920, 'min' => 1, 'label_key' => 'entry_image_width'),
 					array('name' => 'image_height', 'type' => 'number', 'default' => 600, 'min' => 1, 'label_key' => 'entry_image_height'),
 					array('name' => 'cta_url', 'type' => 'text', 'default' => '', 'label_key' => 'entry_cta_url')
@@ -165,7 +163,7 @@ class ControllerDesignHomepage extends Controller {
 			),
 			'text-image' => array(
 				'settings' => array(
-					array('name' => 'image', 'type' => 'text', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
+					array('name' => 'image', 'type' => 'image', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
 					array('name' => 'image_width', 'type' => 'number', 'default' => 800, 'min' => 1, 'label_key' => 'entry_image_width'),
 					array('name' => 'image_height', 'type' => 'number', 'default' => 600, 'min' => 1, 'label_key' => 'entry_image_height'),
 					array('name' => 'image_position', 'type' => 'select', 'default' => 'right', 'label_key' => 'entry_image_position', 'options' => array('left' => 'Left', 'right' => 'Right'))
@@ -305,10 +303,13 @@ class ControllerDesignHomepage extends Controller {
 	}
 
 	/**
-	 * Persists the list screen's per-row `sort_order` number inputs
-	 * (`order[<block_id>]`). Plain form POST + redirect, no AJAX — see this
-	 * file's header comment for why (McSortable needs an asset bundle
-	 * that's never been enqueued into the admin theme).
+	 * Persists the list screen's per-row `order[<block_id>]` values. Plain
+	 * form POST + redirect, still no AJAX — `homepage_list.twig`'s
+	 * `McSortable` list keeps one hidden `order[<block_id>]` input per row
+	 * (recomputed client-side on every `mc:sortable:reorder` event) inside
+	 * the same `<form>`/"Save Order" button this always had, so this
+	 * method's own contract (accept an `order` array, persist it, guarded
+	 * by `page_id`) did not need to change to support drag-and-drop.
 	 */
 	public function saveOrder() {
 		$this->load->language('design/homepage');
@@ -335,7 +336,26 @@ class ControllerDesignHomepage extends Controller {
 		return $this->model_design_homepage->addPage(self::PAGE_CODE, $this->language->get('text_home_page_name'));
 	}
 
+	/**
+	 * Queues MintCart's own admin bundle (`docs/developer/admin/asset-enqueue.md`)
+	 * so the block list's drag-and-drop reordering (`McSortable`,
+	 * `data-mc-sortable` markup in `homepage_list.twig`) actually has CSS/JS
+	 * behind it, and the add/edit form's `image`-type settings fields
+	 * (Hero/Text+Image) can mount `mc-media-picker`. `components.min.css`
+	 * (not `index.min.css`) deliberately excludes Bootstrap 5's
+	 * reset/grid/utility layer, so it is safe to load
+	 * alongside the legacy admin theme's Bootstrap 3 — see that doc's "The
+	 * fix: two bundles, pick the right one" for why. Called from both
+	 * `getList()` and `getForm()`.
+	 */
+	protected function enqueueMintAssets() {
+		$this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
+		$this->document->addScript(HTTP_CATALOG . 'assets/dist/js/admin.min.js');
+	}
+
 	protected function getList() {
+		$this->enqueueMintAssets();
+
 		$page_id = $this->getPageId();
 
 		$data['breadcrumbs'] = array();
@@ -399,6 +419,8 @@ class ControllerDesignHomepage extends Controller {
 	}
 
 	protected function getForm() {
+		$this->enqueueMintAssets();
+
 		$data['text_form'] = !isset($this->request->get['block_id']) ? $this->language->get('text_add') : $this->language->get('text_edit');
 
 		$data['error_warning'] = isset($this->error['warning']) ? $this->error['warning'] : '';

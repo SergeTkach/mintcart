@@ -209,30 +209,43 @@ four routes (`ModelDesignMedia`/`ControllerDesignMedia`).
 - `destroy()` — remove all listeners (call if the host drawer/modal is
   removed from the DOM)
 
-## Not wired into `catalog.js`/`admin.js` yet
+## Wired into `admin.js` — first live consumer
 
-`createMediaPicker` is exported for direct import, not auto-initialized
-from either entry point — it needs a caller-supplied data source and a
-root element that doesn't exist until a real Product/Category/Blocks
-image field renders one. Per `CLAUDE.md` §85, the import is added to
-whichever screen needs it once that consumer exists, not ahead of time.
+`createMediaPicker` is bridged onto `window.MintCart.createMediaPicker`
+in `assets/src/js/admin.js` (same pattern as `createEntityPicker` —
+`CLAUDE.md` §14/§85, legacy admin Twig templates use plain inline
+`<script>` blocks, not `type="module"`, so they cannot `import` this ES
+module directly).
 
-**Update: a real data source now exists.** `ModelDesignMedia`/
-`ControllerDesignMedia` (`design/media/list`, `/folders`, `/upload`,
-`/delete`) implement exactly the `fetchItems`/`fetchFolders`/
-`uploadFiles`/`deleteItems` shape the usage example above calls —
-browsing/uploading/deleting inside OpenCart's own `image/catalog/`
-directory. See `docs/developer/design/media-library.md` for the full
-endpoint contract. What's still missing is the other half of "real
-consumer": no Product/Category/Blocks admin screen mounts
-`mc-media-picker` inside a drawer/modal yet, and it can't until the
-admin asset-enqueue question
-(`docs/developer/blocks/homepage-admin.md`'s "Why this screen uses the
-legacy admin theme") is resolved — the same blocker `McEntityPicker` is
-up against as of this writing (an open, unmerged PR proposes resolving
-it and wiring `McEntityPicker` into `product_form`'s Category field;
-re-check `gh pr list --state open` for its status before assuming
-either picker is live anywhere).
+`ModelDesignMedia`/`ControllerDesignMedia` (`design/media/list`,
+`/folders`, `/upload`, `/delete`) implement exactly the
+`fetchItems`/`fetchFolders`/`uploadFiles`/`deleteItems` shape the usage
+example above calls — browsing/uploading/deleting inside OpenCart's own
+`image/catalog/` directory. See `docs/developer/design/media-library.md`
+for the full endpoint contract.
+
+**First real consumer:** `design/homepage_form.twig`'s Hero/Text+Image
+block types' `image` settings field (Functional Scope §25) —
+`ControllerDesignHomepage::enqueueMintAssets()` queues
+`components.min.css`/`admin.min.js` on the add/edit form (same
+Bootstrap-5-free bundle `ControllerCatalogProduct::getForm()` already
+established, `docs/developer/admin/asset-enqueue.md`), and the field
+hosts a plain `hidden`-attribute-toggled `mc-media-picker` next to the
+existing text input (no `mc-drawer`/`mc-modal` — those need Bootstrap 5
+JS/CSS this bundle deliberately excludes, same shape
+`order_form.twig`'s Customer field `mc-entity-picker` already
+established). Confirming a selection writes the picked item's
+catalog-relative path into the paired text input; the text input itself
+stays editable so a merchant who already knows the path can still
+type/paste it directly. Known, documented limitation:
+`ModelDesignMedia::getFiles()` lists subdirectories inline in the same
+grid as images (`type: 'directory'`) — this consumer does not let a
+directory cell be "entered" from the grid itself (only the top-level
+folder `<select>` navigates), and confirming a directory selection
+applies no path, per `homepage_form.twig`'s own inline script comment.
+Product/Category image fields and a proper Banner Grid/Gallery/Brands/
+Testimonials `items` repeater (Technical Plan §15C/§16, still a single
+raw-JSON textarea today) remain unwired.
 
 ## Definition of Done checklist (`MINTCART_IMPLEMENTATION_GUIDE.md` §79)
 
@@ -253,9 +266,10 @@ either picker is live anywhere).
       widths; the toolbar wraps at narrow widths
 - [x] No Bootstrap 3 dependency
 - [x] No OCMOD required
-- [ ] Theme override checked — deferred; this is an admin primitive with
-      no admin screen/theme override mechanism yet (Phase 6 Admin UX /
-      Phase 12 not started)
-- [ ] Live data source — deferred; today's `fetchItems`/`fetchFolders`/
-      `uploadFiles`/`deleteItems` contract is exercised only by the usage
-      example above, not a real endpoint
+- [x] Theme override checked — N/A: this is an admin-only primitive, not
+      a storefront component, so there is no theme override surface to
+      check (same as `McEntityPicker`/`McSortable`/other Phase 11
+      primitives)
+- [x] Live data source — `ModelDesignMedia`/`ControllerDesignMedia` +
+      `design/homepage_form.twig`'s Hero/Text+Image `image` field (see
+      above)

@@ -47,6 +47,8 @@ import { initSortableLists } from './components/sortable.js';
 import { initTabsTriggers } from './components/tabs.js';
 import { initProgressBars } from './components/progress.js';
 import { createEntityPicker } from './components/entity-picker.js';
+import { createMediaPicker } from './components/media-picker.js';
+import { initAdminSearch } from './components/admin-search.js';
 
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
@@ -75,10 +77,14 @@ window.MintCart = window.MintCart || {};
 window.MintCart.createEntityPicker = createEntityPicker;
 //
 // mc-media-picker (McMediaPicker) shipped the same way in
-// `./components/media-picker.js` as `createMediaPicker(root, options)`: it
-// needs a caller-supplied `fetchItems`/`fetchFolders`/`uploadFiles`/
-// `deleteItems` data source and a real Media UX consumer (Functional Scope
-// §25 - Product/Category/Blocks image fields), neither of which exist yet.
+// `./components/media-picker.js` as `createMediaPicker(root, options)`:
+// bridged here for the identical reason - plain inline `<script>` blocks on
+// legacy admin Twig templates cannot `import` an ES module directly. First
+// live consumer: `design/homepage_form.twig`'s Hero/Text+Image `image`
+// settings fields (Functional Scope §25), wired against the
+// `design/media/list`/`/folders`/`/upload`/`/delete` backend
+// (`ControllerDesignMedia`/`ModelDesignMedia`).
+window.MintCart.createMediaPicker = createMediaPicker;
 //
 // mc-confirm (McConfirm) shipped in `./components/confirm.js` as an
 // exported `mcConfirm()` function, not imported here: it has no boot-time
@@ -96,6 +102,7 @@ function boot() {
     initSortableLists();
     initTabsTriggers();
     initProgressBars();
+    initAdminSearch();
 }
 
 if (document.readyState === 'loading') {

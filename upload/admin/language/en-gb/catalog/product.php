@@ -32,6 +32,9 @@ $_['text_manufacturer_picker_empty']   = 'No manufacturers found.';
 $_['text_manufacturer_picker_prev']    = 'Previous';
 $_['text_manufacturer_picker_next']    = 'Next';
 $_['text_manufacturer_picker_confirm'] = 'Select';
+$_['text_manufacturer_picker_create_placeholder'] = 'New manufacturer name';
+$_['text_manufacturer_picker_create']             = 'Add new';
+$_['error_manufacturer_picker_create']            = 'Enter a name (1-64 characters) and try again.';
 
 // Text - Related Products picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
 $_['text_related_picker_browse']  = 'Browse products';
@@ -40,6 +43,14 @@ $_['text_related_picker_empty']   = 'No products found.';
 $_['text_related_picker_prev']    = 'Previous';
 $_['text_related_picker_next']    = 'Next';
 $_['text_related_picker_confirm'] = 'Add selected';
+
+// Text - Option picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
+$_['text_option_picker_browse']  = 'Browse options';
+$_['text_option_picker_search']  = 'Search options';
+$_['text_option_picker_empty']   = 'No options found.';
+$_['text_option_picker_prev']    = 'Previous';
+$_['text_option_picker_next']    = 'Next';
+$_['text_option_picker_confirm'] = 'Add option';
 
 // Text - Attribute picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
 $_['text_attribute_picker_browse']  = 'Browse';
@@ -57,6 +68,7 @@ $_['text_bulk_field_price']    = 'Price';
 $_['text_bulk_field_manufacturer'] = 'Manufacturer';
 $_['text_bulk_field_stock_status'] = 'Stock Status';
 $_['text_bulk_field_special'] = 'Special Price';
+$_['text_bulk_field_category'] = 'Category';
 
 // Column
 $_['column_name']            = 'Product Name';

@@ -107,6 +107,21 @@
     font-size: var(--mc-font-size-sm);
 }
 
+.mc-entity-picker__create {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-2);
+}
+
+.mc-entity-picker__create[hidden] {
+    display: none;
+}
+
+.mc-entity-picker__create .mc-field__control {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .mc-entity-picker__pager {
     display: flex;
     align-items: center;

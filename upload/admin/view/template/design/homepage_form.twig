@@ -103,6 +103,52 @@
                 <textarea name="settings[{{ field.name }}]" placeholder="{{ field.label }}" id="input-{{ field.name }}" class="form-control" rows="6">{{ field.value }}</textarea>
                 {% elseif field.type == 'number' %}
                 <input type="number" name="settings[{{ field.name }}]" value="{{ field.value }}" placeholder="{{ field.label }}" id="input-{{ field.name }}" class="form-control"{% if field.min is not null %} min="{{ field.min }}"{% endif %} />
+                {% elseif field.type == 'image' %}
+                {#
+                  MintCart Phase 11/25 (Media UX, MINTCART_FUNCTIONAL_SCOPE.md
+                  §25) - mc-media-picker as an additional way to fill this
+                  path field, alongside the plain text input (kept exactly
+                  as before: a merchant who already knows the path can still
+                  type/paste it directly, same "picker is additive, not a
+                  replacement" shape as product_form.twig's Manufacturer/
+                  Category pickers and order_form.twig's Customer picker -
+                  see docs/developer/admin/asset-enqueue.md). Confirming a
+                  selection writes the chosen image's catalog-relative path
+                  (ModelDesignMedia::getFiles()'s `id`, the same shape
+                  `model_tool_image->resize()` already expects everywhere
+                  else this file's own image settings are rendered) into the
+                  text input below - no change to how the value is posted/
+                  normalized (ControllerDesignHomepage::normalizeFieldValue()
+                  still just sees a plain string).
+                #}
+                <div class="input-group">
+                  <input type="text" name="settings[{{ field.name }}]" value="{{ field.value }}" placeholder="{{ field.label }}" id="input-{{ field.name }}" class="form-control" data-mc-image-field-path />
+                  <span class="input-group-btn">
+                    <button type="button" class="btn btn-default" data-mc-action="browse-image" aria-controls="image-picker-{{ field.name }}" aria-expanded="false"><i class="fa fa-picture-o"></i> {{ text_media_picker_browse }}</button>
+                  </span>
+                </div>
+                <div class="mc-media-picker" id="image-picker-{{ field.name }}" data-mc-image-picker hidden>
+                  <div class="mc-media-picker__toolbar">
+                    <input type="search" class="mc-field__control" data-mc-media-picker-search placeholder="{{ text_media_picker_search }}" aria-label="{{ text_media_picker_search }}">
+                    <select class="mc-field__control" data-mc-media-picker-folder aria-label="{{ text_media_picker_search }}"></select>
+                    <label class="mc-button mc-button--secondary">
+                      {{ text_media_picker_upload }}
+                      <input type="file" multiple hidden accept="image/*" data-mc-media-picker-upload>
+                    </label>
+                  </div>
+                  <div class="mc-media-picker__grid" role="listbox" aria-label="{{ field.label }}" data-mc-media-picker-grid></div>
+                  <p class="mc-media-picker__empty" data-mc-media-picker-empty hidden>{{ text_media_picker_empty }}</p>
+                  <div class="mc-media-picker__pager">
+                    <button type="button" class="mc-button mc-button--secondary" data-mc-action="media-picker-prev">{{ text_media_picker_prev }}</button>
+                    <span class="mc-media-picker__page-info" data-mc-media-picker-page-info></span>
+                    <button type="button" class="mc-button mc-button--secondary" data-mc-action="media-picker-next">{{ text_media_picker_next }}</button>
+                  </div>
+                  <div class="mc-media-picker__footer">
+                    <span data-mc-media-picker-selected-count></span>
+                    <button type="button" class="mc-button mc-button--secondary" data-mc-action="media-picker-delete"></button>
+                    <button type="button" class="mc-button mc-button--primary" data-mc-action="media-picker-confirm">{{ text_media_picker_confirm }}</button>
+                  </div>
+                </div>
                 {% else %}
                 <input type="text" name="settings[{{ field.name }}]" value="{{ field.value }}" placeholder="{{ field.label }}" id="input-{{ field.name }}" class="form-control" />
                 {% endif %}
@@ -119,4 +165,123 @@
     </div>
   </div>
 </div>
+<script type="text/javascript"><!--
+// MintCart Phase 11/25 (Media UX, MINTCART_FUNCTIONAL_SCOPE.md §25) -
+// mc-media-picker for this form's `image`-type settings fields (currently
+// Hero/Text+Image's `image` field, see docs/developer/components/media-picker.md).
+// Generic over however many `[data-mc-image-picker]` roots the
+// settings_fields loop above renders (today: at most one visible at a
+// time, since only one block type's fields render per page load) rather
+// than hardcoding one field name - same "no mc-drawer/mc-modal needed,
+// plain hidden-attribute toggle" shape as sale/order_form.twig's Customer
+// field McEntityPicker (neither mc-drawer nor mc-modal work on this
+// Bootstrap-3 legacy screen - components.min.css deliberately excludes
+// the Bootstrap 5 JS/CSS they depend on, see
+// docs/developer/admin/asset-enqueue.md).
+//
+// Known, documented limitation: ModelDesignMedia::getFiles() lists
+// subdirectories inline in the same grid as images (type: 'directory'),
+// since the backend was built for a general-purpose browse/upload/delete
+// API, not specifically for this single-image-field consumer. This
+// picker does not let a directory cell be "entered" (clicking one only
+// toggles its (inert) selection) - folder navigation here is limited to
+// the top-level folder <select> fetchFolders() already populates. Picking
+// a directory cell and confirming does nothing (no path is applied),
+// rather than silently writing a folder path into an image field.
+(function () {
+	if (!window.MintCart || !window.MintCart.createMediaPicker) {
+		return;
+	}
+
+	function fetchJson(url, options) {
+		return fetch(url, options).then(function (response) {
+			return response.json();
+		});
+	}
+
+	document.querySelectorAll('[data-mc-image-picker]').forEach(function (pickerRoot) {
+		var wrapper = pickerRoot.previousElementSibling;
+		var pathInput = wrapper ? wrapper.querySelector('[data-mc-image-field-path]') : null;
+		var browseButton = wrapper ? wrapper.querySelector('[data-mc-action="browse-image"]') : null;
+		var folderSelect = pickerRoot.querySelector('[data-mc-media-picker-folder]');
+
+		if (!pathInput || !browseButton) {
+			return;
+		}
+
+		var picker = window.MintCart.createMediaPicker(pickerRoot, {
+			multiple: false,
+			fetchItems: function (options) {
+				var params = new URLSearchParams({
+					folder: options.folder || '',
+					query: options.query || '',
+					page: options.page,
+					pageSize: options.pageSize
+				});
+
+				return fetchJson('index.php?route=design/media/list&user_token={{ user_token }}&' + params, { signal: options.signal });
+			},
+			fetchFolders: function () {
+				return fetchJson('index.php?route=design/media/folders&user_token={{ user_token }}').then(function (json) {
+					return json.folders || [];
+				});
+			},
+			uploadFiles: function (files) {
+				var formData = new FormData();
+
+				files.forEach(function (file) {
+					formData.append('file[]', file);
+				});
+
+				var folder = folderSelect ? folderSelect.value : '';
+
+				return fetch('index.php?route=design/media/upload&user_token={{ user_token }}&folder=' + encodeURIComponent(folder), {
+					method: 'POST',
+					body: formData
+				}).then(function (response) {
+					return response.json();
+				});
+			},
+			deleteItems: function (items) {
+				var params = new URLSearchParams();
+
+				items.forEach(function (item) {
+					params.append('paths[]', item.id);
+				});
+
+				return fetch('index.php?route=design/media/delete&user_token={{ user_token }}', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+					body: params.toString()
+				}).then(function (response) {
+					return response.json();
+				});
+			},
+			onConfirm: function (selected) {
+				var item = selected[0];
+
+				if (item && item.type !== 'directory') {
+					pathInput.value = item.id;
+				}
+
+				picker.clear();
+				pickerRoot.hidden = true;
+				browseButton.setAttribute('aria-expanded', 'false');
+				browseButton.focus();
+			}
+		});
+
+		browseButton.addEventListener('click', function () {
+			var opening = pickerRoot.hidden;
+
+			pickerRoot.hidden = !pickerRoot.hidden;
+			browseButton.setAttribute('aria-expanded', String(opening));
+
+			if (opening) {
+				picker.refresh();
+			}
+		});
+	});
+})();
+//--></script>
 {{ footer }}

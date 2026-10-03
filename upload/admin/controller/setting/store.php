@@ -2,6 +2,21 @@
 class ControllerSettingStore extends Controller {
 	private $error = array();
 
+	/**
+	 * MintCart Phase 12 (Entity Picker, MINTCART_FUNCTIONAL_SCOPE.md §8,
+	 * MINTCART_TECHNICAL_PLAN.md §20) - enqueues MintCart's own compiled
+	 * bundle for this screen's new Account/Checkout Terms Information
+	 * pickers below. Same "components" bundle (not "index")
+	 * ControllerCatalogProduct's own enqueueMintAssets() already uses for
+	 * the same reason - index.min.css bundles the full Bootstrap 5 reset,
+	 * which conflicts with this page's existing Bootstrap 3 admin theme
+	 * (see docs/developer/admin/asset-enqueue.md).
+	 */
+	protected function enqueueMintAssets() {
+		$this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
+		$this->document->addScript(HTTP_CATALOG . 'assets/dist/js/admin.min.js');
+	}
+
 	public function index() {
 		$this->load->language('setting/store');
 
@@ -154,6 +169,8 @@ class ControllerSettingStore extends Controller {
 	}
 
 	protected function getForm() {
+		$this->enqueueMintAssets();
+
 		$data['text_form'] = !isset($this->request->get['store_id']) ? $this->language->get('text_add') : $this->language->get('text_edit');
 
 		if (isset($this->error['warning'])) {

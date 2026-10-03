@@ -37,6 +37,9 @@ import { initHeaderCartRefresh } from './components/header-cart.js';
 import { initProductGalleries } from './components/product-gallery.js';
 import { initQuickOrderActions } from './components/quick-order.js';
 import { initSearchBoxes } from './components/search-box.js';
+import { initCookieConsent } from './components/cookie-consent.js';
+import { initViewedProducts } from './components/viewed-products.js';
+import { initReviews } from './components/reviews.js';
 
 // MintCart-owned catalog behavior modules are added here as components ship
 // (Phase 4 onward).
@@ -56,6 +59,9 @@ function boot() {
     initProductGalleries();
     initQuickOrderActions();
     initSearchBoxes();
+    initCookieConsent();
+    initViewedProducts();
+    initReviews();
 }
 
 if (document.readyState === 'loading') {
