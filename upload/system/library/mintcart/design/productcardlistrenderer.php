@@ -22,12 +22,23 @@ namespace MintCart\Design;
  * `product`/`display`/`context`/language-string arrays a controller passes
  * in, so it stays unit-testable the same way `ComponentRenderer` and
  * `ProductViewProvider` are.
+ *
+ * `$slotRegistry` (optional 3rd constructor argument, `null` by default)
+ * is `MintCart\Design\SlotRegistry` (`MINTCART_TECHNICAL_PLAN.md` §15,
+ * `MINTCART_IMPLEMENTATION_GUIDE.md` §35 "Extension slots") — the first
+ * real wiring of `product-card.twig`'s documented `product.after_actions`
+ * slot. `null` (every existing call site, byte-for-byte unaffected) keeps
+ * `render()` doing exactly what it always did — no `slots` key is added to
+ * the template data, matching `ComponentRenderer`'s own optional
+ * `$diagnostics` precedent for a zero-behavior-change-by-default addition.
  */
 final class ProductCardListRenderer
 {
     private ComponentRenderer $componentRenderer;
 
     private \MintCart\Commerce\ProductViewProvider $productViewProvider;
+
+    private ?SlotRegistry $slotRegistry;
 
     /**
      * Once a product in this list fails to render, every further product in
@@ -40,10 +51,12 @@ final class ProductCardListRenderer
 
     public function __construct(
         ComponentRenderer $componentRenderer,
-        ?\MintCart\Commerce\ProductViewProvider $productViewProvider = null
+        ?\MintCart\Commerce\ProductViewProvider $productViewProvider = null,
+        ?SlotRegistry $slotRegistry = null
     ) {
         $this->componentRenderer = $componentRenderer;
         $this->productViewProvider = $productViewProvider ?? new \MintCart\Commerce\ProductViewProvider();
+        $this->slotRegistry = $slotRegistry;
     }
 
     public function isEnabled(): bool
@@ -85,6 +98,15 @@ final class ProductCardListRenderer
 
         try {
             $productView = $this->productViewProvider->build($product, $display, $context);
+
+            if ($this->slotRegistry !== null) {
+                $productView['slots'] = [
+                    'product.after_actions' => $this->slotRegistry->render(
+                        'product.after_actions',
+                        $productView['product']
+                    ),
+                ];
+            }
 
             return $this->componentRenderer->render('product-card', $productView + $languageStrings);
         } catch (\Throwable $e) {
