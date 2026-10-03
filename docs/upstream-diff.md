@@ -724,6 +724,22 @@ call site. Full design rationale: `docs/developer/seo/schema-org.md`.
 **Tests:** `php -l` clean; Twig tag balance checked; full `tests/mintcart/`
 suite (77 files) re-run end to end — all passing, no regressions.
 
+**Update (2026-10-02, routine run — MC-0021 fix, Fixes Registry):** added
+`$data['heading_title'] = $this->language->get('heading_title');`
+immediately after the existing `$this->document->setTitle(...)` call.
+Both `special.twig`s (`default` and `mint_default`) render a top-level
+`{{ heading_title }}` for the page heading, but `index()` only ever passed
+that string to `setTitle()` (the `<title>` tag), never to `$data` — the
+same missing-`$data`-assignment bug class as MC-0001/MC-0003/MC-0017,
+found by auditing this one remaining listing controller for the same
+pattern. **Why it can't live in the MintCart layer:** it's a one-line
+`$data[...] = $this->language->get(...)` gap in stock controller logic,
+the exact shape MC-0001/MC-0003/MC-0017 already established belongs here,
+not behind an adapter. **Compatibility impact:** none — purely additive
+`$data` key, no existing key changed, no template change, same for the
+stock `default` theme and `mint_default`. **Tests:** `php -l` clean. Full
+writeup: `docs/fixes/registry.md`'s MC-0021 entry.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/special.php`
@@ -1753,6 +1769,60 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+**Update (this run): the live UI wiring flagged as "Not done yet" above is
+now done** — see `docs/developer/catalog/category-drag-drop.md`'s new "Live
+UI wiring" section for the full writeup.
+`ControllerCatalogCategory::getList()` gained a new `enqueueMintAssets()`
+(verbatim copy of `ControllerCatalogProduct::enqueueMintAssets()` — the
+`components.min.css`/`admin.min.js` pair, `docs/developer/admin/asset-
+enqueue.md`) and now passes `parent_id` per row plus a new `$data['move']`
+(the `catalog/category.move` URL) into `category_list.twig`, which mounts
+the real `mc-sortable` behavior (`data-mc-sortable`/
+`data-mc-sortable-handle`/`data-mc-sortable-item`/`data-mc-action` — its
+documented hook contract, no CSS class dependency) directly on the
+existing Bootstrap 3 table/row markup, gated to `sort == 'sort_order'`.
+An inline `<script>` POSTs the new order to `catalog/category.move`
+immediately on `mc:sortable:reorder`, keeping every row's own `parent_id`
+unchanged (reordering only — no re-parenting from this UI) and splitting
+the new visible order back into per-parent groups before saving (one
+`move()` request per group, skipping any group with only one visible
+member) — this is also what resolves the "Architectural fork identified,
+not resolved (Phase 17)" note `docs/IMPLEMENTATION_STATUS.md`'s Phase 12
+section carried: see `docs/developer/catalog/category-drag-drop.md`'s
+"Resolves the Architectural fork..." section for why this flat,
+cross-parent list needed that grouping rather than a UI redesign. Two new
+language keys were needed beyond `error_category`: `text_drag_hint`,
+`text_move_up`, `text_move_down`, `text_order_saved`, `text_order_failed`,
+`text_sort_by_order_first` (`en-gb/catalog/category.php`).
+
+**Compatibility impact (update):** still purely additive — the existing
+`index()`/`add()`/`edit()`/`delete()`/`repair()`/`autocomplete()` actions,
+`getForm()`, and every other `getList()` data key are untouched;
+`enqueueMintAssets()` only queues two extra HTTP requests
+(`components.min.css`/`admin.min.js`) on the category list action, the
+same additive mechanism `product.php`'s `getForm()` already established.
+
+**Tests (update):** `php -l` clean on `category.php`/
+`en-gb/catalog/category.php`. `category_list.twig`'s `{% if %}`/
+`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts re-checked balanced
+(12/12, 2/2) — one early draft of this change accidentally left a literal
+`{% if %}` inside a JS doc-comment, which Twig would have parsed as a real
+(unbalanced) tag; caught by this same balance check and rewritten to plain
+prose. The new inline `<script>` block was checked for JS syntax errors
+with a standalone Node harness (Twig `{{ }}` output substituted with a
+placeholder string first) — parses cleanly. Full `tests/mintcart/**/*-test.php`
+suite (82 files) re-run end to end — all passing, no regressions (this
+change adds no new PHP class, so no new test file). Verifying this
+increment surfaced a real boot-timing bug in `assets/src/js/admin.js`/
+`catalog.js` (both MintCart-owned, not OpenCart core, so tracked in
+`docs/developer/catalog/category-drag-drop.md`'s "Boot timing bug found
+while verifying this increment" section, not here) — `npm install && npm
+run build` now re-run and compiles cleanly, `npm test` still passes.
+**Not verified live** — same pre-existing no-MySQL/no-browser-session gap
+as every other admin-screen increment in this repo (see
+`docs/MANUAL_VERIFICATION.md`'s Phase 17 section for what a human should
+confirm).
 
 ---
 
@@ -3066,3 +3136,47 @@ coverage, including the rejection cases); full `tests/mintcart/` suite
 the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
 section.
+
+## `upload/system/library/db/pdo.php`
+
+**Reason:** MC-0019 (`docs/fixes/registry.md`) — `query()` had no
+reconnect handling at all: under this class's real default
+(`PDO::ATTR_ERRMODE_SILENT`, never explicitly set), a dropped connection
+(driver error 2006/2013) just made `execute()` return `false`, silently
+producing an empty result; if a `PDOException` happened to surface
+instead, it was rethrown immediately with no retry. The sibling adaptor
+(`DB\MySQLi`) already got this fix under MC-0011; this closes the same
+gap for `DB\PDO`. Extracted the constructor's connection setup into a
+`connect()` method and added a bounded (max one) reconnect-and-retry path
+for exactly those two driver error codes, read from `errorInfo()` (which
+PDO populates regardless of `ATTR_ERRMODE`) on both the silent-`false`
+and the thrown-exception path; every other error code still behaves
+exactly as before, unretried.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+MC-0011's `mysqli.php` entry — `DB\PDO` is a concrete adaptor OpenCart's
+core `DB` class instantiates by class name (`system/library/db.php`'s
+`new $class(...)`) when `DB_DRIVER=pdo`; there is no MintCart-owned seam
+between `DB` and the adaptor to intercept a query and retry it without
+either modifying this file or replacing OpenCart's whole DB bootstrap.
+
+**Compatibility impact:** every existing success/error path is unchanged
+for every driver error code *except* 2006/2013, which previously either
+silently returned an empty result or threw, and now transparently retry
+once before falling back to that exact same pre-fix behavior if the retry
+also fails. No public method signature changed. Two visibility/structural
+changes, both with no other effect since nothing in this codebase
+subclassed `DB\PDO` before: `connect()` is a new `protected` method
+(extracted from the constructor, not exposed as a new public API) so a
+test can override it with a fake connection, and the class is no longer
+`final`, to allow that same test subclass. OpenCart itself never installs
+with `DB_DRIVER=pdo` by default (`mysqli` is the stock choice), so this
+adaptor has no live exercise in this environment beyond the unit test
+below.
+
+**Tests:** `php -l` clean. New
+`tests/mintcart/fixes/mc-0019-pdo-reconnect-test.php` (7 scenarios) — see
+the MC-0019 registry entry for full detail. Full `tests/mintcart/` suite
+re-run end to end — all pass, no regressions. Not verified against a real
+MySQL server or a real `DB_DRIVER=pdo` install (neither available in this
+environment) — see the registry entry's "Not verified" note.
