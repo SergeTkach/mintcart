@@ -46,6 +46,21 @@ still advances to the Ready step (no required-field validation for this
 step), while the Ready step's own checklist correctly still shows
 "shipping" as outstanding until at least one method is enabled.
 
+## Phase 13 — Wizard First product step never rendered live
+
+No MySQL/OpenCart admin session in this environment. Confirm on a real
+install: `mintcart/wizard?step=first_product` renders the form; submitting
+with a blank name or a blank/negative/non-numeric price shows the
+corresponding field error and does not create a product; submitting with
+just a name + price creates a real, enabled product visible in
+`Catalog → Products` and on the storefront immediately (weight/length
+class match the store's `Settings → Option` defaults, stock status reads
+"In Stock"); a blank quantity defaults to 100; clicking "Skip for now"
+(`first_product_action=skip`) advances to the Ready step without creating
+any product; and the Ready step's own `first_product` checklist item
+correctly flips from "Not yet" to "Done" only after a real enabled product
+exists (not merely after the step is marked completed via Skip).
+
 ## Phase 13 — Wizard Language & currency step never rendered live
 
 No MySQL/OpenCart admin session in this environment. Confirm on a real
@@ -196,6 +211,51 @@ user token, using an existing multi-level category tree:
    prior inline logic, not a rewrite, but this should still be re-checked
    live once MySQL is available.
 
+### Live drag & drop UI (this run)
+
+`category_list.twig` now mounts the real `mc-sortable` behavior on
+**Catalog → Categories**, gated to when the list is sorted by the
+**Sort Order** column. On a real install:
+
+5. Open **Catalog → Categories**, click the **Sort Order** column header.
+   Confirm a drag-handle icon and two arrow buttons appear on each row,
+   and a hint above the table explains dragging reorders and autosaves.
+6. Drag a row to a new position (mouse or touch). Confirm the row moves
+   immediately, an AJAX request fires to `catalog/category.move`, and no
+   page reload happens. Reload the page (still sorted by Sort Order) and
+   confirm the new order persisted.
+7. Using only the keyboard, tab to a row's "Move up"/"Move down" buttons
+   and confirm they reorder the row and save the same way as a drag (this
+   is the non-mouse path required by
+   `MINTCART_IMPLEMENTATION_GUIDE.md` §68 — confirm it actually works, not
+   just that the buttons render).
+8. With the browser's network tab open, simulate a failure (e.g. block the
+   `catalog/category.move` request) and drag a row. Confirm the row
+   snaps back to its previous position and a message is announced (check
+   with a screen reader or the accessibility tree — the status text lives
+   in a visually-hidden `aria-live="polite"` region, not visible text).
+9. Switch the sort back to **Category Name** and confirm the drag handle,
+   move buttons, and `data-mc-sortable` behavior are all gone (replaced by
+   the "sort by Sort Order first" hint) — dragging must not be possible
+   while rows are shown alphabetically.
+10. Confirm every other **Catalog → Categories** action (add, edit,
+    delete, repair, the bulk-delete checkbox row) still works exactly as
+    before — this change only added markup/columns, no existing action
+    was touched.
+11. **The mixed-parent safety check.** Set up (or find) a page of the
+    Sort-Order-sorted list where two or more different parents' children
+    are visible together (likely on any store with more than a handful of
+    categories — this list is flat and not grouped by parent). Drag a row
+    belonging to one parent so it ends up interleaved between rows
+    belonging to a different parent. Confirm: (a) only the categories that
+    actually share a parent with at least one other visible row got new
+    `sort_order` values — any category that was the *only* visible member
+    of its parent on this page keeps its original `sort_order` untouched;
+    (b) no category's `parent_id` changed in the database. This is the
+    scenario `docs/developer/catalog/category-drag-drop.md`'s "Resolves
+    the Architectural fork..." section explains and the per-parent-group
+    save logic is specifically meant to protect against.
+
 ## Phase 12 — `mintcart/entity/manufacturer` endpoint, never hit end to end
 
 Same gap as the category endpoint above, plus one thing category couldn't
@@ -336,6 +396,41 @@ extension and one payment extension enabled:
 4. Repeat step 3 with **no** shipping method selected yet in session —
    confirm the `shipping` line is simply absent (matches
    `extension/total/shipping.php`'s own guard), not an error.
+
+## Phase 15 — Shipping method quote endpoint, never exercised against a real DB
+
+`docs/developer/compatibility/shipping-quote-adapter.md` and
+`docs/developer/commerce/shipping-method-service.md` have the full design
+writeup. No MySQL/OpenCart session in this environment.
+`MintCart\Compatibility\OpenCart3\ShippingQuoteAdapter` and
+`MintCart\Commerce\ShippingMethodService` are unit-tested in isolation
+against fakes; neither `checkout/shipping_method.php` (untouched) nor the
+new `ControllerMintcartCheckout::shippingMethods()` action was ever
+actually run against a real cart/extension. On a real install, with at
+least one shipping extension enabled (e.g. Flat Shipping Rate, configured
+with a geo zone that matches a real country/zone combination):
+
+1. Request `index.php?route=mintcart/checkout/shipping_methods&country_id=<id>&zone_id=<id>`
+   (GET) with a `country_id`/`zone_id` pair that matches the enabled
+   extension's configured geo zone — confirm a JSON `{methods: [{method,
+   options: [{id, title, text}]}]}` response listing that extension, with
+   `options[0].text` matching the price it would show on the real
+   `checkout/shipping_method` page for the same address.
+2. Repeat with a `country_id`/`zone_id` pair that does **not** match any
+   configured geo zone — confirm `methods` is an empty list, not an error.
+3. Take an `options[].id` value from step 1's response (e.g. `flat.flat`)
+   and POST it as `shipping_method` to the existing, unmodified
+   `index.php?route=checkout/shipping_method.save` (with a real session
+   that already has `shipping_address` set to a matching address) —
+   confirm it is accepted exactly as if the value had come from the
+   original `checkout/shipping_method` page's own radio buttons (this is
+   the "no translation layer needed" claim `shipping-method-service.md`
+   makes; worth confirming it actually holds).
+4. Confirm `checkout/shipping_method.php`'s own page still renders
+   identically to before this change (this class touches no existing
+   file, so this should trivially still be true — worth a quick sanity
+   check anyway).
+
 ## Admin asset-enqueue fix + `product_form.twig`'s Category `McEntityPicker`, never exercised end to end
 
 `docs/developer/admin/asset-enqueue.md` has the full design writeup. No
@@ -1091,6 +1186,33 @@ and an information page:
    Google Search Console's sitemap report) to confirm no regression in
    acceptance.
 
+## Phase 18 — MintCart sitemap route (`mintcart/seo/sitemap`), never exercised end to end
+
+New `ControllerMintcartSeoSitemap::index()`
+(`upload/catalog/controller/mintcart/seo/sitemap.php`, route
+`mintcart/seo/sitemap`) always-on XML sitemap — no
+`feed_google_sitemap_status`/extension install required, unlike the Google
+Sitemap section just above. `php -l` clean, and the full `tests/mintcart/`
+suite passes, but no live MySQL/OpenCart bootstrap in this environment
+means the route was never actually requested. On a real install with
+existing products (at least one with a product image), categories,
+manufacturers, and an information page:
+
+1. Load `index.php?route=mintcart/seo/sitemap` directly — no extension
+   install or admin setting required, unlike the Google Sitemap route
+   above.
+2. Confirm the response's `Content-Type: application/xml` header, and
+   validate the document is well-formed (e.g. `xmllint --noout`).
+3. Confirm it lists the same set of product/category/manufacturer/
+   information URLs the Google Sitemap extension's own feed lists (enable
+   that extension too, for a real install, and diff the two — they should
+   agree on every entry, since both enumerate via the same OpenCart
+   models).
+4. Confirm a product **without** an image still produces a `<url>` block
+   with no `<image:image>` child.
+5. Confirm this route is unaffected by `feed_google_sitemap_status` being
+   disabled — it should still return a full sitemap either way.
+
 ## Phase 6 — `mint_default`'s new `manufacturer_list.twig` + MC-0017, never rendered live
 
 `php -l` clean on the modified `manufacturer.php`, the new template's Twig
@@ -1254,3 +1376,33 @@ checking specifically once a bundle is loaded on `catalog/product/form`:
    actually persisted — `ControllerCatalogProduct`'s save logic reads the
    same `product_attribute[N][name]`/`[attribute_id]` fields regardless of
    which UI filled them in, so this should need no special-casing.
+
+## Theme API — `product.after_actions` slot, never rendered through a real Twig
+
+`MintCart\Design\SlotRegistry` is fully covered by a standalone unit test
+(`tests/mintcart/design/slot-registry-test.php`, no OpenCart dependency),
+and `ProductCardListRenderer`'s optional `SlotRegistry` argument is
+exercised up to (but not through) the point where `ComponentRenderer`
+would hand its output to Twig (`docs/developer/theme-api/slots.md`) — this
+environment has no `vendor/twig/twig`, so the `{% if slots[...] %}` branch
+in either `product-card.twig` has never actually executed. On a real
+install, once a future increment wires a real `SlotRegistry` with a
+registered listener into one of the listing controllers
+(`category.php`/`search.php`/`manufacturer.php`/`special.php`/`product.php`):
+
+1. With no listener registered anywhere (today's actual state everywhere
+   in this repo), confirm every product-card grid on the storefront is
+   byte-for-byte unchanged from before this increment — no empty
+   `<div class="mc-product-card__slot ...">` wrapper should ever appear in
+   the rendered HTML (the `{% if %}` guard should suppress it entirely when
+   `slots['product.after_actions']` is falsy/unset).
+2. Register a listener on `product.after_actions` returning a small fixed
+   HTML fragment (e.g. `<p>Test slot</p>`). Confirm it appears inside every
+   rendered `mc-product-card` on that page, positioned after the add-to-cart/
+   quick-order buttons (`mint_default`) or after the add-to-cart button
+   (`test_theme`, which has no separate actions wrapper).
+3. Confirm the fragment appears identically on both `mint_default` and
+   `test_theme` — the slot is part of the component contract both themes
+   share, not something either theme's own DOM has to opt into separately.
+4. Register a second listener on the same slot and confirm both fragments
+   render, concatenated, neither silently replacing the other.
