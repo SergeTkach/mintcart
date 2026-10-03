@@ -119,6 +119,13 @@ class ControllerMintcartWizard extends Controller
         // actually surfaces "shipping configured" as outstanding, not this
         // step's ability to proceed).
 
+        // Payment mirrors Delivery exactly, for the same reason: nothing of
+        // its own to validate/save on Continue - a payment method is
+        // enabled through togglePayment(), not this submission, and a store
+        // with zero enabled payment methods can still continue (the Ready
+        // step's own StoreReadiness checklist already surfaces "payment
+        // configured" as outstanding).
+
         $skippingFirstProduct = $step === 'first_product' && ($this->request->post['first_product_action'] ?? '') === 'skip';
 
         if ($step === 'first_product' && !$skippingFirstProduct) {
@@ -532,6 +539,12 @@ class ControllerMintcartWizard extends Controller
             $data['manage_delivery'] = $this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'], true);
         }
 
+        if ($step === 'payment') {
+            $data['payment_extensions'] = $this->loadPaymentExtensions();
+            $data['toggle_payment'] = $this->url->link('mintcart/wizard.togglePayment', 'user_token=' . $this->session->data['user_token'] . '&step=payment', true);
+            $data['manage_payment'] = $this->url->link('mintcart/business/payments', 'user_token=' . $this->session->data['user_token'], true);
+        }
+
         if ($step === 'first_product') {
             $data['product_name'] = $this->request->post['product_name'] ?? '';
             $data['description'] = $this->request->post['description'] ?? '';
@@ -583,6 +596,66 @@ class ControllerMintcartWizard extends Controller
         }
 
         $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=delivery', true));
+    }
+
+    /**
+     * route=mintcart/wizard.togglePayment - POST code. Same shape as
+     * toggleDelivery() above for the 'payment' extension type instead of
+     * 'shipping' - see that method's docblock for the full rationale
+     * (duplicated rather than shared, matching
+     * docs/developer/onboarding/business-delivery-payments.md's own call
+     * for Business -> Delivery vs. Business -> Payments).
+     */
+    public function togglePayment(): void
+    {
+        $this->load->language('mintcart/wizard');
+        $this->load->model('setting/extension');
+        $this->load->model('setting/setting');
+
+        $code = isset($this->request->post['code']) ? (string)$this->request->post['code'] : '';
+
+        if ($code !== '' && in_array($code, $this->model_setting_extension->getInstalled('payment'), true)) {
+            // Merge-then-save - see toggleDelivery()'s identical comment for
+            // why a bare editSetting('payment_<code>', [...]) here would
+            // silently wipe the extension's other settings.
+            $existing = $this->model_setting_setting->getSetting('payment_' . $code);
+
+            $existing['payment_' . $code . '_status'] = empty($existing['payment_' . $code . '_status']) ? '1' : '0';
+
+            $this->model_setting_setting->editSetting('payment_' . $code, $existing);
+        }
+
+        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=payment', true));
+    }
+
+    /**
+     * Read-only list of installed payment extensions for the Payment step -
+     * same shape as loadShippingExtensions() below for the 'payment'
+     * extension type instead of 'shipping'.
+     *
+     * @return array<int, array{code: string, name: string, enabled: bool}>
+     */
+    private function loadPaymentExtensions(): array
+    {
+        $this->load->model('setting/extension');
+
+        $rows = [];
+
+        foreach ($this->model_setting_extension->getInstalled('payment') as $code) {
+            if (!is_file(DIR_APPLICATION . 'controller/extension/payment/' . $code . '.php')) {
+                continue;
+            }
+
+            $this->load->language('extension/payment/' . $code, 'extension');
+
+            $rows[] = [
+                'code' => $code,
+                'name' => $this->language->get('extension')->get('heading_title'),
+                'enabled' => (bool)$this->config->get('payment_' . $code . '_status'),
+            ];
+        }
+
+        return $rows;
     }
 
     /**
