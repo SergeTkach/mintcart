@@ -482,7 +482,15 @@ class ControllerProductManufacturer extends Controller {
 			$output = $this->load->view('product/manufacturer_info', $data);
 
 			// Functional Scope §19: "Production UI не повинен показувати
-			// sensitive debug data" - see category.php's identical comment.
+			// sensitive debug data" - see category.php's identical comment,
+			// including the `&mintcart_diagnostics=json` alternative surface.
+			if ($mint_diagnostics->isEnabled() && isset($this->request->get['mintcart_diagnostics']) && $this->request->get['mintcart_diagnostics'] === 'json') {
+				$this->response->addHeader('Content-Type: application/json');
+				$this->response->setOutput(json_encode($mint_diagnostics->summary()));
+
+				return;
+			}
+
 			if ($mint_diagnostics->isEnabled()) {
 				$output .= "\n<!-- mintcart-diagnostics " . json_encode($mint_diagnostics->summary()) . " -->";
 			}

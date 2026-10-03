@@ -1,19 +1,19 @@
 # Setup Wizard (Phase 13)
 
 `MINTCART_FUNCTIONAL_SCOPE.md` §2, `MINTCART_IMPLEMENTATION_GUIDE.md` §54.
-Seven working steps so far — **Welcome**, **Store**, **Contacts**,
-**Language & currency**, **Delivery**, **First product**, and **Ready**
-(the Store Readiness checklist, Phase 14's `StoreReadiness` service
-surfaced inside the Wizard flow rather than only as a standalone dashboard
-widget). The rest of the flow (`payment` → `design`) is listed in the step
+Eight working steps so far — **Welcome**, **Store**, **Contacts**,
+**Language & currency**, **Delivery**, **Payment**, **First product**, and
+**Ready** (the Store Readiness checklist, Phase 14's `StoreReadiness`
+service surfaced inside the Wizard flow rather than only as a standalone
+dashboard widget). The remaining step (`design`) is listed in the step
 nav as a roadmap but has no real content yet — visiting or submitting
-either of those steps falls back to the live resume point (`CLAUDE.md`
+it falls back to the live resume point (`CLAUDE.md`
 §85: no UI ahead of a real, working consumer). `currentStep()` walks
 `IMPLEMENTED_STEPS` in its own order (`['welcome', 'store', 'contacts',
-'language_currency', 'delivery', 'first_product', 'ready']`), which today
-happens to be a strict prefix of `STEPS` minus the still-unimplemented
-`payment`/`design` — it doesn't have to be a prefix in general (an earlier
-revision of this file had `ready` implemented ahead of
+'language_currency', 'delivery', 'payment', 'first_product', 'ready']`),
+which today is `STEPS` minus the still-unimplemented `design` — it
+doesn't have to be a prefix in general (an earlier revision of this file
+had `ready` implemented ahead of
 `contacts`/`language_currency`/`delivery` for a time), it only has to list
 which steps have real content, in the order a store should complete them.
 
@@ -212,6 +212,40 @@ method yet can still continue past this step. The Ready step's own
 shipping method enabled yet" as outstanding, independent of whether this
 Wizard step itself has been marked completed.
 
+## The Payment step mirrors Delivery exactly
+
+`Payment` is the same shape as `Delivery` above, for the `payment`
+extension type instead of `shipping`: `loadPaymentExtensions()` lists the
+store's installed payment extensions
+(`ModelSettingExtension::getInstalled('payment')`, filtered to extensions
+that still have a real controller file on disk, the same defensive check
+`loadShippingExtensions()` uses) with each one's enabled state read from
+`payment_<code>_status` — the exact config key
+`ControllerMintcartBusinessPayments::getExtensionRows()` (Phase 14) already
+reads/writes for the same extensions. A "Manage payment methods" link
+points at the full `Business → Payments` screen
+(`mintcart/business/payments`) for the complete list/experience; every
+other per-extension setting still lives only on that extension's own
+`extension/payment/<code>` screen — this step never becomes a second
+payment subsystem (`MINTCART_TECHNICAL_PLAN.md` §23), same as `Delivery`.
+
+Enabling/disabling a method happens through `togglePayment()` (route
+`mintcart/wizard.togglePayment`, POST, redirects back to `?step=payment`)
+— the same merge-then-save shape `toggleDelivery()` uses
+(`getSetting('payment_<code>')`, flip the `_status` key, `editSetting()`
+the merged result), and the same deliberate small duplicate rather than a
+shared helper (`CLAUDE.md` §17/§38E — three controllers now share this
+exact shape: `ControllerMintcartBusinessDelivery::toggle()`,
+`ControllerMintcartBusinessPayments::toggle()`, and this one).
+
+Submitting the step itself (`POST step=payment`, "Continue") has no
+required fields and nothing of its own to save, for the same reason
+`Delivery`'s Continue submission doesn't: enabling a payment method is
+`togglePayment()`'s job, and Functional Scope §2 allows this optional step
+to be skipped — the Ready step's own `StoreReadiness` checklist
+(`payment`) is what surfaces "no payment method enabled yet" as
+outstanding.
+
 ## The First product step writes a real, ordinary product
 
 `validateFirstProductStep()`/`saveFirstProductStep()` only ask for
@@ -284,13 +318,13 @@ marks `ready` completed, the same generic `withCompleted()` path every
 step (including the still-unimplemented ones) will eventually use.
 
 The terminal "You're off to a great start" screen (`is_ready` — shown once
-every *implemented* step, `ready` included, is completed) had its copy
-updated this run to drop `first_product` from the "coming in a future
-update" list too (it's implemented now) — it still names
-`payment`/`design`, the two steps still genuinely unimplemented. It is not
-redundant with the `ready` step's own checklist — one is "here is how
-ready your real store is today", the other is "there is no more Wizard
-content to show you right now, go to your dashboard".
+every *implemented* step, `ready` included, is completed) names only the
+steps still genuinely unimplemented in its "coming in a future update"
+list — `delivery`, `payment` and `first_product` were each dropped when
+that step landed; today it names only `design`.
+It is not redundant with the `ready` step's own checklist — one is "here
+is how ready your real store is today", the other is "there is no more
+Wizard content to show you right now, go to your dashboard".
 
 ## Why a standalone page, not the usual admin chrome
 
@@ -348,15 +382,9 @@ done) is allowed, for review; skipping ahead is not.
 
 ## What's explicitly not done yet, by design
 
-- The `payment`/`design` steps — `payment` is a near-mechanical follow-up
-  to the `delivery` step: same shape, swap
-  `ModelSettingExtension::getInstalled('shipping')`/
-  `shipping_<code>_status` for `'payment'`/`payment_<code>_status`, and a
-  new `toggleServicePayment()`/`mintcart/business/payments` pair in place
-  of `toggleDelivery()`/`mintcart/business/delivery`. `design` needs its
-  own real form/save logic (likely a preset picker once
-  `docs/adr/004-design-token-presets.md`'s preset mechanism has a live
-  admin UI consumer).
+- The `design` step needs its own real form/save logic (likely a preset
+  picker once `docs/adr/004-design-token-presets.md`'s preset mechanism
+  has a live admin UI consumer).
 - The First product step has no image upload (same `McMediaPicker`
   upload-endpoint gap as Store's logo field, see below) and no
   category/manufacturer assignment — both deliberately out of scope for
