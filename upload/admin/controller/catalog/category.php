@@ -200,7 +200,7 @@ class ControllerCatalogCategory extends Controller {
 		 * rows POST to. `ControllerCatalogCategory::move()` already existed
 		 * (backend-only, unwired); this is its first live caller.
 		 */
-		$data['move'] = $this->url->link('catalog/category.move', 'user_token=' . $this->session->data['user_token'], true);
+		$data['move'] = $this->url->link('catalog/category/move', 'user_token=' . $this->session->data['user_token'], true);
 
 		$data['categories'] = array();
 
