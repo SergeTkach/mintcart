@@ -47,28 +47,39 @@ key is always present in the result (`null` when not supplied) so a theme's
 `widgets` holds five pre-rendered HTML fragments straight from OpenCart's
 own `common/menu`, `common/search`, `common/cart`, `common/language`,
 `common/currency` sub-controllers — not a normalized data shape. Each of
-these already has its own real Mint-native API planned for later:
+these already has, or is planned to get, its own real Mint-native API:
 
-- **Search** → AJAX Search normalized endpoint (`MINTCART_TECHNICAL_PLAN.md`
-  §26, Functional Scope §14)
+- **Search** → **done (2026-09-19).** `mint_default`'s and `test_theme`'s
+  `header.twig` no longer read `widgets.search` at all — they render
+  `mc-search-box` (`docs/developer/components/search-box.md`) directly,
+  talking to the `mintcart/search/suggest` AJAX Search endpoint
+  (`MINTCART_TECHNICAL_PLAN.md` §26, Functional Scope §14). The
+  `widgets.search` key itself is untouched in `HeaderViewProvider`'s
+  contract — `header.php` still computes it and it is still exposed for
+  any third-party theme that wants the legacy fragment instead.
 - **Cart** → Cart JS client / `mc:cart:updated` event contract
-  (`MINTCART_TECHNICAL_PLAN.md` §25, Functional Scope §15)
+  (`MINTCART_TECHNICAL_PLAN.md` §25, Functional Scope §15); still a legacy
+  fragment (bridged by `header-cart.js`, see
+  `docs/developer/commerce/cart-client.md`) — no live template renders a
+  Mint-native cart widget yet, only the legacy dropdown refreshed via the
+  real event.
 - **Navigation** (`menu`) → no second real consumer yet for a Mint-native
   category-menu-walking component (`CLAUDE.md` §85)
 
-Both Search and Cart are explicitly Phase 15 (Commerce API) work, not this
-phase's. Rather than half-build a normalized shape ahead of those real
-consumers, `Header` embeds the five widgets as-is inside its own layout
-shell, following the documented compatibility pattern for legacy fragments
+Cart and Navigation are still Phase 15 (Commerce API)/deferred work.
+Rather than half-build a normalized shape ahead of a real consumer,
+`Header` still embeds those two widgets as-is inside its own layout shell,
+following the documented compatibility pattern for legacy fragments
 (`MINTCART_IMPLEMENTATION_GUIDE.md` §36 — wrap in `mc-legacy`, never break
 the fragment's own IDs/classes/`data-*`). This still gives a theme full
 control over the *surrounding* DOM (topbar layout, logo placement, account
 menu markup, where each widget slots in) without any OCMOD — the actual
-Theme API property this component exists to prove — even while the five
-widgets' own internals stay OpenCart-native for now. When Search/Cart/
-Navigation get real Mint contracts in a later phase, `Header`'s own shape
-does not need to change — only what fills `widgets.search`/`widgets.cart`/
-`widgets.menu` does.
+Theme API property this component exists to prove — even while Cart/
+Navigation's own internals stay OpenCart-native for now. When they get
+real Mint contracts in a later phase, `Header`'s own shape does not need
+to change — only what fills `widgets.cart`/`widgets.menu` does, the same
+way Search's slot just changed from a legacy fragment to a real component
+without `HeaderViewProvider`'s contract shape changing at all.
 
 ## Live Twig template
 
@@ -133,7 +144,7 @@ longer the blocker.
         {# contacts.phone, widgets.language, widgets.currency, account menu, links.wishlist #}
     </div>
     <div class="mc-header__main">
-        {# mobile nav toggle, branding.logo/name -> links.home, widgets.search, widgets.cart #}
+        {# mobile nav toggle, branding.logo/name -> links.home, mc-search-box, widgets.cart #}
     </div>
     {% if widgets.menu %}
         <nav class="offcanvas offcanvas-lg offcanvas-start mc-drawer mc-header__nav" id="mcHeaderNav">
@@ -144,9 +155,11 @@ longer the blocker.
 ```
 
 `text_account`, `text_register`, `text_login`, `text_order`,
-`text_transaction`, `text_download`, `text_logout` are ordinary OpenCart
-language strings already present in
-`catalog/language/en-gb/common/header.php` — no new strings were needed.
+`text_transaction`, `text_download`, `text_logout`, `text_search` are
+ordinary OpenCart language strings already present in
+`catalog/language/en-gb/common/header.php` — no new strings were needed
+(`text_search` is used as both the `mc-search-box` input's `placeholder`
+and `aria-label`, see `docs/developer/components/search-box.md`).
 `text_wishlist` is passed through **already `sprintf`-formatted** with the
 wishlist count (matching `ControllerCommonHeader`'s pre-existing
 `sprintf($this->language->get('text_wishlist'), ...)` call) — `Header`
