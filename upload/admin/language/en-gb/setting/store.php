@@ -16,6 +16,14 @@ $_['text_stock']                   = 'Stock';
 $_['text_shipping']                = 'Shipping Address';
 $_['text_payment']                 = 'Payment Address';
 
+// Text - Information picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
+$_['text_information_picker_browse']  = 'Browse pages';
+$_['text_information_picker_search']  = 'Search pages';
+$_['text_information_picker_empty']   = 'No pages found.';
+$_['text_information_picker_prev']    = 'Previous';
+$_['text_information_picker_next']    = 'Next';
+$_['text_information_picker_confirm'] = 'Select';
+
 // Column
 $_['column_name']                  = 'Store Name';
 $_['column_url']	               = 'Store URL';

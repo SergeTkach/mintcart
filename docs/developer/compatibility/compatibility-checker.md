@@ -19,9 +19,13 @@ Tests:
 `tests/mintcart/compatibility/install-manifest-parser-test.php` (8 scenarios)
 `tests/mintcart/compatibility/compatibility-checker-test.php` (7 scenarios)
 
-Consumer: `upload/admin/controller/mintcart/compatibility.php`
-(`ControllerMintcartCompatibility`, route `mintcart/compatibility/check`,
-POST, JSON)
+Consumers: `upload/admin/controller/mintcart/compatibility.php`
+(`ControllerMintcartCompatibility`) — `check()` (route
+`mintcart/compatibility/check`, POST, JSON, unchanged since this class's
+first increment) and `index()` (route `mintcart/compatibility`, GET/POST,
+rendered form + results, added 2026-09-30 — see "Admin screen and menu
+entry" below). Both share one `analyze()` helper so the two consumers can
+never drift apart on what "analyze this install.xml" does.
 
 ## Design
 
@@ -153,26 +157,51 @@ raw XML into a POST field is the smallest real consumer that exercises
 the whole pipeline (`CLAUDE.md` §85/§86) without inventing that
 machinery ahead of a second real need for it.
 
-### Why no admin menu entry yet
+### Admin screen and menu entry (2026-09-30)
 
-`admin/controller/common/column_left.php` is, at the time of this
-increment, already being edited by three other open pull requests (each
-adding its own `Business`/`Design` menu entry) — editing it a fourth time
-here would be the exact kind of shared-hot-file collision this routine's
-own dedup process (`docs/IMPLEMENTATION_STATUS.md`'s "Next step" section)
-is meant to avoid. This mirrors the precedent `mintcart/wizard` and
-`mintcart/readiness` already set: both shipped, and were reachable by
-navigating to their route directly, before either got a menu entry.
-Adding a `Advanced → Compatibility Checker` menu entry (or a real
-upload-based screen at that route) is a self-contained follow-up once
-`column_left.php` isn't contended.
+`ControllerMintcartCompatibility::index()` (route `mintcart/compatibility`)
+is the rendered form/results screen this section used to describe as a
+gap: a `<textarea>` to paste `install.xml`, a "Check" button (plain form
+POST, no JS/AJAX — see "Why a plain form POST, not AJAX" below), and,
+after a successful analysis, the same `files`/`bootstrap3_assumptions`/
+`potential_conflicts`/`summary` report `check()` already returned as JSON,
+rendered as a table + warning panels instead. Built on the legacy admin
+theme (Bootstrap 3 `.panel`/`.table`/`form-horizontal` markup), same
+reasoning every other MintCart admin screen in this repo gives (see
+`docs/developer/blocks/homepage-admin.md`'s "Why this screen uses the
+legacy admin theme").
+
+Menu entry: `System → Compatibility Checker`, right after the existing
+`mintcart/settings/diagnostics` entry in `column_left.php`'s `System`
+group (the same group Diagnostics already established — no dedicated
+"Advanced" top-level menu group exists in `column_left.php` yet, so this
+follows that precedent rather than inventing one). At the time this was
+added, `list_pull_requests` showed 24 open PRs (#138–#161); none touched
+`admin/controller/common/column_left.php`'s `System` array — see
+`docs/upstream-diff.md`'s `column_left.php` entry for the exact per-PR
+check.
+
+### Why a plain form POST, not AJAX
+
+MintCart's own compiled asset bundle (`assets/dist/{css,js}`) has never
+been enqueued into the shared admin `header`/`column_left`/`footer` chrome
+anywhere in this repo (`CLAUDE.md` §10, the same blocker
+`docs/developer/components/entity-picker.md`'s "Live wiring deliberately
+not attempted this run" section documents for `McEntityPicker`). A plain
+`<form method="post">` that re-renders the same page server-side needs
+none of that — same "GET shows the form / POST re-renders it with
+results" shape `ControllerMintcartBusinessContacts` already established
+for `Business → Contacts`.
+
+### Why pasted text, not a file upload, still stands
+
+Building a real upload-based flow (`<input type="file">`, store the file,
+keep a history of past checks) is still the more complete admin UX this
+should eventually have — that's still deferred, only the "no page to
+paste into at all" gap is closed by this increment.
 
 ## Not done yet, by design
 
-- **Admin UI list/upload screen and menu entry** — see above; the
-  endpoint itself is fully functional today via a direct POST (e.g. from
-  a REST client or a future JS-driven form), it just has no rendered page
-  of its own yet.
 - **Real OCMOD install-pipeline integration** — this never hooks into
   OpenCart's actual extension-install flow (there isn't one to hook into
   cleanly without a core patch, and Functional Scope §29 explicitly says
@@ -204,11 +233,27 @@ upload-based screen at that route) is a self-contained follow-up once
   keys).
 - Full `tests/mintcart/**/*-test.php` suite re-run end to end (35 files,
   was 33) — all passing, no regressions.
-- **Not verified** — same pre-existing gap as every other controller
-  increment in this repo: no live MySQL/OpenCart admin session in this
-  environment. A human should grant the auto-discovered
-  `mintcart/compatibility` permission to a user group, POST a real,
-  known OCMOD `install.xml` (ideally one with genuine Bootstrap 3 markup
-  and/or a file that collides with MintCart's own modified-file list) to
-  `mintcart/compatibility/check`, and confirm the JSON report matches
-  the file's actual contents.
+
+**Update (2026-09-30, routine run — admin screen + menu entry):** `php -l`
+clean on `compatibility.php`, `column_left.php` (both admin controller and
+`en-gb/common/column_left.php`), and the new
+`en-gb/mintcart/compatibility.php` keys, re-swept across the full
+`upload/`/`tests/` tree. The new `compatibility.twig`'s `{% if %}`/
+`{% for %}` tag counts checked balanced (12/12). No new pure PHP class —
+`analyze()` is an extract-method refactor of `check()`'s existing,
+already-tested logic (no behavior change to `check()`'s own JSON
+contract), so no new unit test file. Full `tests/mintcart/**/*-test.php`
+suite re-run end to end (84 files) — all passing, no regressions. **Not
+verified:** no live MySQL/admin session in this environment — a human
+should confirm `System → Compatibility Checker` renders, that pasting a
+real `install.xml` shows the expected table/warnings, and that a user
+without `mintcart/compatibility` `access` permission sees
+`error_permission` instead of the form (see
+`docs/MANUAL_VERIFICATION.md`'s new entry).
+Same underlying manual step either way: a human should grant the
+auto-discovered `mintcart/compatibility` permission to a user group, then
+exercise a real, known OCMOD `install.xml` (ideally one with genuine
+Bootstrap 3 markup and/or a file that collides with MintCart's own
+modified-file list) — either POSTed to `mintcart/compatibility/check`
+directly, or pasted into `System → Compatibility Checker` — and confirm
+the report matches the file's actual contents.
