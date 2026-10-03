@@ -150,6 +150,10 @@ template is:
             </button>
         {% endif %}
     </div>
+
+    {% if slots is defined and slots['product.after_actions'] %}
+        <div class="mc-product-card__slot mc-product-card__slot--after-actions">{{ slots['product.after_actions']|raw }}</div>
+    {% endif %}
 </article>
 ```
 
@@ -164,6 +168,23 @@ English in JS (every listing controller's language file —
 category/search/special/manufacturer/product — carries the same three
 keys, matching how the five product-card keys before them are already
 duplicated per controller).
+
+## Extension slot: `product.after_actions`
+
+`MINTCART_TECHNICAL_PLAN.md` §15 names `product.after_actions` as one of
+the Theme API's documented extension points — a place a third-party
+extension can inject markup without OCMOD-patching this template. This is
+the slot mechanism's first real wiring; see
+`docs/developer/theme-api/slots.md` for the full `MintCart\Design\SlotRegistry`
+contract (how a listener registers, what `$context` it receives, why no
+listener exists in this codebase yet).
+
+The template only renders the wrapper when `slots['product.after_actions']`
+is a non-empty string — `slots` itself may not even be set (every call site
+that doesn't pass a `SlotRegistry` to `ProductCardListRenderer` never adds
+the key at all, per that class's own optional-3rd-argument contract), so
+`slots is defined` is checked first to avoid a Twig "key does not exist"
+notice on the themes/pages that don't use it.
 
 ## Behavior hooks (`CLAUDE.md` §14)
 
