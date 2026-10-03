@@ -1,0 +1,92 @@
+/**
+ * mc-admin-search
+ *
+ * Admin header "quick settings search" (`MINTCART_FUNCTIONAL_SCOPE.md`
+ * §23, P1 — "Швидкий пошук налаштувань"): a small debounced search box in
+ * `admin/view/template/common/header.twig` that matches a query against
+ * `MintCart\Admin\SettingsSearchIndex`'s static catalog of admin screens
+ * and navigates straight there on selection. MVP is page-level
+ * navigation, not the "конкретну секцію/field" stretch goal that section
+ * names as "за можливості" (if possible) — see
+ * `docs/developer/admin/settings-search.md`.
+ *
+ * Interaction lives in `assets/src/js/components/admin-search.js`, which
+ * owns the `data-mc-admin-search-*` hooks this file styles. Hosted inside
+ * the legacy Bootstrap 3 admin header's `<ul class="nav navbar-nav">`, so
+ * this file only ever styles its own `.mc-admin-search` subtree — nothing
+ * here redefines a bare `<li>`/`<ul>`/`<input>` selector that could leak
+ * onto the rest of that Bootstrap 3 markup (`docs/developer/admin/asset-enqueue.md`,
+ * this page loads `components.min.css`, not `index.min.css`).
+ */
+
+.mc-admin-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--mc-space-3);
+}
+
+.mc-admin-search__input {
+    width: 14rem;
+    max-width: 100%;
+}
+
+.mc-admin-search__results {
+    position: absolute;
+    inset-inline-start: var(--mc-space-3);
+    top: 100%;
+    z-index: var(--mc-z-dropdown);
+    margin: var(--mc-space-1) 0 0;
+    padding: 0;
+    list-style: none;
+    width: 14rem;
+    max-height: 20rem;
+    overflow-y: auto;
+    background-color: var(--mc-surface);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    box-shadow: var(--mc-shadow-md);
+    text-align: start;
+}
+
+.mc-admin-search__results[hidden] {
+    display: none;
+}
+
+.mc-admin-search__result {
+    display: block;
+    width: 100%;
+    padding: var(--mc-space-2) var(--mc-space-3);
+    background: none;
+    border: 0;
+    color: var(--mc-text);
+    font-size: var(--mc-font-size-sm);
+    text-align: start;
+    cursor: pointer;
+}
+
+.mc-admin-search__result:hover,
+.mc-admin-search__result.is-active {
+    background-color: var(--mc-surface-alt);
+}
+
+.mc-admin-search__empty {
+    position: absolute;
+    inset-inline-start: var(--mc-space-3);
+    top: 100%;
+    z-index: var(--mc-z-dropdown);
+    margin: var(--mc-space-1) 0 0;
+    padding: var(--mc-space-3);
+    width: 14rem;
+    background-color: var(--mc-surface);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    box-shadow: var(--mc-shadow-md);
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+    text-align: center;
+}
+
+.mc-admin-search__empty[hidden] {
+    display: none;
+}

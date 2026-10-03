@@ -1452,6 +1452,98 @@ stock `default` theme and `mint_default` (see
 
 ---
 
+## MC-0018 — `admin/controller/common/header.php` never assigns its own loaded language strings to `$data`
+
+**Problem:** `admin/view/template/common/header.twig` — the header every
+single logged-in admin page renders — references eight variables:
+`heading_title` (the logo `alt`/`title`), `text_profile`, `text_store`,
+`text_help`, `text_homepage`, `text_support`, `text_documentation` and
+`text_logout` (all in the top-right user dropdown menu). All eight are
+defined in `admin/language/en-gb/common/header.php`, and
+`ControllerCommonHeader::index()` does call
+`$this->load->language('common/header')` — but it never assigns any of
+the eight to `$data` afterward. Same class of bug as MC-0001
+(`category.php`), MC-0003 (`manufacturer.php`'s `info()`) and MC-0017
+(`manufacturer.php`'s `index()`): Twig's default
+`strict_variables => false` renders an undefined variable as an empty
+string instead of throwing, so the admin logo's `alt`/`title`, the "Your
+Profile" link, the "Stores" section heading, the "Help" section heading,
+and the "OpenCart Homepage"/"Documentation"/"Support Forum"/"Logout" link
+text are all silently blank — on every admin screen, not just one
+controller's page, making this the highest-traffic instance of this bug
+class found in this repository so far.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline, `docs/audit.md` §1). Not
+independently checked against other 3.x point releases — same rationale
+as MC-0001/MC-0003/MC-0017 (no second checkout available to diff against,
+and the fix only adds `$data` keys the template already expects).
+
+**Source:** Discovered directly in this repository while building the
+admin "quick settings search" feature (`MINTCART_FUNCTIONAL_SCOPE.md`
+§23) into this same controller/template pair — not an imported historical
+community patch. Reproduced by grepping
+`admin/view/template/common/header.twig` for every `{{ text_* }}`/
+`{{ heading_title }}` reference and cross-referencing every `$data[...] =`
+assignment in `ControllerCommonHeader::index()`: none of the eight appear
+on the left-hand side anywhere in the file, even though
+`$this->load->language('common/header')` is called and its return value
+is discarded (not captured into a variable, not merged into `$data`).
+
+**Reproduced on MintCart baseline:** Yes — confirmed against
+`upload/admin/view/template/common/header.twig` (stock, unmodified prior
+to this fix, references all eight keys) and
+`upload/admin/controller/common/header.php`'s actual `$data[...] =`
+assignment list (see above). All eight underlying language keys already
+exist and load correctly in
+`upload/admin/language/en-gb/common/header.php` — so, like
+MC-0001/MC-0003/MC-0017, this is purely a missing
+`$data[...] = $this->language->get(...)` call, not a missing translation.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Added the eight missing assignments to
+`ControllerCommonHeader::index()`, immediately after the existing
+`$this->load->language('common/header');` call and before the pre-existing
+`$data['text_logged'] = sprintf(...)` line — explicit per-key
+`$this->language->get(...)` calls, the same shape MC-0001/MC-0003/MC-0017
+already established, rather than a blanket
+`array_merge($data, $this->load->language(...))`: `Language::load()`
+returns its *entire* accumulated registry (every language file loaded so
+far in the request, not just `common/header`'s own keys — confirmed by
+reading `system/library/language.php`'s `load()`), so a blanket merge
+would also pull in unrelated keys from whichever page controller loaded
+its own language file earlier in the same request. No new language
+strings, no template change, no change to `$data['stores']` or any other
+existing key.
+
+**Compatibility impact:** Purely additive — eight previously-blank
+`$data` keys now carry their real values; nothing that previously had a
+value changes. No other controller/template reads these exact keys from
+`ControllerCommonHeader`'s own `$data` (each is scoped to this one
+`load->view('common/header', $data)` call).
+
+**Tests:** `php -l` clean on the modified `header.php`. No dedicated
+regression test added — same rationale as MC-0001/MC-0003/MC-0017: the
+fix is eight `$this->language->get()` calls already unit-proven correct
+by ten other identical call sites across this codebase (including this
+same file's own pre-existing `$this->language->get('code')`/
+`$this->language->get('direction')`/`$this->language->get('text_logged')`
+calls two lines below); a controller-level test would need a live
+OpenCart bootstrap this environment can't provide (no MySQL server, same
+pre-existing gap noted throughout `docs/upstream-diff.md`). A human should
+confirm on a real install that the admin header's logo has real
+alt/title text, and that its user-profile dropdown menu (top-right corner,
+any logged-in admin page) shows real text for "Your Profile", "Stores",
+"Help", "OpenCart Homepage", "Documentation", "Support Forum" and
+"Logout" instead of blank menu items.
+
+---
+
 ## MC-0019 — `DB\PDO::query()` never recovers from a dropped connection
 
 **Problem:** `system/library/db/pdo.php`'s `query()` prepared and executed
