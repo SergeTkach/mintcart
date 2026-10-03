@@ -230,7 +230,7 @@ other per-extension setting still lives only on that extension's own
 payment subsystem (`MINTCART_TECHNICAL_PLAN.md` §23), same as `Delivery`.
 
 Enabling/disabling a method happens through `togglePayment()` (route
-`mintcart/wizard.togglePayment`, POST, redirects back to `?step=payment`)
+`mintcart/wizard/togglePayment`, POST, redirects back to `?step=payment`)
 — the same merge-then-save shape `toggleDelivery()` uses
 (`getSetting('payment_<code>')`, flip the `_status` key, `editSetting()`
 the merged result), and the same deliberate small duplicate rather than a
