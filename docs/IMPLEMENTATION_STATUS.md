@@ -134,6 +134,18 @@ System Pages` (`#146`'s own next-candidates note); the admin
       `docs/developer/compatibility/settings-adapter.md`. Not wired into any
       controller yet; `ProductAdapter`/`CategoryAdapter`/`OrderAdapter`/
       `CustomerAdapter`/`ExtensionAdapter` remain unstarted (no consumer yet).
+- [~] OpenCart adapter interfaces (`MintCart\Compatibility\OpenCart3\*`) —
+      `ProductAdapter` (this run) added:
+      `MintCart\Compatibility\OpenCart3\ProductAdapter`
+      (`find()`/`exists()` wrapping `getProduct()`'s "empty array = not
+      found" shape, same pattern as `CategoryAdapter`) — see
+      `docs/developer/compatibility/product-adapter.md`. Wired into the
+      two MintCart-owned controllers that had this duplicated inline:
+      `ControllerMintcartCart::add()`,
+      `ControllerMintcartQuickorder::submit()`. `OrderAdapter` remains the
+      last unstarted named adapter from `MINTCART_TECHNICAL_PLAN.md` §5
+      (`SettingsAdapter`/`ExtensionAdapter`/`CustomerAdapter`/
+      `CategoryAdapter`/`TotalsAdapter`/`ProductAdapter` are all done).
 - [x] Migration manager (`mc_migration` table, ordered/logged/apply-once migrations) —
       `MintCart\Core\Migration\MigrationManager` +
       `MintCart\Core\Migration\MigrationInterface`; naming convention and file shape
@@ -1127,6 +1139,28 @@ further below for the full writeup of each. All four listing controllers
 `MintCart\Design\ProductCardListRenderer`/`MintCart\Design\ActiveTheme`
 pair; Phase 6/8's product-card pipeline is complete.
 
+**Update (2026-09-30, routine run): `SortOptionsBuilder`/`LimitOptionsBuilder`
+extracted (Technical Plan §15C/§15E/§38C), first consumer wired.** The
+`$data['sorts']`/`$data['limits']` dropdown-option blocks — the other
+piece of duplicated per-listing logic besides the product-card row itself
+— were identical inline code in `category.php`/`manufacturer.php`/
+`search.php`. New `MintCart\Catalog\SortOptionsBuilder` and
+`MintCart\Catalog\LimitOptionsBuilder` (pure, no OpenCart dependency, same
+"primitive first" pattern as `CanonicalUrlBuilder`) extract that list;
+`ControllerProductCategory::index()` is wired as the first consumer, with
+no behavioral change (verified byte-for-byte against the old inline code
+by two new standalone tests). Full writeup:
+`docs/developer/catalog/product-listing-options.md`,
+`docs/upstream-diff.md`'s `category.php` entry. Step 0 found 1 open PR
+(`#148`, IN-PROGRESS — Entity Picker Option backend wiring into
+`product_form.twig`, admin-only, zero overlap with this catalog controller
+file); no Homepage Builder hot shared files (§0f) touched. Verified:
+`php -l` clean on all touched/new files; full `tests/mintcart/` suite (86
+files, up from 84) re-run end to end, all passing, no regressions. **Next
+candidates:** wire the same two builders into `manufacturer.php` and
+`search.php` (mechanical, each independent — see the doc's "Not yet
+wired" section); or re-check `gh pr list --state open` first.
+
 ## Phase 9 — Presets
 
 - [x] At least two radically different presets (e.g. Clean, Warm) on the same DOM —
@@ -1196,13 +1230,57 @@ would mean a hardcoded color, a component bug), and whether both presets apply
 cleanly to `test_theme`'s different DOM. All five items are listed in
 `docs/MANUAL_VERIFICATION.md`'s new Phase 9 section.
 
-**Not wired yet, by design:** nothing writes `data-mc-preset` onto `<html>` at
-runtime — Mint Default's page templates don't emit it and no admin UI selects
-it. That belongs with theme settings (`MINTCART_FUNCTIONAL_SCOPE.md` §9) and
-its declarative `settings.json` schema (Implementation Guide §31), neither of
-which exists; building the writer ahead of the form that sets the value would
-be API ahead of a consumer (`CLAUDE.md` §85). Until then a preset is inspected
-by setting the attribute by hand.
+**Not wired yet, by design (superseded 2026-09-29 — see below):** nothing
+wrote `data-mc-preset` onto `<html>` at runtime — Mint Default's page
+templates didn't emit it and no admin UI selected it. That belonged with
+theme settings (`MINTCART_FUNCTIONAL_SCOPE.md` §9) and its declarative
+`settings.json` schema (Implementation Guide §31), neither of which
+existed; building the writer ahead of the form that sets the value would
+have been API ahead of a consumer (`CLAUDE.md` §85). Until then a preset
+was inspected by setting the attribute by hand.
+
+**Update (2026-09-29, routine run): `Design → Styles` closes this gap —
+a real consumer for `data-mc-preset` now exists.** New
+`ControllerMintcartDesignStyles` (route `mintcart/design/styles`, menu
+entry under `Design`, right after "Theme"): reads the *active* theme's own
+`theme.json` `presets` array (never hardcoded) and lets an admin pick one,
+stored as the single `mintcart_design_preset` setting (own isolated code
+group, same shape `mintcart_dev_mode` already uses). `ControllerCommonHeader::index()`
+now reads that setting, re-validates it against the active theme's own
+declared presets a second time, and passes `$data['mc_preset']` through;
+`mint_default/template/common/header.twig`'s `<html>` tag renders
+`data-mc-preset="{{ mc_preset }}"` only when non-blank. This is
+deliberately the smallest real slice of the future Theme Settings screen
+(Implementation Guide §31) — one setting, not a `settings.json`-driven
+schema for arbitrary theme options — since that broader schema still has
+no second real consumer to justify it (`CLAUDE.md` §85/§86). Full writeup:
+`docs/developer/theme-api/presets.md`'s "Wired: `Design → Styles`"
+section; `docs/upstream-diff.md`'s `header.php` and `common/column_left.php`
+entries. Step 0 dedup check: 13 open PRs at the start of this run
+(`#138`-`#150`), confirmed via each PR's own file list that none touch
+`upload/catalog/controller/common/header.php`,
+`upload/admin/controller/common/column_left.php` (contended only by
+`#139`'s unrelated `Sale` menu-group addition — a different array, no
+shared line), `upload/catalog/view/theme/mint_default/template/common/header.twig`
+(distinct from the `mint/components/header.twig` file `#138` touches), or
+any file under `upload/admin/controller/mintcart/design/`; no Homepage
+Builder hot files (§0f) touched. Verified: `php -l` clean on all touched/
+added PHP files; both changed Twig files' `{% if %}`/`{% for %}` tag
+counts checked balanced (5/5, 2/2 for the new `styles.twig`; unchanged
+5/5, 4/4 for `mint_default`'s `common/header.twig`, only its `<html>` tag
+line changed); full `tests/mintcart/**/*-test.php` suite (84 files)
+re-run end to end — all passing, no regressions (no new pure PHP class
+added — this is thin controller/setting wiring, same shape
+`ControllerMintcartSettingsDiagnostics` already has no dedicated test
+file for). **Not verified:** no live MySQL/browser session in this
+environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 9/31 section
+for the full manual script. **Not done yet:** `test_theme` has no
+`common/header.twig` override of its own (falls back to the legacy
+`default` theme's, a pre-existing gap unrelated to this change) so it
+never renders `data-mc-preset` regardless of its own (empty) presets
+list; the wider `settings.json`-driven Theme Settings schema for options
+beyond "which preset" remains a separate, larger increment; ADR 008's
+live-preview mechanism remains documentation-only.
 
 **Theme live preview (`MINTCART_FUNCTIONAL_SCOPE.md` §31) — RESEARCH item
 resolved, not yet implemented.** `docs/adr/008-theme-live-preview.md` fixes
@@ -2087,6 +2165,12 @@ question is resolved — see the ADR's "Consequences" section.
       **category and manufacturer are done** (manufacturer this run), see
       below; the other five entity types still need their own.
 - [~] Live wiring into an actual admin screen/field — **category,
+      manufacturer, product and option are now done**
+      (`product_form.twig`'s Category and Manufacturer fields in earlier
+      runs, its Related Products field in a later run, its **Option tab
+      this run** — see the "Option field live-wired" update below);
+      information/attribute/customer backends still have no live
+      consumer.
       manufacturer, product and attribute are now done** (`product_form.twig`'s
       Category and Manufacturer fields in earlier runs, its Related
       Products field and now its Attribute tab — see the "Attribute field
@@ -2465,6 +2549,42 @@ live UI wiring; the backend (`ControllerCatalogCategory::move()`,
 `CategoryMoveValidator`, `moveCategory()`) is unaffected and remains
 ready to consume whichever UI shape is chosen.
 
+**Update (this run — Phase 12, Entity Picker): Option field live-wired,
+the entity-picker backend's fourth (of seven) live consumer.**
+`product_form.twig`'s Option tab (`#input-option`, previously only a
+jQuery UI `autocomplete()` field against `catalog/option/autocomplete`)
+gains the same "Browse options" button + hidden `.mc-entity-picker` panel
+pattern as Category/Manufacturer/Related, single-select like Manufacturer
+(`docs/developer/components/entity-picker.md` "Option backend"; full
+writeup in `docs/upstream-diff.md`'s `product.php`/`product_form.twig`/
+language-file entry). Unlike the three pickers before it, selecting an
+option needs to build a whole new type-specific tab-pane, not just
+overwrite/append a couple of fields — so rather than duplicating that
+construction, the existing autocomplete's `'select'` handler body was
+extracted into a named `selectOption(item)` function both the
+autocomplete and the picker's `onConfirm` now call, keeping exactly one
+tab-construction code path.
+
+Two small, additive backend changes support this:
+`MintCart\Design\OptionPickerProvider::build()` now also returns `type`
+per item (free — already on every `getOptions()` row), and
+`ControllerMintcartEntity::option()` layers an `option_value` array onto
+each item for the four types that need one (`select`/`radio`/`checkbox`/
+`image`), via one extra `ModelCatalogOption::getOptionValues()` call per
+row of the current page. `ControllerCatalogProduct`'s own
+`validateForm()`/`addProduct()`/`editProduct()` handling of
+`product_option[]` is completely unchanged — purely additive.
+
+**Next candidates:** the remaining Phase 12 entity types still need live
+wiring (information/attribute/customer — none has an identified first
+consumer yet, per their own backend write-ups above, so picking one means
+choosing a real admin screen/field first, not guessing one); resolving
+the Phase 17 category-list fork above (needs a product decision first —
+note a newer, not-yet-merged run may have already resolved this, check
+`gh pr list --state open` and re-read this section against the latest
+`master` before assuming it's still open); Entity Picker Filters/
+Create-new-flow (neither has a real requirement yet); or re-check `gh pr
+list --state open` first, since this backlog moves fast.
 **Resolved (later routine run) — not by picking (a)/(b)/(c) above.** A
 fourth, purely mechanical option none of these considered: the *save*
 step splits the new visible order into per-parent groups instead of
@@ -2741,7 +2861,7 @@ shipping extensions (`ModelSettingExtension::getInstalled('shipping')`,
 same data source and stale-extension guard `ControllerMintcartBusinessDelivery`
 already established in Phase 14) with a real enabled/disabled badge and a
 per-extension Enable/Disable toggle (`toggleDelivery()`, route
-`mintcart/wizard.toggleDelivery`, the same merge-then-save
+`mintcart/wizard/toggleDelivery`, the same merge-then-save
 `shipping_<code>_status` write `ControllerMintcartBusinessDelivery::toggle()`
 already uses, duplicated rather than shared per that class's own precedent
 of choosing two near-duplicate controllers over a shared base class), plus
@@ -2787,6 +2907,52 @@ other settings.
 - Re-check `gh pr list --state open` before picking the next increment —
   this backlog moves fast.
 
+**Update (2026-09-28, routine run): the Payment step is done.**
+`WizardProgress::IMPLEMENTED_STEPS` gains `payment`, inserted between
+`delivery` and `ready` (canonical `STEPS` order). `ControllerMintcartWizard`'s
+`payment` step lists installed payment extensions
+(`ModelSettingExtension::getInstalled('payment')`, same stale-extension
+guard `loadShippingExtensions()` uses) with a real enabled/disabled badge
+and a per-extension Enable/Disable toggle (`togglePayment()`, route
+`mintcart/wizard.togglePayment`, the same merge-then-save
+`payment_<code>_status` write `ControllerMintcartBusinessPayments::toggle()`
+already uses), plus a "Manage payment methods" link to the full
+`mintcart/business/payments` screen. No fields to validate/save on the
+step's own Continue submission, same reasoning as `delivery`. Full
+writeup: `docs/developer/onboarding/setup-wizard.md`'s new "Payment step"
+section.
+
+Step 0 dedup check: `list_pull_requests --state open` returned 4 open PRs
+at the start of this run — `#138` (search box wiring into
+`mint_default`/`test_theme` `header.twig`), `#139` (admin "Quick Order
+requests" list), `#140` (per-field-typed `bulk_value` control), `#141`
+(Categories drag & drop live UI wiring) — verified via each PR's own file
+list that none touch `wizard.php`, `wizardprogress.php`, `wizard.twig`,
+the wizard language file, or `upload/admin/controller/mintcart/business/*`.
+No hot shared files (§0f: Homepage Builder block-type registry, homepage
+block list/template, `block.css`) are touched by any of the 4 open PRs or
+by this increment.
+
+Verified: `php -l` clean across the full `upload/`/`tests/` tree.
+`tests/mintcart/onboarding/wizard-progress-test.php` grows from 11 to 12
+scenarios (the new `payment` step's place in the resume sequence, its
+`isImplemented()` check, and the "not yet implemented" check moved from
+`payment` to `design`). Full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end — all passing, no regressions. `wizard.twig`'s
+`{% if %}`/`{% endif %}` tag counts checked balanced (50/50) after the new
+step block. **Not verified:** no live MySQL/admin session in this
+sandboxed environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 13
+"Wizard Payment step" entry for the full manual script a human should run.
+
+**Next steps for a future session:**
+- The `design`/`first_product` steps — no existing facade to mirror this
+  time; each needs its own real form/save logic (see
+  `docs/developer/onboarding/setup-wizard.md`'s updated "not done yet"
+  list for a starting sketch of each).
+- Wiring an entry point to `mintcart/wizard` somewhere in the admin UI
+  (no redirect-after-install, no dashboard link exists yet).
+- Re-check `gh pr list --state open` before picking the next increment —
+  this backlog moves fast.
 **Update (2026-10-01, routine run): the `first_product` step is done.**
 `WizardProgress::IMPLEMENTED_STEPS` gains `first_product`, inserted between
 `delivery` and `ready` (matching canonical `STEPS` order — the same
@@ -2872,17 +3038,8 @@ admin consumer); Store step's logo upload; or re-check `gh pr list
       service (CLAUDE.md §85); fully additive, zero existing OpenCart file
       touched, zero upstream diff. Language file:
       `upload/admin/language/en-gb/mintcart/readiness.php`.
-- [~] `Business → Contacts`, `Business → Delivery`, `Business → Payments` UI façades
-      over standard OpenCart storage/extensions — **Delivery and Payments
-      done this run** (see below); Contacts is separately in flight as an
-      open PR — check `docs/IMPLEMENTATION_STATUS.md`'s current state
-      before assuming it's still unclaimed.
-- [ ] Dashboard widget rendering the checklist — not started on `master`
-      as of this run; `mintcart/readiness` is a JSON endpoint only, no
-      admin menu entry or Twig template yet. May already be in flight on
-      an open PR — check before starting one.
-      over standard OpenCart storage/extensions — **Contacts done**
-      (see below); Delivery/Payments not started.
+- [x] `Business → Contacts`, `Business → Delivery`, `Business → Payments` UI façades
+      over standard OpenCart storage/extensions — all three done (see below).
 - [x] Dashboard widget rendering the checklist — done, see below.
 
 **Sub-step (a previous run):** `StoreReadiness` service + `mintcart/readiness`
@@ -3084,6 +3241,21 @@ already share.
       scenarios), `tests/mintcart/commerce/quick-order-migration-test.php`
       (schema). **Not yet verified live** — no MySQL in this environment;
       see `docs/MANUAL_VERIFICATION.md`'s new Phase 15 section. **Not
+      built**: lead → order conversion — deliberately deferred, see the
+      doc's "Not done yet". **Update (2026-09-28, routine run): the admin
+      "Quick Order requests" list is now built** —
+      `Sale → Quick Order Requests` (`ControllerMintcartQuickorder`/
+      `ModelMintcartQuickorder`, admin-side, fully additive except one new
+      `column_left.php` menu entry) surfaces every lead with a per-row
+      status change (`new`/`contacted`/`converted`/`rejected`, via the new
+      `MintCart\Commerce\QuickOrderStatus` whitelist). See
+      `docs/developer/commerce/quick-order-service.md`'s new "Admin list"
+      section for the full writeup and `docs/upstream-diff.md`'s
+      `column_left.php` entry.
+- [ ] `CheckoutService` — not started; still genuinely large/risky without
+      live MySQL to verify `addOrder()`'s full field list against (same
+      reasoning `QuickOrderService` above sidestepped by not touching
+      order creation at all).
       built**: an admin "Quick Order requests" list to surface these leads
       (natural next consumer of `mc_quick_order`), and lead → order
       conversion — both deliberately deferred, see the doc's "Not done
@@ -3936,9 +4108,14 @@ since this backlog moves fast.
       request decode already worked with zero core changes). Full
       writeup: `docs/developer/seo/system-route-aliases.md`,
       `docs/upstream-diff.md`'s `startup/seo_url.php` entry. Test:
-      `tests/mintcart/seo/system-routes-test.php` (8 scenarios). Known
-      limitation: scoped to the main store + storefront default language
-      only, no multi-store/multi-language variant yet.
+      `tests/mintcart/seo/system-routes-test.php` (8 scenarios). **Update
+      (2026-09-29, routine run):** per-language variant done — one alias
+      field per (route, enabled language) pair, safe because MC-0009
+      already makes incoming decode/outgoing `rewrite()` resolve per the
+      request's actual language; no core file change needed for this part.
+      See `docs/developer/seo/system-route-aliases.md`'s "Multi-language"
+      section. Known limitation now: single store only (multi-store still
+      deferred, no real multi-store MintCart consumer yet).
 
 **Update (this run):** started this phase with System route URL aliases —
 at the time this run began, PR #62 (also open, unmerged) had already
@@ -4583,6 +4760,41 @@ human should confirm the rendered `<img>` tags carry the expected
 page. Responsive images (`srcset`), WebP/modern formats and asset
 minification-beyond-esbuild's-defaults remain untouched.
 
+**Update (2026-09-29, routine run): responsive `srcset` is done for the
+four Product Listing Pipeline consumers.** `category.php`/`search.php`/
+`manufacturer.php`/`special.php` each now build a second, 2x
+`model_tool_image->resize()` call next to their existing 1x one and pass
+`image_srcset` (`"<1x> 1x, <2x> 2x"`) through
+`MintCart\Commerce\ProductViewProvider` into both `product-card.twig`
+files (`mint_default`, `test_theme`) — see
+`docs/developer/commerce/product-view-provider.md`'s new "Image srcset
+(responsive images)" section and `docs/developer/components/product-card.md`'s
+new "Image srcset (responsive images)" section for the full writeup.
+Deliberately scoped to just `srcset` for the Product Listing Pipeline's
+already-shared `product-card.twig` contract — the Homepage Products block
+(no `resize()` call site found in `ProductsBlockProvider` itself; it must
+delegate elsewhere, not investigated further this run) and WebP/modern
+formats are separate, larger increments, still untouched. Step 0 dedup
+check: 12 open PRs at the time (`#138`-`#149`), confirmed via each PR's
+own file list that none touch `category.php`/`search.php`/
+`manufacturer.php`/`special.php`/`productviewprovider.php`/either
+`product-card.twig` (`#144`'s open, unmerged diagnostics-JSON change does
+touch the same four controller files, but at a different point in each
+`index()` method — confirmed no shared line via the diff shown in its own
+PR body); no Homepage Builder hot files (§0f) touched. Verified: `php -l`
+clean on all 5 touched PHP files; `tests/mintcart/commerce/product-view-provider-test.php`
+extended (10 → 11 scenarios); full `tests/mintcart/**/*-test.php` suite
+re-run end to end (84 files) — all passing, no regressions; both
+`product-card.twig` files' tag counts re-checked balanced. **Not
+verified:** no live MySQL/browser session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new "Phase 10/19 —
+`mc-product-card` responsive `srcset`" section. **Next candidates:**
+WebP/modern-format generation (needs a real "does a WebP variant exist"
+decision, a larger increment); the Homepage Products block's own image
+pipeline (needs tracing where `ProductsBlockProvider` actually resizes
+images first); asset minification beyond esbuild's defaults; or re-check
+`gh pr list --state open` first, since this backlog moves fast.
+
 Step 0 dedup check for this run: `gh`/GitHub MCP `list_pull_requests
 --state open` showed 30 open PRs (`#52`–`#82`) at the start of this run,
 covering nearly every other unstarted phase in this file (SEO Core's five
@@ -4707,6 +4919,29 @@ this phase (diagnostics, measured performance work) is not started.
       `docs/upstream-diff.md`'s `product.php` entry. Verified: `php -l`
       clean; full `tests/mintcart/` suite (77 files) re-run end to end —
       all passing, no regressions.
+      **Update (2026-09-29, routine run): the JSON diagnostics surface
+      named in this file's own "Next step" list is done.** All five wired
+      controllers (`category.php`/`search.php`/`special.php`/
+      `manufacturer.php::info()`/`product.php`) now also recognize
+      `&mintcart_diagnostics=json` (still gated by `mintcart_dev_mode`): a
+      sibling branch checked right before each one's existing HTML-comment
+      append returns `$mint_diagnostics->summary()` as a standalone JSON
+      response instead, same shape `mintcart/readiness` already
+      established, for tooling that would rather fetch diagnostics than
+      scrape a page's markup. A request without the parameter is
+      byte-for-byte unaffected. Full writeup:
+      `docs/developer/core/diagnostics.md`'s new "JSON diagnostics surface"
+      section; five small per-file notes in `docs/upstream-diff.md`.
+      Verified: `php -l` clean on all five touched files; full
+      `tests/mintcart/**/*-test.php` suite (84 files) re-run end to end —
+      all passing, no regressions (no new test file needed —
+      `Diagnostics::summary()` itself is already covered by
+      `tests/mintcart/core/diagnostics-test.php`; this only threads its
+      existing return value to a different response method). **Not
+      verified:** no live MySQL/browser session in this environment — see
+      `docs/MANUAL_VERIFICATION.md`'s new Phase 10 (Technical Plan) entry.
+      Real DB query counting remains the one open item for this checklist
+      bullet (still needs the `\DB\MySQLi`-hooking upstream-diff decision).
 - [~] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis) — cache
       invalidation API and asset minification (esbuild) were already done
@@ -5030,6 +5265,29 @@ before picking a Homepage Builder block-type increment).
       pre-existing gap — extraction/backup themselves ARE exercised against
       real files/real zip archives in this run's new scenarios, only the
       admin-controller/live-install pipeline around `apply()` is unverified.
+      **Update (2026-09-29, routine run):** ~~no admin controller/route~~
+      **partially done** — `ControllerMintcartUpdate::check()`
+      (`upload/admin/controller/mintcart/update.php`, route
+      `mintcart/update/check`, POST) is the flow's `check` step's first
+      real admin consumer, wired to `PackageManifest` + `UpdateChecker`
+      against the installed MintCart Core version. Deliberately does
+      **not** call `UpdateOrchestrator::apply()` (real file writes/
+      migrations, a separate later increment) or fetch a manifest from a
+      remote server (paste-based JSON, same scope decision
+      `ControllerMintcartCompatibility` made for `install.xml`). No admin
+      menu entry yet (reachable by direct URL only, same reasoning
+      `ControllerMintcartCompatibility`/`ControllerMintcartWizard`/
+      `ControllerMintcartReadiness` already used). Full writeup:
+      `docs/developer/update/update-check-controller.md`. Verified:
+      `php -l` clean; full `tests/mintcart/**/*-test.php` suite (84 files)
+      re-run end to end, all passing, no regressions (no new test file —
+      thin controller wiring over already-tested `PackageManifest`/
+      `UpdateChecker` logic). **Not verified:** no live OpenCart admin
+      bootstrap in this environment, same pre-existing gap every other
+      `ControllerMintcart*` class has — see
+      `docs/MANUAL_VERIFICATION.md`'s new entry for the manual script.
+      **Still not done:** `apply()` wiring into an admin action, an admin
+      menu entry, and a real update-server manifest fetch.
 - [x] Theme/extension rollback — **research/design only, no code** (RESEARCH
       item per Functional Scope §21): `docs/adr/005-theme-extension-update-rollback.md`
       answers all seven of §21's open questions (change detection, manifest
@@ -5039,7 +5297,6 @@ before picking a Homepage Builder block-type increment).
       no rollback action/service exist yet — deferred until the Update
       Manager's own `files`/`backup` steps exist to hang a snapshot off of
       (`CLAUDE.md` §85: no API ahead of a real consumer).
-- [ ] Theme/extension rollback (RESEARCH item per Functional Scope §21)
 - [x] Compatibility Checker (`install.xml` analysis, heuristic warnings only) —
       `MintCart\Compatibility\InstallManifestParser` +
       `MintCart\Compatibility\CompatibilityChecker`
@@ -5050,18 +5307,21 @@ before picking a Homepage Builder block-type increment).
       `bootstrap3-shim.css`'s own marker list), and potential conflicts
       against `docs/upstream-diff.md`'s known-modified-file list — never
       blocks (Functional Scope §29). Full writeup:
-      `docs/developer/compatibility/compatibility-checker.md`. No admin
-      menu entry yet (`column_left.php` contended by 3 other open PRs at
-      the time of this run — see the doc's "Why no admin menu entry yet").
+      `docs/developer/compatibility/compatibility-checker.md`.
+      **Update (2026-09-30, routine run):** admin screen + menu entry
+      done — `ControllerMintcartCompatibility::index()` (route
+      `mintcart/compatibility`, GET/POST) renders a form/results page
+      over the legacy admin theme, menu entry under `System →
+      Compatibility Checker`. `check()`'s own JSON API is unchanged; both
+      now share one `analyze()` helper. See the doc's "Admin screen and
+      menu entry" section.
 - [ ] **Release packaging script** — open PR at the time of this run (see
       "Next step" below); not yet merged to this checklist.
 
-Compatibility Checker is done for what a heuristic, non-blocking analyzer
-needs (parser + checker + a real JSON consumer, fully unit-tested, zero
-existing OpenCart file touched). Update Manager and rollback remain not
-started. Release packaging script's status is tracked by its own PR, not
-rewritten here to avoid conflicting with it.
-- [ ] Compatibility Checker (`install.xml` analysis, heuristic warnings only)
+Compatibility Checker is done, including its admin screen + menu entry
+(see the `[x]` entry above, updated 2026-09-30). Update Manager and
+rollback remain not started. Release packaging script's status is tracked
+by its own PR, not rewritten here to avoid conflicting with it.
 - [ ] **Release packaging script (TODO, not started).** Node/npm (`npm install`
       && `npm run build`) and the PHP vendor libraries already committed
       under `upload/system/**/vendor/` are dev/release-time tooling only —
@@ -5072,6 +5332,28 @@ rewritten here to avoid conflicting with it.
       a pre-built `upload/`. Natural home: alongside Update Manager package
       manifest work (Technical Plan §33), or a standalone `docs/release.md`
       if it's needed before Update Manager exists.
+      `docs/developer/compatibility/compatibility-checker.md`. No admin
+      menu entry yet (`column_left.php` contended by 3 other open PRs at
+      the time of this run — see the doc's "Why no admin menu entry yet").
+- [x] **Release packaging script** — `scripts/release.js` (`npm run
+      release`) + `docs/release.md`. Builds the frontend, stages the
+      committed (`git archive HEAD`) `upload/` tree, copies the built
+      `assets/dist/{css,js}` into `upload/assets/{css,js}`, and zips it
+      into `release/mintcart-<version>.zip`. Re-verified this run
+      (2026-09-29, routine): `npm install` (0 vulnerabilities), `npm run
+      release` ran end to end and produced a real
+      `release/mintcart-0.1.0-dev.zip` (14.66 MB). The two stale bullets
+      this replaced (this one, previously marked "open PR"/"TODO, not
+      started", plus a duplicate `[ ]` Compatibility Checker bullet just
+      above) were merge-conflict debris from an earlier run —
+      corrected here per `CLAUDE.md` §84 ("verify against the actual
+      repository, not memory or a stale note, before assuming something
+      is missing").
+
+Compatibility Checker is done for what a heuristic, non-blocking analyzer
+needs (parser + checker + a real JSON consumer, fully unit-tested, zero
+existing OpenCart file touched). Update Manager and rollback remain not
+started. Release packaging script is also done — see above.
 
 In progress. Verified (this run): `php -l` clean on every touched/added
 PHP file; new `tests/mintcart/update/package-verifier-test.php` (12
@@ -5418,6 +5700,21 @@ Not started.
 
 ## Documentation (Functional Scope §33 / Technical Plan §40)
 
+- [~] User docs (`docs/user/`) — install, Setup Wizard, Delivery and
+      Payments guides done; products (open as PR #156 at the time of this
+      entry — check its merge status), design/homepage/orders/SEO basics
+- [~] User docs (`docs/user/`) — **install, Setup Wizard and Products guides
+      done** (Products this run — see below); delivery/payments/design/
+      homepage/orders/SEO basics guides not started (most of those features
+      aren't built far enough yet to document accurately — see each one's
+      own Phase section above).
+- [ ] Developer architecture overview (`docs/developer/architecture/`,
+      Technical Plan §40's third `docs/` subtree) — not started; the
+      `docs/developer/{components,blocks,commerce,theme-api,onboarding,catalog,update}/`
+      per-feature docs already exist and are kept current per-PR, but there
+      is no single overview doc tying the layers together for a new
+      contributor (`CLAUDE.md`'s own §90 "Final principle" diagram is the
+      closest thing that exists today, inside `CLAUDE.md` itself).
 - [~] User docs (`docs/user/`) — **install and Setup Wizard guides done this
       run**; products/delivery/payments/design/homepage/orders/SEO basics
       guides not started (most of those features aren't built far enough
@@ -5483,6 +5780,80 @@ land and can be documented accurately. Low collision risk either way
 (pure Markdown, `docs/` only) — re-check `docs/user/` isn't newly claimed
 by another open PR before starting, same as any other increment.
 
+**Update (2026-09-30, routine run): `docs/user/delivery.md` and
+`docs/user/payments.md` added.** Step 0 checked all 22 open PRs at the
+time (#138–#159); `#156` ("Docs: add `docs/user/products.md`") was the
+only other in-flight `docs/user/` work and does not overlap two new,
+independent files. Both new docs describe `Business → Delivery`/
+`Business → Payments` (`ControllerMintcartBusinessDelivery`/`...Payments`,
+Phase 14, already documented for developers in
+`docs/developer/onboarding/business-delivery-payments.md`) from a
+merchant's point of view: what the screen lists, what "Configure"/"Manage"
+do, and what toggling does/doesn't touch.
+
+While cross-checking the toggle action against the actual OpenCart 3
+routing engine (`upload/system/engine/action.php`'s `Action::__construct()`,
+per `CLAUDE.md` §84 — never assume routing from memory), found that its
+`preg_replace('/[^a-zA-Z0-9_\/]/', '', $route)` strips the `.` out of any
+dot-notation route before splitting on `/`, so the exact
+`mintcart/business/delivery.toggle`/`mintcart/business/payments.toggle`
+links these two controllers link to
+(confirmed with a standalone PHP repro: `mintcart/business/delivery.toggle`
+becomes the parts `['mintcart','business','deliverytoggle']`, which never
+resolves to a controller file) are currently broken on `master` — clicking
+Enable/Disable produces a routing error, not a status change. This is the
+same class of bug open PR `#147` ("Fix broken dot-notation admin AJAX
+toggle routes") already targets for the Wizard's Delivery step and (per
+its own title) these same two Business screens — so the *fix* is already
+claimed there and was deliberately **not** duplicated here; both new docs
+instead document the toggle as a known, currently-broken gap (with
+"Configure → Status field" as the working alternative in the meantime),
+matching this file's established practice (`setup-wizard.md`'s own "Known
+gaps" section) of describing what's actually true today rather than the
+intended end state. No hot shared file (§0f — Homepage Builder block
+registry/`block.css`) touched; no code file touched at all.
+
+Verified: no code changed (two new Markdown files only), so `php -l`/
+`npm run build`/`tests/mintcart/` don't apply. Every concrete claim
+(screen contents, button labels, language keys, the routing-bug repro)
+was cross-checked against the actual source
+(`upload/admin/controller/mintcart/business/{delivery,payments}.php`,
+their `.twig` templates and language files, and a live `php -r` repro of
+`Action::__construct()`'s regex) rather than written from memory.
+
+**Next step:** once `#147` merges and the toggle actually works, update
+both docs' "Known gaps" section to drop that note; `design.md`/
+`homepage.md`/`orders.md`/`seo-basics.md` remain unwritten user guides
+(same "not built far enough to document accurately" reasoning as before)
+once their underlying features stabilize; re-check `docs/user/` isn't
+newly claimed before starting either.
+**Update (2026-09-30, routine run): `docs/user/products.md` added.** Step 0
+found 18 open PRs at the start of this run — a survey of every one's
+changed-files list (via `pull_request_read`'s `get_files`) confirmed *none*
+touch anything under `docs/user/`, so this was genuinely unclaimed, pure
+Markdown, zero code collision risk (the same reasoning the `install.md`/
+`setup-wizard.md` run above used). Documents `Catalog → Products`
+(`catalog/product`) as it behaves on `master` today: OpenCart's stock
+list/form, the already-merged six-field Bulk Editor toolbar
+(`MintCart\Catalog\BulkProductUpdateValidator::FIELDS`), and the three
+fields (Manufacturer/Category/Related Products) that already have a
+`mc-entity-picker` "Browse" button alongside their original OpenCart input
+— cross-checked directly against `product_list.twig`/`product_form.twig`/
+`bulkproductupdatevalidator.php` rather than assumed from the Functional
+Scope doc. Deliberately does not describe the Attribute/Option pickers or
+the per-field-typed bulk-value control, since those exist only in
+currently-open, unmerged PRs (`#148`/`#152` and the bulk-value-control PR)
+and are not yet true of `master`. Verified: no code touched (Markdown
+only), so `php -l`/`npm run build`/`tests/mintcart/` don't apply; every
+concrete claim (bulk field list and value rules, tab names, which three
+fields have a picker) was re-read from the actual source file, not memory.
+**Next candidates:** re-check `gh pr list --state open` first (18+ open
+PRs at the time of this run — an unusually large backlog); once some of
+that backlog merges, a `delivery.md`/`payments.md` user guide (Business →
+Delivery/Payments façades already exist and are stable) or `docs/adr/`
+entries for decisions currently only justified inline across several
+per-feature docs (`CLAUDE.md` §15) are both similarly low-risk,
+documentation-only next steps.
 **Update (2026-09-29, routine run):** the Developer architecture overview
 named above is now done — see the checklist entry just above for the
 full writeup. Step 0 checked all 17 open PRs at the start of this run
@@ -7133,6 +7504,288 @@ its language file, so this run wired Phase 12's Customer Entity Picker
 backend into `sale/order_form.twig` (see the Phase 12 section above for
 the full writeup) — PR #163. Re-check `gh pr list --state open` before
 picking anything new; this backlog moves fast and is large right now.
+**Trailer note (2026-09-30, routine run):** `list_pull_requests` returned
+24 open PRs at the start of this run (#138–#161, one `IN-PROGRESS`: #148).
+Picked the Phase 19/Compatibility Checker "admin menu entry" gap several
+earlier trailer notes had named but never claimed — `column_left.php`'s
+`System` array was uncontended (checked the PRs most likely to touch
+admin navigation directly; see `docs/upstream-diff.md`'s `column_left.php`
+entry for the exact check). Added `ControllerMintcartCompatibility::index()`
+(route `mintcart/compatibility`, GET/POST) — a rendered form/results page
+over the legacy admin theme, reusing `check()`'s existing, already-tested
+`InstallManifestParser`/`CompatibilityChecker` pipeline via a new shared
+`analyze()` helper (extract-method refactor, `check()`'s own JSON
+contract unchanged) — plus the `System → Compatibility Checker` menu
+entry. Full writeup: the Phase 11 (Technical Plan) Compatibility Checker
+entry above, `docs/developer/compatibility/compatibility-checker.md`'s
+"Admin screen and menu entry" section, `docs/upstream-diff.md`'s
+`column_left.php` entry, `docs/MANUAL_VERIFICATION.md`'s new Phase 19
+section. Verified: `php -l` clean across the full `upload/`/`tests` tree;
+new `compatibility.twig`'s `{% if %}`/`{% for %}` tags balanced (12/12);
+full `tests/mintcart/**/*-test.php` suite (84 files) re-run end to end —
+all passing, no regressions (no new pure class, so no new test file). Not
+verified: no live MySQL/admin session in this environment, same
+pre-existing gap every other `ControllerMintcart*` screen has. **Next
+candidates:** the still-unclaimed admin `mintcart/update/*` `apply()`
+wiring (flagged repeatedly as needing its own careful increment — real
+file writes/migrations against a live install, plus a genuine
+"where does a package manifest/download URL come from" product/
+architecture question per `CLAUDE.md` §20, not a mechanical wiring step);
+an upload-based (not paste-based) Compatibility Checker flow; the
+remaining Entity Picker live-wiring gaps (information/customer backends);
+or re-check `gh pr list --state open` first, since this backlog moves
+fast.
+19 open PRs (`#138`-`#156`, all `ROUTINE-STATUS: DONE` except `#148`
+IN-PROGRESS) at the start of this run — a large unmerged backlog, but
+each individually scoped and none overlapping this run's files. Added
+`MintCart\Catalog\SortOptionsBuilder`/`LimitOptionsBuilder`, wired into
+`category.php` — see the Phase 8 (Implementation Guide numbering) section
+above for the full writeup. **Next candidates:** wire the same builders
+into `manufacturer.php`/`search.php`; or re-check `gh pr list --state
+open` first, given the size of the current backlog.
+**Trailer note (2026-09-29, routine run): documentation-accuracy fix, no
+code change.** Step 0 found 16 open PRs (`#138`-`#153`); a first attempt
+at a code increment (Homepage Products block `srcset`, mirroring `#150`'s
+work on the four listing controllers) was abandoned mid-way once it became
+clear it would need the exact same `productviewprovider.php`/
+`product-card.twig` edits `#150` already carries — a direct file-level
+collision with in-flight, uncontended work, not a genuine independent
+increment (the routine's own step 0f principle, applied one level more
+specifically than its literal Homepage-Builder-only wording). Reverted
+that attempt cleanly before it was ever committed. While investigating,
+running `scripts/release.js`/`npm run release` end to end (to sanity-check
+whether the still-`[ ]`-marked "Release packaging script" checklist item
+was really unimplemented) surfaced two confirmed cases of stale
+merge-conflict debris in this file: the Phase 14 section had duplicated,
+contradictory bullets for the `Business → Contacts` facade and the
+Store-Readiness dashboard widget (one copy said "not started", another
+said "done" — both already exist in the repo: `upload/admin/controller/mintcart/business/contacts.php`
+and `upload/admin/controller/extension/dashboard/mintcart_readiness.php`),
+and the Phase 11 section had two stale `[ ]` bullets each for
+Compatibility Checker and the Release packaging script, again duplicating
+an already-`[x]` entry each. Corrected all four per `CLAUDE.md` §84 (verify
+against the actual repository, not a stale note, before assuming something
+is missing) — see the Phase 14 and Phase 11 sections above for the
+corrected bullets. No PHP/JS/Twig file touched; full
+`tests/mintcart/**/*-test.php` suite (84 files) re-run end to end — all
+passing (expected, since nothing but this doc changed). Also confirmed,
+independently, that `#153`'s fix (the missing
+`upload/system/library/config.php`) is real and severe: a packaged release
+zip built from current `master` has no `Config` class at all, so every
+request would fatal — not re-implemented here since `#153` already covers
+it; this is corroborating evidence for prioritizing that PR's merge.
+**Next candidates:** re-check `gh pr list --state open` first — 16 PRs is
+a lot of concurrent in-flight scope, and several (`#138`, `#144`, `#150`,
+`#151`, `#139`) already touch shared page-chrome files
+(`common/header.php`, `common/column_left.php`) or the shared
+`ProductViewProvider`/`product-card.twig` contract; a future run should
+prefer an area none of the currently-open PRs touch at all, the same
+check this run applied before backing out of the `srcset` attempt.
+**Trailer note (2026-09-29, routine run):** `list_pull_requests` returned
+13 open PRs at the start of this run (`#138`-`#150`, all `DONE` except
+`#148` `IN-PROGRESS`) — see the Phase 9 (Presets) section above for the
+per-file overlap check. Built `Design → Styles`
+(`ControllerMintcartDesignStyles`), the first real admin consumer for
+Phase 9's `data-mc-preset` mechanism, and wired it into
+`ControllerCommonHeader`/`mint_default`'s `common/header.twig` — see that
+section for the full writeup. **Next candidates:** the remaining Entity
+Picker backends needing live wiring (information/attribute/customer);
+`OrderAdapter` (still no duplicated inline order-lookup call site in
+Mint-owned code to justify one); the two-overlapping-Bulk-Editor fork
+(`BulkProductUpdateValidator` vs. `BulkProductUpdatePlanner`, still a
+human decision, not attempted); a wider Theme Settings `settings.json`
+schema (needs a second real theme option beyond "which preset" first); or
+re-check `gh pr list --state open` first, since this backlog moves fast.
+**Trailer note (2026-09-29, routine run):** responsive image `srcset` is
+now done for Category/Search/Manufacturer/Special — see the Phase 10
+(Technical Plan §36 Performance) section above (the entry right after the
+`width`/`height`+lazy-loading update) for the full writeup. 12 open PRs
+existed at the start of this run (`#138`-`#149`); none overlapped this
+increment's files. **A repeated caution for the next run:** several
+sections of this file (Phase 7's old "Mobile Navigation" note, Phase 14's
+Dashboard widget checklist, Phase 11's Release packaging script line)
+were found stale — marked as `[ ]`/"not started" while the real repo
+already had the feature — during this run's own search for unclaimed
+work; verify against actual code (`grep`/`find`, not this file's own
+checklist markers) before assuming something is missing. Re-check `gh pr
+list --state open` before picking the next step.
+**Trailer note (2026-09-29, routine run):** `list_pull_requests` returned
+11 open PRs at the start of this run (#138–#148; #148 `IN-PROGRESS`, the
+rest `DONE`), none covering an Update Manager admin controller/route (see
+PR #149's own body for the full per-PR scope check). Added
+`ControllerMintcartUpdate::check()` (route `mintcart/update/check`) — see
+the Phase 11 (Technical Plan) section above for the full writeup. **Next
+candidates:** wiring `UpdateOrchestrator::apply()` into an admin action
+(real file writes/migrations — needs its own careful, separate
+increment); an admin menu entry for `mintcart/update` once
+`common/column_left.php` isn't contended; a real update-server manifest
+fetch; or re-check `gh pr list --state open` first, since this backlog
+moves fast.
+10 open PRs at the start of this run (#138–#147, all `ROUTINE-STATUS:
+DONE`) — none touching `product_form.twig`, `catalog/option.php`, or any
+`upload/system/library/mintcart/design/*` file. Wired the Phase 12 Entity
+Picker's Option backend into `product_form.twig`'s Option tab — see the
+Phase 12 section above ("Option field live-wired") for the full writeup.
+**Next candidates:** the remaining Phase 12 entity types still needing
+live wiring (information/attribute/customer); or re-check `gh pr list
+--state open` first, since this backlog moves fast.
+**Trailer note (2026-09-29, routine run): real bug fix, not a checklist
+item — broken dot-notation admin AJAX routes.** Step 0 found 9 open PRs
+(#138-#146, all `ROUTINE-STATUS: DONE`), none touching
+`wizard.php`/`business/delivery.php`/`business/payments.php`'s toggle
+routes or any Homepage Builder hot file (§0f). While looking for this
+run's next unclaimed step, found that `ControllerMintcartWizard::toggleDelivery()`
+(Phase 13, `mintcart/wizard.toggleDelivery`),
+`ControllerMintcartBusinessDelivery::toggle()` and
+`ControllerMintcartBusinessPayments::toggle()` (both Phase 14,
+`mintcart/business/{delivery,payments}.toggle`) all built their POST
+toggle route with a dot separating the controller path from the method
+name — the OpenCart 4 convention, not OpenCart 3's. `ControllerStartupRouter::index()`
+(`upload/admin/controller/startup/router.php`) sanitizes the incoming
+route with `preg_replace('/[^a-zA-Z0-9_\/]/', '', $route)` *before*
+`Action` ever sees it, silently stripping the dot and merging the
+controller path and method into one unresolvable segment — confirmed by
+simulating the exact router + `Action` (`upload/system/engine/action.php`)
+logic against the real strings: `mintcart/business/delivery.toggle`
+resolves to a null route and method `mintcart`, which `Action::execute()`
+turns into "Error: Could not call ...". All three "Enable/Disable" toggle
+buttons (`Business → Delivery`, `Business → Payments`, the Setup Wizard's
+Delivery step) were dead on `master` — every prior "not verified live, no
+MySQL in this environment" caveat on these three screens
+(`docs/MANUAL_VERIFICATION.md`'s Phase 13/14 entries) would have caught
+this the moment a human actually clicked the button, but no routine run's
+`php -l`-only verification ever could, since a syntactically valid string
+containing a dot lints fine. Fixed all three call sites (dot → slash,
+matching the exactly one convention every other `url->link()` call in this
+entire codebase already uses — confirmed via a repo-wide `grep`, zero
+other exceptions existed) plus their own route-documenting comments and
+three doc mentions (`docs/MANUAL_VERIFICATION.md`,
+`docs/developer/onboarding/setup-wizard.md`, this file's own Phase 13
+section). Added `tests/mintcart/admin/route-format-test.php` — a
+permanent regression guard (not a one-off assertion) that scans every
+`upload/admin/controller/**/*.php` file's `url->link()` calls for this
+exact dot-notation shape, so a future PR reintroducing it fails CI. This
+matters immediately: PR #142's open, not-yet-merged `togglePayment()`
+copies `toggleDelivery()`'s shape verbatim, dot included — the new test
+will catch it the moment that branch rebases onto this fix (or flag it in
+review if merged as-is first). No OpenCart core file touched — fully
+MintCart-owned files — so no `docs/upstream-diff.md` entry needed; this
+also isn't a historical-OpenCart-bug candidate for `docs/fixes/registry.md`,
+since the bug is MintCart's own, introduced in Phase 13/14, not inherited
+from upstream. Verified: `php -l` clean across the full `upload/`/`tests/`
+tree; full `tests/mintcart/**/*-test.php` suite re-run end to end
+(**85/85 files pass**, 84 existing + this run's new regression test, no
+regressions); the new test's detection logic double-checked by running it
+against a scratch copy of `wizard.php` with the dot reinstated, confirming
+it does flag the exact broken pattern. **Not verified live** — no
+MySQL/admin session in this environment, same pre-existing gap as every
+other admin-screen increment in this repo; a human should still confirm
+all three toggle buttons on a real install per `docs/MANUAL_VERIFICATION.md`'s
+existing Phase 13/14 entries, now that the route itself is fixed.
+**Next candidates:** the admin controller/`mintcart/update/*` route (still
+the only remaining gap before a real install can run `UpdateOrchestrator::apply()`);
+the "changed since install" comparison (now claimed by #145); Entity
+Picker's Option-tab live wiring (`docs/developer/components/entity-picker.md`
+"Option backend" already names `product_form.twig`'s Option tab as the
+identified first consumer); or re-check `gh pr list --state open` first.
+**Trailer note (2026-09-29, routine run):** `list_pull_requests` returned
+7 open PRs at the start of this run (#138–#145), none touching
+`upload/admin/controller/mintcart/seo/*`, `upload/admin/view/template/mintcart/seo/*`,
+or `upload/admin/model/design/seo_url.php`. Added the per-language variant
+to `Design → System Pages` (Phase 18 section above has the full writeup) —
+`ControllerMintcartSeoSystemPages` now manages one alias per (route,
+enabled language) pair instead of only the storefront's default language,
+made safe by the already-merged MC-0009 fix. No core file touched. `php -l`
+clean across the full `upload/` tree; full `tests/mintcart/**/*-test.php`
+suite (84 files) re-run end to end, all passing, no regressions (no new
+pure class added, so no new test file). **Next candidates:** the
+per-*store* variant of the same screen (still deferred, no real
+multi-store MintCart consumer yet); `HreflangBuilder` still has no live
+consumer (needs a per-language URL resolver — this run's `languages()`
+helper in `ControllerMintcartSeoSystemPages` could inform that resolver's
+design, but building it is a separate increment); the admin
+`mintcart/update/*` route flagged by several prior runs; the
+two-overlapping-Bulk-Editor-implementations fork flagged in PR #143's own
+notes (still needs a human decision, not attempted here); or re-check
+`gh pr list --state open` first, since this backlog moves fast.
+**Trailer note (2026-09-29, routine run):** Step 0 found 6 open PRs
+(#138-#143, all `ROUTINE-STATUS: DONE`) — `#138` search-box header wiring,
+`#139` admin Quick Order Requests list, `#140` bulk-editor `bulk_value`
+control, `#141` Categories drag & drop live UI, `#142` Wizard Payment
+step, `#143` `ProductAdapter`. Confirmed via each PR's own file list that
+none touch `upload/catalog/controller/product/{category,search,special,
+manufacturer,product}.php`; no Homepage Builder hot files (§0f) touched by
+any of the 6. Added the `&mintcart_diagnostics=json` surface named in the
+Phase 10 (Technical Plan) Diagnostics section's own "Next step" — see that
+section above for the full writeup. `#143`'s own trailer note flagged two
+other candidates: `OrderAdapter` (no duplicated inline order-lookup call
+site found yet in Mint-owned code to justify one, per `CLAUDE.md` §85 —
+still not attempted) and a human decision on converging
+`BulkProductUpdateValidator`/`BulkProductUpdatePlanner` (a product
+decision, not a mechanical step — left for the project owner, not
+guessed). **Next candidates:** real DB query counting for `Diagnostics`
+(still needs the `\DB\MySQLi`-hooking decision); hreflang live wiring
+(`HreflangBuilder` still needs a per-language URL resolver first, see its
+own doc); `category_ids` as a bulk-editable field (needs a real
+multi-select/picker control); or re-check `gh pr list --state open`
+first, since this backlog moves fast.
+**Trailer note (2026-09-29, routine run):** added
+`MintCart\Compatibility\OpenCart3\ProductAdapter` (Phase 1) — see the
+Phase 1 section above and `docs/developer/compatibility/product-adapter.md`
+for the full writeup. `list_pull_requests` returned 5 open PRs (#138-#142,
+all `ROUTINE-STATUS: DONE`) at the start of this run; none touch
+`upload/catalog/controller/mintcart/cart.php`,
+`upload/catalog/controller/mintcart/quickorder.php`, or any
+`MintCart\Compatibility\OpenCart3\*` file. Homepage Builder hot shared
+files (§0f) untouched by this run and by all 5 open PRs. **Next
+candidates:** `OrderAdapter` (the last unstarted named adapter — no
+obvious already-duplicated inline call site found yet in MintCart-owned
+code; would need one identified first, per `CLAUDE.md` §85); the two
+parallel, seemingly-overlapping Bulk Editor implementations noticed while
+looking for this run's next step (`MintCart\Catalog\BulkProductUpdateValidator`,
+wired into the live `product_list.twig` toolbar/`bulkUpdate()`, vs.
+`MintCart\Catalog\BulkProductUpdatePlanner`, a separate
+plan-then-chunk-then-apply design that already validates `category_ids`
+but was deliberately left unwired — worth a human decision on whether to
+converge these into one, per `CLAUDE.md` §17/§86, rather than continuing
+to build on both); or re-check `gh pr list --state open` first.
+**Trailer note (2026-09-28, routine run):** Setup Wizard `payment` step is
+done (see the Phase 13 section above) — `IMPLEMENTED_STEPS` is now
+`['welcome', 'store', 'contacts', 'language_currency', 'delivery',
+'payment', 'ready']`; only `design`/`first_product` remain unimplemented.
+4 open PRs existed at the start of this run (#138-#141), none overlapping
+this increment's files. Re-check `gh pr list --state open` before picking
+the next step.
+**Trailer note (2026-09-28, routine run):** Step 0 found exactly one open
+PR, #138 (Phase 15 `mc-search-box` header wiring, `ROUTINE-STATUS: DONE`,
+not yet merged) — no file overlap with this run. Added the admin
+`Sale → Quick Order Requests` list — see the Phase 15 section above for
+the full writeup. While investigating, found several other "next
+candidates" this file's own trailer notes had named were already done in
+code but not reflected here (a reminder that these historical notes can
+drift stale — verify against the actual repo, not just this file, per
+`CLAUDE.md` §10/§84): `manufacturer.php`'s `info()` already has
+`SchemaOrgBuilder::breadcrumbList()` wiring (matches
+category/search/special), and `MintCart\Catalog\BulkProductUpdateValidator`
+already covers `status`/`quantity`/`price`/`manufacturer_id`/
+`stock_status_id`/`special_price` (6 fields, not the 4 an earlier trailer
+note described) with `category_ids` already validated (though not yet
+wired to a live endpoint) by the separate, still-unwired
+`BulkProductUpdatePlanner`. The admin `mintcart/update/*` route named just
+above was investigated but not attempted this run: it's the first place
+in the Update Manager flow that would need a real decision about where a
+package manifest/download URL actually comes from (no update-server
+infrastructure exists or is planned) — a product/architecture fork
+(`CLAUDE.md` §20), not a mechanical wiring step like every `Update\*`
+primitive built so far. **Next candidates:** a per-field-typed `bulk_value`
+control for the Bulk Editor toolbar (`docs/developer/catalog/bulk-editor.md`'s
+"Next step" — small, safe, explicitly deferred, not attempted this run);
+`category_ids`/SEO fields wired to a live Bulk Editor endpoint (needs the
+`BulkProductUpdatePlanner`'s chunked-AJAX-endpoint gap filled first, itself
+a larger increment); `CheckoutTotalsService`'s next step per its own doc;
+deciding the update-server/manifest-source question above (a human
+decision, not a routine-run task); or re-check `gh pr list --state open`
+first.
 **Trailer note (2026-09-28, routine run):** Phase 17's live UI wiring is
 now done (category drag & drop, `category_list.twig` + real `mc-sortable`
 behavior) — this also resolves the Phase 12 "Architectural fork
