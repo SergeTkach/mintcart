@@ -118,6 +118,13 @@ drawerEl.addEventListener('mc:entity-picker:change', (event) => {
 - **Search** — the `input` event on `[data-mc-entity-picker-search]` is
   debounced (250ms default, `debounceMs` option), resets to page 1, and
   re-fetches.
+- **Filters** — the `change` event on any
+  `[data-mc-entity-picker-filter="<key>"]` element resets to page 1 and
+  re-fetches, same as search (but not debounced — a `<select>`'s `change`
+  fires once per choice, not per keystroke). Every such element's current
+  `.value` is read into a `filters` object (`{ [key]: value }`) and passed
+  to `fetchItems()` alongside `query`/`page`/`pageSize`; a host page with
+  no filter element gets `filters: {}`.
 - **Pagination** — `data-mc-action="entity-picker-prev"` /
   `"entity-picker-next"`, disabled at the first/last page from the
   `total`/`pageSize` the data source reports. In-flight requests are
@@ -268,9 +275,12 @@ real install is a natural, low-risk follow-up — not attempted this run for
 the same no-live-verification reason.
 
 **Still not done, by design:**
-- Filters beyond search text, and the create-new-flow (add a category
-  inline from the picker) — no requirement identified yet for this
-  consumer.
+- Filters beyond search text (the picker now supports them generically —
+  see the Product backend's own "Filters" section below for the first
+  real consumer, `filter_status`) — Category has no analogous backend
+  filter and no requirement identified yet for this consumer; the
+  create-new-flow (add a category inline from the picker) is still
+  unattempted for every entity type.
 - Every other entity type is now done — **manufacturer**, **product**,
   **information pages**, **attributes**, **options** and **customers**,
   see below.
@@ -419,6 +429,50 @@ keys, same file/pattern as Category's/Manufacturer's own six.
 Removing the old autocomplete field is the same natural, low-risk,
 not-yet-attempted follow-up as Category's/Manufacturer's.
 
+**Filters (beyond search text): `filter_status` is done.** The "Still not
+done, by design" note under the Category backend above flagged "Filters
+beyond search text" as having no identified requirement yet — the Product
+backend's own data already makes a real one obvious: Related
+Products/Category/Manufacturer pickers all list products regardless of
+`status`, so an admin browsing for a related product has no way to tell
+an enabled product from a disabled one apart from re-opening its own edit
+screen. `createEntityPicker()` (`entity-picker.js`) now reads any
+`[data-mc-entity-picker-filter="<key>"]` element inside `root` into a
+plain `filters` object passed to `fetchItems()` alongside `query`/`page`/
+`pageSize` — generic, not product-specific, the same "this module never
+interprets what a key/value means" principle it already applies to
+`query`. `ControllerMintcartEntity::product()` accepts an optional
+`filter_status` GET param and passes it straight through to
+`getProducts()`/`getTotalProducts()` — both already support it (no model
+change, so no upstream diff entry for this). A blank/absent value means
+"every status", unchanged from today's behavior.
+
+This ships the capability and its first real backend consumer, same
+"primitive before/alongside live UI" precedent as `HreflangBuilder`
+(`docs/developer/seo/hreflang.md`) and `CheckoutTotalsService`
+(`docs/developer/commerce/checkout-totals-service.md`) — **no template
+yet renders a `data-mc-entity-picker-filter` element** (Related/Category/
+Manufacturer's existing panels all predate this and would need their own
+small follow-up to add a status `<select>`), deliberately not attempted
+in the same increment: every one of those three panels sits inside
+`product_form.twig`, a file with its own in-flight entity-picker wiring
+PRs at any given time (the Attribute/Option/Customer fields above) — a
+second, unrelated edit to that same file risks exactly the kind of
+same-file collision `CLAUDE.md`'s dedup/hot-file guidance exists to avoid.
+Adding a status filter `<select>` to one of those three panels (and its
+own `text_*_picker_filter_status_*` language strings) is the natural next
+increment once this file's own in-flight PRs have landed.
+
+Category/Manufacturer have no analogous `filter_status` support in their
+own admin models (`ModelCatalogCategory::getCategories()`/
+`ModelCatalogManufacturer::getManufacturers()` have no such parameter at
+all) — adding one would be a genuine `ModelCatalog*` core-file change for
+a single consumer, the same "not worth it yet" reasoning the Category
+backend's own "Why paging happens in PHP" section already gives for a
+different gap in the same two models. Not attempted here; `filter_status`
+stays Product-only until a second entity type has a real need for its own
+filter.
+
 ## Information page backend
 
 ```
@@ -453,15 +507,36 @@ large store), so this isn't a real cost today — same reasoning that already
 justified PHP-side paging alone for category and manufacturer.
 
 Same permission requirement (`mintcart/entity` **Access** must be granted to
-a user group first) and the same "not done yet, by design" live-wiring gap:
-no admin screen calls this endpoint yet, blocked on the same admin
-asset-enqueue problem as category and manufacturer (see above). There is no
-single obvious first consumer the way `product_form.twig`'s Category/
-Manufacturer fields are for the other two — information pages are picked in
-several places (`information_form.twig`'s own layout/link settings and any
-future "related pages" style field), so the first real consumer should be
-identified when one of those screens is actually being migrated to
-`McEntityPicker`, not guessed at here.
+a user group first).
+
+**Live wiring done.** `setting/store_form.twig`'s **Account Terms** and
+**Checkout Terms** fields (`#input-account`/`config_account_id`,
+`#input-checkout`/`config_checkout_id` — native `<select>` elements
+listing every information page, used by `Settings → Store → Edit` to pick
+the page a customer must agree to before registering/checking out) are
+the first real consumers, found by reading `store_form.twig` directly
+rather than guessing (`CLAUDE.md` §84) — the "no single obvious first
+consumer" this section previously described was about *inventing* one,
+not about there being none at all. Each `<select>` gets a "Browse pages"
+button + hidden `.mc-entity-picker` panel, additive alongside the native
+`<select>` (kept as-is, not replaced — a store with only a handful of
+information pages has no real need to lose the plain dropdown). This is
+simpler than Category/Manufacturer's "swap a text+hidden pair" shape:
+confirming a pick here just sets the existing `<select>`'s `.value`,
+since every information page already has an `<option>` rendered
+server-side — no new option needs to be created client-side. Two
+independent `McEntityPicker` instances (one per field, not a shared/
+delegated instance — there are only ever two of these fields, not a
+dynamic row list like Attribute's), both `multiple: false`.
+
+`ControllerSettingStore` gained its own `enqueueMintAssets()` (same
+`components.min.css` + `admin.min.js` pairing every other MintCart admin
+screen uses, see `docs/developer/admin/asset-enqueue.md`), called at the
+top of `getForm()`. Note this is `Settings → Store → Edit`
+(`setting/store.php`), not the separate `Settings → Settings`
+(`setting/setting.php`/`setting.twig`), which has a near-identical,
+currently-unwired pair of selects for a single-store install — left alone
+by this change, a natural follow-up over the exact same pattern.
 
 ## Attribute backend
 
@@ -507,13 +582,27 @@ the start of the name only), the same as manufacturer, not category's
 `LIKE '%…%'` substring match. Pre-existing OpenCart behavior, not
 introduced here.
 
-Same permission requirement and the same "not done yet, by design"
-live-wiring gap as category/manufacturer above. No obvious first live
-consumer has been identified yet for this one — unlike category/
-manufacturer, there is no existing single-select attribute autocomplete
-field on `product_form.twig` to swap out; a future consumer would be a
-*new* UI affordance (e.g. searching attributes by name when adding one to
-a product), not a drop-in replacement of something that already exists.
+Same permission requirement as category/manufacturer above.
+
+**Live wiring done.** `product_form.twig`'s Attribute tab (`#attribute`) is
+the identified first consumer — as predicted above, a *new* affordance, not
+a drop-in replacement, since attribute rows are added dynamically
+(`addAttribute()`) rather than being a single static field. One shared
+`#attribute-picker` `McEntityPicker` instance (single-select) is reused
+across every row via event delegation on the `#attribute` table
+(`Implementation Guide` §14): each row gets its own
+`data-mc-action="browse-attribute" data-mc-attribute-row="N"` button;
+clicking it records which row is active, and `onConfirm` writes the chosen
+attribute's `name`/`id` into that row's `[data-mc-attribute-name]`/
+`[data-mc-attribute-id]` fields — the exact same fields
+`attributeautocomplete()`'s own jQuery UI `'select'` handler already
+writes to (kept as-is, not replaced, same reasoning as category/
+manufacturer/related above), so `ControllerCatalogProduct`'s save logic
+needs no change. A per-row picker instance was deliberately avoided (would
+mean N `fetch` wire-ups and N DOM subtrees for what is nearly always a
+handful of rows) in favor of one instance plus delegation, the same
+"reuse by responsibility, not by copying" principle `CLAUDE.md` §38E
+names for controllers, applied here to a client-side widget.
 
 ## Option backend
 
@@ -526,8 +615,8 @@ wraps `ModelCatalogOption::getOptions()` (never queries the database
 directly) and normalizes rows via `MintCart\Design\OptionPickerProvider`
 (`upload/system/library/mintcart/design/optionpickerprovider.php`, no
 OpenCart dependency, unit-tested in
-`tests/mintcart/design/option-picker-provider-test.php`) into the same
-`{items: [{id, name, image}], total}` shape. Same reason for a new route
+`tests/mintcart/design/option-picker-provider-test.php`) into
+`{items: [{id, name, image, type}], total}`. Same reason for a new route
 instead of reshaping `catalog/option.php`'s own `autocomplete()` action
 (an existing `product_form.twig` consumer with no pagination), and for
 paging in PHP rather than SQL (`ModelCatalogOption` has
@@ -539,19 +628,45 @@ support).
 (individual `oc_option_value` rows can carry one, but an *option* — the
 group, e.g. "Size" — cannot), same reasoning as category.
 
+`type` (`select`/`radio`/`checkbox`/`image`/`text`/`textarea`/`file`/
+`date`/`time`/`datetime`) is the one field this backend adds beyond the
+plain category/manufacturer shape — `OptionPickerProvider` passes it
+through from `o.type` (already present on every `getOptions()` row, no
+extra query) since `product_form.twig`'s Option tab needs it to decide
+which type-specific fields to build for a newly-added option.
+
+For the four types that carry a value list (`select`/`radio`/`checkbox`/
+`image`), the controller layers an `option_value: [{option_value_id, name}]`
+array onto each item after calling the provider, via
+`ModelCatalogOption::getOptionValues()` — one extra query per row of the
+current page (not per row of the full filtered set), same reasoning
+`OptionPickerProvider`'s own docblock gives for why this can't live in
+the OpenCart-independent provider itself. Every other type gets an empty
+`option_value` array. Unlike the legacy `catalog/option/autocomplete`
+action, no per-value image thumbnail is built here — the tab-building JS
+below only ever reads `option_value_id`/`name` from this list.
+
 `filter_name` prefix-matches (`LIKE '…%'`), same as manufacturer, not
 category's substring match — inherited unchanged from
 `ModelCatalogOption::getOptions()`.
 
-Same permission requirement (`mintcart/entity` **Access**) and the same
-"not done yet, by design" live-wiring gap as category/manufacturer: no
-admin screen calls this endpoint yet, for the identical reason
-(MintCart's asset bundle still isn't enqueued on any admin page — see
-above). `product_form.twig`'s **Option** tab (`#input-option`, the
-jQuery UI `autocomplete()` block using `catalog/option/autocomplete`) is
-this backend's identified first real consumer — already
-search-as-you-type, so a future `McEntityPicker` swap is a shape match,
-not a new pattern.
+Same permission requirement (`mintcart/entity` **Access**) as every other
+backend above. **Wired into `product_form.twig`'s Option tab** as an
+*additional* way to add an option, alongside the existing jQuery UI
+`autocomplete()` input (kept as-is, not replaced — same "additive, not a
+swap" reasoning the Category/Manufacturer/Related pickers above already
+used, and the same reason no attempt was made here to also replace
+`catalog/option/autocomplete` as the attribute picker's search source).
+The confirm handler maps the picker's `{id, name, type, option_value}`
+item into the exact `{value, label, type, option_value}` shape the
+autocomplete's own `'select'` handler already expects, and calls that
+same handler (extracted into a named `selectOption()` function so both
+paths share it) — so it builds the exact same tab-pane markup
+(type-specific value fields, the value table for `select`/`radio`/
+`checkbox`/`image` types, tooltip/datetimepicker initialization) with no
+duplicated tab-construction logic. `ControllerCatalogProduct`'s own
+`validateForm()`/`addProduct()`/`editProduct()` handling of
+`product_option[]` is completely unchanged.
 
 ## Customer backend
 
@@ -588,12 +703,36 @@ style as category (not manufacturer's prefix match).
 
 `image` is always `null` — customers have no image concept in OpenCart.
 
-Live wiring **not** attempted — same reason category/manufacturer left it
-undone: MintCart's asset bundle still isn't enqueued on any admin page. No
-single obvious first live consumer has been identified yet for this one
-either (there is no existing customer-autocomplete field on any admin
-template to replace, unlike category/manufacturer/product) — documented
-here rather than guessed at, per `CLAUDE.md` §85.
+**Live wiring: now done.** `sale/order_form.twig`'s **Customer** field
+(`#input-customer`, the jQuery UI `autocomplete()` block using
+`customer/customer/autocomplete`) does have a matching single-select
+picker after all — the "no existing customer-autocomplete field on any
+admin template" premise this section previously stated was wrong; it
+exists, this backend's consumer just hadn't been built yet.
+`ControllerSaleOrder::enqueueMintAssets()` (same `components.min.css` +
+`admin.min.js` pairing `ControllerCatalogProduct` already uses, see
+`docs/developer/admin/asset-enqueue.md` — the asset-enqueue blocker this
+paragraph used to cite is resolved for this screen too now) enqueues the
+bundle, and a "Browse customers" button next to the existing autocomplete
+input opens an `McEntityPicker` backed by this endpoint.
+
+Confirming a selection is **not** a plain id/name overwrite like
+category/manufacturer, because the legacy autocomplete's own `'select'`
+handler on this same field also repopulates `customer_group_id`/
+`firstname`/`lastname`/`email`/`telephone`/the payment and shipping
+address dropdowns — data this backend's `{id, name, image}` shape doesn't
+carry. Rather than widen `CustomerPickerProvider`'s contract (every other
+consumer of that shape would gain unused fields) or touch
+`customer/customer.php` (an OpenCart core controller), the picker's
+`onConfirm` re-queries the *existing* `customer/customer/autocomplete`
+endpoint a second time, filtered by the exact picked name, and matches the
+right row back by `customer_id` — reusing the same full-detail response
+the legacy handler already consumes, with zero core changes. **Known,
+deliberate limitation:** the customer's saved `custom_field` values are
+not re-applied this way (only the field *visibility* for the newly picked
+customer's group, via the native `change` event the existing jQuery
+`customer_group_id` handler already listens for) — see the JS comment in
+`sale/order_form.twig` for the full rationale.
 
 Same permission requirement as every other backend above (`mintcart/entity`
 **Access** must be granted to a user group first).

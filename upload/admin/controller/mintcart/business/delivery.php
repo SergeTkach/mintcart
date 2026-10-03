@@ -61,7 +61,7 @@ class ControllerMintcartBusinessDelivery extends Controller {
 			'href' => $this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'], true)
 		);
 
-		$data['action_toggle'] = $this->url->link('mintcart/business/delivery.toggle', 'user_token=' . $this->session->data['user_token'], true);
+		$data['action_toggle'] = $this->url->link('mintcart/business/delivery/toggle', 'user_token=' . $this->session->data['user_token'], true);
 		$data['manage'] = $this->url->link('extension/extension/shipping', 'user_token=' . $this->session->data['user_token'], true);
 		$data['extensions'] = $this->getExtensionRows('shipping');
 
@@ -72,7 +72,7 @@ class ControllerMintcartBusinessDelivery extends Controller {
 		$this->response->setOutput($this->load->view('mintcart/business/delivery_list', $data));
 	}
 
-	// route=mintcart/business/delivery.toggle - POST code
+	// route=mintcart/business/delivery/toggle - POST code
 	public function toggle() {
 		$this->load->language('mintcart/business/delivery');
 		$this->load->model('setting/extension');

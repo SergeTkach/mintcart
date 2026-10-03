@@ -122,6 +122,14 @@ $_['entry_total']                = 'Total';
 $_['entry_date_added']           = 'Date Added';
 $_['entry_date_modified']        = 'Date Modified';
 
+// Text - Customer picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
+$_['text_customer_picker_browse']  = 'Browse customers';
+$_['text_customer_picker_search']  = 'Search customers';
+$_['text_customer_picker_empty']   = 'No customers found.';
+$_['text_customer_picker_prev']    = 'Previous';
+$_['text_customer_picker_next']    = 'Next';
+$_['text_customer_picker_confirm'] = 'Select';
+
 // Help
 $_['help_override']              = 'If the customers order is being blocked from changing the order status due to an anti-fraud extension enable override.';
 

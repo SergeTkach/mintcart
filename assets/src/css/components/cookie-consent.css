@@ -1,0 +1,81 @@
+/**
+ * mc-cookie-consent
+ *
+ * MintCart-owned storefront cookie notice (docs/MINTCART_FUNCTIONAL_SCOPE.md
+ * §11, Definition of Done §79). A fixed bottom bar, built (today) or
+ * server-rendered (future) with `data-mc-cookie-consent` -
+ * `assets/src/js/components/cookie-consent.js` owns when it appears/closes;
+ * this file only styles it.
+ *
+ * Contract: docs/developer/components/cookie-consent.md
+ *
+ * Component-local tokens (`--mc-cookie-consent-*`) are set from semantic
+ * tokens (settings/tokens.css) per the three-tier system in
+ * docs/MINTCART_IMPLEMENTATION_GUIDE.md §16.
+ */
+
+.mc-cookie-consent {
+    --mc-cookie-consent-bg: var(--mc-surface-inverse);
+    --mc-cookie-consent-color: var(--mc-text-inverse);
+    --mc-cookie-consent-gap: var(--mc-space-4);
+    --mc-cookie-consent-padding-y: var(--mc-space-4);
+    --mc-cookie-consent-padding-x: var(--mc-space-5);
+
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: var(--mc-z-fixed);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-cookie-consent-gap);
+    padding: var(--mc-cookie-consent-padding-y) var(--mc-cookie-consent-padding-x);
+    background-color: var(--mc-cookie-consent-bg);
+    color: var(--mc-cookie-consent-color);
+    box-shadow: var(--mc-shadow-lg);
+    animation: mc-cookie-consent-slide-in var(--mc-motion-duration-slow) var(--mc-motion-easing-decelerate);
+}
+
+.mc-cookie-consent__message {
+    flex: 1 1 18rem;
+    margin: 0;
+    font-size: var(--mc-font-size-sm);
+    line-height: var(--mc-line-height-base);
+}
+
+.mc-cookie-consent__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mc-space-4);
+}
+
+.mc-cookie-consent__link {
+    color: inherit;
+    font-size: var(--mc-font-size-sm);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.mc-cookie-consent__link:hover,
+.mc-cookie-consent__link:focus-visible {
+    color: inherit;
+    opacity: 0.85;
+}
+
+@keyframes mc-cookie-consent-slide-in {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-cookie-consent {
+        animation: none;
+    }
+}

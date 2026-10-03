@@ -68,6 +68,15 @@ foreach (RobotsBuilder::NOINDEX_ROUTES as $route) {
     assertSame(false, strpos($route, ' ') !== false, "NOINDEX_ROUTES: '{$route}' has no whitespace", $failures);
 }
 
+// 10. HAS_RESULTS_REGISTRY_KEY is the plain string constant
+//     ControllerProductSearch::index()/ControllerCommonHeader::index()
+//     bridge search.php's real "did this search match anything" signal
+//     through - a defensive shape/regression check, not a live-registry
+//     check (no \Registry exists in this standalone test, by design; see
+//     the constant's own docblock and docs/developer/seo/robots.md).
+assertSame(true, is_string(RobotsBuilder::HAS_RESULTS_REGISTRY_KEY), 'HAS_RESULTS_REGISTRY_KEY is a string', $failures);
+assertSame(true, RobotsBuilder::HAS_RESULTS_REGISTRY_KEY !== '', 'HAS_RESULTS_REGISTRY_KEY is non-empty', $failures);
+
 if ($failures) {
     fwrite(STDERR, count($failures) . " failure(s):\n");
     foreach ($failures as $failure) {
@@ -76,5 +85,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: RobotsBuilder smoke test (" . (8 + count(RobotsBuilder::NOINDEX_ROUTES) * 2) . " assertions)\n";
+echo "PASS: RobotsBuilder smoke test (" . (10 + count(RobotsBuilder::NOINDEX_ROUTES) * 2) . " assertions)\n";
 exit(0);
