@@ -1566,3 +1566,79 @@ install in this environment actually configures `DB_DRIVER=pdo` (OpenCart
 defaults to `mysqli`) — a human running MintCart with the PDO adaptor
 selected should confirm a long-running operation survives a mid-run
 disconnect instead of silently returning empty results or fataling.
+
+---
+
+## MC-0021 — `special.php` never assigns `heading_title` to `$data`
+
+**Problem:** `catalog/view/theme/default/template/product/special.twig`
+(`{{ heading_title }}` inside its `<h2>`) and
+`catalog/view/theme/mint_default/template/product/special.twig`
+(`{{ heading_title }}` inside its `<h1>`) both render the Special Offers
+page heading from a top-level `heading_title` template variable, but
+`ControllerProductSpecial::index()` never assigns `$data['heading_title']`
+anywhere in the method — it only passes `heading_title` to
+`$this->document->setTitle(...)` (the `<title>` tag), never to `$data`.
+Same class of bug as MC-0001 (`category.php`), MC-0003
+(`manufacturer.php::info()`), and MC-0017 (`manufacturer.php::index()`):
+Twig's default `strict_variables => false` renders an undefined variable
+as an empty string instead of throwing, so the Special Offers page ships
+with a real `<title>` but a silently blank on-page heading, on both the
+stock `default` theme and `mint_default`.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline). Not independently
+checked against other 3.x point releases — same rationale as
+MC-0001/MC-0003/MC-0017 (no second checkout available to diff against,
+and the fix only adds a `$data` key the template already expects).
+
+**Source:** Discovered directly in this repository while auditing every
+`product/*` listing controller (`category.php`/`search.php`/
+`manufacturer.php`/`special.php`) for the same missing-`$data`-assignment
+pattern already fixed three times under MC-0001/MC-0003/MC-0017 — not an
+imported historical community patch. Reproduced by grepping both
+`special.twig` templates for `heading_title` (both reference it) and
+cross-referencing every `$data[...] =` assignment in
+`ControllerProductSpecial::index()`: it never appears on the left-hand
+side anywhere in the method, even though `text_sort`/`text_limit`/
+`text_empty`/`button_continue` (the equivalent MC-0001-family keys for
+this same controller) are already correctly assigned later in the same
+method.
+
+**Reproduced on MintCart baseline:** Yes — confirmed against both
+`upload/catalog/view/theme/default/template/product/special.twig` and
+`upload/catalog/view/theme/mint_default/template/product/special.twig`
+(both reference `{{ heading_title }}`), and against the controller's
+actual `$data[...] =` assignment list (see above). The underlying language
+key already exists and loads correctly: `heading_title` in
+`catalog/language/en-gb/product/special.php` (`'Special Offers'`, loaded
+via `$this->load->language('product/special')` at the top of `index()`)
+— so, like MC-0001/MC-0003/MC-0017, this is purely a missing
+`$data[...] = $this->language->get(...)` call, not a missing translation.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Added `$data['heading_title'] =
+$this->language->get('heading_title');` to
+`ControllerProductSpecial::index()`, immediately after the existing
+`$this->document->setTitle($this->language->get('heading_title'));`
+line — the same relative position and exact same value source
+`manufacturer.php::index()`'s MC-0017 fix uses. No new language strings,
+no template change, no change to `$data['products']`/
+`$data['product_cards']`/`$data['sorts']`. Applies equally to the stock
+`default` theme and `mint_default`.
+
+**Tests:** `php -l` clean on the modified `special.php`. No dedicated
+regression test added — same rationale as MC-0001/MC-0003/MC-0017: the
+fix is a single `$this->language->get()` call already unit-proven correct
+by three prior identical fixes in this same file family; a
+controller-level test would need a live OpenCart bootstrap this
+environment can't provide (no MySQL server, same pre-existing gap noted
+throughout `docs/upstream-diff.md`). A human should confirm on a real
+install that the Special Offers page (`product/special`) shows a real
+page heading instead of a blank one, on both the stock `default` theme
+and `mint_default`.
