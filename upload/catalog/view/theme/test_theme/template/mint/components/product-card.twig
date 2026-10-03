@@ -23,4 +23,8 @@
     >
         {{ text_add_to_cart }}
     </button>
+
+    {% if slots is defined and slots['product.after_actions'] %}
+        <div class="mc-product-card__slot mc-product-card__slot--after-actions">{{ slots['product.after_actions']|raw }}</div>
+    {% endif %}
 </article>

@@ -141,7 +141,81 @@ System Pages` (`#146`'s own next-candidates note); the admin
       table exists yet so the migrations directory is currently empty; covered by
       `tests/mintcart/core/migration-manager-test.php` (in-memory DB double — no
       MySQL server available in this environment; real-DB verification is still
-      needed before this is exercised against a live install)
+      needed before this is exercised against a live install). **(this run,
+      PR #185):** added `docs/developer/core/migration-manager.md` — the
+      architecture doc for this runner (Implementation Guide §71's
+      "Migrations" developer-doc topic), covering its two real consumers
+      (`HealthCheck`'s `pending_migrations` signal,
+      `UpdateOrchestrator`'s `migrations` step). No code changed. The
+      "Slots"/"Events" doc topics from the same §71 list are intentionally
+      still unwritten — neither has an implementation in the codebase yet
+      (checked via `grep -rn "data-mc-slot\|mc_slot" upload/`, no matches),
+      and per `CLAUDE.md` §85 a doc should not describe a speculative API
+      ahead of a real consumer. A future increment's natural next step is
+      implementing one concrete Theme API slot with a real template call
+      site (e.g. `product.after_actions`, Technical Plan §15) before either
+      doc is written.
+- [x] **Theme API Slots — `MintCart\Design\SlotRegistry` (this run, closing
+      the gap PR #185 flagged just above).** `MintCart\Design\SlotRegistry`
+      (`upload/system/library/mintcart/design/slotregistry.php`) is a
+      plain, OpenCart-independent `listen()`/`has()`/`render()` registry —
+      deliberately not built on `MintCart\Core\Stage`/OpenCart's `\Event`
+      (a slot answers a template's "render here" question with markup, a
+      different concern than `Stage`'s before/after `$data`-mutation
+      hooks around a controller method). First real template consumer:
+      `product-card.twig`'s `product.after_actions` slot (both
+      `mint_default` and `test_theme` — a genuinely different DOM in each,
+      same slot contract, proving the Theme API milestone story extends to
+      slots too), wired through `MintCart\Design\ProductCardListRenderer`'s
+      new optional 3rd constructor argument (`null` by default — every
+      existing call site across Category/Search/Manufacturer/Special/
+      Product is byte-for-byte unaffected, same "optional nullable
+      collaborator" shape `ComponentRenderer`'s own `$diagnostics`
+      argument already established). No controller constructs a real
+      `SlotRegistry` yet — `render()` returns `''` for every slot in this
+      codebase today, which is the expected, documented state until a real
+      extension needs one (`CLAUDE.md` §85), not a gap. Full writeup:
+      `docs/developer/theme-api/slots.md`; contract addition documented in
+      `docs/developer/components/product-card.md` ("Extension slot:
+      `product.after_actions`") and
+      `docs/developer/theme-api/product-card-list-renderer.md`
+      ("Extension slot wiring"). **Step 0 dedup check:** `list_pull_requests`
+      returned 37 open PRs (`#139`-`#188`) at the start of this run; none
+      mention "slot"/"SlotRegistry" in their title, and none touch
+      `productcardlistrenderer.php`, either `product-card.twig`, or
+      `product-card.css` — genuinely unclaimed and uncontended. The
+      product-listing controller cluster (`category.php`/`search.php`/
+      `manufacturer.php`/`special.php`/`product.php`), `header.php`/
+      `header.twig`/`column_left.php`, and the Homepage Builder admin
+      controller were all independently confirmed hot (2+ open PRs each,
+      per `#168`'s/`#185`'s/`#186`'s own trailer notes) — deliberately
+      avoided entirely by keeping this increment inside
+      `ProductCardListRenderer`'s own optional-argument pattern rather than
+      wiring a real controller consumer, which would have required
+      touching one of those contended files. Verified: `php -l` clean
+      across the full `upload/`/`tests` tree; new
+      `tests/mintcart/design/slot-registry-test.php` (5 scenarios) and 2
+      new scenarios appended to
+      `tests/mintcart/design/product-card-list-renderer-test.php` (now 10,
+      up from 8) — proving the optional `SlotRegistry` is consulted with
+      the product's own id when supplied, and never touched at all when
+      omitted; full `tests/mintcart/**/*-test.php` suite re-run end to end
+      (89 files) — all passing, no regressions; `npm run build`/`npm test`
+      both clean, `mc-product-card__slot` confirmed present in both
+      `assets/dist/css/index.min.css` and
+      `assets/dist/css/components.min.css`. **Not verified:** no live
+      MySQL/`vendor/twig/twig` session in this environment, so the
+      `{% if slots[...] %}` Twig branch itself has never actually executed
+      — see `docs/MANUAL_VERIFICATION.md`'s new "Theme API —
+      `product.after_actions` slot" entry. **Next candidates:** a real
+      `listen()` caller (an admin "Custom HTML" settings field, or a real
+      third-party extension) once one exists; the same optional-argument
+      pattern extended to `header.before`/`header.after` via a future
+      `HeaderViewProvider` change (`header.php`/`header.twig` are
+      currently hot — re-check `gh pr list --state open` before starting
+      that one); an Events developer doc, still blocked on a real
+      dispatch call site per the same gap `#185` flagged; or re-check
+      `gh pr list --state open` first, since this backlog moves fast.
 - [x] Version information — `MintCart\Core\Version`
 - [x] Basic logging — `MintCart\Core\Logger` (wraps OpenCart's `\Log`, writes to a
       dedicated `mintcart.log`)
@@ -423,39 +497,69 @@ consumer).
       `--bs-toast-zindex` is retinted directly (like `mc-drawer.css` did for
       `.offcanvas-backdrop`) since it's a plain wrapping element, never a
       descendant of `.mc-toast`. Doc: `docs/developer/components/toast.md`
-- [ ] `mc-select` (dedicated component beyond `mc-field__control`'s shared
-      select styling — not attempted; see "Next step" below)
+- [x] `mc-select` — `assets/src/css/components/select.css`; standalone
+      select applied directly to a `<select>` used outside a labeled
+      `.mc-field` wrapper (e.g. a sort-order/per-page-limit control next to
+      a product listing — `MINTCART_TECHNICAL_PLAN.md` §15E's
+      `SortOptionsBuilder`/`LimitOptionsBuilder`, currently an open,
+      unmerged PR at the time of this run — see "Sub-step" below); sizes
+      (`--sm`/`--lg`, matching `mc-button`'s naming/scale), `[multiple]`
+      handling (drops the chevron/right padding, adds a min-height for the
+      listbox look), `has-error` transient state, disabled. Doc:
+      `docs/developer/components/select.md`
 - [x] Each shipped component so far: CSS contract (no Twig yet — no theme/
       renderer exists until Phase 8, per CLAUDE.md §85), JS only where
       actually needed (`mc-alert`'s dismiss, `mc-quantity`'s stepper,
       `mc-modal`'s open/close triggers), a11y states, doc example with a
       Definition-of-Done checklist
 
-**Phase 4 is complete** except for the intentionally-deferred `mc-select`
-(15 of 16 components done: `mc-button`, `mc-alert`, `mc-field`,
-`mc-checkbox`, `mc-radio`, `mc-badge`, `mc-price`, `mc-quantity`,
-`mc-rating`, `mc-breadcrumb`, `mc-pagination`, `mc-card`, `mc-modal`,
-`mc-drawer`, `mc-toast`). Verified with `npm install` (0 vulnerabilities —
-this run's environment needed a fresh install, all packages resolved from
-the committed lockfile with no version drift), `npm run build` (minified)
-and `npm run dev` (sourcemapped), both compiling cleanly — the bundled CSS
-contains `.mc-toast`/`.mc-toast__title`/`.mc-toast__message`/
-`.mc-toast__close`/`.mc-toast--success|danger|warning|info` and a second
-`toast-container{--bs-toast-zindex: var(--mc-z-toast)}` rule overriding
-Bootstrap's own default, and the bundled JS contains the
-`open-toast`/`close-toast`/`mc:toast:shown`/`mc:toast:hidden` strings in
-both `catalog.min.js` and `admin.min.js` (spot-checked with `grep -o`
-against `assets/dist/{css,js}/*`). No PHP files were touched in this
-increment, so the Phase 1 PHP `tests/mintcart/` suite is not applicable. No
-automated component/visual test harness exists yet in this repo — this
-increment's verification is build-compiles + bundled-output grep + manual
-code review only, same gap noted in previous Phase 4 runs (not new).
+**Phase 4 is complete** (16 of 16 components done: `mc-button`, `mc-alert`,
+`mc-field`, `mc-select`, `mc-checkbox`, `mc-radio`, `mc-badge`, `mc-price`,
+`mc-quantity`, `mc-rating`, `mc-breadcrumb`, `mc-pagination`, `mc-card`,
+`mc-modal`, `mc-drawer`, `mc-toast`). Verified with `npm install` (0
+vulnerabilities — this run's environment needed a fresh install, all
+packages resolved from the committed lockfile with no version drift),
+`npm run build` (minified) and `npm run dev` (sourcemapped), both compiling
+cleanly for both the full `index.css`/`index.min.css` bundle and the
+Bootstrap-3-safe `components.css`/`components.min.css` bundle — the
+bundled CSS contains `.mc-select`, `.mc-select--sm`/`--lg` and the
+`--mc-select-*` custom properties in both (spot-checked with `grep -o`
+against `assets/dist/css/*`). No PHP files were touched in this increment,
+so the Phase 1 PHP `tests/mintcart/` suite is not applicable. No automated
+component/visual test harness exists yet in this repo — this increment's
+verification is build-compiles + bundled-output grep + manual code review
+only, same gap noted in previous Phase 4 runs (not new).
 
-**Next step:** `mc-select` remains intentionally deferred — no real
-consumer beyond what `mc-field__control`'s shared `<select>` styling
-already covers (searchable/multi-select would be the trigger to revisit
-it, per CLAUDE.md §85). With `mc-toast` landed, the next run should move to
-**Phase 5 — Layout conventions**.
+**Sub-step (this run): `mc-select`.** Previous runs had left this
+intentionally deferred pending "a real consumer beyond what
+`mc-field__control`'s shared `<select>` styling already covers." Step 0
+dedup check against the 27 open PRs at the start of this run (`#138`–`#164`)
+found none building `mc-select`/`select.css`, and none touching
+`assets/src/css/index.css`, `components.css` or any `components/*.css`
+file — genuinely unclaimed, implementable as new files only (plus two
+one-line `@import` additions). The concrete trigger for revisiting the
+deferral: `MINTCART_TECHNICAL_PLAN.md` §15E names
+`SortOptionsBuilder`/`LimitOptionsBuilder` as reusable actions Category/
+Search/Manufacturer/Specials listings all need, and one is already an open
+PR (`#157`, "Phase 8/15C/15E: SortOptionsBuilder + LimitOptionsBuilder,
+wired into `category.php`") building exactly the kind of standalone,
+label-less sort/limit `<select>` `mc-field__control` isn't designed for
+(no room for `.mc-field`'s label/help/error markup next to a listing
+toolbar). This component gives that in-flight need a component to land on
+without duplicating it here — `select.css` has no PHP/Twig, so it doesn't
+collide with `#157`'s files either way. `MINTCART_IMPLEMENTATION_GUIDE.md`
+§45 lists `mc-select` by name in the required Phase 4 set, same as every
+other already-shipped sibling component, none of which had a live
+Twig/theme consumer at ship time either (Phase 8 gate, CLAUDE.md §85) —
+so this isn't a new abstraction invented "just in case," it is finishing
+the named Phase 4 list against a concrete, already-scoped near-term
+caller.
+
+**Next step:** wire `mc-select` into `#157`'s sort/limit control markup
+once that PR merges (or into this run's own follow-up if it doesn't land
+first — re-check `gh pr list --state open`/`list_pull_requests` before
+assuming which). With all 16 Phase 4 components done, the next run should
+move to **Phase 5 — Layout conventions**.
 
 ## Phase 5 — Layout conventions
 
@@ -1971,8 +2075,13 @@ question is resolved — see the ADR's "Consequences" section.
 - [x] List primitive shipped (Phase 11 — `McEntityPicker`, see above):
       search, pagination, images, multi-select, keyboard nav, selected
       state, all against a caller-supplied data source.
-- [ ] Filters (beyond search text) — not attempted; no real per-entity
-      filter requirement identified yet.
+- [~] Filters (beyond search text) — `McEntityPicker` now supports a
+      generic `[data-mc-entity-picker-filter="<key>"]` hook
+      (`entity-picker.js`) and the Product backend
+      (`ControllerMintcartEntity::product()`) accepts a real
+      `filter_status` param; no template renders a filter element yet
+      (see Product backend's own "Filters" update below) — Category/
+      Manufacturer have no requirement/backend support identified yet.
 - [x] Real `fetchItems` backends per entity type (products, categories,
       manufacturers, attributes, options, information pages, customers) —
       **category and manufacturer are done** (manufacturer this run), see
@@ -2356,14 +2465,22 @@ live UI wiring; the backend (`ControllerCatalogCategory::move()`,
 `CategoryMoveValidator`, `moveCategory()`) is unaffected and remains
 ready to consume whichever UI shape is chosen.
 
+**Resolved (later routine run) — not by picking (a)/(b)/(c) above.** A
+fourth, purely mechanical option none of these considered: the *save*
+step splits the new visible order into per-parent groups instead of
+restricting what the admin can drag. See the Phase 17 section below
+("Update (routine run): live UI wiring is done...") and
+`docs/developer/catalog/category-drag-drop.md`'s "Resolves the
+Architectural fork..." section for the full reasoning.
+
 **Next candidates:** the remaining Phase 12 entity types still need live
 wiring (information/attribute/option/customer — none has an identified
 first consumer yet, per their own backend write-ups above, so picking one
-means choosing a real admin screen/field first, not guessing one);
-resolving the Phase 17 category-list fork above (needs a product decision
-first); Entity Picker Filters/Create-new-flow (neither has a real
-requirement yet); or re-check `gh pr list --state open` first, since this
-backlog moves fast.
+means choosing a real admin screen/field first, not guessing one); full
+drag-to-re-parent for categories (a real tree/drill-down view — still
+unattempted, unlike the reordering fork resolved above); Entity Picker
+Filters/Create-new-flow (neither has a real requirement yet); or re-check
+`gh pr list --state open` first, since this backlog moves fast.
 
 **Update (2026-09-29, routine run): Attribute field live-wired.** Step 0
 found 14 open PRs (`#138`-`#151`, all `ROUTINE-STATUS: DONE` except `#148`
@@ -2645,6 +2762,65 @@ other settings.
 - Re-check `gh pr list --state open` before picking the next increment —
   this backlog moves fast.
 
+**Update (2026-10-01, routine run): the `first_product` step is done.**
+`WizardProgress::IMPLEMENTED_STEPS` gains `first_product`, inserted between
+`delivery` and `ready` (matching canonical `STEPS` order — the same
+"reconciled to canonical order" shape `contacts`/`language_currency`/
+`delivery` themselves already set). `ControllerMintcartWizard`'s
+`first_product` step collects only `product_name` + `price` (required)
+plus optional `quantity`/`description`, then calls the real, unmodified
+`ModelCatalogProduct::addProduct()` — every other field that model
+requires gets a safe default (today's `date_available`, the store's own
+`config_weight_class_id`/`config_length_class_id`, `status = 1`, stock
+status resolved by name rather than a hardcoded id — see
+`loadDefaultStockStatusId()`). A "Skip for now" button
+(`first_product_action=skip`) bypasses validation/creation entirely and
+just marks the step completed, per Functional Scope §2's optional-step
+skipping (same precedent `delivery` already set). This closes
+`MintCart\Onboarding\StoreReadiness`'s own `first_product` signal gap —
+completing this step with a real product now flips that checklist item
+from "Not yet" to "Done" on the very same Ready step this Wizard already
+renders. Full writeup: `docs/developer/onboarding/setup-wizard.md`'s new
+"The First product step writes a real, ordinary product" section.
+
+Step 0 dedup check: `list_pull_requests` returned 42 open PRs (#138-#180)
+at the start of this run. Exactly one, `#142` ("Setup Wizard Payment
+step"), touches the same four files this increment touches
+(`wizard.php`/`wizardprogress.php`/`wizard.twig`/the wizard language
+file) — same accepted-risk shape this file's own `contacts`/
+`language_currency` entries already documented and reconciled twice
+before (both were developed in parallel against diverging bases, then
+merged back to canonical order by hand). `#142`'s own diff adds the
+`payment` step; this increment adds `first_product` — both are
+append-only changes to the same arrays/switch statements/template `{% if
+step == ... %}` blocks, which is exactly the shape prior reconciliations
+in this file handled cleanly, not the kind of same-feature duplicate step
+0d warns about. No Homepage Builder hot file (§0f — block-type registry,
+`block.css`) is touched by either PR.
+
+Verified: `php -l` clean across the full `upload/`/`tests/` tree.
+`tests/mintcart/onboarding/wizard-progress-test.php` grows from 11 to 12
+scenarios (the new `first_product` step's place in the resume sequence,
+its `isImplemented()` check, and the reorder/idempotent scenarios'
+expected lists updated). Full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end — all passing, no regressions. `wizard.twig`'s
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts checked
+balanced (53/53, 5/5) after the new step block. **Not verified:** no live
+MySQL/admin session in this sandboxed environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 13 "Wizard First product step"
+entry for the full manual script a human should run, including the
+Ready step's checklist actually flipping to "Done" after a real product
+is created (not merely after the step is marked completed via Skip).
+
+**Next candidates:** reconcile `IMPLEMENTED_STEPS`' order once `#142`
+(Payment step) merges — canonical order is `..., delivery, payment,
+design, first_product, ready`, so a future run should move `payment`
+between `delivery` and `first_product` rather than leaving it appended
+wherever each PR's own diff happens to land it; the `design` step (needs
+a real form/save target, likely the preset picker once it has a live
+admin consumer); Store step's logo upload; or re-check `gh pr list
+--state open` first, since this backlog moves fast.
+
 ## Phase 14 — Store Readiness / Business Settings
 
 - [x] `MintCart\Onboarding\StoreReadiness` service (computed, not hardcoded,
@@ -2854,11 +3030,14 @@ already share.
 - [~] `QuickOrderService` — open PR #52-#87 backlog includes one (Phase 15
       item, not yet merged as of this update — check `gh pr list --state
       open` before starting a second one).
-- [~] `CheckoutService` — first increment this run:
-      `MintCart\Commerce\CheckoutTotalsService` +
+- [~] `CheckoutService` — two increments so far: `MintCart\Commerce\CheckoutTotalsService` +
       `MintCart\Compatibility\OpenCart3\TotalsAdapter` + the
-      `mintcart/checkout/totals` AJAX endpoint (recomputed order totals,
-      no address/shipping/payment mutation yet). See the writeup below.
+      `mintcart/checkout/totals` AJAX endpoint (recomputed order totals);
+      and (this run) `MintCart\Commerce\ShippingMethodService` +
+      `MintCart\Compatibility\OpenCart3\ShippingQuoteAdapter` + the
+      `mintcart/checkout/shipping_methods` AJAX endpoint (normalized
+      shipping method quote preview for a given address). Still no
+      address/payment mutation, no order creation. See the writeups below.
 - [x] `MintCart\Commerce\QuickOrderService` + Quick Order component (this
       run) — `upload/system/library/mintcart/commerce/quickorderservice.php`
       + `upload/catalog/controller/mintcart/quickorder.php`
@@ -2884,15 +3063,13 @@ already share.
       (natural next consumer of `mc_quick_order`), and lead → order
       conversion — both deliberately deferred, see the doc's "Not done
       yet".
-- [ ] `CheckoutService` — not started; still genuinely large/risky without
-      live MySQL to verify `addOrder()`'s full field list against (same
-      reasoning `QuickOrderService` above sidestepped by not touching
-      order creation at all).
+- [~] `CheckoutService` — totals + shipping-method-quote previews exist
+      (see above); order creation (`addOrder()`) itself remains genuinely
+      large/risky without live MySQL to verify its full field list against
+      (same reasoning `QuickOrderService` above sidestepped by not
+      touching order creation at all) — still not attempted.
 - [x] Mint-native search-box UI component (`mc-search-box`) calling
       `mintcart/search/suggest` — see "Update (this run)" below.
-- [ ] `QuickOrderService`, `CheckoutService` — not started.
-- [ ] Quick Order component — not started; `mc-product-card`'s
-      `data-mc-action="quick-order"` stays hook-only.
 - [ ] Modern checkout UI over existing shipping/payment extensions/totals/order model — not started.
 
 **Update (this run): `CheckoutTotalsService` + `TotalsAdapter` — first
@@ -2937,6 +3114,56 @@ increment: no MySQL/OpenCart bootstrap in this environment — see
 `docs/MANUAL_VERIFICATION.md`'s new Phase 15 entry for what a human should
 confirm on a real install (same payment methods/amounts as before the
 refactor, correct `oc_order.total`, and the new endpoint's JSON shape).
+
+**Update (2026-09-30, routine run): `ShippingMethodService` +
+`ShippingQuoteAdapter` — second `CheckoutService` increment.** Step 0
+dedup check found 23 open PRs (`#138`-`#160`, all `ROUTINE-STATUS: DONE`
+except `#148` `IN-PROGRESS`) — none touch
+`upload/catalog/controller/mintcart/checkout.php`,
+`upload/catalog/controller/checkout/shipping_method.php`, or anything
+under `compatibility/opencart3/`/`commerce/` named `shipping*`. The
+busiest hot zone (`category.php`/`search.php`/`manufacturer.php`/
+`special.php`/`product.php`, touched by 4 of the open PRs) and the
+Homepage Builder block-registry/`block.css` files (untouched by any open
+PR, but the known historical pile-up risk per this routine's own
+instructions) were both avoided entirely by this increment's file list.
+
+Extracted `checkout/shipping_method.php::index()`'s shipping-quote loop
+into `MintCart\Compatibility\OpenCart3\ShippingQuoteAdapter`
+(`docs/developer/compatibility/shipping-quote-adapter.md`) — unlike
+`TotalsAdapter`, this loop is **not** duplicated anywhere else in this
+codebase, so `checkout/shipping_method.php` itself is left completely
+untouched (zero upstream diff, no `docs/upstream-diff.md` entry needed).
+Normalized via the new `MintCart\Commerce\ShippingMethodService`
+(`docs/developer/commerce/shipping-method-service.md`) into a new
+`ControllerMintcartCheckout::shippingMethods()` action (route
+`mintcart/checkout/shipping_methods`, GET, JSON) — a pure preview endpoint
+that takes the address as request parameters and does not read or write
+`$this->session->data['shipping_address']`/`['shipping_methods']`, unlike
+the legacy controller. `options[].id` in the response is built as exactly
+`"<method_code>.<quote_key>"`, the same string
+`checkout/shipping_method.php::save()` already expects, so a future
+checkout UI can post it straight through with no translation layer.
+
+Verified: `php -l` clean on all three touched/new PHP files; two new test
+files (`tests/mintcart/compatibility/opencart3/shipping-quote-adapter-test.php`,
+5 scenarios; `tests/mintcart/commerce/shipping-method-service-test.php`, 4
+scenarios); full `tests/mintcart/**/*-test.php` suite re-run end to end
+(86 files, up from 84) — all passing, no regressions. Not verified: no
+live MySQL/OpenCart session in this environment, same pre-existing gap —
+see `docs/MANUAL_VERIFICATION.md`'s new Phase 15 "Shipping method quote
+endpoint" section for what a human should confirm on a real install.
+
+**Next candidates:** a `mintcart/checkout/payment_methods` preview
+endpoint (the same pattern applied to `checkout/payment_method.php`'s
+payment-extension loop, which already routes through `TotalsAdapter` for
+totals but still inlines its own `getMethod($address, $total)` loop for
+listing available payment methods); a Mint-native checkout UI Twig/JS
+component that actually calls `totals()`/`shippingMethods()` (still
+nothing does — see both docs' "What this is not"); `CheckoutService`'s
+order-creation step itself (still deliberately not attempted, same
+`addOrder()` field-list risk noted above); or re-check `gh pr list --state
+open` first, since this backlog moves fast.
 
 **Update (this run): the header's legacy cart dropdown now reacts to
 `mc:cart:updated`.** `assets/src/js/components/header-cart.js`
@@ -3346,10 +3573,11 @@ table; or re-check `gh pr list --state open` first.
 
 - [x] SortableJS-based category move backend (transaction, cycle prevention,
       category_path rebuild, sort order update) — see below
-- [ ] Live admin UI wiring (`McSortable` mounted on `category_list.twig`,
-      calling the new endpoint) — not attempted this run, see below
+- [x] Live admin UI wiring (`mc-sortable` behavior mounted on
+      `category_list.twig`'s existing table, calling the `move` endpoint) —
+      see "Live UI wiring (routine run)" below.
 
-**Move/reorder backend is done; live UI wiring is not.** Full writeup:
+**Move/reorder backend and live UI wiring are both done.** Full writeup:
 `docs/developer/catalog/category-drag-drop.md`; upstream diff entry in
 `docs/upstream-diff.md`. `MintCart\Catalog\CategoryMoveValidator`
 (`upload/system/library/mintcart/catalog/categorymovevalidator.php`) is a
@@ -3417,6 +3645,77 @@ the option set (parent-scoped tree/drill-down view; same-parent-only drag
 with reject-and-snap-back; or a "Manage order for: [parent]" filter on
 the existing list). A future run or a human should decide the list-UX
 shape first; the backend itself needs no further work.
+
+**Update (routine run): live UI wiring is done — the "not resolved" fork
+above is resolved, but not by choosing one of its three options.** A
+fourth, purely mechanical approach the earlier note didn't consider turned
+out not to need a product/UX decision at all: instead of changing what the
+admin is *allowed to drag* (a tree view, a same-parent filter, or
+reject-and-snap-back), the save step itself splits the new visible order
+back into per-parent groups and saves each group separately (skipping any
+group with only one visible member), so a drag across the flat,
+mixed-parent list can never mix one parent's `sort_order` numbering with
+another's or reset an untouched category's `sort_order`. Full writeup:
+`docs/developer/catalog/category-drag-drop.md`'s "Live UI wiring" and
+"Resolves the Architectural fork..." sections.
+
+`ControllerCatalogCategory::getList()` gained `enqueueMintAssets()`
+(verbatim copy of `ControllerCatalogProduct`'s — `docs/developer/admin/
+asset-enqueue.md`'s "components" bundle) and now passes `parent_id` per
+row plus `$data['move']` into `category_list.twig`. The template mounts
+the real `mc-sortable` **behavior** (not its CSS, which is flex-list-only
+and would break a `<table>` — `data-mc-sortable`/`data-mc-sortable-handle`/
+`data-mc-sortable-item`/`data-mc-action` are its documented hooks,
+CLAUDE.md §14) directly on the existing Bootstrap 3 table, gated to
+`sort == 'sort_order'` (dragging while sorted by Name would scramble a
+visible order that has no persisted meaning). An inline `<script>` POSTs
+to `catalog/category.move` immediately on `mc:sortable:reorder` — no
+"Save Order" button, no page reload — reverting the row order and
+announcing failure via an `aria-live="polite"` region if any group's save
+fails. No category is ever re-parented from this UI.
+
+Six new language keys (`text_drag_hint`, `text_move_up`, `text_move_down`,
+`text_order_saved`, `text_order_failed`, `text_sort_by_order_first`).
+
+**Bonus fix, found while verifying this was actually going to work:**
+`assets/src/js/admin.js`/`catalog.js` called every `init*()` (including
+`initSortableLists()`) at module top level with no DOM-readiness guard,
+while every `header.twig` renders the enqueued bundle as a classic
+`<script>` inside `<head>` — meaning it always ran *before* `<body>`
+existed. Delegated-listener inits (`initAlertDismiss()`) happened to work
+by accident; eager-`querySelectorAll()` inits
+(`initSortableLists()`/`initModalTriggers()`/`initDrawerTriggers()`/
+`initToastTriggers()`/`initTabsTriggers()`/`initProgressBars()`, and on
+the storefront `initSearchBoxes()`) silently found nothing. Without this
+fix, `category_list.twig`'s new drag behavior — the entire point of this
+increment — would never have mounted on a real page. Both files now defer
+their unchanged `init*()` sequence behind a `document.readyState`/
+`DOMContentLoaded` guard. Full writeup:
+`docs/developer/catalog/category-drag-drop.md`'s "Boot timing bug found
+while verifying this increment" section. `assets/src/js/*` are
+MintCart-owned, not OpenCart core, so no `docs/upstream-diff.md` entry.
+
+Verified: `php -l` clean on `category.php`/`en-gb/catalog/category.php`;
+`category_list.twig`'s `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}`
+tag counts balanced (12/12, 2/2); the new inline `<script>` checked with a
+standalone Node harness (Twig `{{ }}` output substituted with a
+placeholder first) — parses cleanly. Full `tests/mintcart/**/*-test.php`
+suite (82 files) re-run end to end — all passing, no regressions (no new
+PHP class, so no new test file). `admin.js`/`catalog.js`: `node --check`
+clean; `npm install && npm run build` compiles both bundles cleanly
+(confirmed `DOMContentLoaded` present in both `assets/dist/js/admin.min.js`/
+`catalog.min.js`); `npm test` (preset-token contract checks, unaffected)
+still passes. **Not verified live** — same pre-existing no-MySQL/
+no-browser-session gap as every other admin-screen increment in this
+repo; see `docs/MANUAL_VERIFICATION.md`'s new "Live drag & drop UI"
+entries, including a dedicated mixed-parent-page safety check.
+
+**Next candidates:** full drag-to-re-parent (a tree/drill-down list view —
+still a real, separate, larger increment, unlike the reordering solved
+here); `enqueueMintAssets()` is now duplicated on two controllers
+(`category.php`/`product.php`) — extracting a shared trait is a natural
+low-risk cleanup once a third consumer appears (`CLAUDE.md` §85/§86, not
+done here); or re-check `gh pr list --state open` first.
 
 ## Phase 18 — SEO Core
 
@@ -3895,6 +4194,51 @@ re-checking whether `SchemaOrgBuilder::product()` can now be wired into
 `product.php`); hreflang still needs its per-language route resolver;
 robots/sitemap centralization and System route URL aliases remain
 unclaimed; or re-check `gh pr list --state open` first.
+
+**Update (2026-09-30, routine run): `mintcart/seo/sitemap` — always-on
+XML sitemap route, no `Extensions > Feeds > Google Sitemap` install
+required.** Closes the "genuinely first-class MintCart-owned
+`mintcart/seo/sitemap.xml` route" gap `MintCart\Seo\SitemapBuilder`'s own
+docblock and `docs/developer/seo/sitemap.md`'s "Not done yet" section had
+both named as the real remaining piece — the stock
+`ControllerExtensionFeedGoogleSitemap` only works when a merchant finds
+and enables that extension and its `feed_google_sitemap_status` setting,
+exactly the kind of technical decision `MINTCART_PRODUCT_VISION.md` §5
+says a shop owner should not have to make. New
+`ControllerMintcartSeoSitemap` (`upload/catalog/controller/mintcart/seo/sitemap.php`,
+route `mintcart/seo/sitemap`) reuses the exact same
+`model_catalog_product`/`model_catalog_category`/
+`model_catalog_manufacturer`/`model_catalog_information` enumeration and
+`SitemapBuilder::urlset()` XML assembly the stock extension already uses
+— same entries, same escaping, always on, no admin extension install.
+Step 0 found 21 open PRs (20 `DONE`, one `IN-PROGRESS` — #148, unrelated
+`product_form.twig` Option picker wiring); none touch any `MintCart\Seo\*`
+file, `mintcart/seo/*`, or the Homepage Builder hot files (§0f — block-type
+registry, `block.css`). Full writeup: `docs/developer/seo/sitemap.md`
+(updated "Not done yet" section). Verified: `php -l` clean on the new
+file and the full `upload`/`tests` tree; full `tests/mintcart/**/*-test.php`
+suite re-run end to end (84 files) — all passing, no regressions (no new
+test file needed — this is a live-DB controller wiring a pure,
+already-tested `SitemapBuilder`, same reasoning every other Phase 18
+controller-wiring increment in this section used). Not verified: no live
+MySQL/Twig session in this environment — a human should confirm on a real
+install that `index.php?route=mintcart/seo/sitemap` returns a well-formed
+`<urlset>` XML document listing every enabled product/category/
+manufacturer/information page (see `docs/MANUAL_VERIFICATION.md`'s Phase
+18 section, new "MintCart sitemap route" entry). **Deliberately not done**
+(unchanged from `docs/developer/seo/sitemap.md`'s own list, just now
+scoped to what remains): `sitemapIndex()`-based paging once a catalog
+exceeds `SitemapBuilder::MAX_URLS_PER_SITEMAP` (`urlset()` already
+truncates safely, same as the stock extension does today — no
+regression, just no multi-file split yet); self-registering a `Sitemap:`
+line in `robots.txt` (OpenCart ships no `robots.txt` management at all
+today, a separate, larger feature); per-language `hreflang` alternate
+links (`HreflangBuilder` still has no consumer). **Next candidates:**
+`robots.txt` management/self-registration; `sitemapIndex()` paging for
+large catalogs; hreflang's per-language route resolver; System route URL
+aliases (still the one remaining `[ ]` item in this section's own
+checklist above); or re-check `gh pr list --state open` first, since this
+backlog moves fast.
 
 ## Modern Editor (Functional Scope §24, P2/RESEARCH)
 
@@ -4545,6 +4889,33 @@ regressions. No JS/CSS touched, so `npm run build`/`npm test` were not
 re-run. No live-wiring gap to flag in `docs/MANUAL_VERIFICATION.md` — there
 is no live request path yet for a human to exercise (see the doc's
 Definition of Done checklist for exactly what's still open).
+
+**Update (2026-10-01, routine run) — MC-0019 added (Fixes Registry):**
+`DB\PDO::query()` had no reconnect-on-dropped-connection handling at all —
+the sibling adaptor `DB\MySQLi::query()` already got this under MC-0011,
+this closes the gap for `DB\PDO`. See `docs/fixes/registry.md`'s MC-0019
+entry and `docs/upstream-diff.md`'s `upload/system/library/db/pdo.php`
+entry for the full writeup. Step 0 dedup check: `list_pull_requests`
+returned 41 open PRs at the start of this run (`#138`–`#177`); none touch
+`system/library/db/*` or any Fixes Registry entry (the closest, `#174`,
+claims `MC-0018` in a different file). No Homepage Builder hot files
+(§0f: block-type registry, homepage block list/template, `block.css`)
+touched by this increment. Verified: `php -l` clean on the modified
+`pdo.php` and the new `tests/mintcart/fixes/mc-0019-pdo-reconnect-test.php`
+(7 scenarios); full `tests/mintcart/**/*-test.php` suite re-run end to end
+(85 files, up from 84) — all passing, no regressions. No JS/CSS touched.
+**Not verified:** no live MySQL server or real `DB_DRIVER=pdo` install in
+this environment — see the registry entry's "Not verified" note. **Next
+candidates:** `OrderAdapter` (`MintCart\Compatibility\OpenCart3`) is the
+one adapter CLAUDE.md §38's list still lacks, but has no real consumer
+yet (confirmed via grep — nothing in `mintcart/*` code touches
+`model_sale_order`), so per CLAUDE.md §85 it should wait for one; Demo
+Data (Functional Scope §30) is unimplemented and can be built as a
+standalone admin screen decoupled from the in-flight Setup Wizard Payment
+step (`#142`) — a real next candidate; or re-check `gh pr list --state
+open` first, since this backlog moves fast (41 open PRs at the time of
+this run — see this routine's own step 0f guidance on hot shared files
+before picking a Homepage Builder block-type increment).
 
 ## Phase 11 (Technical Plan) — Update / Compatibility
 
@@ -6778,6 +7149,18 @@ already had the feature — during this run's own search for unclaimed
 work; verify against actual code (`grep`/`find`, not this file's own
 checklist markers) before assuming something is missing. Re-check `gh pr
 list --state open` before picking the next step.
+**Trailer note (2026-09-28, routine run):** Phase 17's live UI wiring is
+now done (category drag & drop, `category_list.twig` + real `mc-sortable`
+behavior) — this also resolves the Phase 12 "Architectural fork
+identified, not resolved" note via a per-parent-group save split rather
+than a UI redesign. See the Phase 17 section for the full writeup. Step 0
+checked all 3 open PRs at the time (`#138`/`#139`/`#140`, all
+`ROUTINE-STATUS: DONE`, none touching `category.php`/`category_list.twig`/
+any catalog/category file). **Next candidates:** full drag-to-re-parent
+(tree/drill-down view, a separate larger increment); the
+`enqueueMintAssets()` duplication across `category.php`/`product.php`
+(trait extraction, once a third consumer appears); or re-check
+`gh pr list --state open` first.
 **Trailer note (2026-09-19, later routine run, PR #138):** `mc-search-box`
 is now wired into both `mint_default`'s and `test_theme`'s headers (Phase
 15 section above has the full writeup), plus a real bug fix in
@@ -6785,3 +7168,53 @@ is now wired into both `mint_default`'s and `test_theme`'s headers (Phase
 found while verifying). Zero open PRs at the start of this run. **Next
 candidates:** see the Phase 15 section's own "Next candidates" above, or
 re-check `gh pr list --state open` first.
+
+---
+
+**Trailer note (2026-10-02, routine run — MC-0021 fix, Fixes Registry/
+Phase 10 (Technical Plan)).** Step 0 found 49 open PRs (`#138`–`#186`) at
+the start of this run, spanning nearly every tracked phase (Entity
+Picker, Setup Wizard steps, Bulk Editor fields, Update Manager primitives,
+SEO wiring, Compatibility Checker UI, Reviews UI, wishlist persistence,
+seven `docs/user/*` guides, and the `IMPLEMENTATION_STATUS.md`
+merge-conflict-debris cleanup itself in `#154` — deliberately not touched
+by this run for exactly that reason). The `Phase 10 (Technical Plan) — SEO
+/ Fixes / Performance` section above (starting at its `## Phase 10
+(Technical Plan)` heading) is itself the accumulated merge-conflict debris
+`#154` is already fixing — not edited here to avoid colliding with that
+in-flight cleanup; this note is appended standalone instead.
+
+This run audited the one `product/*` listing controller
+(`category.php`/`search.php`/`manufacturer.php` already each had a
+`heading_title`-family fix under MC-0001/MC-0003/MC-0017) that had not yet
+been checked for the same bug class: `special.php`. Confirmed
+`ControllerProductSpecial::index()` never assigns `$data['heading_title']`
+— only `$this->document->setTitle(...)` gets it — while both
+`special.twig`s (`default` and `mint_default`) render a top-level
+`{{ heading_title }}` page heading. Filed **MC-0021** and applied the
+one-line fix (`docs/fixes/registry.md`'s new MC-0021 entry,
+`docs/upstream-diff.md`'s `special.php` entry has a matching "Update"
+block). No open PR title mentions `special.php`, and none of the 49 touch
+it per `gh pr view <n> --name-only`'s spot checks on the ones most likely
+to (none of the SEO/Diagnostics/listing PRs touch this file). Verified:
+`php -l` clean on the modified file; full repo-wide lint
+(`find upload tests -name '*.php'`, matching `.github/workflows/ci.yml`'s
+`php-lint` job) clean; full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end exactly as `ci.yml`'s `php-tests` job does — all
+passing, no regressions. Not verified: no live MySQL/Twig session in this
+environment (same pre-existing gap noted throughout this file) — a human
+should confirm the Special Offers page's heading is no longer blank on a
+real install, on both the stock `default` theme and `mint_default`.
+
+**Next candidates:** once `#154` merges, the `Phase 10 (Technical Plan)`
+section's actual next-free Fix Registry ID should be re-derived from
+`docs/fixes/registry.md` directly (now **MC-0022** — this run's own
+rebase onto `master` found `#178` had already merged MC-0019 while this
+PR was open, so MC-0019 is no longer free; `#174`/`#182` still hold
+MC-0018/MC-0020 as open, unmerged PRs as of this note); a fresh
+Known-Fix-Research-Queue candidate (`MINTCART_FUNCTIONAL_SCOPE.md` §18 —
+e.g. the classic OpenCart pagination "`?page=1`" duplicate-URL issue on
+the in-page sort/limit links themselves, as opposed to the `<link
+rel="canonical">` tag MC-0002 already covers) would need careful
+reproduction before filing, not attempted here for lack of time; or
+re-check `gh pr list --state open` first, since this backlog moves fast.
