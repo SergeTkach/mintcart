@@ -274,6 +274,7 @@ class ControllerProductProduct extends Controller {
 			$data['text_badge_out_of_stock'] = $this->language->get('text_badge_out_of_stock');
 			$data['text_added_to_cart'] = $this->language->get('text_added_to_cart');
 			$data['text_add_to_cart_error'] = $this->language->get('text_add_to_cart_error');
+			$data['text_wishlist_error'] = $this->language->get('text_wishlist_error');
 
 			// Plain field labels product/product.php's own language file
 			// already defines but this controller never assigned to $data
@@ -593,7 +594,8 @@ class ControllerProductProduct extends Controller {
 							'text_add_to_cart'       => $this->language->get('button_cart'),
 							'text_quick_order'       => $this->language->get('text_quick_order'),
 							'text_added_to_cart'     => $this->language->get('text_added_to_cart'),
-							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error')
+							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error'),
+							'text_wishlist_error'    => $this->language->get('text_wishlist_error')
 						),
 						function (\Throwable $e, array $failed_product) {
 							// Same "log and disable for the rest of this
@@ -688,7 +690,15 @@ class ControllerProductProduct extends Controller {
 			$output = $this->load->view('product/product', $data);
 
 			// Functional Scope §19: "Production UI не повинен показувати
-			// sensitive debug data" - see category.php's identical comment.
+			// sensitive debug data" - see category.php's identical comment,
+			// including the `&mintcart_diagnostics=json` alternative surface.
+			if ($mint_diagnostics->isEnabled() && isset($this->request->get['mintcart_diagnostics']) && $this->request->get['mintcart_diagnostics'] === 'json') {
+				$this->response->addHeader('Content-Type: application/json');
+				$this->response->setOutput(json_encode($mint_diagnostics->summary()));
+
+				return;
+			}
+
 			if ($mint_diagnostics->isEnabled()) {
 				$output .= "\n<!-- mintcart-diagnostics " . json_encode($mint_diagnostics->summary()) . " -->";
 			}

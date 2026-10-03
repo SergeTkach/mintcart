@@ -9,6 +9,19 @@
  * - Behavior hooks read from `data-mc-*` attributes, never from CSS classes.
  * - Bootstrap 5 JS is imported here so themes get a single bundled entry
  *   point instead of loading it from a CDN or a second <script> tag.
+ *
+ * Boot timing: same fix and same reason as `admin.js`'s own "Boot timing"
+ * comment - `ControllerCommonHeader::index()`
+ * (`docs/developer/admin/asset-enqueue.md` "Storefront:
+ * ControllerCommonHeader") enqueues this bundle via
+ * `$this->document->addScript()`, and `mint_default`'s `header.twig`
+ * renders `{% for script in scripts %}` inside `<head>` as a plain
+ * classic `<script src="...">`, which runs before `<body>` - and this
+ * page's own markup - exists. `initSearchBoxes()`
+ * (`root.querySelectorAll('[data-mc-search-box]')` at call time) is the
+ * one call below with the same eager-query shape `admin.js`'s
+ * `initSortableLists()` has; `boot()` defers the whole sequence the same
+ * way.
  */
 
 import 'bootstrap';
@@ -24,23 +37,33 @@ import { initHeaderCartRefresh } from './components/header-cart.js';
 import { initProductGalleries } from './components/product-gallery.js';
 import { initQuickOrderActions } from './components/quick-order.js';
 import { initSearchBoxes } from './components/search-box.js';
+import { initCookieConsent } from './components/cookie-consent.js';
 import { initViewedProducts } from './components/viewed-products.js';
 
 // MintCart-owned catalog behavior modules are added here as components ship
 // (Phase 4 onward).
-initAlertDismiss();
-initQuantityStepper();
-initModalTriggers();
-initDrawerTriggers();
-initToastTriggers();
-// mc-tabs was Phase 11's Mint Admin-only primitive until the product detail
-// page (Description/Specification/Reviews tabs) became its first storefront
-// consumer - see docs/developer/components/tabs.md "Not wired into
-// catalog.js" for why this was deferred until now.
-initTabsTriggers();
-initProductCardActions();
-initHeaderCartRefresh();
-initProductGalleries();
-initQuickOrderActions();
-initSearchBoxes();
-initViewedProducts();
+function boot() {
+    initAlertDismiss();
+    initQuantityStepper();
+    initModalTriggers();
+    initDrawerTriggers();
+    initToastTriggers();
+    // mc-tabs was Phase 11's Mint Admin-only primitive until the product
+    // detail page (Description/Specification/Reviews tabs) became its
+    // first storefront consumer - see docs/developer/components/tabs.md
+    // "Not wired into catalog.js" for why this was deferred until now.
+    initTabsTriggers();
+    initProductCardActions();
+    initHeaderCartRefresh();
+    initProductGalleries();
+    initQuickOrderActions();
+    initSearchBoxes();
+    initCookieConsent();
+    initViewedProducts();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+} else {
+    boot();
+}

@@ -303,6 +303,101 @@ Twig `if`/`endif`/`for`/`endfor` tag counts checked balanced before and
 after (13/13, 5/5). **Not verified:** no live MySQL/Twig session in this
 environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 19 entry.
 
+**Update (2026-09-30, routine run — Technical Plan §15C/§15E, `SortOptionsBuilder`/`LimitOptionsBuilder`):**
+the `$data['sorts']`/`$data['limits']` blocks (nine-or-seven inline
+`array()` pushes gated by `config_review_status`, then an
+`array_unique()`+`sort()` limit merge) are replaced with calls to two new
+pure classes, `MintCart\Catalog\SortOptionsBuilder` and
+`MintCart\Catalog\LimitOptionsBuilder`
+(`docs/developer/catalog/product-listing-options.md`). This controller
+still owns the `$this->language->get()` lookup and `$this->url->link()`
+href building for each option — the builders only decide the list, its
+order, and the review-status gate. Behavior is byte-for-byte unchanged:
+both builders were extracted from, and tested against, this exact
+controller's own prior inline arithmetic. **Why it can't live in the
+MintCart layer alone:** the language lookup and route/href building are
+inherently OpenCart-controller concerns (`$this->language`, `$this->url`)
+that the pure builder deliberately does not take a dependency on, same
+reasoning as `CanonicalUrlBuilder`'s entry above. **Compatibility
+impact:** none — `$data['sorts']`/`$data['limits']` keep the exact same
+shape (`text`/`value`/`href` per entry) and the exact same values;
+`category.twig` is untouched. **Tests:** `php -l` clean;
+`tests/mintcart/catalog/sort-options-builder-test.php` (new, 3 scenarios)
+and `tests/mintcart/catalog/limit-options-builder-test.php` (new, 5
+scenarios) cover the builders themselves; full `tests/mintcart/` suite (86
+files, up from 84) re-run end to end — all passing, no regressions. **Not
+verified:** no live MySQL/Twig session in this environment.
+**Update (2026-09-29, routine run — responsive image `srcset`):** the
+same `image_width`/`image_height` foreach loop gains one more line: right
+after the existing 1x `$image = $this->model_tool_image->resize(...)`
+call, a second `$image_2x` call resizes the same source (or
+`placeholder.png`) at double the configured
+`theme_<config_theme>_image_product_width`/`_height`, and
+`$image_srcset = $image . ' 1x, ' . $image_2x . ' 2x';` builds the string
+threaded into `ProductCardListRenderer`'s `product` array as
+`image_srcset` — `MINTCART_FUNCTIONAL_SCOPE.md` §19's "responsive images"
+Performance item, see
+`docs/developer/commerce/product-view-provider.md`'s "Image srcset
+(responsive images)" section for the full contract and the identical
+change's cost/caching discussion. The pre-existing `$data['products'][]`
+array (the legacy `default`-theme `category.twig` data shape) is
+untouched — this only adds a new local variable and a new key inside the
+`$mint_render_product_cards` branch. **Why it can't live in the MintCart
+layer instead:** the second `resize()` call has to sit next to the
+existing 1x call, inside this controller's own `foreach ($results as
+$result)` loop, for the same reason the diagnostics JSON branch above
+does — there is no shared "build this product's presentation values" hook
+these listing controllers funnel through yet (each already independently
+resizes its own thumb). **Compatibility impact:** none — purely additive;
+the legacy `$data['products']` array and the `default` theme are
+untouched; `ProductViewProvider`'s new `image_srcset` field defaults to
+`null` for any caller that doesn't supply it. **Tests:** `php -l` clean;
+`tests/mintcart/commerce/product-view-provider-test.php` extended (10 →
+11 scenarios, two new pass-through/default-null assertions); full
+`tests/mintcart/**/*-test.php` suite re-run end to end (84 files) — all
+passing, no regressions. Both `product-card.twig` files' (`mint_default`,
+`test_theme`) `if`/`endif` tag counts checked balanced (16/16, 5/5).
+**Not verified:** no live MySQL/browser session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new entry. The identical change was made
+to `search.php`/`manufacturer.php`/`special.php` — see each file's own
+entry below for a one-line pointer back to this paragraph rather than
+repeating it.
+**Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
+the existing `if ($mint_diagnostics->isEnabled()) { $output .= "\n<!--
+mintcart-diagnostics ... -->"; }` block, right before `setOutput()`, now
+has a sibling branch checked first: when the request also carries
+`mintcart_diagnostics=json` (still gated by `mintcart_dev_mode` being on),
+the controller returns `$mint_diagnostics->summary()` as a standalone
+`application/json` response instead of the normal page HTML, with an
+early `return` right after `setOutput()`. This was
+`docs/developer/core/diagnostics.md`'s own "Next step" list's third
+bullet ("a structured JSON endpoint ... as an alternative surface to the
+HTML comment") — see that file's new "JSON diagnostics surface" section
+for the full writeup. The identical two-line addition was made at the
+same point in `search.php`/`special.php`/`manufacturer.php`/`product.php`
+— see each file's own entry below for its own brief note. **Why it can't
+live in the MintCart layer:** the branch has to sit exactly where the
+existing HTML-comment branch already sits, right before this specific
+controller's own `setOutput()` call — there is no shared "finish the
+response" hook these five controllers funnel through today (each already
+duplicates the HTML-comment append independently; this mirrors that same
+existing, deliberate small-duplication shape rather than introducing a
+new shared helper for a two-line addition, per `CLAUDE.md` §17/§86).
+**Compatibility impact:** none for any request without
+`mintcart_diagnostics=json` — byte-for-byte the same behavior as before,
+since the new branch's condition is simply false. For a request that does
+pass it, behavior only changes when `mintcart_dev_mode` is also on (the
+same pre-existing gate the HTML comment already uses); with dev mode off,
+`$mint_diagnostics->isEnabled()` is `false` and the whole branch is
+skipped exactly as before. **Tests:** `php -l` clean on all five touched
+files; full `tests/mintcart/**/*-test.php` suite re-run end to end — all
+passing, no regressions (no new test file needed — `Diagnostics::summary()`
+itself is already covered by `tests/mintcart/core/diagnostics-test.php`,
+and this change only threads its existing return value to a different
+response method, no new logic to unit-test). **Not verified:** no live
+MySQL/browser session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new Phase 10 entry.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/category.php`
@@ -570,6 +665,56 @@ as `category.php`'s entry. **Tests:** `php -l` clean; full
 `tests/mintcart/` suite (78 files) re-run end to end — all passing, no
 regressions.
 
+**Update (2026-09-29, routine run — responsive image `srcset`):** same
+`image_srcset` addition as `category.php`'s entry above (the "Update
+(2026-09-29 ...)" paragraph) — a second 2x `model_tool_image->resize()`
+call plus the `image_srcset` key on the `ProductCardListRenderer` product
+array, byte-for-byte the same shape. **Tests:** `php -l` clean; full
+`tests/mintcart/` suite re-run end to end — all passing.
+**Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
+same `mintcart_diagnostics=json` sibling branch added right before this
+file's own `setOutput()` call — see `category.php`'s entry above (the
+"Update (2026-09-29 ...)" paragraph) for the full writeup; this file's
+change is byte-for-byte the same two-line shape. **Tests:** `php -l`
+clean; full `tests/mintcart/` suite re-run end to end — all passing.
+**Update (this run — Phase 18, SEO Core, `RobotsBuilder` `$hasResults`
+registry bridge):** resolves the `header.php`-side "Known limitation"
+`docs/developer/seo/robots.md` documented. A new
+`$mint_search_has_results` local, initialized `true` before the
+`isset($this->request->get['search']) || isset($this->request->get['tag'])`
+guard (a bare `product/search` request with neither param never runs the
+query below — the plain search form, not a "no results" page — so it keeps
+the same `true` default `RobotsBuilder` already uses), is set to
+`($product_total > 0)` right after `$product_total` is computed inside
+that guard. Immediately before the existing
+`$data['header'] = $this->load->controller('common/header');` call, a new
+line writes it to the registry:
+`$this->registry->set(\MintCart\Seo\RobotsBuilder::HAS_RESULTS_REGISTRY_KEY, $mint_search_has_results);`
+— the same `$this->registry->set()`/`->get()` bridge
+`upload/system/engine/startup/startup.php` already uses to hand
+`session`/`customer`/`cart` between stages of a single request; no new
+table, session key or event. **Why it can't live in the MintCart layer:**
+`RobotsBuilder` itself deliberately has no `\Registry` dependency (see its
+own docblock) — only a controller that already knows both "did this
+specific search run" and "is this the point where header.php is about to
+be invoked" can produce and hand off this value at the right moment.
+**Compatibility impact:** None. The registry key is new and MintCart-only;
+no existing `$data` key, template variable, or return value changes. A
+`product/search` request that never sets `search`/`tag` behaves exactly as
+before (`true`, i.e. `header.php` renders `index, follow` for it, same as
+every route that never touches this key at all). **Tests:** `php -l`
+clean on `search.php`/`header.php`/`robotsbuilder.php`.
+`tests/mintcart/seo/robots-builder-test.php` gained two assertions (76,
+up from 74) checking the new `HAS_RESULTS_REGISTRY_KEY` constant's shape —
+`directives()`/`metaContent()`'s own logic is unchanged, so no new
+behavioral test was needed there. Full `tests/mintcart/**/*-test.php`
+suite re-run end to end (84 files) — all passing, no regressions. Same
+pre-existing no-live-request gap as every earlier Phase 18 entry — a human
+should confirm on a real install that a `product/search` query with zero
+matches renders `<meta name="robots" content="noindex, follow">` while one
+with matches still renders `content="index, follow"` (see
+`docs/MANUAL_VERIFICATION.md`'s Phase 18 section).
+
 ---
 
 ## `upload/catalog/language/en-gb/product/search.php`
@@ -686,6 +831,33 @@ call site. Full design rationale: `docs/developer/seo/schema-org.md`.
 **Tests:** `php -l` clean; Twig tag balance checked; full `tests/mintcart/`
 suite (77 files) re-run end to end — all passing, no regressions.
 
+**Update (2026-09-29, routine run — responsive image `srcset`):** same
+`image_srcset` addition as `category.php`'s entry (the "Update
+(2026-09-29 ...)" paragraph) — a second 2x `model_tool_image->resize()`
+call plus the `image_srcset` key on the `ProductCardListRenderer` product
+array, byte-for-byte the same shape. **Tests:** `php -l` clean; full
+**Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
+same `mintcart_diagnostics=json` sibling branch added right before this
+file's own `setOutput()` call — see `category.php`'s entry (the "Update
+(2026-09-29 ...)" paragraph) for the full writeup; this file's change is
+byte-for-byte the same two-line shape. **Tests:** `php -l` clean; full
+`tests/mintcart/` suite re-run end to end — all passing.
+**Update (2026-10-02, routine run — MC-0021 fix, Fixes Registry):** added
+`$data['heading_title'] = $this->language->get('heading_title');`
+immediately after the existing `$this->document->setTitle(...)` call.
+Both `special.twig`s (`default` and `mint_default`) render a top-level
+`{{ heading_title }}` for the page heading, but `index()` only ever passed
+that string to `setTitle()` (the `<title>` tag), never to `$data` — the
+same missing-`$data`-assignment bug class as MC-0001/MC-0003/MC-0017,
+found by auditing this one remaining listing controller for the same
+pattern. **Why it can't live in the MintCart layer:** it's a one-line
+`$data[...] = $this->language->get(...)` gap in stock controller logic,
+the exact shape MC-0001/MC-0003/MC-0017 already established belongs here,
+not behind an adapter. **Compatibility impact:** none — purely additive
+`$data` key, no existing key changed, no template change, same for the
+stock `default` theme and `mint_default`. **Tests:** `php -l` clean. Full
+writeup: `docs/fixes/registry.md`'s MC-0021 entry.
+
 ---
 
 ## `upload/catalog/language/en-gb/product/special.php`
@@ -757,6 +929,38 @@ order. A failure inside the new pipeline (e.g. a missing/unreadable
 header degrades to no `mc_header` (mint_default's wrapper renders nothing
 in `<body>`), it does not fatal the entire page for every visitor, since
 header renders on every single page of the site.
+
+**Update (2026-09-29, routine run — Phase 9/31, `Design → Styles`):** after
+the existing `RobotsBuilder` block, adds `$data['mc_preset']` — reads
+`mintcart_design_preset` (the new `ControllerMintcartDesignStyles` setting,
+`upload/admin/controller/mintcart/design/styles.php`) and re-validates it
+against the *active* theme's own `theme.json` `presets` array before
+passing it through, so a stale value left over from a since-switched theme
+(or a theme that dropped a preset code) never reaches the template as a
+`data-mc-preset` value no loaded CSS actually declares a `:root` block
+for. Deliberately **not** gated by `$mint_render_header` like `mc_header`
+above — this is a plain attribute any theme's own `<html>` tag can choose
+to read, not a Mint component DOM contract; a legacy/third-party theme's
+own header template simply never references `$data['mc_preset']`. Full
+design writeup: `docs/developer/theme-api/presets.md`'s "Wired: `Design →
+Styles`" section.
+
+**Why it can't live in the MintCart layer instead:** Same reasoning as the
+original `mc_header` wiring above — this specific controller's already-
+resolved `$mint_theme` value and the point right before `load->view()` are
+where the final `$data` array is assembled; there is no shared "finish this
+page's `$data`" hook to put it in instead.
+
+**Compatibility impact:** None for a request where `mintcart_design_preset`
+is unset or blank (the default before this run — `$mc_preset` stays `''`,
+`mint_default/common/header.twig`'s new `{% if mc_preset %}` guard omits
+the attribute exactly as before this change existed) and none for any
+theme whose own `common/header.twig` doesn't reference the new key.
+**Tests:** `php -l` clean; full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end — all passing, no regressions (no PHP class
+changed, only this controller's own `$data` array — no new pure logic to
+unit-test). **Not verified:** no live MySQL/browser session in this
+environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 9 entry.
 
 **Tests:** No live end-to-end request test — same pre-existing gap as
 every earlier MintCart controller change (no MySQL server/`vendor/twig/twig`
@@ -837,19 +1041,15 @@ cost. Same catch-and-log failure handling as the two blocks above it. `<head>`
 output added to `mint_default/template/common/header.twig` right after the
 existing `keywords` meta tag.
 
-**Known limitation (deliberate, see `docs/developer/seo/robots.md`):**
-`RobotsBuilder::metaContent()`'s second parameter, `$hasResults` (only
-meaningful for `product/search`), is left at its default (`true`) here —
-header.php has no way to know whether the current request's search
-actually matched anything, since it renders as a sibling sub-controller of
-`ControllerProductSearch`, not that controller itself. Threading a real
-`hasResults` signal across that boundary (registry/session) is a separate,
-slightly larger follow-up; today every `product/search` page, including an
-empty-results one, renders `index, follow` rather than the `noindex,
-follow` `RobotsBuilder` is capable of producing. Every other route
-(the full `NOINDEX_ROUTES` checkout/account whitelist, and every ordinary
-catalog/information/home route) is unaffected by this limitation and
-behaves exactly as `RobotsBuilder`'s own test suite already verifies.
+**Update (this run): `product/search` `$hasResults` now threaded via a
+registry bridge — see `docs/developer/seo/robots.md`.** Reads
+`$this->registry->get(\MintCart\Seo\RobotsBuilder::HAS_RESULTS_REGISTRY_KEY)`
+(falling back to `RobotsBuilder`'s own default, `true`, when unset) instead
+of always passing the implicit default, so `metaContent()`'s second
+argument is now real for `product/search` and unchanged for every other
+route (which never writes that registry key). See
+`upload/catalog/controller/product/search.php`'s own entry below for the
+write side of this bridge.
 
 **Compatibility impact:** None for the legacy `default` theme or any
 unrelated third-party theme (their own header templates never read
@@ -944,6 +1144,111 @@ to Cart/Quick Order/wishlist-toggle buttons actually respond to a click,
 which they visibly did not before this change; the legacy Bootstrap-3/
 jQuery-driven parts of the same page — account pages, `common/cart.info`
 AJAX, `common.js` — still work unmodified).
+
+**Update (2026-09-19, routine run): `text_search` added to the
+`$header_view + array(...)` merge.** One new key, same array, same pattern
+as the existing `text_account`/`text_menu`/`text_close`/... entries — no
+other line changed. Consumed by `mint_default`'s and `test_theme`'s
+`header.twig` for `mc-search-box`'s `placeholder`/`aria-label` (see those
+two files' own entries below and
+`docs/developer/components/search-box.md`). `text_search` already exists
+in `catalog/language/en-gb/common/header.php` (no new language file
+change needed). **Tests:** `php -l` clean; full `tests/mintcart/` suite
+(84 files) re-run end to end, unaffected (no class touched) — still
+passing.
+
+---
+
+## `upload/catalog/view/theme/mint_default/template/mint/components/header.twig` (this entry, 2026-09-19 routine run)
+
+**Reason:** Replaces the `{% if widgets.search %}<div class="mc-legacy">
+{{ widgets.search|raw }}</div>{% endif %}` block (the legacy jQuery-
+autocomplete `common/search` fragment) with `mc-search-box`'s documented
+markup contract (`docs/developer/components/search-box.md`) — the
+component's JS/CSS have existed since an earlier Phase 15 increment with
+no live template consumer; this was the explicitly-named "next step" in
+`docs/IMPLEMENTATION_STATUS.md`'s Phase 15 section, unblocked once
+`components.min.css`/`catalog.min.js` were enqueued on the storefront
+(see this file's `header.php` entry above, "Update ... own compiled asset
+bundle").
+
+**Why it can't live in the MintCart layer instead:** It is Twig markup for
+one specific theme's specific component template — by definition theme
+content, not platform code.
+
+**Compatibility impact:** None outside `mint_default` — this is a template
+file, not shared code. `HeaderViewProvider`'s `widgets.search` key is
+untouched (still computed by `header.php`, still exposed in the contract);
+`mint_default` simply stopped reading it. A theme that copies
+`mint_default` as a starting point and still wants the legacy fragment can
+render `widgets.search` itself — the key did not disappear.
+
+**Tests:** `if`/`for` tag counts re-balanced (10/10, `for` unused) after
+the edit. Full `tests/mintcart/` suite (84 files) re-run end to end,
+unaffected (no PHP class touched) — still passing. **Not verified live**
+— no MySQL/browser session in this environment; see
+`docs/MANUAL_VERIFICATION.md`'s Phase 15 entry.
+
+---
+
+## `upload/catalog/view/theme/test_theme/template/mint/components/header.twig` (this entry, 2026-09-19 routine run)
+
+**Reason:** Adds the same `mc-search-box` markup contract in a different
+placement (directly after the branding link, before the account/cart
+widgets, rather than `mint_default`'s topbar-adjacent `mc-header__widgets`
+slot) — proving the Theme API's override-fallback story for this
+component too, the same way `test_theme`'s product-card/header/footer
+overrides already proved it for theirs (`CLAUDE.md` §19/§45).
+
+**Why it can't live in the MintCart layer instead:** Same as above — this
+is theme content, by definition theme-owned.
+
+**Compatibility impact:** None outside `test_theme`, which exists solely
+as the second reference theme proving Theme API fallback (never a
+production theme).
+
+**Tests:** `if`/`for` tag counts re-balanced (3/3) after the edit. Same
+`tests/mintcart/` suite re-run as above, unaffected.
+
+---
+
+## `assets/src/css/components.css` (this entry, 2026-09-19 routine run)
+
+**Reason:** Bug fix, found while verifying the `mc-search-box` wiring
+above. This file (the Bootstrap-5-reset-free bundle `ControllerCommonHeader`
+actually enqueues on the storefront as `components.min.css`, deliberately
+*not* `index.min.css` — see the `header.php` entry above) was missing
+three `@import` lines `index.css` already had:
+`./components/product-gallery.css`, `./components/quick-order.css`, and
+`./components/search-box.css`. This file's own docblock says to "keep this
+list's imports (order included) identical to `index.css` any time
+`index.css` gains or reorders one" — that instruction was not followed
+when those three component CSS files were added to `index.css` in earlier
+increments, so none of their styling ever reached a live page (only
+`index.min.css`, which nothing on the storefront enqueues, had it). Fixed
+by adding the three missing imports, in the same relative order
+`index.css` uses.
+
+**Why it can't live in the MintCart layer instead:** Build-pipeline
+config, not application code — there is no "MintCart layer" for a CSS
+entry-point file.
+
+**Compatibility impact:** Additive only — `components.min.css` grows by
+the CSS these three component files already contribute to `index.min.css`
+(none of which redeclares a bare `body`/`html`/`*`/element selector, per
+this file's own docblock guarantee — re-checked for all three before
+adding). No existing selector changed. Confirmed none of the three
+introduces a Bootstrap-structural dependency (`.modal`/`.offcanvas`/
+`.toast`/`.dropdown`) this bundle deliberately excludes — the one `.modal-body`
+selector in `quick-order.css` only styles content nested inside a modal
+that `mc-modal.css` (already imported here) already documents as
+unstyled-without-`index.css` chrome, an existing, unrelated limitation
+this change does not widen.
+
+**Tests:** `npm install` (0 vulnerabilities), `npm run build` compiles
+cleanly. `grep -c mc-search-box assets/dist/css/components.min.css` went
+from 0 to 1 after the fix — the actual regression test for this bug.
+`npm test` (preset-token contract checks, unaffected) still passing.
 
 ---
 
@@ -1051,6 +1356,21 @@ end — all passing, no regressions (no new test file needed — same
 rationale as MC-0001/MC-0003, four already-proven `language->get()`
 calls). **Not verified:** no live MySQL/Twig session in this environment
 — see `docs/MANUAL_VERIFICATION.md`'s new Phase 6 entry.
+
+**Update (2026-09-29, routine run — responsive image `srcset`):** same
+`image_srcset` addition as `category.php`'s entry (the "Update
+(2026-09-29 ...)" paragraph) — a second 2x `model_tool_image->resize()`
+call plus the `image_srcset` key on the `ProductCardListRenderer` product
+array, byte-for-byte the same shape. **Tests:** `php -l` clean; full
+`tests/mintcart/` suite re-run end to end — all passing.
+**Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
+same `mintcart_diagnostics=json` sibling branch added right before this
+file's `info()` method's own `setOutput()` call — see `category.php`'s
+entry (the "Update (2026-09-29 ...)" paragraph) for the full writeup;
+this file's change is byte-for-byte the same two-line shape. `index()`'s
+plain manufacturer-list path never constructs `$mint_diagnostics` and is
+untouched. **Tests:** `php -l` clean; full `tests/mintcart/` suite re-run
+end to end — all passing.
 
 ---
 
@@ -1492,6 +1812,68 @@ missing (the flag could previously only be set by writing directly to
 or route touched. **Tests:** `php -l` clean; full `tests/mintcart/`
 suite (81 files) re-run end to end, all passing, no regressions.
 
+**Update (2026-09-30, routine run — `System → Compatibility Checker`):**
+adds one entry to the existing `$system` menu array, right after the
+`mintcart/settings/diagnostics` entry added above, gated by
+`$this->user->hasPermission('access', 'mintcart/compatibility')` — same
+conditional-push shape every sibling entry in this file already uses.
+Points at `ControllerMintcartCompatibility::index()` (new this run — see
+`docs/developer/compatibility/compatibility-checker.md`'s "Admin screen
+and menu entry" section), the rendered form `check()`'s own docblock had
+named as a natural follow-up since the class's first increment. Step 0
+dedup check: `list_pull_requests` returned 24 open PRs at the start of
+this run (#138–#161). Directly checked the file list (`pull_request_read`
+`get_files`) of the ones most likely to touch admin navigation — #139
+(Sale menu group), #146 (SEO admin screen), #149 (Update Manager admin
+route), #151 (Design menu group), #158 (SEO wiring) — confirming each
+edits a different array/location than this run's `System` array (#139's
+own `$sale` array, #151's own `$design` array, or no `column_left.php`
+touch at all). The remaining open PRs' titles (docs-only additions, pure
+`MintCart\*` service classes, SEO builder wiring, bulk-editor field work)
+gave no indication of an admin-menu change, so they were not individually
+diffed — a smaller risk than usual, since this increment's own diff is a
+single, isolated few-line insertion right after the existing Diagnostics
+entry, the same "small, expected conflict a human reconciles" shape every
+prior `column_left.php` increment in this file already accepted. One new
+key
+added to `upload/admin/language/en-gb/common/column_left.php`
+(`text_mintcart_compatibility`), right after
+`text_mintcart_settings_diagnostics`, matching every other menu-label key
+**Update (2026-09-29, routine run — `Design → Styles`):** adds one entry
+to the existing `$design` array, right after the stock "Theme" (Theme
+Editor) entry, gated by
+`$this->user->hasPermission('access', 'mintcart/design/styles')` — same
+conditional-push shape every sibling entry in this file already uses.
+Points at the new `ControllerMintcartDesignStyles`
+(`upload/admin/controller/mintcart/design/styles.php`), the Phase 9/31
+"which design preset does the active theme use" facade
+`docs/developer/theme-api/presets.md`'s own "Not yet wired" section named
+as the missing piece. One new key added to
+`upload/admin/language/en-gb/common/column_left.php`
+(`text_mintcart_design_styles`), right after the existing
+`text_mintcart_seo_system_pages` key, matching every other menu-label key
+already in that file. Purely additive; no existing menu entry, permission
+check, or route touched. **Tests:** `php -l` clean on both changed files;
+full `tests/mintcart/**/*-test.php` suite (84 files) re-run end to end,
+all passing, no regressions.
+**Update (2026-09-28, routine run — `Sale → Quick Order Requests`):** adds
+one entry to the existing `$sale` menu array, right after the stock
+"Orders" entry and before "Order Recurring", gated by
+`$this->user->hasPermission('access', 'mintcart/quickorder')` — same
+conditional-push shape every sibling entry in this file already uses.
+Points at the new `ControllerMintcartQuickorder` (admin-side,
+`upload/admin/controller/mintcart/quickorder.php` — a distinct class from
+the pre-existing catalog-side controller of the same name, which lives in
+a separate MVC tree), the admin list
+`docs/developer/commerce/quick-order-service.md`'s "Not done yet" section
+named as the natural next consumer of the `mc_quick_order` table. One new
+key added to `upload/admin/language/en-gb/common/column_left.php`
+(`text_mintcart_quickorder`), right after `text_order_status`, matching
+every other menu-label key already in that file. Purely additive; no
+existing menu entry, permission check, or route touched. **Tests:**
+`php -l` clean on both changed files; full `tests/mintcart/` suite
+re-run end to end, all passing, no regressions.
+
 ---
 
 ## `upload/admin/model/catalog/category.php` / `upload/admin/controller/catalog/category.php`
@@ -1564,6 +1946,60 @@ gap as every earlier phase: no MySQL in this environment, so
 `moveCategory()`/`rebuildCategoryPath()` and the `move()` action itself were
 never exercised against a real database — a human should confirm on a real
 install (see `docs/MANUAL_VERIFICATION.md`'s new Phase 17 section).
+
+**Update (this run): the live UI wiring flagged as "Not done yet" above is
+now done** — see `docs/developer/catalog/category-drag-drop.md`'s new "Live
+UI wiring" section for the full writeup.
+`ControllerCatalogCategory::getList()` gained a new `enqueueMintAssets()`
+(verbatim copy of `ControllerCatalogProduct::enqueueMintAssets()` — the
+`components.min.css`/`admin.min.js` pair, `docs/developer/admin/asset-
+enqueue.md`) and now passes `parent_id` per row plus a new `$data['move']`
+(the `catalog/category.move` URL) into `category_list.twig`, which mounts
+the real `mc-sortable` behavior (`data-mc-sortable`/
+`data-mc-sortable-handle`/`data-mc-sortable-item`/`data-mc-action` — its
+documented hook contract, no CSS class dependency) directly on the
+existing Bootstrap 3 table/row markup, gated to `sort == 'sort_order'`.
+An inline `<script>` POSTs the new order to `catalog/category.move`
+immediately on `mc:sortable:reorder`, keeping every row's own `parent_id`
+unchanged (reordering only — no re-parenting from this UI) and splitting
+the new visible order back into per-parent groups before saving (one
+`move()` request per group, skipping any group with only one visible
+member) — this is also what resolves the "Architectural fork identified,
+not resolved (Phase 17)" note `docs/IMPLEMENTATION_STATUS.md`'s Phase 12
+section carried: see `docs/developer/catalog/category-drag-drop.md`'s
+"Resolves the Architectural fork..." section for why this flat,
+cross-parent list needed that grouping rather than a UI redesign. Two new
+language keys were needed beyond `error_category`: `text_drag_hint`,
+`text_move_up`, `text_move_down`, `text_order_saved`, `text_order_failed`,
+`text_sort_by_order_first` (`en-gb/catalog/category.php`).
+
+**Compatibility impact (update):** still purely additive — the existing
+`index()`/`add()`/`edit()`/`delete()`/`repair()`/`autocomplete()` actions,
+`getForm()`, and every other `getList()` data key are untouched;
+`enqueueMintAssets()` only queues two extra HTTP requests
+(`components.min.css`/`admin.min.js`) on the category list action, the
+same additive mechanism `product.php`'s `getForm()` already established.
+
+**Tests (update):** `php -l` clean on `category.php`/
+`en-gb/catalog/category.php`. `category_list.twig`'s `{% if %}`/
+`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts re-checked balanced
+(12/12, 2/2) — one early draft of this change accidentally left a literal
+`{% if %}` inside a JS doc-comment, which Twig would have parsed as a real
+(unbalanced) tag; caught by this same balance check and rewritten to plain
+prose. The new inline `<script>` block was checked for JS syntax errors
+with a standalone Node harness (Twig `{{ }}` output substituted with a
+placeholder string first) — parses cleanly. Full `tests/mintcart/**/*-test.php`
+suite (82 files) re-run end to end — all passing, no regressions (this
+change adds no new PHP class, so no new test file). Verifying this
+increment surfaced a real boot-timing bug in `assets/src/js/admin.js`/
+`catalog.js` (both MintCart-owned, not OpenCart core, so tracked in
+`docs/developer/catalog/category-drag-drop.md`'s "Boot timing bug found
+while verifying this increment" section, not here) — `npm install && npm
+run build` now re-run and compiles cleanly, `npm test` still passes.
+**Not verified live** — same pre-existing no-MySQL/no-browser-session gap
+as every other admin-screen increment in this repo (see
+`docs/MANUAL_VERIFICATION.md`'s Phase 17 section for what a human should
+confirm).
 
 ---
 
@@ -2152,6 +2588,126 @@ in this environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for
 the full manual script. Same pre-existing "trimmed repository"
 label-blank gap noted above applies identically to the six new
 `text_related_picker_*` keys — not a new gap this change introduces.
+
+**Update (this run — Phase 12, Entity Picker): Option field wired into
+the same admin screen, closing out the entity-picker backend's own
+"identified first consumer" note for Option.** `product_form.twig`'s
+Option tab (`#input-option`, previously only a jQuery UI `autocomplete()`
+field against `catalog/option/autocomplete`) gains the same "Browse
+options" button + hidden `.mc-entity-picker` panel pattern as the
+Category/Manufacturer/Related fields above, against the
+`mintcart/entity/option` backend
+(`docs/developer/components/entity-picker.md` "Option backend"). Like
+Manufacturer (not Category/Related), this is **single-select**
+(`multiple: false`) since a single confirmed pick adds one new option
+tab. Unlike every other picker above, selecting an option can't just
+overwrite/append a couple of fields — it needs to build a whole new
+type-specific tab-pane (required/value fields differ per option type,
+plus a value table for `select`/`radio`/`checkbox`/`image` types). Rather
+than duplicating that construction, the existing jQuery autocomplete's
+`'select': function(item) { ... }` handler body was extracted into a
+named `selectOption(item)` function (called unchanged by both the
+autocomplete and the new picker's `onConfirm`), so
+`ControllerCatalogProduct::validateForm()`/`addProduct()`/
+`editProduct()`'s handling of `product_option[]` stays completely
+untouched and there is exactly one tab-construction code path, not two.
+
+Two small, additive backend changes support this (both fully described in
+`docs/developer/components/entity-picker.md`'s updated "Option backend"
+section): `MintCart\Design\OptionPickerProvider::build()` now also
+returns `type` per item (free — already present on every
+`ModelCatalogOption::getOptions()` row), and
+`ControllerMintcartEntity::option()` layers an `option_value` array onto
+each item for the four types that need one, via one extra
+`ModelCatalogOption::getOptionValues()` call per row of the *current
+page* (not the full filtered set) — mirroring, at smaller scope, what
+`catalog/option.php`'s own `autocomplete()` action already does for its
+5 results. Six new `text_option_picker_*` language keys were added, same
+**Update (this run — Phase 12, Entity Picker): Attribute tab wired into
+the same admin screen.** `product_form.twig`'s Attribute tab (`#attribute`,
+previously only a jQuery UI `autocomplete()` field per dynamically-added
+row) gains a "Browse" button + hidden `.mc-entity-picker` panel, against
+the already-shipped, previously-consumer-less `mintcart/entity/attribute`
+backend (`docs/developer/components/entity-picker.md` "Attribute
+backend"). Unlike Category/Manufacturer/Related, attribute rows are added
+dynamically (`addAttribute()`), so this is **one shared picker instance**
+(single-select, `multiple: false`) reused across every row via event
+delegation on the `#attribute` table, not a picker-per-field: each row's
+new "Browse" button carries `data-mc-action="browse-attribute"
+data-mc-attribute-row="N"`; clicking it records which row is active, and
+`onConfirm` writes into that row's new `[data-mc-attribute-name]`/
+`[data-mc-attribute-id]` hooks. Both the initial Twig-rendered rows
+(`{% for product_attribute in product_attributes %}`) and the
+JS-generated row markup (`addAttribute()`'s own HTML-string template)
+were updated identically so a row added via either path behaves the same.
+Confirming a selection writes into the exact same fields
+`attributeautocomplete()`'s own jQuery UI `select` handler already writes
+to, so `ControllerCatalogProduct::validateForm()`/`addProduct()`/
+`editProduct()`'s handling of `product_attribute[]` is completely
+untouched. No controller change was needed — this screen's
+`enqueueMintAssets()` already covers the whole form (added for Category).
+Six new `text_attribute_picker_*` language keys were added, same
+file/pattern as Category's/Manufacturer's/Related's own six.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+the Category/Manufacturer/Related entries above — this is the one true
+owner of the product edit screen's form; the `option_value` lookup is
+MintCart-owned code (`ControllerMintcartEntity`), not a fork of the
+option model's own storage.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, or `$data` key changed; the existing jQuery autocomplete still
+works exactly as before, unmodified in behavior (its `'select'` callback
+now delegates to `selectOption()` instead of inlining the same body, with
+zero behavior change). `OptionPickerProvider`'s new `type` item field and
+`ControllerMintcartEntity::option()`'s new `option_value` item field are
+additive JSON keys on a response with no other live consumer yet, so
+nothing existing could depend on their absence.
+
+**Tests:** `php -l` clean across the entire `upload/` tree. Twig
+`{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts checked
+balanced before and after (38/38, 37/37, unchanged — this change adds no
+new conditional/loop tags, only plain HTML/JS). All 10 inline `<script>`
+blocks in `product_form.twig` (not just the two touched by this change)
+extracted and checked with `node --check` (Twig `{{ }}`/`{% %}` tags
+substituted with a placeholder first) — all parse cleanly. Full
+`tests/mintcart/**/*-test.php` suite (84 files) re-run end to end — all
+passing, no regressions;
+`tests/mintcart/design/option-picker-provider-test.php` itself extended
+(6 scenarios, two new `type` pass-through assertions added to an existing
+scenario) and re-run standalone. **Not verified:** no live MySQL/admin
+session in this environment — see `docs/MANUAL_VERIFICATION.md`'s new
+entry for the full manual script. Same pre-existing "trimmed repository"
+label-blank gap noted above applies identically to the six new
+`text_option_picker_*` keys — not a new gap this change introduces.
+owner of the product edit screen's form.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, or `$data` key changed; the existing jQuery autocomplete still
+works exactly as before, on every row regardless of whether it was
+present at page load or added afterward.
+
+**Tests:** `php -l` clean on the language file (no PHP changed in the
+controller or any `upload/system/library/mintcart/*` class — this is
+Twig/JS/language-file only, reusing the already-tested
+`AttributePickerProvider`/`ControllerMintcartEntity::attribute()` backend
+as-is). Twig `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag
+counts checked balanced before and after (38/38, 37/37, unchanged — this
+change adds no new conditional/loop tags). Both modified inline
+`<script>` blocks (and all 8 other, untouched ones) extracted and checked
+with `node --check` (all pass), same approach as the Category/
+Manufacturer/Related entries, since there is no live browser in this
+environment to exercise it. Full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end — all passing, no regressions (no PHP library
+code changed here). **Not verified:** no live MySQL/admin session in this
+environment — see `docs/MANUAL_VERIFICATION.md`'s new entry for the full
+manual script, which specifically covers the multi-row/shared-instance
+behavior this field introduces (browsing into the correct row, resetting
+search state between rows, surviving row removal/re-add) that the
+single-field Category/Manufacturer/Related pickers didn't need to check.
+Same pre-existing "trimmed repository" label-blank gap noted above
+applies identically to the six new `text_attribute_picker_*` keys — not a
+new gap this change introduces.
 ## `upload/system/library/db.php`
 
 **Reason:** MC-0006 (`docs/fixes/registry.md`) — `DB::connected()` called
@@ -2596,6 +3152,16 @@ after (36/36, 11/11). **Not verified:** no live MySQL/Twig session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 19
 entry.
 
+**Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
+same `mintcart_diagnostics=json` sibling branch added right before this
+file's own `setOutput()` call (the related-products `$mint_diagnostics`
+instance) — see `category.php`'s entry above (the "Update (2026-09-29
+...)" paragraph) for the full writeup; this file's change is
+byte-for-byte the same two-line shape. **Tests:** `php -l` clean; full
+`tests/mintcart/` suite re-run end to end — all passing.
+
+---
+
 ## `upload/admin/model/catalog/product.php` / `upload/admin/controller/catalog/product.php` / `upload/admin/view/template/catalog/product_list.twig`
 
 **Reason:** Phase 16 (Bulk Editor, `MINTCART_FUNCTIONAL_SCOPE.md` §7/§17,
@@ -2723,6 +3289,102 @@ bulk special-price update replaces (not adds to) any existing
 via the normal edit form with a non-default customer group or a date
 range — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16 section.
 
+**Update (2026-09-30, routine run — Phase 16, Bulk Editor): `category_ids`
+added as a sixth bulk-editable field** — the last one this section's own
+"Next step" (`docs/developer/catalog/bulk-editor.md`) had flagged as
+genuinely different from the five scalar fields above (a list, not a
+single value). Full design writeup: `docs/developer/catalog/bulk-editor.md`
+"Value input" and "Why a new model method" sections (both updated this
+run).
+
+1. **Validator:** `MintCart\Catalog\BulkProductUpdateValidator::FIELDS`
+   gains `category_ids`; two new methods, `validateCategoryIds(array
+   $categoryIds): ?string` and `normalizeCategoryIds(array
+   $rawCategoryIds): array`, kept separate from the existing
+   `validateValue(string $field, string $value): ?string` (which stays
+   typed for the five scalar fields) rather than widening that method's
+   signature to also accept a list.
+2. **Model:** `ModelCatalogProduct::updateProductField()` gains a
+   `category_ids` branch — `DELETE FROM oc_product_to_category WHERE
+   product_id = ...` then one `INSERT` per category id, the same
+   delete-then-reinsert shape `editProduct()`'s own `product_category`
+   relation already uses, just scoped to this one relation. An empty list
+   clears every category (matches `special_price`'s own "blank removes"
+   semantics).
+3. **Controller:** `validateBulkUpdate()`/`bulkUpdate()` branch on
+   `$field === 'category_ids'` to read `$this->request->post['bulk_value']`
+   as an array (`bulk_value[]`, from the new entity-picker markup) instead
+   of casting it to a string like every other field. `getList()` now also
+   calls the existing `enqueueMintAssets()` helper (previously only called
+   from `getForm()`) so this screen's new picker has
+   `window.MintCart.createEntityPicker` available —
+   `docs/developer/admin/asset-enqueue.md`'s `components.min.css` bundle,
+   not `index.min.css`, so no Bootstrap 3/5 conflict.
+4. **View:** `product_list.twig`'s `bulk_field` `<select>` gains a
+   "Category" `<option>`; a new hidden `#bulk-category-field` block (a
+   `window.MintCart.createEntityPicker` reusing the existing
+   `mintcart/entity/category` endpoint unchanged, appending
+   `bulk_value[]` hidden inputs into `#bulk-category-list`) replaces
+   `#input-bulk-value` when "Category" is chosen, via a new plain-JS
+   (not jQuery, per `CLAUDE.md` §7) `<script>` block mirroring
+   `product_form.twig`'s own Category-field picker wiring almost exactly.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+every entry above in this section — `oc_product_to_category` is OpenCart
+core storage; extending the existing model/controller/template keeps the
+table's one true owner in one place.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+column, route, or `editProduct()`/product-edit-form behavior changed; the
+new `category_ids` branch and picker only run when a merchant explicitly
+chooses "Category" in the bulk-update toolbar. `getList()` now enqueues
+two additional `<link>`/`<script>` tags on this one admin screen (already
+proven safe on the product edit form since Phase 12).
+
+**Tests:** `php -l` clean on all touched/added files.
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` grows from
+46 to 57 assertions (`category_ids` field whitelist,
+`validateCategoryIds()`/`normalizeCategoryIds()` coverage including the
+empty-list-is-valid and one-bad-entry-rejects-the-whole-list cases); full
+`tests/mintcart/**/*-test.php` suite (84 files) re-run end to end — all
+passing, no regressions. `product_list.twig`'s tag counts re-checked
+balanced (14/14, 2/2 — no `{% %}` tag touched, only plain HTML/inline
+`<script>`); all 3 of the file's inline `<script>` blocks (including the
+new toggle/picker wiring) checked for JS syntax errors with a standalone
+Node harness. Same pre-existing gap: no live MySQL/admin session in this
+environment — a human should confirm the picker actually renders and a
+bulk category update replaces (not merges into) each selected product's
+existing categories — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
+section.
+**Update (2026-09-28, routine run — Phase 16, Bulk Editor):** the toolbar's
+single generic `bulk_value` text `<input>` is now two controls sharing
+that `name` — an Enabled/Disabled `<select>` for the `status` field, a
+`type="number"` input (whole numbers for quantity/manufacturer_id/
+stock_status_id, decimals for price/special_price) for every other field
+— toggled by a small inline `<script>` block on `#input-bulk-field`'s
+`change` event, which `disabled`s whichever control is not the active
+one. This touches only `product_list.twig`; no PHP file in this section
+changed — `BulkProductUpdateValidator`/`ControllerCatalogProduct::bulkUpdate()`
+already read `bulk_value` as a plain string regardless of which HTML
+control produced it, and their validation is unchanged.
+
+**Why it can't live in the MintCart layer:** it is admin-form UX for one
+specific pre-existing OpenCart template, not platform code.
+
+**Compatibility impact:** none — a disabled form control is excluded from
+the browser's own POST body, so the controller still only ever receives a
+single `bulk_value`, exactly as before; the six existing fields' bulk
+updates are otherwise untouched.
+
+**Tests:** no PHP touched, so `tests/mintcart/` was not re-run (nothing it
+covers changed). `product_list.twig`'s `{% if %}`/`{% for %}` tag counts
+unchanged and re-checked balanced (14/14, 2/2 — no `{% %}` tag touched).
+The file's three inline `<script>` blocks (including the new toggle)
+checked for JS syntax errors with a standalone Node harness (Twig `{{ }}`
+output substituted with a placeholder string) — all parse cleanly. **Not
+verified live** — no MySQL/admin session in this environment; see
+`docs/MANUAL_VERIFICATION.md`'s updated Phase 16 section (new step 8).
+
 ## `upload/catalog/controller/extension/feed/google_sitemap.php`
 
 **Reason:** Phase 18 (SEO Core, `MINTCART_FUNCTIONAL_SCOPE.md` §16 /
@@ -2806,3 +3468,115 @@ coverage, including the rejection cases); full `tests/mintcart/` suite
 the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
 section.
+
+## `upload/admin/controller/sale/order.php` / `upload/admin/view/template/sale/order_form.twig` / `upload/admin/language/en-gb/sale/order.php`
+
+**Reason:** the same Entity Picker live-wiring gap `product.php`'s entry
+above closed for Category/Manufacturer — `docs/developer/components/entity-picker.md`'s
+"Customer backend" section had `MintCart\Design\CustomerPickerProvider`
+and its `mintcart/entity/customer` endpoint fully built and unit-tested
+but with zero live consumer, incorrectly noting "no existing
+customer-autocomplete field on any admin template to replace" (it does —
+`sale/order_form.twig`'s Customer field, same shape as the Category/
+Manufacturer fields the previous entry wired).
+
+1. **Controller:** new `enqueueMintAssets()` method (byte-identical
+   pattern to `ControllerCatalogProduct`'s own), called at the top of the
+   existing `getForm()` (shared by `add()`/`edit()`).
+   `$this->document->addStyle()`/`addScript()` with
+   `assets/dist/css/components.min.css`/`assets/dist/js/admin.min.js`.
+   Nothing else in `getForm()` changed.
+2. **View:** `order_form.twig`'s Customer `form-group` gained a "Browse
+   customers" button + a hidden `.mc-entity-picker` panel, additive
+   alongside the existing jQuery-autocomplete input (not a replacement).
+   A new inline `<script>` block (plain vanilla JS, not jQuery, per
+   `CLAUDE.md` §7) calls `window.MintCart.createEntityPicker()` against
+   the existing `mintcart/entity/customer` backend. Unlike Category/
+   Manufacturer, confirming a selection cannot just overwrite the name/id
+   fields — this same screen's legacy autocomplete `'select'` handler
+   also fills `customer_group_id`/`firstname`/`lastname`/`email`/
+   `telephone`/the payment and shipping address `<select>` options, none
+   of which `CustomerPickerProvider`'s `{id, name, image}` shape carries.
+   Rather than widen that shared provider contract or touch
+   `customer/customer.php` (OpenCart core), the picker's `onConfirm`
+   re-queries the *existing*, untouched `customer/customer/autocomplete`
+   endpoint a second time (filtered by the exact picked name, matched
+   back by `customer_id`) and reuses its full-detail response to fill the
+   same fields the legacy handler already does. Known, documented
+   limitation: the customer's saved `custom_field` values are not
+   re-applied (only the field *visibility* for the newly picked
+   customer's group, via a native `change` event the existing jQuery
+   `customer_group_id` handler already listens for) — see the in-template
+   comment and `docs/developer/components/entity-picker.md`'s updated
+   "Customer backend" section.
+3. **Language:** six new `text_customer_picker_*` keys, same
+   file/pattern/count as `product.php`'s `text_manufacturer_picker_*`.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+the `product.php` entry above — `order_form.twig`/`ControllerSaleOrder`
+are the one true owner of the manual-order screen's form/save logic;
+the picker is additive markup/script inside the existing form, not a new
+page, and the fallback fetch reuses OpenCart's own existing customer
+search endpoint rather than duplicating its data access.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, or `$data` key changed; the legacy jQuery autocomplete on the same
+field is completely untouched and still works exactly as before.
+
+**Tests:** `php -l` clean on `order.php` and the language file. The new
+inline script was extracted (Twig `{{ … }}` interpolations replaced with
+a placeholder string) and checked with `node --check` (valid syntax),
+same method the `product.php` entry above used, since there is no live
+browser in this environment to exercise it. Full `tests/mintcart/` suite
+(84 files) re-run end to end — no PHP library code changed here (only a
+controller method that delegates to two already-tested OpenCart core
+calls), so no regressions expected or found. **Not verified:** no live
+MySQL/admin session in this environment — a human should confirm the
+picker opens, searches, paginates, and that confirming a selection fills
+the Customer, Customer Group, First/Last Name, E-Mail, Telephone and
+Address fields correctly for an existing customer, and that the existing
+autocomplete field is unaffected (see `docs/MANUAL_VERIFICATION.md`'s new
+Phase 12 "Customer Entity Picker" entry).
+## `upload/system/library/db/pdo.php`
+
+**Reason:** MC-0019 (`docs/fixes/registry.md`) — `query()` had no
+reconnect handling at all: under this class's real default
+(`PDO::ATTR_ERRMODE_SILENT`, never explicitly set), a dropped connection
+(driver error 2006/2013) just made `execute()` return `false`, silently
+producing an empty result; if a `PDOException` happened to surface
+instead, it was rethrown immediately with no retry. The sibling adaptor
+(`DB\MySQLi`) already got this fix under MC-0011; this closes the same
+gap for `DB\PDO`. Extracted the constructor's connection setup into a
+`connect()` method and added a bounded (max one) reconnect-and-retry path
+for exactly those two driver error codes, read from `errorInfo()` (which
+PDO populates regardless of `ATTR_ERRMODE`) on both the silent-`false`
+and the thrown-exception path; every other error code still behaves
+exactly as before, unretried.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+MC-0011's `mysqli.php` entry — `DB\PDO` is a concrete adaptor OpenCart's
+core `DB` class instantiates by class name (`system/library/db.php`'s
+`new $class(...)`) when `DB_DRIVER=pdo`; there is no MintCart-owned seam
+between `DB` and the adaptor to intercept a query and retry it without
+either modifying this file or replacing OpenCart's whole DB bootstrap.
+
+**Compatibility impact:** every existing success/error path is unchanged
+for every driver error code *except* 2006/2013, which previously either
+silently returned an empty result or threw, and now transparently retry
+once before falling back to that exact same pre-fix behavior if the retry
+also fails. No public method signature changed. Two visibility/structural
+changes, both with no other effect since nothing in this codebase
+subclassed `DB\PDO` before: `connect()` is a new `protected` method
+(extracted from the constructor, not exposed as a new public API) so a
+test can override it with a fake connection, and the class is no longer
+`final`, to allow that same test subclass. OpenCart itself never installs
+with `DB_DRIVER=pdo` by default (`mysqli` is the stock choice), so this
+adaptor has no live exercise in this environment beyond the unit test
+below.
+
+**Tests:** `php -l` clean. New
+`tests/mintcart/fixes/mc-0019-pdo-reconnect-test.php` (7 scenarios) — see
+the MC-0019 registry entry for full detail. Full `tests/mintcart/` suite
+re-run end to end — all pass, no regressions. Not verified against a real
+MySQL server or a real `DB_DRIVER=pdo` install (neither available in this
+environment) — see the registry entry's "Not verified" note.
