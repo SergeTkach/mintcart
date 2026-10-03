@@ -9,6 +9,12 @@ $_['text_add']               = 'Add Category';
 $_['text_edit']              = 'Edit Category';
 $_['text_default']           = 'Default';
 $_['text_keyword']           = 'Do not use spaces, instead replace spaces with - and make sure the SEO URL is globally unique.';
+$_['text_drag_hint']         = 'Drag a row (or use the up/down buttons) to reorder categories. The new order is saved automatically.';
+$_['text_move_up']           = 'Move up';
+$_['text_move_down']         = 'Move down';
+$_['text_order_saved']       = 'Order saved.';
+$_['text_order_failed']      = 'Could not save the new order. The list has been reset.';
+$_['text_sort_by_order_first'] = 'Sort by Sort Order to drag-and-drop reorder categories.';
 
 // Column
 $_['column_name']            = 'Category Name';
