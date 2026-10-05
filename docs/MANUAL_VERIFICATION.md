@@ -1398,6 +1398,44 @@ in a browser. On a real `mint_default`-themed install:
    controllers' `$data` arrays, and `default`'s templates never read the
    new keys.
 
+## Phase 10/19 — `mc-product-card` responsive `srcset`, never rendered in a browser
+
+`category.php`/`search.php`/`manufacturer.php`/`special.php`'s new
+`image_srcset` value is simple string-building over an existing, already-
+proven `model_tool_image->resize()` call (no new business logic), and
+`php -l` plus the full `tests/mintcart/` suite (84 files) pass, and both
+`product-card.twig` files' `if`/`endif` tag counts were re-checked
+balanced — but no live MySQL/browser session in this environment means
+none of this was ever actually rendered and inspected. On a real
+`mint_default`-themed install:
+
+1. Open a category page with at least one product that has an image
+   configured. In the browser's dev tools, inspect the product card's main
+   `<img class="mc-product-card__image">` and confirm it now has a
+   `srcset` attribute with two URLs — the same `src` URL followed by
+   ` 1x`, and a second, different URL followed by ` 2x`. Confirm the
+   second URL is a real, loadable image (not a 404) and is visually the
+   same product photo at roughly double the pixel dimensions of the first.
+2. Switch the browser's device pixel ratio to 2x (dev tools' device
+   toolbar, or a real high-DPI display) and confirm the network tab shows
+   the `2x`-descriptor URL being requested instead of the `1x` one; switch
+   back to 1x and confirm the reverse.
+3. Repeat step 1 on `Search` results, a `Manufacturer` page, and
+   `Specials` — confirm all four listing pages produce a `srcset` in the
+   same shape (this was extracted into the one shared
+   `MintCart\Commerce\ProductViewProvider`/`product-card.twig` contract,
+   so all four should behave identically).
+4. Confirm a product with **no** image (falls back to `placeholder.png`)
+   still gets a valid `srcset` — both the `1x` and `2x` URLs should point
+   at differently-sized resizes of the same placeholder image, not a
+   broken URL.
+5. Confirm `width`/`height` (from the existing Phase 19 work above) are
+   still present and unchanged on the same `<img>` tag — this increment
+   only adds `srcset`, it does not touch `width`/`height`/`loading`.
+6. Confirm the legacy `default` theme's `category.twig`/`search.twig`/
+   etc. (none of which this change touches) render byte-identical to
+   before.
+
 ## Phase 7 — MintCart's own asset bundle enqueued on the storefront, never validated in a browser
 
 `ControllerCommonHeader::index()` now calls

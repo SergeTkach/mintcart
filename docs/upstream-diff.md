@@ -303,6 +303,41 @@ Twig `if`/`endif`/`for`/`endfor` tag counts checked balanced before and
 after (13/13, 5/5). **Not verified:** no live MySQL/Twig session in this
 environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 19 entry.
 
+**Update (2026-09-29, routine run — responsive image `srcset`):** the
+same `image_width`/`image_height` foreach loop gains one more line: right
+after the existing 1x `$image = $this->model_tool_image->resize(...)`
+call, a second `$image_2x` call resizes the same source (or
+`placeholder.png`) at double the configured
+`theme_<config_theme>_image_product_width`/`_height`, and
+`$image_srcset = $image . ' 1x, ' . $image_2x . ' 2x';` builds the string
+threaded into `ProductCardListRenderer`'s `product` array as
+`image_srcset` — `MINTCART_FUNCTIONAL_SCOPE.md` §19's "responsive images"
+Performance item, see
+`docs/developer/commerce/product-view-provider.md`'s "Image srcset
+(responsive images)" section for the full contract and the identical
+change's cost/caching discussion. The pre-existing `$data['products'][]`
+array (the legacy `default`-theme `category.twig` data shape) is
+untouched — this only adds a new local variable and a new key inside the
+`$mint_render_product_cards` branch. **Why it can't live in the MintCart
+layer instead:** the second `resize()` call has to sit next to the
+existing 1x call, inside this controller's own `foreach ($results as
+$result)` loop, for the same reason the diagnostics JSON branch above
+does — there is no shared "build this product's presentation values" hook
+these listing controllers funnel through yet (each already independently
+resizes its own thumb). **Compatibility impact:** none — purely additive;
+the legacy `$data['products']` array and the `default` theme are
+untouched; `ProductViewProvider`'s new `image_srcset` field defaults to
+`null` for any caller that doesn't supply it. **Tests:** `php -l` clean;
+`tests/mintcart/commerce/product-view-provider-test.php` extended (10 →
+11 scenarios, two new pass-through/default-null assertions); full
+`tests/mintcart/**/*-test.php` suite re-run end to end (84 files) — all
+passing, no regressions. Both `product-card.twig` files' (`mint_default`,
+`test_theme`) `if`/`endif` tag counts checked balanced (16/16, 5/5).
+**Not verified:** no live MySQL/browser session in this environment — see
+`docs/MANUAL_VERIFICATION.md`'s new entry. The identical change was made
+to `search.php`/`manufacturer.php`/`special.php` — see each file's own
+entry below for a one-line pointer back to this paragraph rather than
+repeating it.
 **Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
 the existing `if ($mint_diagnostics->isEnabled()) { $output .= "\n<!--
 mintcart-diagnostics ... -->"; }` block, right before `setOutput()`, now
@@ -606,6 +641,12 @@ as `category.php`'s entry. **Tests:** `php -l` clean; full
 `tests/mintcart/` suite (78 files) re-run end to end — all passing, no
 regressions.
 
+**Update (2026-09-29, routine run — responsive image `srcset`):** same
+`image_srcset` addition as `category.php`'s entry above (the "Update
+(2026-09-29 ...)" paragraph) — a second 2x `model_tool_image->resize()`
+call plus the `image_srcset` key on the `ProductCardListRenderer` product
+array, byte-for-byte the same shape. **Tests:** `php -l` clean; full
+`tests/mintcart/` suite re-run end to end — all passing.
 **Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
 same `mintcart_diagnostics=json` sibling branch added right before this
 file's own `setOutput()` call — see `category.php`'s entry above (the
@@ -766,6 +807,11 @@ call site. Full design rationale: `docs/developer/seo/schema-org.md`.
 **Tests:** `php -l` clean; Twig tag balance checked; full `tests/mintcart/`
 suite (77 files) re-run end to end — all passing, no regressions.
 
+**Update (2026-09-29, routine run — responsive image `srcset`):** same
+`image_srcset` addition as `category.php`'s entry (the "Update
+(2026-09-29 ...)" paragraph) — a second 2x `model_tool_image->resize()`
+call plus the `image_srcset` key on the `ProductCardListRenderer` product
+array, byte-for-byte the same shape. **Tests:** `php -l` clean; full
 **Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
 same `mintcart_diagnostics=json` sibling branch added right before this
 file's own `setOutput()` call — see `category.php`'s entry (the "Update
@@ -1255,6 +1301,12 @@ rationale as MC-0001/MC-0003, four already-proven `language->get()`
 calls). **Not verified:** no live MySQL/Twig session in this environment
 — see `docs/MANUAL_VERIFICATION.md`'s new Phase 6 entry.
 
+**Update (2026-09-29, routine run — responsive image `srcset`):** same
+`image_srcset` addition as `category.php`'s entry (the "Update
+(2026-09-29 ...)" paragraph) — a second 2x `model_tool_image->resize()`
+call plus the `image_srcset` key on the `ProductCardListRenderer` product
+array, byte-for-byte the same shape. **Tests:** `php -l` clean; full
+`tests/mintcart/` suite re-run end to end — all passing.
 **Update (2026-09-29, routine run — Phase 10, Diagnostics JSON surface):**
 same `mintcart_diagnostics=json` sibling branch added right before this
 file's `info()` method's own `setOutput()` call — see `category.php`'s
