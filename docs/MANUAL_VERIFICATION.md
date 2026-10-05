@@ -1449,6 +1449,31 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
 
+## Phase 11 — `mintcart/update/check`, never hit end to end
+
+`ControllerMintcartUpdate::check()` (`docs/developer/update/update-check-controller.md`)
+is check-only — it never calls `UpdateOrchestrator::apply()`. On a real
+install:
+
+1. Grant `mintcart/update` **Access** (`System → Users → User Groups`).
+2. Request `index.php?route=mintcart/update/check&user_token=<your
+   token>` with POST body `manifest=<json>` where `<json>` is e.g.
+   `{"name":"mintcart-core","version":"9.9.9","requirements":{"php_version":">=8.1"}}`.
+3. Confirm a `200` JSON response with `update_available: true`,
+   `compatible` reflecting whether the current PHP version satisfies
+   `>=8.1`, and `should_apply` true only when both are true.
+4. Repeat with `"version":"0.0.1"` (older than the installed
+   `\MintCart\Core\Version::VERSION`) — confirm `update_available: false`
+   and `should_apply: false` regardless of `compatible`.
+5. Repeat with `"requirements":{"php_version":">=99.0"}` — confirm
+   `compatible: false` and `should_apply: false` even though
+   `update_available` is true.
+6. Post an empty `manifest` — confirm `{"error": "..."}` (no exception,
+   no 500). Post `manifest=not json` — confirm a distinct "not valid JSON"
+   error. Post `manifest={}` — confirm a `PackageManifest` validation
+   error listing the missing `name`/`version` fields.
+7. Confirm no menu entry exists yet for this route (by design — see the
+   controller's own docblock); it's reachable only by direct URL for now.
 ## Phase 10 (Technical Plan) — Diagnostics `mintcart_diagnostics=json` surface, never fetched live
 
 `docs/developer/core/diagnostics.md`'s "JSON diagnostics surface" section:
