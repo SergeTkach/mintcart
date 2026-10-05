@@ -1734,3 +1734,126 @@ throughout `docs/upstream-diff.md`). A human should confirm on a real
 install that the Special Offers page (`product/special`) shows a real
 page heading instead of a blank one, on both the stock `default` theme
 and `mint_default`.
+
+---
+
+## MC-0022 — `product.php`'s main `index()` never assigns `button_continue` to `$data`
+
+**Problem:** `catalog/view/theme/default/template/product/product.twig`
+(and, as of this run, the new `mint_default/template/product/product.twig`
+write-review form) references `{{ button_continue }}` for the "Write a
+review" form's submit button, but `ControllerProductProduct::index()`
+never assigns it to `$data` anywhere in the method. Same class of bug as
+MC-0001/MC-0003/MC-0017: Twig's default `strict_variables => false`
+renders an undefined variable as an empty string instead of throwing, so
+the submit button has rendered with no visible label on every stock
+OpenCart 3.0.5.1 install, on both the `default` theme and (before this
+run) would have on `mint_default` too had its review form existed yet.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline). Not independently
+checked against other 3.x point releases — same rationale as
+MC-0001/MC-0003/MC-0017 (no second checkout available to diff against,
+and the fix only adds a `$data` key the template already expects).
+
+**Source:** Discovered directly in this repository while building
+`mint_default/template/product/product.twig`'s write-review form (this
+run) and cross-referencing every `$data[...] =` assignment in `index()`:
+`button_continue` appears nowhere in the method, even though the
+`default` theme's own stock `product.twig` has referenced it since
+OpenCart 3.0.5.1 shipped. Not an imported historical community patch.
+
+**Reproduced on MintCart baseline:** Yes — confirmed against
+`upload/catalog/view/theme/default/template/product/product.twig` (stock,
+references `button_continue` on its own write-review submit button) and
+`ControllerProductProduct::index()`'s actual method body (no assignment
+anywhere). The key itself is not missing a translation — `button_continue`
+is defined in the global `catalog/language/en-gb/en-gb.php` (auto-loaded
+on every page, same as MC-0003's/MC-0017's finding for this exact key),
+so this is purely a missing `$data['button_continue'] = $this->language->get('button_continue');`
+call.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Added the single missing assignment to
+`ControllerProductProduct::index()`'s success branch, immediately after
+the existing `$data['entry_qty']` assignment (the same group of
+`tab_*`/`text_*` labels the Reviews/Specification tabs already read). No
+new language strings, no change to any existing `$data` key/value.
+Applies equally to the stock `default` theme (whose write-review button
+now also gets a real label, previously blank) and the new
+`mint_default/template/product/product.twig` write-review form added
+alongside this fix.
+
+**Tests:** `php -l` clean on the modified `product.php`. No dedicated
+regression test added — same rationale as MC-0001/MC-0003/MC-0017: the
+fix is one `$this->language->get()` call, already unit-proven correct by
+every other controller's identical use of the same global key. A human
+should confirm on a real install that the product page's "Write a review"
+button shows real text (see `docs/MANUAL_VERIFICATION.md`'s new Reviews
+UI entry).
+
+---
+
+## MC-0023 — `product.php`'s `review()` action never assigns `text_no_reviews` to `$data`
+
+**Problem:** `catalog/view/theme/default/template/product/review.twig`
+(and the new `mint_default/template/product/review.twig` this run)
+references `{{ text_no_reviews }}` for the empty-state message shown when
+a product has zero approved reviews, but `ControllerProductProduct::review()`
+— the separate AJAX action that renders this specific fragment — never
+assigns it to `$data`. Note this is a *different* method than the one
+MC-0022 fixes above: the main `index()` action already assigns
+`text_no_reviews` (used by its own placeholder before any AJAX fragment
+loads), but `review()` is a standalone action with its own `$data` array
+that doesn't inherit anything from `index()`, and it was missed. Same
+blank-string bug class as MC-0001/MC-0003/MC-0017/MC-0022.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline). Not independently
+checked against other 3.x point releases — same rationale as the other
+entries in this family.
+
+**Source:** Discovered directly in this repository while building the new
+`mint_default/template/product/review.twig` AJAX fragment (this run) and
+cross-referencing every `$data[...] =` assignment in `review()`: only
+`reviews`/`pagination`/`results` are assigned; `text_no_reviews` appears
+nowhere in this method (it is assigned in the sibling `index()` method,
+which does not share scope with this one). Not an imported historical
+community patch.
+
+**Reproduced on MintCart baseline:** Yes — confirmed against
+`upload/catalog/view/theme/default/template/product/review.twig` (stock,
+references `text_no_reviews` in its `{% else %}` branch) and
+`ControllerProductProduct::review()`'s actual method body (no assignment
+anywhere). `text_no_reviews` is defined in
+`catalog/language/en-gb/product/product.php`, already loaded by this same
+method's own `$this->load->language('product/product');` call at the top
+— purely a missing `$data[...] = $this->language->get(...)` call, not a
+missing translation.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1).
+
+**MintCart solution:** Added the single missing assignment to
+`ControllerProductProduct::review()`, immediately before the existing
+`$review_total = ...` line. No new language strings, no change to any
+existing `$data` key/value. Applies equally to the stock `default` theme
+(whose empty-review-list message now also renders real text, previously
+blank — only ever visible on a product with zero approved reviews, which
+is why this went unnoticed) and the new
+`mint_default/template/product/review.twig` fragment added alongside this
+fix.
+
+**Tests:** `php -l` clean on the modified `product.php`. No dedicated
+regression test added — same rationale as the rest of this family: the
+fix is one `$this->language->get()` call already unit-proven correct
+elsewhere in the same file (MC-0022, above). A human should confirm on a
+real install that a product with zero approved reviews shows a real
+empty-state message in the Reviews tab (see
+`docs/MANUAL_VERIFICATION.md`'s new Reviews UI entry).
