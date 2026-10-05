@@ -9,27 +9,19 @@
  * the shared admin `header`/`column_left`/`footer` wraps every admin
  * screen, this one included, and still only ever loads Bootstrap 3/jQuery.
  *
- * The list screen's reordering, however, now *does* use `McSortable`
- * (`assets/src/js/components/sortable.js` — see
- * `docs/developer/components/sortable.md`, which names this exact screen as
- * its expected first consumer): `enqueueMintAssets()` below queues
+ * The list screen's reordering now uses `McSortable`
+ * (`assets/src/js/components/sortable.js`, see
+ * `docs/developer/components/sortable.md`), and the add/edit form's
+ * `image`-type settings fields (Hero/Text+Image) mount `mc-media-picker`
+ * (`docs/developer/components/media-picker.md`, Functional Scope §25):
+ * `enqueueMintAssets()` below, called from both `getList()` and
+ * `getForm()`, queues
  * `assets/dist/css/components.min.css` (the Bootstrap-5-free trim of
  * `index.css` — safe to layer on top of the legacy theme's Bootstrap 3,
  * `docs/developer/admin/asset-enqueue.md`'s "The fix: two bundles, pick the
  * right one") and `assets/dist/js/admin.min.js`, the same pattern
  * `ControllerCatalogProduct::getForm()` already established as this
- * repo's first consumer. This is that pattern's *second* consumer — the
- * `enqueueMintAssets()` body is intentionally still just those same two
- * lines copy-pasted, not yet a shared trait/helper (`CLAUDE.md` §85/86: no
- * abstraction ahead of a real second call site to compare against — now
- * that one exists, extracting one is a natural, self-contained follow-up,
- * not attempted here to avoid touching `admin/controller/catalog/product.php`
- * in the same change as this file).
- *
- * The five `items`-repeater block types (Banner Grid, Benefits,
- * Testimonials, Brands, Gallery — see their own note further below) still
- * use a raw-JSON textarea rather than a real add/remove-row JS UI; that
- * question is separate from reordering and is not resolved by this change.
+ * repo's first consumer.
  *
  * `TYPES` now lists all fifteen shipped block types (Products through
  * Gallery, MINTCART_IMPLEMENTATION_GUIDE.md §51's full first-wave catalog)
@@ -45,17 +37,13 @@
  * Five types (Banner Grid, Benefits, Testimonials, Brands, Gallery) have a
  * repeatable `items` list — each item's own structural fields (image path,
  * url, ...) and localized fields (alt, caption, ...). Building a real
- * dynamic add/remove-row JS UI for that needs the same admin asset-enqueue
- * fix the class docblock above flags as still-undecided (no JS bundle is
- * loaded on this screen at all yet), so `items` is deliberately a single
- * raw-JSON textarea per list for now — a real, working escape hatch (an
- * admin can configure any of these blocks today) rather than a half-built
- * repeater. Each such field's `help_key` shows the exact JSON shape.
- * Replacing it with a proper repeater is flagged in
- * `docs/IMPLEMENTATION_STATUS.md` as follow-up work — now that
- * `enqueueMintAssets()` exists on this controller, that follow-up no
- * longer needs to resolve an asset-enqueue question of its own, just build
- * the repeater UI itself.
+ * dynamic add/remove-row JS UI for that is a separate increment from this
+ * one (now that the asset bundle is enqueued here, it no longer needs to
+ * resolve an asset-enqueue question of its own, just build the repeater
+ * UI itself) — `items` stays a single raw-JSON textarea per list for now, a
+ * real, working escape hatch (an admin can configure any of these blocks
+ * today) rather than a half-built repeater. Each such field's `help_key`
+ * shows the exact JSON shape.
  */
 class ControllerDesignHomepage extends Controller {
 	private $error = array();
@@ -111,7 +99,7 @@ class ControllerDesignHomepage extends Controller {
 			),
 			'hero' => array(
 				'settings' => array(
-					array('name' => 'image', 'type' => 'text', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
+					array('name' => 'image', 'type' => 'image', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
 					array('name' => 'image_width', 'type' => 'number', 'default' => 1920, 'min' => 1, 'label_key' => 'entry_image_width'),
 					array('name' => 'image_height', 'type' => 'number', 'default' => 600, 'min' => 1, 'label_key' => 'entry_image_height'),
 					array('name' => 'cta_url', 'type' => 'text', 'default' => '', 'label_key' => 'entry_cta_url')
@@ -175,7 +163,7 @@ class ControllerDesignHomepage extends Controller {
 			),
 			'text-image' => array(
 				'settings' => array(
-					array('name' => 'image', 'type' => 'text', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
+					array('name' => 'image', 'type' => 'image', 'default' => '', 'label_key' => 'entry_image', 'help_key' => 'help_image'),
 					array('name' => 'image_width', 'type' => 'number', 'default' => 800, 'min' => 1, 'label_key' => 'entry_image_width'),
 					array('name' => 'image_height', 'type' => 'number', 'default' => 600, 'min' => 1, 'label_key' => 'entry_image_height'),
 					array('name' => 'image_position', 'type' => 'select', 'default' => 'right', 'label_key' => 'entry_image_position', 'options' => array('left' => 'Left', 'right' => 'Right'))
@@ -352,11 +340,13 @@ class ControllerDesignHomepage extends Controller {
 	 * Queues MintCart's own admin bundle (`docs/developer/admin/asset-enqueue.md`)
 	 * so the block list's drag-and-drop reordering (`McSortable`,
 	 * `data-mc-sortable` markup in `homepage_list.twig`) actually has CSS/JS
-	 * behind it. `components.min.css` (not `index.min.css`) deliberately
-	 * excludes Bootstrap 5's reset/grid/utility layer, so it is safe to load
+	 * behind it, and the add/edit form's `image`-type settings fields
+	 * (Hero/Text+Image) can mount `mc-media-picker`. `components.min.css`
+	 * (not `index.min.css`) deliberately excludes Bootstrap 5's
+	 * reset/grid/utility layer, so it is safe to load
 	 * alongside the legacy admin theme's Bootstrap 3 — see that doc's "The
-	 * fix: two bundles, pick the right one" for why. Only called from
-	 * `getList()`: the add/edit form doesn't render any `mc-*` markup yet.
+	 * fix: two bundles, pick the right one" for why. Called from both
+	 * `getList()` and `getForm()`.
 	 */
 	protected function enqueueMintAssets() {
 		$this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
@@ -429,6 +419,8 @@ class ControllerDesignHomepage extends Controller {
 	}
 
 	protected function getForm() {
+		$this->enqueueMintAssets();
+
 		$data['text_form'] = !isset($this->request->get['block_id']) ? $this->language->get('text_add') : $this->language->get('text_edit');
 
 		$data['error_warning'] = isset($this->error['warning']) ? $this->error['warning'] : '';

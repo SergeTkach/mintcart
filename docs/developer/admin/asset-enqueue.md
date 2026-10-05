@@ -251,3 +251,29 @@ Order/wishlist-toggle buttons actually respond to a click (they visibly
 did not before this change, per the "Root cause" note above); and that
 the legacy Bootstrap-3/jQuery-driven parts of the same page (account
 pages, `common/cart.info` AJAX, `common.js`) still work unmodified.
+
+## Admin: `ControllerDesignHomepage::getForm()` — `createMediaPicker`
+
+Third admin consumer of the same `components.min.css`/`admin.min.js`
+pair (after `ControllerCatalogProduct::getForm()` and, independently, the
+Homepage Builder's own list screen — see `docs/IMPLEMENTATION_STATUS.md`'s
+Phase 11/Technical Plan §16 sections for whichever landed in what order):
+`enqueueMintAssets()` added to `ControllerDesignHomepage`, called from
+`getForm()` (the add/edit screen), so Hero/Text+Image's `image` settings
+field can mount `mc-media-picker` — see
+`docs/developer/components/media-picker.md`'s "Wired into `admin.js`" for
+the full writeup. Bridges `createMediaPicker` onto
+`window.MintCart.createMediaPicker` in `admin.js` the same way
+`createEntityPicker` already was — the "Calling
+`createEntityPicker`/`createMediaPicker` from a legacy template" section
+above's prediction of "the natural next one to bridge" for Media UX.
+
+Same `hidden`-attribute toggle shape as `order_form.twig`'s Customer field
+`mc-entity-picker` (not `mc-drawer`/`mc-modal` — those need Bootstrap 5
+JS/CSS this bundle deliberately excludes). **Known, deliberate risk:** at
+the time of this run, a second open PR independently added an
+identically-named/identically-bodied `enqueueMintAssets()` to this same
+class (called only from `getList()`, for `McSortable` on the block list
+screen) — a duplicate-method merge conflict is expected if both land
+before either is rebased onto the other; trivially resolved by keeping
+one copy and calling it from both methods, not a real disagreement.

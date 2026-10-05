@@ -2171,11 +2171,29 @@ that no longer has an asset-enqueue question blocking it; or re-check
       `image/catalog/` directory via the new
       `MintCart\Design\MediaPath` path-safety primitive (matching
       `common/filemanager.php`'s own proven rules exactly, that legacy
-      screen untouched). No admin screen mounts `mc-media-picker`
-      itself yet — still blocked on the same admin asset-enqueue
-      question as `McEntityPicker`. Docs:
-      `docs/developer/components/media-picker.md`,
-      `docs/developer/design/media-library.md`.
+      screen untouched). **Update (routine run): first admin screen
+      consumer shipped.** `ControllerDesignHomepage::getForm()` now
+      enqueues the `components.min.css`/`admin.min.js` bundle
+      (`enqueueMintAssets()`, same pattern `ControllerCatalogProduct`
+      established) and `design/homepage_form.twig`'s Hero/Text+Image
+      `image` settings field mounts `mc-media-picker` next to its
+      existing plain-text path input (picker is additive, same shape as
+      the Manufacturer/Category/Customer `mc-entity-picker` fields) —
+      `createMediaPicker` bridged onto `window.MintCart.createMediaPicker`
+      in `admin.js`, same as `createEntityPicker`. See
+      `docs/developer/components/media-picker.md`'s "Wired into
+      `admin.js`" section and `docs/developer/admin/asset-enqueue.md`'s
+      new "Admin: `ControllerDesignHomepage::getForm()`" section for the
+      full writeup, including a known, documented limitation (directory
+      entries in the grid aren't enterable) and a flagged, expected
+      duplicate-method merge conflict with a second open PR that
+      independently added the same `enqueueMintAssets()` method for the
+      list screen's `McSortable`. Product/Category image fields and the
+      five `items`-repeater block types (Banner Grid/Benefits/
+      Testimonials/Brands/Gallery, still raw-JSON textareas) remain
+      unwired. Docs: `docs/developer/components/media-picker.md`,
+      `docs/developer/design/media-library.md`,
+      `docs/developer/admin/asset-enqueue.md`.
 
 **All nine Phase 11 primitives are now done:** `McDrawer`/`McModal`/
 `McToast` (via Phase 4), `McConfirm`, `McSortable`, `McTabs`, `McProgress`,
@@ -8230,6 +8248,34 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-10-02, routine run):** step 0 found 46 open PRs
+(`#138`-`#183`), covering nearly every phase. Entity Picker wiring alone
+had 6 open PRs touching various admin forms; Homepage Builder's own
+`design/homepage.php`/`homepage_list.twig` had exactly one open PR
+(`#176`, `McSortable` for the list screen) — under 0f's "2 or more"
+threshold, so not treated as blocked, though see the known expected
+conflict noted below. Picked `McMediaPicker`'s first real admin-screen
+consumer (Phase 11 section above has the full writeup) since no open PR
+touched `design/media.php`, `media-picker.js`, or `homepage_form.twig`.
+**Known, flagged (not silently avoided) conflict:** this run's
+`ControllerDesignHomepage::enqueueMintAssets()` will collide (duplicate
+method) with #176's own independently-added method of the same name on
+the same class once both merge — documented in both the Phase 11 section
+above and `docs/developer/admin/asset-enqueue.md`, trivial to resolve
+(keep one copy, call it from both `getList()` and `getForm()`). Verified:
+`php -l` clean across the full `upload/`/`tests` tree; `npm run build`
+(JS+CSS) clean, `grep` confirms `createMediaPicker`/`mc-media-picker__*`
+land in `admin.min.js`/`components.min.css`; full `tests/mintcart/*-test.php`
+suite re-run end to end (84 files) — all passing, no regressions (no new
+pure logic — controller/Twig/JS wiring around already-tested
+component/backend code, same "no new unit test" precedent as the
+Business Delivery/Payments facades). Not verified: no live MySQL/admin
+session in this environment. **Next candidates:** Product/Category image
+fields' own plain-text image inputs (`product_form.twig` et al.) wiring
+the same `mc-media-picker` pattern; a proper add/remove-row repeater UI
+for the five `items`-JSON block types now that this screen has an asset
+bundle; or re-check `gh pr list --state open` first, since this backlog
+is unusually large.
 **Trailer note (2026-10-02, routine run):** added
 `MintCart\Compatibility\OpenCart3\OrderAdapter` — the last of the six
 named adapters from `MINTCART_TECHNICAL_PLAN.md` §5. See the Phase 1

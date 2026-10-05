@@ -1637,6 +1637,56 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
 
+## Phase 11/25 — `mc-media-picker` on the Homepage Builder's `image` field, never rendered in a browser
+
+`ControllerDesignHomepage::enqueueMintAssets()` + `design/homepage_form.twig`'s
+new `field.type == 'image'` branch (`docs/developer/components/media-picker.md`'s
+"Wired into `admin.js`" section). `php -l`, the full `tests/mintcart/`
+suite (84 files) and `npm run build` all pass, but this environment has
+no MySQL/admin session, so none of the following was ever actually
+observed on a rendered page:
+
+1. Go to Design → Homepage, add or edit a **Hero** or **Text / Image**
+   block. Confirm the `image` field shows a text input *and* a "Browse"
+   button next to it (not just the plain text input it had before).
+2. Click "Browse". Confirm a thumbnail grid opens below the button
+   (`mc-media-picker`), listing the contents of `image/catalog/` —
+   folders and images mixed together, folders with no thumbnail, images
+   with one (via `tool/image`'s resize). Confirm it paginates if there
+   are more than 24 entries.
+3. Type a few characters into the picker's search box. Confirm the grid
+   re-filters after a short pause (debounced), matching
+   `ModelDesignMedia::getFiles()`'s `filter_name` behavior.
+4. Pick the top-level folder `<select>` (if the store has subfolders
+   under `image/catalog/`). Confirm the grid reloads to that folder's
+   contents.
+5. Click an image cell, then click "Select". Confirm the picker closes
+   and the text input's value is replaced with that image's path
+   relative to `image/` (e.g. `catalog/demo_1.jpg`), matching the exact
+   format `model_tool_image->resize()` expects elsewhere in this same
+   controller. Save the block and confirm the image actually renders on
+   the live homepage.
+6. Click a **folder** cell in the grid, then click "Select". Confirm
+   nothing is written into the text input (the picker just closes) —
+   per this is a documented, deliberate limitation (folder cells aren't
+   "enterable" from the grid itself), not a crash or a wrong path being
+   applied.
+7. Use the "Upload" control to upload a new image. Confirm it appears in
+   the grid afterward (same folder scope as the upload), and that
+   selecting it writes the expected path.
+8. Select an existing image and click the delete action. Confirm it is
+   removed from `image/catalog/` on disk and no longer appears in the
+   grid — and confirm a block still referencing that now-deleted path by
+   text continues to degrade the same way a manually-deleted image
+   always has (broken image icon), not a new failure mode this change
+   introduces.
+9. Confirm the plain text input next to the Browse button is still
+   directly editable (typing/pasting a path without using the picker at
+   all still works exactly as before this change).
+10. Switch the block Type `<select>` between Hero/Text+Image and a type
+    with no `image` field (e.g. Products). Confirm no stray/duplicate
+    `mc-media-picker` markup or broken "Browse" button is left visible
+    for the non-image type.
 ## Phase 12 — `Settings → Settings`'s Account/Checkout/Affiliate/Return Terms Information `McEntityPicker`, never exercised end to end
 
 New asset enqueue (`ControllerSettingSetting::enqueueMintAssets()`, same
