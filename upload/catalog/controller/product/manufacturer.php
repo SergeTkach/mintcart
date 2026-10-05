@@ -7,38 +7,51 @@ class ControllerProductManufacturer extends Controller {
 
 		$this->document->setTitle($this->language->get('heading_title'));
 
+		// MintCart\Core\Stage (MINTCART_TECHNICAL_PLAN.md §15B,
+		// MINTCART_IMPLEMENTATION_GUIDE.md §38B, Phase 1). First live
+		// consumer: fires documented fine-grained extension points around
+		// this method's two meaningful stages, on top of OpenCart's
+		// existing Event system - no OCMOD, no new event mechanism. $data
+		// is still built directly below exactly as before; Stage only
+		// wraps it with before/after events. See docs/developer/core/stage.md.
+		$mint_stage = new \MintCart\Core\Stage($this->event, 'catalog.manufacturer');
+
 		$data['breadcrumbs'] = array();
 
-		$data['breadcrumbs'][] = array(
-			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/home')
-		);
+		$mint_stage->run('breadcrumbs', $data, function () use (&$data) {
+			$data['breadcrumbs'][] = array(
+				'text' => $this->language->get('text_home'),
+				'href' => $this->url->link('common/home')
+			);
 
-		$data['breadcrumbs'][] = array(
-			'text' => $this->language->get('text_brand'),
-			'href' => $this->url->link('product/manufacturer')
-		);
+			$data['breadcrumbs'][] = array(
+				'text' => $this->language->get('text_brand'),
+				'href' => $this->url->link('product/manufacturer')
+			);
+		});
 
 		$data['categories'] = array();
 
-		$results = $this->model_catalog_manufacturer->getManufacturers();
+		$mint_stage->run('listing', $data, function () use (&$data) {
+			$results = $this->model_catalog_manufacturer->getManufacturers();
 
-		foreach ($results as $result) {
-			if (is_numeric(utf8_substr($result['name'], 0, 1))) {
-				$key = '0 - 9';
-			} else {
-				$key = utf8_substr(utf8_strtoupper($result['name']), 0, 1);
+			foreach ($results as $result) {
+				if (is_numeric(utf8_substr($result['name'], 0, 1))) {
+					$key = '0 - 9';
+				} else {
+					$key = utf8_substr(utf8_strtoupper($result['name']), 0, 1);
+				}
+
+				if (!isset($data['categories'][$key])) {
+					$data['categories'][$key]['name'] = $key;
+				}
+
+				$data['categories'][$key]['manufacturer'][] = array(
+					'name' => $result['name'],
+					'href' => $this->url->link('product/manufacturer/info', 'manufacturer_id=' . $result['manufacturer_id'])
+				);
 			}
-
-			if (!isset($data['categories'][$key])) {
-				$data['categories'][$key]['name'] = $key;
-			}
-
-			$data['categories'][$key]['manufacturer'][] = array(
-				'name' => $result['name'],
-				'href' => $this->url->link('product/manufacturer/info', 'manufacturer_id=' . $result['manufacturer_id'])
-			);
-		}
+		});
 
 		// MC-0017 (docs/fixes/registry.md) - manufacturer_list.twig (both
 		// the stock `default` theme and `mint_default`) references

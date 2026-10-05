@@ -1669,6 +1669,34 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
 
+## Phase 1/15B — `MintCart\Core\Stage` first live wiring, never exercised against a real event registration
+
+`MintCart\Core\Stage` itself is fully covered by a standalone unit test
+(`tests/mintcart/core/stage-test.php`, no OpenCart dependency), but the
+live wiring into `ControllerProductManufacturer::index()` has never been
+exercised against OpenCart's real `Event`/`Action` registration chain —
+only against a fake recorder. On a real install:
+
+1. Confirm the storefront's `product/manufacturer` route (the plain
+   brand-index page) still renders exactly as before — breadcrumbs
+   ("Home" → "Brands") and the A–Z manufacturer list — with no visible
+   change. This increment only wraps existing code in closures; it must
+   not alter output on a store with no listener registered.
+2. In Admin → Extensions → Events, register a new event: trigger
+   `catalog.manufacturer.listing.before`, pointing at a small test
+   controller route whose method signature is `public function
+   test(&$data) { $data['mc_stage_test'] = 'hit'; }`.
+3. Reload `product/manufacturer`. There is no template output for
+   `mc_stage_test` (this is a smoke test of the wiring, not a feature), so
+   confirm via a temporary `error_log(var_export($data['mc_stage_test'] ??
+   'missing', true))` (or a debugger breakpoint) right after the `$mint_stage
+   ->run('listing', ...)` call in `manufacturer.php` that the listener's
+   mutation reached `$data` as documented in `docs/developer/core/stage.md`.
+   Remove the temporary debug line afterward.
+4. Repeat for `catalog.manufacturer.breadcrumbs.after` to confirm both
+   stages' events actually fire through OpenCart's real `Event::trigger()`
+   → `Action::execute()` chain, not just the fake recorder the unit test
+   uses.
 ## Phase 11/25 — `mc-media-picker` on the Homepage Builder's `image` field, never rendered in a browser
 
 `ControllerDesignHomepage::enqueueMintAssets()` + `design/homepage_form.twig`'s
