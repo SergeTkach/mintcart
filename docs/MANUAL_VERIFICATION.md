@@ -570,6 +570,50 @@ a real install:
    pre-existing "trimmed repository" caveat as the Category picker's own
    step 10 above; not a new gap.
 
+## `product_form.twig`'s Option `McEntityPicker`, never exercised end to end
+
+Same asset-enqueue mechanism as the Category/Manufacturer/Related pickers
+above (already loaded on this same form — no separate enqueue to
+verify), and **single-select** like Manufacturer (confirming a pick adds
+one new option tab, it does not append into a well). On a real install:
+
+1. Go to **Catalog → Products → Edit** (or **Add**) any product, open the
+   **Option** tab.
+2. Confirm the existing Option autocomplete input (`#input-option`) still
+   works exactly as before for every option type (type a few letters,
+   pick a suggestion, confirm a new tab-pane opens with the right
+   type-specific fields — a plain value field for `text`/`textarea`/
+   `file`/`date`/`time`/`datetime`, a value table + "add value" row for
+   `select`/`radio`/`checkbox`/`image`) — this change must not have
+   altered any of that (the handler body itself was only moved into a
+   named function, not rewritten).
+3. Confirm a new "Browse options" button appears below the option pills
+   list, styled as an `mc-button`.
+4. Click it — confirm a search box + option list appears, paginates via
+   Previous/Next, and that typing filters results (debounced, ~250ms).
+5. Select a **text**-type option, click "Add option" — confirm the panel
+   closes and a new tab opens with a plain value `<input>`, identical in
+   shape to what the autocomplete produces for the same option.
+6. Select a **select**/**radio**/**checkbox**/**image**-type option via
+   the picker — confirm the new tab's value table's "add value" `<select>`
+   is pre-populated with that option's real values (fetched via the new
+   per-row `option_value` lookup), and that adding a value row via the
+   `+` button works exactly as it does for a tab opened through the old
+   autocomplete.
+7. Add one option via the old autocomplete and a second via the new
+   picker in the same edit session — confirm both tabs coexist correctly
+   (no tab-index collision — `option_row` is shared and incremented by
+   both paths) and both can be removed independently via their tab's
+   minus-circle icon.
+8. Save the product — confirm every `product_option[]` entry is saved
+   correctly regardless of whether its tab was opened via the old
+   autocomplete or the new picker, and re-opening the edit form shows all
+   of them pre-populated as before (`getForm()`'s existing
+   `product_options` handling was not touched by this change).
+9. Confirm labels on the new UI render as real text, not blank — same
+   pre-existing "trimmed repository" caveat as the Category picker's own
+   step 10 above; not a new gap.
+
 ## Phase 18 — System route URL aliases, never exercised end to end
 
 `ControllerMintcartSeoSystemPages` is `php -l` clean and its pure
@@ -838,21 +882,32 @@ a name pattern where one match is at the start and one only in the middle:
 4. Confirm paging (`page=2`) returns the next slice of the same
    alphabetically-sorted list, not a repeat or a skip.
 
-## Phase 12 — `mintcart/entity/option` endpoint, never hit end to end
+## Phase 12 — `mintcart/entity/option` endpoint, wired into `product_form.twig` (see the dedicated section above), raw endpoint response never independently checked
 
-Same gap as category/manufacturer above. On a real install, with at least
-one product option configured (`Catalog → Options`):
+The live UI (see "`product_form.twig`'s Option `McEntityPicker`" above)
+exercises this endpoint indirectly. This section checks the raw JSON
+shape directly. On a real install, with at least one `select`/`radio`/
+`checkbox`/`image`-type option and one `text`-type option configured
+(`Catalog → Options`):
 
 1. Grant `mintcart/entity` **Access** if not already done for the
    category/manufacturer endpoints above (same permission covers all
-   three routes).
+   routes).
 2. Request `index.php?route=mintcart/entity/option&user_token=<your
    token>&filter_name=&page=1&limit=20` and confirm a JSON
-   `{"items": [...], "total": N}` response with real option names, and
-   `image` always `null`.
+   `{"items": [...], "total": N}` response with real option names,
+   `image` always `null`, and a `type` matching each option's real type
+   (`Catalog → Options` list).
 3. Confirm `filter_name` set to the *start* of one option's name matches
    it, but a substring from the *middle* of that name does not (prefix
    match, same as manufacturer, not category's substring match).
+4. For a `select`/`radio`/`checkbox`/`image`-type option in the response,
+   confirm its item has an `option_value` array with one entry per real
+   `oc_option_value` row (`option_value_id`, `name`), matching what
+   `Catalog → Options → Edit` shows for that option.
+5. For a `text`/`textarea`/`file`/`date`/`time`/`datetime`-type option,
+   confirm its `option_value` is an empty array — no `getOptionValues()`
+   call should run for these types.
 
 ## Phase 12 — `mintcart/entity/customer` endpoint, never hit end to end
 
