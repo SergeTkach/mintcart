@@ -1584,6 +1584,50 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
 
+## Phase 9 — Admin quick settings search + MC-0018, never exercised end to end
+
+`php -l` clean on every touched/new PHP file, `header.twig`'s `{% if %}`/
+`{% endif %}`/`{% for %}`/`{% endfor %}` tag counts checked balanced (3/3,
+4/4), `npm run build` confirmed `mc-admin-search`/`initAdminSearch` landed
+in both CSS bundles and `admin.min.js` — but no live MySQL/admin session
+in this environment means none of it was ever actually rendered or
+clicked through in a browser. On a real install:
+
+1. Log into admin and confirm the header's logo has visible `alt`/`title`
+   text (not blank), and the top-right user-profile dropdown shows real
+   text for "Your Profile", a "Stores" section heading, a "Help" section
+   heading, and "OpenCart Homepage"/"Documentation"/"Support Forum"/
+   "Logout" — this is MC-0018's fix (`docs/fixes/registry.md`). Confirm
+   this on **every** admin page you visit next, not just one.
+2. Confirm a search input now appears in the header's top-right nav, next
+   to the user-profile dropdown. Before granting any permission, type a
+   query (e.g. "currency") and confirm it returns no results (the
+   `mintcart/adminsearch` route has no ACL grant yet on a fresh install,
+   same as every other new `mintcart/*` route).
+3. Go to **Users → User Groups**, edit the group your admin account
+   belongs to, and grant access to `mintcart/adminsearch` under
+   Permissions. Reload any admin page.
+4. Type "currency" in the search box and confirm a dropdown appears with
+   at least "Currency" as a result within ~250ms of the last keystroke
+   (debounce). Click it and confirm it navigates to **Settings →
+   Localisation → Currency** (`route=localisation/currency`).
+5. Repeat for "delivery" (expect "Business → Delivery"), "seo" (expect
+   both "SEO URLs" and "System Pages SEO"), "checkout" (expect "Order
+   Statuses"), "logo"/"email" (expect "Store Settings"), and "vat" (a
+   keyword-only match — expect "Tax Classes"/"Tax Rates" even though
+   neither label contains "vat").
+6. Confirm keyboard use: type a query, press ArrowDown/ArrowUp to move
+   between results (watch for a visible "active" highlight), press Enter
+   on a highlighted result to navigate, and press Escape to close the
+   dropdown without navigating. Confirm clicking anywhere outside the
+   search box also closes an open dropdown.
+7. Type a query matching nothing (e.g. "zzzzz") and confirm the "No
+   matching settings found" empty state appears instead of an empty
+   dropdown.
+8. Confirm this search box is present and working the same way on at
+   least two different admin screens (e.g. Dashboard and Catalog →
+   Products) — `ControllerCommonHeader` is shared by every admin page, so
+   it should need no per-screen wiring.
 ## Phase 12 — `Settings → Store`'s Account/Checkout Terms Information `McEntityPicker`, never exercised end to end
 
 New asset enqueue (`ControllerSettingStore::enqueueMintAssets()`, same

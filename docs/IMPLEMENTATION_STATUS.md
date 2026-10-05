@@ -4789,6 +4789,39 @@ Implementation Guide §51–§64 numbers them as Phases 16–17. This file follo
 Implementation Guide's per-feature phase numbers above; nothing is duplicated,
 tracked once each.)*
 
+- [x] Admin quick settings search (`MINTCART_FUNCTIONAL_SCOPE.md` §23, P1 —
+      "Швидкий пошук налаштувань") — `MintCart\Admin\SettingsSearchIndex`
+      (pure PHP, no OpenCart dependency, `upload/system/library/mintcart/admin/settingssearchindex.php`),
+      a static catalog of ~30 real admin routes (verified against
+      `admin/controller/common/column_left.php`'s own menu links, not
+      invented) with a simple label/keyword substring-match `search()`.
+      `ControllerMintcartAdminsearch` (route `mintcart/adminsearch`, GET
+      `q`, gated by the same `hasPermission('access', ...)` ACL convention
+      every other `mintcart/*` admin controller uses) resolves each match
+      into a real URL via `$this->url->link()`. Wired into
+      `ControllerCommonHeader::index()` (enqueues `components.min.css`/
+      `admin.min.js` — the first controller besides
+      `catalog/product.php`/`catalog/category.php`/`sale/order.php` to do
+      so — and builds `mc_admin_search_url`), rendered as a new
+      `mc-admin-search` search box + results dropdown in
+      `admin/view/template/common/header.twig`'s top-right nav, present on
+      every logged-in admin page (`assets/src/js/components/admin-search.js`,
+      `assets/src/css/components/admin-search.css`). MVP is page-level
+      navigation only — `MINTCART_FUNCTIONAL_SCOPE.md` §23's own wording
+      ("за можливості на конкретну секцію/field") marks field-level
+      targeting as a stretch goal, not a requirement. Full writeup:
+      `docs/developer/admin/settings-search.md`. Test:
+      `tests/mintcart/admin/settings-search-index-test.php` (pure, no
+      OpenCart dependency).
+      **While building this, found and fixed MC-0018** (`docs/fixes/registry.md`)
+      — `ControllerCommonHeader::index()` itself never assigned its own
+      loaded `common/header` language strings to `$data`, so the admin
+      header's logo alt/title and its entire user-profile dropdown menu
+      text (Your Profile/Stores/Help/OpenCart Homepage/Documentation/
+      Support Forum/Logout) rendered blank on every admin page — same bug
+      class as MC-0001/MC-0003/MC-0017, just on the one file every admin
+      screen shares.
+
 ## Phase 10 (Technical Plan) — SEO / Fixes / Performance
 
 - [ ] SEO Core (tracked above as Phase 18)
@@ -5440,6 +5473,14 @@ re-run. No live-wiring gap to flag in `docs/MANUAL_VERIFICATION.md` — there
 is no live request path yet for a human to exercise (see the doc's
 Definition of Done checklist for exactly what's still open).
 
+**Update (2026-10-01, routine run): MC-0018 added** —
+`ControllerCommonHeader::index()` never assigned its own loaded
+`common/header` language strings to `$data`, so the admin header's logo
+alt/title and entire user-profile dropdown menu text rendered blank on
+every admin page. Found and fixed while building the admin quick settings
+search feature in this same controller/template (see the Phase 9
+Productivity section above for that feature's own full writeup). Full
+fix writeup: `docs/fixes/registry.md`'s MC-0018 entry.
 **Update (2026-10-01, routine run) — MC-0019 added (Fixes Registry):**
 `DB\PDO::query()` had no reconnect-on-dropped-connection handling at all —
 the sibling adaptor `DB\MySQLi::query()` already got this under MC-0011,
@@ -7981,6 +8022,36 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-10-01, routine run):** added admin "quick settings
+search" (`MINTCART_FUNCTIONAL_SCOPE.md` §23, P1) — see the Phase 9
+(Technical Plan §42 numbering) — Productivity section above for the full
+writeup (`MintCart\Admin\SettingsSearchIndex`, `mintcart/adminsearch`
+route, `mc-admin-search` header component). Also found and fixed
+**MC-0018** while doing so — `ControllerCommonHeader::index()` never
+assigned its own loaded `common/header` language strings to `$data`, so
+the admin header's logo alt/title and entire user-profile dropdown menu
+text rendered blank on every admin page — see `docs/fixes/registry.md`.
+Step 0 at the start of this run: 36 open PRs (`#138`–`#173`), none
+touching `admin/controller/common/header.php`,
+`admin/view/template/common/header.twig`, `docs/fixes/registry.md`, or
+any `mintcart/admin*` path; no Homepage Builder hot files (§0f) touched.
+`php -l` clean; `npm run build` clean (`mc-admin-search` confirmed present
+in both `assets/dist/css/index.min.css` and
+`assets/dist/css/components.min.css`, and `initAdminSearch`/
+`data-mc-admin-search` confirmed present in `assets/dist/js/admin.min.js`);
+full `tests/mintcart/**/*-test.php` suite re-run end to end (85 files, was
+84) — all passing, no regressions. **Not verified:** no live MySQL/admin
+session in this environment — a human should confirm the search box
+renders in the admin header, that granting `mintcart/adminsearch` access
+to a user group (Users → User Groups → Permissions, same one-time step
+every other new `mintcart/*` route needs) makes it return real results for
+queries like "currency"/"delivery"/"seo", and that the admin header's
+logo/user-profile dropdown text is no longer blank (MC-0018). **Next
+candidates:** field-level search targeting (`MINTCART_FUNCTIONAL_SCOPE.md`
+§23's "за можливості" stretch goal — needs a per-screen anchor/section
+design, not a mechanical addition); more `SettingsSearchIndex` entries as
+new admin screens ship; or re-check `gh pr list --state open` first, since
+this backlog moves fast.
 **Trailer note (2026-10-01, routine run):** added `docs/user/seo.md` (the
 "SEO basics" user guide the Documentation section above had left as the
 last unclaimed `docs/user/` gap). `list_pull_requests` returned 34 open

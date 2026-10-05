@@ -38,6 +38,19 @@
     <div id="header-logo" class="navbar-header"><a href="{{ home }}" class="navbar-brand"><img src="view/image/logo.png" alt="{{ heading_title }}" title="{{ heading_title }}" /></a></div>
     {% if logged %}<a href="#" id="button-menu" class="hidden-md hidden-lg"><span class="fa fa-bars"></span></a>
     <ul class="nav navbar-nav navbar-right">
+      {#
+        MintCart Functional Scope §23 (P1) - admin "quick settings search".
+        Plain data-mc-* behavior hooks (CLAUDE.md §14), no jQuery - see
+        assets/src/js/components/admin-search.js. mc_admin_search_url
+        already carries this session's user_token
+        (ControllerCommonHeader::index()); the JS only ever appends
+        "&q=<query>" to it.
+      #}
+      <li class="mc-admin-search" data-mc-admin-search data-mc-admin-search-url="{{ mc_admin_search_url }}">
+        <input type="search" class="mc-field__control mc-admin-search__input" data-mc-admin-search-input placeholder="{{ text_mc_admin_search_placeholder }}" aria-label="{{ text_mc_admin_search_placeholder }}" autocomplete="off" />
+        <ul class="mc-admin-search__results" role="listbox" aria-label="{{ text_mc_admin_search_placeholder }}" data-mc-admin-search-results hidden></ul>
+        <p class="mc-admin-search__empty" data-mc-admin-search-empty hidden>{{ text_mc_admin_search_empty }}</p>
+      </li>
       <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown"><img src="{{ image }}" alt="{{ firstname }} {{ lastname }}" title="{{ username }}" id="user-profile" class="img-circle" />{{ firstname }} {{ lastname }} <i class="fa fa-caret-down fa-fw"></i></a>
         <ul class="dropdown-menu dropdown-menu-right">
           <li><a href="{{ profile }}"><i class="fa fa-user-circle-o fa-fw"></i> {{ text_profile }}</a></li>
