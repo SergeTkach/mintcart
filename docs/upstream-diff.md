@@ -2983,6 +2983,21 @@ exactly as before (verified by re-running the full frontend build and
 confirming the existing `catalog.min.js`/`admin.min.js` bundling still
 produces the expected storefront-only scoping).
 
+**Addendum (`mc-viewed-products`, Phase 15 / Functional Scope §11):** one
+further purely-additive `$data` key and one further template section, same
+low-risk shape as above. `$data['text_viewed']` (new `text_viewed` language
+key) is now assigned alongside `text_related`, feeding a new, initially
+`hidden` "Recently viewed" section appended to `product.twig` right after
+the existing "Related Products" block. Both are inert until
+`assets/src/js/components/viewed-products.js` (wired into `catalog.js`)
+populates them client-side from `mintcart/viewed/products` (a new, fully
+additive controller — `upload/catalog/controller/mintcart/viewed.php` —
+not itself a core modification, same reason `mintcart/search/suggest`
+isn't logged here). Legacy `default` theme's `product.twig` reads neither
+key and is completely unaffected. See
+`docs/developer/commerce/viewed-products.md` for the full component
+contract.
+
 **Update (this run — Phase 10 (Technical Plan), Diagnostics):** same
 `MintCart\Core\Diagnostics` wiring as `category.php`/`search.php`/
 `special.php`/`manufacturer.php`'s own "Update" entries — constructs it

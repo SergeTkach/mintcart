@@ -1077,6 +1077,34 @@ install:
    own `.mc-search-box` (different placement — next to the branding link)
    to confirm both themes' overrides work independently.
 
+## Phase 15 — `mc-viewed-products` component, never exercised in a browser
+
+`assets/src/js/components/viewed-products.js` and `mintcart/viewed/products`
+are bundle/`php -l`-verified but never exercised against a real browser or
+database (`docs/developer/commerce/viewed-products.md`). On a
+`config_theme=mint_default` install:
+
+1. Visit product A. Confirm the page's own "Recently viewed" section stays
+   `hidden` (a first-time visitor has no history yet).
+2. Visit product B, then product C. Confirm `localStorage`'s
+   `mc:viewed:product_ids` key now holds `[B, A]` (most-recent-first, no C —
+   recording happens on load, before the current product is added to its
+   own exclude list).
+3. Revisit product A. Confirm the "Recently viewed" section un-hides and
+   shows B and C (not A itself — `data-mc-viewed-products-exclude` filters
+   the current product out), each with correct live image/name/price
+   linking back to its product page.
+4. Disable or delete product B from the admin, then reload product A.
+   Confirm B silently disappears from the strip (the server drops it,
+   `getProduct()`'s own status/date_available check) while C still renders.
+5. Revisit product A more than 12 times across enough distinct products to
+   exceed `MAX_HISTORY`. Confirm the history caps at 12 entries and the
+   oldest ones drop off.
+6. Confirm a store configured with the legacy `default` theme shows no new
+   `mintcart/viewed/products` request and no new section — the widget's
+   render side only ever activates against a `[data-mc-viewed-products]`
+   root, which only `mint_default`'s `product.twig` renders.
+
 ## Phase 18 — Schema.org JSON-LD, never validated against a real page
 
 `SchemaOrgBuilder` is unit-tested in isolation (16 scenarios), and its
