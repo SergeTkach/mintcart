@@ -1487,6 +1487,41 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
 
+## Phase 9/31 — `Design → Styles`, never exercised end to end
+
+`ControllerMintcartDesignStyles` is `php -l` clean and reads/writes through
+the same `setting/setting` model every other Mint settings facade in this
+repo already uses, but nothing here has run it against a real admin
+session or rendered storefront page. On a real install with `mint_default`
+active:
+
+1. Go to **Design → Styles**. Confirm two radio options appear —
+   "Theme default" and "Warm" (mint_default's `theme.json` lists
+   `["clean", "warm"]`; "Clean" is visually identical to "Theme default"
+   per Phase 9, but still appears as its own labeled option) — plus "Theme
+   default" at the top.
+2. Select "Warm", Save. Reload any storefront page and confirm, via
+   browser dev tools, that `<html>` now carries
+   `data-mc-preset="warm"`, and that the page's colors/typography/spacing
+   visibly shift to the Warm preset (terracotta/gold palette, serif
+   headings, softer radius) with **no** layout/DOM change — same product
+   grid, same header/footer structure.
+3. Switch back to "Theme default" (the blank radio), Save, reload — confirm
+   `data-mc-preset` disappears from `<html>` entirely (not
+   `data-mc-preset=""`) and the page reverts to the base token values.
+4. Switch `config_theme` (Settings → Store, or System → Design → Theme) to
+   `test_theme` and reload **Design → Styles** — confirm it now shows the
+   "no presets declared" empty state (`test_theme`'s own `theme.json` lists
+   `"presets": []`), not a stale list of Clean/Warm carried over from
+   `mint_default`, and that any previously-saved `mint_default`-specific
+   preset value no longer appears on `test_theme`'s own storefront pages
+   (re-validated against the active theme in `ControllerCommonHeader`, so
+   a `default`-theme install correctly never emits `data-mc-preset` even if
+   `mintcart_design_preset` was saved earlier while `mint_default` was
+   active).
+5. Confirm a user without `mintcart/design/styles` `modify` permission
+   cannot change the setting by posting directly to the route
+   (`error_permission`, no write).
 ## Phase 11 — `mintcart/update/check`, never hit end to end
 
 `ControllerMintcartUpdate::check()` (`docs/developer/update/update-check-controller.md`)

@@ -59,6 +59,7 @@ $_['text_sale']                 = 'Sales';
 $_['text_setting']              = 'Settings';
 $_['text_seo_url']              = 'SEO URL';
 $_['text_mintcart_seo_system_pages'] = 'System Pages';
+$_['text_mintcart_design_styles'] = 'Styles';
 $_['text_mintcart_settings_diagnostics'] = 'Diagnostics';
 $_['text_statistics']           = 'Statistics';
 $_['text_stock_status']         = 'Stock Statuses';

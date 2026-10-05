@@ -906,6 +906,38 @@ header degrades to no `mc_header` (mint_default's wrapper renders nothing
 in `<body>`), it does not fatal the entire page for every visitor, since
 header renders on every single page of the site.
 
+**Update (2026-09-29, routine run — Phase 9/31, `Design → Styles`):** after
+the existing `RobotsBuilder` block, adds `$data['mc_preset']` — reads
+`mintcart_design_preset` (the new `ControllerMintcartDesignStyles` setting,
+`upload/admin/controller/mintcart/design/styles.php`) and re-validates it
+against the *active* theme's own `theme.json` `presets` array before
+passing it through, so a stale value left over from a since-switched theme
+(or a theme that dropped a preset code) never reaches the template as a
+`data-mc-preset` value no loaded CSS actually declares a `:root` block
+for. Deliberately **not** gated by `$mint_render_header` like `mc_header`
+above — this is a plain attribute any theme's own `<html>` tag can choose
+to read, not a Mint component DOM contract; a legacy/third-party theme's
+own header template simply never references `$data['mc_preset']`. Full
+design writeup: `docs/developer/theme-api/presets.md`'s "Wired: `Design →
+Styles`" section.
+
+**Why it can't live in the MintCart layer instead:** Same reasoning as the
+original `mc_header` wiring above — this specific controller's already-
+resolved `$mint_theme` value and the point right before `load->view()` are
+where the final `$data` array is assembled; there is no shared "finish this
+page's `$data`" hook to put it in instead.
+
+**Compatibility impact:** None for a request where `mintcart_design_preset`
+is unset or blank (the default before this run — `$mc_preset` stays `''`,
+`mint_default/common/header.twig`'s new `{% if mc_preset %}` guard omits
+the attribute exactly as before this change existed) and none for any
+theme whose own `common/header.twig` doesn't reference the new key.
+**Tests:** `php -l` clean; full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end — all passing, no regressions (no PHP class
+changed, only this controller's own `$data` array — no new pure logic to
+unit-test). **Not verified:** no live MySQL/browser session in this
+environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 9 entry.
+
 **Tests:** No live end-to-end request test — same pre-existing gap as
 every earlier MintCart controller change (no MySQL server/`vendor/twig/twig`
 in this environment). Verified instead: `php -l` (clean);
@@ -1756,6 +1788,23 @@ missing (the flag could previously only be set by writing directly to
 or route touched. **Tests:** `php -l` clean; full `tests/mintcart/`
 suite (81 files) re-run end to end, all passing, no regressions.
 
+**Update (2026-09-29, routine run — `Design → Styles`):** adds one entry
+to the existing `$design` array, right after the stock "Theme" (Theme
+Editor) entry, gated by
+`$this->user->hasPermission('access', 'mintcart/design/styles')` — same
+conditional-push shape every sibling entry in this file already uses.
+Points at the new `ControllerMintcartDesignStyles`
+(`upload/admin/controller/mintcart/design/styles.php`), the Phase 9/31
+"which design preset does the active theme use" facade
+`docs/developer/theme-api/presets.md`'s own "Not yet wired" section named
+as the missing piece. One new key added to
+`upload/admin/language/en-gb/common/column_left.php`
+(`text_mintcart_design_styles`), right after the existing
+`text_mintcart_seo_system_pages` key, matching every other menu-label key
+already in that file. Purely additive; no existing menu entry, permission
+check, or route touched. **Tests:** `php -l` clean on both changed files;
+full `tests/mintcart/**/*-test.php` suite (84 files) re-run end to end,
+all passing, no regressions.
 **Update (2026-09-28, routine run — `Sale → Quick Order Requests`):** adds
 one entry to the existing `$sale` menu array, right after the stock
 "Orders" entry and before "Order Recurring", gated by
