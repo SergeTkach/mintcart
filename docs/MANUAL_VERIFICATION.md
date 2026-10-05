@@ -1531,6 +1531,38 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
 
+## Phase 11 (Functional Scope §11) — `mc-cookie-consent`, never exercised in a browser
+
+`assets/src/js/components/cookie-consent.js` is bundle-verified (present in
+`catalog.min.js`, absent from `admin.min.js`) and builds its own markup at
+runtime — there is no Twig template to inspect statically
+(`docs/developer/components/cookie-consent.md`). On a real
+`mint_default`-configured install, with a fresh browser profile (no prior
+`localStorage` for the site):
+
+1. Load any storefront page. Confirm a dark bar appears fixed to the
+   bottom of the viewport with a message ending in "Accept", and that it
+   does **not** cover/overlap the header, footer, or any interactive
+   element (check both desktop and a narrow/mobile viewport).
+2. Confirm `Tab` reaches the Accept button (and the "Learn more" link, if
+   present) through normal keyboard navigation, without anything trapping
+   focus inside the bar first.
+3. Click Accept. Confirm the bar disappears immediately.
+4. Reload the page. Confirm the bar does **not** reappear (consent
+   remembered via `localStorage`).
+5. Open the browser's dev tools, clear `localStorage` for the site (or
+   open a fresh private/incognito window), reload, and confirm the bar
+   reappears — proving step 3/4 actually persisted via storage rather than
+   some other mechanism (e.g. a session variable that would have survived
+   a normal reload regardless).
+6. In Safari specifically (or any browser where Private Browsing blocks
+   `localStorage.setItem`), repeat steps 1-3 in a Private/Incognito window
+   and confirm Accept still closes the bar for that page view (even though
+   it may reappear on the next page load/reload in that same private
+   session — see `docs/developer/components/cookie-consent.md`'s
+   "`localStorage` and Private Browsing" section for why that's expected).
+7. Confirm the bar's slide-in entrance is visibly instant (no animation)
+   when the OS/browser's "reduce motion" accessibility setting is enabled.
 ## Phase 19 (Functional Scope §29) — `System → Compatibility Checker`, never exercised end to end
 
 `ControllerMintcartCompatibility::index()`

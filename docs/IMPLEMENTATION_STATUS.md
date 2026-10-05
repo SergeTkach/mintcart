@@ -3508,6 +3508,103 @@ first, since this backlog can move fast.
 
 In progress.
 
+## Commerce Essentials (Functional Scope §11, P0)
+
+Tracks the P0 checklist items `MINTCART_FUNCTIONAL_SCOPE.md` §11 lists
+under "Commerce Essentials" that aren't already covered by their own
+dedicated phase section above (modern checkout/Quick Order/AJAX
+Search/Cart UX/product card are Phase 15's; this section is for the
+remaining, smaller items with no existing home).
+
+- [x] **Cookie consent** — `mc-cookie-consent`
+      (`assets/src/js/components/cookie-consent.js` +
+      `assets/src/css/components/cookie-consent.css`), a plain
+      acknowledgement bar (message + Accept), deliberately not a granular
+      cookie-category consent-management platform (`CLAUDE.md` §16 scope
+      discipline). The first MintCart component to build and inject its
+      own markup at runtime rather than enhance an existing Twig
+      template: no MintCart Settings facade exists yet for
+      admin-editable/translatable banner text, so wiring a real template
+      would have been API-ahead-of-consumer (`CLAUDE.md` §85); instead
+      `initCookieConsent()` (wired into `catalog.js`, already enqueued
+      unconditionally on every Mint-aware page since Phase 7) builds a
+      hardcoded-English default banner itself, appends it to
+      `document.body`, and remembers acceptance via `localStorage` — the
+      first use of `localStorage` anywhere in this codebase, wrapped in
+      `try`/`catch` throughout for Private Browsing/disabled-storage
+      stores. Written so a *future* server-rendered version (once a real
+      Settings facade exists) needs zero JS change — see
+      `docs/developer/components/cookie-consent.md`'s "Why this is the
+      first component that self-injects its own markup". No PHP/template/
+      controller file touched — purely new `assets/src/{js,css}` files
+      plus one import line each in `catalog.js`/`index.css`/
+      `components.css` (all pure appends, at the end of their respective
+      import/init lists, to minimize collision risk with the several
+      other open PRs also touching those shared entry files at the time
+      — see this entry's own dedup note below).
+      Docs: `docs/developer/components/cookie-consent.md`.
+      **Step 0 dedup check:** `mcp__github__list_pull_requests` (all open,
+      not filtered by branch name) returned 26 open PRs (`#138`-`#163`) at
+      the start of this run. None mention "cookie"/"consent" in their
+      title; checked file lists for the PRs most likely to touch shared
+      JS/CSS entry points (`#150` responsive srcset — only PHP/Twig/docs;
+      `#151` Design → Styles preset picker — `header.php`/
+      `column_left.php`/`header.twig`/docs, no `catalog.js`/CSS entry
+      file; `#138` search-box header wiring — `header.twig`/
+      `components.css` only, and its `components.css` addition is a
+      different set of import lines than this increment's single
+      appended line). Hot shared files (§0f, Homepage Builder block
+      registry/`block.css`/`wizard.php`/`entity.php`/`column_left.php`):
+      none touched by this increment. `header.php`/`header.twig`/
+      `column_left.php` are independently contended by `#138`/`#146`/
+      `#151`/`#152`/`#162`/`#163` at the time of this run — deliberately
+      avoided entirely by this increment's self-injecting design (see
+      above), rather than adding a fourth/fifth PR editing those same
+      files.
+      **Verified:** `npm install` (0 vulnerabilities), `npm run build`
+      compiles cleanly; `grep` confirms `mc-cookie-consent`/the init call
+      land in both `assets/dist/css/index.min.css` and
+      `assets/dist/css/components.min.css`, and in
+      `assets/dist/js/catalog.min.js` but **not**
+      `assets/dist/js/admin.min.js` (storefront-only, by design); `npm
+      test` (preset-token contract checks, unaffected) still passing. No
+      PHP touched, so `tests/mintcart/**/*-test.php` doesn't strictly
+      apply — the full suite (84 files) was still re-run end to end as a
+      regression check, all passing, no failures. **Not verified:** no
+      live browser session in this environment — see
+      `docs/MANUAL_VERIFICATION.md`'s new "Phase 11 (Functional Scope
+      §11)" section for the manual script (first-visit appearance,
+      keyboard reachability, persistence across reload, Private
+      Browsing behavior, reduced-motion).
+- [ ] Wishlist — already covered by stock OpenCart
+      (`account/wishlist`/`product/product`'s heart icon,
+      `MintCart\Commerce\ProductViewProvider`'s wishlist action on
+      `mc-product-card`); no MintCart-specific gap identified, not
+      tracked as a separate checklist item.
+- [ ] Viewed products — stock OpenCart ships `extension/report/product_viewed`
+      (an admin report only, not a storefront "recently viewed" widget);
+      a genuine MintCart storefront gap, not yet built.
+- [ ] Configurable badges/stickers beyond the automatic
+      sale/out-of-stock/new set `ProductViewProvider::buildBadges()`
+      already computes (Phase 6) — an admin-defined custom badge (e.g. a
+      merchant-typed "Bestseller" sticker) is a real gap, not yet built.
+- [ ] Delivery/payment/return information on the product page — not yet
+      built as a MintCart component.
+- [ ] Top info bar — not yet built.
+- [ ] Integration-ready reviews area — stock OpenCart already has a
+      review tab on the product page; not yet re-themed as an `mc-*`
+      component or confirmed sufficient as-is.
+
+**Next candidates:** Viewed products (a real, scoped gap — needs a
+"recently viewed" storage mechanism, most naturally `localStorage`-backed
+on the client like this run's cookie consent, or a small `mc_*` table if
+cross-device persistence is wanted — re-check `gh pr list --state open`
+first); configurable badges (needs an admin field on the product form,
+risks a `product_form.twig`/`entity.php` collision — check open PRs
+first, `#148`/`#152`/`#163` were all editing product/order admin forms at
+the time of this run); or re-check `gh pr list --state open` first, since
+this backlog moves fast.
+
 ## Phase 16 — Bulk Editor
 
 - [x] Bulk field-change validation + resumable batch chunking (pure, no DB) —
@@ -7497,6 +7594,30 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-09-30, routine run):** `list_pull_requests` returned
+26 open PRs (`#138`-`#163`) at the start of this run, covering nearly
+every other unstarted phase — see the new "Commerce Essentials
+(Functional Scope §11, P0)" section above (inserted right before "Phase
+16 — Bulk Editor") for the full per-PR overlap/hot-file check. Shipped
+`mc-cookie-consent` (`assets/src/js/components/cookie-consent.js` +
+`assets/src/css/components/cookie-consent.css`), the one Functional Scope
+§11 P0 item with zero prior mentions anywhere in this file or any open
+PR title — a self-injecting component (builds its own markup at runtime,
+no template/controller touched) chosen specifically to avoid the
+`header.php`/`header.twig`/`column_left.php` contention several other
+open PRs (`#138`/`#146`/`#151`/`#152`/`#162`/`#163`) already had at the
+time of this run. `npm run build`/`npm test` clean; full
+`tests/mintcart/**/*-test.php` suite (84 files, unaffected — no PHP
+touched) re-run end to end, all passing. **Next candidates:** Viewed
+products (a real, scoped Commerce Essentials gap, see that section's own
+"Next candidates"); configurable badges (same section — flagged as a
+likely `product_form.twig`/`entity.php` collision, check open PRs first);
+`HreflangBuilder`'s still-missing per-language URL resolver (Phase 18
+section above, "Why no live wiring yet" in
+`docs/developer/seo/hreflang.md` — a real, separate, OpenCart-DB-touching
+piece of work, distinct from the pure-assembler classes this repo's SEO
+library otherwise favors); or re-check `gh pr list --state open` first,
+since this backlog moves fast.
 **Trailer note (2026-09-30, routine run):** 25 open PRs (#138–#162)
 existed at the start of this run — a background file-collision audit of
 all of them found zero overlap with `sale/order.php`/`order_form.twig`/
