@@ -1812,6 +1812,33 @@ missing (the flag could previously only be set by writing directly to
 or route touched. **Tests:** `php -l` clean; full `tests/mintcart/`
 suite (81 files) re-run end to end, all passing, no regressions.
 
+**Update (2026-09-30, routine run — `System → Compatibility Checker`):**
+adds one entry to the existing `$system` menu array, right after the
+`mintcart/settings/diagnostics` entry added above, gated by
+`$this->user->hasPermission('access', 'mintcart/compatibility')` — same
+conditional-push shape every sibling entry in this file already uses.
+Points at `ControllerMintcartCompatibility::index()` (new this run — see
+`docs/developer/compatibility/compatibility-checker.md`'s "Admin screen
+and menu entry" section), the rendered form `check()`'s own docblock had
+named as a natural follow-up since the class's first increment. Step 0
+dedup check: `list_pull_requests` returned 24 open PRs at the start of
+this run (#138–#161). Directly checked the file list (`pull_request_read`
+`get_files`) of the ones most likely to touch admin navigation — #139
+(Sale menu group), #146 (SEO admin screen), #149 (Update Manager admin
+route), #151 (Design menu group), #158 (SEO wiring) — confirming each
+edits a different array/location than this run's `System` array (#139's
+own `$sale` array, #151's own `$design` array, or no `column_left.php`
+touch at all). The remaining open PRs' titles (docs-only additions, pure
+`MintCart\*` service classes, SEO builder wiring, bulk-editor field work)
+gave no indication of an admin-menu change, so they were not individually
+diffed — a smaller risk than usual, since this increment's own diff is a
+single, isolated few-line insertion right after the existing Diagnostics
+entry, the same "small, expected conflict a human reconciles" shape every
+prior `column_left.php` increment in this file already accepted. One new
+key
+added to `upload/admin/language/en-gb/common/column_left.php`
+(`text_mintcart_compatibility`), right after
+`text_mintcart_settings_diagnostics`, matching every other menu-label key
 **Update (2026-09-29, routine run — `Design → Styles`):** adds one entry
 to the existing `$design` array, right after the stock "Theme" (Theme
 Editor) entry, gated by
