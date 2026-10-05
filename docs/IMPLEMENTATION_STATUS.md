@@ -120,6 +120,19 @@ System Pages` (`#146`'s own next-candidates note); the admin
       unmerged PRs (#81/#87/#106) at the time of this update, each shipped
       unwired (no real consumer yet, or the consumer's file was contended
       by other open PRs). `ProductAdapter`/`OrderAdapter` remain unstarted.
+      **Update (2026-10-02, routine run):** all six named adapters from
+      `MINTCART_TECHNICAL_PLAN.md` §5 now exist on this branch —
+      `OrderAdapter` (this run, see PR for the full writeup and
+      `docs/developer/compatibility/order-adapter.md`) wraps the shared
+      `getOrder(int)` lookup across OpenCart's three order model classes
+      (admin `sale/order`, storefront `checkout/order`/`account/order`),
+      normalizing their divergent `null`/`false` not-found sentinels into
+      one `?array` contract, the same shape `CustomerAdapter`/
+      `CategoryAdapter` already use for their own model pairs. Shipped
+      unwired, like `SettingsAdapter`/`ExtensionAdapter`/`CustomerAdapter`
+      before it — no `CheckoutService`/`OrderService` call site exists yet
+      to route through it. `ProductAdapter` still has an open, unmerged PR
+      (#143) at the time of this update.
       **first adapter shipped:** `ExtensionAdapter` (installed-vs-enabled
       extension check, extracted out of `ModelMintcartReadiness`'s inline
       `hasEnabledExtension()`) — see
@@ -8217,6 +8230,28 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-10-02, routine run):** added
+`MintCart\Compatibility\OpenCart3\OrderAdapter` — the last of the six
+named adapters from `MINTCART_TECHNICAL_PLAN.md` §5. See the Phase 1
+section above for the full writeup and
+`docs/developer/compatibility/order-adapter.md`. `list_pull_requests`
+returned 45 open PRs (`#138`-`#182`) at the start of this run; checked
+every title (none mention `OrderAdapter`/order models/`MintCart\Compatibility`)
+and spot-checked `#170` vs `#177` (both "wire Information Entity Picker
+into Settings..." titles) via `pull_request_read get_files` — confirmed
+not duplicates, zero file overlap (`setting/store.php`/`store_form.twig`
+vs `setting/setting.php`/`setting.twig`). No hot shared files (§0f) touched
+— this increment only adds two new files. `php -l` clean on both new
+files; new 10-scenario test
+(`tests/mintcart/compatibility/opencart3/order-adapter-test.php`); full
+`tests/mintcart/**/*-test.php` suite re-run end to end (85 files, up from
+84) — all passing, no regressions (no existing file's behavior changed).
+**Next candidates:** once open PR #143 (`ProductAdapter`) merges, all six
+named Technical Plan §5 adapters exist — wiring any of them into a real
+controller (same "wait for a real consumer" discipline every adapter in
+this namespace has followed) becomes the natural next Phase 1 step; or
+re-check `gh pr list --state open` first — this backlog is very large
+right now (45+ open PRs) and moves fast.
 **Trailer note (2026-10-01, routine run): MC-0020 — `DB\PgSQL::query()`
 reconnect-on-dropped-connection, completing the DB-adaptor sweep.** Step 0
 dedup check: `gh pr list --state open` returned 44 open PRs at the start
