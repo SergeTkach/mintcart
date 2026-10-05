@@ -1647,6 +1647,24 @@ missing (the flag could previously only be set by writing directly to
 or route touched. **Tests:** `php -l` clean; full `tests/mintcart/`
 suite (81 files) re-run end to end, all passing, no regressions.
 
+**Update (2026-09-28, routine run — `Sale → Quick Order Requests`):** adds
+one entry to the existing `$sale` menu array, right after the stock
+"Orders" entry and before "Order Recurring", gated by
+`$this->user->hasPermission('access', 'mintcart/quickorder')` — same
+conditional-push shape every sibling entry in this file already uses.
+Points at the new `ControllerMintcartQuickorder` (admin-side,
+`upload/admin/controller/mintcart/quickorder.php` — a distinct class from
+the pre-existing catalog-side controller of the same name, which lives in
+a separate MVC tree), the admin list
+`docs/developer/commerce/quick-order-service.md`'s "Not done yet" section
+named as the natural next consumer of the `mc_quick_order` table. One new
+key added to `upload/admin/language/en-gb/common/column_left.php`
+(`text_mintcart_quickorder`), right after `text_order_status`, matching
+every other menu-label key already in that file. Purely additive; no
+existing menu entry, permission check, or route touched. **Tests:**
+`php -l` clean on both changed files; full `tests/mintcart/` suite
+re-run end to end, all passing, no regressions.
+
 ---
 
 ## `upload/admin/model/catalog/category.php` / `upload/admin/controller/catalog/category.php`
@@ -1674,7 +1692,7 @@ order, commit". Two changes:
    `category_to_layout`, since a drag & drop move changes structure, not
    content.
 2. **Controller:** a new, fully-additive `move()` action (route
-   `catalog/category.move`) — permission check, `category_id`/`parent_id`
+   `catalog/category/move`) — permission check, `category_id`/`parent_id`
    existence checks via the existing `getCategory()`, cycle-prevention via
    the new `MintCart\Catalog\CategoryMoveValidator` fed by the existing
    `getCategoryPath($parent_id)` (the *same* ancestor-chain lookup
@@ -1727,12 +1745,12 @@ UI wiring" section for the full writeup.
 (verbatim copy of `ControllerCatalogProduct::enqueueMintAssets()` — the
 `components.min.css`/`admin.min.js` pair, `docs/developer/admin/asset-
 enqueue.md`) and now passes `parent_id` per row plus a new `$data['move']`
-(the `catalog/category.move` URL) into `category_list.twig`, which mounts
+(the `catalog/category/move` URL) into `category_list.twig`, which mounts
 the real `mc-sortable` behavior (`data-mc-sortable`/
 `data-mc-sortable-handle`/`data-mc-sortable-item`/`data-mc-action` — its
 documented hook contract, no CSS class dependency) directly on the
 existing Bootstrap 3 table/row markup, gated to `sort == 'sort_order'`.
-An inline `<script>` POSTs the new order to `catalog/category.move`
+An inline `<script>` POSTs the new order to `catalog/category/move`
 immediately on `mc:sortable:reorder`, keeping every row's own `parent_id`
 unchanged (reordering only — no re-parenting from this UI) and splitting
 the new visible order back into per-parent groups before saving (one

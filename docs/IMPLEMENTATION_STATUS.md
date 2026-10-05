@@ -3059,6 +3059,21 @@ already share.
       scenarios), `tests/mintcart/commerce/quick-order-migration-test.php`
       (schema). **Not yet verified live** — no MySQL in this environment;
       see `docs/MANUAL_VERIFICATION.md`'s new Phase 15 section. **Not
+      built**: lead → order conversion — deliberately deferred, see the
+      doc's "Not done yet". **Update (2026-09-28, routine run): the admin
+      "Quick Order requests" list is now built** —
+      `Sale → Quick Order Requests` (`ControllerMintcartQuickorder`/
+      `ModelMintcartQuickorder`, admin-side, fully additive except one new
+      `column_left.php` menu entry) surfaces every lead with a per-row
+      status change (`new`/`contacted`/`converted`/`rejected`, via the new
+      `MintCart\Commerce\QuickOrderStatus` whitelist). See
+      `docs/developer/commerce/quick-order-service.md`'s new "Admin list"
+      section for the full writeup and `docs/upstream-diff.md`'s
+      `column_left.php` entry.
+- [ ] `CheckoutService` — not started; still genuinely large/risky without
+      live MySQL to verify `addOrder()`'s full field list against (same
+      reasoning `QuickOrderService` above sidestepped by not touching
+      order creation at all).
       built**: an admin "Quick Order requests" list to surface these leads
       (natural next consumer of `mc_quick_order`), and lead → order
       conversion — both deliberately deferred, see the doc's "Not done
@@ -7101,6 +7116,36 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-09-28, routine run):** Step 0 found exactly one open
+PR, #138 (Phase 15 `mc-search-box` header wiring, `ROUTINE-STATUS: DONE`,
+not yet merged) — no file overlap with this run. Added the admin
+`Sale → Quick Order Requests` list — see the Phase 15 section above for
+the full writeup. While investigating, found several other "next
+candidates" this file's own trailer notes had named were already done in
+code but not reflected here (a reminder that these historical notes can
+drift stale — verify against the actual repo, not just this file, per
+`CLAUDE.md` §10/§84): `manufacturer.php`'s `info()` already has
+`SchemaOrgBuilder::breadcrumbList()` wiring (matches
+category/search/special), and `MintCart\Catalog\BulkProductUpdateValidator`
+already covers `status`/`quantity`/`price`/`manufacturer_id`/
+`stock_status_id`/`special_price` (6 fields, not the 4 an earlier trailer
+note described) with `category_ids` already validated (though not yet
+wired to a live endpoint) by the separate, still-unwired
+`BulkProductUpdatePlanner`. The admin `mintcart/update/*` route named just
+above was investigated but not attempted this run: it's the first place
+in the Update Manager flow that would need a real decision about where a
+package manifest/download URL actually comes from (no update-server
+infrastructure exists or is planned) — a product/architecture fork
+(`CLAUDE.md` §20), not a mechanical wiring step like every `Update\*`
+primitive built so far. **Next candidates:** a per-field-typed `bulk_value`
+control for the Bulk Editor toolbar (`docs/developer/catalog/bulk-editor.md`'s
+"Next step" — small, safe, explicitly deferred, not attempted this run);
+`category_ids`/SEO fields wired to a live Bulk Editor endpoint (needs the
+`BulkProductUpdatePlanner`'s chunked-AJAX-endpoint gap filled first, itself
+a larger increment); `CheckoutTotalsService`'s next step per its own doc;
+deciding the update-server/manifest-source question above (a human
+decision, not a routine-run task); or re-check `gh pr list --state open`
+first.
 **Trailer note (2026-09-28, routine run):** Phase 17's live UI wiring is
 now done (category drag & drop, `category_list.twig` + real `mc-sortable`
 behavior) — this also resolves the Phase 12 "Architectural fork
