@@ -535,7 +535,7 @@ class ControllerMintcartWizard extends Controller
 
         if ($step === 'delivery') {
             $data['shipping_extensions'] = $this->loadShippingExtensions();
-            $data['toggle_delivery'] = $this->url->link('mintcart/wizard.toggleDelivery', 'user_token=' . $this->session->data['user_token'] . '&step=delivery', true);
+            $data['toggle_delivery'] = $this->url->link('mintcart/wizard/toggleDelivery', 'user_token=' . $this->session->data['user_token'] . '&step=delivery', true);
             $data['manage_delivery'] = $this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'], true);
         }
 
@@ -560,7 +560,7 @@ class ControllerMintcartWizard extends Controller
     }
 
     /**
-     * route=mintcart/wizard.toggleDelivery - POST code. Toggles one shipping
+     * route=mintcart/wizard/toggleDelivery - POST code. Toggles one shipping
      * extension's enabled state without advancing/validating the wizard step
      * itself, then redirects back to this same step - same shape
      * ControllerMintcartBusinessDelivery::toggle() already established

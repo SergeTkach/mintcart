@@ -2728,7 +2728,7 @@ shipping extensions (`ModelSettingExtension::getInstalled('shipping')`,
 same data source and stale-extension guard `ControllerMintcartBusinessDelivery`
 already established in Phase 14) with a real enabled/disabled badge and a
 per-extension Enable/Disable toggle (`toggleDelivery()`, route
-`mintcart/wizard.toggleDelivery`, the same merge-then-save
+`mintcart/wizard/toggleDelivery`, the same merge-then-save
 `shipping_<code>_status` write `ControllerMintcartBusinessDelivery::toggle()`
 already uses, duplicated rather than shared per that class's own precedent
 of choosing two near-duplicate controllers over a shared base class), plus
@@ -7202,6 +7202,65 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-09-29, routine run): real bug fix, not a checklist
+item — broken dot-notation admin AJAX routes.** Step 0 found 9 open PRs
+(#138-#146, all `ROUTINE-STATUS: DONE`), none touching
+`wizard.php`/`business/delivery.php`/`business/payments.php`'s toggle
+routes or any Homepage Builder hot file (§0f). While looking for this
+run's next unclaimed step, found that `ControllerMintcartWizard::toggleDelivery()`
+(Phase 13, `mintcart/wizard.toggleDelivery`),
+`ControllerMintcartBusinessDelivery::toggle()` and
+`ControllerMintcartBusinessPayments::toggle()` (both Phase 14,
+`mintcart/business/{delivery,payments}.toggle`) all built their POST
+toggle route with a dot separating the controller path from the method
+name — the OpenCart 4 convention, not OpenCart 3's. `ControllerStartupRouter::index()`
+(`upload/admin/controller/startup/router.php`) sanitizes the incoming
+route with `preg_replace('/[^a-zA-Z0-9_\/]/', '', $route)` *before*
+`Action` ever sees it, silently stripping the dot and merging the
+controller path and method into one unresolvable segment — confirmed by
+simulating the exact router + `Action` (`upload/system/engine/action.php`)
+logic against the real strings: `mintcart/business/delivery.toggle`
+resolves to a null route and method `mintcart`, which `Action::execute()`
+turns into "Error: Could not call ...". All three "Enable/Disable" toggle
+buttons (`Business → Delivery`, `Business → Payments`, the Setup Wizard's
+Delivery step) were dead on `master` — every prior "not verified live, no
+MySQL in this environment" caveat on these three screens
+(`docs/MANUAL_VERIFICATION.md`'s Phase 13/14 entries) would have caught
+this the moment a human actually clicked the button, but no routine run's
+`php -l`-only verification ever could, since a syntactically valid string
+containing a dot lints fine. Fixed all three call sites (dot → slash,
+matching the exactly one convention every other `url->link()` call in this
+entire codebase already uses — confirmed via a repo-wide `grep`, zero
+other exceptions existed) plus their own route-documenting comments and
+three doc mentions (`docs/MANUAL_VERIFICATION.md`,
+`docs/developer/onboarding/setup-wizard.md`, this file's own Phase 13
+section). Added `tests/mintcart/admin/route-format-test.php` — a
+permanent regression guard (not a one-off assertion) that scans every
+`upload/admin/controller/**/*.php` file's `url->link()` calls for this
+exact dot-notation shape, so a future PR reintroducing it fails CI. This
+matters immediately: PR #142's open, not-yet-merged `togglePayment()`
+copies `toggleDelivery()`'s shape verbatim, dot included — the new test
+will catch it the moment that branch rebases onto this fix (or flag it in
+review if merged as-is first). No OpenCart core file touched — fully
+MintCart-owned files — so no `docs/upstream-diff.md` entry needed; this
+also isn't a historical-OpenCart-bug candidate for `docs/fixes/registry.md`,
+since the bug is MintCart's own, introduced in Phase 13/14, not inherited
+from upstream. Verified: `php -l` clean across the full `upload/`/`tests/`
+tree; full `tests/mintcart/**/*-test.php` suite re-run end to end
+(**85/85 files pass**, 84 existing + this run's new regression test, no
+regressions); the new test's detection logic double-checked by running it
+against a scratch copy of `wizard.php` with the dot reinstated, confirming
+it does flag the exact broken pattern. **Not verified live** — no
+MySQL/admin session in this environment, same pre-existing gap as every
+other admin-screen increment in this repo; a human should still confirm
+all three toggle buttons on a real install per `docs/MANUAL_VERIFICATION.md`'s
+existing Phase 13/14 entries, now that the route itself is fixed.
+**Next candidates:** the admin controller/`mintcart/update/*` route (still
+the only remaining gap before a real install can run `UpdateOrchestrator::apply()`);
+the "changed since install" comparison (now claimed by #145); Entity
+Picker's Option-tab live wiring (`docs/developer/components/entity-picker.md`
+"Option backend" already names `product_form.twig`'s Option tab as the
+identified first consumer); or re-check `gh pr list --state open` first.
 **Trailer note (2026-09-29, routine run):** `list_pull_requests` returned
 7 open PRs at the start of this run (#138–#145), none touching
 `upload/admin/controller/mintcart/seo/*`, `upload/admin/view/template/mintcart/seo/*`,

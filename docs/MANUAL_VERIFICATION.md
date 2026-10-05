@@ -34,7 +34,7 @@ request before this fix), and that a page depending on
 No MySQL/OpenCart admin session in this environment. Confirm on a real
 install: `mintcart/wizard?step=delivery` lists every installed shipping
 extension with its real enabled/disabled state; clicking Enable/Disable
-(`mintcart/wizard.toggleDelivery`) flips only that extension's
+(`mintcart/wizard/toggleDelivery`) flips only that extension's
 `shipping_<code>_status` key and leaves its other settings (cost, tax
 class, geo zone, ...) untouched — the same check
 `docs/developer/onboarding/business-delivery-payments.md`'s own
