@@ -534,9 +534,35 @@ dynamic row list like Attribute's), both `multiple: false`.
 screen uses, see `docs/developer/admin/asset-enqueue.md`), called at the
 top of `getForm()`. Note this is `Settings → Store → Edit`
 (`setting/store.php`), not the separate `Settings → Settings`
-(`setting/setting.php`/`setting.twig`), which has a near-identical,
-currently-unwired pair of selects for a single-store install — left alone
-by this change, a natural follow-up over the exact same pattern.
+(`setting/setting.php`/`setting.twig`), which has a near-identical pair of selects for a single-store install —
+wired the same way, see below.
+
+**Also wired:** `setting/setting.twig`'s **Account Terms**,
+**Checkout Terms**, **Affiliate Terms** and **Return Terms** fields
+(`#input-account`/`config_account_id`, `#input-checkout`/`config_checkout_id`,
+`#input-affiliate`/`config_affiliate_id`, `#input-return`/`config_return_id`
+— native `<select>` elements listing every information page, used by
+`Settings → Settings` to pick the page a customer must agree to before
+registering/checking out, or shown on the affiliate/return flows) are wired
+the same way. Each `<select>` gets a "Browse pages" button + hidden
+`.mc-entity-picker` panel, additive alongside the native `<select>` (kept
+as-is, not replaced). Confirming a pick just sets the matching `<select>`'s
+`.value`, since every information page already has an `<option>` rendered
+server-side — no new option needs to be created client-side. Four
+independent `McEntityPicker` instances (one per field, not a shared/
+delegated instance), all `multiple: false`.
+
+`ControllerSettingSetting` gained its own `enqueueMintAssets()` (same
+`components.min.css` + `admin.min.js` pairing every other MintCart admin
+screen uses, see `docs/developer/admin/asset-enqueue.md`), called at the
+top of `index()` (this controller has no separate `getForm()` — everything
+lives in one `index()` method, unlike `setting/store.php`).
+
+Note this is `Settings → Settings` (`setting/setting.php`/`setting.twig`,
+the single store-wide config form), not `Settings → Store → Edit`
+(`setting/store.php`/`store_form.twig`), which has a near-identical
+Account/Checkout Terms pair of its own — a different file and screen,
+wired independently (above).
 
 ## Attribute backend
 

@@ -2216,6 +2216,13 @@ question is resolved — see the ADR's "Consequences" section.
       manufacturer, product and information are now done**
       (`product_form.twig`'s Category and Manufacturer fields in earlier
       runs, its Related Products field in a later run — see the "Related
+      Products field live-wired" update below; `setting/setting.twig`'s
+      Account/Checkout/Affiliate/Return Terms fields this run — see the
+      "Information field live-wired (Settings → Settings)" update below,
+      PR #177); attribute/option/customer backends each have open,
+      unmerged PRs (#148/#152/#163 at the time of this update) building
+      their own live wiring — re-check `gh pr list --state open` before
+      assuming their status here is current.
       Products field live-wired" update below; `setting/store_form.twig`'s
       Account/Checkout Terms fields this run — see the "Information field
       live-wired" update below); attribute/option/customer backends each
@@ -2757,6 +2764,63 @@ has a real requirement yet); resolving the Phase 17 category-list fork
 above (needs a product decision first); or re-check `gh pr list --state
 open` first, since this backlog moves fast.
 
+**Update (2026-10-01, routine run): Information field live-wired
+(`Settings → Settings`), PR #177.** Step 0 dedup check: `list_pull_requests`
+returned 39 open PRs (`#138`-`#176`) at the start of this run. Fetched
+every open PR's changed-file list (not just titles) via `pull_request_read`
+`get_files` (delegated to a research subagent to keep this scoped) — found
+no exact-duplicate scope between any two PRs, but several file-level
+collisions (e.g. `catalog/controller/product/category.php` touched by 4
+PRs; `column_left.php` by 3; `assets/src/css/components.css` by 5,
+append-only). None of the 39 touch `upload/admin/controller/setting/setting.php`,
+`upload/admin/view/template/setting/setting.twig`, or
+`upload/admin/language/en-gb/setting/setting.php` — specifically confirmed
+**zero overlap with #170** ("wire Information Entity Picker into Settings
+→ Store Terms fields"), which wires the *same* Information backend into a
+*different* screen (`setting/store.php`/`store_form.twig`, per-store
+"Settings → Store → Edit", vs. this run's `setting/setting.php`/
+`setting.twig`, the single store-wide "Settings → Settings" form —
+confirmed by reading both files directly, `CLAUDE.md` §84, not assumed
+from the title alone). Also confirmed no Homepage Builder hot-file
+collision (§0f) — only `#176` touches that area.
+
+`setting.twig`'s **Account Terms**, **Checkout Terms**, **Affiliate
+Terms** and **Return Terms** fields (`config_account_id`/
+`config_checkout_id`/`config_affiliate_id`/`config_return_id` — four
+native `<select>` elements listing every information page) each gained a
+"Browse pages" `McEntityPicker` button + hidden panel, additive alongside
+the native `<select>` (kept as-is). `ControllerSettingSetting` gained its
+own `enqueueMintAssets()` (same `components.min.css`/`admin.min.js`
+pairing every other MintCart admin screen uses), called at the top of
+`index()` — this controller has no separate `getForm()`, unlike
+`setting/store.php`. One shared inline `<script>` wires all four pickers
+via a single `initInformationPicker()` helper (not four copy-pasted
+blocks). Full writeup: `docs/upstream-diff.md`'s new `setting/setting.php`
+entry, `docs/developer/components/entity-picker.md`'s updated
+"Information page backend" section, `docs/MANUAL_VERIFICATION.md`'s new
+entry. Verified: `php -l` clean; `setting.twig`'s `{% if %}`/`{% endif %}`/
+`{% for %}`/`{% endfor %}` tag counts checked balanced before/after
+(102/102, 28/28 — unchanged); new inline script extracted and
+`node --check`-clean; full `tests/mintcart/**/*-test.php` suite (84 files)
+re-run end to end, all passing, no regressions (no library class changed
+— only a controller method delegating to the already-tested
+`ControllerMintcartEntity::information()`/`InformationPickerProvider`).
+Not verified: no live MySQL/admin session in this environment.
+
+**Next candidates:** `attribute`/`option`/`customer` live-wiring status
+depends on `#148`/`#152`/`#163` merging — re-check `gh pr list --state
+open` before touching any of `product_form.twig`'s Attribute/Option tabs
+or `sale/order_form.twig`'s Customer field; `MintCart\Catalog\PaginationBuilder`
+as a pure, uncontended primitive extracted from the pagination-construction
+block duplicated across category/search/manufacturer/special (avoids the
+4×-collided listing controllers — ship tested and documented, wire later,
+same precedent as `ChangedFileDetector`/`ShippingQuoteAdapter`);
+`MintCart\Compatibility\OpenCart3\OrderAdapter` (the last unstarted named
+adapter per Technical Plan §5); resolving the Phase 17 category-list fork
+above (needs a product decision first); Entity Picker Filters/Create-new-flow
+(neither has a real requirement yet); or re-check `gh pr list --state
+open` first — this backlog is very large right now (39+ open PRs) and
+moves fast.
 **Update (2026-09-30, routine run): Customer backend wired into
 `sale/order_form.twig`.** The "customer" item in the "still needs live
 wiring" list above is done — `ControllerSaleOrder::enqueueMintAssets()`
