@@ -292,6 +292,38 @@ manufacturer that has an image set and one that doesn't:
    `docs/developer/components/entity-picker.md`'s manufacturer section for
    why this differs from category's substring match).
 
+### Create-new flow (a later run)
+
+`product_form.twig`'s Manufacturer picker now has an inline "Add new"
+row calling the new `mintcart/entity/manufacturerCreate` action. On a
+real install:
+
+1. Grant `catalog/manufacturer` **Modify** to the test user group, in
+   addition to `mintcart/entity` **Access** (step 1 above) — the create
+   action checks both; with only `mintcart/entity` **Access**, the
+   request should return `{"error": "Permission denied"}` and no row
+   should insert.
+2. Open **Catalog → Products → Add/Edit**, click "Browse manufacturers",
+   type a brand-new name (not an existing manufacturer) into the "Add
+   new" row's input, and click "Add new" (or press Enter in the input).
+   Confirm: the button disables while the request is in flight, the new
+   manufacturer appears selected in the list once it returns, and
+   `#input-manufacturer`/`input[name="manufacturer_id"]` are populated
+   with it — same as picking an existing manufacturer would do.
+3. Confirm the new manufacturer is now also visible from **Catalog →
+   Manufacturers**' own list, assigned to the default store (the quick-create
+   defaults `manufacturer_store` to the same `[0]` `getForm()` itself
+   defaults a brand-new manufacturer to), with no image and no SEO URL —
+   both addable later from that manufacturer's own edit screen.
+4. Try submitting an empty name, and a 65+ character name — confirm both
+   are rejected with `{"error": "Invalid name"}` and no row is inserted
+   (mirrors `ControllerCatalogManufacturer::validateForm()`'s own 1-64
+   character rule).
+5. Save the product. Confirm `manufacturer_id` persists exactly as it
+   would have via the existing jQuery autocomplete field — the create
+   flow writes to the same two fields, so `product.php`'s save logic is
+   untouched.
+
 ## MC-0013 — SMTP `EHLO`/`HELO` hostname fallback, never exercised against a real SMTP server
 
 This environment has no outbound SMTP access, so `HeloHostname::resolve()`

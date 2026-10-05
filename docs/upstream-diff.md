@@ -2544,6 +2544,48 @@ label-blank gap noted above applies identically to the six new
 `text_manufacturer_picker_*` keys — not a new gap this change
 introduces.
 
+**Update (a later run — Phase 12, Entity Picker): Manufacturer field's
+picker gains a create-new flow.** `product_form.twig`'s Manufacturer
+`McEntityPicker` instance now passes a `createItem` option (see
+`docs/developer/components/entity-picker.md`'s new "Create-new flow"
+section for the generic primitive change this builds on — that part
+lives entirely in `assets/src/js/components/entity-picker.js`/
+`entity-picker.css`, not an OpenCart file, so it has no entry here). The
+new markup is one more hidden-by-default row inside the same
+`.mc-entity-picker` panel (`data-mc-entity-picker-create` +
+`-create-input`), and three new language keys
+(`text_manufacturer_picker_create`, `_create_placeholder`,
+`error_manufacturer_picker_create`). No existing field, route, or `$data`
+key changed.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+the rest of this entry — `product_form.twig` is the one true owner of
+this screen; the picker's own `createItem` hook (an OpenCart-independent
+primitive) is the MintCart-layer half of this, already factored out.
+
+**Compatibility impact:** None — purely additive markup/script/language
+keys; the existing jQuery autocomplete and the picker's browse/search/
+select flow are both completely unchanged.
+
+**Tests:** `php -l` clean across the full `upload`/`tests` tree
+(including the new `ControllerMintcartEntity::manufacturerCreate()`
+action, in `upload/admin/controller/mintcart/entity.php` — a fully
+additive new MintCart route, not an OpenCart core file, so it has no
+entry of its own here). Twig `{% if %}`/`{% endif %}`/`{% for %}`/
+`{% endfor %}` tag counts unchanged (38/38, 37/37 — this run only added
+`{{ }}` output and a `{# #}` comment, no new control-flow tags). The
+inline `<script>` blocks were extracted and checked with `node --check`
+(valid syntax). Full `tests/mintcart/**/*-test.php` suite re-run end to
+end (84 files) — all passing, no regressions (no pure-PHP logic changed
+here to need a new test; `manufacturerCreate()` is thin controller/model
+wiring around already-tested `ModelCatalogManufacturer::addManufacturer()`,
+same "no new unit test" precedent `ControllerMintcartEntity::category()`/
+`manufacturer()` already set). **Not verified:** no live MySQL/admin
+session in this environment — see `docs/MANUAL_VERIFICATION.md`'s new
+entry for the full manual script a human should run, including granting
+`catalog/manufacturer` **Modify** (not just `mintcart/entity` **Access**)
+to the test user group before this action will succeed.
+
 **Update (this run — Phase 12, Entity Picker): Related Products field
 wired into the same admin screen, closing out the entity-picker backend's
 own "identified first consumer" note.** `product_form.twig`'s Related

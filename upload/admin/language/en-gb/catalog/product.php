@@ -32,6 +32,9 @@ $_['text_manufacturer_picker_empty']   = 'No manufacturers found.';
 $_['text_manufacturer_picker_prev']    = 'Previous';
 $_['text_manufacturer_picker_next']    = 'Next';
 $_['text_manufacturer_picker_confirm'] = 'Select';
+$_['text_manufacturer_picker_create_placeholder'] = 'New manufacturer name';
+$_['text_manufacturer_picker_create']             = 'Add new';
+$_['error_manufacturer_picker_create']            = 'Enter a name (1-64 characters) and try again.';
 
 // Text - Related Products picker (MintCart Phase 12, MINTCART_FUNCTIONAL_SCOPE.md §8)
 $_['text_related_picker_browse']  = 'Browse products';

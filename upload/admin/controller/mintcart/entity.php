@@ -94,6 +94,60 @@ class ControllerMintcartEntity extends Controller {
 		$this->respond($provider->build($rows, $page, $limit));
 	}
 
+	// route=mintcart/entity/manufacturerCreate - POST name
+	//
+	// Phase 12 (Entity Picker) "Create-new flow via drawer/modal"
+	// (`MINTCART_FUNCTIONAL_SCOPE.md` §8) - the first entity type to get
+	// it, picked because `ModelCatalogManufacturer::addManufacturer()` has
+	// the smallest required-field set of any entity type here: only
+	// `name` (`sort_order`/`image`/`manufacturer_store`/
+	// `manufacturer_seo_url` are all `isset()`-guarded optional in the
+	// model). Deliberately omits image/SEO-URL - a human can fill those in
+	// later from the manufacturer's own edit screen; the quick-create's
+	// job is only to unblock product creation without leaving the page,
+	// not to replace the full form.
+	//
+	// Checks `catalog/manufacturer` `modify` (not a new `mintcart/entity`
+	// "modify" permission) in addition to `mintcart/entity` `access` -
+	// this creates a real catalog row, so it must stay behind the exact
+	// same ACL `ControllerCatalogManufacturer::add()`'s own
+	// `validateForm()` already requires, independent of who may merely
+	// browse manufacturers for picking (`mintcart/entity` access).
+	//
+	// `manufacturer_store = array(0)` matches
+	// `ControllerCatalogManufacturer::getForm()`'s own default for a
+	// brand-new manufacturer (default store pre-checked) - see that
+	// controller's `$data['manufacturer_store'] = array(0);` fallback.
+	public function manufacturerCreate() {
+		if (!$this->user->hasPermission('access', 'mintcart/entity') || !$this->user->hasPermission('modify', 'catalog/manufacturer')) {
+			$this->respond(array('error' => 'Permission denied'));
+			return;
+		}
+
+		$name = isset($this->request->post['name']) ? trim((string)$this->request->post['name']) : '';
+
+		// Same 1-64 char rule as ControllerCatalogManufacturer::validateForm()
+		// (CLAUDE.md §84 - mirrored, not guessed from memory).
+		if (utf8_strlen($name) < 1 || utf8_strlen($name) > 64) {
+			$this->respond(array('error' => 'Invalid name'));
+			return;
+		}
+
+		$this->load->model('catalog/manufacturer');
+
+		$manufacturer_id = $this->model_catalog_manufacturer->addManufacturer(array(
+			'name'               => $name,
+			'sort_order'         => 0,
+			'manufacturer_store' => array(0)
+		));
+
+		$this->respond(array('item' => array(
+			'id'    => (int)$manufacturer_id,
+			'name'  => $name,
+			'image' => null
+		)));
+	}
+
 	// route=mintcart/entity/product - GET filter_name, filter_status, page, limit
 	public function product() {
 		if (!$this->user->hasPermission('access', 'mintcart/entity')) {

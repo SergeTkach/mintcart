@@ -406,6 +406,18 @@
                         <span class="mc-entity-picker__page-info" data-mc-entity-picker-page-info></span>
                         <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-next">{{ text_manufacturer_picker_next }}</button>
                       </div>
+                      {#
+                        MintCart Phase 12 - "create-new flow" (Functional
+                        Scope §8). Hidden by createEntityPicker() itself
+                        unless createItem is supplied - see the JS block
+                        below. Manufacturer is the first entity type to
+                        get this, since addManufacturer() only requires a
+                        name.
+                      #}
+                      <div class="mc-entity-picker__create" data-mc-entity-picker-create hidden>
+                        <input type="text" class="mc-field__control" data-mc-entity-picker-create-input placeholder="{{ text_manufacturer_picker_create_placeholder }}" aria-label="{{ text_manufacturer_picker_create_placeholder }}">
+                        <button type="button" class="mc-button mc-button--secondary" data-mc-action="entity-picker-create">{{ text_manufacturer_picker_create }}</button>
+                      </div>
                       <div class="mc-entity-picker__footer">
                         <button type="button" class="mc-button mc-button--primary" data-mc-action="entity-picker-confirm">{{ text_manufacturer_picker_confirm }}</button>
                       </div>
@@ -1470,6 +1482,28 @@
 			  pickerRoot.hidden = true;
 			  browseButton.setAttribute('aria-expanded', 'false');
 			  browseButton.focus();
+		  },
+		  // MintCart Phase 12 - "create-new flow" (Functional Scope §8).
+		  // Posts to the new mintcart/entity/manufacturerCreate action;
+		  // createEntityPicker() itself selects the returned item and
+		  // re-queries by its name once this resolves.
+		  createItem: function (name) {
+			  var body = new URLSearchParams({ name: name });
+
+			  return fetch('index.php?route=mintcart/entity/manufacturerCreate&user_token={{ user_token }}', {
+				  method: 'POST',
+				  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				  body: body
+			  }).then(function (response) {
+				  return response.json();
+			  }).then(function (json) {
+				  if (json && json.item) {
+					  return json.item;
+				  }
+
+				  alert('{{ error_manufacturer_picker_create }}');
+				  return null;
+			  });
 		  }
 	  });
 
