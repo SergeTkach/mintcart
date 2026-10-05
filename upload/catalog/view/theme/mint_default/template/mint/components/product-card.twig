@@ -16,7 +16,7 @@
         {% endif %}
 
         <div class="mc-product-card__quick-actions">
-            <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-wishlist" data-product-id="{{ product.id }}" aria-pressed="false" aria-label="{{ text_wishlist }}">
+            <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-wishlist" data-product-id="{{ product.id }}" data-mc-text-wishlist-error="{{ text_wishlist_error }}" aria-pressed="false" aria-label="{{ text_wishlist }}">
                 {# swap for {{ mc_icon('heart') }} once the Bootstrap Icons SVG renderer exists (Implementation Guide §21) #}
                 ♥
             </button>

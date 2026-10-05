@@ -325,7 +325,8 @@ class ControllerProductCategory extends Controller {
 							'text_add_to_cart' => $this->language->get('button_cart'),
 							'text_quick_order' => $this->language->get('text_quick_order'),
 							'text_added_to_cart' => $this->language->get('text_added_to_cart'),
-							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error')
+							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error'),
+							'text_wishlist_error' => $this->language->get('text_wishlist_error')
 						),
 						function (\Throwable $e, array $failed_product) {
 							// A broken/missing component template (deploy
