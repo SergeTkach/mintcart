@@ -134,6 +134,18 @@ System Pages` (`#146`'s own next-candidates note); the admin
       `docs/developer/compatibility/settings-adapter.md`. Not wired into any
       controller yet; `ProductAdapter`/`CategoryAdapter`/`OrderAdapter`/
       `CustomerAdapter`/`ExtensionAdapter` remain unstarted (no consumer yet).
+- [~] OpenCart adapter interfaces (`MintCart\Compatibility\OpenCart3\*`) —
+      `ProductAdapter` (this run) added:
+      `MintCart\Compatibility\OpenCart3\ProductAdapter`
+      (`find()`/`exists()` wrapping `getProduct()`'s "empty array = not
+      found" shape, same pattern as `CategoryAdapter`) — see
+      `docs/developer/compatibility/product-adapter.md`. Wired into the
+      two MintCart-owned controllers that had this duplicated inline:
+      `ControllerMintcartCart::add()`,
+      `ControllerMintcartQuickorder::submit()`. `OrderAdapter` remains the
+      last unstarted named adapter from `MINTCART_TECHNICAL_PLAN.md` §5
+      (`SettingsAdapter`/`ExtensionAdapter`/`CustomerAdapter`/
+      `CategoryAdapter`/`TotalsAdapter`/`ProductAdapter` are all done).
 - [x] Migration manager (`mc_migration` table, ordered/logged/apply-once migrations) —
       `MintCart\Core\Migration\MigrationManager` +
       `MintCart\Core\Migration\MigrationInterface`; naming convention and file shape
@@ -7162,6 +7174,26 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-09-29, routine run):** added
+`MintCart\Compatibility\OpenCart3\ProductAdapter` (Phase 1) — see the
+Phase 1 section above and `docs/developer/compatibility/product-adapter.md`
+for the full writeup. `list_pull_requests` returned 5 open PRs (#138-#142,
+all `ROUTINE-STATUS: DONE`) at the start of this run; none touch
+`upload/catalog/controller/mintcart/cart.php`,
+`upload/catalog/controller/mintcart/quickorder.php`, or any
+`MintCart\Compatibility\OpenCart3\*` file. Homepage Builder hot shared
+files (§0f) untouched by this run and by all 5 open PRs. **Next
+candidates:** `OrderAdapter` (the last unstarted named adapter — no
+obvious already-duplicated inline call site found yet in MintCart-owned
+code; would need one identified first, per `CLAUDE.md` §85); the two
+parallel, seemingly-overlapping Bulk Editor implementations noticed while
+looking for this run's next step (`MintCart\Catalog\BulkProductUpdateValidator`,
+wired into the live `product_list.twig` toolbar/`bulkUpdate()`, vs.
+`MintCart\Catalog\BulkProductUpdatePlanner`, a separate
+plan-then-chunk-then-apply design that already validates `category_ids`
+but was deliberately left unwired — worth a human decision on whether to
+converge these into one, per `CLAUDE.md` §17/§86, rather than continuing
+to build on both); or re-check `gh pr list --state open` first.
 **Trailer note (2026-09-28, routine run):** Setup Wizard `payment` step is
 done (see the Phase 13 section above) — `IMPLEMENTED_STEPS` is now
 `['welcome', 'store', 'contacts', 'language_currency', 'delivery',
