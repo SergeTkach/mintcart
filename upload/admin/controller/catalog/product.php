@@ -251,7 +251,12 @@ class ControllerCatalogProduct extends Controller {
 			$validator = new \MintCart\Catalog\BulkProductUpdateValidator();
 
 			$field = (string)$this->request->post['bulk_field'];
-			$value = (string)$this->request->post['bulk_value'];
+
+			if ($field === 'category_ids') {
+				$value = $validator->normalizeCategoryIds(is_array($this->request->post['bulk_value']) ? $this->request->post['bulk_value'] : array());
+			} else {
+				$value = (string)$this->request->post['bulk_value'];
+			}
 
 			foreach ($validator->normalizeProductIds((array)$this->request->post['selected']) as $product_id) {
 				$this->model_catalog_product->updateProductField($product_id, $field, $value);
@@ -300,6 +305,11 @@ class ControllerCatalogProduct extends Controller {
 	}
 
 	protected function getList() {
+		// Phase 16 (Bulk Editor) category_ids field - see
+		// docs/developer/admin/asset-enqueue.md; same call getForm() already
+		// makes for this screen's Category field McEntityPicker.
+		$this->enqueueMintAssets();
+
 		if (isset($this->request->get['filter_name'])) {
 			$filter_name = $this->request->get['filter_name'];
 		} else {
@@ -1348,12 +1358,20 @@ class ControllerCatalogProduct extends Controller {
 		$validator = new \MintCart\Catalog\BulkProductUpdateValidator();
 
 		$field = isset($this->request->post['bulk_field']) ? (string)$this->request->post['bulk_field'] : '';
-		$value = isset($this->request->post['bulk_value']) ? (string)$this->request->post['bulk_value'] : '';
 
 		if (!$this->error) {
 			if (!$validator->isValidField($field)) {
 				$this->error['warning'] = $this->language->get('error_bulk_field');
-			} elseif ($validator->validateValue($field, $value) !== null) {
+			} elseif ($field === 'category_ids') {
+				// category_ids arrives as bulk_value[] (an mc-entity-picker
+				// multi-select), not the single bulk_value string every
+				// other field uses - see product_list.twig's picker markup.
+				$categoryIds = isset($this->request->post['bulk_value']) && is_array($this->request->post['bulk_value']) ? $this->request->post['bulk_value'] : array();
+
+				if ($validator->validateCategoryIds($categoryIds) !== null) {
+					$this->error['warning'] = $this->language->get('error_bulk_value');
+				}
+			} elseif ($validator->validateValue($field, isset($this->request->post['bulk_value']) ? (string)$this->request->post['bulk_value'] : '') !== null) {
 				$this->error['warning'] = $this->language->get('error_bulk_value');
 			}
 		}

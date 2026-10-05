@@ -3609,11 +3609,12 @@ this backlog moves fast.
 
 - [x] Bulk field-change validation + resumable batch chunking (pure, no DB) —
       see below
-- [ ] Inline edit + multi-select bulk actions for Products (status, quantity, price,
-      special, manufacturer, category, stock, SEO fields) — planner ships
-      status/quantity/price/special_price/manufacturer_id/stock_status_id/
-      category_ids; SEO fields deliberately excluded (see below); no admin
-      UI yet
+- [~] Inline edit + multi-select bulk actions for Products (status, quantity, price,
+      special, manufacturer, category, stock, SEO fields) — status, quantity,
+      price, manufacturer_id, stock_status_id, special_price and (this run)
+      category_ids are all live via `ControllerCatalogProduct::bulkUpdate()`;
+      SEO fields deliberately excluded (see below); still no true inline
+      edit (a separate bulk-toolbar submit, not editing a cell directly)
 - [ ] Chunked/resumable AJAX batch jobs (no background daemon) — the
       resumable stepping primitive (`nextBatch()`) exists; the actual AJAX
       endpoint and DB-write loop calling it do not
@@ -3659,10 +3660,9 @@ beyond a plain HTML form.
 In progress.
 - [~] Multi-select bulk actions for Products (status, quantity, price,
       special, manufacturer, category, stock, SEO fields) — status,
-      quantity, price and manufacturer done in earlier runs,
-      **stock status added this run** (see the "Update" below); the
-      remaining fields (special, category, SEO) are natural follow-ups
-      over the same shape.
+      quantity, price, manufacturer, stock status and special price done in
+      earlier runs, **category added this run** (see the "Update" below);
+      SEO fields remain the one deliberately-excluded field (see above).
 - [ ] True inline edit (editing a value directly in the product list
       table, no separate bulk-toolbar step) — not attempted.
 - [ ] Chunked/resumable AJAX batch jobs (no background daemon) — today's
@@ -3820,6 +3820,74 @@ multi-select/picker UI, a bigger lift than every field so far); a
 friendlier per-field value control (`<select>` for Status,
 `type="number"` elsewhere); or re-check `gh pr list --state open` first.
 
+**Update (2026-09-30, routine run): `category_ids` added as a seventh
+(and, per this section's own "Next candidates" list above, the last
+currently-planned) bulk-editable field.** Step 0 dedup check:
+`list_pull_requests` returned 25 open PRs at the start of this run
+(`#138`–`#165`) — read each title/head, then confirmed via
+`gh pr diff <n> --name-only`-equivalent (`pull_request_read`
+`get_files`) on `#140` ("per-field-typed `bulk_value` control", the one
+PR whose scope looked closest to this increment) that it touches
+`product_list.twig` and `docs/developer/catalog/bulk-editor.md` but only
+adds a `<select>`/`type="number"` split for the *existing* six scalar
+fields — it explicitly flags `category_ids` as still needing "a real
+multi-select/picker control" in its own "Next candidates", the exact gap
+this run fills. No other open PR's title referenced Bulk Editor,
+`product_list.twig`, `BulkProductUpdateValidator`, or
+`ModelCatalogProduct`. None of the 25 touch the Homepage Builder hot files
+(§0f — block-type registry, `homepage_list.twig`/`block.css`). This run's
+diff and `#140`'s both touch `product_list.twig`'s bulk-update toolbar
+region, so a textual merge conflict between the two is expected and left
+for human reconciliation whichever lands second — not a scope duplicate
+(different fields, different controls), per this routine's own
+step-0d/0f guidance (collision on a shared file is not itself grounds to
+skip a genuinely different, unclaimed increment).
+
+`MintCart\Catalog\BulkProductUpdateValidator::FIELDS` gains
+`category_ids`; two new methods, `validateCategoryIds(array): ?string`
+and `normalizeCategoryIds(array): array`, kept separate from the existing
+string-typed `validateValue()` rather than widening its signature.
+`ModelCatalogProduct::updateProductField()` gains a `category_ids` branch
+— delete then reinsert `oc_product_to_category` rows, the same pattern
+`editProduct()`'s own category relation already uses, just scoped to this
+one relation; an empty list clears every category (matches
+`special_price`'s "blank removes" semantics). `ControllerCatalogProduct`:
+`validateBulkUpdate()`/`bulkUpdate()` branch on `$field === 'category_ids'`
+to read `bulk_value` as an array instead of casting to string;
+`getList()` now also calls the existing `enqueueMintAssets()` helper
+(previously only called from `getForm()`) so this screen's new
+`window.MintCart.createEntityPicker` has `components.min.css`/
+`admin.min.js` available — `docs/developer/admin/asset-enqueue.md`'s
+already-proven-safe bundle, not the Bootstrap-5-conflicting one.
+`product_list.twig`'s toolbar `<select>` gains a "Category" option, and a
+new hidden `#bulk-category-field` block (reusing the existing
+`mintcart/entity/category` endpoint, the same one `product_form.twig`'s
+own Category field already uses) replaces `#input-bulk-value` when
+chosen, via a new plain-JS (not jQuery) `<script>` block.
+`en-gb/catalog/product.php` gains `text_bulk_field_category`.
+
+Full writeup: `docs/developer/catalog/bulk-editor.md` (rewritten "Value
+input" section, new "category_ids is the other non-`oc_product`-column
+exception" paragraph, updated Verified/Next step),
+`docs/upstream-diff.md`'s admin/product entry (new "Update" block),
+`docs/MANUAL_VERIFICATION.md`'s Phase 16 section (new step 8). Verified:
+`php -l` clean on every touched file under `upload/`/`tests/`;
+`tests/mintcart/catalog/bulk-product-update-validator-test.php` grows
+from 46 to 57 assertions; full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end — all passing, no regressions;
+`product_list.twig`'s tag counts re-checked balanced (14/14, 2/2 — no
+`{% %}` tag touched); all 3 of the file's inline `<script>` blocks
+(including the new one) checked for JS syntax errors with a standalone
+Node harness. **Not verified:** no live MySQL/admin session in this
+environment — a human should confirm the picker actually renders (the
+asset-enqueue addition in particular) and that a bulk category update
+replaces, not merges into, each selected product's existing categories.
+**Next candidates:** SEO fields (needs its own per-store/per-language
+uniqueness design, not a mechanical addition — see
+`docs/developer/catalog/bulk-editor.md` "Next step"); chunked/resumable
+AJAX batch jobs for very large selections; true inline edit in the
+product list table; or re-check `gh pr list --state open` first, since
+this backlog moves fast (25 open PRs at the start of this run).
 **Update (2026-09-28, routine run): per-field-typed `bulk_value` control
 built.** Step 0 dedup check: 2 open PRs at the start of this run (#138
 `mc-search-box` header wiring, #139 admin Quick Order Requests list, both
@@ -7594,6 +7662,14 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-09-30, routine run):** `category_ids` is now a
+bulk-editable Products field (Phase 16) — see that section above for the
+full writeup. 25 open PRs existed at the start of this run (`#138`–`#165`);
+none duplicated this scope, though `#140` touches the same
+`product_list.twig` toolbar region for an unrelated, non-overlapping
+change (per-field controls for the six existing scalar fields) and a
+textual merge conflict there is expected on whichever PR lands second.
+Re-check `gh pr list --state open` before picking the next step.
 **Trailer note (2026-09-30, routine run):** `list_pull_requests` returned
 26 open PRs (`#138`-`#163`) at the start of this run, covering nearly
 every other unstarted phase — see the new "Commerce Essentials

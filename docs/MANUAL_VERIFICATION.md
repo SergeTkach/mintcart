@@ -1199,6 +1199,29 @@ specials:
    Price). Also submit "Special Price" with an invalid value (e.g. `-1`)
    and confirm the same rejection-warning behavior as the other numeric
    fields.
+8. Choose "Category" in the bulk-update field select and confirm the
+   generic `#input-bulk-value` text input hides and a "Browse categories"
+   button + entity picker (`docs/developer/components/entity-picker.md`)
+   appears in its place. Confirm the browser console shows no errors on
+   page load (this confirms `components.min.css`/`admin.min.js` are
+   actually enqueued on this screen — a new addition this run, previously
+   only enqueued on the product edit form). Click "Browse categories",
+   search for and select two or three categories, click "Add selected",
+   and confirm each appears as a row in the list above the button with a
+   remove (minus-circle) icon; click one row's remove icon and confirm it
+   disappears. Select two or three products, submit the bulk-update
+   button, confirm the dialog, and confirm the redirect lands back on the
+   list with a success message. Open one of the updated products' edit
+   forms and confirm its **Categories** field now shows exactly the
+   categories chosen in the picker — **replacing**, not merging with,
+   whatever categories it had before. Repeat with the picker left with no
+   categories selected (empty list) and confirm the product's categories
+   are cleared entirely. Also confirm switching `#input-bulk-field` back
+   and forth between "Category" and any other option correctly
+   shows/hides the right control each time, and that submitting any other
+   field (e.g. "Quantity") after having had "Category" selected still
+   posts only that field's own `bulk_value`, not a stale `bulk_value[]`
+   from an earlier Category selection.
 8. Change the bulk-update field `<select>` between "Status" and every
    other option and confirm the value control swaps correctly each time:
    an Enabled/Disabled `<select>` shows (and the number input hides) only
