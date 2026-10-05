@@ -8217,6 +8217,70 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-10-01, routine run): MC-0020 — `DB\PgSQL::query()`
+reconnect-on-dropped-connection, completing the DB-adaptor sweep.** Step 0
+dedup check: `gh pr list --state open` returned 44 open PRs at the start
+of this run (#138–#181), spanning Entity Picker wiring, Docs, SEO,
+Homepage Builder, Update Manager, Bulk Editor and more — none touching
+`upload/system/library/db/pgsql.php`, `upload/system/library/db/mysqli.php`,
+or `upload/system/library/db/pdo.php` (only #178, "MC-0019: add
+reconnect-on-dropped-connection to DB\PDO::query()", is in the DB-adaptor
+family at all, and its diff — `gh pr view 178 --json files` — touches only
+`pdo.php` plus docs, never `pgsql.php`). The Known Fix Research Queue's
+"database connection / reconnect issues" item (`MINTCART_FUNCTIONAL_SCOPE.md`
+§18) already has MC-0011 (`DB\MySQLi`, merged) and MC-0019 (`DB\PDO`, open
+PR #178) — `DB\PgSQL` was the one sibling adaptor left unfixed, and
+genuinely uncontended. Picked this over every other candidate reviewed
+(Entity Picker's create-new-flow and the Phase 16 chunked/resumable batch
+job both route through `upload/admin/controller/mintcart/entity.php`/the
+admin Bulk Editor screens respectively, both hot files with several of the
+44 open PRs already touching adjacent code there; System route URL aliases
+and hreflang wiring both already have their own open PRs/architectural
+forks noted elsewhere in this file).
+
+Same shape as MC-0011/MC-0019: extracted the constructor's connection
+setup into a `connect()` method, split `query()` into a public entry
+point and a private `runQuery($sql, $allowReconnect)`, and added a bounded
+(max one) reconnect-and-retry for a failed query whose
+`pg_connection_status()` reports `PGSQL_CONNECTION_BAD` (pgsql has no
+errno to inspect, unlike `mysqli`/`PDO`, so connection status is the only
+signal available). Also fixed a second, independent bug found in the same
+method while making this change: the failure branch called
+`pg_result_error($resource)` where `$resource` is the boolean `false`
+`pg_query()` had just returned — a `TypeError` under PHP 8, since
+`pg_result_error()` requires a real `PgSql\Result` — replaced with
+`pg_last_error($this->connection)`, so a genuine query failure now throws
+the intended, informative `\Exception` instead of crashing with an
+unrelated `TypeError`. Full writeup: `docs/fixes/registry.md`'s new
+MC-0020 entry, `docs/upstream-diff.md`'s new `pgsql.php` entry.
+
+New test `tests/mintcart/fixes/mc-0020-pgsql-reconnect-test.php` (5
+scenarios, 9 assertions) uses namespace-function shadowing
+(`DB\pg_connect()`/`DB\pg_query()`/`DB\pg_connection_status()`/
+`DB\pg_fetch_assoc()`/`DB\pg_free_result()`/`DB\pg_last_error()` defined
+in the same `DB` namespace `pgsql.php` lives in, which PHP resolves ahead
+of the global functions) rather than MC-0011's subclass-overrides-
+`connect()` approach, since `pgsql`'s API is procedural (free functions
+taking a connection resource) rather than object-method-based like
+`mysqli`/`PDO` — no real `pgsql` extension connection or server needed.
+Verified: `php -l` clean on both touched/new files. Full
+`tests/mintcart/**/*-test.php` suite re-run end to end (85 files, up from
+84) — all passing, no regressions. **Not verified:** no PostgreSQL server
+in this environment to force a real dropped-connection scenario against
+an actual socket — same class of gap MC-0011/MC-0019 already note for
+their own adaptors; a human running MintCart against a PostgreSQL backend
+should confirm a long-running operation survives a mid-run disconnect
+instead of fataling.
+
+**Next candidates:** the remaining Known Fix Research Queue items
+(pagination `?page=1` duplicate-content handling beyond MC-0002's
+`search.php` canonical fix; installer edge cases beyond MC-0005) — or
+re-check `gh pr list --state open` first, since this backlog is large
+(44+ open PRs at the time of this run) and moves fast; Entity Picker's
+create-new-flow and the Phase 16 chunked/resumable batch job are both
+currently blocked by hot-shared-file contention (see above) and should
+wait until the open PRs touching `mintcart/entity.php`/the Bulk Editor
+screens drop back down.
 **Trailer note (2026-10-01, routine run):** 38 open PRs existed at the
 start of this run (`#138`-`#175`); none touched any Homepage Builder file.
 Picked Phase 10's long-standing "Reordering uses a plain `sort_order`

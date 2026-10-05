@@ -1661,6 +1661,132 @@ disconnect instead of silently returning empty results or fataling.
 
 ---
 
+## MC-0020 — `DB\PgSQL::query()` never recovers from a dropped connection, and crashes with a TypeError on any other query error
+
+**Problem:** `DB\PgSQL::query()` (`system/library/db/pgsql.php`) called
+`pg_query($this->connection, $sql)` once and, on any failure
+(`pg_query()` returning `false`), immediately threw — including the case
+where the underlying TCP connection to PostgreSQL was dropped (idle past
+the server's timeout, a server restart, a network blip), not just a
+genuine SQL error. This is the same "database connection / reconnect
+issues" Known Fix Research Queue category (`MINTCART_FUNCTIONAL_SCOPE.md`
+§18) MC-0011 (`DB\MySQLi`) and MC-0019 (`DB\PDO`) already fixed for
+MintCart's other two DB adaptors — `PgSQL` was the one sibling left with
+the exact same gap, since OpenCart's `DB` class
+(`system/library/db.php`) picks between all three by configured engine
+name with an identical contract.
+
+On top of that, the failure branch's own error-reporting call was itself
+broken: `throw new \Exception('Error: ' . pg_result_error($resource) ...)`
+passes `$resource` — which is the boolean `false` `pg_query()` just
+returned, not a result handle — to `pg_result_error()`. Under PHP 8,
+`pg_result_error(PgSql\Result $result): string|false` requires an actual
+`PgSql\Result`; passing `false` throws a `TypeError` ("must be of type
+PgSql\Result, bool given") instead of the intended, informative
+`\Exception`. Every query failure on this adaptor — recoverable or not —
+was one `TypeError` away from masking the real error with a confusing
+crash, squarely `MINTCART_FUNCTIONAL_SCOPE.md` §18's "PHP 8.x
+compatibility problems" category.
+
+**Affected OpenCart versions:** Confirmed present in OpenCart 3.0.5.1
+(this repository's documented upstream baseline). Not independently
+checked against other 3.x point releases — same rationale as every other
+Fix Registry entry (no second checkout available in this environment to
+diff against, and the fix only adds a narrowly-scoped retry path plus a
+corrected error-message call around behavior that is otherwise
+unchanged).
+
+**Source:** Discovered directly in this repository while completing the
+Known Fix Research Queue's DB-adaptor reconnect sweep MC-0011/MC-0019
+started — not an imported historical community patch. Reproduced by
+reading `query()`: exactly one `pg_query()` call, no connection-health
+check of any kind on failure, and the `pg_result_error($resource)` call
+inspected against PHP 8's `pgsql` extension signature (unlike `mysqli`,
+`pgsql` exposes no per-connection `errno`; `pg_connection_status()` is the
+only way to distinguish "the connection itself is bad" from "the query
+was bad").
+
+**Reproduced on MintCart baseline:** Yes — by inspection (no PostgreSQL
+server in this environment to force a real dropped-connection scenario)
+and via `tests/mintcart/fixes/mc-0020-pgsql-reconnect-test.php`, which
+intercepts every `pg_*()` call `DB\PgSQL` makes by defining fake
+`DB\pg_connect()`/`DB\pg_query()`/`DB\pg_connection_status()`/
+`DB\pg_fetch_assoc()`/`DB\pg_free_result()`/`DB\pg_last_error()` functions
+in the same `DB` namespace `pgsql.php` itself lives in (PHP resolves an
+unqualified function call against the current namespace before falling
+back to the global one) — no real `pgsql` extension connection required,
+and confirms against the reverted code (checked by hand) that a dropped
+connection threw with no retry, and that a query failure's exception
+message construction was the broken `pg_result_error($resource)` call.
+
+**Upstream fixed:** Not checked against a newer OpenCart release (no
+network/second-checkout access in this environment). MintCart tracks a
+pinned 3.0.5.1 baseline (`CLAUDE.md` §1) rather than following upstream
+point releases, so this doesn't block applying the fix here regardless of
+upstream's status.
+
+**MintCart solution:** Extracted the constructor's connection-setup body
+into a new `connect()` method (verbatim, no behavior change — stores
+`$hostname`/`$username`/`$password`/`$database`/`$port` as properties so
+`connect()` can be called again later), then split `query()` into a
+public entry point and a private `runQuery($sql, $allowReconnect)`, the
+same shape MC-0011/MC-0019 already established. On a failed query, if
+`$allowReconnect` is true and `pg_connection_status($this->connection)`
+reports `PGSQL_CONNECTION_BAD` (pgsql's only connection-health signal —
+there is no errno to inspect, unlike `mysqli`/`PDO`), it calls `connect()`
+again and retries the *same* `$sql` once, with `$allowReconnect = false`
+on the retry — so a connection that drops twice in a row (or a server
+that's genuinely down) still throws, instead of reconnecting forever. Any
+other failure (connection status still OK — a genuine SQL error, missing
+table, permission, ...) still throws immediately on the first attempt,
+unretried. Separately, the exception message now reads
+`pg_last_error($this->connection)` instead of the broken
+`pg_result_error($resource)` call — `pg_last_error()` takes the
+connection (always available) rather than a nonexistent result handle, so
+the failure branch now actually produces the intended `\Exception` with a
+real message instead of crashing with an unrelated `TypeError`.
+`connect()` is `protected` rather than `private` for the same reason
+MC-0011 made `DB\MySQLi::connect()` `protected` (a future test could
+subclass it), though this test's mechanism ended up being the
+namespace-function-shadowing approach above instead, since `pgsql`'s API
+is procedural rather than object-method-based like `mysqli`/`PDO`.
+
+**Compatibility impact:** Every existing success/error path is unchanged
+except: (1) a query that fails because the connection is genuinely
+`PGSQL_CONNECTION_BAD` now transparently reconnects and retries once
+before falling back to the exact same throw behavior if the retry also
+fails; (2) the exception thrown on any query failure now carries a real
+`pg_last_error()` message instead of crashing with a `TypeError` before
+the `\Exception` could even be constructed. No public method signature
+changed. Nothing in this codebase subclasses `DB\PgSQL` today, so the
+visibility change from implicit-constructor-only to a named `protected`
+`connect()` method has no other effect.
+
+**Tests:** `tests/mintcart/fixes/mc-0020-pgsql-reconnect-test.php` (new, 5
+scenarios, 9 assertions): (1) no error → returns the rows, `pg_connect()`
+called exactly once, no retry; (2) connection reports `PGSQL_CONNECTION_BAD`
+on the first attempt, success on the retry → returns the retry's result,
+`pg_connect()` called exactly twice; (3) `PGSQL_CONNECTION_BAD` on *both*
+the original attempt and the retry → throws (does not reconnect a third
+time / loop forever), `pg_connect()` called exactly twice, the exception
+message carries the scripted `pg_last_error()` text; (4) a non-recoverable
+failure (connection status stays OK, e.g. a SQL syntax error) → throws
+immediately using `pg_last_error()`'s text, `pg_connect()` called exactly
+once, no reconnect attempted — confirms the `pg_result_error($resource)`
+`TypeError` path is gone; (5) `pg_connect()` itself failing at
+construction time still throws the same "could not make a database link"
+`\Exception` as before the fix. `php -l` clean on the modified
+`pgsql.php` and the new test file. Full `tests/mintcart/**/*-test.php`
+suite re-run end to end (85 files, was 84) — all passing, no regressions.
+**Not verified:** no PostgreSQL server in this environment to force a
+real dropped-connection/`wait_timeout`-style disconnect against an actual
+socket — a human running MintCart against a PostgreSQL backend should
+confirm a long-running operation survives a mid-run disconnect instead of
+fataling, the same manual-verification gap MC-0011/MC-0019 already note
+for their own DB adaptors.
+
+---
+
 ## MC-0021 — `special.php` never assigns `heading_title` to `$data`
 
 **Problem:** `catalog/view/theme/default/template/product/special.twig`

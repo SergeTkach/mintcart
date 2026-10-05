@@ -3520,6 +3520,49 @@ the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
 section.
 
+---
+
+## `upload/system/library/db/pgsql.php`
+
+**Reason:** MC-0020 (`docs/fixes/registry.md`) — `query()` threw
+immediately on any `pg_query()` failure, including a dropped TCP
+connection (`pg_connection_status() === PGSQL_CONNECTION_BAD`), instead of
+reconnecting and retrying the same query once — the last of MintCart's
+three DB adaptors (`mysqli`/MC-0011, `PDO`/MC-0019, now `pgsql`) to get
+this fix. Also fixed the failure branch's own broken error-message call
+(`pg_result_error($resource)` where `$resource` is the boolean `false`
+`pg_query()` just returned — a `TypeError` under PHP 8 — replaced with
+`pg_last_error($this->connection)`).
+
+**Why it can't live in the MintCart layer instead:** `DB\PgSQL` is one of
+the concrete adaptors OpenCart's core `DB` class instantiates by class
+name (`system/library/db.php`'s `new $class(...)`) — there is no
+MintCart-owned seam between `DB` and the adaptor to intercept a query and
+retry it without either modifying this file or replacing OpenCart's whole
+DB bootstrap, which is a much larger and riskier change for a
+connection-health retry fix. Same reasoning MC-0011's `mysqli.php` entry
+already gives for the sibling adaptor.
+
+**Compatibility impact:** Every existing success/error path is unchanged
+except: a query that fails because the connection is genuinely
+`PGSQL_CONNECTION_BAD` now transparently retries once before falling back
+to the exact same throw behavior if the retry also fails, and a query
+failure's exception now carries a real `pg_last_error()` message instead
+of crashing with an unrelated `TypeError`. No public method signature
+changed; `connect()` is a new `protected` method (extracted from the
+constructor, not exposed as a new public API). Nothing in this codebase
+subclasses `DB\PgSQL` today, so the visibility change has no other
+effect.
+
+**Tests:** `php -l` clean. New
+`tests/mintcart/fixes/mc-0020-pgsql-reconnect-test.php` (5 scenarios, 9
+assertions) — see the MC-0020 registry entry for full detail; uses
+namespace-function shadowing (`DB\pg_connect()`/`DB\pg_query()`/etc.)
+rather than the subclassing MC-0011's test used, since `pgsql`'s API is
+procedural rather than object-method-based. Full `tests/mintcart/` suite
+re-run end to end (85 files) — all pass, no regressions. Not verified
+against a real PostgreSQL server (none available in this environment) —
+see the registry entry's "Not verified" note.
 ## `upload/admin/controller/setting/setting.php` / `upload/admin/view/template/setting/setting.twig` / `upload/admin/language/en-gb/setting/setting.php`
 ## `upload/admin/controller/common/header.php` + `admin/view/template/common/header.twig` + `admin/language/en-gb/common/header.php`
 
