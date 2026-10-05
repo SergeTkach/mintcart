@@ -570,6 +570,50 @@ a real install:
    pre-existing "trimmed repository" caveat as the Category picker's own
    step 10 above; not a new gap.
 
+## `sale/order_form.twig`'s Customer `McEntityPicker`, never exercised end to end
+
+New asset enqueue (`ControllerSaleOrder::enqueueMintAssets()`, same
+mechanism as `product_form.twig`'s pickers above) plus a **single-select**
+picker, but unlike Manufacturer this one must also repopulate several
+other fields on confirm (see `docs/upstream-diff.md`'s new
+`sale/order.php` entry for the full design rationale). On a real install:
+
+1. Grant `mintcart/entity` **Access** to your user group if not already
+   done.
+2. Go to **Sale → Orders → Add New** (or edit an existing order).
+3. Open the page's view-source / devtools and confirm
+   `assets/dist/css/components.min.css` and `assets/dist/js/admin.min.js`
+   are both linked in `<head>` and load with a 200 — same check as the
+   product form, on a screen that didn't have them before.
+4. Confirm the existing Customer autocomplete input still works exactly
+   as before (type a few letters, pick a suggestion, confirm Customer
+   Group/First Name/Last Name/E-Mail/Telephone and the Payment/Shipping
+   Address dropdowns all populate) — this change must not have altered
+   that at all.
+5. Confirm a new "Browse customers" button appears next to the Customer
+   input, styled as an `mc-button`.
+6. Click it — confirm a search box + customer list appears, paginates via
+   Previous/Next (SQL-level paging, like the Product/Related pickers, not
+   PHP-side like Category/Manufacturer — confirm page 2 shows the *next*
+   set of customers), and that typing filters results (debounced, ~250ms).
+7. Select a customer, click "Select" — confirm the panel closes and:
+   a. the Customer text input + hidden `customer_id` update immediately;
+   b. shortly after (the second, detail-fetching request), Customer
+      Group/First Name/Last Name/E-Mail/Telephone and both address
+      dropdowns update to match that customer's real data — the exact
+      same fields the old autocomplete's `'select'` handler fills.
+8. Pick a customer whose custom fields (if your install's customer groups
+   use any) had previously-saved values — confirm the correct custom
+   field *inputs* show/hide for that customer's group (the group `change`
+   event still fires), but do **not** expect their previously-saved
+   *values* to reappear — this is the documented, deliberate limitation,
+   not a bug.
+9. Save the order — confirm `customer_id` and the address selections are
+   saved correctly regardless of whether they were set via the old
+   autocomplete or the new picker.
+10. Confirm labels on the new UI render as real text, not blank — same
+    pre-existing "trimmed repository" caveat noted in the Category
+    picker's own entry above; not a new gap.
 ## `product_form.twig`'s Option `McEntityPicker`, never exercised end to end
 
 Same asset-enqueue mechanism as the Category/Manufacturer/Related pickers
