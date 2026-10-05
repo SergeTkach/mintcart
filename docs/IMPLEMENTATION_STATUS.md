@@ -4755,6 +4755,29 @@ this phase (diagnostics, measured performance work) is not started.
       `docs/upstream-diff.md`'s `product.php` entry. Verified: `php -l`
       clean; full `tests/mintcart/` suite (77 files) re-run end to end —
       all passing, no regressions.
+      **Update (2026-09-29, routine run): the JSON diagnostics surface
+      named in this file's own "Next step" list is done.** All five wired
+      controllers (`category.php`/`search.php`/`special.php`/
+      `manufacturer.php::info()`/`product.php`) now also recognize
+      `&mintcart_diagnostics=json` (still gated by `mintcart_dev_mode`): a
+      sibling branch checked right before each one's existing HTML-comment
+      append returns `$mint_diagnostics->summary()` as a standalone JSON
+      response instead, same shape `mintcart/readiness` already
+      established, for tooling that would rather fetch diagnostics than
+      scrape a page's markup. A request without the parameter is
+      byte-for-byte unaffected. Full writeup:
+      `docs/developer/core/diagnostics.md`'s new "JSON diagnostics surface"
+      section; five small per-file notes in `docs/upstream-diff.md`.
+      Verified: `php -l` clean on all five touched files; full
+      `tests/mintcart/**/*-test.php` suite (84 files) re-run end to end —
+      all passing, no regressions (no new test file needed —
+      `Diagnostics::summary()` itself is already covered by
+      `tests/mintcart/core/diagnostics-test.php`; this only threads its
+      existing return value to a different response method). **Not
+      verified:** no live MySQL/browser session in this environment — see
+      `docs/MANUAL_VERIFICATION.md`'s new Phase 10 (Technical Plan) entry.
+      Real DB query counting remains the one open item for this checklist
+      bullet (still needs the `\DB\MySQLi`-hooking upstream-diff decision).
 - [~] Measured performance improvements (lazy loading, responsive images, asset
       minification, cache invalidation API — no mandatory Redis) — cache
       invalidation API and asset minification (esbuild) were already done
@@ -7174,6 +7197,27 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-09-29, routine run):** Step 0 found 6 open PRs
+(#138-#143, all `ROUTINE-STATUS: DONE`) — `#138` search-box header wiring,
+`#139` admin Quick Order Requests list, `#140` bulk-editor `bulk_value`
+control, `#141` Categories drag & drop live UI, `#142` Wizard Payment
+step, `#143` `ProductAdapter`. Confirmed via each PR's own file list that
+none touch `upload/catalog/controller/product/{category,search,special,
+manufacturer,product}.php`; no Homepage Builder hot files (§0f) touched by
+any of the 6. Added the `&mintcart_diagnostics=json` surface named in the
+Phase 10 (Technical Plan) Diagnostics section's own "Next step" — see that
+section above for the full writeup. `#143`'s own trailer note flagged two
+other candidates: `OrderAdapter` (no duplicated inline order-lookup call
+site found yet in Mint-owned code to justify one, per `CLAUDE.md` §85 —
+still not attempted) and a human decision on converging
+`BulkProductUpdateValidator`/`BulkProductUpdatePlanner` (a product
+decision, not a mechanical step — left for the project owner, not
+guessed). **Next candidates:** real DB query counting for `Diagnostics`
+(still needs the `\DB\MySQLi`-hooking decision); hreflang live wiring
+(`HreflangBuilder` still needs a per-language URL resolver first, see its
+own doc); `category_ids` as a bulk-editable field (needs a real
+multi-select/picker control); or re-check `gh pr list --state open`
+first, since this backlog moves fast.
 **Trailer note (2026-09-29, routine run):** added
 `MintCart\Compatibility\OpenCart3\ProductAdapter` (Phase 1) — see the
 Phase 1 section above and `docs/developer/compatibility/product-adapter.md`
