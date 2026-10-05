@@ -3469,6 +3469,75 @@ the new `<option>`. Same pre-existing gap: no live MySQL/admin session in
 this environment — see `docs/MANUAL_VERIFICATION.md`'s updated Phase 16
 section.
 
+## `upload/admin/controller/setting/store.php` / `upload/admin/view/template/setting/store_form.twig` / `upload/admin/language/en-gb/setting/store.php`
+
+**Reason:** Phase 12 (Entity Picker, `MINTCART_FUNCTIONAL_SCOPE.md` §8,
+`MINTCART_TECHNICAL_PLAN.md` §20) — the Information Picker backend
+(`mintcart/entity/information`, `MintCart\Design\InformationPickerProvider`)
+had been fully built and unit-tested since an earlier run but had no live
+consumer; `docs/developer/components/entity-picker.md`'s "Information page
+backend" section deliberately left the first consumer unguessed rather
+than inventing one. Reading `setting/store_form.twig` directly (`CLAUDE.md`
+§84) found one: its **Account Terms**/**Checkout Terms** fields
+(`config_account_id`/`config_checkout_id`) are plain `<select>` elements
+listing every information page, used by `Settings → Store → Edit` to pick
+the page a customer must agree to before registering/checking out — the
+same kind of single-value field Category/Manufacturer's pickers already
+replaced on `product_form.twig`, just rendered as a native `<select>`
+there instead of a text+hidden pair.
+
+1. **Controller:** new `ControllerSettingStore::enqueueMintAssets()`
+   (byte-identical pattern to `ControllerCatalogProduct`'s own — see
+   `docs/developer/admin/asset-enqueue.md`), called at the top of the
+   existing `getForm()` (shared by `add()`/`edit()`).
+2. **View:** each of the two `<select>` elements gained a "Browse pages"
+   button + hidden `.mc-entity-picker` panel directly below it, additive
+   alongside the native `<select>` (kept as-is, not replaced). Two
+   independent `McEntityPicker` instances (one per field — there are only
+   ever two of these fields, not a dynamic row list), both single-select.
+   Confirming a pick just sets the matching `<select>`'s `.value` — no new
+   `<option>` needs to be created client-side, since the native `<select>`
+   already has one for every information page rendered server-side. A new
+   inline `<script>` block (plain vanilla JS, not jQuery, per `CLAUDE.md`
+   §7) wires both via one small local `initInformationPicker()` helper
+   (not two copy-pasted blocks — the two fields differ only in which
+   button/panel/`<select>` they target).
+3. **Language:** six new `text_information_picker_*` keys in
+   `upload/admin/language/en-gb/setting/store.php`, same shape as the
+   Manufacturer picker's own.
+
+**Why it can't live in the MintCart layer instead:** same reasoning as
+every entry above in this section — `setting/store.php`/`store_form.twig`
+are the one true owner of this screen's form; the picker is additive
+markup/script inside the existing form, not a new page.
+
+**Compatibility impact:** Purely additive — no existing method signature,
+route, column, or `$data` key changed; the native `<select>` elements are
+completely unaffected and still submit the same `config_account_id`/
+`config_checkout_id` POST fields regardless of whether a merchant used the
+native dropdown or the new picker. `Settings → Settings`
+(`setting/setting.php`/`setting.twig`) has a near-identical, currently
+unwired pair of selects for a single-store install — left alone by this
+change, a natural follow-up over the exact same pattern.
+
+**Tests:** `php -l` clean on `store.php` and the language file. The new
+inline script was extracted (Twig `{{ … }}` interpolations replaced with a
+placeholder string) and checked with `node --check` (valid syntax), same
+method every other Entity Picker wiring entry in this file used, since
+there is no live browser in this environment to exercise it.
+`store_form.twig`'s `{% if %}`/`{% endif %}`/`{% for %}`/`{% endfor %}` tag
+counts checked balanced before and after (40/40, 12/12 — no `{% %}` tag
+touched, only plain HTML/inline `<script>`). Full `tests/mintcart/**/*-test.php`
+suite (84 files) re-run end to end — no PHP library code changed here (only
+a controller method that delegates to the existing, already-tested
+`ControllerMintcartEntity::information()`/`InformationPickerProvider`), so
+no regressions expected or found. **Not verified:** no live MySQL/admin
+session in this environment — a human should confirm both pickers open,
+search, paginate, and that confirming a selection updates the matching
+`<select>`'s displayed value, then that saving the store correctly
+persists `config_account_id`/`config_checkout_id` regardless of which UI
+set them (see `docs/MANUAL_VERIFICATION.md`'s new Phase 12 "Information
+Entity Picker" entry).
 ## `upload/admin/controller/sale/order.php` / `upload/admin/view/template/sale/order_form.twig` / `upload/admin/language/en-gb/sale/order.php`
 
 **Reason:** the same Entity Picker live-wiring gap `product.php`'s entry

@@ -1584,6 +1584,46 @@ the release process (or a manual copy, per `.gitignore`'s own comment on
    the enqueue is gated behind `isMintAware()`, so a non-Mint theme pays
    nothing.
 
+## Phase 12 — `Settings → Store`'s Account/Checkout Terms Information `McEntityPicker`, never exercised end to end
+
+New asset enqueue (`ControllerSettingStore::enqueueMintAssets()`, same
+mechanism as the Category/Manufacturer/Related/Attribute/Option/Customer
+pickers above) plus two independent **single-select** pickers (one per
+field, confirming a pick just updates the existing native `<select>`, it
+does not append a new row/option). On a real install:
+
+1. Grant `mintcart/entity` **Access** if not already done for the other
+   Entity Picker endpoints (same permission covers all seven routes).
+2. Create a handful of Information pages (`Catalog → Information`) if the
+   install doesn't already have several, so paging/search are meaningful
+   to test.
+3. Go to **Settings → Store → Edit** (the store you're editing, not
+   `Settings → Settings`).
+4. Confirm the existing **Account Terms** and **Checkout Terms**
+   `<select>` dropdowns still work exactly as before (pick a page from
+   each directly) — this change must not have altered that at all.
+5. Confirm a new "Browse pages" button appears below each dropdown,
+   styled as an `mc-button`.
+6. Click the Account Terms one — confirm a search box + page list appears,
+   paginates via Previous/Next, and that typing filters results
+   (substring match, matches anywhere in the title, same as
+   `mintcart/entity/information`'s own documented behavior — not just a
+   prefix match like Manufacturer/Option).
+7. Select a page, click "Select" — confirm the panel closes and the
+   **Account Terms** `<select>` above it now shows that page selected
+   (not the Checkout Terms one).
+8. Repeat for the Checkout Terms picker — confirm it updates only the
+   Checkout Terms `<select>`, and that having both pickers open/used in
+   the same page load doesn't cross-wire them (each is its own
+   independent `McEntityPicker` instance, not a shared one).
+9. Save the store — confirm `config_account_id`/`config_checkout_id` are
+   saved correctly regardless of whether they were set via the native
+   dropdown or the new picker, and re-opening the edit form shows the
+   same selection pre-populated in both the `<select>` and (implicitly,
+   since it reads the same `<select>`) the picker's effect.
+10. Confirm labels on the new UI render as real text, not blank — same
+    pre-existing "trimmed repository" caveat noted in the Category
+    picker's own entry above; not a new gap.
 ## Phase 15 — Wishlist persistence (`MintCart\Commerce\WishlistService`), never hit end to end
 
 `WishlistService` is covered by a standalone unit test, but with no live
