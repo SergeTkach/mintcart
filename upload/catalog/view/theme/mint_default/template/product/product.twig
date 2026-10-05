@@ -2,6 +2,9 @@
 {% if mc_schema_product %}
 <script type="application/ld+json">{{ mc_schema_product|raw }}</script>
 {% endif %}
+{% if mc_schema_breadcrumb %}
+<script type="application/ld+json">{{ mc_schema_breadcrumb|raw }}</script>
+{% endif %}
 <div class="container py-4">
     <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
         <ol class="mc-breadcrumb__list">

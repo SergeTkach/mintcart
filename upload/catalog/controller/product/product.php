@@ -683,6 +683,27 @@ class ControllerProductProduct extends Controller {
 				} catch (\Throwable $e) {
 					(new \MintCart\Core\Logger())->error('SchemaOrgBuilder failed to build Product schema: ' . $e->getMessage());
 				}
+
+				// MintCart\Seo\SchemaOrgBuilder BreadcrumbList JSON-LD
+				// (MINTCART_FUNCTIONAL_SCOPE.md §16, Phase 18) - the wiring
+				// the comment above already anticipated ("same reasoning as
+				// category.php/search.php's BreadcrumbList wiring") but
+				// never added. $data['breadcrumbs'] is complete by this
+				// point (built at the top of this method and appended to
+				// throughout, same as category.php/search.php/
+				// manufacturer.php/special.php), same try/catch-and-log
+				// pattern as the Product schema block just above so a
+				// malformed value can't fatal the page. A fresh builder
+				// instance is used (not the Product schema block's
+				// `$schema_builder`) so this block never depends on that
+				// block having reached its own `new` statement first.
+				try {
+					$breadcrumb_schema_builder = new \MintCart\Seo\SchemaOrgBuilder();
+
+					$data['mc_schema_breadcrumb'] = $breadcrumb_schema_builder->toJsonLd($breadcrumb_schema_builder->breadcrumbList($data['breadcrumbs']));
+				} catch (\Throwable $e) {
+					(new \MintCart\Core\Logger())->error('SchemaOrgBuilder failed to build BreadcrumbList schema: ' . $e->getMessage());
+				}
 			}
 
 			$mint_diagnostics->mark('view_rendered');
