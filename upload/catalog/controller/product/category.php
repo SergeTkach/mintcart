@@ -361,61 +361,21 @@ class ControllerProductCategory extends Controller {
 
 			$data['sorts'] = array();
 
-			$data['sorts'][] = array(
-				'text'  => $this->language->get('text_default'),
-				'value' => 'p.sort_order-ASC',
-				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=p.sort_order&order=ASC' . $url)
-			);
-
-			$data['sorts'][] = array(
-				'text'  => $this->language->get('text_name_asc'),
-				'value' => 'pd.name-ASC',
-				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=pd.name&order=ASC' . $url)
-			);
-
-			$data['sorts'][] = array(
-				'text'  => $this->language->get('text_name_desc'),
-				'value' => 'pd.name-DESC',
-				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=pd.name&order=DESC' . $url)
-			);
-
-			$data['sorts'][] = array(
-				'text'  => $this->language->get('text_price_asc'),
-				'value' => 'p.price-ASC',
-				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=p.price&order=ASC' . $url)
-			);
-
-			$data['sorts'][] = array(
-				'text'  => $this->language->get('text_price_desc'),
-				'value' => 'p.price-DESC',
-				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=p.price&order=DESC' . $url)
-			);
-
-			if ($this->config->get('config_review_status')) {
+			// MintCart\Catalog\SortOptionsBuilder (MINTCART_TECHNICAL_PLAN.md
+			// §15C/§15E, §38C "SortOptionsBuilder" candidate) — pure
+			// extraction of this exact sort/order/text_key list and its
+			// review-status gate, already proven byte-for-byte identical to
+			// this controller's own prior inline block by
+			// tests/mintcart/catalog/sort-options-builder-test.php. This
+			// controller still owns the language lookup and href building —
+			// the builder never calls $this->language or $this->url itself.
+			foreach ((new \MintCart\Catalog\SortOptionsBuilder())->build((bool)$this->config->get('config_review_status')) as $sort_option) {
 				$data['sorts'][] = array(
-					'text'  => $this->language->get('text_rating_desc'),
-					'value' => 'rating-DESC',
-					'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=rating&order=DESC' . $url)
-				);
-
-				$data['sorts'][] = array(
-					'text'  => $this->language->get('text_rating_asc'),
-					'value' => 'rating-ASC',
-					'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=rating&order=ASC' . $url)
+					'text'  => $this->language->get($sort_option['text_key']),
+					'value' => $sort_option['sort'] . '-' . $sort_option['order'],
+					'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=' . $sort_option['sort'] . '&order=' . $sort_option['order'] . $url)
 				);
 			}
-
-			$data['sorts'][] = array(
-				'text'  => $this->language->get('text_model_asc'),
-				'value' => 'p.model-ASC',
-				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=p.model&order=ASC' . $url)
-			);
-
-			$data['sorts'][] = array(
-				'text'  => $this->language->get('text_model_desc'),
-				'value' => 'p.model-DESC',
-				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=p.model&order=DESC' . $url)
-			);
 
 			$url = '';
 
@@ -433,9 +393,12 @@ class ControllerProductCategory extends Controller {
 
 			$data['limits'] = array();
 
-			$limits = array_unique(array($this->config->get('theme_' . $this->config->get('config_theme') . '_product_limit'), 25, 50, 75, 100));
-
-			sort($limits);
+			// MintCart\Catalog\LimitOptionsBuilder (MINTCART_TECHNICAL_PLAN.md
+			// §15C/§15E, §38C "LimitOptionsBuilder" candidate) — pure
+			// extraction of the array_unique()+sort() merge, already proven
+			// byte-for-byte identical to this controller's own prior inline
+			// block by tests/mintcart/catalog/limit-options-builder-test.php.
+			$limits = (new \MintCart\Catalog\LimitOptionsBuilder())->build((int)$this->config->get('theme_' . $this->config->get('config_theme') . '_product_limit'));
 
 			foreach($limits as $value) {
 				$data['limits'][] = array(

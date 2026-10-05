@@ -1139,6 +1139,28 @@ further below for the full writeup of each. All four listing controllers
 `MintCart\Design\ProductCardListRenderer`/`MintCart\Design\ActiveTheme`
 pair; Phase 6/8's product-card pipeline is complete.
 
+**Update (2026-09-30, routine run): `SortOptionsBuilder`/`LimitOptionsBuilder`
+extracted (Technical Plan §15C/§15E/§38C), first consumer wired.** The
+`$data['sorts']`/`$data['limits']` dropdown-option blocks — the other
+piece of duplicated per-listing logic besides the product-card row itself
+— were identical inline code in `category.php`/`manufacturer.php`/
+`search.php`. New `MintCart\Catalog\SortOptionsBuilder` and
+`MintCart\Catalog\LimitOptionsBuilder` (pure, no OpenCart dependency, same
+"primitive first" pattern as `CanonicalUrlBuilder`) extract that list;
+`ControllerProductCategory::index()` is wired as the first consumer, with
+no behavioral change (verified byte-for-byte against the old inline code
+by two new standalone tests). Full writeup:
+`docs/developer/catalog/product-listing-options.md`,
+`docs/upstream-diff.md`'s `category.php` entry. Step 0 found 1 open PR
+(`#148`, IN-PROGRESS — Entity Picker Option backend wiring into
+`product_form.twig`, admin-only, zero overlap with this catalog controller
+file); no Homepage Builder hot shared files (§0f) touched. Verified:
+`php -l` clean on all touched/new files; full `tests/mintcart/` suite (86
+files, up from 84) re-run end to end, all passing, no regressions. **Next
+candidates:** wire the same two builders into `manufacturer.php` and
+`search.php` (mechanical, each independent — see the doc's "Not yet
+wired" section); or re-check `gh pr list --state open` first.
+
 ## Phase 9 — Presets
 
 - [x] At least two radically different presets (e.g. Clean, Warm) on the same DOM —
@@ -7375,6 +7397,15 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-09-30, routine run):** `list_pull_requests` returned
+19 open PRs (`#138`-`#156`, all `ROUTINE-STATUS: DONE` except `#148`
+IN-PROGRESS) at the start of this run — a large unmerged backlog, but
+each individually scoped and none overlapping this run's files. Added
+`MintCart\Catalog\SortOptionsBuilder`/`LimitOptionsBuilder`, wired into
+`category.php` — see the Phase 8 (Implementation Guide numbering) section
+above for the full writeup. **Next candidates:** wire the same builders
+into `manufacturer.php`/`search.php`; or re-check `gh pr list --state
+open` first, given the size of the current backlog.
 **Trailer note (2026-09-29, routine run): documentation-accuracy fix, no
 code change.** Step 0 found 16 open PRs (`#138`-`#153`); a first attempt
 at a code increment (Homepage Products block `srcset`, mirroring `#150`'s
