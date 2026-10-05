@@ -2762,6 +2762,52 @@ other settings.
 - Re-check `gh pr list --state open` before picking the next increment —
   this backlog moves fast.
 
+**Update (2026-09-28, routine run): the Payment step is done.**
+`WizardProgress::IMPLEMENTED_STEPS` gains `payment`, inserted between
+`delivery` and `ready` (canonical `STEPS` order). `ControllerMintcartWizard`'s
+`payment` step lists installed payment extensions
+(`ModelSettingExtension::getInstalled('payment')`, same stale-extension
+guard `loadShippingExtensions()` uses) with a real enabled/disabled badge
+and a per-extension Enable/Disable toggle (`togglePayment()`, route
+`mintcart/wizard.togglePayment`, the same merge-then-save
+`payment_<code>_status` write `ControllerMintcartBusinessPayments::toggle()`
+already uses), plus a "Manage payment methods" link to the full
+`mintcart/business/payments` screen. No fields to validate/save on the
+step's own Continue submission, same reasoning as `delivery`. Full
+writeup: `docs/developer/onboarding/setup-wizard.md`'s new "Payment step"
+section.
+
+Step 0 dedup check: `list_pull_requests --state open` returned 4 open PRs
+at the start of this run — `#138` (search box wiring into
+`mint_default`/`test_theme` `header.twig`), `#139` (admin "Quick Order
+requests" list), `#140` (per-field-typed `bulk_value` control), `#141`
+(Categories drag & drop live UI wiring) — verified via each PR's own file
+list that none touch `wizard.php`, `wizardprogress.php`, `wizard.twig`,
+the wizard language file, or `upload/admin/controller/mintcart/business/*`.
+No hot shared files (§0f: Homepage Builder block-type registry, homepage
+block list/template, `block.css`) are touched by any of the 4 open PRs or
+by this increment.
+
+Verified: `php -l` clean across the full `upload/`/`tests/` tree.
+`tests/mintcart/onboarding/wizard-progress-test.php` grows from 11 to 12
+scenarios (the new `payment` step's place in the resume sequence, its
+`isImplemented()` check, and the "not yet implemented" check moved from
+`payment` to `design`). Full `tests/mintcart/**/*-test.php` suite (84
+files) re-run end to end — all passing, no regressions. `wizard.twig`'s
+`{% if %}`/`{% endif %}` tag counts checked balanced (50/50) after the new
+step block. **Not verified:** no live MySQL/admin session in this
+sandboxed environment — see `docs/MANUAL_VERIFICATION.md`'s new Phase 13
+"Wizard Payment step" entry for the full manual script a human should run.
+
+**Next steps for a future session:**
+- The `design`/`first_product` steps — no existing facade to mirror this
+  time; each needs its own real form/save logic (see
+  `docs/developer/onboarding/setup-wizard.md`'s updated "not done yet"
+  list for a starting sketch of each).
+- Wiring an entry point to `mintcart/wizard` somewhere in the admin UI
+  (no redirect-after-install, no dashboard link exists yet).
+- Re-check `gh pr list --state open` before picking the next increment —
+  this backlog moves fast.
 **Update (2026-10-01, routine run): the `first_product` step is done.**
 `WizardProgress::IMPLEMENTED_STEPS` gains `first_product`, inserted between
 `delivery` and `ready` (matching canonical `STEPS` order — the same
@@ -7116,6 +7162,13 @@ route (still the only remaining gap before a real install can run
 `apply()`); the "changed since install" comparison itself; or re-check
 `gh pr list --state open` first.
 
+**Trailer note (2026-09-28, routine run):** Setup Wizard `payment` step is
+done (see the Phase 13 section above) — `IMPLEMENTED_STEPS` is now
+`['welcome', 'store', 'contacts', 'language_currency', 'delivery',
+'payment', 'ready']`; only `design`/`first_product` remain unimplemented.
+4 open PRs existed at the start of this run (#138-#141), none overlapping
+this increment's files. Re-check `gh pr list --state open` before picking
+the next step.
 **Trailer note (2026-09-28, routine run):** Step 0 found exactly one open
 PR, #138 (Phase 15 `mc-search-box` header wiring, `ROUTINE-STATUS: DONE`,
 not yet merged) — no file overlap with this run. Added the admin

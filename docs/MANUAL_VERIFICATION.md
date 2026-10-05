@@ -46,6 +46,21 @@ still advances to the Ready step (no required-field validation for this
 step), while the Ready step's own checklist correctly still shows
 "shipping" as outstanding until at least one method is enabled.
 
+## Phase 13 — Wizard Payment step never rendered live
+
+No MySQL/OpenCart admin session in this environment. Confirm on a real
+install: `mintcart/wizard?step=payment` lists every installed payment
+extension with its real enabled/disabled state; clicking Enable/Disable
+(`mintcart/wizard/togglePayment`) flips only that extension's
+`payment_<code>_status` key and leaves its other settings untouched —
+same check as the Delivery step entry above, now against the `payment`
+extension type; "Manage payment methods" links to a working
+`mintcart/business/payments` page; a store with zero payment extensions
+installed shows the empty state instead of an empty list; and clicking
+Continue with nothing enabled still advances to the Ready step (no
+required-field validation for this step), while the Ready step's own
+checklist correctly still shows "payment" as outstanding until at least
+one method is enabled.
 ## Phase 13 — Wizard First product step never rendered live
 
 No MySQL/OpenCart admin session in this environment. Confirm on a real

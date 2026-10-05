@@ -59,6 +59,13 @@ $_['button_enable']          = 'Enable';
 $_['button_disable']         = 'Disable';
 $_['button_manage_delivery'] = 'Manage delivery methods';
 
+// Payment step
+
+$_['payment_title']         = 'How will you get paid?';
+$_['payment_text']          = 'Enable the payment methods you plan to offer. You can configure each one\'s settings any time from Business > Payments. This step is optional — skip it for now and come back later.';
+$_['text_payment_empty']    = 'No payment methods are installed yet.';
+$_['button_manage_payment'] = 'Manage payment methods';
+
 // First product step
 
 $_['first_product_title']  = 'Add your first product';
@@ -81,7 +88,7 @@ $_['button_finish_setup']   = 'Finish setup';
 // Ready / more-steps-coming state (shown once every implemented step, ready included, is completed)
 
 $_['ready_title'] = 'You\'re off to a great start';
-$_['ready_text']  = 'The rest of the Setup Wizard (payment and design) is coming in a future update. For now, head to your dashboard to keep setting up your store.';
+$_['ready_text']  = 'The rest of the Setup Wizard (design) is coming in a future update. For now, head to your dashboard to keep setting up your store.';
 $_['button_go_to_dashboard'] = 'Go to dashboard';
 
 // Errors
