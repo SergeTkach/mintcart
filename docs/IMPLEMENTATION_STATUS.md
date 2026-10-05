@@ -6043,6 +6043,13 @@ Not started.
 
 ## Documentation (Functional Scope §33 / Technical Plan §40)
 
+- [~] User docs (`docs/user/`) — `install.md`, `setup-wizard.md` and
+      `design.md` merged to `master` so far. `products.md`/`delivery.md`/
+      `payments.md`/`homepage.md`/`orders.md`/`seo.md` have each been
+      attempted by at least one routine run as of this writing but were
+      still open, unmerged PRs at the time `design.md` was added — re-check
+      `gh pr list --state open` and `docs/user/` itself (not just this
+      checklist) before assuming any of them have landed.
 - [~] User docs (`docs/user/`) — install, Setup Wizard and **SEO basics**
       guides done; products/delivery/payments/homepage/orders guides are
       claimed by other open PRs in the backlog as of this run (re-check
@@ -6135,6 +6142,47 @@ route) was cross-checked against the actual source file it describes
 `upload/admin/controller/mintcart/wizard.php`) rather than written from
 memory.
 
+**Next step:** a `products.md` user guide is the natural next one to add
+(Store → Products already has a stable, complete admin screen in stock
+OpenCart, unlike most of the Wizard's remaining steps) — or continue this
+section once more Phase 13 Wizard steps/Phase 14 Business Settings façades
+land and can be documented accurately. Low collision risk either way
+(pure Markdown, `docs/` only) — re-check `docs/user/` isn't newly claimed
+by another open PR before starting, same as any other increment.
+
+**Update (2026-10-01, routine run): `docs/user/design.md` added.** Step 0
+found 35 open PRs; a file-overlap pass (every PR's changed-file list
+pulled via the GitHub REST API) showed essentially every code area already
+contended by 2+ open PRs (`product_form.twig`/`entity-picker.md`,
+`search.php`/`category.php`, `components.css`/`index.css`/`catalog.js`,
+`header.php`, admin `column_left.php`, …) — see this run's branch history
+for the full breakdown. `docs/user/` was the one area with zero open-PR
+touches on `docs/user/design.md` specifically (five sibling PRs exist for
+`products.md`/`delivery.md`+`payments.md`/`homepage.md`/`orders.md`/`seo.md`,
+none for `design.md`), and `MINTCART_FUNCTIONAL_SCOPE.md` §33 lists
+"design" as a required user-doc topic. The guide documents what's real
+today: `mint_default` theme, `Design → Homepage` (Blocks), legacy
+`Design → Layout`, the `clean`/`warm` CSS presets and their activation
+contract, and the Theme API's component-override mechanism
+(`test_theme`'s proof) — pointed at `docs/developer/theme-api/` for the
+designer/developer audience rather than duplicating that content. It is
+explicit about the real gap this run found while researching: no
+`Design → Styles` admin screen or `data-mc-preset` wiring exists on
+`master` yet (confirmed by grepping the storefront theme and admin menu
+source directly, not assumed) — that is exactly what open PR #151 is
+building, so the guide calls it a known gap rather than describing it as
+done. Verified: Markdown only, no code touched, so `php -l`/the
+`tests/mintcart/` suite don't apply; every concrete claim (admin menu
+entries, `theme.json` presets list, absence of `settings.json`, absence of
+any live `data-mc-preset` attribute) was cross-checked against
+`upload/admin/controller/common/column_left.php`,
+`upload/catalog/view/theme/mint_default/theme.json`, and a repo-wide grep
+for `data-mc-preset`, rather than written from memory. **Next step:**
+continue this section with whichever of `products.md`/`delivery.md`/
+`payments.md`/`homepage.md`/`orders.md`/`seo.md` is confirmed merged and
+not duplicated by a still-open PR, or — once PR #151 (Design → Styles)
+merges — revisit `design.md`'s "Known gap" section to document the real
+preset picker.
 **Update (2026-10-01, routine run): `docs/user/orders.md`.** Step 0 dedup
 check: `list_pull_requests` returned 33 open PRs (`#138`-`#170`) at the
 start of this run; none of their titles mentioned `orders.md`, an "SEO
