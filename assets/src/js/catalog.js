@@ -48,6 +48,22 @@ import { initStickyHeader } from './components/sticky-header.js';
 import { initCartPage } from './components/cart-page.js';
 import { initBuyBar } from './components/buy-bar.js';
 
+// Swiper-based sliders live in their own bundle (slider(.min).js next to
+// this file) and are only fetched when the page has one. Resolved at load
+// time, while document.currentScript still points at this script.
+const sliderSrc = document.currentScript?.src.replace(/catalog(\.min)?\.js(\?.*)?$/, (match, min) => `slider${min || ''}.js`);
+
+function loadSliders() {
+    if (!sliderSrc || !document.querySelector('[data-mc-slider]')) {
+        return;
+    }
+
+    const script = document.createElement('script');
+    script.src = sliderSrc;
+    script.defer = true;
+    document.head.appendChild(script);
+}
+
 // MintCart-owned catalog behavior modules are added here as components ship
 // (Phase 4 onward).
 function boot() {
@@ -77,6 +93,7 @@ function boot() {
     initStickyHeader();
     initCartPage();
     initBuyBar();
+    loadSliders();
 }
 
 if (document.readyState === 'loading') {
