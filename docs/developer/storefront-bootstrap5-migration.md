@@ -46,7 +46,7 @@ Most frequent BS3-only classes in `default/` (files): `pull-right` 101,
 
 ## Steps (check off as they land)
 
-- [ ] 1. JS shim `assets/src/js/compatibility/bootstrap3-jquery.js`:
+- [x] 1. JS shim `assets/src/js/compatibility/bootstrap3-jquery.js`:
       `$.fn.button('loading'|'reset')`, `data-toggle` → `data-bs-toggle`
       mirror (initial DOM + MutationObserver). Unit-tested.
 - [ ] 2. CSS shim: extend `compatibility/bootstrap3-shim.css` with the

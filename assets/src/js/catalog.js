@@ -26,6 +26,8 @@
 
 import 'bootstrap';
 
+import { initBootstrap3Compat } from './compatibility/bootstrap3-jquery.js';
+
 import { initAlertDismiss } from './components/alert.js';
 import { initQuantityStepper } from './components/quantity.js';
 import { initModalTriggers } from './components/modal.js';
@@ -44,6 +46,9 @@ import { initReviews } from './components/reviews.js';
 // MintCart-owned catalog behavior modules are added here as components ship
 // (Phase 4 onward).
 function boot() {
+    // Legacy default/ templates + extensions on Bootstrap 5 (ADR 010). First,
+    // and after Bootstrap's own DOMContentLoaded jQuery plugin registration.
+    initBootstrap3Compat();
     initAlertDismiss();
     initQuantityStepper();
     initModalTriggers();
