@@ -49,19 +49,54 @@ import { initCartPage } from './components/cart-page.js';
 import { initBuyBar } from './components/buy-bar.js';
 
 // Swiper-based sliders live in their own bundle (slider(.min).js next to
-// this file) and are only fetched when the page has one. Resolved at load
-// time, while document.currentScript still points at this script.
+// this file), fetched only when a `[data-mc-slider]` is on the page - at
+// load, or inserted later by any script (AJAX, quick view, an extension).
+// Contract: docs/developer/components/slider.md "Protocol".
+// Resolved at load time, while document.currentScript still points at
+// this classic <script>.
 const sliderSrc = document.currentScript?.src.replace(/catalog(\.min)?\.js(\?.*)?$/, (match, min) => `slider${min || ''}.js`);
+let sliderBundleRequested = false;
 
-function loadSliders() {
-    if (!sliderSrc || !document.querySelector('[data-mc-slider]')) {
+function hasSlider(node) {
+    return node.nodeType === 1
+        && (node.matches('[data-mc-slider]') || node.querySelector('[data-mc-slider]') !== null);
+}
+
+function loadSliders(root = document.documentElement) {
+    if (!sliderSrc || !hasSlider(root)) {
         return;
     }
 
+    // Bundle already here: set up just the new ones (idempotent).
+    if (window.MintCart?.sliders) {
+        window.MintCart.sliders.init(root);
+        return;
+    }
+
+    // Requested but not executed yet: it scans the whole document on load.
+    if (sliderBundleRequested) {
+        return;
+    }
+
+    sliderBundleRequested = true;
+
     const script = document.createElement('script');
     script.src = sliderSrc;
-    script.defer = true;
     document.head.appendChild(script);
+}
+
+function watchSliders() {
+    loadSliders();
+
+    if (typeof MutationObserver !== 'function') {
+        return;
+    }
+
+    new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            mutation.addedNodes.forEach((node) => loadSliders(node));
+        }
+    }).observe(document.body, { childList: true, subtree: true });
 }
 
 // MintCart-owned catalog behavior modules are added here as components ship
@@ -93,7 +128,7 @@ function boot() {
     initStickyHeader();
     initCartPage();
     initBuyBar();
-    loadSliders();
+    watchSliders();
 }
 
 if (document.readyState === 'loading') {
