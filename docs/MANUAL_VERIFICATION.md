@@ -13,6 +13,27 @@ than silently fixing and forgetting to update this file.
 
 ---
 
+## Storefront UI 2026-10-07 — seen only in headless Edge
+
+Bootstrap 5 storefront and the new mint_default components were checked
+with headless screenshots and DOM probes, not by a person in a browser.
+On a real browser (desktop + phone), Ctrl+F5 after copying `assets/dist`
+to `upload/assets/dist`:
+
+1. Header: desktop category menu + flyouts; mobile ☰ drawer; sticky header
+   on scroll (shadow, topbar scrolls away); currency/language dropdowns.
+2. Mini cart: open, remove an item (panel stays open, totals update).
+3. Cart page: +/− quantity auto-updates totals; remove; coupon / shipping
+   estimate / voucher blocks still work.
+4. Product page: option pills, file upload option, Add to Cart without a
+   required option (toast + field marked + scrolled), sticky buy bar,
+   lightbox (opens at the selected photo, swipe on phone).
+5. Lists: category, search, specials, manufacturer, featured on home -
+   cards, toast with product name + View cart link.
+6. Home: hero slider + brand carousel (autoplay, arrows, dots, swipe).
+7. A legacy page (account / information / contact) still looks acceptable
+   through the BS3 shim.
+
 ## Phase 15 — Mint checkout never run end to end
 
 `mintcart/checkout/{state,update,confirm}` + `mint_default`'s

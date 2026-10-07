@@ -23,6 +23,49 @@ both controllers pass syntax checks and all 9 MetaBuilder smoke scenarios pass.
 
 Legend: `[x]` done, `[~]` in progress / partially done, `[ ]` not started.
 
+## Update (2026-10-07, interactive session) — Bootstrap 5 storefront + storefront UI
+
+Branch `phase-15-mint-checkout` (BS5 work started on
+`phase-2-storefront-bootstrap5` and was merged into it). Not merged to
+master, no PR yet. Visual checks were done with headless Edge screenshots
+and DOM probes against the local install; the user has not clicked through
+these yet (see `docs/MANUAL_VERIFICATION.md` "Storefront UI 2026-10-07").
+
+- **Bootstrap 5 on the storefront (ADR 010).** mint_default no longer loads
+  Bootstrap 3 or `default/stylesheet.css`; `index.min.css` (BS5 + Mint +
+  shim) and `catalog.min.js`. JS shim (`compatibility/bootstrap3-jquery.js`:
+  `.button('loading'|'reset')`, `data-toggle`→`data-bs-*`, `.in`→`.show`),
+  extended CSS shim (BS3 breakpoints), double-caret fix.
+  `settings/bootstrap-bridge.css` points Bootstrap's own variables at
+  `--mc-*` tokens. Checklist: `docs/developer/storefront-bootstrap5-migration.md`.
+- **One product-card pipeline (§15C/§15D).** `mintcart/product_cards`
+  controller used by all 11 product lists (featured/bestseller/special/
+  latest modules, category, search, specials, manufacturer, related, home
+  Products block); card HTML diffed identical before/after.
+  `docs/developer/commerce/product-cards.md`.
+- **Storefront components (mint_default overrides, stock data, no
+  controller changes unless noted):** `mc-nav` menu, `mc-mini-cart`, sticky
+  header + compact mobile header, `mc-cart-page` (checkout/cart.twig),
+  `mc-subcategories`, `mc-product-list`, `mc-slider` (Swiper 14,
+  slideshow/carousel), PDP: `mc-buy-bar` sticky add-to-cart, option pills
+  (`mc-choice-group`), `mc-stock` (`mc_in_stock` in product.php), GLightbox
+  lightbox (ADR 011), file option upload (`option-upload.js`).
+- **Fixes:** options never sent on add-to-cart (`dataset.optionId`), checkbox
+  options sent once, file option unwired; product page missing-option now
+  marks + scrolls instead of reloading; JSON endpoints returned `&amp;` URLs
+  and entity-encoded names; menu hidden on desktop (`.offcanvas` +
+  `.offcanvas-lg`).
+- **JS loading model (ADR 012):** extensions load their own JS via
+  `addScript()`; libraries Mint ships are requested through component
+  markup; Swiper is a lazy bundle (`slider.min.js`) loaded on first
+  `[data-mc-slider]`, including late HTML (MutationObserver).
+  `docs/developer/extensions/storefront-js.md`.
+- **Still open:** Mint checkout 7-step live check (Phase 15 below); delivery
+  / payment / returns block on the PDP (needs a content-source decision);
+  Quick Order missing-option handling on the PDP; OpenCart's Swiper 3 is
+  still enqueued by the stock slideshow/carousel controllers; storefront
+  bundle split per page (GLightbox is global).
+
 ## Phase 0 — Audit
 
 - [x] Audit repository (upstream version, modified files, OCMOD, themes, modules, DB,
@@ -416,6 +459,9 @@ or re-check `gh pr list --state open` first, since this backlog moves fast.
       `.pull-right`/`.pull-left`, `.hidden-xs`/`.visible-xs`, `.btn-default`,
       `.panel`/`.panel-heading`/`.panel-body`, `.input-group-btn`. Uses
       `var(--mc-*, <fallback>)` since Phase 3 tokens don't exist yet.
+
+- [x] Storefront actually runs on Bootstrap 5 (2026-10-07, ADR 010) - see
+      the 2026-10-07 update at the top of this file.
 
 **Phase 2 is complete.** Verified with `npm install` (0 vulnerabilities),
 `npm run build` (minified output) and `npm run dev` (sourcemapped output) —

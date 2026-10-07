@@ -56,7 +56,7 @@ Most frequent BS3-only classes in `default/` (files): `pull-right` 101,
       `index.min.css` (BS5 + Mint) instead of `components.min.css`; keep
       jQuery, Font Awesome, `common.js`. `ControllerCommonHeader`: choose
       the bundle. Admin keeps `components.min.css` (still BS3).
-- [ ] 4. Rebuild, copy `assets/dist` → `upload/assets/dist`, live check:
+- [~] 4. Rebuild, copy `assets/dist` → `upload/assets/dist`, live check:
       home, category, product (options, reviews, tabs), search, cart,
       account login/register/edit, information, contact, Mint checkout,
       bank transfer / COD confirm blocks.
@@ -64,10 +64,18 @@ Most frequent BS3-only classes in `default/` (files): `pull-right` 101,
       Watch: product 42 loads BS3-era `bootstrap-datetimepicker` (date/time
       options); legacy modules using `.product-thumb` lost
       default/stylesheet.css. Visual pass by the user still pending.
-- [ ] 5. Fix what step 4 finds (shim only; no edits to `default/`).
-- [ ] 6. Docs: ADR 010 status, IMPLEMENTATION_STATUS, MANUAL_VERIFICATION,
+- [~] 5. Fix what step 4 finds (shim only; no edits to `default/`).
+- [~] 6. Docs: ADR 010 status, IMPLEMENTATION_STATUS, MANUAL_VERIFICATION,
       header.twig comment, then PR. Afterwards rebase/merge into
       `phase-15-mint-checkout` and resume its live check.
+
+## Progress note (2026-10-07, end of day)
+
+Steps 4-6 partly done: pages checked with headless Edge screenshots and
+fixes landed (menu, carets, colours via bootstrap-bridge.css, cart page,
+category header, gallery, sliders). Branch merged into
+`phase-15-mint-checkout`; IMPLEMENTATION_STATUS and MANUAL_VERIFICATION
+updated. Remaining: the user's own click-through, then PR.
 
 ## Product lists (2026-10-07)
 
