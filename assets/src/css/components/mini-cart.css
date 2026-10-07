@@ -1,0 +1,222 @@
+/**
+ * mc-mini-cart - header cart toggle + dropdown panel (mint_default
+ * common/cart.twig, docs/developer/components/mini-cart.md).
+ * Open state is Bootstrap 5 dropdown `.show` (data-bs-display="static"),
+ * positioned here. Remove buttons: `data-mc-action="remove-cart-item"`.
+ */
+
+.mc-mini-cart {
+    --mc-mini-cart-width: 23rem;
+    --mc-mini-cart-thumb: 3.5rem;
+
+    position: relative;
+}
+
+.mc-mini-cart__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-2);
+    padding: var(--mc-space-2) var(--mc-space-3);
+    font-weight: var(--mc-font-weight-medium);
+    color: var(--mc-text);
+    white-space: nowrap;
+    background: var(--mc-surface);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-pill);
+    cursor: pointer;
+    transition: border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-mini-cart__toggle:hover,
+.mc-mini-cart__toggle[aria-expanded="true"] {
+    color: var(--mc-primary);
+    border-color: var(--mc-primary);
+}
+
+.mc-mini-cart__toggle:focus-visible {
+    outline: 2px solid var(--mc-primary);
+    outline-offset: 2px;
+}
+
+.mc-mini-cart__icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex: 0 0 auto;
+}
+
+/* Panel. Overrides Bootstrap's .dropdown-menu box only inside mc-mini-cart. */
+.mc-mini-cart__panel.dropdown-menu {
+    position: absolute;
+    top: calc(100% + var(--mc-space-2));
+    right: 0;
+    left: auto;
+    z-index: var(--mc-z-dropdown);
+    width: min(var(--mc-mini-cart-width), calc(100vw - 2 * var(--mc-space-4)));
+    padding: var(--mc-space-4);
+    color: var(--mc-text);
+    background: var(--mc-surface);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+    box-shadow: var(--mc-shadow-lg);
+}
+
+.mc-mini-cart__items {
+    max-height: 20rem;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.mc-mini-cart__item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--mc-space-3);
+    padding-block: var(--mc-space-3);
+    border-bottom: var(--mc-border-width) solid var(--mc-border);
+    transition: opacity var(--mc-motion-duration-base) var(--mc-motion-easing-standard);
+}
+
+.mc-mini-cart__item:first-child {
+    padding-top: 0;
+}
+
+.mc-mini-cart__item.is-loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.mc-mini-cart__thumb {
+    flex: 0 0 var(--mc-mini-cart-thumb);
+    overflow: hidden;
+    background: var(--mc-surface-alt);
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-mini-cart__thumb img {
+    display: block;
+    width: 100%;
+    height: var(--mc-mini-cart-thumb);
+    object-fit: contain;
+}
+
+.mc-mini-cart__info {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mc-mini-cart__name {
+    display: block;
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-medium);
+    line-height: 1.35;
+    color: var(--mc-text);
+    text-decoration: none;
+}
+
+a.mc-mini-cart__name:hover,
+a.mc-mini-cart__name:focus-visible {
+    color: var(--mc-primary);
+}
+
+.mc-mini-cart__meta {
+    margin: var(--mc-space-1) 0 0;
+    font-size: var(--mc-font-size-xs);
+    color: var(--mc-muted);
+}
+
+.mc-mini-cart__line {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--mc-space-2);
+    margin: var(--mc-space-1) 0 0;
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-mini-cart__qty {
+    color: var(--mc-muted);
+}
+
+.mc-mini-cart__price {
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-mini-cart__remove {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    color: var(--mc-muted);
+    background: transparent;
+    border: 0;
+    border-radius: var(--mc-radius-pill);
+    cursor: pointer;
+}
+
+.mc-mini-cart__remove svg {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+.mc-mini-cart__remove:hover,
+.mc-mini-cart__remove:focus-visible {
+    color: var(--mc-danger);
+    background: var(--mc-surface-alt);
+}
+
+.mc-mini-cart__totals {
+    margin: var(--mc-space-3) 0 0;
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-mini-cart__total {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--mc-space-3);
+    padding-block: var(--mc-space-1);
+}
+
+.mc-mini-cart__total dt {
+    font-weight: var(--mc-font-weight-normal);
+    color: var(--mc-muted);
+}
+
+.mc-mini-cart__total dd {
+    margin: 0;
+}
+
+.mc-mini-cart__total--grand {
+    margin-top: var(--mc-space-1);
+    padding-top: var(--mc-space-2);
+    font-size: var(--mc-font-size-base);
+    font-weight: var(--mc-font-weight-bold);
+    border-top: var(--mc-border-width) solid var(--mc-border);
+}
+
+.mc-mini-cart__total--grand dt {
+    font-weight: inherit;
+    color: var(--mc-text);
+}
+
+.mc-mini-cart__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--mc-space-2);
+    margin-top: var(--mc-space-4);
+}
+
+.mc-mini-cart__actions .mc-button {
+    justify-content: center;
+    text-align: center;
+}
+
+.mc-mini-cart__empty {
+    margin: 0;
+    padding-block: var(--mc-space-4);
+    text-align: center;
+    color: var(--mc-muted);
+}

@@ -21,12 +21,36 @@
  * "Explicitly deferred" list.
  */
 
+import { Dropdown } from 'bootstrap';
+
+import { removeFromCart } from '../commerce/cart-client.js';
+
 export function initHeaderCartRefresh(root = document) {
     const cart = root.querySelector('#cart');
 
     if (!cart) {
         return;
     }
+
+    cart.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-mc-action="remove-cart-item"]');
+
+        if (!button || button.disabled) {
+            return;
+        }
+
+        // Clicks inside a Bootstrap dropdown would otherwise close it.
+        event.stopPropagation();
+        button.disabled = true;
+        button.closest('.mc-mini-cart__item')?.classList.add('is-loading');
+
+        try {
+            await removeFromCart(button.dataset.cartId);
+        } catch {
+            button.disabled = false;
+            button.closest('.mc-mini-cart__item')?.classList.remove('is-loading');
+        }
+    });
 
     document.addEventListener('mc:cart:updated', async () => {
         try {
@@ -38,7 +62,17 @@ export function initHeaderCartRefresh(root = document) {
             const fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('#cart');
 
             if (fresh) {
+                // Keep the panel open when the update came from inside it
+                // (removing an item), so the shopper sees the result.
+                const wasOpen = cart.querySelector('.dropdown-menu.show') !== null;
+
                 cart.innerHTML = fresh.innerHTML;
+
+                const toggle = cart.querySelector('[data-bs-toggle="dropdown"]');
+
+                if (wasOpen && toggle) {
+                    Dropdown.getOrCreateInstance(toggle).show();
+                }
             }
         } catch {
             // Best-effort refresh - a failed re-fetch leaves the widget
