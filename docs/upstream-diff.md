@@ -2411,6 +2411,20 @@ environment — a human should confirm a real checkout still shows the same
 payment methods/total after this refactor (see
 `docs/MANUAL_VERIFICATION.md`).
 
+**Update (2026-10-05, Mint checkout):** the payment-methods loop
+(`getExtensions('payment')` → `getMethod($address, $total)` → recurring
+filter → sort by `sort_order`) also moved out, into
+`MintCart\Compatibility\OpenCart3\PaymentMethodsAdapter`, because the Mint
+single-page checkout (`mintcart/checkout/update`) has to offer exactly the
+same methods. `index()` now calls `$payment_adapter->calculate(
+$this->session->data['payment_address'], $total,
+$this->cart->hasRecurringProducts())`. Same extensions, same status keys,
+same `property_exists(..., 'recurringPayments')` check on the same model
+proxy, same sort — no behavior change. Tests:
+`tests/mintcart/compatibility/opencart3/payment-methods-adapter-test.php`.
+Can't live elsewhere for the same reason as the totals call: this is where
+the stock checkout needs the list.
+
 ---
 
 ## `upload/catalog/controller/checkout/confirm.php`
@@ -2455,6 +2469,28 @@ controller-wiring increment: no MySQL/OpenCart bootstrap in this
 environment — a human should confirm a real order placed through checkout
 still records the correct `total` in `oc_order` after this refactor (see
 `docs/MANUAL_VERIFICATION.md`).
+
+**Update (2026-10-05, Mint checkout):** the ~200 lines that assembled
+`$order_data` field by field (store, customer/guest, payment + shipping
+address and method, products with per-unit tax, gift vouchers, comment,
+affiliate/marketing tracking, currency, client IP/headers) moved to
+`MintCart\Commerce\CheckoutService::buildOrderData()` (pure mapping) and
+`MintCart\Compatibility\OpenCart3\CheckoutOrderAdapter` (reads
+session/cart/customer/config/request, calls `addOrder()`). `index()` now
+does `$order_data = $order_adapter->collect($totals_result);
+$this->session->data['order_id'] = $order_adapter->place($order_data);`
+and keeps rendering the confirm view from `$order_data['totals']` as
+before. Reason: the Mint checkout (`mintcart/checkout/confirm`, ADR 009)
+must create orders identical to stock ones — one builder instead of a
+copy. Compatibility impact: none intended — every key and value is pinned
+against the old inline code in
+`tests/mintcart/commerce/checkout-service-test.php`; the only difference is
+that a request with neither a logged-in customer nor `session['guest']`
+(which stock would reach only by skipping its own steps) now gets empty
+customer fields instead of PHP undefined-index notices. Tests: that file +
+`tests/mintcart/compatibility/opencart3/checkout-order-adapter-test.php`.
+Needs a live order on a real install (see `docs/MANUAL_VERIFICATION.md`,
+"Phase 15 — Mint checkout").
 ## `upload/admin/controller/catalog/product.php` / `upload/admin/view/template/catalog/product_form.twig` / `upload/admin/language/en-gb/catalog/product.php`
 
 **Reason:** solving the "admin asset-enqueue problem" that #53/#63 (and
@@ -3920,3 +3956,23 @@ the MC-0019 registry entry for full detail. Full `tests/mintcart/` suite
 re-run end to end — all pass, no regressions. Not verified against a real
 MySQL server or a real `DB_DRIVER=pdo` install (neither available in this
 environment) — see the registry entry's "Not verified" note.
+
+---
+
+## `upload/catalog/language/en-gb/checkout/checkout.php`
+
+**Reason:** the Mint single-page checkout template
+(`mint_default/template/checkout/checkout.twig`) is rendered by the stock
+`checkout/checkout` controller, which loads only this language file; its
+section labels and messages (`text_mc_*`, `button_mc_place_order`) are
+appended here so they reach the template through the stock
+`event/language` merge, without touching the controller.
+
+**Why it can't live in the MintCart layer instead:** a separate Mint
+language file would need the stock controller to load it (a controller
+patch) — appending keys is the smaller diff.
+
+**Compatibility impact:** additive keys only, all prefixed `mc_`; no stock
+key changed.
+
+**Tests:** `php -l` clean; strings exercised by the manual checkout check.

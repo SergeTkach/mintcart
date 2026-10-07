@@ -63,4 +63,5 @@
 @import './components/media-picker.css';
 @import './components/progress.css';
 @import './components/cookie-consent.css';
+@import './components/checkout.css';
 @import './compatibility/bootstrap3-shim.css';

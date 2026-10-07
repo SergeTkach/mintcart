@@ -3653,7 +3653,24 @@ already share.
 - [ ] `QuickOrderService`, `CheckoutService` — not started.
 - [ ] Quick Order component — not started; `mc-product-card`'s
       `data-mc-action="quick-order"` stays hook-only.
-- [ ] Modern checkout UI over existing shipping/payment extensions/totals/order model — not started.
+- [~] Modern checkout UI over existing shipping/payment extensions/totals/order model —
+      **first working increment (2026-10-05, interactive session):** Mint
+      single-page checkout for `mint_default` on the stock `checkout/checkout`
+      route (ADR 009, `docs/developer/commerce/checkout-service.md`).
+      `MintCart\Commerce\CheckoutService` (validation, address, method
+      picking, `buildOrderData()`), `PaymentMethodsAdapter`,
+      `CheckoutOrderAdapter`, `mintcart/checkout/{state,update,confirm}`,
+      `checkout-client.js` + `components/checkout.js`, `checkout.css`.
+      Writes the stock checkout session keys, so every shipping/payment
+      extension works unchanged; order creation (`addOrder()`) now goes
+      through one builder shared with stock `checkout/confirm.php` (which,
+      with `payment_method.php`, was refactored onto the adapters — see
+      `docs/upstream-diff.md`). Guest + logged-in, one address, live
+      recalculation of delivery/payment/totals, inline validation, terms
+      checkbox, payment extension's own confirm step. **Not verified live**
+      (see `docs/MANUAL_VERIFICATION.md` "Phase 15 — Mint checkout").
+      Not built yet: address book, registration in checkout, custom fields,
+      captcha, separate billing address, coupon/voucher entry.
 
 **Update (this run): `CheckoutTotalsService` + `TotalsAdapter` — first
 `CheckoutService` increment.** Step 0 dedup check against the 35 open PRs

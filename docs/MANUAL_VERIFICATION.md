@@ -13,6 +13,35 @@ than silently fixing and forgetting to update this file.
 
 ---
 
+## Phase 15 — Mint checkout never run end to end
+
+`mintcart/checkout/{state,update,confirm}` + `mint_default`'s
+`checkout/checkout.twig` (ADR 009) and the refactor of stock
+`checkout/confirm.php`/`payment_method.php` onto
+`CheckoutOrderAdapter`/`PaymentMethodsAdapter` were only unit-tested — no
+live OpenCart/MySQL in the session that built them. Confirm on a real
+install with `mint_default` active:
+
+1. Guest, cart with a shippable product: page loads with store country/
+   region preselected, delivery and payment options appear without a click,
+   totals include the selected delivery cost; changing country reloads
+   regions and re-quotes delivery.
+2. Place order with Cash On Delivery and with Bank Transfer: the extension's
+   own confirm block appears under the summary, its button completes the
+   order and lands on `checkout/success`; `oc_order` row has correct
+   name/phone/email, address, `shipping_code`, `payment_code`, totals and
+   `total`; cart is empty afterwards.
+3. Empty required fields → inline errors, no order created; Terms checkbox
+   (set Settings → Option → Checkout Terms) blocks until ticked.
+4. Logged-in customer with a default address: contact is read-only from the
+   account, address prefilled.
+5. Download-only product with guest checkout off → login notice, form disabled.
+6. Switch to the `default` theme: the stock six-step checkout still places
+   an order identically (regression check for the confirm.php/
+   payment_method.php refactor).
+7. PayPal Standard (or any extension that renders its own `<form>`): its
+   form submits to the gateway.
+
 ## Phase 0 — restored `Config` engine class never booted live
 
 `upload/system/library/config.php` (OpenCart's core `Config` class) was

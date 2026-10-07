@@ -62,6 +62,13 @@ class ControllerMintcartCart extends Controller {
 		return $cart_service->snapshot($items, $totals);
 	}
 
+	// Not an HTTP endpoint of its own: lets ControllerMintcartCheckout reuse
+	// this exact item list via $this->load->controller('mintcart/cart/snapshot')
+	// (Loader::controller() returns the action's return value).
+	public function snapshot() {
+		return $this->buildSnapshot();
+	}
+
 	private function respond($json) {
 		$this->response->addHeader('Content-Type: application/json');
 		$this->response->setOutput(json_encode($json));
