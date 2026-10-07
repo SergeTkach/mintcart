@@ -1,0 +1,40 @@
+/**
+ * mc-subcategories - "Refine search" subcategory links on a category page
+ * (mint_default product/category.twig). Title is a styled label, not a
+ * heading (Guide §19.1); links are pills that wrap.
+ */
+
+.mc-subcategories__title {
+    margin: 0 0 var(--mc-space-2);
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-semibold);
+    color: var(--mc-muted);
+}
+
+.mc-subcategories__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-subcategories__link {
+    display: inline-block;
+    padding: var(--mc-space-1) var(--mc-space-3);
+    font-size: var(--mc-font-size-sm);
+    color: var(--mc-text);
+    text-decoration: none;
+    background: var(--mc-surface);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-pill);
+    transition: border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-subcategories__link:hover,
+.mc-subcategories__link:focus-visible {
+    color: var(--mc-primary);
+    border-color: var(--mc-primary);
+}
