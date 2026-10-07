@@ -77,6 +77,26 @@
     flex-wrap: wrap;
 }
 
+/* Every topbar link - Mint's own and the legacy currency/language
+   widgets' btn-link toggles - reads as quiet text, not a blue link. */
+.mc-header__topbar a,
+.mc-header__topbar .btn-link {
+    --bs-btn-color: inherit;
+    --bs-btn-hover-color: var(--mc-text);
+    --bs-btn-active-color: var(--mc-text);
+    --bs-btn-padding-x: 0;
+    --bs-btn-padding-y: 0;
+    --bs-btn-font-size: inherit;
+    color: inherit;
+    text-decoration: none;
+}
+
+.mc-header__topbar a:hover,
+.mc-header__topbar a:focus-visible,
+.mc-header__topbar .btn-link:hover {
+    color: var(--mc-text);
+}
+
 .mc-header__phone {
     display: inline-flex;
     align-items: center;
