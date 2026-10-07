@@ -115,7 +115,15 @@ function readOptions(button) {
             return;
         }
 
-        options[field.dataset.optionId] = field.value;
+        const optionId = field.dataset.mcOptionId;
+
+        // A checkbox option can have several values (`option[id][]`).
+        if (field.type === 'checkbox') {
+            (options[optionId] ||= []).push(field.value);
+            return;
+        }
+
+        options[optionId] = field.value;
     });
 
     return options;

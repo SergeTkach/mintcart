@@ -42,6 +42,7 @@ import { initSearchBoxes } from './components/search-box.js';
 import { initCookieConsent } from './components/cookie-consent.js';
 import { initViewedProducts } from './components/viewed-products.js';
 import { initReviews } from './components/reviews.js';
+import { initOptionUploads } from './components/option-upload.js';
 
 // MintCart-owned catalog behavior modules are added here as components ship
 // (Phase 4 onward).
@@ -67,6 +68,7 @@ function boot() {
     initCookieConsent();
     initViewedProducts();
     initReviews();
+    initOptionUploads();
 }
 
 if (document.readyState === 'loading') {

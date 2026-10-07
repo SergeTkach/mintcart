@@ -158,8 +158,9 @@
                                         <textarea id="input-option-{{ option.product_option_id }}" name="option[{{ option.product_option_id }}]" class="mc-field__control" rows="3" data-mc-option-id="{{ option.product_option_id }}">{{ option.value }}</textarea>
                                     {% elseif option.type == 'file' %}
                                         <label class="mc-field__label" for="input-option-{{ option.product_option_id }}">{{ option.name }}{% if option.required %} *{% endif %}</label>
-                                        <input type="file" id="input-option-{{ option.product_option_id }}" class="mc-field__control">
-                                        
+                                        <input type="file" id="input-option-{{ option.product_option_id }}" class="mc-field__control" data-mc-option-upload="{{ option.product_option_id }}" aria-describedby="input-option-{{ option.product_option_id }}-status">
+                                        <input type="hidden" name="option[{{ option.product_option_id }}]" value="" data-mc-option-id="{{ option.product_option_id }}">
+                                        <p class="mc-field__help" id="input-option-{{ option.product_option_id }}-status" aria-live="polite"></p>
                                     {% else %}
                                         <label class="mc-field__label" for="input-option-{{ option.product_option_id }}">{{ option.name }}{% if option.required %} *{% endif %}</label>
                                         <input type="{{ option.type in ['date', 'time', 'datetime'] ? option.type : 'text' }}" id="input-option-{{ option.product_option_id }}" name="option[{{ option.product_option_id }}]" value="{{ option.value }}" class="mc-field__control" data-mc-option-id="{{ option.product_option_id }}">
