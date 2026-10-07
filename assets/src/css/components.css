@@ -28,10 +28,9 @@
  * (verified: none of `settings/tokens.css`, `presets/*.css`,
  * `elements/prose.css`, or any `components/*.css` file declares a bare
  * `body`/`html`/`*`/element selector - grepped before adding this file).
- * `compatibility/bootstrap3-shim.css` is the one exception by design: it
- * only *patches* specific legacy Bootstrap-3 classes
- * (`.pull-right`/`.btn-default`/`.panel`/...) with `--mc-*` token values,
- * which is additive/beneficial on a Bootstrap-3 page, not a conflict. So
+ * `compatibility/bootstrap3-shim.css` is deliberately NOT imported here
+ * (ADR 010): it re-creates Bootstrap 3 classes for Bootstrap 5 pages and
+ * would fight the real Bootstrap 3 this bundle sits next to. So
  * this bundle is safe to add to a legacy Bootstrap-3 page without
  * reverting or reworking anything already on it - unlike `index.css`,
  * which stays the right choice for a page that owns its full asset stack
@@ -98,4 +97,3 @@
 @import './components/media-picker.css';
 @import './components/progress.css';
 @import './components/cookie-consent.css';
-@import './compatibility/bootstrap3-shim.css';

@@ -9,6 +9,7 @@
 import {
     mirrorBootstrap3Attributes,
     createLegacyButtonPlugin,
+    upgradeBootstrap3Classes,
 } from '../../assets/src/js/compatibility/bootstrap3-jquery.js';
 
 const failures = [];
@@ -135,6 +136,33 @@ check(noText.content === 'Add', 'loading without data-loading-text keeps the tex
 
 plugin.call($.wrap([button]), 'toggle');
 check(fallbackCalledWith === 'toggle', "'toggle' is delegated to Bootstrap 5's plugin");
+
+// --- .in -> .show, BS3 tab li.active ---------------------------------------
+
+function classed(classes, attributes = {}, children = []) {
+    const element = fakeElement(attributes, children, 'div');
+    element.classList = new Set(classes.split(' ').filter(Boolean));
+    element.classList.contains = element.classList.has;
+    element.classList.remove = element.classList.delete;
+    element.querySelectorAll = () => children.filter((child) => child.wanted);
+    return element;
+}
+
+const openCollapse = classed('panel-collapse collapse in');
+openCollapse.wanted = true;
+const tabLi = classed('active');
+const tabLink = classed('', { 'data-toggle': 'tab' });
+tabLink.parentElement = tabLi;
+tabLink.wanted = true;
+const notCollapse = classed('in');
+const scope = classed('', {}, [openCollapse, tabLink, notCollapse]);
+
+upgradeBootstrap3Classes(scope);
+
+check(openCollapse.classList.has('show') && !openCollapse.classList.has('in'), '.collapse.in becomes .collapse.show');
+check(tabLink.classList.has('active'), 'BS3 tab: link becomes .active');
+check(!tabLi.classList.has('active'), 'BS3 tab: li loses .active');
+check(notCollapse.classList.has('in'), '.in without .collapse/.fade is left alone');
 
 if (failures.length) {
     console.error('FAIL bootstrap3-jquery:\n - ' + failures.join('\n - '));

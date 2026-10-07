@@ -49,7 +49,7 @@ Most frequent BS3-only classes in `default/` (files): `pull-right` 101,
 - [x] 1. JS shim `assets/src/js/compatibility/bootstrap3-jquery.js`:
       `$.fn.button('loading'|'reset')`, `data-toggle` → `data-bs-toggle`
       mirror (initial DOM + MutationObserver). Unit-tested.
-- [ ] 2. CSS shim: extend `compatibility/bootstrap3-shim.css` with the
+- [x] 2. CSS shim: extend `compatibility/bootstrap3-shim.css` with the
       class list above (forms, panels, visibility, grid aliases, labels,
       close, caret, thumbnail, well, img-responsive).
 - [ ] 3. `mint_default/template/common/header.twig`: drop BS3 CSS/JS, load

@@ -12,6 +12,10 @@
  *    later (common.js and payment widgets inject alerts/modals via AJAX).
  * 2. `$(el).button('loading' | 'reset')` with `data-loading-text` - the
  *    Bootstrap 3 Button plugin, gone since Bootstrap 4, used ~157 times.
+ * 3. Bootstrap 3 state classes: `.in` (initially open collapse / faded-in
+ *    element) is `.show` in Bootstrap 5, and BS3 tabs mark the `<li>` as
+ *    `.active` while the BS5 Tab plugin looks for `.active` on the
+ *    `[data-bs-toggle="tab"]` trigger itself.
  *
  * `.modal('show')` / `.tooltip({...})` need nothing: Bootstrap 5 still
  * registers its own jQuery interface when `window.jQuery` exists.
@@ -46,6 +50,35 @@ export function mirrorBootstrap3Attributes(root) {
     }
 
     root.querySelectorAll(LEGACY_SELECTOR).forEach(mirrorElement);
+}
+
+/**
+ * `.collapse.in` / `.fade.in` -> `.show`, and a BS3 tab `<li class="active">`
+ * moves its `.active` onto the tab link, for `root` and its descendants.
+ */
+export function upgradeBootstrap3Classes(root) {
+    const scope = [root, ...root.querySelectorAll('.collapse.in, .fade.in, li.active > [data-toggle="tab"]')];
+
+    for (const element of scope) {
+        if (element.nodeType !== 1 || !element.classList) {
+            continue;
+        }
+
+        if (element.classList.contains('in') && (element.classList.contains('collapse') || element.classList.contains('fade'))) {
+            element.classList.remove('in');
+            element.classList.add('show');
+        }
+
+        if (element.getAttribute('data-toggle') === 'tab' && element.parentElement && element.parentElement.classList.contains('active')) {
+            element.parentElement.classList.remove('active');
+            element.classList.add('active');
+        }
+    }
+}
+
+function upgrade(root) {
+    mirrorBootstrap3Attributes(root);
+    upgradeBootstrap3Classes(root);
 }
 
 /**
@@ -89,14 +122,14 @@ export function createLegacyButtonPlugin($, fallback) {
  * `import 'bootstrap'` side effect.
  */
 export function initBootstrap3Compat(doc = document, win = window) {
-    mirrorBootstrap3Attributes(doc.documentElement);
+    upgrade(doc.documentElement);
 
     if (typeof win.MutationObserver === 'function') {
         new win.MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === 1) {
-                        mirrorBootstrap3Attributes(node);
+                        upgrade(node);
                     }
                 });
             }
