@@ -69,6 +69,17 @@ Most frequent BS3-only classes in `default/` (files): `pull-right` 101,
       header.twig comment, then PR. Afterwards rebase/merge into
       `phase-15-mint-checkout` and resume its live check.
 
+## Product lists (2026-10-07)
+
+- [x] A. Shared `mintcart/product_cards` controller
+      (`docs/developer/commerce/product-cards.md`); featured / bestseller /
+      special / latest modules render `mc-product-card` in `mc-product-list`
+      on mint_default. Featured verified on home over HTTP; the other three
+      are not placed in any layout on the dev DB — not seen rendered.
+- [ ] B. Move the six existing copies (category, search, special,
+      manufacturer, product related, home Products block) onto the shared
+      controller, one commit each.
+
 ## Out of scope
 
 - Admin stays on BS3 (separate phase).
