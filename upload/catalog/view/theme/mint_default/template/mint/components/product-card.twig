@@ -64,7 +64,10 @@
             class="mc-button mc-button--primary mc-product-card__add-to-cart"
             data-mc-action="add-to-cart"
             data-product-id="{{ product.id }}"
+            data-product-name="{{ product.name }}"
             data-quantity="{{ product.minimum }}"
+            data-mc-cart-url="{{ cart_url }}"
+            data-mc-text-view-cart="{{ text_view_cart }}"
             data-mc-text-added="{{ text_added_to_cart }}"
             data-mc-text-add-error="{{ text_add_to_cart_error }}"
             {{ product.actions.add_to_cart ? '' : 'disabled' }}

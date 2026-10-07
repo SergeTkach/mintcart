@@ -273,6 +273,9 @@ class ControllerProductProduct extends Controller {
 			$data['text_badge_sale'] = $this->language->get('text_badge_sale');
 			$data['text_badge_out_of_stock'] = $this->language->get('text_badge_out_of_stock');
 			$data['text_added_to_cart'] = $this->language->get('text_added_to_cart');
+			// Add-to-cart toast: product name + "View cart" link (product-card.js).
+			$data['text_view_cart'] = $this->language->get('text_view_cart');
+			$data['cart_url'] = $this->url->link('checkout/cart');
 			$data['text_add_to_cart_error'] = $this->language->get('text_add_to_cart_error');
 			$data['text_wishlist_error'] = $this->language->get('text_wishlist_error');
 

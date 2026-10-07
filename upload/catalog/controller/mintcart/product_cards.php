@@ -67,7 +67,9 @@ class ControllerMintcartProductCards extends Controller {
 			'text_quick_order'       => $this->language->get('text_quick_order'),
 			'text_added_to_cart'     => $this->language->get('text_added_to_cart'),
 			'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error'),
-			'text_wishlist_error'    => $this->language->get('text_wishlist_error')
+			'text_wishlist_error'    => $this->language->get('text_wishlist_error'),
+			'text_view_cart'         => $this->language->get('text_view_cart'),
+			'cart_url'               => $this->url->link('checkout/cart')
 		);
 
 		// OpenCart's own backorder flag - without it ProductViewProvider

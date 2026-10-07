@@ -195,7 +195,14 @@ function initAddToCart(root) {
                 return;
             }
 
-            showToast(createToast({ title: addedText, message: addedText, variant: 'success' }));
+            const { productName, mcCartUrl, mcTextViewCart } = button.dataset;
+
+            showToast(createToast({
+                title: addedText,
+                message: productName || addedText,
+                variant: 'success',
+                action: mcCartUrl && mcTextViewCart ? { text: mcTextViewCart, href: mcCartUrl } : null,
+            }));
         } catch {
             showToast(createToast({ title: errorText, message: errorText, variant: 'danger' }));
         } finally {
