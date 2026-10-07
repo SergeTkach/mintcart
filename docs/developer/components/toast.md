@@ -240,3 +240,10 @@ component root" element.
 - [x] No OCMOD required
 - [ ] Theme override checked — deferred until the Theme resolver exists
       (Phase 8); there is no theme to override yet
+
+## Action link (2026-10-07)
+
+`createToast({ title, message, variant, action })` — optional
+`action: { text, href }` appends one `a.mc-toast__action` under the message
+(text set via `textContent`). Used by add-to-cart: title "Added to cart",
+message = product name, action "View cart" → `checkout/cart`.

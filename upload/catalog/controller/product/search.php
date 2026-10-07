@@ -217,24 +217,6 @@ class ControllerProductSearch extends Controller {
 		// identical comment and docs/developer/core/diagnostics.md.
 		$mint_diagnostics = new \MintCart\Core\Diagnostics((bool)$this->config->get('mintcart_dev_mode'));
 
-		if ($mint_render_product_cards) {
-			$product_card_list_renderer = new \MintCart\Design\ProductCardListRenderer(
-				new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme, 'components', $mint_diagnostics)
-			);
-
-			$text_badge = array(
-				'sale'         => $this->language->get('text_badge_sale'),
-				'out-of-stock' => $this->language->get('text_badge_out_of_stock'),
-				'new'          => $this->language->get('text_badge_new')
-			);
-
-			// OpenCart's own backorder flag - see category.php's identical
-			// comment and docs/developer/commerce/product-view-provider.md.
-			$allow_out_of_stock_purchase = (bool)$this->config->get('config_stock_checkout');
-
-			$data['product_cards'] = array();
-		}
-
 		if (isset($this->request->get['search']) || isset($this->request->get['tag'])) {
 			$filter_data = array(
 				'filter_name'         => $search,
@@ -261,12 +243,6 @@ class ControllerProductSearch extends Controller {
 					$image = $this->model_tool_image->resize('placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'));
 				}
 
-				// 2x variant for a high-DPI srcset - see category.php's
-				// identical comment (docs/developer/commerce/product-view-provider.md
-				// "Image dimensions").
-				$image_2x = $this->model_tool_image->resize($result['image'] ? $result['image'] : 'placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width') * 2, $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height') * 2);
-				$image_srcset = $image . ' 1x, ' . $image_2x . ' 2x';
-
 				if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
 					$price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
 				} else {
@@ -287,12 +263,6 @@ class ControllerProductSearch extends Controller {
 					$tax = false;
 				}
 
-				if ($this->config->get('config_review_status')) {
-					$rating = (int)$result['rating'];
-				} else {
-					$rating = false;
-				}
-
 				$href = $this->url->link('product/product', 'product_id=' . $result['product_id'] . $url);
 
 				$data['products'][] = array(
@@ -308,54 +278,17 @@ class ControllerProductSearch extends Controller {
 					'href'        => $href
 				);
 
-				if ($mint_render_product_cards) {
-					$product_card = $product_card_list_renderer->render(
-						array(
-							'id'                          => $result['product_id'],
-							'name'                        => $result['name'],
-							'url'                         => $href,
-							'image'                       => $image,
-							'image_srcset'                => $image_srcset,
-							'image_width'                 => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'),
-							'image_height'                => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'),
-							'price'                       => $price,
-							'special'                     => $special,
-							'tax'                         => $tax,
-							'rating'                      => $rating,
-							'quantity'                    => $result['quantity'],
-							'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
-							'minimum'                     => $result['minimum'],
-							'manufacturer'                => isset($result['manufacturer']) ? $result['manufacturer'] : null,
-							'allow_out_of_stock_purchase' => $allow_out_of_stock_purchase
-						),
-						array(),
-						array(
-							'listing_type' => 'search',
-							'position'     => count($data['products'])
-						),
-						array(
-							'text_badge'       => $text_badge,
-							'text_wishlist'    => $this->language->get('button_wishlist'),
-							'text_compare'     => $this->language->get('button_compare'),
-							'text_rated'       => $this->language->get('text_rated'),
-							'text_tax'         => $this->language->get('text_tax'),
-							'text_add_to_cart' => $this->language->get('button_cart'),
-							'text_quick_order' => $this->language->get('text_quick_order'),
-							'text_added_to_cart' => $this->language->get('text_added_to_cart'),
-							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error'),
-							'text_wishlist_error' => $this->language->get('text_wishlist_error')
-						),
-						function (\Throwable $e, array $failed_product) {
-							(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render product-card for product_id ' . $failed_product['id'] . ': ' . $e->getMessage());
-						}
-					);
+			}
 
-					if ($product_card !== null) {
-						$data['product_cards'][] = $product_card;
-					}
-
-					$mint_render_product_cards = $product_card_list_renderer->isEnabled();
-				}
+			// Shared product-card pipeline (docs/developer/commerce/product-cards.md);
+			// null on non-Mint themes, which keep using $data['products'].
+			if ($mint_render_product_cards) {
+				$data['product_cards'] = $this->load->controller('mintcart/product_cards', array(
+					'results'      => $results,
+					'listing_type' => 'search',
+					'url'          => $url,
+					'diagnostics'  => $mint_diagnostics
+				));
 			}
 
 			$url = '';

@@ -45,7 +45,7 @@ class ControllerMintcartCart extends Controller {
 				'cart_id'        => $product['cart_id'],
 				'product_id'     => $product['product_id'],
 				'name'           => $product['name'],
-				'url'            => $this->url->link('product/product', 'product_id=' . $product['product_id']),
+				'url'            => str_replace('&amp;', '&', $this->url->link('product/product', 'product_id=' . $product['product_id'])),
 				'thumb'          => $thumb,
 				'quantity'       => (int)$product['quantity'],
 				'price'          => $this->currency->format($unit_price, $this->session->data['currency']),
@@ -118,7 +118,7 @@ class ControllerMintcartCart extends Controller {
 		if ($missing_options || $recurring_missing) {
 			$this->respond(array(
 				'error'    => $this->language->get('error_option'),
-				'redirect' => $this->url->link('product/product', 'product_id=' . $product_id)
+				'redirect' => str_replace('&amp;', '&', $this->url->link('product/product', 'product_id=' . $product_id))
 			));
 			return;
 		}

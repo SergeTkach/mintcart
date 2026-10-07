@@ -89,6 +89,10 @@ select.mc-field__control {
     color: var(--mc-muted);
 }
 
+.mc-field__help.has-error {
+    color: var(--mc-danger);
+}
+
 .mc-field__error {
     margin: 0;
     font-family: var(--mc-font-family-base);

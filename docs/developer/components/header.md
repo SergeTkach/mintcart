@@ -147,7 +147,7 @@ longer the blocker.
         {# mobile nav toggle, branding.logo/name -> links.home, mc-search-box, widgets.cart #}
     </div>
     {% if widgets.menu %}
-        <nav class="offcanvas offcanvas-lg offcanvas-start mc-drawer mc-header__nav" id="mcHeaderNav">
+        <nav class="offcanvas-lg offcanvas-start mc-drawer mc-header__nav" id="mcHeaderNav">
             {# offcanvas-header (mobile only) + widgets.menu in .offcanvas-body #}
         </nav>
     {% endif %}
@@ -173,7 +173,7 @@ entry).
 ## Mobile navigation
 
 `mc-header__nav` (the `<nav>` wrapping `widgets.menu`) carries Bootstrap
-5's responsive off-canvas classes — `.offcanvas.offcanvas-lg.offcanvas-start`
+5's responsive off-canvas classes — `.offcanvas-lg.offcanvas-start` (never together with plain `.offcanvas`, which hides it at every width)
 — plus `.mc-drawer` (`docs/developer/components/drawer.md`). At the `lg`
 breakpoint (992px) and up, Bootstrap's own CSS neutralizes the off-canvas
 positioning/backdrop/transform and the nav renders as a normal static

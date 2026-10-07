@@ -44,7 +44,7 @@ class ControllerMintcartAdminsearch extends Controller {
 		foreach ($index->search($query) as $match) {
 			$results[] = array(
 				'label' => $match['label'],
-				'url'   => $this->url->link($match['route'], 'user_token=' . $this->session->data['user_token'], true)
+				'url'   => str_replace('&amp;', '&', $this->url->link($match['route'], 'user_token=' . $this->session->data['user_token'], true))
 			);
 		}
 

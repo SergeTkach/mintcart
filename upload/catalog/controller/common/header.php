@@ -20,33 +20,22 @@ class ControllerCommonHeader extends Controller {
 			$server = $this->config->get('config_url');
 		}
 
-		// MintCart's own compiled asset bundle (Phase 7 "Known gap",
-		// docs/developer/components/header.md, docs/developer/admin/asset-enqueue.md)
-		// - computed here, before $data['styles']/$data['scripts'] snapshot
-		// Document's queue a few lines below, so these calls actually reach
-		// the <head> loop mint_default's common/header.twig already has.
-		// Same components.min.css/catalog.min.js split
-		// ControllerCatalogProduct::getForm() already proved safe to add to
-		// a page that still runs Bootstrap 3/jQuery
-		// (docs/developer/admin/asset-enqueue.md "The fix: two bundles, pick
-		// the right one"): components.min.css is index.css with the
-		// `@import 'bootstrap/dist/css/bootstrap.css'` line removed (the
-		// thing that broke this exact page when index.min.css was tried
-		// here instead - see this controller's own common/header.twig
-		// comment), and catalog.min.js is plain ES modules with no jQuery
-		// coupling, so it does not collide with common.js/jQuery/Bootstrap
-		// 3's own bootstrap.min.js already loaded below. Gated by the same
-		// isMintAware() check $mint_header/mc_schema_organization use
-		// further down (recomputed there is no longer necessary - this is
-		// now the one place `$mint_theme`/`$mint_render_header` are
-		// resolved) so a store on the legacy 'default' theme, or an
-		// unrelated third-party theme, pays no extra request for a bundle
-		// its own templates never reference.
+		// MintCart's own compiled asset bundle (ADR 010,
+		// docs/developer/storefront-bootstrap5-migration.md). A Mint-aware
+		// theme (theme.json present) runs on Bootstrap 5: index.min.css is
+		// Bootstrap 5 + Mint CSS + the Bootstrap 3 class shim, catalog.min.js
+		// is Bootstrap 5 JS + Mint JS + the Bootstrap 3 jQuery/data-toggle
+		// shim. Such a theme's common/header.twig must NOT load Bootstrap 3
+		// itself (mint_default's doesn't); jQuery/common.js stay for legacy
+		// code. Computed before $data['styles']/$data['scripts'] snapshot the
+		// Document queue below. A store on the legacy 'default' theme, or an
+		// unrelated third-party theme, keeps its own Bootstrap 3 stack and
+		// gets nothing from here.
 		$mint_theme = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
 		$mint_render_header = \MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme);
 
 		if ($mint_render_header) {
-			$this->document->addStyle($server . 'assets/dist/css/components.min.css');
+			$this->document->addStyle($server . 'assets/dist/css/index.min.css');
 			$this->document->addScript($server . 'assets/dist/js/catalog.min.js');
 		}
 

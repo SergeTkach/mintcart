@@ -8,6 +8,7 @@ class ControllerExtensionModuleFeatured extends Controller {
 		$this->load->model('tool/image');
 
 		$data['products'] = array();
+		$mint_results = array();
 
 		if (!$setting['limit']) {
 			$setting['limit'] = 4;
@@ -20,6 +21,8 @@ class ControllerExtensionModuleFeatured extends Controller {
 				$product_info = $this->model_catalog_product->getProduct($product_id);
 
 				if ($product_info) {
+					$mint_results[] = $product_info;
+
 					if ($product_info['image']) {
 						$image = $this->model_tool_image->resize($product_info['image'], $setting['width'], $setting['height']);
 					} else {
@@ -68,6 +71,16 @@ class ControllerExtensionModuleFeatured extends Controller {
 		}
 
 		if ($data['products']) {
+			// Mint-aware themes render the shared product-card component
+			// (mintcart/product_cards, docs/developer/commerce/product-cards.md);
+			// null on any other theme, which keeps using $data['products'].
+			$data['product_cards'] = $this->load->controller('mintcart/product_cards', array(
+				'results'      => $mint_results,
+				'listing_type' => 'module_featured',
+				'image_width'  => $setting['width'],
+				'image_height' => $setting['height']
+			));
+
 			return $this->load->view('extension/module/featured', $data);
 		}
 	}

@@ -26,7 +26,11 @@ async function postForm(route, data) {
     const body = new URLSearchParams();
 
     for (const [key, value] of Object.entries(data)) {
-        body.set(key, value);
+        if (Array.isArray(value)) {
+            value.forEach((item) => body.append(`${key}[]`, item));
+        } else {
+            body.set(key, value);
+        }
     }
 
     const response = await fetch(`index.php?route=${route}`, {
@@ -53,7 +57,8 @@ function dispatchCartUpdated(snapshot) {
 /**
  * @param {string|number} productId
  * @param {number} quantity
- * @param {Record<string, string>} [options] `product_option_id` -> value,
+ * @param {Record<string, string|string[]>} [options] `product_option_id` ->
+ *        value (an array for a checkbox option -> `option[id][]`),
  *        same shape `checkout/cart.php`'s own `add()` accepts. Omit for a
  *        product with no options.
  * @returns {Promise<{redirected: true, url: string}|Record<string, unknown>>}

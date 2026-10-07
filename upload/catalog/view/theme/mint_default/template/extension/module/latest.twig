@@ -1,0 +1,15 @@
+{#
+    latest module on mint_default: the shared product-card component via
+    mintcart/product_cards (docs/developer/commerce/product-cards.md).
+    Overrides default/template/extension/module/latest.twig (.product-thumb).
+#}
+{% if product_cards %}
+<div class="mc-product-list">
+    <p class="mc-product-list__title">{{ heading_title }}</p>
+    <div class="mc-product-list__grid">
+        {% for product_card in product_cards %}
+            <div class="mc-product-list__item">{{ product_card }}</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

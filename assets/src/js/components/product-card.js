@@ -115,7 +115,15 @@ function readOptions(button) {
             return;
         }
 
-        options[field.dataset.optionId] = field.value;
+        const optionId = field.dataset.mcOptionId;
+
+        // A checkbox option can have several values (`option[id][]`).
+        if (field.type === 'checkbox') {
+            (options[optionId] ||= []).push(field.value);
+            return;
+        }
+
+        options[optionId] = field.value;
     });
 
     return options;
@@ -195,7 +203,14 @@ function initAddToCart(root) {
                 return;
             }
 
-            showToast(createToast({ title: addedText, message: addedText, variant: 'success' }));
+            const { productName, mcCartUrl, mcTextViewCart } = button.dataset;
+
+            showToast(createToast({
+                title: addedText,
+                message: productName || addedText,
+                variant: 'success',
+                action: mcCartUrl && mcTextViewCart ? { text: mcTextViewCart, href: mcCartUrl } : null,
+            }));
         } catch {
             showToast(createToast({ title: errorText, message: errorText, variant: 'danger' }));
         } finally {
