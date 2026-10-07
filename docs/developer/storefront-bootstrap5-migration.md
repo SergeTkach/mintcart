@@ -89,9 +89,10 @@ Most frequent BS3-only classes in `default/` (files): `pull-right` 101,
 
 - JSON contract: URLs unescaped (`&`, not `&amp;`) and product names plain
   text (`html_entity_decode`), escaped by the JS that renders them.
-  `mintcart/cart` item/option `name` still carries OpenCart's stored
-  entities (`30&quot;`) — decode it once the checkout summary JS is
-  confirmed to escape (`escapeHtml`/`textContent`), not before.
+  Exception, resolved at merge (2026-10-07): `mintcart/cart` and checkout
+  state keep OpenCart's stored entities (`30&quot;`) on purpose -
+  `checkout.js` renders them with `innerHTML` and relies on OpenCart's
+  escaped strings (as stock templates do). Do not decode them.
 
 ## Out of scope
 
