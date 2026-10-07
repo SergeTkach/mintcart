@@ -203,7 +203,13 @@ function markMissingOptions(form, missingIds) {
         }
     });
 
-    first?.focus();
+    // Centre it explicitly: plain focus() scrolls the minimum, which can
+    // leave the field under the sticky header (or not scroll at all when
+    // triggered from the sticky buy bar).
+    if (first) {
+        (first.closest('.mc-field') || first).scrollIntoView({ block: 'center', behavior: 'smooth' });
+        first.focus({ preventScroll: true });
+    }
 }
 
 function initOptionErrorReset(root) {

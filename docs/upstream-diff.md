@@ -3986,3 +3986,15 @@ patch) — appending keys is the smaller diff.
 key changed.
 
 **Tests:** `php -l` clean; strings exercised by the manual checkout check.
+
+
+## `upload/catalog/controller/product/product.php` — `mc_in_stock` (2026-10-07)
+
+**Change:** one line, `$data['mc_in_stock'] = $product_info['quantity'] > 0;`
+right after the stock-text block, for mint_default's PDP stock marker
+(green/red `mc-stock`). Same file already carries Mint additions (see its
+entries above); also `text_view_cart` / `cart_url` for the add-to-cart toast.
+**Why not Mint layer:** the value is per-request product data the stock
+controller already loaded; a template cannot compute it from the localized
+stock text. **Compatibility:** additive `$data` key, ignored by other themes.
+**Tests:** manual / headless screenshot of product 40 (In Stock, green).

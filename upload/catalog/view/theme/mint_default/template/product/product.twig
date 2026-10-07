@@ -97,11 +97,11 @@
                         {% if reward %}
                             <li>{{ text_reward }} {{ reward }}</li>
                         {% endif %}
-                        <li>{{ text_stock }} {{ stock }}</li>
+                        <li>{{ text_stock }} <span class="mc-stock {{ mc_in_stock ? 'mc-stock--in' : 'mc-stock--out' }}">{{ stock }}</span></li>
                     </ul>
 
                     {% if price %}
-                        <div class="mc-price mb-3{% if special %} mc-price--special{% endif %}" style="font-size: var(--mc-font-size-xl);">
+                        <div class="mc-price mc-price--lg mb-3{% if special %} mc-price--special{% endif %}">
                             <span class="mc-price__current">{{ special ?: price }}</span>
                             {% if special %}<span class="mc-price__original">{{ price }}</span>{% endif %}
                             {% if tax %}<span class="mc-price__tax d-block">{{ text_tax }} {{ tax }}</span>{% endif %}
@@ -121,7 +121,7 @@
                     {% endif %}
 
                     {% if options %}
-                        <h2 class="h5 mb-3">{{ text_option }}</h2>
+                        <p class="mc-product-page__options-title">{{ text_option }}</p>
                         <div data-mc-product-options>
                             {% for option in options %}
                                 <div class="mc-field mb-3">
@@ -134,7 +134,7 @@
                                             {% endfor %}
                                         </select>
                                     {% elseif option.type == 'radio' %}
-                                        <fieldset>
+                                        <fieldset class="mc-choice-group">
                                             <legend class="mc-field__label">{{ option.name }}{% if option.required %} *{% endif %}</legend>
                                             {% for value in option.product_option_value %}
                                                 <label class="mc-radio">
@@ -144,7 +144,7 @@
                                             {% endfor %}
                                         </fieldset>
                                     {% elseif option.type == 'checkbox' %}
-                                        <fieldset>
+                                        <fieldset class="mc-choice-group">
                                             <legend class="mc-field__label">{{ option.name }}{% if option.required %} *{% endif %}</legend>
                                             {% for value in option.product_option_value %}
                                                 <label class="mc-checkbox">
@@ -317,4 +317,19 @@
         {{ column_right }}
     </div>
 </div>
+{% if price %}
+    {# Sticky buy bar (buy-bar.js): shown once the main Add to Cart button has
+       scrolled out of view; its button clicks the real one, so options,
+       quantity, toasts and missing-option marking all stay in one place. #}
+    <div class="mc-buy-bar" data-mc-buy-bar role="region" aria-label="{{ heading_title }}" hidden>
+        <div class="container mc-buy-bar__inner">
+            {% if thumb %}<img class="mc-buy-bar__thumb" src="{{ thumb }}" alt="" width="48" height="48" loading="lazy">{% endif %}
+            <div class="mc-buy-bar__info">
+                <p class="mc-buy-bar__name">{{ heading_title }}</p>
+                <p class="mc-buy-bar__price{% if special %} mc-buy-bar__price--special{% endif %}">{{ special ?: price }}</p>
+            </div>
+            <button type="button" class="mc-button mc-button--primary mc-buy-bar__button" data-mc-action="buy-bar-add">{{ text_add_to_cart }}</button>
+        </div>
+    </div>
+{% endif %}
 {{ footer }}

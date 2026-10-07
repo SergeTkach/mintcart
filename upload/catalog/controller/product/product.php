@@ -335,6 +335,10 @@ class ControllerProductProduct extends Controller {
 				$data['stock'] = $this->language->get('text_instock');
 			}
 
+			// mint_default PDP stock marker (in / out colour), alongside the
+			// stock text above.
+			$data['mc_in_stock'] = $product_info['quantity'] > 0;
+
 			$this->load->model('tool/image');
 
 			if ($product_info['image']) {

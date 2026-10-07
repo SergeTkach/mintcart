@@ -54,3 +54,9 @@
 .mc-price--special .mc-price__current {
     --mc-price-color: var(--mc-danger);
 }
+
+/* Product page headline price. */
+.mc-price--lg .mc-price__current {
+    font-size: var(--mc-font-size-2xl);
+    font-weight: var(--mc-font-weight-bold);
+}
