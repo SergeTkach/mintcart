@@ -75,7 +75,12 @@ export async function addToCart(productId, quantity = 1, options = {}) {
     const json = await postForm('mintcart/cart/add', payload);
 
     if (json.redirect) {
-        return { redirected: true, url: json.redirect };
+        return {
+            redirected: true,
+            url: json.redirect,
+            error: json.error || '',
+            missingOptions: (json.missing_options || []).map(String),
+        };
     }
 
     dispatchCartUpdated(json);

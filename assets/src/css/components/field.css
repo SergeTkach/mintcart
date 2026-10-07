@@ -108,6 +108,10 @@ select.mc-field__control {
     --mc-field-border-color: var(--mc-danger);
 }
 
+.mc-field.has-error .mc-field__label {
+    color: var(--mc-danger);
+}
+
 .mc-field.has-error .mc-field__control:focus-visible {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-danger) 25%, transparent);
 }

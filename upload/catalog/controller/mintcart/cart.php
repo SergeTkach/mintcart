@@ -117,8 +117,11 @@ class ControllerMintcartCart extends Controller {
 
 		if ($missing_options || $recurring_missing) {
 			$this->respond(array(
-				'error'    => $this->language->get('error_option'),
-				'redirect' => str_replace('&amp;', '&', $this->url->link('product/product', 'product_id=' . $product_id))
+				'error'           => $this->language->get('error_option'),
+				// product_option_ids still unanswered, so the product page can
+				// mark those fields instead of following `redirect`.
+				'missing_options' => array_values($missing_options),
+				'redirect'        => str_replace('&amp;', '&', $this->url->link('product/product', 'product_id=' . $product_id))
 			));
 			return;
 		}
