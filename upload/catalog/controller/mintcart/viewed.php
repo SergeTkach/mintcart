@@ -71,7 +71,7 @@ class ControllerMintcartViewed extends Controller {
 			$items[] = array(
 				'id'      => (int)$result['product_id'],
 				'name'    => $result['name'],
-				'url'     => $this->url->link('product/product', 'product_id=' . $result['product_id']),
+				'url'     => str_replace('&amp;', '&', $this->url->link('product/product', 'product_id=' . $result['product_id'])),
 				'image'   => $image,
 				'price'   => $price,
 				'special' => $special
