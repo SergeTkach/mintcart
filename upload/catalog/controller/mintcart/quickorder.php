@@ -46,7 +46,7 @@ class ControllerMintcartQuickorder extends Controller {
 		if ($missing_options) {
 			$this->respond(array(
 				'error'    => $this->language->get('error_option'),
-				'redirect' => $this->url->link('product/product', 'product_id=' . $product_id)
+				'redirect' => str_replace('&amp;', '&', $this->url->link('product/product', 'product_id=' . $product_id))
 			));
 			return;
 		}
