@@ -45,6 +45,53 @@
     flex: 0 0 auto;
 }
 
+/* Item count bubble on the icon; the full summary text stays the
+   accessible label (visually hidden on narrow screens). */
+.mc-mini-cart__count {
+    position: absolute;
+    min-width: 1.125rem;
+    height: 1.125rem;
+    padding: 0 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: var(--mc-font-weight-bold);
+    line-height: 1.125rem;
+    color: var(--mc-on-primary, #fff);
+    text-align: center;
+    background: var(--mc-primary);
+    border-radius: var(--mc-radius-pill);
+}
+
+.mc-mini-cart__toggle {
+    position: relative;
+}
+
+@media (min-width: 576px) {
+    /* The summary text already says how many items - no bubble needed. */
+    .mc-mini-cart__count {
+        display: none;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .mc-mini-cart__toggle {
+        padding: var(--mc-space-2);
+    }
+
+    .mc-mini-cart__count {
+        top: -0.25rem;
+        right: -0.25rem;
+    }
+
+    .mc-mini-cart__summary {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+}
+
 /* Panel. Overrides Bootstrap's .dropdown-menu box only inside mc-mini-cart. */
 .mc-mini-cart__panel.dropdown-menu {
     position: absolute;

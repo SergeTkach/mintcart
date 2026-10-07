@@ -44,6 +44,7 @@ import { initViewedProducts } from './components/viewed-products.js';
 import { initReviews } from './components/reviews.js';
 import { initCheckout } from './components/checkout.js';
 import { initOptionUploads } from './components/option-upload.js';
+import { initStickyHeader } from './components/sticky-header.js';
 
 // MintCart-owned catalog behavior modules are added here as components ship
 // (Phase 4 onward).
@@ -71,6 +72,7 @@ function boot() {
     initReviews();
     initCheckout();
     initOptionUploads();
+    initStickyHeader();
 }
 
 if (document.readyState === 'loading') {

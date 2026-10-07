@@ -29,6 +29,30 @@
     border-bottom: var(--mc-border-width) solid var(--mc-border);
 }
 
+/*
+ * Sticky header (modifier - a theme drops it to get a static header).
+ * The topbar scrolls away, the main row + navigation stay: `top` is the
+ * negative topbar height, measured into --mc-header-topbar-height by
+ * sticky-header.js. `is-stuck` (set by the same script) adds the shadow.
+ * While the mobile nav drawer is open the header is lifted to drawer level,
+ * otherwise the drawer (fixed, but inside this stacking context) would sit
+ * under Bootstrap's body-level backdrop.
+ */
+.mc-header--sticky {
+    position: sticky;
+    top: calc(-1 * var(--mc-header-topbar-height, 0px));
+    z-index: var(--mc-z-sticky);
+    transition: box-shadow var(--mc-motion-duration-base) var(--mc-motion-easing-standard);
+}
+
+.mc-header--sticky.is-stuck {
+    box-shadow: var(--mc-shadow-md);
+}
+
+.mc-header--sticky:has(.offcanvas-lg.show, .offcanvas-lg.showing, .offcanvas-lg.hiding) {
+    z-index: var(--mc-z-drawer);
+}
+
 /* ---------------------------------------------------------------------- */
 /* Topbar                                                                  */
 /* ---------------------------------------------------------------------- */
@@ -119,6 +143,34 @@
     align-items: center;
     gap: var(--mc-space-3);
     flex-shrink: 0;
+}
+
+/* Below lg: one compact row (menu toggle, logo, cart) + search underneath,
+   so the sticky header stays short on phones. */
+@media (max-width: 991.98px) {
+    .mc-header__main {
+        padding-top: var(--mc-space-3);
+        padding-bottom: var(--mc-space-3);
+    }
+
+    .mc-header__branding {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .mc-header__logo img {
+        max-height: 2.25rem;
+        max-width: 100%;
+    }
+
+    .mc-header__actions {
+        order: 3;
+    }
+
+    .mc-header__widgets {
+        order: 4;
+        flex-basis: 100%;
+    }
 }
 
 /* ---------------------------------------------------------------------- */

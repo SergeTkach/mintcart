@@ -13,6 +13,9 @@
 <div id="cart" class="mc-mini-cart dropdown">
     <button type="button" class="mc-mini-cart__toggle" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
         <svg class="mc-mini-cart__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg>
+        {% set mc_cart_qty = 0 %}
+        {% for product in products %}{% set mc_cart_qty = mc_cart_qty + product.quantity %}{% endfor %}
+        {% if mc_cart_qty %}<span class="mc-mini-cart__count" aria-hidden="true">{{ mc_cart_qty }}</span>{% endif %}
         <span class="mc-mini-cart__summary" id="cart-total">{{ text_items }}</span>
     </button>
     <div class="mc-mini-cart__panel dropdown-menu dropdown-menu-end">

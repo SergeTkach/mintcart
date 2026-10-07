@@ -260,3 +260,19 @@ this component never reimplements grid/flex math of its own.
       (network tab, 200 response) and makes `mc-product-card`'s Add to
       Cart/Quick Order/wishlist buttons respond to a click, before this is
       production-ready.
+
+## Sticky header (2026-10-07)
+
+`mc-header--sticky` + `data-mc-sticky-header` (on by default in
+mint_default; drop both for a static header). The topbar scrolls away; the
+main row and navigation stay (`top: -var(--mc-header-topbar-height)`).
+`assets/src/js/components/sticky-header.js` keeps
+`--mc-header-topbar-height` in sync (ResizeObserver) and toggles `is-stuck`
+(shadow) after the topbar has scrolled off. While the mobile nav drawer is
+open the header is lifted to `--mc-z-drawer` so the drawer stays above
+Bootstrap's body-level backdrop.
+
+Below `lg` the main row is compact: menu toggle, logo, cart in one row,
+search underneath. The mini cart shows an item-count bubble on the icon
+below 576px, where the summary text is visually hidden (still the
+accessible label).
