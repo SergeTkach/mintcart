@@ -198,26 +198,6 @@ class ControllerProductCategory extends Controller {
 			// argument - see that class's own doc comment.
 			$mint_diagnostics = new \MintCart\Core\Diagnostics((bool)$this->config->get('mintcart_dev_mode'));
 
-			if ($mint_render_product_cards) {
-				$product_card_list_renderer = new \MintCart\Design\ProductCardListRenderer(
-					new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme, 'components', $mint_diagnostics)
-				);
-
-				$text_badge = array(
-					'sale'         => $this->language->get('text_badge_sale'),
-					'out-of-stock' => $this->language->get('text_badge_out_of_stock'),
-					'new'          => $this->language->get('text_badge_new')
-				);
-
-				// OpenCart's own backorder flag (catalog/controller/checkout/cart.php
-				// checks the same setting before blocking an out-of-stock add) -
-				// without this, ProductViewProvider would disable add-to-cart for
-				// any out-of-stock product even on a store that allows backorders.
-				$allow_out_of_stock_purchase = (bool)$this->config->get('config_stock_checkout');
-
-				$data['product_cards'] = array();
-			}
-
 			$filter_data = array(
 				'filter_category_id' => $category_id,
 				'filter_filter'      => $filter,
@@ -237,16 +217,6 @@ class ControllerProductCategory extends Controller {
 				} else {
 					$image = $this->model_tool_image->resize('placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'));
 				}
-
-				// 2x variant for a high-DPI srcset (MINTCART_FUNCTIONAL_SCOPE.md
-				// §19 Performance: "responsive images"). Same source/config
-				// values as $image above, width/height doubled -
-				// model_tool_image->resize() caches whatever size it's asked
-				// for, so this is one extra resize() call per product, not a
-				// new image pipeline (docs/developer/commerce/product-view-provider.md
-				// "Image dimensions").
-				$image_2x = $this->model_tool_image->resize($result['image'] ? $result['image'] : 'placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width') * 2, $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height') * 2);
-				$image_srcset = $image . ' 1x, ' . $image_2x . ' 2x';
 
 				if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
 					$price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
@@ -268,12 +238,6 @@ class ControllerProductCategory extends Controller {
 					$tax = false;
 				}
 
-				if ($this->config->get('config_review_status')) {
-					$rating = (int)$result['rating'];
-				} else {
-					$rating = false;
-				}
-
 				$href = $this->url->link('product/product', 'path=' . $this->request->get['path'] . '&product_id=' . $result['product_id'] . $url);
 
 				$data['products'][] = array(
@@ -289,65 +253,18 @@ class ControllerProductCategory extends Controller {
 					'href'        => $href
 				);
 
-				if ($mint_render_product_cards) {
-					$product_card = $product_card_list_renderer->render(
-						array(
-							'id'                          => $result['product_id'],
-							'name'                        => $result['name'],
-							'url'                         => $href,
-							'image'                       => $image,
-							'image_srcset'                => $image_srcset,
-							'image_width'                 => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'),
-							'image_height'                => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'),
-							'price'                       => $price,
-							'special'                     => $special,
-							'tax'                         => $tax,
-							'rating'                      => $rating,
-							'quantity'                    => $result['quantity'],
-							'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
-							'minimum'                     => $result['minimum'],
-							'manufacturer'                => isset($result['manufacturer']) ? $result['manufacturer'] : null,
-							'allow_out_of_stock_purchase' => $allow_out_of_stock_purchase
-						),
-						array(),
-						array(
-							// 1-based: "1st product on this page", not a
-							// zero-based array index.
-							'listing_type' => 'category',
-							'position'     => count($data['products'])
-						),
-						array(
-							'text_badge'       => $text_badge,
-							'text_wishlist'    => $this->language->get('button_wishlist'),
-							'text_compare'     => $this->language->get('button_compare'),
-							'text_rated'       => $this->language->get('text_rated'),
-							'text_tax'         => $this->language->get('text_tax'),
-							'text_add_to_cart' => $this->language->get('button_cart'),
-							'text_quick_order' => $this->language->get('text_quick_order'),
-							'text_added_to_cart' => $this->language->get('text_added_to_cart'),
-							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error'),
-							'text_wishlist_error' => $this->language->get('text_wishlist_error')
-						),
-						function (\Throwable $e, array $failed_product) {
-							// A broken/missing component template (deploy
-							// mistake, permissions, future refactor) must not
-							// turn into a fatal error for every visitor on
-							// this page - MintCart\Design\ProductCardListRenderer
-							// stops attempting the pipeline for the rest of
-							// this request and lets the page render without
-							// product cards rather than not render at all.
-							// The legacy $data['products'] array above is
-							// unaffected either way.
-							(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render product-card for product_id ' . $failed_product['id'] . ': ' . $e->getMessage());
-						}
-					);
+			}
 
-					if ($product_card !== null) {
-						$data['product_cards'][] = $product_card;
-					}
-
-					$mint_render_product_cards = $product_card_list_renderer->isEnabled();
-				}
+			// Shared product-card pipeline (docs/developer/commerce/product-cards.md);
+			// null on non-Mint themes, which keep using $data['products'].
+			if ($mint_render_product_cards) {
+				$data['product_cards'] = $this->load->controller('mintcart/product_cards', array(
+					'results'      => $results,
+					'listing_type' => 'category',
+					'link_prefix'  => 'path=' . $this->request->get['path'] . '&',
+					'url'          => $url,
+					'diagnostics'  => $mint_diagnostics
+				));
 			}
 
 			$url = '';

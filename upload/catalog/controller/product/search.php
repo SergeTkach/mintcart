@@ -217,7 +217,6 @@ class ControllerProductSearch extends Controller {
 		// identical comment and docs/developer/core/diagnostics.md.
 		$mint_diagnostics = new \MintCart\Core\Diagnostics((bool)$this->config->get('mintcart_dev_mode'));
 
-
 		if (isset($this->request->get['search']) || isset($this->request->get['tag'])) {
 			$filter_data = array(
 				'filter_name'         => $search,
