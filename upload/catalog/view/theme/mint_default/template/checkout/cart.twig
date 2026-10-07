@@ -1,0 +1,141 @@
+{#
+    Shopping cart page for mint_default (mc-cart-page). Same data as the
+    stock ControllerCheckoutCart::index() - only the markup is Mint-owned.
+
+    Quantity: the stock form (POST quantity[cart_id] to {{ action }},
+    i.e. checkout/cart/edit) - works without JS; cart-page.js submits it as
+    soon as a quantity changes. Remove: Mint cart client, then reload.
+    Coupon / shipping estimate / voucher blocks are extension output
+    (`modules`) and keep their own markup.
+
+    Contract: docs/developer/components/cart-page.md
+#}
+{{ header }}
+<div class="container py-4" data-mc-cart-page>
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    {% for alert in [{type: 'info', text: attention}, {type: 'success', text: success}, {type: 'danger', text: error_warning}] %}
+        {% if alert.text %}
+            <div class="mc-alert mc-alert--{{ alert.type }} mb-4" role="{{ alert.type == 'danger' ? 'alert' : 'status' }}">
+                <div class="mc-alert__body"><p class="mc-alert__message">{{ alert.text }}</p></div>
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    <div class="row g-4">
+        {{ column_left }}
+
+        {% if column_left and column_right %}
+            {% set content_class = 'col-lg-6' %}
+        {% elseif column_left or column_right %}
+            {% set content_class = 'col-lg-9' %}
+        {% else %}
+            {% set content_class = 'col-12' %}
+        {% endif %}
+
+        <div class="{{ content_class }}">
+            {{ content_top }}
+
+            <h1 class="mc-cart-page__heading mb-4">
+                {{ heading_title }}
+                {% if weight %}<span class="mc-cart-page__weight">{{ weight }}</span>{% endif %}
+            </h1>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <form class="mc-cart-page__form" action="{{ action }}" method="post" enctype="multipart/form-data" data-mc-cart-form>
+                        <ul class="mc-cart-page__items">
+                            {% for product in products %}
+                                <li class="mc-cart-page__item">
+                                    {% if product.thumb %}
+                                        <a class="mc-cart-page__thumb" href="{{ product.href }}" tabindex="-1" aria-hidden="true">
+                                            <img src="{{ product.thumb }}" alt="" loading="lazy">
+                                        </a>
+                                    {% endif %}
+
+                                    <div class="mc-cart-page__info">
+                                        <a class="mc-cart-page__name" href="{{ product.href }}">{{ product.name }}</a>
+                                        {% if not product.stock %}<span class="mc-cart-page__stock">***</span>{% endif %}
+                                        <p class="mc-cart-page__meta">
+                                            {{ column_model }}: {{ product.model }}
+                                            {% for option in product.option %}<br>{{ option.name }}: {{ option.value }}{% endfor %}
+                                            {% if product.reward %}<br>{{ product.reward }}{% endif %}
+                                            {% if product.recurring %}<br>{{ text_recurring_item }}: {{ product.recurring }}{% endif %}
+                                        </p>
+                                        <p class="mc-cart-page__unit">{{ column_price }}: {{ product.price }}</p>
+                                    </div>
+
+                                    <div class="mc-cart-page__controls">
+                                        <div class="mc-quantity">
+                                            <button type="button" class="mc-quantity__button" data-mc-action="quantity-decrement" aria-label="−">−</button>
+                                            <input type="number" class="mc-quantity__input" name="quantity[{{ product.cart_id }}]" value="{{ product.quantity }}" min="1" step="1" inputmode="numeric" aria-label="{{ column_quantity }}: {{ product.name }}">
+                                            <button type="button" class="mc-quantity__button" data-mc-action="quantity-increment" aria-label="+">+</button>
+                                        </div>
+                                        <span class="mc-cart-page__total">{{ product.total }}</span>
+                                        <button type="button" class="mc-cart-page__remove" data-mc-action="remove-cart-item" data-cart-id="{{ product.cart_id }}" aria-label="{{ button_remove }}: {{ product.name }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/></svg>
+                                        </button>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                            {% for voucher in vouchers %}
+                                <li class="mc-cart-page__item">
+                                    <div class="mc-cart-page__info">
+                                        <span class="mc-cart-page__name">{{ voucher.description }}</span>
+                                    </div>
+                                    <div class="mc-cart-page__controls">
+                                        <span class="mc-cart-page__total">{{ voucher.amount }}</span>
+                                        <button type="button" class="mc-cart-page__remove" onclick="voucher.remove('{{ voucher.key }}');" aria-label="{{ button_remove }}: {{ voucher.description }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/></svg>
+                                        </button>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <noscript><button type="submit" class="mc-button mc-button--secondary mc-button--sm mt-3">{{ button_update }}</button></noscript>
+                    </form>
+
+                    {% if modules %}
+                        <div class="mc-cart-page__extras mt-4">
+                            <p class="mc-cart-page__extras-title">{{ text_next }}</p>
+                            <p class="mc-cart-page__extras-hint">{{ text_next_choice }}</p>
+                            <div class="panel-group" id="accordion">
+                                {% for module in modules %}{{ module }}{% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-lg-4">
+                    <aside class="mc-cart-page__summary">
+                        <dl class="mc-cart-page__totals">
+                            {% for total in totals %}
+                                <div class="mc-cart-page__total-row{% if loop.last %} mc-cart-page__total-row--grand{% endif %}">
+                                    <dt>{{ total.title }}</dt>
+                                    <dd>{{ total.text }}</dd>
+                                </div>
+                            {% endfor %}
+                        </dl>
+                        <a class="mc-button mc-button--primary mc-cart-page__checkout" href="{{ checkout }}">{{ button_checkout }}</a>
+                        <a class="mc-cart-page__continue" href="{{ continue }}">{{ button_shopping }}</a>
+                    </aside>
+                </div>
+            </div>
+
+            {{ content_bottom }}
+        </div>
+
+        {{ column_right }}
+    </div>
+</div>
+{{ footer }}
