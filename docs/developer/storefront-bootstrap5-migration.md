@@ -76,9 +76,14 @@ Most frequent BS3-only classes in `default/` (files): `pull-right` 101,
       special / latest modules render `mc-product-card` in `mc-product-list`
       on mint_default. Featured verified on home over HTTP; the other three
       are not placed in any layout on the dev DB — not seen rendered.
-- [ ] B. Move the six existing copies (category, search, special,
+- [x] B. Move the six existing copies (category, search, special,
       manufacturer, product related, home Products block) onto the shared
-      controller, one commit each.
+      controller, one commit each. Card HTML diffed before/after over HTTP:
+      identical for category/search/special/manufacturer; related gained
+      srcset + width/height; home Products block not on the dev DB, unseen.
+- [x] C. Fix: add-to-cart / quick-order JSON redirect kept `&amp;`.
+- [x] D. `mc-nav` category menu (stock menu.twig is BS3 navbar, hidden by
+      BS5) — `docs/developer/components/navigation.md`.
 
 ## Out of scope
 

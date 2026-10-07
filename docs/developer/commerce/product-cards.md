@@ -35,11 +35,12 @@ language file).
 | List | Controller | Template (mint_default) |
 |---|---|---|
 | Featured / Bestseller / Special / Latest modules | `extension/module/*.php` | `extension/module/*.twig` (`mc-product-list`) |
-
-Category, search, special, manufacturer, related products and the homepage
-Products block still build cards with their own copy of this code; moving
-them onto this controller is the follow-up (see
-`docs/developer/storefront-bootstrap5-migration.md`).
+| Category | `product/category.php` (`link_prefix` = `path=…&`) | `product/category.twig` |
+| Search | `product/search.php` | `product/search.twig` |
+| Specials page | `product/special.php` | `product/special.twig` |
+| Manufacturer | `product/manufacturer.php` (`link_prefix` = `manufacturer_id=…&`) | `product/manufacturer_info.twig` |
+| Related products | `product/product.php` (related image size) | `product/product.twig` |
+| Homepage Products block | `common/home.php` | `mint/blocks/products.twig` |
 
 ## `mc-product-list`
 

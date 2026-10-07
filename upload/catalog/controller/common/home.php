@@ -196,16 +196,9 @@ class ControllerCommonHome extends Controller {
 	}
 
 	/**
-	 * Queries products for one 'products' mc_block row and renders it,
-	 * reusing the same MintCart\Commerce\ProductViewProvider +
-	 * MintCart\Design\ProductCardListRenderer pipeline Category/Search/
-	 * Special/Manufacturer already use (MINTCART_TECHNICAL_PLAN.md
-	 * §15C/§15D) - the per-product image/price/special/tax mapping below
-	 * mirrors ControllerProductCategory::index() exactly, the same
-	 * established per-controller duplication every other listing
-	 * controller carries pending a shared ProductListingService
-	 * (MINTCART_TECHNICAL_PLAN.md §15C, not built yet - CLAUDE.md §85, no
-	 * abstraction before enough real consumers justify it).
+	 * Queries products for one 'products' mc_block row and renders it through
+	 * the shared mintcart/product_cards pipeline (MINTCART_TECHNICAL_PLAN.md
+	 * §15C/§15D, docs/developer/commerce/product-cards.md).
 	 *
 	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
 	 * @param string $mint_theme
@@ -214,7 +207,6 @@ class ControllerCommonHome extends Controller {
 	 */
 	private function renderProductsBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer, $mint_theme) {
 		$this->load->model('catalog/product');
-		$this->load->model('tool/image');
 
 		$settings = (new \MintCart\Blocks\ProductsBlockProvider())->build($block['settings'], $block['content']);
 
@@ -235,108 +227,11 @@ class ControllerCommonHome extends Controller {
 			return null;
 		}
 
-		$product_card_list_renderer = new \MintCart\Design\ProductCardListRenderer(
-			new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme)
-		);
-
-		$text_badge = array(
-			'sale'         => $this->language->get('text_badge_sale'),
-			'out-of-stock' => $this->language->get('text_badge_out_of_stock'),
-			'new'          => $this->language->get('text_badge_new')
-		);
-
-		// Same backorder flag ControllerProductCategory checks - without
-		// it, ProductViewProvider would disable add-to-cart for any
-		// out-of-stock product even on a store that allows backorders.
-		$allow_out_of_stock_purchase = (bool)$this->config->get('config_stock_checkout');
-
-		$product_cards = array();
-
-		foreach ($results as $position => $result) {
-			if ($result['image']) {
-				$image = $this->model_tool_image->resize($result['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'));
-			} else {
-				$image = $this->model_tool_image->resize('placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'));
-			}
-
-			if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
-				$price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
-			} else {
-				$price = false;
-			}
-
-			if (!is_null($result['special']) && (float)$result['special'] >= 0) {
-				$special = $this->currency->format($this->tax->calculate($result['special'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
-				$tax_price = (float)$result['special'];
-			} else {
-				$special = false;
-				$tax_price = (float)$result['price'];
-			}
-
-			if ($this->config->get('config_tax')) {
-				$tax = $this->currency->format($tax_price, $this->session->data['currency']);
-			} else {
-				$tax = false;
-			}
-
-			if ($this->config->get('config_review_status')) {
-				$rating = (int)$result['rating'];
-			} else {
-				$rating = false;
-			}
-
-			$href = $this->url->link('product/product', 'product_id=' . $result['product_id']);
-
-			$product_card = $product_card_list_renderer->render(
-				array(
-					'id'                          => $result['product_id'],
-					'name'                        => $result['name'],
-					'url'                         => $href,
-					'image'                       => $image,
-					'image_width'                 => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width'),
-					'image_height'                => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height'),
-					'price'                       => $price,
-					'special'                     => $special,
-					'tax'                         => $tax,
-					'rating'                      => $rating,
-					'quantity'                    => $result['quantity'],
-					'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
-					'minimum'                     => $result['minimum'],
-					'manufacturer'                => isset($result['manufacturer']) ? $result['manufacturer'] : null,
-					'allow_out_of_stock_purchase' => $allow_out_of_stock_purchase
-				),
-				array(),
-				array(
-					'listing_type' => 'homepage_products_block',
-					'position'     => $position + 1
-				),
-				array(
-					'text_badge'             => $text_badge,
-					'text_wishlist'          => $this->language->get('button_wishlist'),
-					'text_compare'           => $this->language->get('button_compare'),
-					'text_rated'             => $this->language->get('text_rated'),
-					'text_tax'               => $this->language->get('text_tax'),
-					'text_add_to_cart'       => $this->language->get('button_cart'),
-					'text_quick_order'       => $this->language->get('text_quick_order'),
-					'text_added_to_cart'     => $this->language->get('text_added_to_cart'),
-					'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error')
-				),
-				function (\Throwable $e, array $failed_product) {
-					// Same degrade-the-grid-not-the-page behaviour as every
-					// other ProductCardListRenderer consumer - a broken
-					// component must not fatal the whole homepage.
-					(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render product-card for product_id ' . $failed_product['id'] . ' in Homepage Products block: ' . $e->getMessage());
-				}
-			);
-
-			if ($product_card !== null) {
-				$product_cards[] = $product_card;
-			}
-
-			if (!$product_card_list_renderer->isEnabled()) {
-				break;
-			}
-		}
+		// Shared product-card pipeline (docs/developer/commerce/product-cards.md).
+		$product_cards = $this->load->controller('mintcart/product_cards', array(
+			'results'      => $results,
+			'listing_type' => 'homepage_products_block'
+		));
 
 		if (!$product_cards) {
 			return null;
