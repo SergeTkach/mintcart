@@ -167,7 +167,7 @@
 /* ---------------------------------------------------------------------- */
 
 /*
- * `.mc-header__nav` carries Bootstrap's `.offcanvas .offcanvas-lg
+ * `.mc-header__nav` carries Bootstrap's `.offcanvas-lg
  * .offcanvas-start` (docs/developer/components/drawer.md) - at the `lg`
  * breakpoint and up it renders as a normal static block (Bootstrap's own
  * responsive-offcanvas behavior neutralizes the slide-in/backdrop/fixed-

@@ -101,7 +101,7 @@
 
     {% if widgets.menu %}
         <nav
-            class="offcanvas offcanvas-lg offcanvas-start mc-drawer mc-header__nav"
+            class="offcanvas-lg offcanvas-start mc-drawer mc-header__nav"
             tabindex="-1"
             id="mcHeaderNav"
             aria-labelledby="mcHeaderNavTitle"
@@ -111,7 +111,9 @@
                 <button type="button" class="mc-drawer__close" data-mc-action="close-drawer" aria-label="{{ text_close }}">&times;</button>
             </div>
             <div class="offcanvas-body mc-legacy">
-                {{ widgets.menu|raw }}
+                <div class="container">
+                    {{ widgets.menu|raw }}
+                </div>
             </div>
         </nav>
     {% endif %}
