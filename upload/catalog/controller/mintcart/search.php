@@ -70,7 +70,7 @@ class ControllerMintcartSearch extends Controller {
 
 			$items[] = array(
 				'id'      => $result['product_id'],
-				'name'    => $result['name'],
+				'name'    => html_entity_decode($result['name'], ENT_QUOTES, 'UTF-8'),
 				'url'     => str_replace('&amp;', '&', $this->url->link('product/product', 'product_id=' . $result['product_id'])),
 				'image'   => $image,
 				'price'   => $price,

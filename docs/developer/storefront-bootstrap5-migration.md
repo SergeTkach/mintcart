@@ -85,6 +85,14 @@ Most frequent BS3-only classes in `default/` (files): `pull-right` 101,
 - [x] D. `mc-nav` category menu (stock menu.twig is BS3 navbar, hidden by
       BS5) — `docs/developer/components/navigation.md`.
 
+## Notes for the checkout-branch merge
+
+- JSON contract: URLs unescaped (`&`, not `&amp;`) and product names plain
+  text (`html_entity_decode`), escaped by the JS that renders them.
+  `mintcart/cart` item/option `name` still carries OpenCart's stored
+  entities (`30&quot;`) — decode it once the checkout summary JS is
+  confirmed to escape (`escapeHtml`/`textContent`), not before.
+
 ## Out of scope
 
 - Admin stays on BS3 (separate phase).
