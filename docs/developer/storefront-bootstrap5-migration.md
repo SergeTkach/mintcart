@@ -52,7 +52,7 @@ Most frequent BS3-only classes in `default/` (files): `pull-right` 101,
 - [x] 2. CSS shim: extend `compatibility/bootstrap3-shim.css` with the
       class list above (forms, panels, visibility, grid aliases, labels,
       close, caret, thumbnail, well, img-responsive).
-- [ ] 3. `mint_default/template/common/header.twig`: drop BS3 CSS/JS, load
+- [x] 3. `mint_default/template/common/header.twig`: drop BS3 CSS/JS, load
       `index.min.css` (BS5 + Mint) instead of `components.min.css`; keep
       jQuery, Font Awesome, `common.js`. `ControllerCommonHeader`: choose
       the bundle. Admin keeps `components.min.css` (still BS3).

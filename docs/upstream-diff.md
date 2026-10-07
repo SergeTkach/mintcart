@@ -1073,6 +1073,16 @@ for what a human should confirm once installed (checkout/account pages
 render `content="noindex, follow"`; ordinary catalog pages render
 `content="index, follow"`).
 
+**Update (2026-10-07): Bootstrap 5 storefront (ADR 010).** The enqueued
+stylesheet is now `assets/dist/css/index.min.css` (Bootstrap 5 + Mint +
+Bootstrap 3 class shim) instead of `components.min.css`, and
+`mint_default`'s `common/header.twig` no longer loads Bootstrap 3 CSS/JS or
+`default/stylesheet/stylesheet.css`. Same one-line change inside the same
+`isMintAware()` gate, so non-Mint themes are unaffected. The two-bundle
+reasoning in the 2026-09-19 update below is superseded for the storefront
+(it still holds for admin). Plan and audit:
+`docs/developer/storefront-bootstrap5-migration.md`.
+
 **Update (2026-09-19, routine run): enqueue MintCart's own
 `components.min.css`/`catalog.min.js` bundle.** Resolves the standing
 "Known gap" every Phase 4-15 component doc has carried since it was

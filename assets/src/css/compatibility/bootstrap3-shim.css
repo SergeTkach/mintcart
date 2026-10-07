@@ -181,6 +181,14 @@
     }
 }
 
+/* Was in default/stylesheet/stylesheet.css, which Bootstrap 5 themes no
+   longer load (ADR 010). */
+div.required .control-label::before {
+    content: '* ';
+    color: var(--mc-danger, #dc3545);
+    font-weight: 700;
+}
+
 .help-block {
     display: block;
     margin-top: var(--mc-space-1, 0.25rem);
