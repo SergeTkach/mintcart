@@ -12,7 +12,8 @@
  *     $cards = $this->load->controller('mintcart/product_cards', array(
  *         'results'      => $results,          // getProducts()/getProduct() rows
  *         'listing_type' => 'category',
- *         'url'          => '&path=20',        // optional, appended to product links
+ *         'link_prefix'  => 'path=20&',        // optional, before product_id in product links
+ *         'url'          => '&sort=p.price',    // optional, appended to product links
  *         'image_width'  => 200,               // optional, theme setting by default
  *         'image_height' => 200,
  *         'diagnostics'  => $mint_diagnostics  // optional MintCart\Core\Diagnostics
@@ -41,6 +42,7 @@ class ControllerMintcartProductCards extends Controller {
 		$this->load->model('tool/image');
 
 		$listing_type = isset($args['listing_type']) ? (string)$args['listing_type'] : 'listing';
+		$link_prefix = isset($args['link_prefix']) ? (string)$args['link_prefix'] : '';
 		$url = isset($args['url']) ? (string)$args['url'] : '';
 		$theme_setting = 'theme_' . $this->config->get('config_theme');
 		$width = !empty($args['image_width']) ? (int)$args['image_width'] : (int)$this->config->get($theme_setting . '_image_product_width');
@@ -77,7 +79,7 @@ class ControllerMintcartProductCards extends Controller {
 
 		foreach (array_values($args['results']) as $position => $result) {
 			$card = $renderer->render(
-				$this->product($result, $url, $width, $height, $allow_out_of_stock_purchase),
+				$this->product($result, $link_prefix, $url, $width, $height, $allow_out_of_stock_purchase),
 				array(),
 				array(
 					'listing_type' => $listing_type,
@@ -101,7 +103,7 @@ class ControllerMintcartProductCards extends Controller {
 		return $cards;
 	}
 
-	private function product(array $result, $url, $width, $height, $allow_out_of_stock_purchase) {
+	private function product(array $result, $link_prefix, $url, $width, $height, $allow_out_of_stock_purchase) {
 		$source = $result['image'] ? $result['image'] : 'placeholder.png';
 		$image = $this->model_tool_image->resize($source, $width, $height);
 		$image_2x = $this->model_tool_image->resize($source, $width * 2, $height * 2);
@@ -129,7 +131,7 @@ class ControllerMintcartProductCards extends Controller {
 		return array(
 			'id'                          => $result['product_id'],
 			'name'                        => $result['name'],
-			'url'                         => $this->url->link('product/product', 'product_id=' . $result['product_id'] . $url),
+			'url'                         => $this->url->link('product/product', $link_prefix . 'product_id=' . $result['product_id'] . $url),
 			'image'                       => $image,
 			'image_srcset'                => $image . ' 1x, ' . $image_2x . ' 2x',
 			'image_width'                 => $width,

@@ -9,7 +9,8 @@ the image / price / special / tax / rating preparation.
 $data['product_cards'] = $this->load->controller('mintcart/product_cards', array(
     'results'      => $results,        // model_catalog_product rows (getProducts(), getProduct(), ...)
     'listing_type' => 'module_latest', // context.listing_type for the card
-    'url'          => '&path=20',      // optional, appended to product links
+    'link_prefix'  => 'path=20&',     // optional, before product_id in product links
+    'url'          => '&sort=p.price', // optional, appended to product links
     'image_width'  => 200,             // optional, theme image_product size by default
     'image_height' => 200,
     'diagnostics'  => $mint_diagnostics // optional MintCart\Core\Diagnostics
