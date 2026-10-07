@@ -24,6 +24,7 @@
  */
 
 @import 'bootstrap/dist/css/bootstrap.css';
+@import 'glightbox/dist/css/glightbox.css';
 @import './settings/tokens.css';
 @import './settings/bootstrap-bridge.css';
 @import './presets/clean.css';
