@@ -16,7 +16,9 @@
  */
 
 .mc-product-list {
-    --mc-product-list-min: 11rem;
+    /* Four columns in a full-width 1320px container, like the category grid;
+       fewer in narrower positions (columns, sidebars). */
+    --mc-product-list-min: 16.25rem;
     --mc-product-list-gap: var(--mc-space-4);
 
     margin-bottom: var(--mc-space-8);
@@ -34,6 +36,13 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(var(--mc-product-list-min), 100%), 1fr));
     gap: var(--mc-product-list-gap);
+}
+
+@media (max-width: 575.98px) {
+    .mc-product-list {
+        --mc-product-list-min: 9.5rem;
+        --mc-product-list-gap: var(--mc-space-3);
+    }
 }
 
 .mc-product-list__item {

@@ -19,7 +19,10 @@
     width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: contain;
-    background: var(--mc-surface-alt);
+    /* Product photos usually carry their own white background - a tinted
+       backdrop would frame them as a white box inside a grey square. */
+    background: var(--mc-surface);
+    border: var(--mc-border-width) solid color-mix(in srgb, var(--mc-border) 45%, transparent);
     border-radius: var(--mc-radius-lg);
     margin-bottom: var(--mc-space-3);
 }
@@ -38,8 +41,8 @@
     width: 4.5rem;
     height: 4.5rem;
     padding: 0;
-    background: var(--mc-surface-alt);
-    border: var(--mc-border-width) solid transparent;
+    background: var(--mc-surface);
+    border: var(--mc-border-width) solid color-mix(in srgb, var(--mc-border) 45%, transparent);
     border-radius: var(--mc-radius-md);
     cursor: pointer;
     overflow: hidden;
