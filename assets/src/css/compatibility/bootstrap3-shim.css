@@ -55,6 +55,14 @@
     padding-inline: 0.3125rem;
 }
 
+/* Bootstrap 5 draws its own caret on every .dropdown-toggle via ::after;
+   Bootstrap 3 markup already carries one (`fa fa-caret-down` / `.caret`),
+   so legacy toggles would show two. Hide BS5's only where a legacy caret
+   exists, leaving Mint-owned dropdowns untouched. */
+.dropdown-toggle:has(> .fa-caret-down, > .caret)::after {
+    display: none;
+}
+
 .caret {
     display: inline-block;
     width: 0;
