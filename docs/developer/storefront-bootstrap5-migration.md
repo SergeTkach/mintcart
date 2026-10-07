@@ -60,6 +60,10 @@ Most frequent BS3-only classes in `default/` (files): `pull-right` 101,
       home, category, product (options, reviews, tabs), search, cart,
       account login/register/edit, information, contact, Mint checkout,
       bank transfer / COD confirm blocks.
+      HTTP smoke (2026-10-07): 12 routes 200, no PHP errors, no BS3 asset.
+      Watch: product 42 loads BS3-era `bootstrap-datetimepicker` (date/time
+      options); legacy modules using `.product-thumb` lost
+      default/stylesheet.css. Visual pass by the user still pending.
 - [ ] 5. Fix what step 4 finds (shim only; no edits to `default/`).
 - [ ] 6. Docs: ADR 010 status, IMPLEMENTATION_STATUS, MANUAL_VERIFICATION,
       header.twig comment, then PR. Afterwards rebase/merge into
