@@ -246,7 +246,9 @@ class ControllerMintcartWizard extends Controller
     {
         $file = $this->request->files['logo'] ?? null;
 
-        if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        // OpenCart's Request::clean() runs $_FILES through htmlspecialchars(),
+        // so error/size arrive as strings - compare them as ints.
+        if (!is_array($file) || (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
             return null;
         }
 
@@ -259,7 +261,7 @@ class ControllerMintcartWizard extends Controller
     // store's own domain, a scripted SVG would be stored XSS.
     private function isAcceptableLogo(array $file): bool
     {
-        if ($file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name']) || $file['size'] > 2 * 1024 * 1024) {
+        if ((int)$file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name']) || (int)$file['size'] > 2 * 1024 * 1024) {
             return false;
         }
 
