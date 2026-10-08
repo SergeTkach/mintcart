@@ -138,6 +138,13 @@
     outline-offset: 2px;
 }
 
+/* Hero: the same light frame as the logos strip, so a banner with a white
+   background still reads as one block instead of melting into the page. */
+.mc-slider--hero .mc-slider__viewport {
+    background: var(--mc-surface);
+    border: var(--mc-border-width) solid color-mix(in srgb, var(--mc-border) 45%, transparent);
+}
+
 /* Logos: a quiet strip; logos greyed until hovered. */
 .mc-slider--logos {
     --mc-slider-arrow-size: 2rem;
