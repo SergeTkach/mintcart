@@ -2224,8 +2224,9 @@ registered listener into one of the listing controllers
    widget.
 2. Every wizard screen opens (no "Permission denied") — also Business,
    Design → Styles and other Mint screens.
-3. Store step: upload a PNG logo → it shows on the storefront header; a
-   .txt renamed to .png and a file over 2 MB are refused with an error.
+3. Store step: upload a PNG logo and an SVG logo → each shows on the
+   storefront header; a .txt renamed to .png, a file over 2 MB and an SVG
+   with `<script>` / `onload=` are refused with an error.
 4. Design step: Clean / Warm; Continue, open the store — the chosen style is
    applied (same as Design → Styles).
 5. Fresh install from `upload/` (not an old copy): `oc_mc_migration` lists

@@ -253,25 +253,39 @@ class ControllerMintcartWizard extends Controller
         return $file;
     }
 
-    // PNG/JPG/GIF/WebP up to 2 MB that really decode as an image. No SVG:
-    // it can carry script, and the stock file manager refuses it too.
+    // SVG, PNG, JPG, GIF or WebP up to 2 MB. Rasters must really decode as
+    // an image; an SVG must pass MintCart\Design\SvgValidator (no script,
+    // event handlers, external references, DOCTYPE) - served from the
+    // store's own domain, a scripted SVG would be stored XSS.
     private function isAcceptableLogo(array $file): bool
     {
         if ($file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name']) || $file['size'] > 2 * 1024 * 1024) {
             return false;
         }
 
-        $info = @getimagesize($file['tmp_name']);
+        return $this->logoExtension($file['tmp_name']) !== null;
+    }
 
-        return is_array($info) && in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG, IMAGETYPE_GIF, IMAGETYPE_WEBP], true);
+    private function logoExtension(string $tmpName): ?string
+    {
+        $info = @getimagesize($tmpName);
+        $rasters = [IMAGETYPE_PNG => 'png', IMAGETYPE_JPEG => 'jpg', IMAGETYPE_GIF => 'gif', IMAGETYPE_WEBP => 'webp'];
+
+        if (is_array($info) && isset($rasters[$info[2]])) {
+            return $rasters[$info[2]];
+        }
+
+        if (\MintCart\Design\SvgValidator::isSafe((string)file_get_contents($tmpName))) {
+            return 'svg';
+        }
+
+        return null;
     }
 
     // Stores the logo under image/catalog/ and returns its config_logo path.
     private function storeLogo(array $file): string
     {
-        $extensions = [IMAGETYPE_PNG => 'png', IMAGETYPE_JPEG => 'jpg', IMAGETYPE_GIF => 'gif', IMAGETYPE_WEBP => 'webp'];
-        $info = getimagesize($file['tmp_name']);
-        $path = 'catalog/logo-' . date('YmdHis') . '.' . $extensions[$info[2]];
+        $path = 'catalog/logo-' . date('YmdHis') . '.' . $this->logoExtension($file['tmp_name']);
 
         move_uploaded_file($file['tmp_name'], DIR_IMAGE . $path);
 

@@ -93,8 +93,8 @@ $_['ready_text']  = 'Your store is set up. Anything still open is listed above -
 
 // Store: logo
 $_['entry_logo'] = 'Logo (optional)';
-$_['help_logo']  = 'PNG, JPG, GIF or WebP, up to 2 MB. Leave empty to keep the current one.';
-$_['error_logo'] = 'The logo must be a PNG, JPG, GIF or WebP image up to 2 MB.';
+$_['help_logo']  = 'SVG, PNG, JPG, GIF or WebP, up to 2 MB. Leave empty to keep the current one.';
+$_['error_logo'] = 'The logo must be an SVG, PNG, JPG, GIF or WebP image up to 2 MB. SVG files with scripts, event handlers or external links are not accepted.';
 
 // Design
 $_['design_title']      = 'Choose a look';

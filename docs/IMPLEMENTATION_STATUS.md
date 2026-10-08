@@ -52,7 +52,8 @@ access/modify on all `admin/controller/mintcart/**` routes
 "Skip setup for now"). Same day: Design step (theme presets from
 `theme.json`, writes `mintcart_design_preset` like Design → Styles, via
 new `ActiveTheme::presets()`) and an optional logo upload on the Store step
-(PNG/JPG/GIF/WebP ≤ 2 MB, `config_logo`). All 9 wizard steps implemented.
+(SVG/PNG/JPG/GIF/WebP ≤ 2 MB, `config_logo`; SVG checked by
+`MintCart\Design\SvgValidator`). All 9 wizard steps implemented.
 Migrations applied on the local dev DB (user OK). Admin click-through by
 the user pending.
 

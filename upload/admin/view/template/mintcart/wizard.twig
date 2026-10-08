@@ -79,7 +79,7 @@
         <div class="mc-field mb-3 {% if error.logo %}has-error{% endif %}">
           <label class="mc-field__label" for="input-config-logo">{{ entry_logo }}</label>
           {% if current_logo %}<img src="{{ current_logo }}" alt="" class="d-block mb-2" height="48" />{% endif %}
-          <input type="file" id="input-config-logo" name="logo" accept="image/png,image/jpeg,image/gif,image/webp" class="mc-field__control" aria-describedby="help-config-logo{% if error.logo %} error-config-logo{% endif %}" />
+          <input type="file" id="input-config-logo" name="logo" accept="image/svg+xml,.svg,image/png,image/jpeg,image/gif,image/webp" class="mc-field__control" aria-describedby="help-config-logo{% if error.logo %} error-config-logo{% endif %}" />
           <p class="mc-field__help" id="help-config-logo">{{ help_logo }}</p>
           {% if error.logo %}<p class="mc-field__error" id="error-config-logo" role="alert">{{ error.logo }}</p>{% endif %}
         </div>
