@@ -90,6 +90,19 @@ foreach ($index->all() as $entry) {
 $routes = array_map(static fn (array $entry) => $entry['route'], $index->all());
 assertSame(count($routes), count(array_unique($routes)), 'all(): every entry has a unique route', $failures);
 
+// --- Ukrainian / Russian synonyms (admin is often used in uk/ru) ---
+
+$firstLabel = static function (array $results): string {
+    return $results ? $results[0]['label'] : '';
+};
+
+assertSame('Currency', $firstLabel($index->search('валюта')), 'uk: валюта -> Currency', $failures);
+assertSame('Business → Delivery', $firstLabel($index->search('доставка')), 'uk: доставка -> Business → Delivery', $failures);
+assertSame('Store Settings', $firstLabel($index->search('Логотип')), 'uk: Логотип (any case) -> Store Settings', $failures);
+assertSame('Coupons', $firstLabel($index->search('промокод')), 'uk: промокод -> Coupons', $failures);
+assertSame('Business → Payments', $firstLabel($index->search('оплат')), 'uk prefix: оплат -> Business → Payments', $failures);
+assertSame('Orders', $firstLabel($index->search('заказ')), 'ru: заказ -> Orders', $failures);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
