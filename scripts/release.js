@@ -20,7 +20,7 @@
  *      how OpenCart's own downloadable zip ships a clean `upload/` an
  *      installer still has to run against.
  *   3. Copies the freshly built `assets/dist/{css,js}` into
- *      `upload/assets/{css,js}` inside that staging copy — mirroring the
+ *      `upload/assets/dist/{css,js}` inside that staging copy — mirroring the
  *      local-dev convention already documented in `.gitignore` (`assets/`
  *      lives outside `upload/`, which is what the webserver serves, so the
  *      built output needs to land inside `upload/` to be reachable by URL).
@@ -87,9 +87,11 @@ function main() {
         { shell: true, stdio: 'inherit', cwd: ROOT }
     );
 
-    console.log('\n[3/4] Copying built assets into upload/assets/{css,js}...');
+    console.log('\n[3/4] Copying built assets into upload/assets/dist/{css,js}...');
     const distDir = path.join(ROOT, 'assets/dist');
-    const uploadAssetsDir = path.join(STAGING_DIR, 'upload/assets');
+    // Pages load assets/dist/{css,js}/*.min.* (catalog and admin
+    // common/header.php) - the package must use the same path.
+    const uploadAssetsDir = path.join(STAGING_DIR, 'upload/assets/dist');
 
     for (const kind of ['css', 'js']) {
         const source = path.join(distDir, kind);
