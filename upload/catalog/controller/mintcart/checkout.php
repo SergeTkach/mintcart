@@ -433,7 +433,9 @@ class ControllerMintcartCheckout extends Controller {
 		}
 
 		if (!isset($this->session->data['payment_method'])) {
-			$errors['payment_method'] = 'error_payment';
+			// None offered at all is the store's problem, not the customer's
+			// - say so instead of "Payment method required!".
+			$errors['payment_method'] = empty($this->session->data['payment_methods']) ? 'error_mc_no_payment' : 'error_payment';
 		}
 
 		$messages = array();

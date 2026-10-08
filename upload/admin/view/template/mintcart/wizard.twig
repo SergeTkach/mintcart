@@ -196,6 +196,15 @@
         <h1 class="mc-wizard__title">{{ step == 'delivery' ? delivery_title : payment_title }}</h1>
         <p class="mc-wizard__lead">{{ step == 'delivery' ? delivery_text : payment_text }}</p>
 
+        {% set any_enabled = methods|filter(m => m.enabled)|length > 0 %}
+        {% if not any_enabled %}
+        <div class="mc-alert mc-alert--warning mb-4" role="status">
+          <div class="mc-alert__body">
+            <p class="mc-alert__message">{{ step == 'delivery' ? warning_delivery_none : warning_payment_none }}</p>
+          </div>
+        </div>
+        {% endif %}
+
         {% if methods is empty %}
         <p class="mc-wizard__empty">{{ step == 'delivery' ? text_delivery_empty : text_payment_empty }}</p>
         {% else %}

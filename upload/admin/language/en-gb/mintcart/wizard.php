@@ -58,6 +58,7 @@ $_['entry_currency']          = 'Default currency';
 $_['delivery_title']         = 'How will you ship orders?';
 $_['delivery_text']          = 'Enable the shipping methods you plan to offer. You can configure each one\'s cost and settings any time from Business > Delivery. This step is optional — skip it for now and come back later.';
 $_['text_delivery_empty']    = 'No shipping methods are installed yet.';
+$_['warning_delivery_none']  = 'No delivery method is enabled, so customers cannot check out products that need shipping. Enable at least one.';
 $_['text_enabled']           = 'Enabled';
 $_['text_disabled']          = 'Disabled';
 $_['button_enable']          = 'Enable';
@@ -69,6 +70,7 @@ $_['button_manage_delivery'] = 'Manage delivery methods';
 $_['payment_title']         = 'How will you get paid?';
 $_['payment_text']          = 'Enable the payment methods you plan to offer. You can configure each one\'s settings any time from Business > Payments. This step is optional — skip it for now and come back later.';
 $_['text_payment_empty']    = 'No payment methods are installed yet.';
+$_['warning_payment_none']  = 'No payment method is enabled, so your store cannot take orders. Enable at least one - Cash On Delivery is the simplest to start with.';
 $_['button_manage_payment'] = 'Manage payment methods';
 
 // First product step

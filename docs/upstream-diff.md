@@ -3976,7 +3976,7 @@ environment) — see the registry entry's "Not verified" note.
 `checkout/checkout` controller, which loads only this language file; its
 section labels and messages (`text_mc_*`, `button_mc_place_order`, and
 since 2026-10-08 the coupon / gift certificate field's `entry_mc_code`,
-`button_mc_code_*`, `error_mc_code*`, `button_mc_close`) are
+`button_mc_code_*`, `error_mc_code*`, `button_mc_close`, `error_mc_no_payment`) are
 appended here so they reach the template through the stock
 `event/language` merge, without touching the controller.
 
