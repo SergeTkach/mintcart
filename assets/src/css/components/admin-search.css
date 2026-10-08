@@ -17,29 +17,45 @@
  * here redefines a bare `<li>`/`<ul>`/`<input>` selector that could leak
  * onto the rest of that Bootstrap 3 markup (`docs/developer/admin/asset-enqueue.md`,
  * this page loads `components.min.css`, not `index.min.css`).
+ *
+ * Sizes are in px on purpose: the legacy admin's Bootstrap 3 sets
+ * `html { font-size: 10px }`, so the rem-based --mc-* type/space tokens
+ * render ~40% smaller here than on Bootstrap 5 pages. The header's own
+ * links are 13px text in 60px-tall items; the search matches them.
  */
 
 .mc-admin-search {
     position: relative;
-    display: flex;
+    display: inline-flex !important; /* stylesheet.css: #header .navbar-nav > li { display: inline-block } */
     align-items: center;
-    padding: 0 var(--mc-space-3);
+    height: 60px;
+    padding: 0 12px;
+    vertical-align: top;
 }
 
-.mc-admin-search__input {
-    width: 14rem;
+.mc-admin-search .mc-admin-search__input {
+    width: 260px;
     max-width: 100%;
+    height: 34px;
+    padding: 6px 12px 6px 32px;
+    font-size: 13px;
+    line-height: 20px;
+    background: var(--mc-surface-alt) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236c757d'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0'/%3E%3C/svg%3E") no-repeat 11px center / 13px 13px;
+}
+
+.mc-admin-search .mc-admin-search__input:focus {
+    background-color: var(--mc-surface);
 }
 
 .mc-admin-search__results {
     position: absolute;
-    inset-inline-start: var(--mc-space-3);
-    top: 100%;
+    inset-inline-start: 12px;
+    top: calc(100% - 8px);
     z-index: var(--mc-z-dropdown);
-    margin: var(--mc-space-1) 0 0;
-    padding: 0;
+    margin: 0;
+    padding: 4px 0;
     list-style: none;
-    width: 14rem;
+    width: 320px;
     max-height: 20rem;
     overflow-y: auto;
     background-color: var(--mc-surface);
@@ -56,11 +72,12 @@
 .mc-admin-search__result {
     display: block;
     width: 100%;
-    padding: var(--mc-space-2) var(--mc-space-3);
+    padding: 8px 14px;
     background: none;
     border: 0;
     color: var(--mc-text);
-    font-size: var(--mc-font-size-sm);
+    font-size: 13px;
+    line-height: 18px;
     text-align: start;
     cursor: pointer;
 }
@@ -72,18 +89,18 @@
 
 .mc-admin-search__empty {
     position: absolute;
-    inset-inline-start: var(--mc-space-3);
-    top: 100%;
+    inset-inline-start: 12px;
+    top: calc(100% - 8px);
     z-index: var(--mc-z-dropdown);
-    margin: var(--mc-space-1) 0 0;
-    padding: var(--mc-space-3);
-    width: 14rem;
+    margin: 0;
+    padding: 12px;
+    width: 320px;
     background-color: var(--mc-surface);
     border: var(--mc-border-width) solid var(--mc-border);
     border-radius: var(--mc-radius-md);
     box-shadow: var(--mc-shadow-md);
     color: var(--mc-muted);
-    font-size: var(--mc-font-size-sm);
+    font-size: 13px;
     text-align: center;
 }
 
