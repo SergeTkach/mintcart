@@ -2,7 +2,7 @@
 /**
  * MintCart release packaging script.
  *
- * docs/IMPLEMENTATION_STATUS.md's "Phase 11 (Technical Plan) — Update /
+ * docs/implementation-log.md's "Phase 11 (Technical Plan) — Update /
  * Compatibility" section flagged this as a standing TODO: `npm install` and
  * `npm run build`, plus the PHP vendor libraries already committed under
  * `upload/system/**\/vendor/`, are dev/release-time tooling only — the
