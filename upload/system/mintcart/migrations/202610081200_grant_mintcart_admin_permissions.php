@@ -12,9 +12,13 @@ use MintCart\Core\Migration\MigrationInterface;
 return new class implements MigrationInterface {
     public function up(object $db): void
     {
-        $controllerDir = defined('DIR_OPENCART')
-            ? DIR_OPENCART . 'admin/controller/'
-            : DIR_APPLICATION . 'controller/';
+        if (defined('DIR_OPENCART')) {
+            $controllerDir = DIR_OPENCART . 'admin/controller/';
+        } elseif (defined('DIR_APPLICATION')) {
+            $controllerDir = DIR_APPLICATION . 'controller/';
+        } else {
+            return; // no OpenCart context (e.g. a standalone test run)
+        }
 
         AdminPermissions::grant($db, DB_PREFIX, $controllerDir);
     }

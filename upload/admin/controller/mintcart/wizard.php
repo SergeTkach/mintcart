@@ -164,6 +164,10 @@ class ControllerMintcartWizard extends Controller
         // step's own StoreReadiness checklist already surfaces "payment
         // configured" as outstanding).
 
+        if ($step === 'design') {
+            $this->validateDesignStep();
+        }
+
         $skippingFirstProduct = $step === 'first_product' && ($this->request->post['first_product_action'] ?? '') === 'skip';
 
         if ($step === 'first_product' && !$skippingFirstProduct) {
@@ -190,6 +194,10 @@ class ControllerMintcartWizard extends Controller
 
         if ($step === 'language_currency') {
             $this->saveLanguageCurrencyStep();
+        }
+
+        if ($step === 'design') {
+            $this->saveDesignStep();
         }
 
         if ($step === 'first_product' && !$skippingFirstProduct) {
@@ -225,6 +233,49 @@ class ControllerMintcartWizard extends Controller
         if (utf8_strlen($address) < 3 || utf8_strlen($address) > 256) {
             $this->error['address'] = $this->language->get('error_address');
         }
+
+        $logo = $this->uploadedLogo();
+
+        if ($logo !== null && !$this->isAcceptableLogo($logo)) {
+            $this->error['logo'] = $this->language->get('error_logo');
+        }
+    }
+
+    // Logo is optional: null when no file was chosen.
+    private function uploadedLogo(): ?array
+    {
+        $file = $this->request->files['logo'] ?? null;
+
+        if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        return $file;
+    }
+
+    // PNG/JPG/GIF/WebP up to 2 MB that really decode as an image. No SVG:
+    // it can carry script, and the stock file manager refuses it too.
+    private function isAcceptableLogo(array $file): bool
+    {
+        if ($file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name']) || $file['size'] > 2 * 1024 * 1024) {
+            return false;
+        }
+
+        $info = @getimagesize($file['tmp_name']);
+
+        return is_array($info) && in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG, IMAGETYPE_GIF, IMAGETYPE_WEBP], true);
+    }
+
+    // Stores the logo under image/catalog/ and returns its config_logo path.
+    private function storeLogo(array $file): string
+    {
+        $extensions = [IMAGETYPE_PNG => 'png', IMAGETYPE_JPEG => 'jpg', IMAGETYPE_GIF => 'gif', IMAGETYPE_WEBP => 'webp'];
+        $info = getimagesize($file['tmp_name']);
+        $path = 'catalog/logo-' . date('YmdHis') . '.' . $extensions[$info[2]];
+
+        move_uploaded_file($file['tmp_name'], DIR_IMAGE . $path);
+
+        return $path;
     }
 
     /**
@@ -249,6 +300,36 @@ class ControllerMintcartWizard extends Controller
      * not scheme), which would otherwise let a stored link execute script
      * in a storefront visitor's browser when they click it.
      */
+    /**
+     * Design: pick one of the active theme's presets - the same
+     * `mintcart_design_preset` setting Design -> Styles writes. A theme
+     * without presets has nothing to choose; the step just continues.
+     */
+    private function validateDesignStep(): void
+    {
+        $preset = (string)($this->request->post['mintcart_design_preset'] ?? '');
+
+        if ($preset !== '' && !in_array($preset, $this->availablePresets(), true)) {
+            $this->error['preset'] = $this->language->get('error_preset');
+        }
+    }
+
+    private function saveDesignStep(): void
+    {
+        $preset = (string)($this->request->post['mintcart_design_preset'] ?? '');
+
+        if ($this->availablePresets()) {
+            $this->model_setting_setting->editSetting('mintcart_design', ['mintcart_design_preset' => $preset]);
+        }
+    }
+
+    private function availablePresets(): array
+    {
+        $directory = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
+
+        return \MintCart\Design\ActiveTheme::presets(DIR_CATALOG . 'view/theme', $directory);
+    }
+
     private function validateContactsStep(): void
     {
         foreach (self::SOCIAL_NETWORKS as $network) {
@@ -317,6 +398,12 @@ class ControllerMintcartWizard extends Controller
             'config_telephone' => trim((string)$this->request->post['config_telephone']),
             'config_address'   => trim((string)$this->request->post['config_address']),
         ]);
+
+        $logo = $this->uploadedLogo();
+
+        if ($logo !== null) {
+            $merged['config_logo'] = $this->storeLogo($logo);
+        }
 
         $this->model_setting_setting->editSetting('config', $merged);
     }
@@ -552,6 +639,9 @@ class ControllerMintcartWizard extends Controller
             $data['config_email'] = $this->request->post['config_email'] ?? $this->config->get('config_email');
             $data['config_telephone'] = $this->request->post['config_telephone'] ?? $this->config->get('config_telephone');
             $data['config_address'] = $this->request->post['config_address'] ?? $this->config->get('config_address');
+            $data['current_logo'] = $this->config->get('config_logo') && is_file(DIR_IMAGE . $this->config->get('config_logo'))
+                ? HTTP_CATALOG . 'image/' . $this->config->get('config_logo')
+                : '';
         }
 
         if ($step === 'contacts') {
@@ -582,6 +672,17 @@ class ControllerMintcartWizard extends Controller
             $data['payment_extensions'] = $this->loadPaymentExtensions();
             $data['toggle_payment'] = $this->url->link('mintcart/wizard/togglePayment', 'user_token=' . $this->session->data['user_token'] . '&step=payment', true);
             $data['manage_payment'] = $this->url->link('mintcart/business/payments', 'user_token=' . $this->session->data['user_token'], true);
+        }
+
+        if ($step === 'design') {
+            $data['presets'] = [];
+
+            foreach ($this->availablePresets() as $code) {
+                $data['presets'][] = ['code' => $code, 'label' => $this->language->get('preset_' . $code) !== 'preset_' . $code ? $this->language->get('preset_' . $code) : ucfirst($code)];
+            }
+
+            $data['selected_preset'] = $this->request->post['mintcart_design_preset'] ?? ((string)$this->config->get('mintcart_design_preset') ?: ($data['presets'][0]['code'] ?? ''));
+            $data['store_preview'] = HTTP_CATALOG;
         }
 
         if ($step === 'first_product') {

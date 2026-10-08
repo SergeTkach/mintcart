@@ -51,7 +51,7 @@ final class FakeDb
             return $this->result($rows);
         }
 
-        if (str_starts_with($sql, 'INSERT INTO')) {
+        if (str_starts_with($sql, 'INSERT INTO') && str_contains($sql, 'mc_migration')) {
             preg_match("/VALUES \('(.+)', NOW\(\)\)/", $sql, $matches);
             $this->rowsMigration[] = stripslashes($matches[1]);
 
@@ -105,6 +105,8 @@ check(
         '202608231406_create_mc_blocks.php',
         '202609041200_create_mc_quick_order.php',
         '202609191200_create_mc_installed_file.php',
+        '202610081200_grant_mintcart_admin_permissions.php',
+        '202610081201_register_wizard_autostart.php',
     ],
     'all real migrations should apply in filename order, got: ' . json_encode($result['applied']),
     $failures

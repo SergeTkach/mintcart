@@ -2215,3 +2215,19 @@ registered listener into one of the listing controllers
    share, not something either theme's own DOM has to opt into separately.
 4. Register a second listener on the same slot and confirm both fragments
    render, concatenated, neither silently replacing the other.
+
+## Setup Wizard 2026-10-08 — autostart, Design, logo
+
+1. Log in to the admin: you land in the Setup Wizard, not the dashboard
+   (until it is finished). "Skip setup for now…" goes to the dashboard and
+   stops the redirect; the wizard stays reachable from the Store Readiness
+   widget.
+2. Every wizard screen opens (no "Permission denied") — also Business,
+   Design → Styles and other Mint screens.
+3. Store step: upload a PNG logo → it shows on the storefront header; a
+   .txt renamed to .png and a file over 2 MB are refused with an error.
+4. Design step: Clean / Warm; Continue, open the store — the chosen style is
+   applied (same as Design → Styles).
+5. Fresh install from `upload/` (not an old copy): `oc_mc_migration` lists
+   all migrations, `oc_event` has `mintcart_wizard_autostart`, first login
+   opens the wizard.
