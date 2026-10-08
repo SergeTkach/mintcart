@@ -22,8 +22,9 @@ block, not something to redo from scratch.
 npm run release
 ```
 
-Requires `git` and `zip` on `PATH` (both present in this repo's own CI
-runner — see `.github/workflows/ci.yml`'s `ubuntu-latest` jobs). Produces
+Requires `git` on `PATH`, and `zip` — or, on Windows 10+, nothing extra:
+without `zip` the script packs with Windows' own `System32	ar.exe`
+(bsdtar). CI (`.github/workflows/ci.yml`, `ubuntu-latest`) has `zip`. Produces
 `release/mintcart-<version>.zip`, where `<version>` is read from
 `MintCart\Core\Version::VERSION`
 (`upload/system/library/mintcart/core/version.php`) — the single source of
@@ -86,7 +87,8 @@ unzip -l release/mintcart-*.zip | head -30      # sanity-check the file list
 unzip -l release/mintcart-*.zip | grep -E '/\.htaccess$|config\.php$|install\.lock$'
 # ^ should print nothing (only .htaccess.txt / config-dist.php templates ship)
 unzip -l release/mintcart-*.zip | grep 'upload/assets/'
-# ^ should show css/index.min.css, js/catalog.min.js, js/admin.min.js
+# ^ should show assets/dist/css/{index,components}.min.css and
+#   assets/dist/js/{catalog,admin,slider}.min.js - nothing else
 ```
 
 This was run manually against this repository's own `HEAD` while building
@@ -98,3 +100,13 @@ out to `git`/`zip`/`npm` and produces a multi-megabyte binary artifact —
 not something a `tests/mintcart/**/*-test.php`-style smoke test is a good
 fit for); a human/CI run of `npm run release` itself, as shown above, is
 the verification.
+
+**2026-10-08 run (Windows, no `zip`):** fixed three problems found by the
+first real run — built assets were copied to `upload/assets/{css,js}`
+while pages load `upload/assets/dist/...` (a store installed from the zip
+would have had no CSS/JS); the stock empty `upload/config-dist.php` was
+missing from the repo (installer needs it); and the `git archive | tar`
+shell pipe broke on Windows (Git's GNU tar mangles `C:\` paths). Only
+`*.min.*` files are copied now (no dev builds/maps). Result: 14.94 MB,
+5 asset files under `upload/assets/dist/`, `config-dist.php` present.
+Not yet done: installing that zip on a clean database.
