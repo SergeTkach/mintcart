@@ -59,6 +59,10 @@ $_['tab_attribute']            = 'Specification';
 $_['tab_review']               = 'Reviews (%s)';
 $_['tab_overview']             = 'Overview';
 $_['text_section_nav']         = 'Product sections';
+$_['text_mc_delivery']         = 'Delivery';
+$_['text_mc_payment']          = 'Payment';
+$_['text_mc_returns']          = 'Returns';
+$_['text_mc_from']             = 'orders over %s';
 
 // Error
 $_['error_name']               = 'Warning: Review Name must be between 3 and 25 characters!';

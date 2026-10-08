@@ -4025,3 +4025,15 @@ admin permissions for `mintcart/*` screens and no wizard autostart event.
 migration throws like any install SQL error.
 **Tests:** `php -l`; migration logic: `tests/mintcart/core/admin-permissions-test.php`.
 Live fresh-install run still to do.
+
+## `upload/catalog/controller/product/product.php` / `.../language/en-gb/product/product.php` — purchase info (2026-10-08)
+
+**Change:** one line, `$data['mc_purchase_info'] = $this->load->controller('mintcart/purchase_info');`,
+plus four language keys (`text_mc_delivery`, `text_mc_payment`,
+`text_mc_returns`, `text_mc_from`). The data itself is built by the new
+additive `catalog/controller/mintcart/purchase_info.php` (enabled shipping /
+payment extensions, Return Terms page). **Why not Mint layer:** the product
+controller is what renders the page; the template cannot call a
+controller. **Compatibility:** additive `$data` key. **Tests:** page render
+on product 40 (Delivery row shown; Payment/Returns hidden while nothing is
+enabled/set).

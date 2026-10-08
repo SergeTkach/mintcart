@@ -341,6 +341,8 @@ class ControllerProductProduct extends Controller {
 			// mint_default PDP stock marker (in / out colour), alongside the
 			// stock text above.
 			$data['mc_in_stock'] = $product_info['quantity'] > 0;
+			// Delivery / payment / returns summary (mintcart/purchase_info).
+			$data['mc_purchase_info'] = $this->load->controller('mintcart/purchase_info');
 
 			$this->load->model('tool/image');
 

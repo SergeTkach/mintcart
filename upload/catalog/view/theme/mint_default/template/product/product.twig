@@ -225,6 +225,31 @@
                     {% if minimum > 1 %}
                         <p class="mc-field__help mt-2">{{ text_minimum }}</p>
                     {% endif %}
+
+                    {# Delivery / payment / returns, from the store's enabled
+                       extensions and Return Terms page (mintcart/purchase_info). #}
+                    {% if mc_purchase_info.delivery or mc_purchase_info.payment or mc_purchase_info.returns %}
+                        <dl class="mc-purchase-info mt-4">
+                            {% if mc_purchase_info.delivery %}
+                                <div class="mc-purchase-info__row">
+                                    <dt class="mc-purchase-info__label">{{ text_mc_delivery }}</dt>
+                                    <dd class="mc-purchase-info__value">{{ mc_purchase_info.delivery|join(' · ') }}</dd>
+                                </div>
+                            {% endif %}
+                            {% if mc_purchase_info.payment %}
+                                <div class="mc-purchase-info__row">
+                                    <dt class="mc-purchase-info__label">{{ text_mc_payment }}</dt>
+                                    <dd class="mc-purchase-info__value">{{ mc_purchase_info.payment|join(' · ') }}</dd>
+                                </div>
+                            {% endif %}
+                            {% if mc_purchase_info.returns %}
+                                <div class="mc-purchase-info__row">
+                                    <dt class="mc-purchase-info__label">{{ text_mc_returns }}</dt>
+                                    <dd class="mc-purchase-info__value"><a href="{{ mc_purchase_info.returns.href }}">{{ mc_purchase_info.returns.title }}</a></dd>
+                                </div>
+                            {% endif %}
+                        </dl>
+                    {% endif %}
                 </div>
             </div>
 

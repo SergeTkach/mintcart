@@ -133,3 +133,30 @@
     margin: var(--mc-space-4) 0 var(--mc-space-2);
     font-weight: var(--mc-font-weight-semibold);
 }
+
+/* Delivery / payment / returns summary under Add to Cart. */
+.mc-purchase-info {
+    display: grid;
+    gap: var(--mc-space-2);
+    margin-bottom: 0;
+    padding: var(--mc-space-4);
+    font-size: var(--mc-font-size-sm);
+    background: var(--mc-surface-alt);
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-purchase-info__row {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    gap: var(--mc-space-3);
+}
+
+.mc-purchase-info__label {
+    font-weight: var(--mc-font-weight-semibold);
+    color: var(--mc-muted);
+}
+
+.mc-purchase-info__value {
+    margin: 0;
+    color: var(--mc-text);
+}

@@ -85,8 +85,9 @@ Branch state: `phase-15-mint-checkout` → PR #190 (open). Follow-up work on
       COD / free checkout added, not live-checked
 - [x] Product page: gallery + lightbox, option pills, stock, sticky buy bar,
       section nav, live total price (`mintcart/price`, cart rules)
-- [ ] Delivery / payment / returns info on the product page (needs a
-      decision on where the text comes from)
+- [~] Delivery / payment / returns on the product page: built from enabled
+      extensions + Return Terms page (2026-10-08); hand-written text not
+      supported yet (needs a decision on where it is edited)
 - [ ] Top info bar; configurable (manual) badges
 
 ## Productivity
@@ -136,6 +137,7 @@ failures are environment-specific and predate this branch
 2. Merge PR #190.
 3. Run `npm run release`, install the zip on a clean DB, go install →
    wizard → product → order.
-4. Decide the product-page delivery/payment/returns text source and build it.
+4. Decide whether the product-page delivery/returns block also needs
+   hand-written text (the automatic version is in).
 5. Admin navigation restructured in business language.
 6. Early Access.
