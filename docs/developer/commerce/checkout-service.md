@@ -39,6 +39,15 @@ The stock `extension/total/coupon/coupon` route is not reused: it sets a
 flash `success` for the cart page and cannot remove a coupon.
 State: `codes.enabled`, `codes.applied[] = {type, code}`.
 
+**Re-confirm reuses the pending order (2026-10-08).** `confirm()` passes
+the session's previous `order_id` to `CheckoutOrderAdapter::place()`; while
+that order is still unconfirmed (status 0) it is updated with the stock
+`editOrder()` instead of inserting another "missing order". The JS keeps
+the Place order button enabled during background updates (confirm aborts
+them and re-sends the whole form) and allows one confirm at a time — a click
+made right after fixing a field used to be swallowed, and a double request
+left a stray status-0 order.
+
 **Terms link (2026-10-08).** The agree link opens an `mc-modal` with the
 information page's text only, fetched from the stock content-only route
 `information/information/agree` (`state.agree_url`). The link's legacy

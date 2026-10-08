@@ -67,6 +67,7 @@ function initCheckoutRoot(root) {
     let zonesCountry = null;
     let timer = null;
     let controller = null;
+    let confirming = false;
 
     function showMessage(html) {
         message.querySelector('.mc-alert__message').innerHTML = html;
@@ -409,8 +410,11 @@ function initCheckoutRoot(root) {
         controller?.abort();
         controller = new AbortController();
 
+        // The submit button stays enabled: confirm() aborts this request and
+        // re-sends the whole form, and the server recalculates delivery and
+        // payment itself. (Disabling it here silently swallowed a click made
+        // right after fixing a field, while this update was in flight.)
         root.setAttribute('aria-busy', 'true');
-        submit.disabled = true;
 
         try {
             const state = await updateCheckout(new FormData(form), controller.signal);
@@ -430,8 +434,6 @@ function initCheckoutRoot(root) {
         } finally {
             root.setAttribute('aria-busy', 'false');
         }
-
-        submit.disabled = false;
     }
 
     function scheduleUpdate(delay = UPDATE_DELAY) {
@@ -451,6 +453,13 @@ function initCheckoutRoot(root) {
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
+
+        // One confirm at a time: each one creates/updates the order.
+        if (confirming) {
+            return;
+        }
+
+        confirming = true;
         clearTimeout(timer);
         controller?.abort();
         clearErrors();
@@ -486,6 +495,7 @@ function initCheckoutRoot(root) {
         } catch {
             showMessage(text.mcTextError);
         } finally {
+            confirming = false;
             submit.disabled = false;
             submit.classList.remove('is-loading');
         }

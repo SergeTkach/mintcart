@@ -139,7 +139,9 @@ class ControllerMintcartCheckout extends Controller {
 
 		$order_data = $order_adapter->collect($totals_adapter->calculate($this->cart->getTaxes()));
 
-		$this->session->data['order_id'] = $order_adapter->place($order_data);
+		$pending_order_id = isset($this->session->data['order_id']) ? (int)$this->session->data['order_id'] : 0;
+
+		$this->session->data['order_id'] = $order_adapter->place($order_data, $pending_order_id);
 
 		$this->respond(array(
 			'payment_html' => $this->load->controller('extension/payment/' . $this->session->data['payment_method']['code'])

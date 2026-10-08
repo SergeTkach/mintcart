@@ -76,11 +76,31 @@ final class CheckoutOrderAdapter
         );
     }
 
-    public function place(array $orderData): int
+    /**
+     * @param int $pendingOrderId The session's previous order_id, if any.
+     *        When that order is still unconfirmed (order_status_id 0 - the
+     *        customer went back and confirmed again) it is updated in place
+     *        with the stock editOrder() instead of leaving it behind as one
+     *        more "missing order". Stock checkout/confirm.php passes nothing
+     *        and keeps the stock always-insert behavior.
+     */
+    public function place(array $orderData, int $pendingOrderId = 0): int
     {
         $this->registry->get('load')->model('checkout/order');
 
-        return (int) $this->registry->get('model_checkout_order')->addOrder($orderData);
+        $model = $this->registry->get('model_checkout_order');
+
+        if ($pendingOrderId > 0) {
+            $pending = $model->getOrder($pendingOrderId);
+
+            if ($pending && (int) $pending['order_status_id'] === 0) {
+                $model->editOrder($pendingOrderId, $orderData);
+
+                return $pendingOrderId;
+            }
+        }
+
+        return (int) $model->addOrder($orderData);
     }
 
     private function store($config, $request): array
