@@ -11,6 +11,7 @@
   <div class="text-center mb-4">
     <span class="mc-badge mc-badge--new">MintCart</span>
     <h1 class="h3 mt-2">{{ heading_title }}</h1>
+    {% if step != 'ready' %}<a class="small text-body-secondary" href="{{ skip_wizard }}">{{ button_skip_wizard }}</a>{% endif %}
   </div>
 
   <ol class="d-flex flex-wrap justify-content-center gap-2 list-unstyled mb-4">

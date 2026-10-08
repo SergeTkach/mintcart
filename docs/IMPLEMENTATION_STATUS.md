@@ -42,6 +42,15 @@ Mint checkout: coupon / gift certificate field in the summary
 session keys). Positive path (a real active coupon) not checked yet.
 User confirmed the Bootstrap 5 storefront works (2026-10-08).
 
+Setup Wizard path (2026-10-08): found that no code ran MintCart
+migrations (fresh install: no mc_quick_order etc.) and that the
+Administrator group had no permission for any `mintcart/*` screen. Now the
+installers run migrations; migration 202610081200 grants full admin groups
+access/modify on all `admin/controller/mintcart/**` routes
+(`MintCart\Core\AdminPermissions`); 202610081201 registers the
+`mintcart_wizard_autostart` event (dashboard → wizard until finished or
+"Skip setup for now"). Design step + logo still to do.
+
 ## Update (2026-10-07, interactive session) — Bootstrap 5 storefront + storefront UI
 
 Branch `phase-15-mint-checkout` (BS5 work started on

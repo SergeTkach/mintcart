@@ -50,6 +50,44 @@ class ControllerMintcartWizard extends Controller
         $this->render($this->resolveViewableStep($progress, $requestedStep), $progress);
     }
 
+    /**
+     * Event handler (admin/controller/common/dashboard/before, registered by
+     * migration 202610081201): until the wizard is finished or skipped, the
+     * dashboard - where login lands - opens the wizard instead
+     * (Functional Scope §2: after install the owner should not be dropped
+     * into the plain OpenCart admin). Only for users who may run it.
+     */
+    public function autostart(&$route = '', &$data = array())
+    {
+        if (!$this->user->isLogged() || !$this->user->hasPermission('modify', 'mintcart/wizard')) {
+            return null;
+        }
+
+        if ($this->config->get('mintcart_wizard_skip_dismissed')) {
+            return null;
+        }
+
+        $this->load->model('setting/setting');
+
+        if ($this->loadProgress()->isReady()) {
+            return null;
+        }
+
+        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'], true));
+    }
+
+    // "Skip for now": stop the autostart; the wizard stays reachable from
+    // the dashboard's Store Readiness widget, with progress kept.
+    public function skip()
+    {
+        if ($this->user->hasPermission('modify', 'mintcart/wizard')) {
+            $this->load->model('setting/setting');
+            $this->model_setting_setting->editSetting('mintcart_wizard_skip', ['mintcart_wizard_skip_dismissed' => 1]);
+        }
+
+        $this->response->redirect($this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true));
+    }
+
     private function loadProgress(): \MintCart\Onboarding\WizardProgress
     {
         $setting = $this->model_setting_setting->getSetting('mintcart_wizard');
@@ -491,6 +529,7 @@ class ControllerMintcartWizard extends Controller
         $data['asset_base'] = HTTP_CATALOG;
         $data['action'] = $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'], true);
         $data['dashboard'] = $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true);
+        $data['skip_wizard'] = $this->url->link('mintcart/wizard/skip', 'user_token=' . $this->session->data['user_token'], true);
 
         $data['step'] = $step;
         $data['is_ready'] = $step === null;

@@ -4012,3 +4012,16 @@ other labels in the nav reuse the stock `tab_*`/`text_related` keys.
 **Compatibility:** additive keys, ignored by other themes.
 **Tests:** headless Edge probe (1280px and 390px): every nav link lands its
 section 16px under the bar and highlights its own link.
+
+## `upload/install/model/install/install.php` / `upload/install/cli_install.php` — run MintCart migrations (2026-10-08)
+
+**Change:** after the stock SQL import and settings, both installers run
+`MintCart\Core\Migration\MigrationManager` over `system/mintcart/migrations`
+(defining `DB_PREFIX` from the install form first - migration files use it).
+**Why not Mint layer:** nothing else runs at install time; before this a
+fresh install had no `mc_*` tables beyond what someone applied by hand, no
+admin permissions for `mintcart/*` screens and no wizard autostart event.
+**Compatibility:** additive, runs after everything stock; a failing
+migration throws like any install SQL error.
+**Tests:** `php -l`; migration logic: `tests/mintcart/core/admin-permissions-test.php`.
+Live fresh-install run still to do.
