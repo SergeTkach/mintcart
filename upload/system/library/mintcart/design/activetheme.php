@@ -47,4 +47,28 @@ final class ActiveTheme
     {
         return is_file(rtrim($themesDirectory, '/') . '/' . $directory . '/theme.json');
     }
+
+    /**
+     * Preset codes the theme declares in its `theme.json` (`presets`).
+     * Empty for a theme without a manifest or without presets. Used by
+     * Design -> Styles and the Setup Wizard's Design step.
+     *
+     * @return string[]
+     */
+    public static function presets(string $themesDirectory, string $directory): array
+    {
+        $path = rtrim($themesDirectory, '/') . '/' . $directory . '/theme.json';
+
+        if (!is_file($path)) {
+            return [];
+        }
+
+        $manifest = json_decode((string) file_get_contents($path), true);
+
+        if (!is_array($manifest) || !isset($manifest['presets']) || !is_array($manifest['presets'])) {
+            return [];
+        }
+
+        return array_values(array_filter($manifest['presets'], 'is_string'));
+    }
 }

@@ -236,6 +236,16 @@ function setup_db($data) {
 
 		$db->query("DELETE FROM `" . $data['db_prefix'] . "setting` WHERE `key` = 'config_api_id'");
 		$db->query("INSERT INTO `" . $data['db_prefix'] . "setting` SET `code` = 'config', `key` = 'config_api_id', value = '" . (int)$api_id . "'");
+
+		// MintCart: apply MintCart migrations (mc_* tables, admin permissions
+		// for mintcart/* screens, Setup Wizard autostart event) - without this
+		// a fresh install has none of them. Migration files use DB_PREFIX.
+		if (!defined('DB_PREFIX')) {
+			define('DB_PREFIX', $data['db_prefix']);
+		}
+
+		$migrations = new \MintCart\Core\Migration\MigrationManager($db, $data['db_prefix'], DIR_SYSTEM . 'mintcart/migrations');
+		$migrations->run();
 	}
 }
 

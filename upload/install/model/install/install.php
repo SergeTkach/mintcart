@@ -53,6 +53,16 @@ class ModelInstallInstall extends Model {
 			
 			// set the current years prefix
 			$db->query("UPDATE `" . $data['db_prefix'] . "setting` SET `value` = 'INV-" . date('Y') . "-00' WHERE `key` = 'config_invoice_prefix'");
+
+			// MintCart: apply MintCart migrations (mc_* tables, admin permissions
+			// for mintcart/* screens, Setup Wizard autostart event) - without this
+			// a fresh install has none of them. Migration files use DB_PREFIX.
+			if (!defined('DB_PREFIX')) {
+				define('DB_PREFIX', $data['db_prefix']);
+			}
+
+			$migrations = new \MintCart\Core\Migration\MigrationManager($db, $data['db_prefix'], DIR_SYSTEM . 'mintcart/migrations');
+			$migrations->run();
 		}
 	}
 }

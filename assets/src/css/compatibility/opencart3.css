@@ -1,0 +1,87 @@
+/**
+ * OpenCart 3 page skeleton on Bootstrap 5.
+ *
+ * Pages mint_default doesn't override (account/*, information/*,
+ * checkout/success, contact, ...) render the stock default/ templates:
+ *
+ *   <div id="..." class="container">
+ *     <ul class="breadcrumb"><li><a>...</a></li></ul>
+ *     <div class="row">... <div id="content" class="col-sm-*">
+ *       <h1>...</h1> ... <div class="buttons"><div class="pull-right">...
+ *
+ * default/stylesheet/stylesheet.css used to space and style that skeleton;
+ * it is not loaded on Bootstrap 5 (ADR 010), so the breadcrumb sat against
+ * the header, `.buttons` (floated children, no clearfix) ran into the
+ * footer line, and short pages collapsed. This file gives that skeleton the
+ * mc-breadcrumb look and Mint spacing. Selectors target the legacy markup
+ * on purpose (incl. the stock #content id) - Mint templates use mc-*.
+ */
+
+/* Breadcrumb: same look as mc-breadcrumb. Plain `ul.breadcrumb` weight (not
+   :where) - it has to beat Bootstrap's reboot/.breadcrumb and the base link
+   colour; a theme still overrides it with any more specific selector. */
+ul.breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: var(--mc-space-6, 1.5rem) 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--mc-font-size-sm, 0.875rem);
+    background: none;
+}
+
+ul.breadcrumb > li {
+    display: flex;
+    align-items: center;
+    color: var(--mc-muted, #6b7280);
+}
+
+ul.breadcrumb > li + li::before {
+    content: '/';
+    margin: 0 var(--mc-space-2, 0.5rem);
+    color: var(--mc-border-strong, #9ca3af);
+}
+
+ul.breadcrumb a {
+    color: var(--mc-muted, #6b7280);
+    text-decoration: none;
+}
+
+ul.breadcrumb a:hover {
+    color: var(--mc-text, #111827);
+    text-decoration: underline;
+}
+
+ul.breadcrumb > li:last-child a {
+    color: var(--mc-text, #111827);
+    font-weight: var(--mc-font-weight-medium, 500);
+}
+
+/* Content column: room above the footer, and short pages (success, empty
+   account lists) don't leave the footer floating mid-screen. */
+:where(#content) {
+    min-height: 500px;
+    padding-bottom: var(--mc-space-10, 2.5rem);
+}
+
+:where(#content > h1, #content > h2:first-child) {
+    margin-bottom: var(--mc-space-4, 1rem);
+    font-size: var(--mc-font-size-3xl, 1.875rem);
+    font-weight: var(--mc-font-weight-bold, 700);
+    line-height: var(--mc-line-height-tight, 1.25);
+    color: var(--mc-text, #111827);
+}
+
+:where(#content > p) {
+    max-width: 48rem;
+    font-size: var(--mc-font-size-lg, 1.125rem);
+    line-height: var(--mc-line-height-relaxed, 1.75);
+    color: var(--mc-text, #111827);
+}
+
+/* Button row under forms/messages: clears its floated pull-left/right. */
+:where(.buttons) {
+    display: flow-root;
+    margin: var(--mc-space-6, 1.5rem) 0 0;
+}

@@ -107,19 +107,7 @@ class ControllerMintcartDesignStyles extends Controller {
 	protected function availablePresets() {
 		$directory = \MintCart\Design\ActiveTheme::directory($this->config->get('config_theme'), $this->config->get('theme_default_directory'));
 
-		$manifest_path = DIR_CATALOG . 'view/theme/' . $directory . '/theme.json';
-
-		if (!is_file($manifest_path)) {
-			return array();
-		}
-
-		$manifest = json_decode((string)file_get_contents($manifest_path), true);
-
-		if (!is_array($manifest) || !isset($manifest['presets']) || !is_array($manifest['presets'])) {
-			return array();
-		}
-
-		return array_values(array_filter($manifest['presets'], 'is_string'));
+		return \MintCart\Design\ActiveTheme::presets(DIR_CATALOG . 'view/theme', $directory);
 	}
 
 	protected function getForm() {

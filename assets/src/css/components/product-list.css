@@ -1,0 +1,50 @@
+/**
+ * mc-product-list - a titled list of product cards whose column count
+ * follows the width of its own container, not the viewport, so the same
+ * markup works in the content area and in a narrow layout column.
+ * Used by the featured/bestseller/special/latest modules on mint_default
+ * (docs/developer/commerce/product-cards.md). Page listings (category,
+ * search, ...) keep the Bootstrap row/col grid.
+ *
+ * Contract:
+ *   .mc-product-list
+ *     .mc-product-list__title   styled label, not a heading (Guide §19.1)
+ *     .mc-product-list__grid
+ *       .mc-product-list__item  wraps one rendered product-card
+ *
+ * Tokens: --mc-product-list-min (narrowest card), --mc-product-list-gap.
+ */
+
+.mc-product-list {
+    /* Four columns in a full-width 1320px container, like the category grid;
+       fewer in narrower positions (columns, sidebars). */
+    --mc-product-list-min: 16.25rem;
+    --mc-product-list-gap: var(--mc-space-4);
+
+    margin-bottom: var(--mc-space-8);
+}
+
+.mc-product-list__title {
+    margin: 0 0 var(--mc-space-4);
+    font-size: var(--mc-font-size-lg);
+    font-weight: var(--mc-font-weight-semibold);
+    line-height: var(--mc-line-height-tight, 1.25);
+    color: var(--mc-text);
+}
+
+.mc-product-list__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--mc-product-list-min), 100%), 1fr));
+    gap: var(--mc-product-list-gap);
+}
+
+@media (max-width: 575.98px) {
+    .mc-product-list {
+        --mc-product-list-min: 9.5rem;
+        --mc-product-list-gap: var(--mc-space-3);
+    }
+}
+
+.mc-product-list__item {
+    min-width: 0;
+}

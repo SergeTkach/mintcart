@@ -273,6 +273,9 @@ class ControllerProductProduct extends Controller {
 			$data['text_badge_sale'] = $this->language->get('text_badge_sale');
 			$data['text_badge_out_of_stock'] = $this->language->get('text_badge_out_of_stock');
 			$data['text_added_to_cart'] = $this->language->get('text_added_to_cart');
+			// Add-to-cart toast: product name + "View cart" link (product-card.js).
+			$data['text_view_cart'] = $this->language->get('text_view_cart');
+			$data['cart_url'] = $this->url->link('checkout/cart');
 			$data['text_add_to_cart_error'] = $this->language->get('text_add_to_cart_error');
 			$data['text_wishlist_error'] = $this->language->get('text_wishlist_error');
 
@@ -305,6 +308,9 @@ class ControllerProductProduct extends Controller {
 			$data['text_tags'] = $this->language->get('text_tags');
 			$data['tab_description'] = $this->language->get('tab_description');
 			$data['tab_attribute'] = $this->language->get('tab_attribute');
+			// mint_default's sticky section nav (Overview link + its aria-label).
+			$data['tab_overview'] = $this->language->get('tab_overview');
+			$data['text_section_nav'] = $this->language->get('text_section_nav');
 			$data['text_no_reviews'] = $this->language->get('text_no_reviews');
 			$data['entry_qty'] = $this->language->get('entry_qty');
 			// MC-0022 (docs/fixes/registry.md): button_continue was never
@@ -331,6 +337,10 @@ class ControllerProductProduct extends Controller {
 			} else {
 				$data['stock'] = $this->language->get('text_instock');
 			}
+
+			// mint_default PDP stock marker (in / out colour), alongside the
+			// stock text above.
+			$data['mc_in_stock'] = $product_info['quantity'] > 0;
 
 			$this->load->model('tool/image');
 
@@ -501,24 +511,6 @@ class ControllerProductProduct extends Controller {
 			// docs/developer/core/diagnostics.md.
 			$mint_diagnostics = new \MintCart\Core\Diagnostics((bool)$this->config->get('mintcart_dev_mode'));
 
-			if ($mint_render_product_cards) {
-				$product_card_list_renderer = new \MintCart\Design\ProductCardListRenderer(
-					new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $mint_theme, 'components', $mint_diagnostics)
-				);
-
-				$text_badge = array(
-					'sale'         => $this->language->get('text_badge_sale'),
-					'out-of-stock' => $this->language->get('text_badge_out_of_stock'),
-					'new'          => $this->language->get('text_badge_new')
-				);
-
-				// Same backorder flag ControllerProductCategory/Search
-				// already resolve before calling ProductViewProvider.
-				$allow_out_of_stock_purchase = (bool)$this->config->get('config_stock_checkout');
-
-				$data['product_cards'] = array();
-			}
-
 			foreach ($results as $result) {
 				if ($result['image']) {
 					$image = $this->model_tool_image->resize($result['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_related_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_related_height'));
@@ -567,56 +559,18 @@ class ControllerProductProduct extends Controller {
 					'href'        => $related_href
 				);
 
-				if ($mint_render_product_cards) {
-					$product_card = $product_card_list_renderer->render(
-						array(
-							'id'                          => $result['product_id'],
-							'name'                        => $result['name'],
-							'url'                         => $related_href,
-							'image'                       => $image,
-							'price'                       => $price,
-							'special'                     => $special,
-							'tax'                         => $tax,
-							'rating'                      => $rating,
-							'quantity'                    => $result['quantity'],
-							'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
-							'minimum'                     => $result['minimum'],
-							'manufacturer'                => isset($result['manufacturer']) ? $result['manufacturer'] : null,
-							'allow_out_of_stock_purchase' => $allow_out_of_stock_purchase
-						),
-						array(),
-						array(
-							'listing_type' => 'related',
-							'position'     => count($data['products'])
-						),
-						array(
-							'text_badge'             => $text_badge,
-							'text_wishlist'          => $this->language->get('button_wishlist'),
-							'text_compare'           => $this->language->get('button_compare'),
-							'text_rated'             => $this->language->get('text_rated'),
-							'text_tax'               => $this->language->get('text_tax'),
-							'text_add_to_cart'       => $this->language->get('button_cart'),
-							'text_quick_order'       => $this->language->get('text_quick_order'),
-							'text_added_to_cart'     => $this->language->get('text_added_to_cart'),
-							'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error'),
-							'text_wishlist_error'    => $this->language->get('text_wishlist_error')
-						),
-						function (\Throwable $e, array $failed_product) {
-							// Same "log and disable for the rest of this
-							// request" degrade behavior every other
-							// ProductCardListRenderer call site uses - a
-							// broken related-product card must not fatal
-							// the whole product page.
-							(new \MintCart\Core\Logger())->error('ComponentRenderer failed to render product-card for related product_id ' . $failed_product['id'] . ': ' . $e->getMessage());
-						}
-					);
+			}
 
-					if ($product_card !== null) {
-						$data['product_cards'][] = $product_card;
-					}
-
-					$mint_render_product_cards = $product_card_list_renderer->isEnabled();
-				}
+			// Shared product-card pipeline (docs/developer/commerce/product-cards.md);
+			// null on non-Mint themes, which keep using $data['products'].
+			if ($mint_render_product_cards) {
+				$data['product_cards'] = $this->load->controller('mintcart/product_cards', array(
+					'results'      => $results,
+					'listing_type' => 'related',
+					'image_width'  => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_related_width'),
+					'image_height' => $this->config->get('theme_' . $this->config->get('config_theme') . '_image_related_height'),
+					'diagnostics'  => $mint_diagnostics
+				));
 			}
 
 			$data['tags'] = array();

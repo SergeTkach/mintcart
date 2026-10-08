@@ -115,7 +115,15 @@ function readOptions(button) {
             return;
         }
 
-        options[field.dataset.optionId] = field.value;
+        const optionId = field.dataset.mcOptionId;
+
+        // A checkbox option can have several values (`option[id][]`).
+        if (field.type === 'checkbox') {
+            (options[optionId] ||= []).push(field.value);
+            return;
+        }
+
+        options[optionId] = field.value;
     });
 
     return options;
@@ -169,6 +177,53 @@ function initWishlistToggle(root) {
     });
 }
 
+/**
+ * Flags each missing required option's `.mc-field` with `has-error` /
+ * `aria-invalid` and focuses the first one; clears flags on the others.
+ * A flag is also cleared as soon as that option is changed.
+ */
+function markMissingOptions(form, missingIds) {
+    const missing = new Set(missingIds);
+    let first = null;
+
+    form.querySelectorAll('[data-mc-product-options] [data-mc-option-id]').forEach((field) => {
+        const wrapper = field.closest('.mc-field');
+        const isMissing = missing.has(field.dataset.mcOptionId);
+
+        if (wrapper) {
+            wrapper.classList.toggle('has-error', isMissing);
+        }
+
+        if (field.type !== 'hidden') {
+            field.toggleAttribute('aria-invalid', isMissing);
+        }
+
+        if (isMissing && !first) {
+            first = field.type === 'hidden' ? wrapper?.querySelector('[data-mc-option-upload]') : field;
+        }
+    });
+
+    // Centre it explicitly: plain focus() scrolls the minimum, which can
+    // leave the field under the sticky header (or not scroll at all when
+    // triggered from the sticky buy bar).
+    if (first) {
+        (first.closest('.mc-field') || first).scrollIntoView({ block: 'center', behavior: 'smooth' });
+        first.focus({ preventScroll: true });
+    }
+}
+
+function initOptionErrorReset(root) {
+    root.addEventListener('change', (event) => {
+        const field = event.target.closest('[data-mc-product-options] [data-mc-option-id], [data-mc-option-upload]');
+        const wrapper = field?.closest('.mc-field.has-error');
+
+        if (wrapper) {
+            wrapper.classList.remove('has-error');
+            wrapper.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+        }
+    });
+}
+
 function initAddToCart(root) {
     root.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-mc-action="add-to-cart"]');
@@ -191,11 +246,35 @@ function initAddToCart(root) {
             const result = await addToCart(productId, quantity, options);
 
             if (result.redirected) {
-                window.location.href = result.url;
+                // On the product page the options are right here - say what is
+                // missing instead of "redirecting" to the same page. A grid card
+                // has no option UI, so it still goes to the product page.
+                const form = button.closest('[data-mc-product-form]');
+
+                if (form) {
+                    markMissingOptions(form, result.missingOptions);
+                    showToast(createToast({ title: errorText, message: result.error || errorText, variant: 'danger' }));
+                } else {
+                    window.location.href = result.url;
+                }
+
                 return;
             }
 
-            showToast(createToast({ title: addedText, message: addedText, variant: 'success' }));
+            const form = button.closest('[data-mc-product-form]');
+
+            if (form) {
+                markMissingOptions(form, []);
+            }
+
+            const { productName, mcCartUrl, mcTextViewCart } = button.dataset;
+
+            showToast(createToast({
+                title: addedText,
+                message: productName || addedText,
+                variant: 'success',
+                action: mcCartUrl && mcTextViewCart ? { text: mcTextViewCart, href: mcCartUrl } : null,
+            }));
         } catch {
             showToast(createToast({ title: errorText, message: errorText, variant: 'danger' }));
         } finally {
@@ -210,4 +289,5 @@ export function initProductCardActions(root = document) {
     initWishlistToggle(root);
     toggleAction(root, 'toggle-compare', 'mc:product-card:compare-toggle');
     initAddToCart(root);
+    initOptionErrorReset(root);
 }

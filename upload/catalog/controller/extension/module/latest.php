@@ -58,6 +58,16 @@ class ControllerExtensionModuleLatest extends Controller {
 				);
 			}
 
+			// Mint-aware themes render the shared product-card component
+			// (mintcart/product_cards, docs/developer/commerce/product-cards.md);
+			// null on any other theme, which keeps using $data['products'].
+			$data['product_cards'] = $this->load->controller('mintcart/product_cards', array(
+				'results'      => $results,
+				'listing_type' => 'module_latest',
+				'image_width'  => $setting['width'],
+				'image_height' => $setting['height']
+			));
+
 			return $this->load->view('extension/module/latest', $data);
 		}
 	}

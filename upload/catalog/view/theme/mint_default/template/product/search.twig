@@ -85,7 +85,7 @@
 
                     <div class="d-flex flex-wrap gap-3">
                         <div class="d-flex align-items-center gap-2">
-                            <label class="form-label mb-0" for="input-sort">{{ text_sort }}</label>
+                            <label class="form-label mb-0 text-nowrap" for="input-sort">{{ text_sort }}</label>
                             <select id="input-sort" class="form-select form-select-sm" onchange="location = this.value;">
                                 {% for item in sorts %}
                                     <option value="{{ item.href }}"{% if item.value == '%s-%s'|format(sort, order) %} selected{% endif %}>{{ item.text }}</option>
@@ -94,7 +94,7 @@
                         </div>
 
                         <div class="d-flex align-items-center gap-2">
-                            <label class="form-label mb-0" for="input-limit">{{ text_limit }}</label>
+                            <label class="form-label mb-0 text-nowrap" for="input-limit">{{ text_limit }}</label>
                             <select id="input-limit" class="form-select form-select-sm" onchange="location = this.value;">
                                 {% for item in limits %}
                                     <option value="{{ item.href }}"{% if item.value == limit %} selected{% endif %}>{{ item.text }}</option>

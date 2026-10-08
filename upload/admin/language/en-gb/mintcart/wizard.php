@@ -21,6 +21,11 @@ $_['step_ready']                = 'Ready';
 $_['welcome_title']    = 'Welcome to MintCart';
 $_['welcome_text']     = 'Let\'s get your store ready to take its first order. This will only take a few minutes, and you can always come back and finish later.';
 $_['button_get_started'] = 'Get started';
+$_['button_skip_wizard'] = 'Skip for now';
+$_['button_back']        = 'Back';
+$_['text_steps']         = 'Setup steps';
+$_['text_step_of']       = 'Step %s of %s';
+$_['text_progress']      = '%s%% done';
 
 // Store step
 
@@ -88,7 +93,21 @@ $_['button_finish_setup']   = 'Finish setup';
 // Ready / more-steps-coming state (shown once every implemented step, ready included, is completed)
 
 $_['ready_title'] = 'You\'re off to a great start';
-$_['ready_text']  = 'The rest of the Setup Wizard (design) is coming in a future update. For now, head to your dashboard to keep setting up your store.';
+$_['ready_text']  = 'Your store is set up. Anything still open is listed above - you can change every setting later in the admin.';
+
+// Store: logo
+$_['entry_logo'] = 'Logo (optional)';
+$_['help_logo']  = 'SVG, PNG, JPG, GIF or WebP, up to 2 MB. Leave empty to keep the current one.';
+$_['error_logo'] = 'The logo must be an SVG, PNG, JPG, GIF or WebP image up to 2 MB. SVG files with scripts, event handlers or external links are not accepted.';
+
+// Design
+$_['design_title']      = 'Choose a look';
+$_['design_text']       = 'Pick a style for your storefront. It changes colours, fonts and shapes - you can switch it any time under Design -> Styles.';
+$_['design_no_presets'] = 'Your current theme has no styles to choose from. Continue to the next step.';
+$_['design_preview']    = 'Open the store in a new tab';
+$_['preset_clean']      = 'Clean - cool, minimal';
+$_['preset_warm']       = 'Warm - soft, friendly';
+$_['error_preset']      = 'Please choose one of the listed styles.';
 $_['button_go_to_dashboard'] = 'Go to dashboard';
 
 // Errors

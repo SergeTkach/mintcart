@@ -49,7 +49,7 @@ final class FakeDb
             return $this->result($rows);
         }
 
-        if (str_starts_with($sql, 'INSERT INTO')) {
+        if (str_starts_with($sql, 'INSERT INTO') && str_contains($sql, 'mc_migration')) {
             preg_match("/VALUES \('(.+)', NOW\(\)\)/", $sql, $matches);
             $this->rowsMigration[] = stripslashes($matches[1]);
 

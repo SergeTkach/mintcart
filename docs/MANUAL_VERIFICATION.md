@@ -13,6 +13,63 @@ than silently fixing and forgetting to update this file.
 
 ---
 
+## Storefront UI 2026-10-07 — seen only in headless Edge
+
+Bootstrap 5 storefront and the new mint_default components were checked
+with headless screenshots and DOM probes, not by a person in a browser.
+On a real browser (desktop + phone), Ctrl+F5 after copying `assets/dist`
+to `upload/assets/dist`:
+
+1. Header: desktop category menu + flyouts; mobile ☰ drawer; sticky header
+   on scroll (shadow, topbar scrolls away); currency/language dropdowns.
+2. Mini cart: open, remove an item (panel stays open, totals update).
+3. Cart page: +/− quantity auto-updates totals; remove; coupon / shipping
+   estimate / voucher blocks still work.
+4. Product page: option pills, file upload option, Add to Cart without a
+   required option (toast + field marked + scrolled), sticky buy bar,
+   lightbox (opens at the selected photo, swipe on phone).
+5. Lists: category, search, specials, manufacturer, featured on home -
+   cards, toast with product name + View cart link.
+6. Home: hero slider + brand carousel (autoplay, arrows, dots, swipe).
+7. A legacy page (account / information / contact) still looks acceptable
+   through the BS3 shim.
+
+## Phase 15 — Mint checkout never run end to end
+
+`mintcart/checkout/{state,update,confirm}` + `mint_default`'s
+`checkout/checkout.twig` (ADR 009) and the refactor of stock
+`checkout/confirm.php`/`payment_method.php` onto
+`CheckoutOrderAdapter`/`PaymentMethodsAdapter` were only unit-tested — no
+live OpenCart/MySQL in the session that built them. Confirm on a real
+install with `mint_default` active:
+
+1. Guest, cart with a shippable product: page loads with store country/
+   region preselected, delivery and payment options appear without a click,
+   totals include the selected delivery cost; changing country reloads
+   regions and re-quotes delivery.
+2. Place order with Cash On Delivery and with Bank Transfer: the extension's
+   own confirm block appears under the summary, its button completes the
+   order and lands on `checkout/success`; `oc_order` row has correct
+   name/phone/email, address, `shipping_code`, `payment_code`, totals and
+   `total`; cart is empty afterwards.
+3. Empty required fields → inline errors, no order created; Terms checkbox
+   (set Settings → Option → Checkout Terms) blocks until ticked.
+4. Logged-in customer with a default address: contact is read-only from the
+   account, address prefilled.
+5. Download-only product with guest checkout off → login notice, form disabled.
+6. Switch to the `default` theme: the stock six-step checkout still places
+   an order identically (regression check for the confirm.php/
+   payment_method.php refactor).
+7. PayPal Standard (or any extension that renders its own `<form>`): its
+   form submits to the gateway.
+8. (2026-10-08) Coupon / gift certificate field in "Your order": create an
+   active coupon (Marketing → Coupons), apply it → a "Coupon (CODE)" line
+   appears and the total drops; the code shows as a chip, × removes it.
+   An invalid/expired code shows an inline error. Place the order with a
+   coupon and check `oc_order_total` / `oc_coupon_history`. Same for a gift
+   certificate (Sales → Gift Vouchers). Only verified so far: empty,
+   invalid and expired codes, removal, empty-cart redirect.
+
 ## Phase 0 — restored `Config` engine class never booted live
 
 `upload/system/library/config.php` (OpenCart's core `Config` class) was
@@ -805,9 +862,14 @@ product configured:
    click Add to Cart **without** selecting the option — confirm it
    redirects back to the same product page (the existing "missing required
    option" fallback), not a silent failure.
-4. Confirm the Description/Specification/Reviews tabs switch panels
-   correctly (`mc-tabs`, keyboard arrow-key navigable) and that
-   Specification only appears when the product actually has attributes.
+4. (Updated 2026-10-08 — tabs replaced by `mc-section-nav`.) Confirm the
+   sticky section nav under the header jumps smoothly to Description /
+   Specification / Reviews / Related, the section lands just below the bar,
+   the active item follows scrolling, and Specification only appears when
+   the product actually has attributes.
+4a. (2026-10-08) Press −/+ and pick options with a price: the main price,
+   the buy bar price and "Ex Tax" show the total for that quantity; add to
+   cart and confirm the cart line total is the same number.
 5. Confirm the Related Products grid renders `mc-product-card` markup
    identical in shape to the same product's appearance on a category page.
 6. Switch to the legacy `default` theme and confirm the product page is
@@ -2153,3 +2215,20 @@ registered listener into one of the listing controllers
    share, not something either theme's own DOM has to opt into separately.
 4. Register a second listener on the same slot and confirm both fragments
    render, concatenated, neither silently replacing the other.
+
+## Setup Wizard 2026-10-08 — autostart, Design, logo
+
+1. Log in to the admin: you land in the Setup Wizard, not the dashboard
+   (until it is finished). "Skip setup for now…" goes to the dashboard and
+   stops the redirect; the wizard stays reachable from the Store Readiness
+   widget.
+2. Every wizard screen opens (no "Permission denied") — also Business,
+   Design → Styles and other Mint screens.
+3. Store step: upload a PNG logo and an SVG logo → each shows on the
+   storefront header; a .txt renamed to .png, a file over 2 MB and an SVG
+   with `<script>` / `onload=` are refused with an error.
+4. Design step: Clean / Warm; Continue, open the store — the chosen style is
+   applied (same as Design → Styles).
+5. Fresh install from `upload/` (not an old copy): `oc_mc_migration` lists
+   all migrations, `oc_event` has `mintcart_wizard_autostart`, first login
+   opens the wizard.

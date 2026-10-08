@@ -26,12 +26,13 @@
 
 import 'bootstrap';
 
+import { initBootstrap3Compat } from './compatibility/bootstrap3-jquery.js';
+
 import { initAlertDismiss } from './components/alert.js';
 import { initQuantityStepper } from './components/quantity.js';
 import { initModalTriggers } from './components/modal.js';
 import { initDrawerTriggers } from './components/drawer.js';
 import { initToastTriggers } from './components/toast.js';
-import { initTabsTriggers } from './components/tabs.js';
 import { initProductCardActions } from './components/product-card.js';
 import { initHeaderCartRefresh } from './components/header-cart.js';
 import { initProductGalleries } from './components/product-gallery.js';
@@ -40,20 +41,76 @@ import { initSearchBoxes } from './components/search-box.js';
 import { initCookieConsent } from './components/cookie-consent.js';
 import { initViewedProducts } from './components/viewed-products.js';
 import { initReviews } from './components/reviews.js';
+import { initCheckout } from './components/checkout.js';
+import { initOptionUploads } from './components/option-upload.js';
+import { initStickyHeader } from './components/sticky-header.js';
+import { initCartPage } from './components/cart-page.js';
+import { initBuyBar } from './components/buy-bar.js';
+import { initSectionNav } from './components/section-nav.js';
+import { initProductPrice } from './components/product-price.js';
+
+// Swiper-based sliders live in their own bundle (slider(.min).js next to
+// this file), fetched only when a `[data-mc-slider]` is on the page - at
+// load, or inserted later by any script (AJAX, quick view, an extension).
+// Contract: docs/developer/components/slider.md "Protocol".
+// Resolved at load time, while document.currentScript still points at
+// this classic <script>.
+const sliderSrc = document.currentScript?.src.replace(/catalog(\.min)?\.js(\?.*)?$/, (match, min) => `slider${min || ''}.js`);
+let sliderBundleRequested = false;
+
+function hasSlider(node) {
+    return node.nodeType === 1
+        && (node.matches('[data-mc-slider]') || node.querySelector('[data-mc-slider]') !== null);
+}
+
+function loadSliders(root = document.documentElement) {
+    if (!sliderSrc || !hasSlider(root)) {
+        return;
+    }
+
+    // Bundle already here: set up just the new ones (idempotent).
+    if (window.MintCart?.sliders) {
+        window.MintCart.sliders.init(root);
+        return;
+    }
+
+    // Requested but not executed yet: it scans the whole document on load.
+    if (sliderBundleRequested) {
+        return;
+    }
+
+    sliderBundleRequested = true;
+
+    const script = document.createElement('script');
+    script.src = sliderSrc;
+    document.head.appendChild(script);
+}
+
+function watchSliders() {
+    loadSliders();
+
+    if (typeof MutationObserver !== 'function') {
+        return;
+    }
+
+    new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            mutation.addedNodes.forEach((node) => loadSliders(node));
+        }
+    }).observe(document.body, { childList: true, subtree: true });
+}
 
 // MintCart-owned catalog behavior modules are added here as components ship
 // (Phase 4 onward).
 function boot() {
+    // Legacy default/ templates + extensions on Bootstrap 5 (ADR 010). First,
+    // and after Bootstrap's own DOMContentLoaded jQuery plugin registration.
+    initBootstrap3Compat();
     initAlertDismiss();
     initQuantityStepper();
     initModalTriggers();
     initDrawerTriggers();
     initToastTriggers();
-    // mc-tabs was Phase 11's Mint Admin-only primitive until the product
-    // detail page (Description/Specification/Reviews tabs) became its
-    // first storefront consumer - see docs/developer/components/tabs.md
-    // "Not wired into catalog.js" for why this was deferred until now.
-    initTabsTriggers();
     initProductCardActions();
     initHeaderCartRefresh();
     initProductGalleries();
@@ -62,6 +119,14 @@ function boot() {
     initCookieConsent();
     initViewedProducts();
     initReviews();
+    initCheckout();
+    initOptionUploads();
+    initStickyHeader();
+    initCartPage();
+    initBuyBar();
+    initSectionNav();
+    initProductPrice();
+    watchSliders();
 }
 
 if (document.readyState === 'loading') {

@@ -1,0 +1,77 @@
+{#
+    Header mini cart for mint_default (mc-mini-cart). Same data the stock
+    ControllerCommonCart provides (products, vouchers, totals, text_items,
+    cart, checkout, ...) - only the markup is Mint-owned.
+
+    `#cart` stays the root id: header-cart.js re-fetches common/cart/info on
+    `mc:cart:updated` and swaps this element's content. Removing an item
+    goes through the Mint cart client (`data-mc-action="remove-cart-item"`),
+    not common.js `cart.remove()`.
+
+    Contract: docs/developer/components/mini-cart.md
+#}
+<div id="cart" class="mc-mini-cart dropdown">
+    <button type="button" class="mc-mini-cart__toggle" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+        <svg class="mc-mini-cart__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg>
+        {% set mc_cart_qty = 0 %}
+        {% for product in products %}{% set mc_cart_qty = mc_cart_qty + product.quantity %}{% endfor %}
+        {% if mc_cart_qty %}<span class="mc-mini-cart__count" aria-hidden="true">{{ mc_cart_qty }}</span>{% endif %}
+        <span class="mc-mini-cart__summary" id="cart-total">{{ text_items }}</span>
+    </button>
+    <div class="mc-mini-cart__panel dropdown-menu dropdown-menu-end">
+        {% if products or vouchers %}
+            <ul class="mc-mini-cart__items">
+                {% for product in products %}
+                    <li class="mc-mini-cart__item">
+                        {% if product.thumb %}
+                            <a class="mc-mini-cart__thumb" href="{{ product.href }}" tabindex="-1" aria-hidden="true">
+                                <img src="{{ product.thumb }}" alt="" loading="lazy">
+                            </a>
+                        {% endif %}
+                        <div class="mc-mini-cart__info">
+                            <a class="mc-mini-cart__name" href="{{ product.href }}">{{ product.name }}</a>
+                            {% if product.option or product.recurring %}
+                                <p class="mc-mini-cart__meta">
+                                    {% for option in product.option %}{{ option.name }}: {{ option.value }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                    {% if product.recurring %}{{ text_recurring }} {{ product.recurring }}{% endif %}
+                                </p>
+                            {% endif %}
+                            <p class="mc-mini-cart__line">
+                                <span class="mc-mini-cart__qty">&times; {{ product.quantity }}</span>
+                                <span class="mc-mini-cart__price">{{ product.total }}</span>
+                            </p>
+                        </div>
+                        <button type="button" class="mc-mini-cart__remove" data-mc-action="remove-cart-item" data-cart-id="{{ product.cart_id }}" aria-label="{{ button_remove }}: {{ product.name }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/></svg>
+                        </button>
+                    </li>
+                {% endfor %}
+                {% for voucher in vouchers %}
+                    <li class="mc-mini-cart__item">
+                        <div class="mc-mini-cart__info">
+                            <span class="mc-mini-cart__name">{{ voucher.description }}</span>
+                            <p class="mc-mini-cart__line">
+                                <span class="mc-mini-cart__qty">&times; 1</span>
+                                <span class="mc-mini-cart__price">{{ voucher.amount }}</span>
+                            </p>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+            <dl class="mc-mini-cart__totals">
+                {% for total in totals %}
+                    <div class="mc-mini-cart__total{% if loop.last %} mc-mini-cart__total--grand{% endif %}">
+                        <dt>{{ total.title }}</dt>
+                        <dd>{{ total.text }}</dd>
+                    </div>
+                {% endfor %}
+            </dl>
+            <div class="mc-mini-cart__actions">
+                <a class="mc-button mc-button--secondary" href="{{ cart }}">{{ text_cart }}</a>
+                <a class="mc-button mc-button--primary" href="{{ checkout }}">{{ text_checkout }}</a>
+            </div>
+        {% else %}
+            <p class="mc-mini-cart__empty">{{ text_empty }}</p>
+        {% endif %}
+    </div>
+</div>

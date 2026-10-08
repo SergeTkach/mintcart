@@ -23,6 +23,83 @@ both controllers pass syntax checks and all 9 MetaBuilder smoke scenarios pass.
 
 Legend: `[x]` done, `[~]` in progress / partially done, `[ ]` not started.
 
+## Update (2026-10-08) — PDP section nav
+
+Branch `phase-15-mint-checkout`. PDP tabs (`mc-tabs`) replaced with stacked
+sections + sticky `mc-section-nav` (smooth jump, scroll spy; Cartello UX
+idea). `sticky-header.js` now publishes `--mc-header-sticky-offset`. Docs:
+`docs/developer/components/section-nav.md`. Checked with headless Edge
+probes at 1280px / 390px; user click-through pending.
+
+PDP live price: `mintcart/price` + `MintCart\Commerce\ProductPriceCalculator`
+(cart.php rules: tier by total cart quantity, special always wins, options
+on top). Total for the chosen quantity in the main price and buy bar.
+Test: `tests/mintcart/commerce/product-price-calculator-test.php`; endpoint
+matched the cart line total for product 42 × 12 with options.
+
+Mint checkout: coupon / gift certificate field in the summary
+(`mintcart/checkout/code`, `removeCode`; stock coupon/voucher models and
+session keys). Positive path (a real active coupon) not checked yet.
+User confirmed the Bootstrap 5 storefront works (2026-10-08).
+
+Setup Wizard path (2026-10-08): found that no code ran MintCart
+migrations (fresh install: no mc_quick_order etc.) and that the
+Administrator group had no permission for any `mintcart/*` screen. Now the
+installers run migrations; migration 202610081200 grants full admin groups
+access/modify on all `admin/controller/mintcart/**` routes
+(`MintCart\Core\AdminPermissions`); 202610081201 registers the
+`mintcart_wizard_autostart` event (dashboard → wizard until finished or
+"Skip setup for now"). Same day: Design step (theme presets from
+`theme.json`, writes `mintcart_design_preset` like Design → Styles, via
+new `ActiveTheme::presets()`) and an optional logo upload on the Store step
+(SVG/PNG/JPG/GIF/WebP ≤ 2 MB, `config_logo`; SVG checked by
+`MintCart\Design\SvgValidator`). All 9 wizard steps implemented.
+Migrations applied on the local dev DB (user OK). Admin click-through by
+the user pending.
+
+## Update (2026-10-07, interactive session) — Bootstrap 5 storefront + storefront UI
+
+Branch `phase-15-mint-checkout` (BS5 work started on
+`phase-2-storefront-bootstrap5` and was merged into it). Not merged to
+master, no PR yet. Visual checks were done with headless Edge screenshots
+and DOM probes against the local install; the user has not clicked through
+these yet (see `docs/MANUAL_VERIFICATION.md` "Storefront UI 2026-10-07").
+
+- **Bootstrap 5 on the storefront (ADR 010).** mint_default no longer loads
+  Bootstrap 3 or `default/stylesheet.css`; `index.min.css` (BS5 + Mint +
+  shim) and `catalog.min.js`. JS shim (`compatibility/bootstrap3-jquery.js`:
+  `.button('loading'|'reset')`, `data-toggle`→`data-bs-*`, `.in`→`.show`),
+  extended CSS shim (BS3 breakpoints), double-caret fix.
+  `settings/bootstrap-bridge.css` points Bootstrap's own variables at
+  `--mc-*` tokens. Checklist: `docs/developer/storefront-bootstrap5-migration.md`.
+- **One product-card pipeline (§15C/§15D).** `mintcart/product_cards`
+  controller used by all 11 product lists (featured/bestseller/special/
+  latest modules, category, search, specials, manufacturer, related, home
+  Products block); card HTML diffed identical before/after.
+  `docs/developer/commerce/product-cards.md`.
+- **Storefront components (mint_default overrides, stock data, no
+  controller changes unless noted):** `mc-nav` menu, `mc-mini-cart`, sticky
+  header + compact mobile header, `mc-cart-page` (checkout/cart.twig),
+  `mc-subcategories`, `mc-product-list`, `mc-slider` (Swiper 14,
+  slideshow/carousel), PDP: `mc-buy-bar` sticky add-to-cart, option pills
+  (`mc-choice-group`), `mc-stock` (`mc_in_stock` in product.php), GLightbox
+  lightbox (ADR 011), file option upload (`option-upload.js`).
+- **Fixes:** options never sent on add-to-cart (`dataset.optionId`), checkbox
+  options sent once, file option unwired; product page missing-option now
+  marks + scrolls instead of reloading; JSON endpoints returned `&amp;` URLs
+  and entity-encoded names; menu hidden on desktop (`.offcanvas` +
+  `.offcanvas-lg`).
+- **JS loading model (ADR 012):** extensions load their own JS via
+  `addScript()`; libraries Mint ships are requested through component
+  markup; Swiper is a lazy bundle (`slider.min.js`) loaded on first
+  `[data-mc-slider]`, including late HTML (MutationObserver).
+  `docs/developer/extensions/storefront-js.md`.
+- **Still open:** Mint checkout 7-step live check (Phase 15 below); delivery
+  / payment / returns block on the PDP (needs a content-source decision);
+  Quick Order missing-option handling on the PDP; OpenCart's Swiper 3 is
+  still enqueued by the stock slideshow/carousel controllers; storefront
+  bundle split per page (GLightbox is global).
+
 ## Phase 0 — Audit
 
 - [x] Audit repository (upstream version, modified files, OCMOD, themes, modules, DB,
@@ -416,6 +493,9 @@ or re-check `gh pr list --state open` first, since this backlog moves fast.
       `.pull-right`/`.pull-left`, `.hidden-xs`/`.visible-xs`, `.btn-default`,
       `.panel`/`.panel-heading`/`.panel-body`, `.input-group-btn`. Uses
       `var(--mc-*, <fallback>)` since Phase 3 tokens don't exist yet.
+
+- [x] Storefront actually runs on Bootstrap 5 (2026-10-07, ADR 010) - see
+      the 2026-10-07 update at the top of this file.
 
 **Phase 2 is complete.** Verified with `npm install` (0 vulnerabilities),
 `npm run build` (minified output) and `npm run dev` (sourcemapped output) —
@@ -3653,7 +3733,24 @@ already share.
 - [ ] `QuickOrderService`, `CheckoutService` — not started.
 - [ ] Quick Order component — not started; `mc-product-card`'s
       `data-mc-action="quick-order"` stays hook-only.
-- [ ] Modern checkout UI over existing shipping/payment extensions/totals/order model — not started.
+- [~] Modern checkout UI over existing shipping/payment extensions/totals/order model —
+      **first working increment (2026-10-05, interactive session):** Mint
+      single-page checkout for `mint_default` on the stock `checkout/checkout`
+      route (ADR 009, `docs/developer/commerce/checkout-service.md`).
+      `MintCart\Commerce\CheckoutService` (validation, address, method
+      picking, `buildOrderData()`), `PaymentMethodsAdapter`,
+      `CheckoutOrderAdapter`, `mintcart/checkout/{state,update,confirm}`,
+      `checkout-client.js` + `components/checkout.js`, `checkout.css`.
+      Writes the stock checkout session keys, so every shipping/payment
+      extension works unchanged; order creation (`addOrder()`) now goes
+      through one builder shared with stock `checkout/confirm.php` (which,
+      with `payment_method.php`, was refactored onto the adapters — see
+      `docs/upstream-diff.md`). Guest + logged-in, one address, live
+      recalculation of delivery/payment/totals, inline validation, terms
+      checkbox, payment extension's own confirm step. **Not verified live**
+      (see `docs/MANUAL_VERIFICATION.md` "Phase 15 — Mint checkout").
+      Not built yet: address book, registration in checkout, custom fields,
+      captcha, separate billing address, coupon/voucher entry.
 
 **Update (this run): `CheckoutTotalsService` + `TotalsAdapter` — first
 `CheckoutService` increment.** Step 0 dedup check against the 35 open PRs

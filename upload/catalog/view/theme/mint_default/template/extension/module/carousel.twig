@@ -1,0 +1,29 @@
+{#
+    Carousel module (brand logos) on mint_default: Swiper 14 (slider.js,
+    preset "logos"). Same banners[] as the stock
+    ControllerExtensionModuleCarousel.
+    Contract: docs/developer/components/slider.md
+#}
+{% if banners %}
+<div class="mc-slider mc-slider--logos mb-4" data-mc-slider="logos">
+    <div class="mc-slider__viewport">
+        <div class="mc-slider__track">
+            {% for banner in banners %}
+                <div class="mc-slider__slide">
+                    {% if banner.link %}<a class="mc-slider__link" href="{{ banner.link }}">{% endif %}
+                    <img class="mc-slider__image" src="{{ banner.image }}" alt="{{ banner.title }}" loading="lazy">
+                    {% if banner.link %}</a>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% if banners|length > 2 %}
+        <button type="button" class="mc-slider__arrow mc-slider__arrow--prev" data-mc-slider-prev aria-label="Previous">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/></svg>
+        </button>
+        <button type="button" class="mc-slider__arrow mc-slider__arrow--next" data-mc-slider-next aria-label="Next">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/></svg>
+        </button>
+    {% endif %}
+</div>
+{% endif %}

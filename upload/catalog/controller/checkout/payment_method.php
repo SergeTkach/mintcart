@@ -13,40 +13,13 @@ class ControllerCheckoutPaymentMethod extends Controller {
 
 			$total = $totals_result['total'];
 
-			// Payment Methods
-			$method_data = array();
-
-			$this->load->model('setting/extension');
-
-			$results = $this->model_setting_extension->getExtensions('payment');
-
-			$recurring = $this->cart->hasRecurringProducts();
-
-			foreach ($results as $result) {
-				if ($this->config->get('payment_' . $result['code'] . '_status')) {
-					$this->load->model('extension/payment/' . $result['code']);
-
-					$method = $this->{'model_extension_payment_' . $result['code']}->getMethod($this->session->data['payment_address'], $total);
-
-					if ($method) {
-						if ($recurring) {
-							if (property_exists($this->{'model_extension_payment_' . $result['code']}, 'recurringPayments') && $this->{'model_extension_payment_' . $result['code']}->recurringPayments()) {
-								$method_data[$result['code']] = $method;
-							}
-						} else {
-							$method_data[$result['code']] = $method;
-						}
-					}
-				}
-			}
-
-			$sort_order = array();
-
-			foreach ($method_data as $key => $value) {
-				$sort_order[$key] = $value['sort_order'];
-			}
-
-			array_multisort($sort_order, SORT_ASC, $method_data);
+			// Payment Methods - computed via
+			// MintCart\Compatibility\OpenCart3\PaymentMethodsAdapter, which
+			// extracts this identical loop out of this file so the Mint
+			// checkout (mintcart/checkout) offers exactly the same methods
+			// (see docs/upstream-diff.md's entry for this file).
+			$payment_adapter = new \MintCart\Compatibility\OpenCart3\PaymentMethodsAdapter($this->config, $this->load, $this->registry);
+			$method_data = $payment_adapter->calculate($this->session->data['payment_address'], $total, $this->cart->hasRecurringProducts());
 
 			$this->session->data['payment_methods'] = $method_data;
 		}

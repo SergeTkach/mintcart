@@ -98,3 +98,11 @@ pattern as `mc-quantity`/`mc-alert`.
 - [x] Theme override checked — `test_theme` doesn't override `product.twig`
       or this component, so it falls back to `mint_default`'s version via
       the same Theme resolver chain Phase 8 already proved (ADR 002/003)
+
+## Lightbox (2026-10-07, ADR 011)
+
+`a.mc-product-gallery__main-link[data-mc-action="gallery-open"]` opens
+GLightbox with every gallery photo (the thumbs' `href`s = popup size, or
+the main link alone when there are no thumbs), starting at the active
+thumb. Selecting a thumb also updates the main link's `href`, so the no-JS
+fallback opens the photo being shown.

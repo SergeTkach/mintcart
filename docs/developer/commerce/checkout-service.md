@@ -1,0 +1,142 @@
+# Mint checkout (`CheckoutService` + `mintcart/checkout/*`)
+
+Single-page checkout for `mint_default` (Functional Scope §12, Technical
+Plan §27, Implementation Guide §61). Architecture decision: ADR 009.
+
+```
+checkout/checkout (stock controller, unchanged)
+  └─ mint_default/template/checkout/checkout.twig
+       └─ assets/src/js/components/checkout.js
+            └─ assets/src/js/commerce/checkout-client.js
+                 └─ ControllerMintcartCheckout  state / update / confirm
+                      ├─ MintCart\Commerce\CheckoutService            (pure rules)
+                      ├─ Compatibility\OpenCart3\ShippingQuoteAdapter  (shipping quotes)
+                      ├─ Compatibility\OpenCart3\TotalsAdapter         (order totals)
+                      ├─ Compatibility\OpenCart3\PaymentMethodsAdapter (payment methods)
+                      └─ Compatibility\OpenCart3\CheckoutOrderAdapter  (order data + addOrder)
+```
+
+## Endpoints
+
+| Route | Method | Writes session | Returns |
+|---|---|---|---|
+| `mintcart/checkout/state` | GET | recalculates methods if an address is already set | full state (incl. `countries`) |
+| `mintcart/checkout/update` | POST, any subset of the form | yes, no validation | state, or `{redirect}` |
+| `mintcart/checkout/confirm` | POST, whole form | yes, then validates | `{errors, state}`, `{redirect}` or `{payment_html}` |
+| `mintcart/checkout/code` | POST `code` | `coupon` or `voucher` | `{error, state}` (`error` = '' on success) or `{redirect}` |
+| `mintcart/checkout/removeCode` | POST `type` = `coupon`/`voucher` | unsets it | `{error, state}` or `{redirect}` |
+
+**Coupon / gift certificate (2026-10-08).** One field in the summary takes
+either: the code is tried as a coupon (`total_coupon_status` on), then as a
+gift certificate (`total_voucher_status` on). Validation is the stock
+`model_extension_total_coupon->getCoupon()` / `..._voucher->getVoucher()`
+(dates, usage limits, products, minimum total, balance); the code goes to
+the same `session['coupon']` / `['voucher']` the stock cart-page blocks use,
+so the totals extensions apply it unchanged. Payment methods are re-offered
+after a change (availability can depend on the total), and the JS drops an
+already shown payment step, since that order was created for the old total.
+The stock `extension/total/coupon/coupon` route is not reused: it sets a
+flash `success` for the cart page and cannot remove a coupon.
+State: `codes.enabled`, `codes.applied[] = {type, code}`.
+
+**Re-confirm reuses the pending order (2026-10-08).** `confirm()` passes
+the session's previous `order_id` to `CheckoutOrderAdapter::place()`; while
+that order is still unconfirmed (status 0) it is updated with the stock
+`editOrder()` instead of inserting another "missing order". The JS keeps
+the Place order button enabled during background updates (confirm aborts
+them and re-sends the whole form) and allows one confirm at a time — a click
+made right after fixing a field used to be swallowed, and a double request
+left a stray status-0 order.
+
+**Terms link (2026-10-08).** The agree link opens an `mc-modal` with the
+information page's text only, fetched from the stock content-only route
+`information/information/agree` (`state.agree_url`). The link's legacy
+`agree` class is removed so common.js's jQuery dialog doesn't open too;
+without JS (or if the fetch fails) the full page opens in a new tab.
+
+`{redirect}` is returned when the cart can no longer be checked out
+(empty / out of stock without backorders / below a minimum) or a guest
+tries to check out where guest checkout is off.
+
+Posted fields: `firstname lastname email telephone` (ignored for a logged-in
+customer — their account data is used), `country_id zone_id city address_1
+postcode` (plus `company address_2` if a theme adds them),
+`shipping_method` (`code.quote`), `payment_method` (code), `comment`,
+`agree`.
+
+### Session keys written
+
+Exactly the stock ones, so extensions and `checkout/confirm.php` read a
+normal checkout: `account = 'guest'`, `guest[...]`, `payment_address`,
+`shipping_address` (same address — one-address decision), `shipping_methods`,
+`shipping_method`, `payment_methods`, `payment_method`, `comment`, and
+finally `order_id`.
+
+### State shape
+
+```json
+{
+  "logged": false, "can_guest": true, "shipping_required": true, "initialized": true,
+  "contact": { "firstname": "", "lastname": "", "email": "", "telephone": "" },
+  "address": { "company": "", "address_1": "", "address_2": "", "city": "", "postcode": "", "country_id": 220, "zone_id": 3490 },
+  "comment": "",
+  "login_html": "Already have an account? <a href=\"…\">Log in</a>",
+  "countries": [{ "country_id": 220, "name": "Ukraine", "postcode_required": false }],
+  "zones": [{ "zone_id": 3490, "name": "Kyiv" }],
+  "shipping": { "methods": [{ "method": "Flat Rate", "options": [{ "id": "flat.flat", "title": "Flat Shipping Rate", "text": "$5.00" }] }], "selected": "flat.flat" },
+  "payment": { "methods": [{ "code": "cod", "title": "Cash On Delivery", "terms": "" }], "selected": "cod" },
+  "agree_html": "",
+  "items": [ /* CartService::snapshot() items, via mintcart/cart/snapshot */ ],
+  "totals": { "lines": [{ "code": "sub_total", "title": "Sub-Total", "text": "$20.00" }], "total": "$25.00" }
+}
+```
+
+`countries` is only in `state` (page boot), not in `update`.
+
+## Recalculation order
+
+`update`/`confirm` → `persist()`: write contact + address → re-quote
+shipping for the address → pick shipping (keep previous if still offered,
+else first valid) → compute totals (shipping now included) → re-offer
+payment methods for that total → pick payment (same rule) → save comment.
+
+## `CheckoutService` (pure)
+
+- `canCheckout(products, hasVouchers, hasStock, stockCheckout)` — stock cart gate.
+- `validateContact(input)` / `validateAddress(input, country, zoneIds)` →
+  `field => language key` (`error_firstname`, …), same limits as stock
+  `guest.php`. A zone is required whenever the country has zones.
+- `buildAddress(contact, input, country, zone)` — the stock session address shape.
+- `pickShippingMethod(id, methodData)` / `pickPaymentMethod(code, methods)`.
+- `buildOrderData(ctx, taxOf, voucherCode)` — the `addOrder()` array,
+  moved out of `checkout/confirm.php`.
+
+## JS
+
+- `checkout-client.js`: `fetchCheckoutState()`, `updateCheckout(formData, signal)`,
+  `confirmCheckout(formData)`. `updateCheckout` dispatches
+  `mc:checkout:updated` (`detail` = state) on `document`.
+- `components/checkout.js`: `initCheckout()` (wired in `catalog.js`), hooks
+  are all `data-mc-checkout-*` attributes in the template.
+
+## Theme override
+
+A theme that wants different checkout DOM overrides
+`template/checkout/checkout.twig`, keeps the `data-mc-checkout*` hooks (or
+ships its own script against the three endpoints). Strings come from
+`catalog/language/<lang>/checkout/checkout.php` (`text_mc_*`,
+`button_mc_place_order`).
+
+## Not done yet
+
+Address book for logged-in customers (their default address is prefilled,
+a changed address is used for the order but not saved to the book),
+registration during checkout, custom fields, captcha, separate billing
+address, reward points entry on the page, auto-click of simple
+payment confirm buttons.
+
+## Tests
+
+- `tests/mintcart/commerce/checkout-service-test.php`
+- `tests/mintcart/compatibility/opencart3/payment-methods-adapter-test.php`
+- `tests/mintcart/compatibility/opencart3/checkout-order-adapter-test.php`

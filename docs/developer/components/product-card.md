@@ -351,3 +351,12 @@ padding via CSS only — same DOM/contract, no separate template.
 - [x] Ships a real Mint Default `.twig` file, resolvable via `ComponentRenderer`
 - [x] Live controller wiring — `ControllerProductCategory`/`ControllerProductSearch`/`ControllerProductSpecial`/`ControllerProductManufacturer`/`ControllerProductProduct` (Related Products) all render it via `ProductViewProvider` + `ComponentRenderer`
 - [x] Theme override checked — `catalog/view/theme/test_theme/` overrides only `product-card.twig` with a genuinely different DOM; `ComponentRenderer` resolves it correctly in both directions (override active vs. Mint Default active), see `docs/adr/002-theme-api-milestone-proof.md`. Resolution is proven; a human still needs to confirm the override actually **renders** correctly on a real install (no MySQL/`vendor/twig/twig` in this environment — same gap as every earlier Phase 8 entry)
+
+## Add-to-cart toast data (2026-10-07)
+
+The add-to-cart button may carry `data-product-name`, `data-mc-cart-url` and
+`data-mc-text-view-cart` (template vars `product.name`, `cart_url`,
+`text_view_cart`, supplied by `mintcart/product_cards`). With them the
+success toast shows the product name and a "View cart" link; without them
+(older theme overrides) it falls back to the plain "Added to cart" toast.
+The product page's main add-to-cart button carries the same attributes.

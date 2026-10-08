@@ -91,3 +91,24 @@ $_['error_no_shipping']              = 'Warning: No Shipping options are availab
 $_['error_payment']                  = 'Warning: Payment method required!';
 $_['error_no_payment']               = 'Warning: No Payment options are available. Please <a href="%s">contact us</a> for assistance!';
 $_['error_custom_field']             = '%s required!';
+
+// MintCart single-page checkout (catalog/view/theme/mint_default/template/checkout/checkout.twig)
+$_['text_mc_contact']                = 'Contact details';
+$_['text_mc_address']                = 'Delivery address';
+$_['text_mc_shipping']               = 'Delivery';
+$_['text_mc_payment']                = 'Payment';
+$_['text_mc_comment']                = 'Order comment';
+$_['text_mc_summary']                = 'Your order';
+$_['text_mc_login']                  = 'Already have an account? <a href="%s">Log in</a>';
+$_['text_mc_login_required']         = 'Guest checkout is not available for this order. Please log in or create an account to continue.';
+$_['text_mc_no_shipping']            = 'No delivery options are available for this address.';
+$_['text_mc_no_payment']             = 'No payment options are available.';
+$_['text_mc_payment_ready']          = 'Your order has been created. Complete the payment step below.';
+$_['text_mc_error']                  = 'Something went wrong. Please try again.';
+$_['button_mc_place_order']          = 'Place order';
+$_['button_mc_close']                = 'Close';
+$_['entry_mc_code']                  = 'Coupon or gift certificate';
+$_['button_mc_code_apply']           = 'Apply';
+$_['button_mc_code_remove']          = 'Remove code %s';
+$_['error_mc_code_empty']            = 'Please enter a code.';
+$_['error_mc_code']                  = 'This code is invalid, expired or already used up.';

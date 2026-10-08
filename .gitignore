@@ -89,3 +89,6 @@ upload/system/storage/session/*
 
 # Backups
 *.zip
+
+# Logos uploaded through the Setup Wizard (store data, not source)
+upload/image/catalog/logo-*

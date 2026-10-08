@@ -81,6 +81,19 @@
     font-size: var(--mc-font-size-sm);
 }
 
+.mc-toast__action {
+    display: inline-block;
+    margin-top: var(--mc-space-2);
+    color: var(--mc-primary);
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-toast__action:hover,
+.mc-toast__action:focus-visible {
+    color: var(--mc-primary-hover);
+}
+
 .mc-toast__close {
     flex: 0 0 auto;
     display: inline-flex;

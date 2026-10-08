@@ -45,7 +45,7 @@ class ControllerMintcartCart extends Controller {
 				'cart_id'        => $product['cart_id'],
 				'product_id'     => $product['product_id'],
 				'name'           => $product['name'],
-				'url'            => $this->url->link('product/product', 'product_id=' . $product['product_id']),
+				'url'            => str_replace('&amp;', '&', $this->url->link('product/product', 'product_id=' . $product['product_id'])),
 				'thumb'          => $thumb,
 				'quantity'       => (int)$product['quantity'],
 				'price'          => $this->currency->format($unit_price, $this->session->data['currency']),
@@ -60,6 +60,13 @@ class ControllerMintcartCart extends Controller {
 		);
 
 		return $cart_service->snapshot($items, $totals);
+	}
+
+	// Not an HTTP endpoint of its own: lets ControllerMintcartCheckout reuse
+	// this exact item list via $this->load->controller('mintcart/cart/snapshot')
+	// (Loader::controller() returns the action's return value).
+	public function snapshot() {
+		return $this->buildSnapshot();
 	}
 
 	private function respond($json) {
@@ -110,8 +117,11 @@ class ControllerMintcartCart extends Controller {
 
 		if ($missing_options || $recurring_missing) {
 			$this->respond(array(
-				'error'    => $this->language->get('error_option'),
-				'redirect' => $this->url->link('product/product', 'product_id=' . $product_id)
+				'error'           => $this->language->get('error_option'),
+				// product_option_ids still unanswered, so the product page can
+				// mark those fields instead of following `redirect`.
+				'missing_options' => array_values($missing_options),
+				'redirect'        => str_replace('&amp;', '&', $this->url->link('product/product', 'product_id=' . $product_id))
 			));
 			return;
 		}

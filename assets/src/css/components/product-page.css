@@ -1,0 +1,135 @@
+/**
+ * Product detail page pieces (mint_default product/product.twig):
+ * mc-stock marker, mc-choice-group option pills, options label, the
+ * stacked content sections the mc-section-nav links to, rating link.
+ */
+
+.mc-product-page__options-title {
+    margin: 0 0 var(--mc-space-3);
+    font-size: var(--mc-font-size-lg);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+/* Stock marker: coloured dot + text. */
+.mc-stock {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-1);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-stock::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    background: currentcolor;
+    border-radius: var(--mc-radius-pill);
+}
+
+.mc-stock--in {
+    color: var(--mc-success);
+}
+
+.mc-stock--out {
+    color: var(--mc-danger);
+}
+
+/* Radio / checkbox options as selectable pills. The real input stays in
+   the DOM (focusable, keyboard-operable), only visually hidden. */
+.mc-choice-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.mc-choice-group > legend {
+    width: 100%;
+    float: none;
+}
+
+.mc-choice-group .mc-radio,
+.mc-choice-group .mc-checkbox {
+    position: relative;
+    padding: var(--mc-space-2) var(--mc-space-4);
+    background: var(--mc-surface);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-pill);
+    transition: border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-choice-group .mc-radio__input,
+.mc-choice-group .mc-checkbox__input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.mc-choice-group .mc-radio__label,
+.mc-choice-group .mc-checkbox__label {
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-choice-group .mc-radio:hover,
+.mc-choice-group .mc-checkbox:hover {
+    border-color: var(--mc-primary);
+}
+
+.mc-choice-group .mc-radio:has(:checked),
+.mc-choice-group .mc-checkbox:has(:checked) {
+    background: color-mix(in srgb, var(--mc-primary) 10%, var(--mc-surface));
+    border-color: var(--mc-primary);
+    box-shadow: inset 0 0 0 1px var(--mc-primary);
+}
+
+.mc-choice-group .mc-radio:has(:focus-visible),
+.mc-choice-group .mc-checkbox:has(:focus-visible) {
+    outline: 2px solid var(--mc-primary);
+    outline-offset: 2px;
+}
+
+.mc-field.has-error .mc-choice-group .mc-radio,
+.mc-field.has-error .mc-choice-group .mc-checkbox {
+    border-color: var(--mc-danger);
+}
+
+/* Rating under the title: jumps to the Reviews section. */
+.mc-product-page__rating-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-2);
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+    text-decoration: none;
+}
+
+.mc-product-page__rating-link:hover {
+    color: var(--mc-text);
+    text-decoration: underline;
+}
+
+/* Stacked content sections (Description / Specification / Reviews /
+   Related). The label is styled text, not a heading (Implementation Guide
+   §19.1) - the product name stays the page's only h1. */
+.mc-product-section {
+    padding-block: var(--mc-space-6);
+    border-top: var(--mc-border-width) solid var(--mc-border);
+}
+
+.mc-product-section__title {
+    margin: 0 0 var(--mc-space-4);
+    font-size: var(--mc-font-size-xl);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-product-section__subtitle {
+    margin: var(--mc-space-4) 0 var(--mc-space-2);
+    font-weight: var(--mc-font-weight-semibold);
+}

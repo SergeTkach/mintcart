@@ -1,0 +1,174 @@
+{#
+    MintCart single-page checkout (MINTCART_FUNCTIONAL_SCOPE.md §12,
+    MINTCART_IMPLEMENTATION_GUIDE.md §61).
+
+    Rendered by the stock `checkout/checkout` route (ControllerCheckoutCheckout
+    ::index(), unmodified) - this template replaces the legacy six-step
+    accordion for mint_default. Server data here is only what that stock
+    controller provides (breadcrumbs, shipping_required, error_warning, and
+    the merged `checkout/checkout` language strings); everything dynamic
+    (countries/zones, delivery and payment options, items, totals) comes from
+    `mintcart/checkout/state` and is kept fresh by
+    assets/src/js/components/checkout.js.
+
+    Contract: docs/developer/commerce/checkout-service.md
+#}
+{% macro field(name, label, type, autocomplete) %}
+    <div class="mc-field" data-mc-checkout-field="{{ name }}">
+        <label class="mc-field__label" for="mc-checkout-{{ name }}">{{ label }}</label>
+        <input type="{{ type }}" id="mc-checkout-{{ name }}" name="{{ name }}" class="mc-field__control" autocomplete="{{ autocomplete }}" aria-describedby="mc-checkout-{{ name }}-error">
+        <p class="mc-field__error" id="mc-checkout-{{ name }}-error" hidden></p>
+    </div>
+{% endmacro %}
+{% import _self as f %}
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item">
+                        <a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+                    </li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <h1 class="mc-checkout__heading mb-4">{{ heading_title }}</h1>
+
+    {% if error_warning %}
+        <div class="mc-alert mc-alert--danger mb-4" role="alert">
+            <div class="mc-alert__body"><p class="mc-alert__message">{{ error_warning }}</p></div>
+        </div>
+    {% endif %}
+
+    <div
+        class="mc-checkout"
+        data-mc-checkout
+        aria-busy="true"
+        data-mc-text-select="{{ text_select }}"
+        data-mc-text-none="{{ text_none }}"
+        data-mc-text-no-shipping="{{ text_mc_no_shipping }}"
+        data-mc-text-no-payment="{{ text_mc_no_payment }}"
+        data-mc-text-login-required="{{ text_mc_login_required }}"
+        data-mc-text-error="{{ text_mc_error }}"
+    >
+        <div class="row g-4">
+            <form class="col-lg-8" id="mc-checkout-form" data-mc-checkout-form novalidate>
+                <p class="mc-checkout__login" data-mc-checkout-login hidden></p>
+
+                <div class="mc-alert mc-alert--danger mb-4" data-mc-checkout-message role="alert" hidden>
+                    <div class="mc-alert__body"><p class="mc-alert__message"></p></div>
+                </div>
+
+                <fieldset class="mc-checkout__section" data-mc-checkout-section="contact">
+                    <legend class="mc-checkout__title">{{ text_mc_contact }}</legend>
+                    <div class="mc-checkout__grid">
+                        {{ f.field('firstname', entry_firstname, 'text', 'given-name') }}
+                        {{ f.field('lastname', entry_lastname, 'text', 'family-name') }}
+                        {{ f.field('telephone', entry_telephone, 'tel', 'tel') }}
+                        {{ f.field('email', entry_email, 'email', 'email') }}
+                    </div>
+                </fieldset>
+
+                <fieldset class="mc-checkout__section" data-mc-checkout-section="address">
+                    <legend class="mc-checkout__title">{{ text_mc_address }}</legend>
+                    <div class="mc-checkout__grid">
+                        <div class="mc-field" data-mc-checkout-field="country_id">
+                            <label class="mc-field__label" for="mc-checkout-country_id">{{ entry_country }}</label>
+                            <select id="mc-checkout-country_id" name="country_id" class="mc-field__control" autocomplete="country" aria-describedby="mc-checkout-country_id-error"></select>
+                            <p class="mc-field__error" id="mc-checkout-country_id-error" hidden></p>
+                        </div>
+                        <div class="mc-field" data-mc-checkout-field="zone_id">
+                            <label class="mc-field__label" for="mc-checkout-zone_id">{{ entry_zone }}</label>
+                            <select id="mc-checkout-zone_id" name="zone_id" class="mc-field__control" autocomplete="address-level1" aria-describedby="mc-checkout-zone_id-error"></select>
+                            <p class="mc-field__error" id="mc-checkout-zone_id-error" hidden></p>
+                        </div>
+                        {{ f.field('city', entry_city, 'text', 'address-level2') }}
+                        {{ f.field('address_1', entry_address_1, 'text', 'address-line1') }}
+                        <div data-mc-checkout-postcode hidden>
+                            {{ f.field('postcode', entry_postcode, 'text', 'postal-code') }}
+                        </div>
+                    </div>
+                </fieldset>
+
+                {% if shipping_required %}
+                    <fieldset class="mc-checkout__section" data-mc-checkout-section="shipping">
+                        <legend class="mc-checkout__title">{{ text_mc_shipping }}</legend>
+                        <div class="mc-checkout__options" data-mc-checkout-shipping aria-live="polite"></div>
+                        <p class="mc-field__error" data-mc-checkout-error="shipping_method" role="alert" hidden></p>
+                    </fieldset>
+                {% endif %}
+
+                <fieldset class="mc-checkout__section" data-mc-checkout-section="payment">
+                    <legend class="mc-checkout__title">{{ text_mc_payment }}</legend>
+                    <div class="mc-checkout__options" data-mc-checkout-payment-methods aria-live="polite"></div>
+                    <p class="mc-field__error" data-mc-checkout-error="payment_method" role="alert" hidden></p>
+                </fieldset>
+
+                <fieldset class="mc-checkout__section" data-mc-checkout-section="comment">
+                    <legend class="mc-checkout__title">{{ text_mc_comment }}</legend>
+                    <div class="mc-field">
+                        <label class="visually-hidden" for="mc-checkout-comment">{{ text_comments }}</label>
+                        <textarea id="mc-checkout-comment" name="comment" class="mc-field__control" rows="3" placeholder="{{ text_comments }}"></textarea>
+                    </div>
+                </fieldset>
+            </form>
+
+            {# Outside the <form> on purpose: payment extensions render their own <form> (e.g. PayPal Standard), which must not be nested. #}
+            <div class="col-lg-4">
+                <aside class="mc-checkout__summary" aria-label="{{ text_mc_summary }}">
+                    <p class="mc-checkout__title">{{ text_mc_summary }}</p>
+
+                    <ul class="mc-checkout__items" data-mc-checkout-items></ul>
+
+                    {# Coupon / gift certificate: its own small form (not part of the
+                       checkout form, so typing a code doesn't re-quote delivery). #}
+                    <form class="mc-checkout__code" data-mc-checkout-code hidden novalidate>
+                        <label class="mc-field__label" for="mc-checkout-code">{{ entry_mc_code }}</label>
+                        <div class="mc-checkout__code-row">
+                            <input type="text" id="mc-checkout-code" name="code" class="mc-field__control" autocomplete="off" aria-describedby="mc-checkout-code-error">
+                            <button type="submit" class="mc-button mc-button--secondary">{{ button_mc_code_apply }}</button>
+                        </div>
+                        <p class="mc-field__error" id="mc-checkout-code-error" data-mc-checkout-code-error role="alert" hidden></p>
+                        <ul class="mc-checkout__codes" data-mc-checkout-codes data-mc-text-remove="{{ button_mc_code_remove }}"></ul>
+                    </form>
+
+                    <dl class="mc-checkout__totals" data-mc-checkout-totals aria-live="polite"></dl>
+
+                    <div class="mc-checkout__agree" data-mc-checkout-agree hidden>
+                        <label class="mc-checkbox">
+                            <input type="checkbox" class="mc-checkbox__input" name="agree" value="1" form="mc-checkout-form">
+                            <span class="mc-checkbox__label" data-mc-checkout-agree-text></span>
+                        </label>
+                        <p class="mc-field__error" data-mc-checkout-error="agree" role="alert" hidden></p>
+                    </div>
+
+                    <button type="submit" form="mc-checkout-form" class="mc-button mc-button--primary mc-button--lg mc-checkout__submit" data-mc-checkout-submit disabled>{{ button_mc_place_order }}</button>
+
+                    <div class="mc-checkout__payment" data-mc-checkout-payment hidden>
+                        <p class="mc-checkout__payment-note">{{ text_mc_payment_ready }}</p>
+                        <div data-mc-checkout-payment-body></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        {# Terms dialog: the agree link opens the page's text here (checkout.js). #}
+        <div class="modal mc-modal fade" id="mc-checkout-terms" tabindex="-1" aria-labelledby="mc-checkout-terms-title" aria-hidden="true" data-mc-checkout-terms>
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <p class="modal-title mc-modal__title" id="mc-checkout-terms-title" data-mc-checkout-terms-title></p>
+                        <button type="button" class="mc-modal__close" data-mc-action="close-modal" aria-label="{{ button_mc_close }}">&times;</button>
+                    </div>
+                    <div class="modal-body mc-prose" data-mc-checkout-terms-body></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ footer }}

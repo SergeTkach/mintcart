@@ -1,0 +1,125 @@
+/**
+ * mc-nav - category navigation (mint_default common/menu.twig,
+ * docs/developer/components/navigation.md).
+ *
+ * Below `lg` it lives in the mc-header offcanvas drawer: vertical list,
+ * sub-menus open inline. From `lg` up: horizontal bar, sub-menus as a
+ * flyout panel. Sub-menu open state is Bootstrap 5 dropdown's `.show` with
+ * `data-bs-display="static"`, so all positioning is here, not Popper.
+ */
+
+.mc-nav {
+    --mc-nav-link-color: var(--mc-text);
+    --mc-nav-link-hover-color: var(--mc-primary);
+
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-nav__item {
+    position: relative;
+}
+
+.mc-nav__link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-2);
+    padding: var(--mc-space-3) 0;
+    font-weight: var(--mc-font-weight-medium);
+    color: var(--mc-nav-link-color);
+    text-decoration: none;
+}
+
+.mc-nav__link:hover,
+.mc-nav__link:focus-visible,
+.mc-nav__link[aria-expanded="true"] {
+    color: var(--mc-nav-link-hover-color);
+}
+
+.mc-nav__link--parent::after {
+    content: "";
+    width: 0.4em;
+    height: 0.4em;
+    border-right: 2px solid currentcolor;
+    border-bottom: 2px solid currentcolor;
+    transform: translateY(-25%) rotate(45deg);
+    transition: transform var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-nav__link--parent[aria-expanded="true"]::after {
+    transform: translateY(25%) rotate(-135deg);
+}
+
+/* Sub-menu: inline list in the drawer. Overrides Bootstrap's .dropdown-menu
+   box only inside mc-nav. */
+.mc-nav__panel.dropdown-menu {
+    position: static;
+    min-width: 0;
+    margin: 0;
+    padding: 0 0 var(--mc-space-3) var(--mc-space-4);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.mc-nav__sublist {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-nav__sublink,
+.mc-nav__all {
+    display: block;
+    padding: var(--mc-space-2) 0;
+    color: var(--mc-nav-link-color);
+    text-decoration: none;
+}
+
+.mc-nav__sublink:hover,
+.mc-nav__sublink:focus-visible,
+.mc-nav__all:hover,
+.mc-nav__all:focus-visible {
+    color: var(--mc-nav-link-hover-color);
+}
+
+.mc-nav__all {
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+@media (min-width: 992px) {
+    .mc-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--mc-space-6);
+    }
+
+    .mc-nav__link {
+        justify-content: flex-start;
+    }
+
+    .mc-nav__panel.dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: var(--mc-z-dropdown);
+        min-width: 14rem;
+        padding: var(--mc-space-3) var(--mc-space-4);
+        background: var(--mc-surface);
+        border: var(--mc-border-width) solid var(--mc-border);
+        border-radius: var(--mc-radius-md);
+        box-shadow: var(--mc-shadow-md);
+    }
+
+    .mc-nav__all {
+        margin-top: var(--mc-space-2);
+        padding-top: var(--mc-space-3);
+        border-top: var(--mc-border-width) solid var(--mc-border);
+    }
+}
+

@@ -1,0 +1,93 @@
+/**
+ * Bootstrap 5 -> MintCart token bridge.
+ *
+ * Bootstrap's compiled CSS hard-codes its own palette (#0d6efd blue, ...)
+ * into per-component custom properties. Pages also render Bootstrap
+ * component markup Mint does not own (legacy default/ templates, extension
+ * widgets, list-group category module, pagination, forms). Re-pointing those
+ * properties at --mc-* tokens makes all of it follow the active design
+ * tokens and presets instead of Bootstrap blue - no Bootstrap recompilation
+ * (Implementation Guide §11).
+ *
+ * Only bundled into index.css (Bootstrap 5 pages). Values only - never
+ * changes Bootstrap layout or component structure.
+ */
+
+:root {
+    --bs-primary: var(--mc-primary);
+    --bs-body-font-family: var(--mc-font-family-base);
+    --bs-body-color: var(--mc-text);
+    --bs-secondary-color: var(--mc-muted);
+    --bs-border-radius: var(--mc-radius-md);
+    --bs-border-radius-sm: var(--mc-radius-sm);
+    --bs-border-radius-lg: var(--mc-radius-lg);
+}
+
+/* Bootstrap 5.3 colors links via an rgb triplet, which a hex token can't
+   feed, so the colour is set directly. */
+a {
+    color: var(--mc-primary);
+}
+
+a:hover {
+    color: var(--mc-primary-hover);
+}
+
+.btn-primary {
+    --bs-btn-color: var(--mc-on-primary);
+    --bs-btn-bg: var(--mc-primary);
+    --bs-btn-border-color: var(--mc-primary);
+    --bs-btn-hover-color: var(--mc-on-primary);
+    --bs-btn-hover-bg: var(--mc-primary-hover);
+    --bs-btn-hover-border-color: var(--mc-primary-hover);
+    --bs-btn-active-color: var(--mc-on-primary);
+    --bs-btn-active-bg: var(--mc-primary-active);
+    --bs-btn-active-border-color: var(--mc-primary-active);
+    --bs-btn-disabled-bg: var(--mc-primary);
+    --bs-btn-disabled-border-color: var(--mc-primary);
+    --bs-btn-focus-shadow-rgb: 0, 0, 0;
+}
+
+.btn-link {
+    --bs-btn-color: var(--mc-primary);
+    --bs-btn-hover-color: var(--mc-primary-hover);
+    --bs-btn-active-color: var(--mc-primary-active);
+}
+
+.list-group {
+    --bs-list-group-color: var(--mc-text);
+    --bs-list-group-action-hover-bg: var(--mc-surface-alt);
+    --bs-list-group-active-color: var(--mc-on-primary);
+    --bs-list-group-active-bg: var(--mc-primary);
+    --bs-list-group-active-border-color: var(--mc-primary);
+}
+
+.pagination {
+    --bs-pagination-color: var(--mc-primary);
+    --bs-pagination-hover-color: var(--mc-primary-hover);
+    --bs-pagination-focus-color: var(--mc-primary-hover);
+    --bs-pagination-active-bg: var(--mc-primary);
+    --bs-pagination-active-border-color: var(--mc-primary);
+}
+
+.dropdown-menu {
+    --bs-dropdown-link-active-bg: var(--mc-primary);
+    --bs-dropdown-link-active-color: var(--mc-on-primary);
+}
+
+.nav {
+    --bs-nav-link-color: var(--mc-text);
+    --bs-nav-link-hover-color: var(--mc-primary);
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: color-mix(in srgb, var(--mc-primary) 55%, white);
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--mc-primary) 25%, transparent);
+}
+
+.form-check-input:checked {
+    background-color: var(--mc-primary);
+    border-color: var(--mc-primary);
+}

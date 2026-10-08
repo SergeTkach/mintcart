@@ -1,0 +1,80 @@
+/**
+ * mc-buy-bar - sticky add-to-cart bar on the product page (buy-bar.js).
+ * Fixed to the bottom of the viewport while the main Add to Cart button is
+ * scrolled out of view.
+ */
+
+.mc-buy-bar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: var(--mc-z-sticky);
+    padding-block: var(--mc-space-3);
+    background: var(--mc-surface);
+    border-top: var(--mc-border-width) solid var(--mc-border);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+    animation: mc-buy-bar-in var(--mc-motion-duration-base) var(--mc-motion-easing-decelerate);
+}
+
+.mc-buy-bar[hidden] {
+    display: none;
+}
+
+@keyframes mc-buy-bar-in {
+    from {
+        transform: translateY(100%);
+    }
+}
+
+.mc-buy-bar__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+}
+
+.mc-buy-bar__thumb {
+    flex: 0 0 auto;
+    width: 3rem;
+    height: 3rem;
+    object-fit: contain;
+    border: var(--mc-border-width) solid color-mix(in srgb, var(--mc-border) 45%, transparent);
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-buy-bar__info {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mc-buy-bar__name {
+    margin: 0;
+    overflow: hidden;
+    font-weight: var(--mc-font-weight-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-buy-bar__price {
+    margin: 0;
+    font-weight: var(--mc-font-weight-bold);
+}
+
+.mc-buy-bar__price--special {
+    color: var(--mc-danger);
+}
+
+.mc-buy-bar__button {
+    flex: 0 0 auto;
+}
+
+/* Keep the page end reachable under the bar. */
+body:has(.mc-buy-bar:not([hidden])) {
+    padding-bottom: 4.5rem;
+}
+
+@media (max-width: 575.98px) {
+    .mc-buy-bar__thumb {
+        display: none;
+    }
+}

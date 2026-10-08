@@ -406,3 +406,20 @@ done) is allowed, for review; skipping ahead is not.
   standalone; the controller itself is `php -l`-clean and manually reviewed
   against the real `ModelSettingSetting` implementation, same verification
   depth every other controller-wiring increment in this repo has used.
+
+## Layout (2026-10-08) — `mc-wizard`
+
+The wizard is a standalone onboarding page, styled by
+`assets/src/css/components/wizard.css` (bundled in index.css): top bar with
+the MintCart mark (`admin/view/image/mintcart/logo.svg`) and "Skip for
+now"; on the left "Step N of M", a progress bar and a vertical stepper
+(done = ✓, current = `aria-current="step"`); on the right the step panel —
+the step title is the page `h1`, form fields in a Bootstrap grid, and a
+Back / Continue bar (`{% macro actions %}` in the template). Below `lg` only
+"Step N of M" + bar is shown. Delivery/payment/readiness rows are
+`mc-wizard__option` (`is-on` when enabled/done); Design presets are
+`mc-wizard__choice` cards with colour swatches (mirroring presets/*.css).
+
+Back goes to the previous step; a completed step can be submitted again
+(saved, then on to the resume step) — before, edits made after Back were
+silently dropped.

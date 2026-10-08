@@ -70,11 +70,12 @@ const ALERT_VARIANTS = new Set(['danger', 'warning']);
  * there do). Auto-removes the element from the DOM once it finishes
  * hiding, so repeated calls don't leak nodes.
  *
- * @param {{ title: string, message: string, variant?: 'success'|'danger'|'warning'|'info' }} options
+ * @param {{ title: string, message: string, variant?: 'success'|'danger'|'warning'|'info', action?: { text: string, href: string } }} options
+ *        `action` adds one link under the message (e.g. "View cart").
  * @returns {HTMLElement} the created `.mc-toast` element - not yet shown,
  *          pass it to `showToast()`.
  */
-export function createToast({ title, message, variant = 'info' }) {
+export function createToast({ title, message, variant = 'info', action = null }) {
     let container = document.querySelector('.toast-container');
 
     if (!container) {
@@ -103,6 +104,14 @@ export function createToast({ title, message, variant = 'info' }) {
 
     toast.querySelector('.mc-toast__title').textContent = title;
     toast.querySelector('.mc-toast__message').textContent = message;
+
+    if (action && action.text && action.href) {
+        const link = document.createElement('a');
+        link.className = 'mc-toast__action';
+        link.href = action.href;
+        link.textContent = action.text;
+        toast.querySelector('.toast-body').appendChild(link);
+    }
 
     container.appendChild(toast);
 

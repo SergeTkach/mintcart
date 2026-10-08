@@ -5,16 +5,16 @@
   "description": "MintCart frontend build pipeline (Bootstrap 5 + vanilla JS, esbuild).",
   "scripts": {
     "build": "npm run build:js && npm run build:css",
-    "build:js": "esbuild assets/src/js/catalog.js --bundle --minify --outfile=assets/dist/js/catalog.min.js && esbuild assets/src/js/admin.js --bundle --minify --outfile=assets/dist/js/admin.min.js",
+    "build:js": "esbuild assets/src/js/catalog.js --bundle --minify --outfile=assets/dist/js/catalog.min.js && esbuild assets/src/js/admin.js --bundle --minify --outfile=assets/dist/js/admin.min.js && esbuild assets/src/js/slider.js --bundle --minify --outfile=assets/dist/js/slider.min.js",
     "build:css": "npm run build:css:index && npm run build:css:components",
     "build:css:index": "esbuild assets/src/css/index.css --bundle --minify --outfile=assets/dist/css/index.min.css",
     "build:css:components": "esbuild assets/src/css/components.css --bundle --minify --outfile=assets/dist/css/components.min.css",
     "dev": "npm run dev:js && npm run dev:css",
-    "dev:js": "esbuild assets/src/js/catalog.js --bundle --sourcemap --outfile=assets/dist/js/catalog.js && esbuild assets/src/js/admin.js --bundle --sourcemap --outfile=assets/dist/js/admin.js",
+    "dev:js": "esbuild assets/src/js/catalog.js --bundle --sourcemap --outfile=assets/dist/js/catalog.js && esbuild assets/src/js/admin.js --bundle --sourcemap --outfile=assets/dist/js/admin.js && esbuild assets/src/js/slider.js --bundle --sourcemap --outfile=assets/dist/js/slider.js",
     "dev:css": "npm run dev:css:index && npm run dev:css:components",
     "dev:css:index": "esbuild assets/src/css/index.css --bundle --sourcemap --outfile=assets/dist/css/index.css",
     "dev:css:components": "esbuild assets/src/css/components.css --bundle --sourcemap --outfile=assets/dist/css/components.css",
-    "test": "node tests/frontend/preset-tokens-test.js",
+    "test": "node tests/frontend/preset-tokens-test.js && node tests/frontend/bootstrap3-jquery-test.mjs",
     "release": "node scripts/release.js"
   },
   "devDependencies": {
@@ -23,6 +23,7 @@
   "dependencies": {
     "bootstrap": "5.3.8",
     "bootstrap-icons": "1.13.1",
+    "glightbox": "3.3.1",
     "sortablejs": "1.15.7",
     "swiper": "14.1.0"
   }

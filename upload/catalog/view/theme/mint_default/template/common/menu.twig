@@ -1,0 +1,43 @@
+{#
+    Category navigation for mint_default (mc-nav). Same `categories` data the
+    stock ControllerCommonMenu provides - only the markup is Mint-owned, so
+    it works on Bootstrap 5 (the default/ template relies on Bootstrap 3's
+    `.navbar-collapse`, which Bootstrap 5 hides at every width).
+
+    Rendered inside mc-header's `.mc-header__nav` (offcanvas below `lg`,
+    static bar from `lg` up). Sub-menus use the Bootstrap 5 dropdown
+    primitive with `data-bs-display="static"` so CSS, not Popper, positions
+    them: flyout panel on desktop, inline list in the mobile drawer.
+
+    Contract: docs/developer/components/navigation.md
+#}
+{% if categories %}
+<ul class="mc-nav">
+    {% for category in categories %}
+        {% if category.children %}
+            <li class="mc-nav__item dropdown">
+                <a
+                    class="mc-nav__link mc-nav__link--parent"
+                    href="{{ category.href }}"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    data-bs-display="static"
+                    aria-expanded="false"
+                >{{ category.name }}</a>
+                <div class="mc-nav__panel dropdown-menu">
+                    <ul class="mc-nav__sublist">
+                        {% for child in category.children %}
+                            <li><a class="mc-nav__sublink" href="{{ child.href }}">{{ child.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    <a class="mc-nav__all" href="{{ category.href }}">{{ text_all }} {{ category.name }}</a>
+                </div>
+            </li>
+        {% else %}
+            <li class="mc-nav__item">
+                <a class="mc-nav__link" href="{{ category.href }}">{{ category.name }}</a>
+            </li>
+        {% endif %}
+    {% endfor %}
+</ul>
+{% endif %}
