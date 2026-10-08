@@ -76,3 +76,4 @@
 @import './components/cookie-consent.css';
 @import './components/checkout.css';
 @import './compatibility/bootstrap3-shim.css';
+@import './compatibility/opencart3.css';

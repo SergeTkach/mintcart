@@ -106,3 +106,13 @@ updated. Remaining: the user's own click-through, then PR.
 
 - Admin stays on BS3 (separate phase).
 - No rewrite of `default/` templates or `common.js`.
+
+## Legacy page skeleton (2026-10-08)
+
+`assets/src/css/compatibility/opencart3.css` styles the skeleton of pages
+mint_default doesn't override (account/*, information/*, checkout/success,
+contact, ...): `ul.breadcrumb` gets the mc-breadcrumb look and vertical
+spacing, `#content` gets `min-height: 500px` and bottom padding, the
+content `h1` / lead `p` get Mint type sizes, and `.buttons` clears its
+floated `pull-left/right` children (it ran into the footer line). This used
+to be default/stylesheet.css's job, which is not loaded on Bootstrap 5.
