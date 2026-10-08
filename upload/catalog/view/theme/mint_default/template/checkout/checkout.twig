@@ -156,6 +156,19 @@
                 </aside>
             </div>
         </div>
+
+        {# Terms dialog: the agree link opens the page's text here (checkout.js). #}
+        <div class="modal mc-modal fade" id="mc-checkout-terms" tabindex="-1" aria-labelledby="mc-checkout-terms-title" aria-hidden="true" data-mc-checkout-terms>
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <p class="modal-title mc-modal__title" id="mc-checkout-terms-title" data-mc-checkout-terms-title></p>
+                        <button type="button" class="mc-modal__close" data-mc-action="close-modal" aria-label="{{ button_mc_close }}">&times;</button>
+                    </div>
+                    <div class="modal-body mc-prose" data-mc-checkout-terms-body></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {{ footer }}

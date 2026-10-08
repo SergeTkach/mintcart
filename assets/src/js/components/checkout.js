@@ -27,6 +27,7 @@ import {
     applyCheckoutCode,
     removeCheckoutCode,
 } from '../commerce/checkout-client.js';
+import { Modal } from 'bootstrap';
 
 const UPDATE_DELAY = 300;
 
@@ -279,6 +280,14 @@ function initCheckoutRoot(root) {
             agree.querySelectorAll('a').forEach((a) => {
                 a.target = '_blank';
                 a.rel = 'noopener';
+
+                if (state.agree_url) {
+                    // `agree` is the hook of common.js's legacy jQuery dialog;
+                    // drop it so only the Mint dialog opens.
+                    a.classList.remove('agree');
+                    a.dataset.mcAction = 'open-checkout-terms';
+                    a.dataset.mcTermsUrl = state.agree_url;
+                }
             });
         }
 
@@ -341,6 +350,34 @@ function initCheckoutRoot(root) {
             codeForm.classList.remove('is-loading');
         }
     }
+
+    const terms = root.querySelector('[data-mc-checkout-terms]');
+
+    root.addEventListener('click', async (event) => {
+        const link = event.target.closest('[data-mc-action="open-checkout-terms"]');
+
+        if (!link || event.ctrlKey || event.metaKey || event.shiftKey) {
+            return;
+        }
+
+        event.preventDefault();
+
+        try {
+            const response = await fetch(link.dataset.mcTermsUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+
+            if (!response.ok) {
+                throw new Error(String(response.status));
+            }
+
+            // The store's own information page, printed unescaped by stock
+            // OpenCart too.
+            terms.querySelector('[data-mc-checkout-terms-body]').innerHTML = await response.text();
+            terms.querySelector('[data-mc-checkout-terms-title]').textContent = link.textContent.trim();
+            Modal.getOrCreateInstance(terms).show();
+        } catch {
+            window.open(link.href, '_blank', 'noopener');
+        }
+    });
 
     codeForm.addEventListener('submit', (event) => {
         event.preventDefault();

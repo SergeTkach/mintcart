@@ -527,6 +527,8 @@ class ControllerMintcartCheckout extends Controller {
 		$agree_info = $this->agreeInformation();
 
 		$state['agree_html'] = $agree_info ? sprintf($this->language->get('text_agree'), $this->url->link('information/information', 'information_id=' . $agree_info['information_id'], true), $agree_info['title']) : '';
+		// Content-only version of the same page (stock route, no header/footer) for the terms dialog.
+		$state['agree_url'] = $agree_info ? str_replace('&amp;', '&', $this->url->link('information/information/agree', 'information_id=' . $agree_info['information_id'], true)) : '';
 
 		// Coupon / gift certificate field: shown when either total is on.
 		$state['codes'] = array(

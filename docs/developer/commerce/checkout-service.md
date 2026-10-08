@@ -39,6 +39,12 @@ The stock `extension/total/coupon/coupon` route is not reused: it sets a
 flash `success` for the cart page and cannot remove a coupon.
 State: `codes.enabled`, `codes.applied[] = {type, code}`.
 
+**Terms link (2026-10-08).** The agree link opens an `mc-modal` with the
+information page's text only, fetched from the stock content-only route
+`information/information/agree` (`state.agree_url`). The link's legacy
+`agree` class is removed so common.js's jQuery dialog doesn't open too;
+without JS (or if the fetch fails) the full page opens in a new tab.
+
 `{redirect}` is returned when the cart can no longer be checked out
 (empty / out of stock without backorders / below a minimum) or a guest
 tries to check out where guest checkout is off.

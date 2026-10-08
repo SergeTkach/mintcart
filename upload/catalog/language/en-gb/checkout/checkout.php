@@ -106,6 +106,7 @@ $_['text_mc_no_payment']             = 'No payment options are available.';
 $_['text_mc_payment_ready']          = 'Your order has been created. Complete the payment step below.';
 $_['text_mc_error']                  = 'Something went wrong. Please try again.';
 $_['button_mc_place_order']          = 'Place order';
+$_['button_mc_close']                = 'Close';
 $_['entry_mc_code']                  = 'Coupon or gift certificate';
 $_['button_mc_code_apply']           = 'Apply';
 $_['button_mc_code_remove']          = 'Remove code %s';
