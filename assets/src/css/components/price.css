@@ -60,3 +60,9 @@
     font-size: var(--mc-font-size-2xl);
     font-weight: var(--mc-font-weight-bold);
 }
+
+/* Live recalculation in flight (product-price.js). */
+.mc-price.is-loading {
+    opacity: 0.6;
+    transition: opacity var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}

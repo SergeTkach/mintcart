@@ -31,6 +31,12 @@ idea). `sticky-header.js` now publishes `--mc-header-sticky-offset`. Docs:
 `docs/developer/components/section-nav.md`. Checked with headless Edge
 probes at 1280px / 390px; user click-through pending.
 
+PDP live price: `mintcart/price` + `MintCart\Commerce\ProductPriceCalculator`
+(cart.php rules: tier by total cart quantity, special always wins, options
+on top). Total for the chosen quantity in the main price and buy bar.
+Test: `tests/mintcart/commerce/product-price-calculator-test.php`; endpoint
+matched the cart line total for product 42 × 12 with options.
+
 ## Update (2026-10-07, interactive session) — Bootstrap 5 storefront + storefront UI
 
 Branch `phase-15-mint-checkout` (BS5 work started on

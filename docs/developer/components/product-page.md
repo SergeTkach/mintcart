@@ -27,6 +27,8 @@ Changed 2026-10-08:
   the stock template). Related Products became a section too.
 - The rating under the title links to the Reviews section and shows the
   "Reviews (N)" label.
+- Live total price on quantity / option change (main price + buy bar) —
+  `docs/developer/commerce/product-price.md`.
 
 Not done yet: delivery / payment / returns info block (needs a decision on
 where that content comes from), Quick Order missing-option handling.

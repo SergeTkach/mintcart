@@ -127,10 +127,12 @@
                     </ul>
 
                     {% if price %}
-                        <div class="mc-price mc-price--lg mb-3{% if special %} mc-price--special{% endif %}">
-                            <span class="mc-price__current">{{ special ?: price }}</span>
-                            {% if special %}<span class="mc-price__original">{{ price }}</span>{% endif %}
-                            {% if tax %}<span class="mc-price__tax d-block">{{ text_tax }} {{ tax }}</span>{% endif %}
+                        {# product-price.js turns this into the live total for the
+                           chosen quantity + options (route mintcart/price). #}
+                        <div class="mc-price mc-price--lg mb-3{% if special %} mc-price--special{% endif %}" data-mc-product-price data-mc-product-id="{{ product_id }}" aria-live="polite">
+                            <span class="mc-price__current" data-mc-price-current>{{ special ?: price }}</span>
+                            <span class="mc-price__original" data-mc-price-original{% if not special %} hidden{% endif %}>{{ special ? price }}</span>
+                            {% if tax %}<span class="mc-price__tax d-block">{{ text_tax }} <span data-mc-price-tax>{{ tax }}</span></span>{% endif %}
                         </div>
 
                         {% if points %}
@@ -351,7 +353,7 @@
             {% if thumb %}<img class="mc-buy-bar__thumb" src="{{ thumb }}" alt="" width="48" height="48" loading="lazy">{% endif %}
             <div class="mc-buy-bar__info">
                 <p class="mc-buy-bar__name">{{ heading_title }}</p>
-                <p class="mc-buy-bar__price{% if special %} mc-buy-bar__price--special{% endif %}">{{ special ?: price }}</p>
+                <p class="mc-buy-bar__price{% if special %} mc-buy-bar__price--special{% endif %}" data-mc-price-current>{{ special ?: price }}</p>
             </div>
             <button type="button" class="mc-button mc-button--primary mc-buy-bar__button" data-mc-action="buy-bar-add">{{ text_add_to_cart }}</button>
         </div>

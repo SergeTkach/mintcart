@@ -860,6 +860,9 @@ product configured:
    Specification / Reviews / Related, the section lands just below the bar,
    the active item follows scrolling, and Specification only appears when
    the product actually has attributes.
+4a. (2026-10-08) Press −/+ and pick options with a price: the main price,
+   the buy bar price and "Ex Tax" show the total for that quantity; add to
+   cart and confirm the cart line total is the same number.
 5. Confirm the Related Products grid renders `mc-product-card` markup
    identical in shape to the same product's appearance on a category page.
 6. Switch to the legacy `default` theme and confirm the product page is

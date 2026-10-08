@@ -47,6 +47,7 @@ import { initStickyHeader } from './components/sticky-header.js';
 import { initCartPage } from './components/cart-page.js';
 import { initBuyBar } from './components/buy-bar.js';
 import { initSectionNav } from './components/section-nav.js';
+import { initProductPrice } from './components/product-price.js';
 
 // Swiper-based sliders live in their own bundle (slider(.min).js next to
 // this file), fetched only when a `[data-mc-slider]` is on the page - at
@@ -124,6 +125,7 @@ function boot() {
     initCartPage();
     initBuyBar();
     initSectionNav();
+    initProductPrice();
     watchSliders();
 }
 
