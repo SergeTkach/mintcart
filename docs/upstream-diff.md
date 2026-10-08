@@ -3998,3 +3998,15 @@ entries above); also `text_view_cart` / `cart_url` for the add-to-cart toast.
 controller already loaded; a template cannot compute it from the localized
 stock text. **Compatibility:** additive `$data` key, ignored by other themes.
 **Tests:** manual / headless screenshot of product 40 (In Stock, green).
+
+## `upload/catalog/controller/product/product.php` / `upload/catalog/language/en-gb/product/product.php` — section nav labels (2026-10-08)
+
+**Change:** two language keys (`tab_overview` = "Overview",
+`text_section_nav` = "Product sections") and the two matching `$data`
+assignments, for mint_default's sticky section nav (`mc-section-nav`), which
+replaced the Description/Specification/Reviews tabs. **Why not Mint layer:**
+the product page's own language file is what the controller already loads;
+other labels in the nav reuse the stock `tab_*`/`text_related` keys.
+**Compatibility:** additive keys, ignored by other themes.
+**Tests:** headless Edge probe (1280px and 390px): every nav link lands its
+section 16px under the bar and highlights its own link.

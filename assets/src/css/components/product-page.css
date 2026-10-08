@@ -1,6 +1,7 @@
 /**
  * Product detail page pieces (mint_default product/product.twig):
- * mc-stock marker, mc-choice-group option pills, options label.
+ * mc-stock marker, mc-choice-group option pills, options label, the
+ * stacked content sections the mc-section-nav links to, rating link.
  */
 
 .mc-product-page__options-title {
@@ -97,4 +98,38 @@
 .mc-field.has-error .mc-choice-group .mc-radio,
 .mc-field.has-error .mc-choice-group .mc-checkbox {
     border-color: var(--mc-danger);
+}
+
+/* Rating under the title: jumps to the Reviews section. */
+.mc-product-page__rating-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-2);
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+    text-decoration: none;
+}
+
+.mc-product-page__rating-link:hover {
+    color: var(--mc-text);
+    text-decoration: underline;
+}
+
+/* Stacked content sections (Description / Specification / Reviews /
+   Related). The label is styled text, not a heading (Implementation Guide
+   §19.1) - the product name stays the page's only h1. */
+.mc-product-section {
+    padding-block: var(--mc-space-6);
+    border-top: var(--mc-border-width) solid var(--mc-border);
+}
+
+.mc-product-section__title {
+    margin: 0 0 var(--mc-space-4);
+    font-size: var(--mc-font-size-xl);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-product-section__subtitle {
+    margin: var(--mc-space-4) 0 var(--mc-space-2);
+    font-weight: var(--mc-font-weight-semibold);
 }

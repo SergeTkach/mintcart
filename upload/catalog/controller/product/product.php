@@ -308,6 +308,9 @@ class ControllerProductProduct extends Controller {
 			$data['text_tags'] = $this->language->get('text_tags');
 			$data['tab_description'] = $this->language->get('tab_description');
 			$data['tab_attribute'] = $this->language->get('tab_attribute');
+			// mint_default's sticky section nav (Overview link + its aria-label).
+			$data['tab_overview'] = $this->language->get('tab_overview');
+			$data['text_section_nav'] = $this->language->get('text_section_nav');
 			$data['text_no_reviews'] = $this->language->get('text_no_reviews');
 			$data['entry_qty'] = $this->language->get('entry_qty');
 			// MC-0022 (docs/fixes/registry.md): button_continue was never

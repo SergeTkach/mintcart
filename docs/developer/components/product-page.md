@@ -17,5 +17,16 @@ Pieces added 2026-10-07 on top of `product/product.twig`:
   option is scrolled to the centre (clear of the sticky header) and focused.
   Rendered only when the product has a price.
 
+Changed 2026-10-08:
+
+- **`mc-section-nav`** (see `section-nav.md`) replaces the `mc-tabs`
+  Description / Specification / Reviews block. Content is stacked as
+  `mc-product-section` blocks (label = `mc-product-section__title`, styled
+  text, not a heading); the sticky nav jumps between them and highlights
+  the one in view. Reviews render only when `review_status` is on (as in
+  the stock template). Related Products became a section too.
+- The rating under the title links to the Reviews section and shows the
+  "Reviews (N)" label.
+
 Not done yet: delivery / payment / returns info block (needs a decision on
 where that content comes from), Quick Order missing-option handling.

@@ -855,9 +855,11 @@ product configured:
    click Add to Cart **without** selecting the option — confirm it
    redirects back to the same product page (the existing "missing required
    option" fallback), not a silent failure.
-4. Confirm the Description/Specification/Reviews tabs switch panels
-   correctly (`mc-tabs`, keyboard arrow-key navigable) and that
-   Specification only appears when the product actually has attributes.
+4. (Updated 2026-10-08 — tabs replaced by `mc-section-nav`.) Confirm the
+   sticky section nav under the header jumps smoothly to Description /
+   Specification / Reviews / Related, the section lands just below the bar,
+   the active item follows scrolling, and Specification only appears when
+   the product actually has attributes.
 5. Confirm the Related Products grid renders `mc-product-card` markup
    identical in shape to the same product's appearance on a category page.
 6. Switch to the legacy `default` theme and confirm the product page is

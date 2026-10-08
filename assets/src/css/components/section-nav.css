@@ -1,0 +1,74 @@
+/**
+ * mc-section-nav - sticky in-page navigation between the sections of a long
+ * page (first consumer: the product page - Overview / Description /
+ * Specification / Reviews / Related).
+ *
+ * Plain anchor links: the jump works without JS, Bootstrap's reboot gives
+ * `:root` smooth scrolling (and drops it under prefers-reduced-motion), and
+ * the page gets a scroll-padding-top that clears the sticky header + this
+ * bar. section-nav.js only measures the bar height into
+ * --mc-section-nav-height and moves `aria-current` to the section in view
+ * (`[data-mc-section]` elements).
+ *
+ * Sticks right under the stuck part of the header
+ * (--mc-header-sticky-offset, published by sticky-header.js).
+ *
+ * Contract: docs/developer/components/section-nav.md
+ */
+
+.mc-section-nav {
+    position: sticky;
+    top: var(--mc-header-sticky-offset, 0px);
+    z-index: calc(var(--mc-z-sticky) - 1);
+    background: var(--mc-surface);
+    border-bottom: var(--mc-border-width) solid var(--mc-border);
+}
+
+.mc-section-nav__list {
+    display: flex;
+    gap: var(--mc-space-1);
+    margin: 0;
+    padding: var(--mc-space-2) 0;
+    overflow-x: auto;
+    list-style: none;
+    scrollbar-width: none;
+}
+
+.mc-section-nav__list::-webkit-scrollbar {
+    display: none;
+}
+
+.mc-section-nav__link {
+    display: block;
+    padding: var(--mc-space-2) var(--mc-space-4);
+    color: var(--mc-muted);
+    font-weight: var(--mc-font-weight-medium);
+    white-space: nowrap;
+    text-decoration: none;
+    border-radius: var(--mc-radius-sm);
+    transition: background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-section-nav__link:hover {
+    color: var(--mc-text);
+    background: var(--mc-surface-alt);
+}
+
+.mc-section-nav__link[aria-current="true"] {
+    color: var(--mc-text);
+    font-weight: var(--mc-font-weight-semibold);
+    background: var(--mc-surface-alt);
+}
+
+.mc-section-nav__link:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+/* Anchor jumps on a page that has the bar land below header + bar. */
+:root:has(.mc-section-nav) {
+    scroll-padding-top: calc(
+        var(--mc-header-sticky-offset, 0px) + var(--mc-section-nav-height, 3.5rem) + var(--mc-space-4)
+    );
+}

@@ -23,6 +23,14 @@ both controllers pass syntax checks and all 9 MetaBuilder smoke scenarios pass.
 
 Legend: `[x]` done, `[~]` in progress / partially done, `[ ]` not started.
 
+## Update (2026-10-08) — PDP section nav
+
+Branch `phase-15-mint-checkout`. PDP tabs (`mc-tabs`) replaced with stacked
+sections + sticky `mc-section-nav` (smooth jump, scroll spy; Cartello UX
+idea). `sticky-header.js` now publishes `--mc-header-sticky-offset`. Docs:
+`docs/developer/components/section-nav.md`. Checked with headless Edge
+probes at 1280px / 390px; user click-through pending.
+
 ## Update (2026-10-07, interactive session) — Bootstrap 5 storefront + storefront UI
 
 Branch `phase-15-mint-checkout` (BS5 work started on
