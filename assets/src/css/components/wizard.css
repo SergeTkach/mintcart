@@ -1,0 +1,412 @@
+/**
+ * mc-wizard - the Setup Wizard onboarding page
+ * (admin/view/template/mintcart/wizard.twig).
+ *
+ * A standalone page, not legacy admin chrome: top bar with the MintCart
+ * mark, a vertical stepper with progress on the left, the step panel with
+ * Back / Continue on the right. Below lg the stepper collapses to
+ * "Step N of M" + progress bar.
+ *
+ * Doc: docs/developer/onboarding/setup-wizard.md
+ */
+
+.mc-wizard {
+    min-height: 100vh;
+    background: var(--mc-surface-alt);
+}
+
+/* Top bar ---------------------------------------------------------------- */
+
+.mc-wizard__topbar {
+    background: var(--mc-surface);
+    border-bottom: var(--mc-border-width) solid var(--mc-border);
+}
+
+.mc-wizard__topbar-inner {
+    max-width: 68rem;
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-4);
+    min-height: 4rem;
+}
+
+.mc-wizard__brand {
+    width: auto;
+    height: 2rem;
+}
+
+.mc-wizard__topbar-title {
+    padding-left: var(--mc-space-4);
+    font-weight: var(--mc-font-weight-medium);
+    color: var(--mc-muted);
+    border-left: var(--mc-border-width) solid var(--mc-border);
+}
+
+@media (max-width: 575.98px) {
+    .mc-wizard__topbar-title {
+        display: none;
+    }
+}
+
+.mc-wizard__skip {
+    margin-left: auto;
+    font-size: var(--mc-font-size-sm);
+    color: var(--mc-muted);
+    text-decoration: none;
+}
+
+.mc-wizard__skip:hover {
+    color: var(--mc-text);
+    text-decoration: underline;
+}
+
+.mc-wizard__layout {
+    max-width: 68rem;
+    padding-block: var(--mc-space-8) var(--mc-space-16);
+}
+
+/* Progress --------------------------------------------------------------- */
+
+.mc-wizard__progress-head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--mc-space-2);
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-semibold);
+    color: var(--mc-muted);
+}
+
+.mc-wizard__progress {
+    height: 0.375rem;
+    overflow: hidden;
+    background: var(--mc-border);
+    border-radius: var(--mc-radius-pill);
+}
+
+.mc-wizard__progress-bar {
+    display: block;
+    width: var(--mc-wizard-progress, 0%);
+    height: 100%;
+    background: var(--mc-primary);
+    border-radius: inherit;
+    transition: width var(--mc-motion-duration-slow) var(--mc-motion-easing-standard);
+}
+
+/* Stepper ---------------------------------------------------------------- */
+
+.mc-wizard__nav {
+    position: sticky;
+    top: var(--mc-space-6);
+}
+
+.mc-wizard__steps {
+    display: none;
+    margin: var(--mc-space-6) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+@media (min-width: 992px) {
+    .mc-wizard__steps {
+        display: block;
+    }
+}
+
+.mc-wizard__step {
+    position: relative;
+}
+
+/* Connector line between markers. */
+.mc-wizard__step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 2.25rem;
+    bottom: -0.25rem;
+    left: calc(var(--mc-space-3) + 0.875rem - 1px);
+    width: 2px;
+    background: var(--mc-border);
+}
+
+.mc-wizard__step.is-done:not(:last-child)::after {
+    background: var(--mc-primary);
+}
+
+.mc-wizard__step-link {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    padding: var(--mc-space-2) var(--mc-space-3);
+    color: var(--mc-muted);
+    text-decoration: none;
+    border-radius: var(--mc-radius-md);
+}
+
+a.mc-wizard__step-link:hover {
+    color: var(--mc-text);
+    background: var(--mc-surface);
+}
+
+a.mc-wizard__step-link:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+.mc-wizard__step-marker {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: var(--mc-font-size-xs);
+    font-weight: var(--mc-font-weight-semibold);
+    background: var(--mc-surface);
+    border: 2px solid var(--mc-border);
+    border-radius: var(--mc-radius-pill);
+}
+
+.mc-wizard__step.is-done .mc-wizard__step-marker {
+    color: var(--mc-on-primary);
+    background: var(--mc-primary);
+    border-color: var(--mc-primary);
+}
+
+.mc-wizard__step.is-done .mc-wizard__step-link {
+    color: var(--mc-text);
+}
+
+.mc-wizard__step[aria-current="step"] .mc-wizard__step-link {
+    color: var(--mc-text);
+    font-weight: var(--mc-font-weight-semibold);
+    background: var(--mc-surface);
+    box-shadow: var(--mc-shadow-sm);
+}
+
+.mc-wizard__step[aria-current="step"] .mc-wizard__step-marker {
+    color: var(--mc-primary);
+    border-color: var(--mc-primary);
+}
+
+/* Panel ------------------------------------------------------------------ */
+
+.mc-wizard__panel {
+    padding: var(--mc-space-6);
+    background: var(--mc-surface);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+    box-shadow: var(--mc-shadow-sm);
+}
+
+@media (min-width: 768px) {
+    .mc-wizard__panel {
+        padding: var(--mc-space-10);
+    }
+}
+
+.mc-wizard__title {
+    margin: 0 0 var(--mc-space-2);
+    font-size: var(--mc-font-size-2xl);
+    font-weight: var(--mc-font-weight-bold);
+    line-height: var(--mc-line-height-tight);
+    color: var(--mc-text);
+}
+
+.mc-wizard__lead {
+    float: none;
+    width: 100%;
+    max-width: 40rem;
+    margin: 0 0 var(--mc-space-6);
+    padding: 0;
+    font-size: var(--mc-font-size-base);
+    line-height: var(--mc-line-height-relaxed);
+    color: var(--mc-muted);
+}
+
+.mc-wizard__empty {
+    padding: var(--mc-space-4);
+    color: var(--mc-muted);
+    background: var(--mc-surface-alt);
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-wizard__more {
+    display: inline-block;
+    margin-top: var(--mc-space-4);
+    font-size: var(--mc-font-size-sm);
+}
+
+/* Back / Continue, separated from the form above. */
+.mc-wizard__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mc-space-3);
+    margin-top: var(--mc-space-8);
+    padding-top: var(--mc-space-6);
+    border-top: var(--mc-border-width) solid var(--mc-border);
+}
+
+.mc-wizard__next {
+    min-width: 10rem;
+    margin-left: auto;
+}
+
+.mc-wizard__secondary {
+    margin-top: var(--mc-space-3);
+    text-align: right;
+}
+
+.mc-wizard__link-button {
+    padding: 0;
+    font-size: var(--mc-font-size-sm);
+    color: var(--mc-muted);
+    text-decoration: underline;
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+.mc-wizard__link-button:hover {
+    color: var(--mc-text);
+}
+
+/* Option rows (delivery, payment, readiness checklist) ------------------- */
+
+.mc-wizard__options {
+    display: grid;
+    gap: var(--mc-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-wizard__option {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    min-height: 3.5rem;
+    padding: var(--mc-space-2) var(--mc-space-4);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-wizard__option.is-on {
+    border-color: color-mix(in srgb, var(--mc-success) 45%, var(--mc-border));
+    background: color-mix(in srgb, var(--mc-success) 5%, var(--mc-surface));
+}
+
+.mc-wizard__option-name {
+    flex: 1 1 auto;
+    font-weight: var(--mc-font-weight-medium);
+}
+
+/* Readiness score ---------------------------------------------------------- */
+
+.mc-wizard__readiness {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-4);
+    margin-bottom: var(--mc-space-6);
+}
+
+.mc-wizard__readiness-value {
+    font-size: var(--mc-font-size-3xl);
+    font-weight: var(--mc-font-weight-bold);
+    color: var(--mc-primary);
+}
+
+.mc-wizard__readiness .mc-wizard__progress {
+    flex: 1 1 auto;
+}
+
+/* Logo ------------------------------------------------------------------- */
+
+.mc-wizard__logo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mc-space-3);
+}
+
+.mc-wizard__logo .mc-field__control {
+    flex: 1 1 16rem;
+}
+
+/* Checkerboard behind the preview so transparent logos stay visible. */
+.mc-wizard__logo-preview {
+    width: auto;
+    max-width: 12rem;
+    height: 3.5rem;
+    padding: var(--mc-space-2);
+    object-fit: contain;
+    background: repeating-conic-gradient(var(--mc-surface-alt) 0 25%, var(--mc-surface) 0 50%) 0 0 / 12px 12px;
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+}
+
+/* Design choices ----------------------------------------------------------- */
+
+.mc-wizard__choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: var(--mc-space-3);
+}
+
+.mc-wizard__choice {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-3);
+    padding: var(--mc-space-4);
+    border: 2px solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+    cursor: pointer;
+    transition: border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-wizard__choice:hover {
+    border-color: var(--mc-border-strong);
+}
+
+.mc-wizard__choice:has(:checked) {
+    border-color: var(--mc-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-primary) 18%, transparent);
+}
+
+.mc-wizard__choice:has(:focus-visible) {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+/* The real radio stays in the DOM, keyboard-operable, visually hidden. */
+.mc-wizard__choice-input {
+    position: absolute;
+    opacity: 0;
+}
+
+.mc-wizard__choice-label {
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-wizard__swatch {
+    display: flex;
+    height: 3rem;
+    overflow: hidden;
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-wizard__swatch > span {
+    flex: 1;
+    background: var(--mc-border);
+}
+
+/* Swatch colours mirror presets/clean.css and presets/warm.css. */
+.mc-wizard__choice--clean .mc-wizard__swatch > span:nth-child(1) { background: var(--mc-color-mint-600); }
+.mc-wizard__choice--clean .mc-wizard__swatch > span:nth-child(2) { background: var(--mc-color-blue-500); }
+.mc-wizard__choice--clean .mc-wizard__swatch > span:nth-child(3) { background: var(--mc-color-gray-50); }
+
+.mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(1) { background: #c1552c; }
+.mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(2) { background: #d69e2e; }
+.mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(3) { background: #f8ede0; }

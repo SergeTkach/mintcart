@@ -6,326 +6,329 @@
 <title>{{ heading_title }}</title>
 <link rel="stylesheet" href="{{ asset_base }}assets/dist/css/index.min.css" />
 </head>
-<body class="bg-body-tertiary">
-<div class="container py-5" style="max-width: 640px;">
-  <div class="text-center mb-4">
-    <span class="mc-badge mc-badge--new">MintCart</span>
-    <h1 class="h3 mt-2">{{ heading_title }}</h1>
-    {% if step != 'ready' %}<a class="small text-body-secondary" href="{{ skip_wizard }}">{{ button_skip_wizard }}</a>{% endif %}
+<body class="mc-wizard">
+{#
+  Setup Wizard - a standalone onboarding page (no legacy admin chrome).
+  Component: assets/src/css/components/wizard.css,
+  docs/developer/onboarding/setup-wizard.md.
+#}
+{% macro actions(prev_step_url, button_back, label) %}
+  <div class="mc-wizard__actions">
+    {% if prev_step_url %}<a class="mc-button mc-button--ghost" href="{{ prev_step_url }}">{{ button_back }}</a>{% endif %}
+    <button type="submit" class="mc-button mc-button--primary mc-wizard__next">{{ label }}</button>
   </div>
+{% endmacro %}
+{% import _self as wizard %}
 
-  <ol class="d-flex flex-wrap justify-content-center gap-2 list-unstyled mb-4">
-    {% for nav_step in nav_steps %}
-    <li>
-      {% if nav_step.reachable %}
-      <a href="{{ action }}&amp;step={{ nav_step.code }}" class="mc-badge {% if nav_step.current %}mc-badge--sale{% elseif nav_step.completed %}mc-badge--success{% else %}mc-badge--new{% endif %}">{{ nav_step.label }}</a>
-      {% else %}
-      <span class="mc-badge" aria-disabled="true">{{ nav_step.label }}</span>
-      {% endif %}
-    </li>
-    {% endfor %}
-  </ol>
+<header class="mc-wizard__topbar">
+  <div class="container mc-wizard__topbar-inner">
+    <img class="mc-wizard__brand" src="{{ brand_logo }}" alt="MintCart" width="140" height="48" />
+    <span class="mc-wizard__topbar-title">{{ heading_title }}</span>
+    {% if step and step != 'ready' %}<a class="mc-wizard__skip" href="{{ skip_wizard }}">{{ button_skip_wizard }}</a>{% endif %}
+  </div>
+</header>
 
-  <div class="mc-card">
-    <div class="mc-card__body">
-
-      {% if error.warning %}
-      <div class="mc-alert mc-alert--danger mb-3" role="alert">
-        <div class="mc-alert__body">
-          <p class="mc-alert__message">{{ error.warning }}</p>
+<main class="container mc-wizard__layout">
+  <div class="row g-4 g-lg-5">
+    <div class="col-lg-4">
+      <nav class="mc-wizard__nav" aria-label="{{ text_steps }}">
+        <div class="mc-wizard__progress-head">
+          <span>{{ text_step_of|format(step_number, step_total) }}</span>
+          <span>{{ text_progress|format(progress_percent) }}</span>
         </div>
-      </div>
-      {% endif %}
-
-      {% if step == 'welcome' %}
-      <h2 class="mc-card__title">{{ welcome_title }}</h2>
-      <p class="mc-card__text">{{ welcome_text }}</p>
-      <form action="{{ action }}" method="post">
-        <input type="hidden" name="step" value="welcome" />
-        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_get_started }}</button>
-      </form>
-      {% endif %}
-
-      {% if step == 'store' %}
-      <h2 class="mc-card__title">{{ store_title }}</h2>
-      <p class="mc-card__text">{{ store_text }}</p>
-      <form action="{{ action }}" method="post" enctype="multipart/form-data" novalidate>
-        <input type="hidden" name="step" value="store" />
-
-        <div class="mc-field mb-3 {% if error.name %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-config-name">{{ entry_name }}</label>
-          <input type="text" id="input-config-name" name="config_name" value="{{ config_name }}" class="mc-field__control" {% if error.name %}aria-invalid="true" aria-describedby="error-config-name"{% endif %} />
-          {% if error.name %}<p class="mc-field__error" id="error-config-name" role="alert">{{ error.name }}</p>{% endif %}
+        <div class="mc-wizard__progress" role="progressbar" aria-label="{{ text_steps }}" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100" style="--mc-wizard-progress: {{ progress_percent }}%">
+          <span class="mc-wizard__progress-bar"></span>
         </div>
 
-        <div class="mc-field mb-3 {% if error.email %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-config-email">{{ entry_email }}</label>
-          <input type="email" id="input-config-email" name="config_email" value="{{ config_email }}" class="mc-field__control" {% if error.email %}aria-invalid="true" aria-describedby="error-config-email"{% endif %} />
-          {% if error.email %}<p class="mc-field__error" id="error-config-email" role="alert">{{ error.email }}</p>{% endif %}
-        </div>
-
-        <div class="mc-field mb-3 {% if error.telephone %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-config-telephone">{{ entry_telephone }}</label>
-          <input type="text" id="input-config-telephone" name="config_telephone" value="{{ config_telephone }}" class="mc-field__control" {% if error.telephone %}aria-invalid="true" aria-describedby="error-config-telephone"{% endif %} />
-          {% if error.telephone %}<p class="mc-field__error" id="error-config-telephone" role="alert">{{ error.telephone }}</p>{% endif %}
-        </div>
-
-        <div class="mc-field mb-4 {% if error.address %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-config-address">{{ entry_address }}</label>
-          <textarea id="input-config-address" name="config_address" class="mc-field__control" {% if error.address %}aria-invalid="true" aria-describedby="error-config-address"{% endif %}>{{ config_address }}</textarea>
-          {% if error.address %}<p class="mc-field__error" id="error-config-address" role="alert">{{ error.address }}</p>{% endif %}
-        </div>
-
-        <div class="mc-field mb-3 {% if error.logo %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-config-logo">{{ entry_logo }}</label>
-          {% if current_logo %}<img src="{{ current_logo }}" alt="" class="d-block mb-2" height="48" />{% endif %}
-          <input type="file" id="input-config-logo" name="logo" accept="image/svg+xml,.svg,image/png,image/jpeg,image/gif,image/webp" class="mc-field__control" aria-describedby="help-config-logo{% if error.logo %} error-config-logo{% endif %}" />
-          <p class="mc-field__help" id="help-config-logo">{{ help_logo }}</p>
-          {% if error.logo %}<p class="mc-field__error" id="error-config-logo" role="alert">{{ error.logo }}</p>{% endif %}
-        </div>
-
-        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_continue }}</button>
-      </form>
-      {% endif %}
-
-      {% if step == 'contacts' %}
-      <h2 class="mc-card__title">{{ contacts_title }}</h2>
-      <p class="mc-card__text">{{ contacts_text }}</p>
-      <form action="{{ action }}" method="post" novalidate>
-        <input type="hidden" name="step" value="contacts" />
-
-        <div class="mc-field mb-3 {% if error.social_facebook %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-social-facebook">{{ entry_social_facebook }}</label>
-          <input type="url" id="input-social-facebook" name="social_facebook" value="{{ social_facebook }}" placeholder="https://facebook.com/yourstore" class="mc-field__control" {% if error.social_facebook %}aria-invalid="true" aria-describedby="error-social-facebook"{% endif %} />
-          {% if error.social_facebook %}<p class="mc-field__error" id="error-social-facebook" role="alert">{{ error.social_facebook }}</p>{% endif %}
-        </div>
-
-        <div class="mc-field mb-3 {% if error.social_instagram %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-social-instagram">{{ entry_social_instagram }}</label>
-          <input type="url" id="input-social-instagram" name="social_instagram" value="{{ social_instagram }}" placeholder="https://instagram.com/yourstore" class="mc-field__control" {% if error.social_instagram %}aria-invalid="true" aria-describedby="error-social-instagram"{% endif %} />
-          {% if error.social_instagram %}<p class="mc-field__error" id="error-social-instagram" role="alert">{{ error.social_instagram }}</p>{% endif %}
-        </div>
-
-        <div class="mc-field mb-3 {% if error.social_twitter %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-social-twitter">{{ entry_social_twitter }}</label>
-          <input type="url" id="input-social-twitter" name="social_twitter" value="{{ social_twitter }}" placeholder="https://x.com/yourstore" class="mc-field__control" {% if error.social_twitter %}aria-invalid="true" aria-describedby="error-social-twitter"{% endif %} />
-          {% if error.social_twitter %}<p class="mc-field__error" id="error-social-twitter" role="alert">{{ error.social_twitter }}</p>{% endif %}
-        </div>
-
-        <div class="mc-field mb-4 {% if error.social_youtube %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-social-youtube">{{ entry_social_youtube }}</label>
-          <input type="url" id="input-social-youtube" name="social_youtube" value="{{ social_youtube }}" placeholder="https://youtube.com/@yourstore" class="mc-field__control" {% if error.social_youtube %}aria-invalid="true" aria-describedby="error-social-youtube"{% endif %} />
-          {% if error.social_youtube %}<p class="mc-field__error" id="error-social-youtube" role="alert">{{ error.social_youtube }}</p>{% endif %}
-        </div>
-
-        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_continue }}</button>
-      </form>
-      {% endif %}
-
-      {% if step == 'language_currency' %}
-      <h2 class="mc-card__title">{{ language_currency_title }}</h2>
-      <p class="mc-card__text">{{ language_currency_text }}</p>
-      <form action="{{ action }}" method="post" novalidate>
-        <input type="hidden" name="step" value="language_currency" />
-
-        <div class="mc-field mb-3 {% if error.language %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-config-language">{{ entry_language }}</label>
-          <select id="input-config-language" name="config_language" class="mc-field__control" {% if error.language %}aria-invalid="true" aria-describedby="error-config-language"{% endif %}>
-            {% for language in languages %}
-            <option value="{{ language.code }}" {% if language.code == config_language %}selected="selected"{% endif %}>{{ language.name }}</option>
-            {% endfor %}
-          </select>
-          {% if error.language %}<p class="mc-field__error" id="error-config-language" role="alert">{{ error.language }}</p>{% endif %}
-        </div>
-
-        <div class="mc-field mb-4 {% if error.currency %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-config-currency">{{ entry_currency }}</label>
-          <select id="input-config-currency" name="config_currency" class="mc-field__control" {% if error.currency %}aria-invalid="true" aria-describedby="error-config-currency"{% endif %}>
-            {% for currency in currencies %}
-            <option value="{{ currency.code }}" {% if currency.code == config_currency %}selected="selected"{% endif %}>{{ currency.title }} ({{ currency.code }})</option>
-            {% endfor %}
-          </select>
-          {% if error.currency %}<p class="mc-field__error" id="error-config-currency" role="alert">{{ error.currency }}</p>{% endif %}
-        </div>
-
-        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_continue }}</button>
-      </form>
-      {% endif %}
-
-      {% if step == 'delivery' %}
-      <h2 class="mc-card__title">{{ delivery_title }}</h2>
-      <p class="mc-card__text">{{ delivery_text }}</p>
-
-      {% if shipping_extensions is empty %}
-      <p class="mc-card__text mb-3">{{ text_delivery_empty }}</p>
-      {% else %}
-      <ul class="list-unstyled mb-3">
-        {% for extension in shipping_extensions %}
-        <li class="d-flex justify-content-between align-items-center mb-2">
-          <span>{{ extension.name }}</span>
-          <span class="d-flex align-items-center gap-2">
-            {% if extension.enabled %}
-            <span class="mc-badge mc-badge--success">{{ text_enabled }}</span>
+        <ol class="mc-wizard__steps">
+          {% for nav_step in nav_steps %}
+          <li class="mc-wizard__step{% if nav_step.completed and not nav_step.current %} is-done{% endif %}"{% if nav_step.current %} aria-current="step"{% endif %}>
+            {% if nav_step.reachable and not nav_step.current %}
+            <a class="mc-wizard__step-link" href="{{ action }}&amp;step={{ nav_step.code }}">
             {% else %}
-            <span class="mc-badge">{{ text_disabled }}</span>
+            <span class="mc-wizard__step-link">
             {% endif %}
-            <form action="{{ toggle_delivery }}" method="post">
-              <input type="hidden" name="code" value="{{ extension.code }}" />
-              <button type="submit" class="mc-button mc-button--ghost mc-button--sm">{% if extension.enabled %}{{ button_disable }}{% else %}{{ button_enable }}{% endif %}</button>
-            </form>
-          </span>
-        </li>
-        {% endfor %}
-      </ul>
-      {% endif %}
-
-      <a href="{{ manage_delivery }}" class="mc-card__text d-inline-block mb-4">{{ button_manage_delivery }}</a>
-
-      <form action="{{ action }}" method="post">
-        <input type="hidden" name="step" value="delivery" />
-        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_continue }}</button>
-      </form>
-      {% endif %}
-
-      {% if step == 'payment' %}
-      <h2 class="mc-card__title">{{ payment_title }}</h2>
-      <p class="mc-card__text">{{ payment_text }}</p>
-
-      {% if payment_extensions is empty %}
-      <p class="mc-card__text mb-3">{{ text_payment_empty }}</p>
-      {% else %}
-      <ul class="list-unstyled mb-3">
-        {% for extension in payment_extensions %}
-        <li class="d-flex justify-content-between align-items-center mb-2">
-          <span>{{ extension.name }}</span>
-          <span class="d-flex align-items-center gap-2">
-            {% if extension.enabled %}
-            <span class="mc-badge mc-badge--success">{{ text_enabled }}</span>
-            {% else %}
-            <span class="mc-badge">{{ text_disabled }}</span>
-            {% endif %}
-            <form action="{{ toggle_payment }}" method="post">
-              <input type="hidden" name="code" value="{{ extension.code }}" />
-              <button type="submit" class="mc-button mc-button--ghost mc-button--sm">{% if extension.enabled %}{{ button_disable }}{% else %}{{ button_enable }}{% endif %}</button>
-            </form>
-          </span>
-        </li>
-        {% endfor %}
-      </ul>
-      {% endif %}
-
-      <a href="{{ manage_payment }}" class="mc-card__text d-inline-block mb-4">{{ button_manage_payment }}</a>
-
-      <form action="{{ action }}" method="post">
-        <input type="hidden" name="step" value="payment" />
-        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_continue }}</button>
-      </form>
-      {% endif %}
-
-      {% if step == 'design' %}
-      <h2 class="mc-card__title">{{ design_title }}</h2>
-      <form action="{{ action }}" method="post" novalidate>
-        <input type="hidden" name="step" value="design" />
-        {% if presets %}
-        <fieldset class="mb-3">
-          <legend class="mc-card__text">{{ design_text }}</legend>
-          {% for preset in presets %}
-          <label class="mc-radio d-flex mb-2">
-            <input type="radio" class="mc-radio__input" name="mintcart_design_preset" value="{{ preset.code }}"{% if preset.code == selected_preset %} checked{% endif %} />
-            <span class="mc-radio__label">{{ preset.label }}</span>
-          </label>
+              <span class="mc-wizard__step-marker" aria-hidden="true">{% if nav_step.completed and not nav_step.current %}&#10003;{% else %}{{ loop.index }}{% endif %}</span>
+              <span class="mc-wizard__step-label">{{ nav_step.label }}</span>
+            {% if nav_step.reachable and not nav_step.current %}</a>{% else %}</span>{% endif %}
+          </li>
           {% endfor %}
-          {% if error.preset %}<p class="mc-field__error" role="alert">{{ error.preset }}</p>{% endif %}
-        </fieldset>
-        <p class="mb-4"><a href="{{ store_preview }}" target="_blank" rel="noopener">{{ design_preview }}</a></p>
-        {% else %}
-        <p class="mc-card__text">{{ design_no_presets }}</p>
+        </ol>
+      </nav>
+    </div>
+
+    <div class="col-lg-8">
+      <section class="mc-wizard__panel">
+
+        {% if error.warning %}
+        <div class="mc-alert mc-alert--danger mb-4" role="alert">
+          <div class="mc-alert__body">
+            <p class="mc-alert__message">{{ error.warning }}</p>
+          </div>
+        </div>
         {% endif %}
-        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_continue }}</button>
-      </form>
-      {% endif %}
 
-      {% if step == 'first_product' %}
-      <h2 class="mc-card__title">{{ first_product_title }}</h2>
-      <p class="mc-card__text">{{ first_product_text }}</p>
-      <form action="{{ action }}" method="post" novalidate>
-        <input type="hidden" name="step" value="first_product" />
-        <input type="hidden" name="first_product_action" value="add" />
+        {% if step == 'welcome' %}
+        <h1 class="mc-wizard__title">{{ welcome_title }}</h1>
+        <p class="mc-wizard__lead">{{ welcome_text }}</p>
+        <form action="{{ action }}" method="post">
+          <input type="hidden" name="step" value="welcome" />
+          {{ wizard.actions('', button_back, button_get_started) }}
+        </form>
+        {% endif %}
 
-        <div class="mc-field mb-3 {% if error.product_name %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-product-name">{{ entry_product_name }}</label>
-          <input type="text" id="input-product-name" name="product_name" value="{{ product_name }}" class="mc-field__control" {% if error.product_name %}aria-invalid="true" aria-describedby="error-product-name"{% endif %} />
-          {% if error.product_name %}<p class="mc-field__error" id="error-product-name" role="alert">{{ error.product_name }}</p>{% endif %}
-        </div>
+        {% if step == 'store' %}
+        <h1 class="mc-wizard__title">{{ store_title }}</h1>
+        <p class="mc-wizard__lead">{{ store_text }}</p>
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" novalidate>
+          <input type="hidden" name="step" value="store" />
 
-        <div class="mc-field mb-3 {% if error.price %}has-error{% endif %}">
-          <label class="mc-field__label" for="input-price">{{ entry_price }}</label>
-          <input type="text" inputmode="decimal" id="input-price" name="price" value="{{ price }}" class="mc-field__control" {% if error.price %}aria-invalid="true" aria-describedby="error-price"{% endif %} />
-          {% if error.price %}<p class="mc-field__error" id="error-price" role="alert">{{ error.price }}</p>{% endif %}
-        </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mc-field {% if error.name %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-config-name">{{ entry_name }}</label>
+                <input type="text" id="input-config-name" name="config_name" value="{{ config_name }}" class="mc-field__control" {% if error.name %}aria-invalid="true" aria-describedby="error-config-name"{% endif %} />
+                {% if error.name %}<p class="mc-field__error" id="error-config-name" role="alert">{{ error.name }}</p>{% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mc-field {% if error.email %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-config-email">{{ entry_email }}</label>
+                <input type="email" id="input-config-email" name="config_email" value="{{ config_email }}" class="mc-field__control" {% if error.email %}aria-invalid="true" aria-describedby="error-config-email"{% endif %} />
+                {% if error.email %}<p class="mc-field__error" id="error-config-email" role="alert">{{ error.email }}</p>{% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mc-field {% if error.telephone %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-config-telephone">{{ entry_telephone }}</label>
+                <input type="tel" id="input-config-telephone" name="config_telephone" value="{{ config_telephone }}" class="mc-field__control" {% if error.telephone %}aria-invalid="true" aria-describedby="error-config-telephone"{% endif %} />
+                {% if error.telephone %}<p class="mc-field__error" id="error-config-telephone" role="alert">{{ error.telephone }}</p>{% endif %}
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="mc-field {% if error.address %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-config-address">{{ entry_address }}</label>
+                <textarea id="input-config-address" name="config_address" rows="3" class="mc-field__control" {% if error.address %}aria-invalid="true" aria-describedby="error-config-address"{% endif %}>{{ config_address }}</textarea>
+                {% if error.address %}<p class="mc-field__error" id="error-config-address" role="alert">{{ error.address }}</p>{% endif %}
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="mc-field {% if error.logo %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-config-logo">{{ entry_logo }}</label>
+                <div class="mc-wizard__logo">
+                  {% if current_logo %}<img class="mc-wizard__logo-preview" src="{{ current_logo }}" alt="" />{% endif %}
+                  <input type="file" id="input-config-logo" name="logo" accept="image/svg+xml,.svg,image/png,image/jpeg,image/gif,image/webp" class="mc-field__control" aria-describedby="help-config-logo{% if error.logo %} error-config-logo{% endif %}" />
+                </div>
+                <p class="mc-field__help" id="help-config-logo">{{ help_logo }}</p>
+                {% if error.logo %}<p class="mc-field__error" id="error-config-logo" role="alert">{{ error.logo }}</p>{% endif %}
+              </div>
+            </div>
+          </div>
 
-        <div class="mc-field mb-3">
-          <label class="mc-field__label" for="input-quantity">{{ entry_quantity }}</label>
-          <input type="number" min="0" id="input-quantity" name="quantity" value="{{ quantity }}" placeholder="100" class="mc-field__control" />
-        </div>
+          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+        </form>
+        {% endif %}
 
-        <div class="mc-field mb-4">
-          <label class="mc-field__label" for="input-description">{{ entry_description }}</label>
-          <textarea id="input-description" name="description" class="mc-field__control">{{ description }}</textarea>
-        </div>
+        {% if step == 'contacts' %}
+        <h1 class="mc-wizard__title">{{ contacts_title }}</h1>
+        <p class="mc-wizard__lead">{{ contacts_text }}</p>
+        <form action="{{ action }}" method="post" novalidate>
+          <input type="hidden" name="step" value="contacts" />
 
-        <button type="submit" class="mc-button mc-button--primary w-100 mb-2">{{ button_add_product }}</button>
-      </form>
-      <form action="{{ action }}" method="post">
-        <input type="hidden" name="step" value="first_product" />
-        <input type="hidden" name="first_product_action" value="skip" />
-        <button type="submit" class="mc-button mc-button--ghost w-100">{{ button_skip }}</button>
-      </form>
-      {% endif %}
+          <div class="row g-3">
+            {% for network in [
+              {code: 'facebook', label: entry_social_facebook, placeholder: 'https://facebook.com/yourstore', value: social_facebook, error: error.social_facebook},
+              {code: 'instagram', label: entry_social_instagram, placeholder: 'https://instagram.com/yourstore', value: social_instagram, error: error.social_instagram},
+              {code: 'twitter', label: entry_social_twitter, placeholder: 'https://x.com/yourstore', value: social_twitter, error: error.social_twitter},
+              {code: 'youtube', label: entry_social_youtube, placeholder: 'https://youtube.com/@yourstore', value: social_youtube, error: error.social_youtube}
+            ] %}
+            <div class="col-md-6">
+              <div class="mc-field {% if network.error %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-social-{{ network.code }}">{{ network.label }}</label>
+                <input type="url" id="input-social-{{ network.code }}" name="social_{{ network.code }}" value="{{ network.value }}" placeholder="{{ network.placeholder }}" class="mc-field__control" {% if network.error %}aria-invalid="true" aria-describedby="error-social-{{ network.code }}"{% endif %} />
+                {% if network.error %}<p class="mc-field__error" id="error-social-{{ network.code }}" role="alert">{{ network.error }}</p>{% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
 
-      {% if step == 'ready' %}
-      <h2 class="mc-card__title">{{ readiness_title }}</h2>
-      <p class="mc-card__text">{{ readiness_text }}</p>
+          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+        </form>
+        {% endif %}
 
-      <div
-        class="progress mc-progress mb-2"
-        role="progressbar"
-        aria-label="{{ readiness_title }}"
-        aria-valuenow="{{ readiness.percent }}"
-        aria-valuemin="0"
-        aria-valuemax="100"
-      >
-        <div class="progress-bar mc-progress__bar" style="width: {{ readiness.percent }}%"></div>
-      </div>
-      <p class="mc-card__text mb-3"><strong>{{ readiness.percent }}%</strong></p>
+        {% if step == 'language_currency' %}
+        <h1 class="mc-wizard__title">{{ language_currency_title }}</h1>
+        <p class="mc-wizard__lead">{{ language_currency_text }}</p>
+        <form action="{{ action }}" method="post" novalidate>
+          <input type="hidden" name="step" value="language_currency" />
 
-      <ul class="list-unstyled mb-4">
-        {% for check in readiness.checks %}
-        <li class="d-flex justify-content-between align-items-center mb-2">
-          <span>{{ check.label }}</span>
-          {% if check.complete %}
-          <span class="mc-badge mc-badge--success">{{ text_check_done }}</span>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mc-field {% if error.language %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-config-language">{{ entry_language }}</label>
+                <select id="input-config-language" name="config_language" class="mc-field__control" {% if error.language %}aria-invalid="true" aria-describedby="error-config-language"{% endif %}>
+                  {% for language in languages %}
+                  <option value="{{ language.code }}" {% if language.code == config_language %}selected="selected"{% endif %}>{{ language.name }}</option>
+                  {% endfor %}
+                </select>
+                {% if error.language %}<p class="mc-field__error" id="error-config-language" role="alert">{{ error.language }}</p>{% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mc-field {% if error.currency %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-config-currency">{{ entry_currency }}</label>
+                <select id="input-config-currency" name="config_currency" class="mc-field__control" {% if error.currency %}aria-invalid="true" aria-describedby="error-config-currency"{% endif %}>
+                  {% for currency in currencies %}
+                  <option value="{{ currency.code }}" {% if currency.code == config_currency %}selected="selected"{% endif %}>{{ currency.title }} ({{ currency.code }})</option>
+                  {% endfor %}
+                </select>
+                {% if error.currency %}<p class="mc-field__error" id="error-config-currency" role="alert">{{ error.currency }}</p>{% endif %}
+              </div>
+            </div>
+          </div>
+
+          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+        </form>
+        {% endif %}
+
+        {% if step == 'delivery' or step == 'payment' %}
+        {% set methods = step == 'delivery' ? shipping_extensions : payment_extensions %}
+        <h1 class="mc-wizard__title">{{ step == 'delivery' ? delivery_title : payment_title }}</h1>
+        <p class="mc-wizard__lead">{{ step == 'delivery' ? delivery_text : payment_text }}</p>
+
+        {% if methods is empty %}
+        <p class="mc-wizard__empty">{{ step == 'delivery' ? text_delivery_empty : text_payment_empty }}</p>
+        {% else %}
+        <ul class="mc-wizard__options">
+          {% for extension in methods %}
+          <li class="mc-wizard__option{% if extension.enabled %} is-on{% endif %}">
+            <span class="mc-wizard__option-name">{{ extension.name }}</span>
+            <span class="mc-badge{% if extension.enabled %} mc-badge--success{% endif %}">{{ extension.enabled ? text_enabled : text_disabled }}</span>
+            <form action="{{ step == 'delivery' ? toggle_delivery : toggle_payment }}" method="post">
+              <input type="hidden" name="code" value="{{ extension.code }}" />
+              <button type="submit" class="mc-button mc-button--{{ extension.enabled ? 'ghost' : 'secondary' }} mc-button--sm">{{ extension.enabled ? button_disable : button_enable }}</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+        <a href="{{ step == 'delivery' ? manage_delivery : manage_payment }}" class="mc-wizard__more">{{ step == 'delivery' ? button_manage_delivery : button_manage_payment }}</a>
+
+        <form action="{{ action }}" method="post">
+          <input type="hidden" name="step" value="{{ step }}" />
+          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+        </form>
+        {% endif %}
+
+        {% if step == 'design' %}
+        <h1 class="mc-wizard__title">{{ design_title }}</h1>
+        <form action="{{ action }}" method="post" novalidate>
+          <input type="hidden" name="step" value="design" />
+          {% if presets %}
+          <fieldset>
+            <legend class="mc-wizard__lead">{{ design_text }}</legend>
+            <div class="mc-wizard__choices">
+              {% for preset in presets %}
+              <label class="mc-wizard__choice mc-wizard__choice--{{ preset.code }}">
+                <input type="radio" class="mc-wizard__choice-input" name="mintcart_design_preset" value="{{ preset.code }}"{% if preset.code == selected_preset %} checked{% endif %} />
+                <span class="mc-wizard__swatch" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="mc-wizard__choice-label">{{ preset.label }}</span>
+              </label>
+              {% endfor %}
+            </div>
+            {% if error.preset %}<p class="mc-field__error" role="alert">{{ error.preset }}</p>{% endif %}
+          </fieldset>
+          <a class="mc-wizard__more" href="{{ store_preview }}" target="_blank" rel="noopener">{{ design_preview }}</a>
           {% else %}
-          <span class="mc-badge">{{ text_check_pending }}</span>
+          <p class="mc-wizard__empty">{{ design_no_presets }}</p>
           {% endif %}
-        </li>
-        {% endfor %}
-      </ul>
+          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+        </form>
+        {% endif %}
 
-      <form action="{{ action }}" method="post">
-        <input type="hidden" name="step" value="ready" />
-        <button type="submit" class="mc-button mc-button--primary w-100">{{ button_finish_setup }}</button>
-      </form>
-      {% endif %}
+        {% if step == 'first_product' %}
+        <h1 class="mc-wizard__title">{{ first_product_title }}</h1>
+        <p class="mc-wizard__lead">{{ first_product_text }}</p>
+        <form action="{{ action }}" method="post" novalidate>
+          <input type="hidden" name="step" value="first_product" />
+          <input type="hidden" name="first_product_action" value="add" />
 
-      {% if is_ready %}
-      <h2 class="mc-card__title">{{ ready_title }}</h2>
-      <p class="mc-card__text">{{ ready_text }}</p>
-      <a href="{{ dashboard }}" class="mc-button mc-button--primary w-100">{{ button_go_to_dashboard }}</a>
-      {% endif %}
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="mc-field {% if error.product_name %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-product-name">{{ entry_product_name }}</label>
+                <input type="text" id="input-product-name" name="product_name" value="{{ product_name }}" class="mc-field__control" {% if error.product_name %}aria-invalid="true" aria-describedby="error-product-name"{% endif %} />
+                {% if error.product_name %}<p class="mc-field__error" id="error-product-name" role="alert">{{ error.product_name }}</p>{% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mc-field {% if error.price %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-price">{{ entry_price }}</label>
+                <input type="text" inputmode="decimal" id="input-price" name="price" value="{{ price }}" class="mc-field__control" {% if error.price %}aria-invalid="true" aria-describedby="error-price"{% endif %} />
+                {% if error.price %}<p class="mc-field__error" id="error-price" role="alert">{{ error.price }}</p>{% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mc-field">
+                <label class="mc-field__label" for="input-quantity">{{ entry_quantity }}</label>
+                <input type="number" min="0" id="input-quantity" name="quantity" value="{{ quantity }}" placeholder="100" class="mc-field__control" />
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="mc-field">
+                <label class="mc-field__label" for="input-description">{{ entry_description }}</label>
+                <textarea id="input-description" name="description" rows="4" class="mc-field__control">{{ description }}</textarea>
+              </div>
+            </div>
+          </div>
 
+          {{ wizard.actions(prev_step_url, button_back, button_add_product) }}
+        </form>
+        <form action="{{ action }}" method="post" class="mc-wizard__secondary">
+          <input type="hidden" name="step" value="first_product" />
+          <input type="hidden" name="first_product_action" value="skip" />
+          <button type="submit" class="mc-wizard__link-button">{{ button_skip }}</button>
+        </form>
+        {% endif %}
+
+        {% if step == 'ready' %}
+        <h1 class="mc-wizard__title">{{ readiness_title }}</h1>
+        <p class="mc-wizard__lead">{{ readiness_text }}</p>
+
+        <div class="mc-wizard__readiness">
+          <span class="mc-wizard__readiness-value">{{ readiness.percent }}%</span>
+          <div class="mc-wizard__progress" role="progressbar" aria-label="{{ readiness_title }}" aria-valuenow="{{ readiness.percent }}" aria-valuemin="0" aria-valuemax="100" style="--mc-wizard-progress: {{ readiness.percent }}%">
+            <span class="mc-wizard__progress-bar"></span>
+          </div>
+        </div>
+
+        <ul class="mc-wizard__options">
+          {% for check in readiness.checks %}
+          <li class="mc-wizard__option{% if check.complete %} is-on{% endif %}">
+            <span class="mc-wizard__option-name">{{ check.label }}</span>
+            <span class="mc-badge{% if check.complete %} mc-badge--success{% endif %}">{{ check.complete ? text_check_done : text_check_pending }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <form action="{{ action }}" method="post">
+          <input type="hidden" name="step" value="ready" />
+          {{ wizard.actions(prev_step_url, button_back, button_finish_setup) }}
+        </form>
+        {% endif %}
+
+        {% if is_ready %}
+        <h1 class="mc-wizard__title">{{ ready_title }}</h1>
+        <p class="mc-wizard__lead">{{ ready_text }}</p>
+        <div class="mc-wizard__actions">
+          <a href="{{ dashboard }}" class="mc-button mc-button--primary mc-wizard__next">{{ button_go_to_dashboard }}</a>
+        </div>
+        {% endif %}
+
+      </section>
     </div>
   </div>
-</div>
+</main>
 </body>
 </html>

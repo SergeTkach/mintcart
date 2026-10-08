@@ -126,10 +126,12 @@ class ControllerMintcartWizard extends Controller
         $step = isset($this->request->post['step']) ? (string)$this->request->post['step'] : '';
         $current = $progress->currentStep();
 
-        if ($step === '' || $step !== $current) {
-            // Not the live resume step (stale form, tampered request, or
-            // everything is already done) - redirect back to whatever the
-            // real current state is rather than trusting the client.
+        // The live resume step, or a step already completed (the owner went
+        // Back to change it - saved again, then on to the resume step).
+        if ($step === '' || !$progress->isImplemented($step) || ($step !== $current && !$progress->isCompleted($step))) {
+            // Not a step the owner may submit (stale form, tampered request,
+            // or a step further ahead) - redirect back to whatever the real
+            // current state is rather than trusting the client.
             $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'], true));
 
             return;
@@ -636,6 +638,21 @@ class ControllerMintcartWizard extends Controller
 
         $data['step'] = $step;
         $data['is_ready'] = $step === null;
+
+        $data['brand_logo'] = HTTP_SERVER . 'view/image/mintcart/logo.svg';
+
+        // Step N of M, progress bar and the Back link (the step before this
+        // one; always reachable, since steps are completed in order).
+        $steps = $progress->steps();
+        $index = $step === null ? count($steps) - 1 : (int)array_search($step, $steps, true);
+        $completedCount = count(array_filter($steps, [$progress, 'isCompleted']));
+
+        $data['step_number'] = $index + 1;
+        $data['step_total'] = count($steps);
+        $data['progress_percent'] = (int)round($completedCount / count($steps) * 100);
+        $data['prev_step_url'] = ($step !== null && $index > 0)
+            ? $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=' . $steps[$index - 1], true)
+            : '';
 
         $data['nav_steps'] = [];
 

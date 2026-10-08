@@ -21,7 +21,11 @@ $_['step_ready']                = 'Ready';
 $_['welcome_title']    = 'Welcome to MintCart';
 $_['welcome_text']     = 'Let\'s get your store ready to take its first order. This will only take a few minutes, and you can always come back and finish later.';
 $_['button_get_started'] = 'Get started';
-$_['button_skip_wizard'] = 'Skip setup for now and go to the dashboard';
+$_['button_skip_wizard'] = 'Skip for now';
+$_['button_back']        = 'Back';
+$_['text_steps']         = 'Setup steps';
+$_['text_step_of']       = 'Step %s of %s';
+$_['text_progress']      = '%s%% done';
 
 // Store step
 
