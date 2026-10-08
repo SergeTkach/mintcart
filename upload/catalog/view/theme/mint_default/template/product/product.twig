@@ -156,7 +156,7 @@
                                     {% if option.type == 'select' %}
                                         <label class="mc-field__label" for="input-option-{{ option.product_option_id }}">{{ option.name }}{% if option.required %} *{% endif %}</label>
                                         <select id="input-option-{{ option.product_option_id }}" name="option[{{ option.product_option_id }}]" class="mc-field__control" data-mc-option-id="{{ option.product_option_id }}">
-                                            <option value=""></option>
+                                            <option value="">{{ text_select|trim }}</option>
                                             {% for value in option.product_option_value %}
                                                 <option value="{{ value.product_option_value_id }}">{{ value.name }}{% if value.price %} ({{ value.price_prefix }}{{ value.price }}){% endif %}</option>
                                             {% endfor %}
