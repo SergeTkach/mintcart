@@ -31,6 +31,12 @@ import { Modal } from 'bootstrap';
 
 const UPDATE_DELAY = 300;
 
+// Payment methods whose confirm step is nothing but a button (no
+// instructions, no card form): Place order confirms them straight away
+// instead of asking for a second click. bank_transfer / cheque show bank
+// details or payee first, so the customer still confirms those.
+const AUTO_CONFIRM_PAYMENTS = ['cod', 'free_checkout'];
+
 function option(value, label, selected) {
     const el = document.createElement('option');
 
@@ -491,6 +497,15 @@ function initCheckoutRoot(root) {
             runScripts(body);
             submit.hidden = true;
             payment.hidden = false;
+
+            // `#button-confirm` is the stock payment-extension markup's own id.
+            const confirmButton = body.querySelector('#button-confirm');
+
+            if (confirmButton && AUTO_CONFIRM_PAYMENTS.includes(form.elements.payment_method?.value)) {
+                confirmButton.click();
+                return;
+            }
+
             payment.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } catch {
             showMessage(text.mcTextError);

@@ -81,8 +81,8 @@ Branch state: `phase-15-mint-checkout` → PR #190 (open). Follow-up work on
       payment / totals recalculation, coupon / gift certificate, Terms
       dialog, duplicate-order fix. **One real order placed by the user.**
       Missing: address book, registration in checkout, custom fields,
-      captcha, separate billing address, reward points, auto-confirm for
-      simple payment methods
+      captcha, separate billing address, reward points. Auto-confirm for
+      COD / free checkout added, not live-checked
 - [x] Product page: gallery + lightbox, option pills, stock, sticky buy bar,
       section nav, live total price (`mintcart/price`, cart rules)
 - [ ] Delivery / payment / returns info on the product page (needs a
