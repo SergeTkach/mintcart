@@ -3974,7 +3974,9 @@ environment) — see the registry entry's "Not verified" note.
 **Reason:** the Mint single-page checkout template
 (`mint_default/template/checkout/checkout.twig`) is rendered by the stock
 `checkout/checkout` controller, which loads only this language file; its
-section labels and messages (`text_mc_*`, `button_mc_place_order`) are
+section labels and messages (`text_mc_*`, `button_mc_place_order`, and
+since 2026-10-08 the coupon / gift certificate field's `entry_mc_code`,
+`button_mc_code_*`, `error_mc_code*`) are
 appended here so they reach the template through the stock
 `event/language` merge, without touching the controller.
 

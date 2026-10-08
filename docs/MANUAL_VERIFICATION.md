@@ -62,6 +62,13 @@ install with `mint_default` active:
    payment_method.php refactor).
 7. PayPal Standard (or any extension that renders its own `<form>`): its
    form submits to the gateway.
+8. (2026-10-08) Coupon / gift certificate field in "Your order": create an
+   active coupon (Marketing → Coupons), apply it → a "Coupon (CODE)" line
+   appears and the total drops; the code shows as a chip, × removes it.
+   An invalid/expired code shows an inline error. Place the order with a
+   coupon and check `oc_order_total` / `oc_coupon_history`. Same for a gift
+   certificate (Sales → Gift Vouchers). Only verified so far: empty,
+   invalid and expired codes, removal, empty-cart redirect.
 
 ## Phase 0 — restored `Config` engine class never booted live
 

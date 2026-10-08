@@ -146,6 +146,84 @@ class ControllerMintcartCheckout extends Controller {
 		));
 	}
 
+	// route=mintcart/checkout/code - POST code. One field for both a coupon and
+	// a gift certificate: tried as a coupon first, then as a certificate.
+	// Validation is the stock total models' own (dates, usage limits, cart
+	// products, minimum total, balance); the codes go to the same session
+	// keys the stock cart-page blocks use, so the coupon/voucher total
+	// extensions pick them up unchanged.
+	public function code() {
+		$this->load->language('checkout/checkout');
+
+		$blocked = $this->blocked();
+
+		if ($blocked) {
+			$this->respond($blocked);
+
+			return;
+		}
+
+		$code = trim((string)($this->request->post['code'] ?? ''));
+		$error = '';
+
+		if ($code === '') {
+			$error = $this->language->get('error_mc_code_empty');
+		} elseif ($this->config->get('total_coupon_status') && $this->couponValid($code)) {
+			$this->session->data['coupon'] = $code;
+		} elseif ($this->config->get('total_voucher_status') && $this->voucherValid($code)) {
+			$this->session->data['voucher'] = $code;
+		} else {
+			$error = $this->language->get('error_mc_code');
+		}
+
+		$this->respondWithCodes($error);
+	}
+
+	// route=mintcart/checkout/removeCode - POST type=coupon|voucher
+	public function removeCode() {
+		$this->load->language('checkout/checkout');
+
+		$blocked = $this->blocked();
+
+		if ($blocked) {
+			$this->respond($blocked);
+
+			return;
+		}
+
+		$type = (string)($this->request->post['type'] ?? '');
+
+		if ($type === 'coupon' || $type === 'voucher') {
+			unset($this->session->data[$type]);
+		}
+
+		$this->respondWithCodes('');
+	}
+
+	private function couponValid($code) {
+		$this->load->model('extension/total/coupon');
+
+		return (bool)$this->model_extension_total_coupon->getCoupon($code);
+	}
+
+	private function voucherValid($code) {
+		$this->load->model('extension/total/voucher');
+
+		return (bool)$this->model_extension_total_voucher->getVoucher($code);
+	}
+
+	// A code changes the total, and payment availability can depend on it.
+	private function respondWithCodes($error) {
+		if (isset($this->session->data['payment_address'])) {
+			$this->recalculate(null, null);
+		}
+
+		$this->respond(array(
+			'error' => $error,
+			'state' => $this->buildState(false)
+		));
+	}
+
 	private function service() {
 		return new \MintCart\Commerce\CheckoutService();
 	}
@@ -449,6 +527,18 @@ class ControllerMintcartCheckout extends Controller {
 		$agree_info = $this->agreeInformation();
 
 		$state['agree_html'] = $agree_info ? sprintf($this->language->get('text_agree'), $this->url->link('information/information', 'information_id=' . $agree_info['information_id'], true), $agree_info['title']) : '';
+
+		// Coupon / gift certificate field: shown when either total is on.
+		$state['codes'] = array(
+			'enabled' => (bool)($this->config->get('total_coupon_status') || $this->config->get('total_voucher_status')),
+			'applied' => array()
+		);
+
+		foreach (array('coupon', 'voucher') as $type) {
+			if (!empty($this->session->data[$type])) {
+				$state['codes']['applied'][] = array('type' => $type, 'code' => $this->session->data[$type]);
+			}
+		}
 
 		$cart = $this->load->controller('mintcart/cart/snapshot');
 

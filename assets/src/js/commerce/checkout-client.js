@@ -50,6 +50,25 @@ export async function updateCheckout(formData, signal) {
 }
 
 /**
+ * Applies a coupon or gift certificate code. Resolves to
+ * `{ error, state }` (`error` = '' on success) or `{ redirect }`.
+ *
+ * @param {string} code
+ */
+export async function applyCheckoutCode(code) {
+    return post('mintcart/checkout/code', new URLSearchParams({ code }));
+}
+
+/**
+ * Removes the applied coupon or gift certificate.
+ *
+ * @param {'coupon'|'voucher'} type
+ */
+export async function removeCheckoutCode(type) {
+    return post('mintcart/checkout/removeCode', new URLSearchParams({ type }));
+}
+
+/**
  * Validates and creates the order. Resolves to `{ errors, state }`,
  * `{ redirect }` or `{ payment_html }` (the chosen payment extension's own
  * confirm markup).

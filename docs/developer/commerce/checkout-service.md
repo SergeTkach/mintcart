@@ -23,6 +23,21 @@ checkout/checkout (stock controller, unchanged)
 | `mintcart/checkout/state` | GET | recalculates methods if an address is already set | full state (incl. `countries`) |
 | `mintcart/checkout/update` | POST, any subset of the form | yes, no validation | state, or `{redirect}` |
 | `mintcart/checkout/confirm` | POST, whole form | yes, then validates | `{errors, state}`, `{redirect}` or `{payment_html}` |
+| `mintcart/checkout/code` | POST `code` | `coupon` or `voucher` | `{error, state}` (`error` = '' on success) or `{redirect}` |
+| `mintcart/checkout/removeCode` | POST `type` = `coupon`/`voucher` | unsets it | `{error, state}` or `{redirect}` |
+
+**Coupon / gift certificate (2026-10-08).** One field in the summary takes
+either: the code is tried as a coupon (`total_coupon_status` on), then as a
+gift certificate (`total_voucher_status` on). Validation is the stock
+`model_extension_total_coupon->getCoupon()` / `..._voucher->getVoucher()`
+(dates, usage limits, products, minimum total, balance); the code goes to
+the same `session['coupon']` / `['voucher']` the stock cart-page blocks use,
+so the totals extensions apply it unchanged. Payment methods are re-offered
+after a change (availability can depend on the total), and the JS drops an
+already shown payment step, since that order was created for the old total.
+The stock `extension/total/coupon/coupon` route is not reused: it sets a
+flash `success` for the cart page and cannot remove a coupon.
+State: `codes.enabled`, `codes.applied[] = {type, code}`.
 
 `{redirect}` is returned when the cart can no longer be checked out
 (empty / out of stock without backorders / below a minimum) or a guest
@@ -102,7 +117,7 @@ ships its own script against the three endpoints). Strings come from
 Address book for logged-in customers (their default address is prefilled,
 a changed address is used for the order but not saved to the book),
 registration during checkout, custom fields, captcha, separate billing
-address, coupon/voucher/reward entry on the page, auto-click of simple
+address, reward points entry on the page, auto-click of simple
 payment confirm buttons.
 
 ## Tests

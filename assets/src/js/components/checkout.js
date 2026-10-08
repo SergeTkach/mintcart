@@ -20,7 +20,13 @@
  * Contract: docs/developer/commerce/checkout-service.md
  */
 
-import { fetchCheckoutState, updateCheckout, confirmCheckout } from '../commerce/checkout-client.js';
+import {
+    fetchCheckoutState,
+    updateCheckout,
+    confirmCheckout,
+    applyCheckoutCode,
+    removeCheckoutCode,
+} from '../commerce/checkout-client.js';
 
 const UPDATE_DELAY = 300;
 
@@ -217,6 +223,32 @@ function initCheckoutRoot(root) {
         });
     }
 
+    const codeForm = root.querySelector('[data-mc-checkout-code]');
+    const codeError = codeForm.querySelector('[data-mc-checkout-code-error]');
+    const codeList = codeForm.querySelector('[data-mc-checkout-codes]');
+
+    function renderCodes(codes) {
+        codeForm.hidden = !codes.enabled;
+
+        codeList.replaceChildren(...codes.applied.map(({ type, code }) => {
+            const li = document.createElement('li');
+            const label = document.createElement('span');
+            const remove = document.createElement('button');
+
+            li.className = 'mc-checkout__code-chip';
+            label.textContent = code;
+            remove.type = 'button';
+            remove.className = 'mc-checkout__code-remove';
+            remove.dataset.mcAction = 'remove-checkout-code';
+            remove.dataset.mcCodeType = type;
+            remove.setAttribute('aria-label', codeList.dataset.mcTextRemove.replace('%s', code));
+            remove.textContent = '×';
+            li.append(label, remove);
+
+            return li;
+        }));
+    }
+
     function render(state, full) {
         if (full) {
             countries = state.countries;
@@ -276,7 +308,52 @@ function initCheckoutRoot(root) {
         );
 
         renderSummary(state);
+        renderCodes(state.codes);
     }
+
+    // A code changes the total: an order already created for the old total
+    // must be confirmed again, so drop the payment step.
+    async function sendCode(request) {
+        codeError.hidden = true;
+        codeForm.classList.add('is-loading');
+        resetPayment();
+
+        try {
+            const json = await request();
+
+            if (json.redirect) {
+                window.location.href = json.redirect;
+                return;
+            }
+
+            render(json.state, false);
+            document.dispatchEvent(new CustomEvent('mc:checkout:updated', { bubbles: true, detail: json.state }));
+
+            if (json.error) {
+                codeError.textContent = json.error;
+                codeError.hidden = false;
+            } else {
+                codeForm.elements.code.value = '';
+            }
+        } catch {
+            showMessage(text.mcTextError);
+        } finally {
+            codeForm.classList.remove('is-loading');
+        }
+    }
+
+    codeForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        sendCode(() => applyCheckoutCode(codeForm.elements.code.value));
+    });
+
+    codeList.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-mc-action="remove-checkout-code"]');
+
+        if (button) {
+            sendCode(() => removeCheckoutCode(button.dataset.mcCodeType));
+        }
+    });
 
     function setGuestBlocked() {
         showMessage(root.querySelector('[data-mc-checkout-login]').innerHTML || text.mcTextLoginRequired);

@@ -169,6 +169,73 @@
     color: var(--mc-muted);
 }
 
+/* Coupon / gift certificate field in the summary. */
+.mc-checkout__code {
+    margin-bottom: var(--mc-space-4);
+}
+
+.mc-checkout__code-row {
+    display: flex;
+    gap: var(--mc-space-2);
+}
+
+.mc-checkout__code-row .mc-field__control {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mc-checkout__code.is-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.mc-checkout__codes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-checkout__codes:not(:empty) {
+    margin-top: var(--mc-space-3);
+}
+
+.mc-checkout__code-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-1);
+    padding: var(--mc-space-1) var(--mc-space-1) var(--mc-space-1) var(--mc-space-3);
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-semibold);
+    background: var(--mc-surface-alt);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-pill);
+}
+
+.mc-checkout__code-remove {
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    line-height: 1;
+    color: var(--mc-muted);
+    background: transparent;
+    border: 0;
+    border-radius: var(--mc-radius-pill);
+    cursor: pointer;
+}
+
+.mc-checkout__code-remove:hover {
+    color: var(--mc-text);
+    background: var(--mc-border);
+}
+
+.mc-checkout__code-remove:focus-visible {
+    outline: var(--mc-border-width-thick) solid var(--mc-accent);
+    outline-offset: 1px;
+}
+
 .mc-checkout__totals {
     display: flex;
     flex-direction: column;

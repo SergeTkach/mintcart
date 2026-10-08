@@ -125,6 +125,18 @@
 
                     <ul class="mc-checkout__items" data-mc-checkout-items></ul>
 
+                    {# Coupon / gift certificate: its own small form (not part of the
+                       checkout form, so typing a code doesn't re-quote delivery). #}
+                    <form class="mc-checkout__code" data-mc-checkout-code hidden novalidate>
+                        <label class="mc-field__label" for="mc-checkout-code">{{ entry_mc_code }}</label>
+                        <div class="mc-checkout__code-row">
+                            <input type="text" id="mc-checkout-code" name="code" class="mc-field__control" autocomplete="off" aria-describedby="mc-checkout-code-error">
+                            <button type="submit" class="mc-button mc-button--secondary">{{ button_mc_code_apply }}</button>
+                        </div>
+                        <p class="mc-field__error" id="mc-checkout-code-error" data-mc-checkout-code-error role="alert" hidden></p>
+                        <ul class="mc-checkout__codes" data-mc-checkout-codes data-mc-text-remove="{{ button_mc_code_remove }}"></ul>
+                    </form>
+
                     <dl class="mc-checkout__totals" data-mc-checkout-totals aria-live="polite"></dl>
 
                     <div class="mc-checkout__agree" data-mc-checkout-agree hidden>

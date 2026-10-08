@@ -37,6 +37,11 @@ on top). Total for the chosen quantity in the main price and buy bar.
 Test: `tests/mintcart/commerce/product-price-calculator-test.php`; endpoint
 matched the cart line total for product 42 × 12 with options.
 
+Mint checkout: coupon / gift certificate field in the summary
+(`mintcart/checkout/code`, `removeCode`; stock coupon/voucher models and
+session keys). Positive path (a real active coupon) not checked yet.
+User confirmed the Bootstrap 5 storefront works (2026-10-08).
+
 ## Update (2026-10-07, interactive session) — Bootstrap 5 storefront + storefront UI
 
 Branch `phase-15-mint-checkout` (BS5 work started on
