@@ -69,6 +69,7 @@ class ControllerMintcartProductCards extends Controller {
 			'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error'),
 			'text_wishlist_error'    => $this->language->get('text_wishlist_error'),
 			'text_view_cart'         => $this->language->get('text_view_cart'),
+			'text_continue_shopping' => $this->language->get('text_continue_shopping'),
 			'cart_url'               => $this->url->link('checkout/cart')
 		);
 

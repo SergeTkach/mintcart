@@ -10,5 +10,6 @@ $_['text_badge_out_of_stock'] = 'Out of Stock';
 $_['text_badge_new']          = 'New';
 $_['text_added_to_cart']      = 'Added to cart';
 $_['text_view_cart']          = 'View cart';
+$_['text_continue_shopping']  = 'Continue shopping';
 $_['text_add_to_cart_error']  = 'Could not add this product to your cart';
 $_['text_wishlist_error']     = 'Could not update your wishlist';

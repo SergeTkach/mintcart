@@ -241,8 +241,9 @@ def render_product(kind, color_name, path_main, path_alt):
 
 
 def render_banner(path, headline, sub, kinds, colors, grad):
-    """1140x380 slide: two-line headline and button on the left, objects right."""
-    c = Canvas(1140, 380, grad[0])
+    """1140x475 slide (25% taller than the first 1140x380 version): headline and button on the left, objects right."""
+    c = Canvas(1140, 475, grad[0])
+    dy = (475 - 380) // 2  # the old layout, centred in the taller canvas
     top, bottom = hex_rgb(grad[0]), hex_rgb(grad[1])
     px = c.img.load()
     for y in range(c.h):
@@ -250,16 +251,16 @@ def render_banner(path, headline, sub, kinds, colors, grad):
         col = tuple(int(top[k] + (bottom[k] - top[k]) * t) for k in range(3))
         for x in range(c.w):
             px[x, y] = col
-    size = 290
+    size = 340
     for i, (kind, color) in enumerate(zip(kinds, colors)):
         layer = Canvas(800, 800, (255, 255, 255))
         draw_shape(layer, kind, hex_rgb(COLORS[color]))
         big = layer.img.resize((size * S, size * S), Image.LANCZOS)
         mask = Image.eval(big.convert('L'), lambda v: 0 if v > 248 else 255).filter(ImageFilter.GaussianBlur(S))
-        c.img.paste(big, ((540 + i * 175) * S, 45 * S), mask)
+        c.img.paste(big, ((500 + i * 170) * S, ((475 - size) // 2) * S), mask)
     c.d = ImageDraw.Draw(c.img, 'RGBA')
     lines = headline.split('|')
-    y = 78
+    y = 78 + dy
     for line in lines:
         c.d.text((70 * S, y * S), line, font=font(50 * S, True), fill=hex_rgb('#1d1f23'))
         y += 62
@@ -267,7 +268,7 @@ def render_banner(path, headline, sub, kinds, colors, grad):
     by = y + 62
     c.d.rounded_rectangle([72 * S, by * S, 252 * S, (by + 50) * S], 12 * S, fill=hex_rgb('#14806a'))
     c.d.text((104 * S, (by + 9) * S), 'Shop now', font=font(24 * S, True), fill=(255, 255, 255))
-    c.result((1140, 380)).save(path, 'JPEG', quality=90)
+    c.result((1140, 475)).save(path, 'JPEG', quality=90)
 
 
 def render_brand(path, name):
@@ -370,6 +371,8 @@ def main():
     # --- home page: featured module, slides, brand carousel --------------
     feat = ','.join('"%d"' % p for p in FEATURED)
     sql.append("UPDATE oc_module SET setting = %s WHERE module_id = 28;" % q('{"name":"Home Page","product":[%s],"limit":"4","width":"600","height":"600","status":"1"}' % feat))
+
+    sql.append("UPDATE oc_module SET setting = '{\"name\":\"Home Page\",\"banner_id\":\"7\",\"width\":\"1140\",\"height\":\"475\",\"status\":\"1\"}' WHERE module_id = 27;")  # home slider, 1140x475
 
     slides = [
         ('hero1.jpg', 'Everyday things,|made well', 'Simple pieces for a calm, comfortable home.', ['mug', 'vase', 'lamp'], ['White', 'Clay', 'Black'], ('#f3f4f6', '#e3e6ea'), 'path=100'),
