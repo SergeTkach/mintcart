@@ -111,6 +111,7 @@ check(
         '202610221201_grant_admin_permissions_badges.php',
         '202610221202_product_badge_definitions.php',
         '202610221300_default_system_url_aliases.php',
+        '202610221301_alias_reviews_page.php',
     ],
     'all real migrations should apply in filename order, got: ' . json_encode($result['applied']),
     $failures

@@ -4161,3 +4161,24 @@ can change them in System → Settings → Option. An existing store keeps its o
 **Compatibility impact:** new installs only; the picture cache (`image/cache`) is rebuilt on demand.
 
 **Tests:** product, category and home pages checked on the local store after the change.
+
+---
+
+## Extension slots in the page controllers and templates
+
+Files: `upload/catalog/controller/common/header.php`, `checkout/cart.php`, `checkout/checkout.php`,
+`product/product.php`, `mintcart/product_cards.php`; templates `mint_default/.../common/header.twig`,
+`checkout/cart.twig`, `checkout/checkout.twig`, `product/product.twig` and the card templates.
+
+**Reason:** Theme API slots (`header.before/after`, `product.*`, `cart.before/after_totals`,
+`checkout.before_confirm`) need the controller to ask `\MintCart\Design\Slots::shared()` and the
+template to print the result (docs/developer/theme-api/slots.md).
+
+**Why it cannot live in the Mint layer:** the page controllers and templates are where the
+positions are; there is no hook that lets an outside class add markup between two template lines.
+
+**Compatibility impact:** additive: one `mc_slots` data key per page, empty strings when nothing listens;
+stock `default` theme templates ignore it.
+
+**Tests:** `tests/mintcart/design/slot-registry-test.php`; pages checked on the local store with
+temporary listeners.
