@@ -268,6 +268,10 @@ class ControllerCommonHeader extends Controller {
 
 		$data['mc_preset'] = $mc_preset;
 
+		// <html data-mc-theme>: lets a theme scope its own CSS to its pages
+		// (e.g. mint_gallery's product page) without a page-template copy.
+		$data['mc_theme'] = $mint_render_header ? $mint_theme : '';
+
 		return $this->load->view('common/header', $data);
 	}
 }
