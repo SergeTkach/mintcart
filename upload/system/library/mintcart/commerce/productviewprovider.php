@@ -116,7 +116,9 @@ final class ProductViewProvider
         $badges = [];
 
         if (!empty($product['special'])) {
-            $badges[] = ['type' => 'sale', 'label' => null];
+            // "-20%" when the discount is known (whole percent), else the plain "Sale" text.
+            $discount = (int) ($product['discount'] ?? 0);
+            $badges[] = ['type' => 'sale', 'label' => $discount > 0 ? '-' . $discount . '%' : null];
         }
 
         if (!$inStock) {

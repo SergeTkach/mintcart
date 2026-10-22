@@ -37,6 +37,15 @@
             <a href="{{ product.url }}">{{ product.name }}</a>
         </h3>
 
+        {% if display.show_rating and product.rating %}
+            <div class="mc-rating mc-rating--sm" style="--mc-rating-value: {{ (product.rating / 5 * 100)|round }}%" role="img" aria-label="{{ text_rated|format(product.rating) }}">
+                <span class="mc-rating__stars" aria-hidden="true">
+                    <span class="mc-rating__stars-empty">★★★★★</span>
+                    <span class="mc-rating__stars-filled">★★★★★</span>
+                </span>
+            </div>
+        {% endif %}
+
         {% if not product.stock.in_stock and product.stock.label %}
             <p class="mc-product-card__stock mc-product-card__stock--out">{{ product.stock.label }}</p>
         {% endif %}

@@ -37,7 +37,7 @@ final class HeaderViewProvider
 {
     private const LINK_KEYS = [
         'account', 'login', 'register', 'order', 'transaction', 'download',
-        'logout', 'wishlist', 'shopping_cart', 'checkout', 'contact',
+        'logout', 'wishlist', 'compare', 'shopping_cart', 'checkout', 'contact',
     ];
 
     private const WIDGET_KEYS = ['menu', 'search', 'cart', 'language', 'currency'];

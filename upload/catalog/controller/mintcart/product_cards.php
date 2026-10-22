@@ -152,6 +152,8 @@ class ControllerMintcartProductCards extends Controller {
 			'tax'                         => $tax,
 			'rating'                      => $this->config->get('config_review_status') ? (int)$result['rating'] : false,
 			'quantity'                    => $result['quantity'],
+			// Discount in whole percent (a special price below the regular one), for the "-20%" tag.
+			'discount'                    => (!is_null($result['special']) && (float)$result['special'] >= 0 && (float)$result['price'] > 0) ? (int)round((1 - (float)$result['special'] / (float)$result['price']) * 100) : 0,
 			'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
 			'minimum'                     => $result['minimum'],
 			'manufacturer'                => isset($result['manufacturer']) ? $result['manufacturer'] : null,

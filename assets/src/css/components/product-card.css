@@ -359,3 +359,20 @@
         transition: none;
     }
 }
+
+/* Retail details: a bold discount tag and a clear price. */
+.mc-product-card .mc-badge--sale {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--mc-radius-md);
+    font-size: var(--mc-font-size-xs);
+    font-weight: var(--mc-font-weight-bold);
+    letter-spacing: 0.02em;
+}
+
+.mc-product-card .mc-price__current {
+    font-weight: var(--mc-font-weight-bold);
+}
+
+.mc-product-card .mc-rating {
+    margin-top: calc(var(--mc-space-1) * -1);
+}

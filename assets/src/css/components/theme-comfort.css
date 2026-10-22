@@ -747,3 +747,281 @@
 .mc-header--comfort .mc-header__nav-toggle:hover {
     background: var(--mc-color-gray-200);
 }
+
+/* ====================================================================== */
+/* Retail header: top bar with the phone, a search with a button, labelled   */
+/* account / wishlist / compare, a solid cart with the total                 */
+/* ====================================================================== */
+
+/* Top bar: dark, the phone on the left, the announcement beside it. */
+.mc-header--comfort .mc-header__announcement {
+    padding-block: 0.5rem;
+    background-color: #14201b;
+    color: rgb(255 255 255 / 88%);
+    font-size: 0.8125rem;
+    text-align: left;
+}
+
+.mc-header--comfort .mc-header__topbar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-4);
+}
+
+.mc-header--comfort .mc-header__announcement-text,
+.mc-header--comfort .mc-header__announcement-link {
+    margin-inline: auto;
+    color: inherit;
+    text-align: center;
+}
+
+.mc-header--comfort .mc-header__phone {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+    .mc-header--comfort .mc-header__phone {
+        display: inline-flex;
+    }
+
+    .mc-header--comfort .mc-header__announcement-text,
+    .mc-header--comfort .mc-header__announcement-link {
+        margin-inline: 0 auto;
+        padding-left: var(--mc-space-6);
+        text-align: left;
+    }
+}
+
+.mc-header--comfort .mc-header__phone svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    color: var(--mc-color-mint-300);
+}
+
+.mc-header--comfort .mc-header__phone-label {
+    opacity: 0.65;
+}
+
+.mc-header--comfort .mc-header__phone strong {
+    font-weight: var(--mc-font-weight-semibold);
+    letter-spacing: 0.02em;
+}
+
+.mc-header--comfort .mc-header__phone:hover strong {
+    text-decoration: underline;
+}
+
+/* Search: the magnifier becomes a green round button at the right end. */
+.mc-header--comfort .mc-search-box__input {
+    padding-left: 1.25rem;
+    padding-right: 3.25rem;
+    background-image: none;
+}
+
+.mc-header--comfort .mc-search-box__submit {
+    position: absolute;
+    top: 50%;
+    right: 0.3125rem;
+    display: inline-grid;
+    place-items: center;
+    width: 2.125rem;
+    height: 2.125rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--mc-radius-pill);
+    background: var(--mc-primary);
+    color: var(--mc-on-primary);
+    cursor: pointer;
+    transform: translateY(-50%);
+    transition: background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-header--comfort .mc-search-box__submit:hover,
+.mc-header--comfort .mc-search-box__submit:focus-visible {
+    background: var(--mc-primary-hover);
+}
+
+.mc-header--comfort .mc-search-box__submit svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+}
+
+/* Account / wishlist / compare: an icon in front of the label. */
+.mc-header--comfort .mc-header__account-toggle::before,
+.mc-header--comfort .mc-header__wishlist::before,
+.mc-header--comfort .mc-header__compare::before {
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    background-color: currentcolor;
+    content: "";
+    -webkit-mask: var(--mc-header-icon) center / contain no-repeat;
+    mask: var(--mc-header-icon) center / contain no-repeat;
+}
+
+.mc-header--comfort .mc-header__account-toggle {
+    --mc-header-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z'/%3E%3C/svg%3E");
+}
+
+.mc-header--comfort .mc-header__wishlist {
+    --mc-header-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15'/%3E%3C/svg%3E");
+}
+
+.mc-header--comfort .mc-header__compare {
+    --mc-header-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5m14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5'/%3E%3C/svg%3E");
+}
+
+.mc-header--comfort .mc-header__compare {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-1);
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--mc-radius-pill);
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-medium);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.mc-header--comfort .mc-header__compare:hover {
+    background-color: var(--mc-surface-muted);
+    color: var(--mc-primary-hover);
+}
+
+/* Cart: a solid green pill, icon + the cart total (the total is hidden on phones). */
+.mc-header--comfort .mc-mini-cart__toggle {
+    width: auto;
+    min-width: 2.75rem;
+    padding: 0 1.125rem 0 1rem;
+    gap: 0.625rem;
+}
+
+.mc-header--comfort .mc-mini-cart__total {
+    display: none;
+    font-size: 0.9375rem;
+    font-weight: var(--mc-font-weight-bold);
+    letter-spacing: 0.01em;
+}
+
+@media (min-width: 768px) {
+    .mc-header--comfort .mc-mini-cart__total {
+        display: inline;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .mc-header--comfort .mc-mini-cart__toggle {
+        width: 2.75rem;
+        padding: 0;
+    }
+}
+
+/* Drawer: phone, then two equal pairs (currency + language, wishlist + compare), and the
+   account as one full-width green button at the very bottom. */
+@media (max-width: 991.98px) {
+    .mc-header--comfort .mc-header__drawer-phone {
+        order: 2;
+        margin: auto 0 var(--mc-space-3);
+        padding: var(--mc-space-3) var(--mc-space-4);
+        border-radius: var(--mc-radius-lg);
+        background: var(--mc-surface-muted);
+        color: var(--mc-text);
+        text-decoration: none;
+    }
+
+    .mc-header--comfort .mc-header__drawer-phone-label {
+        display: block;
+        color: var(--mc-muted);
+        font-size: var(--mc-font-size-xs);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .mc-header--comfort .mc-header__drawer-phone strong {
+        font-size: var(--mc-font-size-lg);
+    }
+
+    .mc-header--comfort .mc-header__utility-slot {
+        order: 3;
+        margin-top: auto;
+        padding: 0;
+    }
+
+    .mc-header--comfort .mc-header__drawer-phone ~ .mc-header__utility-slot {
+        margin-top: 0;
+    }
+
+    .mc-header--comfort .mc-header__utility-slot .mc-header__utility {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mc-header--comfort .mc-header__utility-slot .mc-header__utility .mc-header__compare {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0 var(--mc-space-2);
+        color: var(--mc-text);
+        text-decoration: none;
+    }
+
+    .mc-header--comfort .mc-header__utility-slot .mc-header__account {
+        grid-column: 1 / -1;
+        order: 9;
+        position: relative;
+        background: var(--mc-primary);
+    }
+
+    .mc-header--comfort .mc-header__utility-slot .mc-header__account-toggle {
+        min-height: 3.25rem;
+        color: var(--mc-on-primary);
+        font-size: var(--mc-font-size-base);
+        font-weight: var(--mc-font-weight-semibold);
+    }
+
+    /* The account menu opens upward, over the buttons above it. */
+    .mc-header--comfort .mc-header__utility-slot .mc-header__account-menu {
+        inset: auto 0 calc(100% + var(--mc-space-2)) 0;
+        width: auto;
+        margin: 0;
+    }
+}
+
+/* Desktop: one row (logo, search, utility links, cart). The search takes what is left. */
+@media (min-width: 992px) {
+    .mc-header--comfort .mc-header__row {
+        flex-wrap: nowrap;
+        gap: var(--mc-space-4);
+    }
+
+    .mc-header--comfort .mc-header__widget--search {
+        flex: 1 1 14rem;
+        max-width: 30rem;
+    }
+
+    .mc-header--comfort .mc-header__widget--search:focus-within {
+        flex-basis: 14rem;
+    }
+
+    .mc-header--comfort .mc-header__account-toggle,
+    .mc-header--comfort .mc-header__wishlist,
+    .mc-header--comfort .mc-header__compare,
+    .mc-header--comfort .mc-header__end .btn-link {
+        padding: 0.5rem 0.625rem;
+    }
+}
+
+/* Drawer pairs: currency + language side by side (a lone currency takes the whole row),
+   then wishlist + compare, then the account. */
+@media (max-width: 991.98px) {
+    .mc-header--comfort .mc-header__utility-slot .mc-header__utility > .mc-legacy:first-child:nth-last-child(4) {
+        grid-column: 1 / -1;
+    }
+}

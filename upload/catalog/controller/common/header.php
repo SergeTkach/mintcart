@@ -138,6 +138,7 @@ class ControllerCommonHeader extends Controller {
 						'download' => $data['download'],
 						'logout' => $data['logout'],
 						'wishlist' => $data['wishlist'],
+						'compare' => $this->url->link('product/compare', '', true),
 						'shopping_cart' => $data['shopping_cart'],
 						'checkout' => $data['checkout'],
 						'contact' => $data['contact']
@@ -164,6 +165,8 @@ class ControllerCommonHeader extends Controller {
 					'text_download' => $this->language->get('text_download'),
 					'text_logout' => $this->language->get('text_logout'),
 					'text_wishlist' => $data['text_wishlist'],
+					'text_compare' => $this->language->get('text_mc_compare'),
+					'text_call' => $this->language->get('text_mc_call'),
 					'text_menu' => $this->language->get('text_menu'),
 					'text_close' => $this->language->get('text_close'),
 					'text_search' => $this->language->get('text_search')

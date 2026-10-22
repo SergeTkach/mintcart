@@ -335,8 +335,17 @@ def main():
     # Home layout order: builder blocks, then featured products + brands (content_bottom).
     sql.append("UPDATE oc_layout_module SET position = 'content_bottom' WHERE code IN ('featured.28', 'carousel.29') AND layout_id = 1;")
 
-    # One picture per top category: its first product's photo.
-    sql.append("UPDATE oc_category c SET c.image = (SELECT p.image FROM oc_product p JOIN oc_product_to_category x ON x.product_id = p.product_id WHERE x.category_id = c.category_id ORDER BY p.product_id LIMIT 1) WHERE c.parent_id = 0;")
+    # One picture per top category: a 4:3 crop of its first product's photo (OpenCart's resize()
+    # pads a picture of another ratio with white, so the tile gets exactly the ratio it shows).
+    seen_roots = set()
+    for position, (pname, leaf, _b, _pr, _sp, pexels_id, _bl, _d) in enumerate(PRODUCTS):
+        root = ancestors(leaf)[0]
+        if root in seen_roots:
+            continue
+        seen_roots.add(root)
+        fn = 'category%d.jpg' % root
+        save(photo(pexels_id), fn, (1040, 780), centering=FOCUS.get(pexels_id, (0.5, 0.5)))
+        sql.append("UPDATE oc_category SET image = %s WHERE category_id = %d;" % (q(IMG_PREFIX + fn), root))
 
     # --- slider / about pictures: cropped to the 760x600 (about 4:3) the block asks for ---
     for i, pexels_id in enumerate(SLIDE_PHOTOS, 1):
@@ -382,6 +391,11 @@ def main():
         {'question': 'Can I return an item?', 'answer': 'Yes, within 30 days if it is unused. Write to us and we will arrange a pickup.'},
         {'question': 'Which payment methods do you accept?', 'answer': 'Bank cards, bank transfer and cash on delivery.'}]})
     block(80, 'cta', {}, {'title': 'Not sure what to choose?', 'text': 'Tell us about your room and we will suggest a few things that go well together.', 'cta_label': 'Contact us', 'cta_url': 'index.php?route=information/contact'})
+
+    # Header: the dark promo bar text, and a real-looking phone instead of the install placeholder.
+    sql.append("DELETE FROM oc_setting WHERE store_id = 0 AND `key` = 'mintcart_announcement_text';")
+    sql.append("INSERT INTO oc_setting (store_id, `code`, `key`, `value`, serialized) VALUES (0, 'mintcart', 'mintcart_announcement_text', 'Free delivery on orders over $60 · 30-day returns', 0);")
+    sql.append("UPDATE oc_setting SET `value` = '+380 44 123 45 67' WHERE store_id = 0 AND `key` = 'config_telephone' AND `value` = '123456789';")
 
     sql.append('COMMIT;')
 

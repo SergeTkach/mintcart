@@ -40,6 +40,35 @@
     padding-bottom: var(--mc-space-8);
 }
 
+/* A section title with a "View all" link at the right end. */
+.mc-block__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--mc-space-4);
+    margin-bottom: var(--mc-space-6);
+}
+
+.mc-block__head .mc-block__title {
+    margin: 0;
+}
+
+.mc-block__link {
+    flex: none;
+    color: var(--mc-primary-hover);
+    font-weight: var(--mc-font-weight-semibold);
+    text-decoration: none;
+}
+
+.mc-block__link::after {
+    content: " \2192";
+}
+
+.mc-block__link:hover,
+.mc-block__link:focus-visible {
+    text-decoration: underline;
+}
+
 .mc-block__more {
     margin: var(--mc-space-6) 0 0;
     text-align: center;

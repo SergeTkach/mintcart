@@ -94,9 +94,10 @@ class ControllerDesignHomepage extends Controller {
 					array('name' => 'sort', 'type' => 'select', 'default' => 'p.date_added', 'label_key' => 'entry_sort', 'options' => array(
 						'p.date_added' => 'Date Added', 'p.viewed' => 'Viewed', 'p.price' => 'Price', 'pd.name' => 'Name'
 					)),
-					array('name' => 'order', 'type' => 'select', 'default' => 'DESC', 'label_key' => 'entry_order', 'options' => array('ASC' => 'ASC', 'DESC' => 'DESC'))
+					array('name' => 'order', 'type' => 'select', 'default' => 'DESC', 'label_key' => 'entry_order', 'options' => array('ASC' => 'ASC', 'DESC' => 'DESC')),
+					array('name' => 'more_url', 'type' => 'text', 'default' => '', 'label_key' => 'entry_more_url', 'help_key' => 'help_more_url')
 				),
-				'content' => array($title)
+				'content' => array($title, array('name' => 'more_label', 'type' => 'text', 'default' => '', 'label_key' => 'entry_more_label'))
 			),
 			'hero' => array(
 				'settings' => array(

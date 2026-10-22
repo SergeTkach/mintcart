@@ -1,6 +1,8 @@
 <?php
 // Text
 $_['text_home']          = 'Home';
+$_['text_mc_compare']      = 'Compare';
+$_['text_mc_call']         = 'Call us';
 $_['text_wishlist']      = 'Wish List (%s)';
 $_['text_shopping_cart'] = 'Shopping Cart';
 $_['text_category']      = 'Categories';

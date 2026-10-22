@@ -273,9 +273,17 @@ class ControllerCommonHome extends Controller {
 			return null;
 		}
 
+		$this->load->language('mintcart/reviews');
+
+		// Optional "View all" link beside the title (settings `more_url`, content `more_label`).
+		$more_url = isset($block['settings']['more_url']) && is_string($block['settings']['more_url']) ? trim($block['settings']['more_url']) : '';
+		$more_label = isset($block['content']['more_label']) && is_string($block['content']['more_label']) && trim($block['content']['more_label']) !== '' ? trim($block['content']['more_label']) : $this->language->get('text_view_all');
+
 		return $block_renderer->render('products', array(
 			'title'         => $settings['title'],
-			'product_cards' => $product_cards
+			'product_cards' => $product_cards,
+			'more_url'      => $more_url !== '' ? htmlspecialchars($more_url, ENT_QUOTES, 'UTF-8') : '',
+			'more_label'    => htmlspecialchars($more_label, ENT_QUOTES, 'UTF-8')
 		));
 	}
 

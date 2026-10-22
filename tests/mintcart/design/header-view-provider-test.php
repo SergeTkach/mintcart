@@ -76,7 +76,7 @@ $view = $provider->build([], [], [], [
     'not_a_real_link' => 'index.php?route=malicious/thing',
 ]);
 
-assertSame(count(['account', 'login', 'register', 'order', 'transaction', 'download', 'logout', 'wishlist', 'shopping_cart', 'checkout', 'contact']), count($view['links']), 'links: every documented key present', $failures);
+assertSame(count(['account', 'login', 'register', 'order', 'transaction', 'download', 'logout', 'wishlist', 'compare', 'shopping_cart', 'checkout', 'contact']), count($view['links']), 'links: every documented key present', $failures);
 assertSame('index.php?route=account/account', $view['links']['account'], 'links: account passes through', $failures);
 assertSame('index.php?route=checkout/checkout', $view['links']['checkout'], 'links: checkout passes through', $failures);
 assertSame(null, $view['links']['login'], 'links: unsupplied key defaults to null', $failures);
