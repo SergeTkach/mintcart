@@ -299,7 +299,7 @@ class ControllerCommonHome extends Controller {
 		$this->load->model('tool/image');
 
 		// Picture sizes per layout: the half of a split slide, a full slide, a promo card.
-		$slide_size = $settings['layout'] === 'full' ? array(1600, 640) : array(760, 600);
+		$slide_size = $settings['layout'] === 'full' ? array(1600, 640) : array(1000, 790);
 
 		foreach ($settings['slides'] as &$slide) {
 			$slide['image'] = ($slide['image'] !== '' && is_file(DIR_IMAGE . $slide['image'])) ? $this->model_tool_image->resize($slide['image'], $slide_size[0], $slide_size[1]) : '';
@@ -399,7 +399,7 @@ class ControllerCommonHome extends Controller {
 
 		foreach ($results as $result) {
 			if ($result['image']) {
-				$image = $this->model_tool_image->resize($result['image'], 300, 300); // block tiles are wider than the 80px theme category size
+				$image = $this->model_tool_image->resize($result['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_category_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_category_height'));
 			} else {
 				$image = '';
 			}

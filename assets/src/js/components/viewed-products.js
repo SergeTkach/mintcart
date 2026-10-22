@@ -98,7 +98,7 @@ function renderItems(listEl, items) {
             <article class="mc-product-card mc-viewed-products__item">
                 <div class="mc-product-card__media">
                     <a class="mc-product-card__media-link" href="${escapeHtml(item.url)}" tabindex="-1" aria-hidden="true">
-                        <img class="mc-product-card__image" src="${escapeHtml(item.image)}" alt="" loading="lazy">
+                        <img class="mc-product-card__image" src="${escapeHtml(item.image)}"${item.srcset ? ` srcset="${escapeHtml(item.srcset)}"` : ''}${item.width ? ` width="${Number(item.width)}" height="${Number(item.height)}"` : ''} alt="" loading="lazy">
                     </a>
                 </div>
                 <div class="mc-product-card__body">

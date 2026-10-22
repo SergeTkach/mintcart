@@ -374,7 +374,7 @@ def main():
               {'title': 'Friendly support', 'description': 'We reply within a day'}]})
     block(20, 'categories', {'parent_id': 0, 'limit': 8}, {'title': 'Shop by category'})
     block(30, 'products', {'limit': 8, 'sort': 'p.date_added', 'order': 'DESC'}, {'title': 'New arrivals'})
-    block(40, 'text-image', {'image': IMG_PREFIX + 'about.jpg', 'image_width': 800, 'image_height': 631, 'image_position': 'left'},
+    block(40, 'text-image', {'image': IMG_PREFIX + 'about.jpg', 'image_width': 1100, 'image_height': 868, 'image_position': 'left'},
           {'title': 'Things made to be used', 'body': '<p>We pick a small number of well-made things for the home and keep them in stock. Stoneware from small kilns, solid oak, linen and soy wax - no filler.</p><p>Every product is photographed as it really is, and every order ships in recyclable packaging.</p>', 'image_alt': 'Our home collection'})
     block(50, 'testimonials', {'source': 'reviews', 'limit': 3}, {'title': 'What customers say'})
     block(70, 'faq', {}, {'title': 'Questions and answers', 'items': [

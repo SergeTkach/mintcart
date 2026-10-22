@@ -212,7 +212,7 @@ def main():
               {'title': 'Friendly support', 'description': 'We reply within a day'}]})
     block(20, 'categories', {'parent_id': 0, 'limit': 8}, {'title': 'Shop by category'})
     block(30, 'products', {'limit': 8, 'sort': 'p.date_added', 'order': 'DESC'}, {'title': 'New arrivals'})
-    block(40, 'text-image', {'image': 'catalog/local/hero-9.jpg', 'image_width': 800, 'image_height': 631, 'image_position': 'left'},
+    block(40, 'text-image', {'image': 'catalog/local/hero-9.jpg', 'image_width': 1100, 'image_height': 868, 'image_position': 'left'},
           {'title': 'Tech that earns its place on your desk', 'body': '<p>We keep a small, honest range of phones, laptops and audio from brands we trust, with official warranty and clear specifications - no filler.</p><p>Every order ships in recyclable packaging, and you can return it within 30 days.</p>', 'image_alt': 'A laptop on a desk'})
     block(50, 'testimonials', {'source': 'reviews', 'limit': 3}, {'title': 'What customers say'})
     block(70, 'faq', {}, {'title': 'Questions and answers', 'items': [

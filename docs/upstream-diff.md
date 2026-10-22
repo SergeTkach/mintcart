@@ -4134,3 +4134,30 @@ migration would run after install and leave the stock value until then.
 
 **Tests:** fresh install shows the new `<link rel="icon">` (local store checked
 after setting the same value by hand).
+
+---
+
+## `upload/install/opencart.sql` (theme image sizes)
+
+**Reason:** the stock OpenCart 3 sizes are too small for MintCart's cards and for
+retina screens: product 228, thumb 228, popup 500, additional 74, category 80,
+related 200, compare 90, wishlist/cart 47 px. New defaults:
+
+| Setting | Was | Now |
+|---|---|---|
+| `image_product` (cards, lists) | 228 x 228 | 400 x 400 (cards also load a 2x copy) |
+| `image_thumb` (product page picture) | 228 x 228 | 800 x 800 |
+| `image_popup` (zoom) | 500 x 500 | 1400 x 1400 |
+| `image_additional` (gallery thumbnails) | 74 x 74 | 160 x 160 |
+| `image_category` (category tiles) | 80 x 80 | 520 x 390 |
+| `image_related` | 200 x 200 | 400 x 400 |
+| `image_compare` | 90 x 90 | 160 x 160 |
+| `image_wishlist`, `image_cart` | 47 x 47 | 96 x 96 |
+
+**Why it cannot live in the Mint layer:** these are install-time settings rows; a store
+can change them in System → Settings → Option. An existing store keeps its own values
+(set them by hand or re-run the demo).
+
+**Compatibility impact:** new installs only; the picture cache (`image/cache`) is rebuilt on demand.
+
+**Tests:** product, category and home pages checked on the local store after the change.
