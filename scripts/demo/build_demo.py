@@ -1,0 +1,354 @@
+#!/usr/bin/env python3
+"""
+MintCart demo content: a small home-goods store.
+
+Generates the product / banner / brand images (Pillow) into
+upload/image/catalog/demo/shop/ and writes a SQL file that REPLACES the stock
+OpenCart demo catalog (38 categories, 20 products, 6 brands) with:
+
+  8 categories, 24 products (3 per category), 5 brands, 4 specials,
+  2 home slides, a brand carousel, no category-page banner, and the Featured module's product list.
+
+Usage:
+    python scripts/demo/build_demo.py <out.sql>
+    mysql -uroot <database> --default-character-set=utf8mb4 < <out.sql>
+
+The SQL deletes the existing catalog rows first (orders and customers are
+left alone). Take a database dump before applying it. Product ids 100+,
+category ids 100+, brand ids 20+, so the content is easy to recognise and
+remove again.
+"""
+
+import html
+import os
+import sys
+
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+IMG_DIR = os.path.join(ROOT, 'upload', 'image', 'catalog', 'demo', 'shop')
+IMG_PREFIX = 'catalog/demo/shop/'
+S = 2  # supersampling
+
+COLORS = {
+    'Charcoal': '#3b3e44', 'Stone': '#9ca1a8', 'White': '#f2f2f0',
+    'Clay': '#b4694a', 'Sage': '#7d9985', 'Navy': '#2e4766',
+    'Mustard': '#d2a52e', 'Black': '#222427', 'Oat': '#d8d2c4',
+}
+
+CATEGORIES = [
+    (100, 'Mugs & Cups', 'mugs-cups', 'mug',
+     'Everyday stoneware for coffee, tea and slow mornings.'),
+    (101, 'Vases', 'vases', 'vase',
+     'Simple hand-finished vases for a single stem or a full bunch.'),
+    (102, 'Lighting', 'lighting', 'lamp',
+     'Warm, quiet light for desks, shelves and bedside tables.'),
+    (103, 'Furniture', 'furniture', 'chair',
+     'Small pieces of furniture that are made to last and easy to move.'),
+    (104, 'Bags', 'bags', 'bag',
+     'Sturdy everyday bags with room for a laptop and a lunch.'),
+    (105, 'Stationery', 'stationery', 'notebook',
+     'Notebooks that lie flat and paper that takes ink well.'),
+    (106, 'Textiles', 'textiles', 'pillow',
+     'Soft cushions and covers in washable natural fibres.'),
+    (107, 'Candles', 'candles', 'candle',
+     'Slow-burning soy candles in reusable glass jars.'),
+]
+
+BRANDS = [(20, 'Nordhem'), (21, 'Oak & Co'), (22, 'Lumen'), (23, 'Kiln'), (24, 'Paperleaf')]
+
+# (category index, name base, brand id, base price, [(color, special price or None)], blurb)
+PRODUCTS = [
+    (0, 'Stoneware Mug', 23, 18, [('White', None), ('Charcoal', 14), ('Sage', None)],
+     'A 350 ml mug with a thick, comfortable handle. Dishwasher and microwave safe.'),
+    (1, 'Tall Ceramic Vase', 23, 42, [('White', None), ('Clay', None), ('Navy', 34)],
+     'A 28 cm vase with a narrow neck. Glazed inside, so it holds water.'),
+    (2, 'Desk Lamp', 22, 64, [('Black', None), ('White', None), ('Mustard', None)],
+     'A compact lamp with a fabric cord and a dimmable warm-white bulb.'),
+    (3, 'Oak Side Chair', 21, 149, [('Oat', None), ('Charcoal', 119), ('Sage', None)],
+     'Solid oak frame, stackable, assembled with no tools in two minutes.'),
+    (4, 'Canvas Tote', 21, 38, [('Oat', None), ('Navy', None), ('Black', None)],
+     'Heavy 14 oz canvas with an inside pocket and reinforced handles.'),
+    (5, 'Lay-Flat Notebook', 24, 14, [('Black', None), ('Stone', None), ('Clay', None)],
+     'A5, 160 pages of 100 gsm paper that is smooth, ink-friendly and acid-free.'),
+    (6, 'Linen Cushion', 20, 29, [('Oat', None), ('Sage', None), ('Charcoal', 23)],
+     'Stonewashed linen cover with a hidden zip. Insert included, cover machine washable.'),
+    (7, 'Soy Candle', 22, 22, [('White', None), ('Stone', None), ('Clay', None)],
+     'Hand-poured soy wax in a reusable glass jar. About 45 hours of burn time.'),
+]
+
+# Product id for (category index, colour index): 100 + cat*3 + colour
+FEATURED = [100, 106, 109, 115]
+
+
+def hex_rgb(h):
+    h = h.lstrip('#')
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def shade(rgb, f):
+    return tuple(max(0, min(255, int(c * f))) for c in rgb)
+
+
+def font(size, bold=False):
+    for name in (['seguisb.ttf', 'segoeuib.ttf'] if bold else ['segoeui.ttf']):
+        try:
+            return ImageFont.truetype(os.path.join('C:/Windows/Fonts', name), size)
+        except OSError:
+            continue
+    return ImageFont.load_default()
+
+
+class Canvas:
+    def __init__(self, w, h, bg):
+        self.w, self.h = w * S, h * S
+        self.img = Image.new('RGB', (self.w, self.h), bg)
+        self.d = ImageDraw.Draw(self.img, 'RGBA')
+
+    def sc(self, box):
+        return [v * S for v in box]
+
+    def shadow(self, cx, cy, rx, ry):
+        layer = Image.new('RGBA', self.img.size, (0, 0, 0, 0))
+        ImageDraw.Draw(layer).ellipse(self.sc([cx - rx, cy - ry, cx + rx, cy + ry]), fill=(0, 0, 0, 70))
+        layer = layer.filter(ImageFilter.GaussianBlur(14 * S))
+        self.img.paste(layer, (0, 0), layer)
+        self.d = ImageDraw.Draw(self.img, 'RGBA')
+
+    def rrect(self, box, r, fill):
+        self.d.rounded_rectangle(self.sc(box), r * S, fill=fill)
+
+    def ell(self, box, fill=None, outline=None, width=0):
+        self.d.ellipse(self.sc(box), fill=fill, outline=outline, width=width * S)
+
+    def poly(self, pts, fill):
+        self.d.polygon([(x * S, y * S) for x, y in pts], fill=fill)
+
+    def rect(self, box, fill):
+        self.d.rectangle(self.sc(box), fill=fill)
+
+    def result(self, size):
+        return self.img.resize(size, Image.LANCZOS)
+
+
+def draw_shape(c, kind, rgb):
+    base, dark, light = rgb, shade(rgb, 0.8), shade(rgb, 1.15)
+    if kind == 'mug':
+        c.shadow(400, 600, 190, 22)
+        c.ell([495, 330, 615, 500], outline=dark, width=30)
+        c.rrect([235, 250, 525, 590], 44, base)
+        c.rect([260, 290, 300, 560], (255, 255, 255, 38))
+        c.ell([235, 232, 525, 290], fill=light)
+        c.ell([252, 240, 508, 282], fill=shade(rgb, 0.45))
+    elif kind == 'vase':
+        c.shadow(400, 640, 150, 20)
+        c.rect([352, 150, 448, 320], base)
+        c.ell([262, 270, 538, 645], fill=base)
+        c.ell([348, 138, 452, 170], fill=light)
+        c.ell([360, 144, 440, 164], fill=shade(rgb, 0.5))
+        c.ell([300, 330, 345, 560], fill=(255, 255, 255, 40))
+    elif kind == 'lamp':
+        c.shadow(400, 626, 150, 18)
+        c.rect([392, 360, 408, 610], dark)
+        c.ell([315, 596, 485, 636], fill=base)
+        c.poly([(290, 190), (510, 190), (580, 365), (220, 365)], base)
+        c.poly([(290, 190), (350, 190), (330, 365), (220, 365)], (255, 255, 255, 40))
+        c.ell([290, 178, 510, 204], fill=light)
+        c.ell([330, 346, 470, 384], fill=(255, 244, 200, 255))
+    elif kind == 'chair':
+        c.shadow(400, 650, 190, 20)
+        c.rect([256, 420, 282, 645], dark)
+        c.rect([518, 420, 544, 645], dark)
+        c.rect([268, 345, 292, 425], dark)
+        c.rect([508, 345, 532, 425], dark)
+        c.rrect([235, 160, 565, 340], 26, base)
+        c.rrect([220, 380, 580, 436], 18, light)
+        c.rect([252, 180, 290, 320], (255, 255, 255, 36))
+    elif kind == 'bag':
+        c.shadow(400, 646, 200, 20)
+        c.ell([300, 170, 500, 420], outline=dark, width=26)
+        c.poly([(225, 320), (575, 320), (610, 640), (190, 640)], base)
+        c.rrect([205, 308, 595, 372], 20, light)
+        c.poly([(225, 320), (275, 320), (252, 640), (190, 640)], (255, 255, 255, 34))
+        c.rrect([345, 430, 455, 470], 10, shade(rgb, 0.7))
+    elif kind == 'notebook':
+        c.shadow(400, 656, 150, 16)
+        c.rrect([270, 140, 535, 650], 16, base)
+        c.rect([270, 140, 304, 650], dark)
+        c.rect([482, 140, 496, 650], (0, 0, 0, 55))
+        c.rrect([342, 230, 450, 330], 8, (255, 255, 255, 215))
+        c.rect([362, 258, 430, 266], (0, 0, 0, 70))
+        c.rect([362, 282, 410, 290], (0, 0, 0, 50))
+    elif kind == 'pillow':
+        c.shadow(400, 586, 230, 20)
+        c.rrect([190, 230, 610, 570], 100, base)
+        c.poly([(190, 230), (230, 250), (215, 330), (190, 330)], (255, 255, 255, 30))
+        c.d.line([(self_x * S, self_y * S) for self_x, self_y in [(210, 250), (400, 400), (590, 550)]],
+                 fill=(0, 0, 0, 22), width=5 * S)
+        c.d.line([(self_x * S, self_y * S) for self_x, self_y in [(590, 250), (400, 400), (210, 550)]],
+                 fill=(0, 0, 0, 22), width=5 * S)
+        c.ell([385, 385, 415, 415], fill=shade(rgb, 0.78))
+    elif kind == 'candle':
+        c.shadow(400, 632, 150, 18)
+        c.rrect([285, 330, 515, 628], 34, (255, 255, 255, 120))
+        c.rrect([293, 400, 507, 620], 28, base)
+        c.ell([293, 385, 507, 425], fill=light)
+        c.rect([396, 338, 404, 390], (40, 40, 40, 255))
+        c.ell([380, 240, 420, 332], fill=(255, 190, 70, 235))
+        c.ell([390, 276, 410, 326], fill=(255, 240, 190, 255))
+        c.rect([305, 420, 330, 600], (255, 255, 255, 44))
+
+
+def render_product(kind, color_name, path_main, path_alt):
+    rgb = hex_rgb(COLORS[color_name])
+    c = Canvas(800, 800, (255, 255, 255))
+    draw_shape(c, kind, rgb)
+    c.result((800, 800)).save(path_main, 'JPEG', quality=90)
+    alt = Canvas(800, 800, (244, 244, 244))
+    draw_shape(alt, kind, rgb)
+    im = alt.result((800, 800)).transpose(Image.FLIP_LEFT_RIGHT)
+    im.save(path_alt, 'JPEG', quality=90)
+
+
+def render_banner(path, headline, sub, kinds, colors, grad):
+    """1140x380 slide: two-line headline and button on the left, objects right."""
+    c = Canvas(1140, 380, grad[0])
+    top, bottom = hex_rgb(grad[0]), hex_rgb(grad[1])
+    px = c.img.load()
+    for y in range(c.h):
+        t = y / c.h
+        col = tuple(int(top[k] + (bottom[k] - top[k]) * t) for k in range(3))
+        for x in range(c.w):
+            px[x, y] = col
+    size = 290
+    for i, (kind, color) in enumerate(zip(kinds, colors)):
+        layer = Canvas(800, 800, (255, 255, 255))
+        draw_shape(layer, kind, hex_rgb(COLORS[color]))
+        big = layer.img.resize((size * S, size * S), Image.LANCZOS)
+        mask = Image.eval(big.convert('L'), lambda v: 0 if v > 248 else 255).filter(ImageFilter.GaussianBlur(S))
+        c.img.paste(big, ((540 + i * 175) * S, 45 * S), mask)
+    c.d = ImageDraw.Draw(c.img, 'RGBA')
+    lines = headline.split('|')
+    y = 78
+    for line in lines:
+        c.d.text((70 * S, y * S), line, font=font(50 * S, True), fill=hex_rgb('#1d1f23'))
+        y += 62
+    c.d.text((72 * S, (y + 8) * S), sub, font=font(22 * S), fill=hex_rgb('#5f636a'))
+    by = y + 62
+    c.d.rounded_rectangle([72 * S, by * S, 252 * S, (by + 50) * S], 12 * S, fill=hex_rgb('#14806a'))
+    c.d.text((104 * S, (by + 9) * S), 'Shop now', font=font(24 * S, True), fill=(255, 255, 255))
+    c.result((1140, 380)).save(path, 'JPEG', quality=90)
+
+
+def render_brand(path, name):
+    c = Canvas(260, 160, (255, 255, 255))
+    f = font(44 * S, True)
+    w = c.d.textlength(name, font=f)
+    c.d.text(((260 * S - w) / 2, 50 * S), name, font=f, fill=hex_rgb('#8a8f97'))
+    c.result((260, 160)).save(path, 'JPEG', quality=90)
+
+
+def q(value):
+    return "'" + str(value).replace('\\', '\\\\').replace("'", "\\'") + "'"
+
+
+def esc(text):
+    return html.escape(text, quote=True)
+
+
+def slug(text):
+    return ''.join(ch.lower() if ch.isalnum() else '-' for ch in text).strip('-').replace('--', '-')
+
+
+def main():
+    if len(sys.argv) != 2:
+        sys.exit(__doc__)
+
+    out_sql = sys.argv[1]
+    os.makedirs(IMG_DIR, exist_ok=True)
+    sql = ['SET NAMES utf8mb4;', 'START TRANSACTION;']
+
+    # --- wipe the stock catalog (orders/customers untouched) -------------
+    for table in [
+        'oc_product_attribute', 'oc_product_description', 'oc_product_discount',
+        'oc_product_filter', 'oc_product_image', 'oc_product_option_value',
+        'oc_product_option', 'oc_product_recurring', 'oc_product_related',
+        'oc_product_reward', 'oc_product_special', 'oc_product_to_category',
+        'oc_product_to_download', 'oc_product_to_layout', 'oc_product_to_store',
+        'oc_review', 'oc_cart', 'oc_customer_wishlist', 'oc_coupon_product',
+        'oc_product', 'oc_category_description', 'oc_category_path',
+        'oc_category_to_store', 'oc_category_to_layout', 'oc_category_filter',
+        'oc_coupon_category', 'oc_category', 'oc_manufacturer_to_store',
+        'oc_manufacturer',
+    ]:
+        sql.append('DELETE FROM %s;' % table)
+    sql.append("DELETE FROM oc_seo_url WHERE query LIKE 'path=%' OR query LIKE 'product_id=%' OR query LIKE 'manufacturer_id=%' OR query LIKE 'category_id=%';")
+
+    # --- brands -----------------------------------------------------------
+    for bid, name in BRANDS:
+        sql.append('INSERT INTO oc_manufacturer (manufacturer_id, name, image, sort_order) VALUES (%d, %s, NULL, %d);' % (bid, q(name), bid))
+        sql.append('INSERT INTO oc_manufacturer_to_store (manufacturer_id, store_id) VALUES (%d, 0);' % bid)
+        sql.append("INSERT INTO oc_seo_url (store_id, language_id, query, keyword) VALUES (0, 1, 'manufacturer_id=%d', %s);" % (bid, q(slug(name))))
+
+    # --- categories -------------------------------------------------------
+    for i, (cid, name, kw, _kind, blurb) in enumerate(CATEGORIES):
+        sql.append("INSERT INTO oc_category (category_id, image, parent_id, top, `column`, sort_order, status, date_added, date_modified) VALUES (%d, NULL, 0, 1, 1, %d, 1, NOW(), NOW());" % (cid, i))
+        sql.append('INSERT INTO oc_category_description (category_id, language_id, name, description, meta_title, meta_description, meta_keyword) VALUES (%d, 1, %s, %s, %s, %s, \'\');' % (cid, q(esc(name)), q(esc('<p>%s</p>' % blurb)), q(esc(name)), q(blurb)))
+        sql.append('INSERT INTO oc_category_path (category_id, path_id, level) VALUES (%d, %d, 0);' % (cid, cid))
+        sql.append('INSERT INTO oc_category_to_store (category_id, store_id) VALUES (%d, 0);' % cid)
+        sql.append('INSERT INTO oc_category_to_layout (category_id, store_id, layout_id) VALUES (%d, 0, 0);' % cid)
+        sql.append("INSERT INTO oc_seo_url (store_id, language_id, query, keyword) VALUES (0, 1, 'path=%d', %s);" % (cid, q(kw)))
+
+    # --- products ---------------------------------------------------------
+    n = 0
+    for cat_index, base, brand, price, colors, blurb in PRODUCTS:
+        cid, cname, _ckw, kind, _cblurb = CATEGORIES[cat_index]
+        for ci, (color, special) in enumerate(colors):
+            pid = 100 + cat_index * 3 + ci
+            n += 1
+            name = '%s - %s' % (base, color)
+            main_img = 'p%d.jpg' % pid
+            alt_img = 'p%d-alt.jpg' % pid
+            render_product(kind, color, os.path.join(IMG_DIR, main_img), os.path.join(IMG_DIR, alt_img))
+            desc = '<p>%s</p><p>Colour: %s.</p>' % (blurb, color)
+            sql.append(
+                "INSERT INTO oc_product (product_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, stock_status_id, image, manufacturer_id, shipping, price, points, tax_class_id, date_available, weight, weight_class_id, length, width, height, length_class_id, subtract, minimum, sort_order, status, viewed, date_added, date_modified) "
+                "VALUES (%d, %s, %s, '', '', '', '', '', '', 40, 7, %s, %d, 1, %.4f, 0, 9, CURDATE(), 0.5, 2, 0, 0, 0, 1, 1, 1, %d, 1, 0, NOW(), NOW());"
+                % (pid, q('MC-%03d' % n), q('MC-%03d' % n), q(IMG_PREFIX + main_img), brand, price, n))
+            sql.append("INSERT INTO oc_product_description (product_id, language_id, name, description, tag, meta_title, meta_description, meta_keyword) VALUES (%d, 1, %s, %s, '', %s, %s, '');" % (pid, q(esc(name)), q(esc(desc)), q(esc(name)), q(blurb)))
+            sql.append('INSERT INTO oc_product_to_store (product_id, store_id) VALUES (%d, 0);' % pid)
+            sql.append('INSERT INTO oc_product_to_layout (product_id, store_id, layout_id) VALUES (%d, 0, 0);' % pid)
+            sql.append('INSERT INTO oc_product_to_category (product_id, category_id) VALUES (%d, %d);' % (pid, cid))
+            sql.append("INSERT INTO oc_product_image (product_id, image, sort_order) VALUES (%d, %s, 0);" % (pid, q(IMG_PREFIX + alt_img)))
+            sql.append("INSERT INTO oc_seo_url (store_id, language_id, query, keyword) VALUES (0, 1, 'product_id=%d', %s);" % (pid, q(slug(name))))
+            if special:
+                sql.append("INSERT INTO oc_product_special (product_id, customer_group_id, priority, price, date_start, date_end) VALUES (%d, 1, 1, %.4f, '2020-01-01', '2099-12-31');" % (pid, special))
+
+    # --- home page: featured module, slides, brand carousel --------------
+    feat = ','.join('"%d"' % p for p in FEATURED)
+    sql.append("UPDATE oc_module SET setting = %s WHERE module_id = 28;" % q('{"name":"Home Page","product":[%s],"limit":"4","width":"600","height":"600","status":"1"}' % feat))
+
+    slides = [
+        ('hero1.jpg', 'Everyday things,|made well', 'Simple pieces for a calm, comfortable home.', ['mug', 'vase', 'lamp'], ['White', 'Clay', 'Black'], ('#f3f4f6', '#e3e6ea'), 'path=100'),
+        ('hero2.jpg', 'A softer|kind of light', 'Lamps and candles for slow evenings.', ['lamp', 'candle', 'candle'], ['Mustard', 'White', 'Stone'], ('#f6f6f4', '#e6e7e9'), 'path=102'),
+    ]
+    sql.append('DELETE FROM oc_banner_image WHERE banner_id IN (6, 7, 8);')  # 6 = stock category-page banner
+    for i, (fn, head, sub, kinds, cols, grad, link) in enumerate(slides):
+        render_banner(os.path.join(IMG_DIR, fn), head, sub, kinds, cols, grad)
+        cid = int(link.split('=')[1])
+        sql.append("INSERT INTO oc_banner_image (banner_id, language_id, title, link, image, sort_order) VALUES (7, 1, %s, %s, %s, %d);" % (q(head.replace('|', ' ')), q('index.php?route=product/category&path=%d' % cid), q(IMG_PREFIX + fn), i))
+    for i, (bid, name) in enumerate(BRANDS):
+        fn = 'brand%d.jpg' % bid
+        render_brand(os.path.join(IMG_DIR, fn), name)
+        sql.append("INSERT INTO oc_banner_image (banner_id, language_id, title, link, image, sort_order) VALUES (8, 1, %s, %s, %s, %d);" % (q(name), q('index.php?route=product/manufacturer/info&manufacturer_id=%d' % bid), q(IMG_PREFIX + fn), i))
+
+    sql.append('COMMIT;')
+
+    with open(out_sql, 'w', encoding='utf-8') as fh:
+        fh.write('\n'.join(sql) + '\n')
+
+    print('images:', len(os.listdir(IMG_DIR)), 'sql statements:', len(sql))
+
+
+if __name__ == '__main__':
+    main()

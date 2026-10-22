@@ -101,6 +101,11 @@
 /* ====================================================================== */
 
 .mc-header--comfort {
+    /* Menu bar colour: the logo's green (#1abc9c) darkened until white text on
+       it reaches ~4.5:1 contrast. A store with another logo changes this one
+       variable. */
+    --mc-header-nav-bg: #14806a;
+
     border-bottom: var(--mc-border-width) solid var(--mc-border);
 }
 
@@ -169,8 +174,9 @@
 }
 
 .mc-header--comfort .mc-search-box__input:focus {
-    border-color: var(--mc-border-strong);
+    border-color: var(--mc-header-nav-bg);
     background-color: var(--mc-surface);
+    box-shadow: 0 0 0 3px rgb(20 128 106 / 20%);
     outline: 0;
 }
 
@@ -267,33 +273,47 @@
     border-radius: var(--mc-radius-md);
 }
 
-/* lg and up: the menu is a full-width graphite bar - the one strong element
-   on an otherwise quiet page. Below lg it stays the normal drawer. */
+/* lg and up: the menu is a brand-green bar the width of the page container -
+   the one strong element on an otherwise quiet page. The colour goes on the
+   inner `.container` (Bootstrap forces `.offcanvas-lg` itself transparent).
+   Below lg it stays the normal drawer. */
 @media (min-width: 992px) {
-    .mc-header--comfort {
-        border-bottom: 0;
+    .mc-header--comfort .mc-header__nav {
+        padding-bottom: var(--mc-space-3);
     }
 
-    /* !important: Bootstrap forces `.offcanvas-lg` transparent from lg up. */
-    .mc-header--comfort .mc-header__nav {
-        padding-bottom: 0;
-        background-color: var(--mc-surface-inverse) !important;
+    .mc-header--comfort .mc-header__nav .container {
+        position: relative;
+        isolation: isolate;
+        padding-block: var(--mc-space-1);
+    }
+
+    /* The bar is painted inside the container gutter so it lines up with the
+       content edges (logo, slider) instead of sticking out past them. */
+    .mc-header--comfort .mc-header__nav .container::before {
+        position: absolute;
+        z-index: -1;
+        inset: 0 calc(var(--bs-gutter-x, 1.5rem) * 0.5);
+        border-radius: var(--mc-radius-lg);
+        background-color: var(--mc-header-nav-bg);
+        content: '';
     }
 
     .mc-header--comfort .mc-nav {
-        gap: 0;
+        gap: var(--mc-space-1);
+        padding-inline: var(--mc-space-2);
     }
 
     .mc-header--comfort .mc-nav__link {
-        padding: var(--mc-space-3) var(--mc-space-4);
-        border-radius: 0;
+        padding: var(--mc-space-2) var(--mc-space-4);
+        border-radius: var(--mc-radius-md);
         color: var(--mc-text-inverse);
     }
 
     .mc-header--comfort .mc-nav__link:hover,
     .mc-header--comfort .mc-nav__link:focus-visible,
     .mc-header--comfort .mc-nav__link[aria-expanded='true'] {
-        background-color: rgb(255 255 255 / 14%);
+        background-color: rgb(255 255 255 / 16%);
         color: var(--mc-text-inverse);
     }
 
@@ -303,20 +323,39 @@
     }
 }
 
-/* Narrow screens: search gets its own full row under logo and actions. */
+/* Narrow screens: row 1 = menu button, logo, cart; row 2 = search; then the
+   small links (language, currency, account, wishlist). `display: contents`
+   lets the end group's children be ordered as items of the header row. */
 @media (max-width: 991.98px) {
-    .mc-header--comfort .mc-header__branding {
-        flex: 1 1 auto;
+    .mc-header--comfort .mc-header__row {
+        gap: var(--mc-space-3) var(--mc-space-4);
     }
 
     .mc-header--comfort .mc-header__end {
-        margin-left: 0;
+        display: contents;
+    }
+
+    .mc-header--comfort .mc-header__nav-toggle {
+        order: 0;
+    }
+
+    .mc-header--comfort .mc-header__branding {
+        flex: 1 1 auto;
+        order: 1;
+    }
+
+    .mc-header--comfort .mc-header__end > .mc-header__widget {
+        order: 2;
     }
 
     .mc-header--comfort .mc-header__widget--search,
     .mc-header--comfort .mc-header__widget--search:focus-within {
         flex: 1 0 100%;
-        order: 5;
+        order: 3;
+    }
+
+    .mc-header--comfort .mc-header__end > :not(.mc-header__widget) {
+        order: 4;
     }
 }
 

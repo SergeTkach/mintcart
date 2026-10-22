@@ -98,6 +98,10 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 - [x] Top info bar (Business → Contacts, one text for all languages;
       not live-checked)
 - [ ] Configurable (manual) badges
+- [~] Demo data: `scripts/demo/build_demo.py` replaces the stock OpenCart catalog
+      with a small home-goods store (8 categories, 24 products, 5 brands,
+      4 specials, 2 slides, generated images). Applied to the local DB by
+      hand; not wired into the Setup Wizard's optional demo step yet
 
 ## Productivity
 
