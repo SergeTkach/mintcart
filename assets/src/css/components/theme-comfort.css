@@ -646,16 +646,7 @@
         font-weight: var(--mc-font-weight-bold);
     }
 
-    .mc-header--comfort .mc-header__nav .mc-drawer__close {
-        width: 2.25rem;
-        height: 2.25rem;
-        border-radius: var(--mc-radius-pill);
-        background: var(--mc-surface-muted);
-        color: var(--mc-text);
-        font-size: 1.5rem;
-    }
-
-    .mc-header--comfort .mc-header__nav .offcanvas-body {
+        .mc-header--comfort .mc-header__nav .offcanvas-body {
         display: flex;
         flex-direction: column;
         padding: var(--mc-space-2) var(--mc-space-3) var(--mc-space-4);
