@@ -17,7 +17,7 @@
         {% for product in products %}{% set mc_cart_qty = mc_cart_qty + product.quantity %}{% endfor %}
         {% if mc_cart_qty %}<span class="mc-mini-cart__count" aria-hidden="true">{{ mc_cart_qty }}</span>{% endif %}
         <span class="mc-mini-cart__summary" id="cart-total">{{ text_items }}</span>
-        {% if totals %}<span class="mc-mini-cart__total" aria-hidden="true">{{ (totals|last).text }}</span>{% endif %}
+        {% if totals %}<span class="mc-mini-cart__amount" aria-hidden="true">{{ (totals|last).text }}</span>{% endif %}
     </button>
     <div class="mc-mini-cart__panel dropdown-menu dropdown-menu-end">
         {% if products or vouchers %}

@@ -137,6 +137,13 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 - [x] Compatibility Checker (install.xml analysis, admin screen)
 - [~] Release packaging: `npm run release` (`scripts/release.js`); asset
       path bug fixed 2026-10-08; needs `zip` on PATH, never run end to end
+- [x] Homepage Builder Slider block (split / full / cards layouts, rich slides)
+      on the `mc-slider` engine; Customer reviews page + review-backed Testimonials;
+      manual product badges (set + per-product assignment); Quick Order on the
+      product page; "Added to cart" modal; sticky buy box
+- [x] Home page rhythm (ADR 015) and retail header (ADR 016): tinted bands, soft
+      shapes, dark top bar with phone, one-row header, discount tags, ratings
+- [x] Demo data: `npm run demo:home` (Pexels photos) / `demo:electronics` (local only)
 - [ ] Fresh install from `upload/` → wizard → first order, end to end
 - [ ] Smoke tests per Implementation Guide §78 (browser)
 
@@ -147,7 +154,7 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 
 ## Tests
 
-`php` over `tests/mintcart/**/*-test.php`: 107 files, 105 pass. The 2
+`php` over `tests/mintcart/**/*-test.php`: 109 files, 107 pass. The 2
 failures are environment-specific and predate this branch
 (`design/media-model-test.php` path separator on Windows,
 `fixes/mc-0020-pgsql-reconnect-test.php` needs pgsql).

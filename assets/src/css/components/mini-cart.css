@@ -267,3 +267,9 @@ a.mc-mini-cart__name:focus-visible {
     text-align: center;
     color: var(--mc-muted);
 }
+
+/* The cart amount next to the icon is a theme option (mint_comfort shows it as a pill);
+   the other themes already print the summary text, so it stays hidden there. */
+.mc-mini-cart__amount {
+    display: none;
+}

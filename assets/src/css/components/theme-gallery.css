@@ -101,3 +101,9 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
+
+/* Utility labels stay on one line. */
+.mc-header--gallery .mc-header__account-toggle,
+.mc-header--gallery .mc-header__wishlist {
+    white-space: nowrap;
+}

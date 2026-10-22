@@ -71,6 +71,13 @@ assertSame('', $card['product']['badges'][2]['color'], 'no colour -> empty', $fa
 $plain = $provider->build(['id' => 2, 'name' => 'Cup', 'url' => '/cup', 'image' => '/cup.jpg']);
 assertSame([], $plain['product']['badges'], 'no badges by default', $failures);
 
+// A discount (whole percent) turns the "Sale" badge into a "-NN%" tag; without it the label stays null.
+$withDiscount = $provider->build(['id' => 3, 'name' => 'Lamp', 'url' => '/lamp', 'image' => '/lamp.jpg', 'special' => '$8', 'discount' => 20]);
+assertSame('sale', $withDiscount['product']['badges'][0]['type'], 'discount: the badge is still of type sale', $failures);
+assertSame('-20%', $withDiscount['product']['badges'][0]['label'], 'discount: the label is -20%', $failures);
+$noDiscount = $provider->build(['id' => 4, 'name' => 'Lamp', 'url' => '/lamp', 'image' => '/lamp.jpg', 'special' => '$8']);
+assertSame(null, $noDiscount['product']['badges'][0]['label'], 'no discount value: the label stays null (theme shows "Sale")', $failures);
+
 if ($failures) {
     fwrite(STDERR, "FAIL\n - " . implode("\n - ", $failures) . "\n");
     exit(1);
