@@ -9,6 +9,8 @@
     "build:css": "npm run build:css:index && npm run build:css:components",
     "build:css:index": "esbuild assets/src/css/index.css --bundle --minify --outfile=assets/dist/css/index.min.css",
     "build:css:components": "esbuild assets/src/css/components.css --bundle --minify --outfile=assets/dist/css/components.min.css",
+    "demo:home": "python scripts/demo/apply.py home",
+    "demo:electronics": "python scripts/demo/apply.py electronics",
     "dev": "npm run dev:js && npm run dev:css && node scripts/sync-dist.js",
     "dev:js": "esbuild assets/src/js/catalog.js --bundle --sourcemap --outfile=assets/dist/js/catalog.js && esbuild assets/src/js/admin.js --bundle --sourcemap --outfile=assets/dist/js/admin.js && esbuild assets/src/js/slider.js --bundle --sourcemap --outfile=assets/dist/js/slider.js",
     "dev:css": "npm run dev:css:index && npm run dev:css:components",

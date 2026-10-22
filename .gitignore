@@ -100,3 +100,4 @@ upload/image/catalog/local/
 __pycache__/
 
 scripts/demo/.photo-cache/
+scripts/demo/.backups/
