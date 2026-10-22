@@ -21,6 +21,9 @@
 
         <div class="mc-product-card__quick-actions">
             <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-wishlist" data-product-id="{{ product.id }}" data-mc-text-wishlist-error="{{ text_wishlist_error }}" aria-pressed="false" aria-label="{{ text_wishlist }}">♥</button>
+            {% if product.actions.compare %}
+                <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-compare" data-product-id="{{ product.id }}" aria-pressed="false" aria-label="{{ text_compare }}">⇄</button>
+            {% endif %}
         </div>
 
         <div class="mc-product-card__actions">
@@ -39,6 +42,12 @@
             >
                 {{ text_add_to_cart }}
             </button>
+
+            {% if product.actions.quick_order and display.action_variant != 'compact' %}
+                <button type="button" class="mc-button mc-button--secondary mc-product-card__quick-order" data-mc-action="quick-order" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">
+                    {{ text_quick_order }}
+                </button>
+            {% endif %}
         </div>
     </div>
 
