@@ -2,7 +2,7 @@
  * "Comfort" design preset.
  *
  * A plain, friendly look that is easy on the eyes: white page, quiet neutral
- * greys, a graphite action colour, comfortable reading rhythm, medium-soft
+ * greys, the brand green as the single accent, comfortable reading rhythm, medium-soft
  * corners and gentle shadows. Nothing decorative - it is meant to be read, not admired.
  * Like every preset it redefines ONLY semantic-tier tokens already declared
  * in settings/tokens.css (docs/adr/004-design-token-presets.md); shapes that
@@ -18,20 +18,19 @@
     --mc-preset-comfort-grey-200: #e4e4e7;
     --mc-preset-comfort-grey-400: #c9c9ce;
     --mc-preset-comfort-grey-600: #6b6f76;
-    --mc-preset-comfort-graphite-600: #2d3138;
-    --mc-preset-comfort-graphite-700: #1c1f24;
-    --mc-preset-comfort-graphite-800: #111316;
+    --mc-preset-comfort-brand-600: #14806a;
+    --mc-preset-comfort-brand-700: #0f6957;
+    --mc-preset-comfort-brand-800: #0b5545;
     --mc-preset-comfort-red: #d14343;
-    --mc-preset-comfort-green: #3f7f62;
-    --mc-preset-comfort-shadow: 20, 22, 26;
+        --mc-preset-comfort-shadow: 20, 22, 26;
 
     /* Color */
-    --mc-primary: var(--mc-preset-comfort-graphite-600);
-    --mc-primary-hover: var(--mc-preset-comfort-graphite-700);
-    --mc-primary-active: var(--mc-preset-comfort-graphite-800);
+    --mc-primary: var(--mc-preset-comfort-brand-600);
+    --mc-primary-hover: var(--mc-preset-comfort-brand-700);
+    --mc-primary-active: var(--mc-preset-comfort-brand-800);
     --mc-on-primary: var(--mc-color-white);
 
-    --mc-accent: var(--mc-preset-comfort-graphite-600);
+    --mc-accent: var(--mc-preset-comfort-brand-600);
     --mc-on-accent: var(--mc-color-white);
 
     --mc-surface: var(--mc-color-white);
@@ -44,7 +43,7 @@
     --mc-border: var(--mc-preset-comfort-grey-200);
     --mc-border-strong: var(--mc-preset-comfort-grey-400);
 
-    --mc-success: var(--mc-preset-comfort-green);
+    --mc-success: var(--mc-preset-comfort-brand-600);
     --mc-danger: var(--mc-preset-comfort-red);
 
     /* Reading rhythm */

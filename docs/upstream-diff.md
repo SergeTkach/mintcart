@@ -4037,3 +4037,26 @@ controller is what renders the page; the template cannot call a
 controller. **Compatibility:** additive `$data` key. **Tests:** page render
 on product 40 (Delivery row shown; Payment/Returns hidden while nothing is
 enabled/set).
+
+---
+
+## `upload/catalog/controller/common/menu.php` and `upload/catalog/controller/extension/module/category.php`
+
+**Reason:** Both controllers hand-rolled exactly two category levels. They now
+delegate the tree walk to `MintCart\Catalog\CategoryTree`
+(`upload/system/library/mintcart/catalog/categorytree.php`), which returns up to
+three levels. The keys the stock templates read (`name`, `href`, `column`,
+`children`, and for the module `category_id`, `child_id`) are unchanged; the
+module also exposes `grandchild_id`. Every node additionally carries
+`category_id` and a nested `children`.
+
+**Why it cannot live in the Mint layer:** the controllers *are* where the menu
+data is built, and a theme cannot add a level to data the controller never
+loads. The walk itself, the part worth testing, lives in the Mint class; the
+controllers only supply how to read children, build a link and count products.
+
+**Compatibility impact:** none for the stock/default templates (they ignore the
+third level); `mint_comfort` renders it. Product-count text and the module's
+"only the active branch is expanded" behaviour are kept.
+
+**Tests:** `tests/mintcart/catalog/category-tree-test.php`.

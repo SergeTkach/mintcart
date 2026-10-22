@@ -44,6 +44,7 @@ import { initReviews } from './components/reviews.js';
 import { initCheckout } from './components/checkout.js';
 import { initOptionUploads } from './components/option-upload.js';
 import { initStickyHeader } from './components/sticky-header.js';
+import { initHeaderUtility } from './components/header-utility.js';
 import { initCartPage } from './components/cart-page.js';
 import { initBuyBar } from './components/buy-bar.js';
 import { initSectionNav } from './components/section-nav.js';
@@ -122,6 +123,7 @@ function boot() {
     initCheckout();
     initOptionUploads();
     initStickyHeader();
+    initHeaderUtility();
     initCartPage();
     initBuyBar();
     initSectionNav();

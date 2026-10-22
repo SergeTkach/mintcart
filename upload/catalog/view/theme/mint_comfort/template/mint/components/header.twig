@@ -65,34 +65,36 @@
             </div>
 
             <div class="mc-header__end">
-                {% if widgets.language %}
-                    <div class="mc-legacy">{{ widgets.language|raw }}</div>
-                {% endif %}
-                {% if widgets.currency %}
-                    <div class="mc-legacy">{{ widgets.currency|raw }}</div>
-                {% endif %}
+                <div class="mc-header__utility" data-mc-header-utility>
+                    {% if widgets.language %}
+                        <div class="mc-legacy">{{ widgets.language|raw }}</div>
+                    {% endif %}
+                    {% if widgets.currency %}
+                        <div class="mc-legacy">{{ widgets.currency|raw }}</div>
+                    {% endif %}
 
-                <div class="mc-header__account">
-                    <button type="button" class="mc-header__account-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                        {% if account.logged %}{{ account.first_name }}{% else %}{{ text_account }}{% endif %}
-                    </button>
-                    <ul class="mc-header__account-menu dropdown-menu dropdown-menu-end">
-                        {% if account.logged %}
-                            <li><a class="mc-header__account-menu-link" href="{{ links.account }}">{{ text_account }}</a></li>
-                            <li><a class="mc-header__account-menu-link" href="{{ links.order }}">{{ text_order }}</a></li>
-                            <li><a class="mc-header__account-menu-link" href="{{ links.transaction }}">{{ text_transaction }}</a></li>
-                            <li><a class="mc-header__account-menu-link" href="{{ links.download }}">{{ text_download }}</a></li>
-                            <li><a class="mc-header__account-menu-link" href="{{ links.logout }}">{{ text_logout }}</a></li>
-                        {% else %}
-                            <li><a class="mc-header__account-menu-link" href="{{ links.register }}">{{ text_register }}</a></li>
-                            <li><a class="mc-header__account-menu-link" href="{{ links.login }}">{{ text_login }}</a></li>
-                        {% endif %}
-                    </ul>
+                    <div class="mc-header__account">
+                        <button type="button" class="mc-header__account-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if account.logged %}{{ account.first_name }}{% else %}{{ text_account }}{% endif %}
+                        </button>
+                        <ul class="mc-header__account-menu dropdown-menu dropdown-menu-end">
+                            {% if account.logged %}
+                                <li><a class="mc-header__account-menu-link" href="{{ links.account }}">{{ text_account }}</a></li>
+                                <li><a class="mc-header__account-menu-link" href="{{ links.order }}">{{ text_order }}</a></li>
+                                <li><a class="mc-header__account-menu-link" href="{{ links.transaction }}">{{ text_transaction }}</a></li>
+                                <li><a class="mc-header__account-menu-link" href="{{ links.download }}">{{ text_download }}</a></li>
+                                <li><a class="mc-header__account-menu-link" href="{{ links.logout }}">{{ text_logout }}</a></li>
+                            {% else %}
+                                <li><a class="mc-header__account-menu-link" href="{{ links.register }}">{{ text_register }}</a></li>
+                                <li><a class="mc-header__account-menu-link" href="{{ links.login }}">{{ text_login }}</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    {% if links.wishlist %}
+                        <a class="mc-header__wishlist" href="{{ links.wishlist }}">{{ text_wishlist }}</a>
+                    {% endif %}
                 </div>
-
-                {% if links.wishlist %}
-                    <a class="mc-header__wishlist" href="{{ links.wishlist }}">{{ text_wishlist }}</a>
-                {% endif %}
 
                 {% if widgets.cart %}
                     <div class="mc-header__widget mc-legacy">{{ widgets.cart|raw }}</div>
@@ -113,6 +115,7 @@
                 <button type="button" class="mc-drawer__close" data-mc-action="close-drawer" aria-label="{{ text_close }}">&times;</button>
             </div>
             <div class="offcanvas-body mc-legacy">
+                <div class="mc-header__utility-slot d-lg-none" data-mc-header-utility-slot></div>
                 <div class="container">
                     {{ widgets.menu|raw }}
                 </div>

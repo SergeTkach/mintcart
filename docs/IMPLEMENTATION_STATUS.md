@@ -99,9 +99,13 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
       not live-checked)
 - [ ] Configurable (manual) badges
 - [~] Demo data: `scripts/demo/build_demo.py` replaces the stock OpenCart catalog
-      with a small home-goods store (8 categories, 24 products, 5 brands,
-      4 specials, 2 slides, generated images). Applied to the local DB by
-      hand; not wired into the Setup Wizard's optional demo step yet
+      with a small home-goods store (8 root categories + 12 subcategories,
+      two of them third-level; 30 products, 5 brands, specials, 2 slides,
+      generated images). Applied to the local DB by hand; not wired into the
+      Setup Wizard's optional demo step yet
+- [x] Three-level category tree (`MintCart\Catalog\CategoryTree`) behind the
+      menu and the category module; `mint_comfort` shows it in the menu bar,
+      the bordered-free category list and the mobile drawer
 
 ## Productivity
 

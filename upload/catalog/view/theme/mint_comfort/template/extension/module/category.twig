@@ -1,0 +1,31 @@
+{# Mint Comfort category list (column left): a quiet text list instead of the
+   stock boxed list-group. Up to three levels; only the active branch is open.
+   Data from extension/module/category (MintCart\Catalog\CategoryTree):
+   categories[].children[].children[], category_id, child_id, grandchild_id,
+   heading_title. #}
+<nav class="mc-category-nav" aria-label="{{ heading_title }}">
+  <p class="mc-category-nav__title">{{ heading_title }}</p>
+  <ul class="mc-category-nav__list">
+    {% for category in categories %}
+      <li>
+        <a href="{{ category.href }}" class="mc-category-nav__link{% if category.category_id == category_id %} is-active{% if not child_id %} is-current{% endif %}{% endif %}"{% if category.category_id == category_id and not child_id %} aria-current="page"{% endif %}>{{ category.name }}</a>
+        {% if category.category_id == category_id and category.children %}
+          <ul class="mc-category-nav__list mc-category-nav__list--children">
+            {% for child in category.children %}
+              <li>
+                <a href="{{ child.href }}" class="mc-category-nav__link{% if child.category_id == child_id %} is-active{% if not grandchild_id %} is-current{% endif %}{% endif %}"{% if child.category_id == child_id and not grandchild_id %} aria-current="page"{% endif %}>{{ child.name }}</a>
+                {% if child.category_id == child_id and child.children %}
+                  <ul class="mc-category-nav__list mc-category-nav__list--children">
+                    {% for grandchild in child.children %}
+                      <li><a href="{{ grandchild.href }}" class="mc-category-nav__link{% if grandchild.category_id == grandchild_id %} is-active is-current{% endif %}"{% if grandchild.category_id == grandchild_id %} aria-current="page"{% endif %}>{{ grandchild.name }}</a></li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</nav>

@@ -1,7 +1,7 @@
 {# Mint Comfort: "soft" product card. Same contract as mint_default's
    product-card (product / display / context); only the DOM differs: a
-   rounded image tile, name underneath, price on the left and a compact
-   button on the right. #}
+   rounded image tile, name underneath, price on the left and a round
+   cart-icon button on the right; quick order sits on the tile. #}
 <article class="mc-product-card mc-product-card--soft">
     <div class="mc-product-card__media">
         <a class="mc-product-card__media-link" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
@@ -25,6 +25,11 @@
                 <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-compare" data-product-id="{{ product.id }}" aria-pressed="false" aria-label="{{ text_compare }}">⇄</button>
             {% endif %}
         </div>
+        {% if product.actions.quick_order and display.action_variant != 'compact' %}
+            <button type="button" class="mc-product-card__quick-order" data-mc-action="quick-order" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">
+                {{ text_quick_order }}
+            </button>
+        {% endif %}
     </div>
 
     <div class="mc-product-card__body">
@@ -55,13 +60,9 @@
             data-mc-text-add-error="{{ text_add_to_cart_error }}"
             {{ product.actions.add_to_cart ? '' : 'disabled' }}
         >
-            {{ text_add_to_cart }}
+            <svg class="mc-product-card__add-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l1.313 7h8.17l1.313-7zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg>
+            <span class="visually-hidden">{{ text_add_to_cart }}</span>
         </button>
 
-        {% if product.actions.quick_order and display.action_variant != 'compact' %}
-            <button type="button" class="mc-button mc-button--secondary mc-product-card__quick-order" data-mc-action="quick-order" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">
-                {{ text_quick_order }}
-            </button>
-        {% endif %}
     </div>
 </article>

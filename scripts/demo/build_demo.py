@@ -6,7 +6,8 @@ Generates the product / banner / brand images (Pillow) into
 upload/image/catalog/demo/shop/ and writes a SQL file that REPLACES the stock
 OpenCart demo catalog (38 categories, 20 products, 6 brands) with:
 
-  8 categories, 24 products (3 per category), 5 brands, 4 specials,
+  8 root categories with 12 subcategories (two third-level), 30 products,
+  5 brands, specials,
   2 home slides, a brand carousel, no category-page banner, and the Featured module's product list.
 
 Usage:
@@ -36,48 +37,58 @@ COLORS = {
     'Mustard': '#d2a52e', 'Black': '#222427', 'Oat': '#d8d2c4',
 }
 
+# (id, name, slug, parent id or None, blurb) - 8 roots, 12 subcategories,
+# two of them third-level.
 CATEGORIES = [
-    (100, 'Mugs & Cups', 'mugs-cups', 'mug',
-     'Everyday stoneware for coffee, tea and slow mornings.'),
-    (101, 'Vases', 'vases', 'vase',
-     'Simple hand-finished vases for a single stem or a full bunch.'),
-    (102, 'Lighting', 'lighting', 'lamp',
-     'Warm, quiet light for desks, shelves and bedside tables.'),
-    (103, 'Furniture', 'furniture', 'chair',
-     'Small pieces of furniture that are made to last and easy to move.'),
-    (104, 'Bags', 'bags', 'bag',
-     'Sturdy everyday bags with room for a laptop and a lunch.'),
-    (105, 'Stationery', 'stationery', 'notebook',
-     'Notebooks that lie flat and paper that takes ink well.'),
-    (106, 'Textiles', 'textiles', 'pillow',
-     'Soft cushions and covers in washable natural fibres.'),
-    (107, 'Candles', 'candles', 'candle',
-     'Slow-burning soy candles in reusable glass jars.'),
+    (100, 'Mugs & Cups', 'mugs-cups', None, 'Everyday stoneware for coffee, tea and slow mornings.'),
+    (108, 'Coffee Mugs', 'coffee-mugs', 100, 'Big, comfortable mugs for the first cup of the day.'),
+    (101, 'Vases', 'vases', None, 'Simple hand-finished vases for a single stem or a full bunch.'),
+    (109, 'Ceramic Vases', 'ceramic-vases', 101, 'Glazed inside, so they hold water.'),
+    (102, 'Lighting', 'lighting', None, 'Warm, quiet light for desks, shelves and bedside tables.'),
+    (110, 'Table Lamps', 'table-lamps', 102, 'Lamps for desks and side tables.'),
+    (111, 'Desk Lamps', 'desk-lamps', 110, 'Compact lamps that stay out of the way of your work.'),
+    (112, 'Floor Lamps', 'floor-lamps', 102, 'Tall lamps that light up a corner.'),
+    (103, 'Furniture', 'furniture', None, 'Small pieces of furniture that are made to last and easy to move.'),
+    (113, 'Chairs', 'chairs', 103, 'Chairs for the kitchen, the hall and the desk.'),
+    (114, 'Side Chairs', 'side-chairs', 113, 'Light, stackable chairs in solid oak.'),
+    (115, 'Side Tables', 'side-tables', 103, 'Small tables for a book and a cup.'),
+    (104, 'Bags', 'bags', None, 'Sturdy everyday bags with room for a laptop and a lunch.'),
+    (116, 'Tote Bags', 'tote-bags', 104, 'Canvas totes for shopping and the daily commute.'),
+    (105, 'Stationery', 'stationery', None, 'Notebooks that lie flat and paper that takes ink well.'),
+    (117, 'Notebooks', 'notebooks', 105, 'Lay-flat notebooks in a handy A5 size.'),
+    (106, 'Textiles', 'textiles', None, 'Soft cushions and covers in washable natural fibres.'),
+    (118, 'Cushions', 'cushions', 106, 'Linen cushion covers with a hidden zip.'),
+    (107, 'Candles', 'candles', None, 'Slow-burning soy candles in reusable glass jars.'),
+    (119, 'Soy Candles', 'soy-candles', 107, 'Hand-poured, in glass jars you can reuse.'),
 ]
 
 BRANDS = [(20, 'Nordhem'), (21, 'Oak & Co'), (22, 'Lumen'), (23, 'Kiln'), (24, 'Paperleaf')]
 
-# (category index, name base, brand id, base price, [(color, special price or None)], blurb)
+# (leaf category id, shape, name base, brand id, base price, [(color, special price or None)], blurb)
+# Product id = 100 + position * 3 + colour index.
 PRODUCTS = [
-    (0, 'Stoneware Mug', 23, 18, [('White', None), ('Charcoal', 14), ('Sage', None)],
+    (108, 'mug', 'Stoneware Mug', 23, 18, [('White', None), ('Charcoal', 14), ('Sage', None)],
      'A 350 ml mug with a thick, comfortable handle. Dishwasher and microwave safe.'),
-    (1, 'Tall Ceramic Vase', 23, 42, [('White', None), ('Clay', None), ('Navy', 34)],
+    (109, 'vase', 'Tall Ceramic Vase', 23, 42, [('White', None), ('Clay', None), ('Navy', 34)],
      'A 28 cm vase with a narrow neck. Glazed inside, so it holds water.'),
-    (2, 'Desk Lamp', 22, 64, [('Black', None), ('White', None), ('Mustard', None)],
+    (111, 'lamp', 'Desk Lamp', 22, 64, [('Black', None), ('White', None), ('Mustard', None)],
      'A compact lamp with a fabric cord and a dimmable warm-white bulb.'),
-    (3, 'Oak Side Chair', 21, 149, [('Oat', None), ('Charcoal', 119), ('Sage', None)],
+    (114, 'chair', 'Oak Side Chair', 21, 149, [('Oat', None), ('Charcoal', 119), ('Sage', None)],
      'Solid oak frame, stackable, assembled with no tools in two minutes.'),
-    (4, 'Canvas Tote', 21, 38, [('Oat', None), ('Navy', None), ('Black', None)],
+    (116, 'bag', 'Canvas Tote', 21, 38, [('Oat', None), ('Navy', None), ('Black', None)],
      'Heavy 14 oz canvas with an inside pocket and reinforced handles.'),
-    (5, 'Lay-Flat Notebook', 24, 14, [('Black', None), ('Stone', None), ('Clay', None)],
+    (117, 'notebook', 'Lay-Flat Notebook', 24, 14, [('Black', None), ('Stone', None), ('Clay', None)],
      'A5, 160 pages of 100 gsm paper that is smooth, ink-friendly and acid-free.'),
-    (6, 'Linen Cushion', 20, 29, [('Oat', None), ('Sage', None), ('Charcoal', 23)],
+    (118, 'pillow', 'Linen Cushion', 20, 29, [('Oat', None), ('Sage', None), ('Charcoal', 23)],
      'Stonewashed linen cover with a hidden zip. Insert included, cover machine washable.'),
-    (7, 'Soy Candle', 22, 22, [('White', None), ('Stone', None), ('Clay', None)],
+    (119, 'candle', 'Soy Candle', 22, 22, [('White', None), ('Stone', None), ('Clay', None)],
      'Hand-poured soy wax in a reusable glass jar. About 45 hours of burn time.'),
+    (112, 'floorlamp', 'Arc Floor Lamp', 22, 119, [('Black', None), ('White', None), ('Navy', 99)],
+     'A 150 cm floor lamp with a weighted base and a pull-chain switch.'),
+    (115, 'table', 'Round Side Table', 21, 79, [('Oat', None), ('Charcoal', None), ('Sage', None)],
+     'A 40 cm table with a solid top and three splayed legs.'),
 ]
 
-# Product id for (category index, colour index): 100 + cat*3 + colour
 FEATURED = [100, 106, 109, 115]
 
 
@@ -179,6 +190,22 @@ def draw_shape(c, kind, rgb):
         c.rrect([342, 230, 450, 330], 8, (255, 255, 255, 215))
         c.rect([362, 258, 430, 266], (0, 0, 0, 70))
         c.rect([362, 282, 410, 290], (0, 0, 0, 50))
+    elif kind == 'floorlamp':
+        c.shadow(400, 690, 130, 16)
+        c.ell([320, 668, 480, 706], fill=base)
+        c.rect([392, 250, 408, 680], dark)
+        c.poly([(330, 130), (470, 130), (520, 270), (280, 270)], base)
+        c.poly([(330, 130), (370, 130), (350, 270), (280, 270)], (255, 255, 255, 40))
+        c.ell([330, 120, 470, 142], fill=light)
+        c.ell([350, 254, 450, 284], fill=(255, 244, 200, 255))
+    elif kind == 'table':
+        c.shadow(400, 650, 190, 18)
+        c.poly([(330, 400), (350, 400), (300, 640), (278, 640)], dark)
+        c.poly([(450, 400), (470, 400), (520, 640), (498, 640)], dark)
+        c.poly([(392, 400), (408, 400), (408, 650), (392, 650)], dark)
+        c.ell([230, 330, 570, 440], fill=base)
+        c.ell([240, 335, 560, 425], fill=light)
+        c.ell([300, 350, 420, 385], fill=(255, 255, 255, 50))
     elif kind == 'pillow':
         c.shadow(400, 586, 230, 20)
         c.rrect([190, 230, 610, 570], 100, base)
@@ -290,21 +317,31 @@ def main():
         sql.append('INSERT INTO oc_manufacturer_to_store (manufacturer_id, store_id) VALUES (%d, 0);' % bid)
         sql.append("INSERT INTO oc_seo_url (store_id, language_id, query, keyword) VALUES (0, 1, 'manufacturer_id=%d', %s);" % (bid, q(slug(name))))
 
-    # --- categories -------------------------------------------------------
-    for i, (cid, name, kw, _kind, blurb) in enumerate(CATEGORIES):
-        sql.append("INSERT INTO oc_category (category_id, image, parent_id, top, `column`, sort_order, status, date_added, date_modified) VALUES (%d, NULL, 0, 1, 1, %d, 1, NOW(), NOW());" % (cid, i))
+    # --- categories ---------------------------------------------------------
+    parent_of = {cid: parent for cid, _n, _k, parent, _b in CATEGORIES}
+
+    def ancestors(cid):
+        chain = []
+        while cid is not None:
+            chain.append(cid)
+            cid = parent_of[cid]
+        return list(reversed(chain))  # root ... cid
+
+    for i, (cid, name, kw, parent, blurb) in enumerate(CATEGORIES):
+        top = 1 if parent is None else 0
+        sql.append("INSERT INTO oc_category (category_id, image, parent_id, top, `column`, sort_order, status, date_added, date_modified) VALUES (%d, NULL, %d, %d, 1, %d, 1, NOW(), NOW());" % (cid, parent or 0, top, i))
         sql.append('INSERT INTO oc_category_description (category_id, language_id, name, description, meta_title, meta_description, meta_keyword) VALUES (%d, 1, %s, %s, %s, %s, \'\');' % (cid, q(esc(name)), q(esc('<p>%s</p>' % blurb)), q(esc(name)), q(blurb)))
-        sql.append('INSERT INTO oc_category_path (category_id, path_id, level) VALUES (%d, %d, 0);' % (cid, cid))
+        for level, anc in enumerate(ancestors(cid)):
+            sql.append('INSERT INTO oc_category_path (category_id, path_id, level) VALUES (%d, %d, %d);' % (cid, anc, level))
         sql.append('INSERT INTO oc_category_to_store (category_id, store_id) VALUES (%d, 0);' % cid)
         sql.append('INSERT INTO oc_category_to_layout (category_id, store_id, layout_id) VALUES (%d, 0, 0);' % cid)
         sql.append("INSERT INTO oc_seo_url (store_id, language_id, query, keyword) VALUES (0, 1, 'path=%d', %s);" % (cid, q(kw)))
 
-    # --- products ---------------------------------------------------------
+    # --- products -----------------------------------------------------------
     n = 0
-    for cat_index, base, brand, price, colors, blurb in PRODUCTS:
-        cid, cname, _ckw, kind, _cblurb = CATEGORIES[cat_index]
+    for position, (leaf, kind, base, brand, price, colors, blurb) in enumerate(PRODUCTS):
         for ci, (color, special) in enumerate(colors):
-            pid = 100 + cat_index * 3 + ci
+            pid = 100 + position * 3 + ci
             n += 1
             name = '%s - %s' % (base, color)
             main_img = 'p%d.jpg' % pid
@@ -318,7 +355,10 @@ def main():
             sql.append("INSERT INTO oc_product_description (product_id, language_id, name, description, tag, meta_title, meta_description, meta_keyword) VALUES (%d, 1, %s, %s, '', %s, %s, '');" % (pid, q(esc(name)), q(esc(desc)), q(esc(name)), q(blurb)))
             sql.append('INSERT INTO oc_product_to_store (product_id, store_id) VALUES (%d, 0);' % pid)
             sql.append('INSERT INTO oc_product_to_layout (product_id, store_id, layout_id) VALUES (%d, 0, 0);' % pid)
-            sql.append('INSERT INTO oc_product_to_category (product_id, category_id) VALUES (%d, %d);' % (pid, cid))
+            # In every category on the way up, like the stock OpenCart demo does,
+            # so parent category pages list their subcategories' products too.
+            for cat in ancestors(leaf):
+                sql.append('INSERT INTO oc_product_to_category (product_id, category_id) VALUES (%d, %d);' % (pid, cat))
             sql.append("INSERT INTO oc_product_image (product_id, image, sort_order) VALUES (%d, %s, 0);" % (pid, q(IMG_PREFIX + alt_img)))
             sql.append("INSERT INTO oc_seo_url (store_id, language_id, query, keyword) VALUES (0, 1, 'product_id=%d', %s);" % (pid, q(slug(name))))
             if special:
@@ -333,6 +373,7 @@ def main():
         ('hero2.jpg', 'A softer|kind of light', 'Lamps and candles for slow evenings.', ['lamp', 'candle', 'candle'], ['Mustard', 'White', 'Stone'], ('#f6f6f4', '#e6e7e9'), 'path=102'),
     ]
     sql.append('DELETE FROM oc_banner_image WHERE banner_id IN (6, 7, 8);')  # 6 = stock category-page banner
+    sql.append("DELETE FROM oc_layout_module WHERE code IN ('banner.30', 'banner.31');")  # its placement
     for i, (fn, head, sub, kinds, cols, grad, link) in enumerate(slides):
         render_banner(os.path.join(IMG_DIR, fn), head, sub, kinds, cols, grad)
         cid = int(link.split('=')[1])

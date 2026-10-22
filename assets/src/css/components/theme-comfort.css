@@ -75,25 +75,54 @@
 
 .mc-product-card--soft .mc-product-card__actions .mc-button {
     flex: 0 0 auto;
-    padding: var(--mc-space-2) var(--mc-space-4);
-    font-size: var(--mc-font-size-sm);
-}
-
-.mc-product-card--soft .mc-product-card__actions .mc-product-card__quick-order {
-    flex: 1 0 100%;
+    width: 2.5rem;
+    height: 2.5rem;
     padding: 0;
-    border: 0;
-    background: none;
-    color: var(--mc-muted);
-    font-size: var(--mc-font-size-sm);
-    text-align: left;
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+    border-radius: var(--mc-radius-pill);
 }
 
-.mc-product-card--soft .mc-product-card__actions .mc-product-card__quick-order:hover {
-    background: none;
+.mc-product-card--soft .mc-product-card__add-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+/* Quick order: a small white bar on the image tile. Revealed on hover/focus
+   for mouse users; always visible where there is no hover (touch). */
+.mc-product-card--soft .mc-product-card__quick-order {
+    position: absolute;
+    right: var(--mc-space-3);
+    bottom: var(--mc-space-3);
+    left: var(--mc-space-3);
+    padding: var(--mc-space-2) var(--mc-space-3);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    background: var(--mc-surface);
+    box-shadow: var(--mc-shadow-sm);
     color: var(--mc-text);
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-semibold);
+    cursor: pointer;
+}
+
+.mc-product-card--soft .mc-product-card__quick-order:hover,
+.mc-product-card--soft .mc-product-card__quick-order:focus-visible {
+    border-color: var(--mc-primary);
+    color: var(--mc-primary);
+}
+
+@media (hover: hover) {
+    .mc-product-card--soft .mc-product-card__quick-order {
+        opacity: 0;
+        transform: translateY(0.35rem);
+        transition: opacity var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+            transform var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+    }
+
+    .mc-product-card--soft:hover .mc-product-card__quick-order,
+    .mc-product-card--soft:focus-within .mc-product-card__quick-order {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 /* ====================================================================== */
@@ -101,12 +130,11 @@
 /* ====================================================================== */
 
 .mc-header--comfort {
-    /* Menu bar colour: the logo's green (#1abc9c) darkened until white text on
-       it reaches ~4.5:1 contrast. A store with another logo changes this one
-       variable. */
-    --mc-header-nav-bg: #14806a;
-
-    border-bottom: var(--mc-border-width) solid var(--mc-border);
+    /* Menu bar colour: the preset's primary (the logo's green, darkened until
+       white text on it reaches ~4.5:1 contrast). No full-width rule under the
+       header: the bar is container-wide, and while stuck the header's shadow
+       separates it from the page. */
+    --mc-header-nav-bg: var(--mc-primary);
 }
 
 .mc-header__row {
@@ -148,7 +176,7 @@
 .mc-header--comfort .mc-header__account-toggle:hover,
 .mc-header--comfort .mc-header__wishlist:hover,
 .mc-header--comfort .mc-header__end .btn-link:hover {
-    color: var(--mc-muted);
+    color: var(--mc-primary);
 }
 
 /* Search: short, not a bar across the page. */
@@ -163,10 +191,11 @@
 }
 
 .mc-header--comfort .mc-search-box__input {
+    height: 2.5rem;
     padding-left: 2.5rem;
-    border-color: transparent;
+    border: var(--mc-border-width) solid var(--mc-border-strong);
     border-radius: var(--mc-radius-md);
-    background-color: var(--mc-surface-alt);
+    background-color: var(--mc-surface);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236b6f76'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: 0.9rem center;
@@ -174,9 +203,9 @@
 }
 
 .mc-header--comfort .mc-search-box__input:focus {
-    border-color: var(--mc-header-nav-bg);
+    border-color: var(--mc-primary);
     background-color: var(--mc-surface);
-    box-shadow: 0 0 0 3px rgb(20 128 106 / 20%);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-primary) 22%, transparent);
     outline: 0;
 }
 
@@ -187,15 +216,16 @@
     width: 2.5rem;
     height: 2.5rem;
     padding: 0;
-    border-color: transparent;
-    background-color: var(--mc-surface-alt);
+    border: var(--mc-border-width) solid var(--mc-border-strong);
+    background-color: var(--mc-surface);
     color: var(--mc-text);
 }
 
 .mc-header--comfort .mc-mini-cart__toggle:hover,
 .mc-header--comfort .mc-mini-cart__toggle[aria-expanded='true'] {
-    background-color: var(--mc-border);
-    color: var(--mc-text);
+    border-color: var(--mc-primary);
+    background-color: var(--mc-primary);
+    color: var(--mc-on-primary);
 }
 
 .mc-header--comfort .mc-mini-cart__summary {
@@ -208,9 +238,10 @@
 }
 
 .mc-header--comfort .mc-mini-cart__count {
-    top: -0.25rem;
-    right: -0.25rem;
+    top: -0.35rem;
+    right: -0.35rem;
     display: block;
+    box-shadow: 0 0 0 2px var(--mc-surface);
 }
 
 /* Dropdowns (language, currency, account): soft floating panels. */
@@ -323,9 +354,28 @@
     }
 }
 
-/* Narrow screens: row 1 = menu button, logo, cart; row 2 = search; then the
-   small links (language, currency, account, wishlist). `display: contents`
-   lets the end group's children be ordered as items of the header row. */
+.mc-header--comfort .mc-header__utility {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-4);
+}
+
+/* On narrow screens the utility group lives at the top of the menu drawer
+   (header-utility.js moves the same node there). */
+.mc-header--comfort .mc-header__utility-slot {
+    padding: var(--mc-space-4) var(--mc-space-4) var(--mc-space-3);
+    border-bottom: var(--mc-border-width) solid var(--mc-border);
+}
+
+.mc-header--comfort .mc-header__utility-slot .mc-header__utility {
+    flex-wrap: wrap;
+    gap: var(--mc-space-3) var(--mc-space-5);
+}
+
+/* Narrow screens: row 1 = menu button, logo, cart; row 2 = search. The small
+   links (language, currency, account, wishlist) move into the menu drawer.
+   `display: contents` lets the end group's children be ordered as items of
+   the header row. */
 @media (max-width: 991.98px) {
     .mc-header--comfort .mc-header__row {
         gap: var(--mc-space-3) var(--mc-space-4);
@@ -352,10 +402,6 @@
     .mc-header--comfort .mc-header__widget--search:focus-within {
         flex: 1 0 100%;
         order: 3;
-    }
-
-    .mc-header--comfort .mc-header__end > :not(.mc-header__widget) {
-        order: 4;
     }
 }
 
@@ -484,4 +530,115 @@
 [data-mc-theme='mint_comfort'] .mc-prose tbody tr:last-child td,
 [data-mc-theme='mint_comfort'] .table-bordered tbody tr:last-child td {
     border-bottom: 0;
+}
+
+/* Category list (column left): a quiet text list, no boxes. */
+.mc-category-nav {
+    margin-bottom: var(--mc-space-6);
+}
+
+.mc-category-nav__title {
+    margin: 0 0 var(--mc-space-2);
+    padding-inline: var(--mc-space-3);
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-xs);
+    font-weight: var(--mc-font-weight-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.mc-category-nav__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-category-nav__list--children {
+    margin: var(--mc-space-1) 0 var(--mc-space-2) var(--mc-space-4);
+}
+
+.mc-category-nav__link {
+    display: block;
+    padding: var(--mc-space-2) var(--mc-space-3);
+    border-radius: var(--mc-radius-md);
+    color: var(--mc-text);
+    text-decoration: none;
+}
+
+.mc-category-nav__link:hover,
+.mc-category-nav__link:focus-visible {
+    background-color: var(--mc-surface-alt);
+}
+
+/* An ancestor of the current page: coloured, no fill. */
+.mc-category-nav__link.is-active {
+    color: var(--mc-primary);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+/* The page you are on: the only filled row. */
+.mc-category-nav__link.is-current {
+    background-color: color-mix(in srgb, var(--mc-primary) 9%, var(--mc-surface));
+}
+
+/* Third menu level: muted, indented under its parent. */
+.mc-header--comfort .mc-nav__sublist--nested {
+    margin: 0 0 var(--mc-space-1) var(--mc-space-3);
+}
+
+.mc-header--comfort .mc-nav__sublink--nested {
+    padding-block: var(--mc-space-1);
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+/* Drawer: show the hierarchy - bigger top-level rows, indented children,
+   a thin guide line beside nested lists. */
+@media (max-width: 991.98px) {
+    .mc-header--comfort .mc-nav {
+        padding: var(--mc-space-2) var(--mc-space-2);
+    }
+
+    .mc-header--comfort .mc-nav__link {
+        padding: var(--mc-space-3);
+        border-radius: var(--mc-radius-md);
+        font-size: var(--mc-font-size-base);
+        font-weight: var(--mc-font-weight-semibold);
+    }
+
+    .mc-header--comfort .mc-nav__link[aria-expanded='true'] {
+        background-color: var(--mc-surface-alt);
+    }
+
+    /* Inside the drawer the open branch is a flat inline list, not a card. */
+    .mc-header--comfort .mc-nav__panel.dropdown-menu {
+        padding: var(--mc-space-1) var(--mc-space-3) var(--mc-space-3) var(--mc-space-5);
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .mc-header--comfort .mc-nav__sublink {
+        padding: var(--mc-space-2) var(--mc-space-3);
+        border-radius: var(--mc-radius-md);
+    }
+
+    .mc-header--comfort .mc-nav__sublist--nested {
+        margin: 0 0 var(--mc-space-1) var(--mc-space-3);
+        padding-left: var(--mc-space-2);
+        border-left: 2px solid var(--mc-border);
+    }
+
+    .mc-header--comfort .mc-nav__all {
+        padding: var(--mc-space-2) var(--mc-space-3);
+        color: var(--mc-primary);
+    }
+}
+
+/* The divider above "Show all" is a straight rule, not a rounded row. */
+@media (min-width: 992px) {
+    .mc-header--comfort .mc-nav__all {
+        border-radius: 0;
+    }
 }
