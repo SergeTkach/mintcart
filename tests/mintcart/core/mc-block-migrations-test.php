@@ -110,6 +110,7 @@ check(
         '202610221200_create_mc_product_badge.php',
         '202610221201_grant_admin_permissions_badges.php',
         '202610221202_product_badge_definitions.php',
+        '202610221300_default_system_url_aliases.php',
     ],
     'all real migrations should apply in filename order, got: ' . json_encode($result['applied']),
     $failures
