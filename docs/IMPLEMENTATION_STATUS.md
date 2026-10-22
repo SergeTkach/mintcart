@@ -100,10 +100,14 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 - [x] Configurable (manual) badges: Marketing → Product Badges, `mc_product_badge`
       (`docs/developer/commerce/product-badges.md`); cards only, not the product page
 - [~] Demo data: `scripts/demo/build_demo.py` replaces the stock OpenCart catalog
-      with a small home-goods store (8 root categories + 12 subcategories,
-      two of them third-level; 30 products, 5 brands, specials, 2 slides,
-      generated images). Applied to the local DB by hand; not wired into the
-      Setup Wizard's optional demo step yet
+      with a small home-goods store on free Pexels photos (credits in
+      `upload/image/catalog/demo/shop/CREDITS.txt`): 8 root categories with
+      subcategories, 48 products with a photo each, specifications, specials,
+      5 brands, reviews, badges, and the home page blocks (slider, benefits,
+      categories, new arrivals, about, reviews, FAQ, CTA). Applied to the local DB by
+      hand; not wired into the Setup Wizard's optional demo step yet.
+      `scripts/demo/build_local_electronics.py` is a local-only variant with an
+      electronics catalogue (third-party photos, git-ignored; never ship it)
 - [x] Three-level category tree (`MintCart\Catalog\CategoryTree`) behind the
       menu and the category module; `mint_comfort` shows it in the menu bar,
       the bordered-free category list and the mobile drawer
