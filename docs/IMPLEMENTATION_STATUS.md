@@ -97,7 +97,8 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
       supported yet (needs a decision on where it is edited)
 - [x] Top info bar (Business → Contacts, one text for all languages;
       not live-checked)
-- [ ] Configurable (manual) badges
+- [x] Configurable (manual) badges: Marketing → Product Badges, `mc_product_badge`
+      (`docs/developer/commerce/product-badges.md`); cards only, not the product page
 - [~] Demo data: `scripts/demo/build_demo.py` replaces the stock OpenCart catalog
       with a small home-goods store (8 root categories + 12 subcategories,
       two of them third-level; 30 products, 5 brands, specials, 2 slides,
@@ -142,7 +143,7 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 
 ## Tests
 
-`php` over `tests/mintcart/**/*-test.php`: 105 files, 103 pass. The 2
+`php` over `tests/mintcart/**/*-test.php`: 106 files, 104 pass. The 2
 failures are environment-specific and predate this branch
 (`design/media-model-test.php` path separator on Windows,
 `fixes/mc-0020-pgsql-reconnect-test.php` needs pgsql).
@@ -162,7 +163,7 @@ splits `payment_address` / `shipping_address` in `mintcart/checkout.php`):
 
 Smaller items, taken autonomously in this order:
 
-1. [ ] Configurable (manual) product badges
+1. [x] Configurable (manual) product badges
 2. [ ] Default system-page URL aliases on install (verify)
 3. [ ] Render Theme API slots in templates (`SlotRegistry` has no consumer)
 4. [ ] hreflang verified on a multi-language store

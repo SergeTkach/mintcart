@@ -456,6 +456,14 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			if ($this->user->hasPermission('access', 'mintcart/badge')) {
+				$marketing[] = array(
+					'name'	   => $this->language->get('text_mintcart_badge'),
+					'href'     => $this->url->link('mintcart/badge', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			if ($marketing) {
 				$data['menus'][] = array(
 					'id'       => 'menu-marketing',

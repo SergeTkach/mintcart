@@ -395,6 +395,11 @@ def main():
         cv.result((600, 600)).save(os.path.join(IMG_DIR, fn), 'JPEG', quality=90)
         sql.append("UPDATE oc_category SET image = %s WHERE category_id = %d;" % (q(IMG_PREFIX + fn), cid))
 
+    # --- manual product badges (Marketing → Product Badges) ---------------
+    sql.append('DELETE FROM oc_mc_product_badge;')
+    for pid, label, color in [(100, 'Bestseller', '#2457d6'), (106, 'Eco', ''), (118, 'Hit', '#d92d20')]:
+        sql.append("INSERT INTO oc_mc_product_badge (product_id, label, color, sort_order, date_added) VALUES (%d, %s, %s, 0, NOW());" % (pid, q(label), q(color)))
+
     # --- home page blocks (Homepage Builder: mc_page 'home') -------------
     # The OpenCart banner/featured modules above keep working; these blocks
     # are rendered above them and turn the home page into a full storefront.

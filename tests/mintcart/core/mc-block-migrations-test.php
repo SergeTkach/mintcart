@@ -107,6 +107,8 @@ check(
         '202609191200_create_mc_installed_file.php',
         '202610081200_grant_mintcart_admin_permissions.php',
         '202610081201_register_wizard_autostart.php',
+        '202610221200_create_mc_product_badge.php',
+        '202610221201_grant_admin_permissions_badges.php',
     ],
     'all real migrations should apply in filename order, got: ' . json_encode($result['applied']),
     $failures

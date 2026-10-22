@@ -4060,3 +4060,20 @@ third level); `mint_comfort` renders it. Product-count text and the module's
 "only the active branch is expanded" behaviour are kept.
 
 **Tests:** `tests/mintcart/catalog/category-tree-test.php`.
+
+---
+
+## `upload/admin/controller/common/column_left.php` and `upload/admin/language/en-gb/common/column_left.php` (Product Badges)
+
+**Reason:** one new conditional menu entry, Marketing → Product Badges
+(`mintcart/badge`), plus its label `text_mintcart_badge`. Same shape as the
+Quick Order Requests entry.
+
+**Why it cannot live in the Mint layer:** the OpenCart admin menu is built
+inside this controller; there is no extension point for adding an entry.
+
+**Compatibility impact:** none; the entry only shows for users who have
+`access` to `mintcart/badge`.
+
+**Tests:** menu item visible for the Administrator group after
+`202610221201_grant_admin_permissions_badges.php` (checked in the local DB).

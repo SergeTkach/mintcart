@@ -77,11 +77,19 @@ class ControllerMintcartProductCards extends Controller {
 		// that allow backorders.
 		$allow_out_of_stock_purchase = (bool)$this->config->get('config_stock_checkout');
 
+		// Manual stickers (Marketing → Product Badges): one query for the list.
+		$this->load->model('mintcart/badge');
+
+		$manual_badges = $this->model_mintcart_badge->getByProductIds(array_column($args['results'], 'product_id'));
+
 		$cards = array();
 
 		foreach (array_values($args['results']) as $position => $result) {
+			$product = $this->product($result, $link_prefix, $url, $width, $height, $allow_out_of_stock_purchase);
+			$product['manual_badges'] = isset($manual_badges[(int)$result['product_id']]) ? $manual_badges[(int)$result['product_id']] : array();
+
 			$card = $renderer->render(
-				$this->product($result, $link_prefix, $url, $width, $height, $allow_out_of_stock_purchase),
+				$product,
 				array(),
 				array(
 					'listing_type' => $listing_type,

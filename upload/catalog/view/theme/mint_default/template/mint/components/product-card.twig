@@ -10,7 +10,7 @@
         {% if product.badges %}
             <ul class="mc-product-card__badges">
                 {% for badge in product.badges %}
-                    <li><span class="mc-badge mc-badge--{{ badge.type }}">{{ badge.label ?: text_badge[badge.type] }}</span></li>
+                    <li><span class="mc-badge mc-badge--{{ badge.type }}"{% if badge.color %} style="--mc-badge-bg:{{ badge.color }};--mc-badge-color:{{ badge.on_color }}"{% endif %}>{{ badge.label ?: text_badge[badge.type] }}</span></li>
                 {% endfor %}
             </ul>
         {% endif %}
