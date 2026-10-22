@@ -5,16 +5,17 @@ store-wide list and lets the home page show the latest reviews.
 
 ## Page
 
-`route=mintcart/reviews` ("Customer reviews"): all approved reviews, newest
-first, 10 per page with pagination, each with the rating, date and a link to
-its product.
+`route=mintcart/reviews` ("Customer reviews"): a summary band on top (average rating,
+number of reviews, how many per star), then all approved reviews, newest first, 12 per
+page with pagination. Each review is a card: stars, date, text, author (with an initial
+avatar) and the product it is about (picture, name, link).
 
 - Controller `upload/catalog/controller/mintcart/reviews.php`
-- Model `upload/catalog/model/mintcart/review.php` (`getReviews()`, `getTotalReviews()`;
+- Model `upload/catalog/model/mintcart/review.php` (`getReviews()`, `getTotalReviews()`, `getSummary()`;
   same visibility rules as OpenCart's product reviews: review and product enabled,
   product available and in the current store)
 - Language `upload/catalog/language/en-gb/mintcart/reviews.php`
-- Template `mint_default/template/mintcart/reviews.twig` (child themes inherit it)
+- Template `mint_default/template/mintcart/reviews.twig` (child themes inherit it); styles `assets/src/css/components/reviews-page.css`
 
 ## Testimonials block with real reviews
 

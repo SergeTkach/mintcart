@@ -227,13 +227,13 @@
     height: 2.75rem;
     padding: 0;
     border: 0;
-    background-color: var(--mc-surface-muted);
-    color: var(--mc-text);
+    background-color: var(--mc-primary);
+    color: var(--mc-on-primary);
 }
 
 .mc-header--comfort .mc-mini-cart__toggle:hover,
 .mc-header--comfort .mc-mini-cart__toggle[aria-expanded='true'] {
-    background-color: var(--mc-primary);
+    background-color: var(--mc-primary-hover);
     color: var(--mc-on-primary);
 }
 
@@ -250,7 +250,9 @@
     top: -0.35rem;
     right: -0.35rem;
     display: block;
-    box-shadow: 0 0 0 2px var(--mc-surface);
+    background: var(--mc-surface);
+    color: var(--mc-primary-hover);
+    box-shadow: 0 0 0 2px var(--mc-primary);
 }
 
 /* Dropdowns (language, currency, account): soft floating panels. */
