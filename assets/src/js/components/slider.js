@@ -8,7 +8,7 @@
  * extensions - never styles these. Swiper's core CSS is reproduced in
  * slider.css for the same reason.
  *
- * - `data-mc-slider="hero|logos"` picks a preset; any other value starts
+ * - `data-mc-slider="hero|rich|logos"` picks a preset; any other value starts
  *   from a plain one-slide-per-view default.
  * - `data-mc-slider-options='{"slidesPerView":3}'` (JSON) is merged over
  *   the preset - Swiper parameters, documented subset in slider.md.
@@ -30,6 +30,14 @@ const PRESETS = {
         spaceBetween: 0,
         loop: true,
         autoplay: { delay: 5000, pauseOnMouseEnter: true, disableOnInteraction: false },
+    },
+    // Homepage Builder "Slider" block (blocks/slider.twig); the block overrides the
+    // autoplay delay (or turns it off) through data-mc-slider-options.
+    rich: {
+        slidesPerView: 1,
+        spaceBetween: 0,
+        loop: true,
+        autoplay: { delay: 6000, pauseOnMouseEnter: true, disableOnInteraction: false },
     },
     logos: {
         slidesPerView: 2,

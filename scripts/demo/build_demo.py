@@ -271,6 +271,30 @@ def render_banner(path, headline, sub, kinds, colors, grad):
     c.result((1140, 475)).save(path, 'JPEG', quality=90)
 
 
+def render_slide_media(path, kinds, colors, grad, size=(760, 600)):
+    """Picture for a split slide of the Slider block: objects on a soft gradient."""
+    w, h = size
+    c = Canvas(w, h, grad[0])
+    top, bottom = hex_rgb(grad[0]), hex_rgb(grad[1])
+    px = c.img.load()
+    for y in range(c.h):
+        t = y / c.h
+        col = tuple(int(top[k] + (bottom[k] - top[k]) * t) for k in range(3))
+        for x in range(c.w):
+            px[x, y] = col
+    n = len(kinds)
+    obj = int(min(h * 0.62, w * 0.5))
+    step = (w - obj) // max(1, n - 1) if n > 1 else 0
+    for i, (kind, color) in enumerate(zip(kinds, colors)):
+        layer = Canvas(800, 800, (255, 255, 255))
+        draw_shape(layer, kind, hex_rgb(COLORS[color]))
+        big = layer.img.resize((obj * S, obj * S), Image.LANCZOS)
+        mask = Image.eval(big.convert('L'), lambda v: 0 if v > 248 else 255).filter(ImageFilter.GaussianBlur(S))
+        x = (w - obj) // 2 if n == 1 else int(i * step * 0.8 + (w - obj - (n - 1) * step * 0.8) / 2)
+        c.img.paste(big, (x * S, ((h - obj) // 2) * S), mask)
+    c.result((w, h)).save(path, 'JPEG', quality=90)
+
+
 def render_brand(path, name):
     c = Canvas(260, 160, (255, 255, 255))
     f = font(44 * S, True)
@@ -421,6 +445,22 @@ def main():
     def block(order, btype, settings, content):
         sql.append("INSERT INTO oc_mc_block (page_id, type, sort_order, status, settings_json, date_added, date_modified) VALUES (@home_page, %s, %d, 1, %s, NOW(), NOW());" % (q(btype), order, q(json.dumps(settings, ensure_ascii=False))))
         sql.append("INSERT INTO oc_mc_block_description (block_id, language_id, content_json) VALUES (LAST_INSERT_ID(), 1, %s);" % q(json.dumps(content, ensure_ascii=False)))
+
+    slider_slides = [
+        ('slide1.jpg', ['mug', 'vase', 'lamp'], ['White', 'Clay', 'Black'], ('#eef1f4', '#dfe4ea'), 'path=100',
+         {'eyebrow': 'New season', 'title': 'Everyday things, <em>made well</em>', 'subtitle': 'Simple pieces for a calm, comfortable home.', 'price': 'from $14', 'btn_text': 'Shop now', 'btn2_text': 'All specials'}),
+        ('slide2.jpg', ['lamp', 'candle', 'candle'], ['Mustard', 'White', 'Stone'], ('#f6f2ea', '#ebe3d3'), 'path=102',
+         {'eyebrow': 'Lighting', 'title': 'A softer kind of <em>light</em>', 'subtitle': 'Lamps and candles for slow evenings.', 'price': '$22', 'old_price': '$29', 'btn_text': 'See lighting', 'btn2_text': 'Candles'}),
+        ('slide3.jpg', ['chair', 'table'], ['Oat', 'Sage'], ('#eef3ee', '#dde7de'), 'path=103',
+         {'eyebrow': 'Furniture', 'title': 'Small pieces, <em>built to last</em>', 'subtitle': 'Solid oak, assembled in two minutes.', 'price': 'from $79', 'btn_text': 'Browse furniture', 'btn2_text': 'Chairs'}),
+    ]
+    slider_settings, slider_content = [], []
+    for fn, kinds, cols, grad, link, text in slider_slides:
+        render_slide_media(os.path.join(IMG_DIR, fn), kinds, cols, grad)
+        slider_settings.append({'image': IMG_PREFIX + fn, 'link': 'index.php?route=product/category&' + link, 'btn2_link': 'index.php?route=product/special' if 'specials' in text['btn2_text'].lower() else 'index.php?route=product/category&' + link, 'color': 'navy'})
+        slider_content.append(text)
+    block(5, 'slider', {'layout': 'split', 'autoplay': 6000, 'items': slider_settings}, {'items': slider_content})
+    sql.append("DELETE FROM oc_layout_module WHERE code = 'slideshow.27' AND layout_id = 1;")  # the Slider block replaces the stock slideshow on the home page
 
     block(10, 'benefits',
           {'items': [{'icon': 'truck'}, {'icon': 'arrow-repeat'}, {'icon': 'shield-check'}, {'icon': 'headset'}]},

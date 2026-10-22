@@ -105,6 +105,8 @@ class ControllerCommonHome extends Controller {
 				$markup = $this->renderBrandsBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'text-image') {
 				$markup = $this->renderTextImageBlock($block, $block_renderer);
+			} elseif ($block['type'] === 'slider') {
+				$markup = $this->renderSliderBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'cta') {
 				$markup = $this->renderCtaBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'newsletter') {
@@ -274,6 +276,58 @@ class ControllerCommonHome extends Controller {
 		return $block_renderer->render('products', array(
 			'title'         => $settings['title'],
 			'product_cards' => $product_cards
+		));
+	}
+
+	/**
+	 * Renders one 'slider' mc_block row (Homepage Builder main slider with rich
+	 * slides). SliderBlockProvider normalizes the data; this resolves pictures
+	 * (resized per layout, a missing file just drops the picture, the slide's
+	 * text still shows) and escapes links. docs/developer/blocks/slider.md
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Markup, or null when no slide is left to show.
+	 */
+	private function renderSliderBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\SliderBlockProvider())->build($block['settings'], $block['content']);
+
+		if (!$settings['slides']) {
+			return null;
+		}
+
+		$this->load->language('mintcart/slider');
+		$this->load->model('tool/image');
+
+		// Picture sizes per layout: the half of a split slide, a full slide, a promo card.
+		$slide_size = $settings['layout'] === 'full' ? array(1600, 640) : array(760, 600);
+
+		foreach ($settings['slides'] as &$slide) {
+			$slide['image'] = ($slide['image'] !== '' && is_file(DIR_IMAGE . $slide['image'])) ? $this->model_tool_image->resize($slide['image'], $slide_size[0], $slide_size[1]) : '';
+			$slide['link'] = htmlspecialchars($slide['link'], ENT_QUOTES, 'UTF-8');
+			$slide['btn2_link'] = htmlspecialchars($slide['btn2_link'], ENT_QUOTES, 'UTF-8');
+			$slide['btn_text'] = $slide['btn_text'] !== '' ? $slide['btn_text'] : $this->language->get('text_default_button');
+		}
+		unset($slide);
+
+		foreach ($settings['cards'] as $key => &$card) {
+			if (!is_file(DIR_IMAGE . $card['image'])) {
+				unset($settings['cards'][$key]);
+
+				continue;
+			}
+
+			$card['image'] = $this->model_tool_image->resize($card['image'], 640, 340);
+			$card['link'] = htmlspecialchars($card['link'], ENT_QUOTES, 'UTF-8');
+		}
+		unset($card);
+
+		return $block_renderer->render('slider', array(
+			'layout'        => $settings['layout'],
+			'autoplay'      => $settings['autoplay'],
+			'slides'        => $settings['slides'],
+			'cards'         => array_values($settings['cards']),
+			'text_previous' => $this->language->get('text_previous'),
+			'text_next'     => $this->language->get('text_next')
 		));
 	}
 

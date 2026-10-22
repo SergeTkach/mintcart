@@ -50,6 +50,7 @@ class ControllerDesignHomepage extends Controller {
 
 	/** Every block type with a real, merged Provider/Renderer/template. */
 	const TYPES = array(
+		'slider'       => 'text_type_slider',
 		'products'     => 'text_type_products',
 		'hero'         => 'text_type_hero',
 		'categories'   => 'text_type_categories',
@@ -116,6 +117,18 @@ class ControllerDesignHomepage extends Controller {
 					array('name' => 'limit', 'type' => 'number', 'default' => 6, 'min' => 1, 'label_key' => 'entry_limit')
 				),
 				'content' => array($title)
+			),
+			'slider' => array(
+				'settings' => array(
+					array('name' => 'layout', 'type' => 'select', 'default' => 'split', 'label_key' => 'entry_slider_layout', 'options' => array('split' => 'Text + picture', 'full' => 'Picture behind the text', 'cards' => 'Slider + 2 promo cards')),
+					array('name' => 'autoplay', 'type' => 'number', 'default' => 6000, 'min' => 0, 'label_key' => 'entry_autoplay', 'help_key' => 'help_autoplay'),
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_slider_items', 'help_key' => 'help_slider_items_settings'),
+					array('name' => 'cards', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_slider_cards', 'help_key' => 'help_slider_cards_settings')
+				),
+				'content' => array(
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_slider_items', 'help_key' => 'help_slider_items_content'),
+					array('name' => 'cards', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_slider_cards', 'help_key' => 'help_slider_cards_content')
+				)
 			),
 			'banner-grid' => array(
 				'settings' => array(

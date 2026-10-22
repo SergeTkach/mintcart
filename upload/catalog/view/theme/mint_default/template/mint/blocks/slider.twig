@@ -1,0 +1,100 @@
+{#
+    Homepage Builder "Slider" block: the main slider with rich slides (eyebrow,
+    title with a highlighted word, subtitle, price + old price, two buttons).
+    Built on the mc-slider engine (slider.js, preset "rich"); slide markup is
+    mc-slide__*. No headings in the slides: they are decorative text, the page
+    has one real h1 (Implementation Guide §19.1).
+
+    Variables (SliderBlockProvider + home controller): layout (split|full|cards),
+    autoplay (ms, 0 = off), slides[] {image, image_alt, color, link, btn2_link,
+    eyebrow, title, subtitle, price, old_price, btn_text, btn2_text},
+    cards[] {image, link, kicker, title, link_text}, text_previous, text_next.
+    Documentation: docs/developer/blocks/slider.md
+#}
+{% macro slide_text(slide) %}
+    <div class="mc-slide__text">
+        {% if slide.eyebrow %}<span class="mc-slide__eyebrow">{{ slide.eyebrow }}</span>{% endif %}
+        {% if slide.title %}<div class="mc-slide__title">{{ slide.title }}</div>{% endif %}
+        {% if slide.subtitle %}<p class="mc-slide__subtitle">{{ slide.subtitle }}</p>{% endif %}
+        {% if slide.price %}
+            <p class="mc-slide__price">
+                {% if slide.old_price %}<s class="mc-slide__old-price">{{ slide.old_price }}</s>{% endif %}
+                <strong>{{ slide.price }}</strong>
+            </p>
+        {% endif %}
+        {% if slide.link or slide.btn2_text %}
+            <div class="mc-slide__actions">
+                {% if slide.link %}<a class="mc-button mc-button--primary" href="{{ slide.link }}">{{ slide.btn_text }}</a>{% endif %}
+                {% if slide.btn2_text %}<a class="mc-button mc-button--secondary" href="{{ slide.btn2_link ?: '#' }}">{{ slide.btn2_text }}</a>{% endif %}
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}
+{% import _self as ui %}
+
+{% macro slider(slides, layout, autoplay, text_previous, text_next) %}
+    {% import _self as ui %}
+    <div class="mc-slider mc-slider--rich mc-slider--{{ layout }}" data-mc-slider="rich" data-mc-slider-options='{% if autoplay %}{"autoplay":{"delay":{{ autoplay }},"pauseOnMouseEnter":true,"disableOnInteraction":false}}{% else %}{"autoplay":false}{% endif %}'>
+        <div class="mc-slider__viewport">
+            <div class="mc-slider__track">
+                {% for slide in slides %}
+                    <div class="mc-slider__slide">
+                        {% if layout == 'full' %}
+                            <div class="mc-slide mc-slide--full mc-slide--{{ slide.color }}">
+                                {% if slide.image %}<img class="mc-slide__bg" src="{{ slide.image }}" alt="{{ slide.image_alt }}"{% if not loop.first %} loading="lazy"{% endif %}>{% endif %}
+                                <div class="mc-slide__inner">{{ ui.slide_text(slide) }}</div>
+                            </div>
+                        {% else %}
+                            <div class="mc-slide mc-slide--split">
+                                <div class="mc-slide__body">{{ ui.slide_text(slide) }}</div>
+                                {% if slide.image %}
+                                    <div class="mc-slide__media">
+                                        <img src="{{ slide.image }}" alt="{{ slide.image_alt }}"{% if not loop.first %} loading="lazy"{% endif %}>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% if slides|length > 1 %}
+            <button type="button" class="mc-slider__arrow mc-slider__arrow--prev" data-mc-slider-prev aria-label="{{ text_previous }}">
+                <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/></svg>
+            </button>
+            <button type="button" class="mc-slider__arrow mc-slider__arrow--next" data-mc-slider-next aria-label="{{ text_next }}">
+                <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/></svg>
+            </button>
+            <div class="mc-slider__dots" data-mc-slider-dots></div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% if slides %}
+<section class="mc-block mc-block--slider" data-mc-block-type="slider">
+    <div class="container">
+        {% if layout == 'cards' and cards %}
+            <div class="mc-slider-layout">
+                <div class="mc-slider-layout__main">{{ ui.slider(slides, 'split', autoplay, text_previous, text_next) }}</div>
+                <div class="mc-slider-layout__side">
+                    {% for card in cards %}
+                        {% set tag = card.link ? 'a' : 'div' %}
+                        <{{ tag }} class="mc-slide-card"{% if card.link %} href="{{ card.link }}"{% endif %}>
+                            <img class="mc-slide-card__image" src="{{ card.image }}" alt="" loading="lazy">
+                            {% if card.kicker or card.title or card.link_text %}
+                                <span class="mc-slide-card__body">
+                                    {% if card.kicker %}<span class="mc-slide__eyebrow">{{ card.kicker }}</span>{% endif %}
+                                    {% if card.title %}<span class="mc-slide-card__title">{{ card.title }}</span>{% endif %}
+                                    {% if card.link_text %}<span class="mc-slide-card__more">{{ card.link_text }} &rarr;</span>{% endif %}
+                                </span>
+                            {% endif %}
+                        </{{ tag }}>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            {{ ui.slider(slides, layout == 'full' ? 'full' : 'split', autoplay, text_previous, text_next) }}
+        {% endif %}
+    </div>
+</section>
+{% endif %}

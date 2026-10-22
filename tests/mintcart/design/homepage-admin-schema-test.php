@@ -3,7 +3,7 @@
  * Standalone smoke test for ControllerDesignHomepage's generic,
  * schema-driven settings/content field handling
  * (`upload/admin/controller/design/homepage.php`) — the piece that lets
- * all 15 shipped Homepage Builder block types (Products through Gallery,
+ * all shipped Homepage Builder block types (Products through Gallery,
  * MINTCART_IMPLEMENTATION_GUIDE.md §51) be configured through this screen
  * instead of only Products.
  *
@@ -191,7 +191,7 @@ $controller = makeController([
 
 assertSame____(true, callPrivate($controller, 'validateForm'), 'Scenario 5b: a blank JSON items field should pass validation (normalizes to an empty list)', $failures);
 
-// 6. Every one of the 15 types resolves to a real field schema (no type
+// 6. Every shipped type resolves to a real field schema (no type
 //    silently falls through to the empty default), and every field
 //    referenced by that schema has a resolvable language string - a typo
 //    in a label_key/help_key would otherwise only surface as a broken
@@ -245,5 +245,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: Homepage admin schema test (6 scenarios, all 15 block types)\n";
+echo "PASS: Homepage admin schema test (6 scenarios, all block types)\n";
 exit(0);
