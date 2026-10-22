@@ -369,7 +369,7 @@ def main():
           {'items': [{'icon': 'truck'}, {'icon': 'arrow-repeat'}, {'icon': 'shield-check'}, {'icon': 'headset'}]},
           {'title': '', 'items': [
               {'title': 'Free delivery', 'description': 'On orders over $60'},
-              {'title': '30-day returns', 'description': 'Changed your mind? No problem'},
+              {'title': '30-day returns', 'description': 'Changed your mind? Easy'},
               {'title': 'Secure payment', 'description': 'Card, bank transfer or cash'},
               {'title': 'Friendly support', 'description': 'We reply within a day'}]})
     block(20, 'categories', {'parent_id': 0, 'limit': 8}, {'title': 'Shop by category'})

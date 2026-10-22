@@ -8,7 +8,7 @@
 
 .mc-slider {
     --mc-slider-arrow-size: 2.5rem;
-    --mc-slider-radius: var(--mc-radius-lg);
+    --mc-slider-radius: var(--mc-radius-xl);
 
     position: relative;
 }
@@ -142,7 +142,6 @@
    background still reads as one block instead of melting into the page. */
 .mc-slider--hero .mc-slider__viewport {
     background: var(--mc-surface);
-    border: var(--mc-border-width) solid color-mix(in srgb, var(--mc-border) 45%, transparent);
 }
 
 /* Logos: a quiet strip; logos greyed until hovered. */
@@ -150,8 +149,7 @@
     --mc-slider-arrow-size: 2rem;
 
     padding: var(--mc-space-4) var(--mc-space-12);
-    background: var(--mc-surface);
-    border: var(--mc-border-width) solid color-mix(in srgb, var(--mc-border) 45%, transparent);
+    background: var(--mc-surface-tint);
     border-radius: var(--mc-slider-radius);
 }
 
@@ -166,6 +164,7 @@
 }
 
 .mc-slider--logos .mc-slider__image {
+    mix-blend-mode: multiply; /* a logo on white melts into the tinted strip */
     width: auto;
     max-width: 100%;
     max-height: 4.5rem;

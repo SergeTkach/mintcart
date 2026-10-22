@@ -20,17 +20,17 @@
  */
 
 .mc-product-card {
-    --mc-product-card-bg: var(--mc-surface);
-    --mc-product-card-border-color: var(--mc-border);
-    --mc-product-card-radius: var(--mc-radius-lg);
-    --mc-product-card-shadow: var(--mc-shadow-sm);
-    --mc-product-card-padding: var(--mc-space-4);
+    /* No frame: the picture sits on a soft tint and the text lies on the page. */
+    --mc-product-card-bg: transparent;
+    --mc-product-card-border-color: transparent;
+    --mc-product-card-radius: var(--mc-radius-xl);
+    --mc-product-card-shadow: none;
+    --mc-product-card-padding: var(--mc-space-3) var(--mc-space-1) 0;
 
     position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
-    overflow: hidden;
     background-color: var(--mc-product-card-bg);
     border: var(--mc-border-width) solid var(--mc-product-card-border-color);
     border-radius: var(--mc-product-card-radius);
@@ -46,7 +46,8 @@
     display: block;
     aspect-ratio: 1 / 1;
     overflow: hidden;
-    background-color: var(--mc-surface-alt);
+    border-radius: var(--mc-product-card-radius);
+    background-color: var(--mc-surface-tint);
 }
 
 .mc-product-card__image {
@@ -54,6 +55,17 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+    transition: transform 0.5s var(--mc-motion-easing-standard, ease);
+}
+
+.mc-product-card:hover .mc-product-card__image:not(.mc-product-card__image--secondary) {
+    transform: scale(1.04);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-product-card__image {
+        transition: none;
+    }
 }
 
 /*
@@ -111,9 +123,10 @@
     width: 2.25rem;
     height: 2.25rem;
     padding: 0;
-    border: var(--mc-border-width) solid var(--mc-border);
+    border: 0;
     border-radius: var(--mc-radius-pill);
     background-color: var(--mc-surface);
+    box-shadow: var(--mc-shadow-soft);
     color: var(--mc-muted);
     cursor: pointer;
     transition:

@@ -26,7 +26,7 @@
 }
 
 .mc-product-card--soft .mc-product-card__media {
-    border-radius: var(--mc-radius-lg);
+    border-radius: var(--mc-radius-xl);
     transition: box-shadow var(--mc-motion-duration-base) var(--mc-motion-easing-standard);
 }
 
@@ -34,8 +34,10 @@
     box-shadow: var(--mc-shadow-md);
 }
 
+/* The picture fills the tile (a padded photo reads as a frame). Photos shot on white
+   melt into the tile through the multiply blend below. */
 .mc-product-card--soft .mc-product-card__image {
-    padding: var(--mc-space-4);
+    padding: 0;
 }
 
 /* Photos shot on white melt into the grey tile instead of showing a box. */
