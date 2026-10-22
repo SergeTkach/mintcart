@@ -1,14 +1,27 @@
 /**
- * Sticky buy bar on the product page (`[data-mc-buy-bar]`, buy-bar.css).
- * Shown while the main add-to-cart button is scrolled above the viewport;
- * its button clicks that main button, so options, quantity, toasts and
- * missing-option marking are handled once, by product-card.js.
+ * Sticky buy controls on the product page. On phones: the bottom bar
+ * (`[data-mc-buy-bar]`, buy-bar.css), shown while the main add-to-cart button
+ * is scrolled above the viewport. On desktop: the buy box beside the lower
+ * sections (`[data-mc-buy-box]`, always sticky, CSS only). Both buttons carry
+ * `data-mc-action="buy-bar-add"` and click the main button, so options,
+ * quantity, the confirmation and missing-option marking are handled once, by
+ * product-card.js.
  */
 export function initBuyBar(root = document) {
     const bar = root.querySelector('[data-mc-buy-bar]');
     const main = root.querySelector('[data-mc-product-form] [data-mc-action="add-to-cart"]');
 
-    if (!bar || !main) {
+    if (!main) {
+        return;
+    }
+
+    root.addEventListener('click', (event) => {
+        if (event.target.closest('[data-mc-action="buy-bar-add"]')) {
+            main.click();
+        }
+    });
+
+    if (!bar) {
         return;
     }
 
@@ -24,10 +37,4 @@ export function initBuyBar(root = document) {
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
     update();
-
-    bar.addEventListener('click', (event) => {
-        if (event.target.closest('[data-mc-action="buy-bar-add"]')) {
-            main.click();
-        }
-    });
 }
