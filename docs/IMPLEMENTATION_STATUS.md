@@ -41,6 +41,8 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 - [x] Phase 8 — Theme resolver: `ComponentRenderer`, `test_theme` overrides
       product-card / header / footer with 0 OCMOD (ADR 002)
 - [x] Phase 9 — Presets: Clean, Warm (ADR 004); Design → Styles
+  - [x] Lounge preset (calm ivory / sage / brass, serif headings, soft shadows);
+        tokens only, live-checked on home, product and information pages
   - [~] Gallery preset + `mint_gallery` theme with tile product card (ADR 013);
         header + tile card live-checked on the local store (desktop, home +
         category, headless screenshots; not mobile, product page or

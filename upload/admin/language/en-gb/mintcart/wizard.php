@@ -110,6 +110,7 @@ $_['design_preview']    = 'Open the store in a new tab';
 $_['preset_clean']      = 'Clean - cool, minimal';
 $_['preset_warm']       = 'Warm - soft, friendly';
 $_['preset_gallery']    = 'Gallery - white, image-first, square';
+$_['preset_lounge']     = 'Lounge - calm, warm, hotel-like';
 $_['error_preset']      = 'Please choose one of the listed styles.';
 $_['button_go_to_dashboard'] = 'Go to dashboard';
 
