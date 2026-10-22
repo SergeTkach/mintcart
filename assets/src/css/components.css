@@ -62,7 +62,7 @@
 @import './presets/clean.css';
 @import './presets/warm.css';
 @import './presets/gallery.css';
-@import './presets/lounge.css';
+@import './presets/comfort.css';
 @import './elements/prose.css';
 @import './components/button.css';
 @import './components/alert.css';
@@ -110,3 +110,4 @@
 @import './components/cookie-consent.css';
 @import './components/checkout.css';
 @import './components/theme-gallery.css';
+@import './components/theme-comfort.css';

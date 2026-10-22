@@ -4,5 +4,5 @@
     "version": "1.0.0",
     "mint_api": "^1.0",
     "parent": "mint_default",
-    "presets": ["gallery", "lounge", "clean", "warm"]
+    "presets": ["gallery", "comfort", "clean", "warm"]
 }
