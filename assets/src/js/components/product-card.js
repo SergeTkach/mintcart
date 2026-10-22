@@ -81,7 +81,7 @@ function toggleAction(root, actionName, eventName) {
  * cards have no such input and keep using the static attribute, this only
  * changes behavior where `data-quantity-input` is actually present.
  */
-function readQuantity(button) {
+export function readQuantity(button) {
     const inputId = button.dataset.quantityInput;
     const input = inputId ? document.getElementById(inputId) : null;
 
@@ -102,7 +102,7 @@ function readQuantity(button) {
  * checkbox options aren't fully supported by `addToCart()`'s single-value
  * `option` shape yet (`docs/developer/commerce/cart-client.md`).
  */
-function readOptions(button) {
+export function readOptions(button) {
     const options = {};
     const container = button.closest('[data-mc-product-form]')?.querySelector('[data-mc-product-options]');
 

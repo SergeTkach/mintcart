@@ -18,7 +18,7 @@
 
 /**
  * @param {string|number} productId
- * @param {{quantity?: number, name: string, telephone?: string, email?: string}} fields
+ * @param {{quantity?: number, name: string, telephone?: string, email?: string, options?: Record<string, string|string[]>}} fields
  * @returns {Promise<{redirected: true, url: string}|{errors: Record<string, string>}|{success: true, message: string}>}
  */
 export async function submitQuickOrder(productId, fields) {
@@ -29,6 +29,15 @@ export async function submitQuickOrder(productId, fields) {
     body.set('name', fields.name ?? '');
     body.set('telephone', fields.telephone ?? '');
     body.set('email', fields.email ?? '');
+
+    // Chosen product options (product page): option[<id>]=value, option[<id>][]=value for checkboxes.
+    Object.entries(fields.options ?? {}).forEach(([id, value]) => {
+        if (Array.isArray(value)) {
+            value.forEach((v) => body.append(`option[${id}][]`, v));
+        } else {
+            body.set(`option[${id}]`, value);
+        }
+    });
 
     const response = await fetch('index.php?route=mintcart/quickorder/submit', {
         method: 'POST',

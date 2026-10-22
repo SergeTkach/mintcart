@@ -287,6 +287,7 @@ class ControllerProductProduct extends Controller {
 			// Add-to-cart toast: product name + "View cart" link (product-card.js).
 			$data['text_view_cart'] = $this->language->get('text_view_cart');
 			$data['text_continue_shopping'] = $this->language->get('text_continue_shopping');
+			$data['text_quick_order'] = $this->language->get('text_quick_order');
 			$data['cart_url'] = $this->url->link('checkout/cart');
 			$data['text_add_to_cart_error'] = $this->language->get('text_add_to_cart_error');
 			$data['text_wishlist_error'] = $this->language->get('text_wishlist_error');

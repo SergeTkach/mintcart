@@ -229,6 +229,20 @@
                         >
                             {{ text_add_to_cart }}
                         </button>
+
+                        {# Quick Order: the same modal the listing cards open; here it also takes the
+                           quantity and the chosen options from this page (quick-order.js). #}
+                        <button
+                            type="button"
+                            class="mc-button mc-button--secondary"
+                            data-mc-action="quick-order"
+                            data-product-id="{{ product_id }}"
+                            data-product-name="{{ heading_title }}"
+                            data-quantity-input="input-quantity"
+                            {{ price is same as(false) ? 'disabled' : '' }}
+                        >
+                            {{ text_quick_order }}
+                        </button>
                     </div>
 
                     {% if minimum > 1 %}

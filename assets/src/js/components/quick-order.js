@@ -25,6 +25,7 @@
 import { Modal } from 'bootstrap';
 import { submitQuickOrder } from '../commerce/quick-order-client.js';
 import { createToast, showToast } from './toast.js';
+import { readOptions, readQuantity } from './product-card.js';
 import { initQuantityStepper } from './quantity.js';
 
 const MODAL_ID = 'mc-quick-order-modal';
@@ -145,6 +146,7 @@ async function handleSubmit(modal) {
 
     try {
         const result = await submitQuickOrder(productId, {
+            options: form.dataset.options ? JSON.parse(form.dataset.options) : {},
             quantity: form.querySelector('[name="quantity"]').value,
             name: form.querySelector('[name="name"]').value,
             telephone: form.querySelector('[name="telephone"]').value,
@@ -177,7 +179,10 @@ function openQuickOrder(button) {
 
     clearErrors(modal);
     form.reset();
-    form.querySelector('[name="quantity"]').value = '1';
+    // On the product page the button carries the quantity input and sits inside the product
+    // form, so the chosen quantity and options go into the request (a card has neither).
+    form.querySelector('[name="quantity"]').value = String(button.dataset.quantityInput ? readQuantity(button) : 1);
+    form.dataset.options = JSON.stringify(readOptions(button));
     initQuantityStepper(modal);
     form.dataset.productId = button.dataset.productId ?? '';
     modal.querySelector('.mc-modal__title').textContent = button.dataset.productName || 'Quick Order';

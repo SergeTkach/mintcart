@@ -81,6 +81,8 @@
 
     --mc-surface: var(--mc-color-white);
     --mc-surface-alt: var(--mc-color-gray-50);
+    /* A neutral light grey for small controls (header search, cart button): the brand tint is for large bands only. */
+    --mc-surface-muted: var(--mc-color-gray-100);
     /* A faint wash of the brand colour: section bands, soft cards. Follows the preset's primary. */
     --mc-surface-tint: color-mix(in srgb, var(--mc-primary) 6%, var(--mc-surface));
     --mc-surface-inverse: var(--mc-color-gray-900);

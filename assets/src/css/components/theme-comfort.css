@@ -133,11 +133,10 @@
 /* ====================================================================== */
 
 .mc-header--comfort {
-    /* Menu bar: a soft tint of the preset's primary, like the section bands of the
-       pages, with dark text - not a saturated block that outweighs everything else.
-       No full-width rule under the header: the bar is container-wide, and while
-       stuck the header's shadow separates it from the page. */
-    --mc-header-nav-bg: var(--mc-surface-tint);
+    /* Menu bar colour: the preset's primary (the logo's green, darkened until white
+       text on it reaches ~4.5:1 contrast). No rule under the header: the bar is
+       container-wide, and while stuck the header's shadow separates it from the page. */
+    --mc-header-nav-bg: var(--mc-primary);
 }
 
 .mc-header__row {
@@ -187,7 +186,7 @@
 .mc-header--comfort .mc-header__account-toggle:hover,
 .mc-header--comfort .mc-header__wishlist:hover,
 .mc-header--comfort .mc-header__end .btn-link:hover {
-    background-color: var(--mc-surface-tint);
+    background-color: var(--mc-surface-muted);
     color: var(--mc-primary-hover);
 }
 
@@ -207,7 +206,7 @@
     padding-left: 2.75rem;
     border: 0;
     border-radius: var(--mc-radius-pill);
-    background-color: var(--mc-surface-tint);
+    background-color: var(--mc-surface-muted);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236b6f76'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: 0.9rem center;
@@ -228,7 +227,7 @@
     height: 2.75rem;
     padding: 0;
     border: 0;
-    background-color: var(--mc-surface-tint);
+    background-color: var(--mc-surface-muted);
     color: var(--mc-text);
 }
 
@@ -314,7 +313,7 @@
     border-radius: var(--mc-radius-md);
 }
 
-/* lg and up: the menu is a tinted bar the width of the page container. The colour goes on the
+/* lg and up: the menu is a brand-green bar the width of the page container. The colour goes on the
    inner `.container` (Bootstrap forces `.offcanvas-lg` itself transparent).
    Below lg it stays the normal drawer. */
 @media (min-width: 992px) {
@@ -347,22 +346,21 @@
     .mc-header--comfort .mc-nav__link {
         padding: var(--mc-space-2) var(--mc-space-4);
         border-radius: var(--mc-radius-pill);
-        color: var(--mc-text);
+        color: var(--mc-text-inverse);
         font-weight: var(--mc-font-weight-semibold);
     }
 
-    /* The hovered / open item becomes a white pill lifted off the bar. */
+    /* The hovered / open item becomes a lighter pill on the green bar. */
     .mc-header--comfort .mc-nav__link:hover,
     .mc-header--comfort .mc-nav__link:focus-visible,
     .mc-header--comfort .mc-nav__link[aria-expanded='true'] {
-        background-color: var(--mc-surface);
-        box-shadow: var(--mc-shadow-soft);
-        color: var(--mc-primary-hover);
+        background-color: rgb(255 255 255 / 18%);
+        color: var(--mc-text-inverse);
     }
 
     .mc-header--comfort .mc-nav__link:focus-visible {
-        outline: var(--mc-border-width-thick) solid var(--mc-primary);
-        outline-offset: 1px;
+        outline: var(--mc-border-width-thick) solid var(--mc-text-inverse);
+        outline-offset: -2px;
     }
 }
 
@@ -650,7 +648,7 @@
         width: 2.25rem;
         height: 2.25rem;
         border-radius: var(--mc-radius-pill);
-        background: var(--mc-surface-tint);
+        background: var(--mc-surface-muted);
         color: var(--mc-text);
         font-size: 1.5rem;
     }
@@ -685,16 +683,36 @@
     }
 
     .mc-header--comfort .mc-header__utility-slot .mc-header__utility {
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(5.75rem, 1fr));
         gap: var(--mc-space-2);
     }
 
     .mc-header--comfort .mc-header__utility-slot .mc-header__utility > * {
-        flex: 1 1 calc(33% - var(--mc-space-2));
         min-width: 0;
         border-radius: var(--mc-radius-lg);
-        background: var(--mc-surface-tint);
+        background: var(--mc-surface-muted);
         text-align: center;
+    }
+
+    /* The legacy currency/language widgets: fill the cell, show their text, no focus box. */
+    .mc-header--comfort .mc-header__utility-slot .mc-legacy form,
+    .mc-header--comfort .mc-header__utility-slot .mc-legacy .btn-group {
+        display: flex;
+        width: 100%;
+    }
+
+    .mc-header--comfort .mc-header__utility-slot .mc-legacy .btn-group > .btn {
+        flex: 1 1 auto;
+        gap: 0.3rem;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .mc-header--comfort .mc-header__utility-slot .hidden-xs,
+    .mc-header--comfort .mc-header__utility-slot .hidden-sm,
+    .mc-header--comfort .mc-header__utility-slot .hidden-md {
+        display: inline !important;
     }
 
     .mc-header--comfort .mc-header__utility-slot .mc-header__utility .btn,
@@ -730,9 +748,9 @@
     height: 2.75rem;
     border: 0;
     border-radius: var(--mc-radius-pill);
-    background: var(--mc-surface-tint);
+    background: var(--mc-surface-muted);
 }
 
 .mc-header--comfort .mc-header__nav-toggle:hover {
-    background: color-mix(in srgb, var(--mc-primary) 14%, var(--mc-surface));
+    background: var(--mc-color-gray-200);
 }
