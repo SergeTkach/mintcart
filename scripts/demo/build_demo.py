@@ -386,6 +386,15 @@ def main():
         render_brand(os.path.join(IMG_DIR, fn), name)
         sql.append("INSERT INTO oc_banner_image (banner_id, language_id, title, link, image, sort_order) VALUES (8, 1, %s, %s, %s, %d);" % (q(name), q('index.php?route=product/manufacturer/info&manufacturer_id=%d' % bid), q(IMG_PREFIX + fn), i))
 
+    # --- root category pictures (used by the Categories home block) ------
+    for cid, kind, color in [(100, 'mug', 'Clay'), (101, 'vase', 'Sage'), (102, 'lamp', 'Mustard'), (103, 'chair', 'Oat'),
+                             (104, 'bag', 'Navy'), (105, 'notebook', 'Stone'), (106, 'pillow', 'Sage'), (107, 'candle', 'Clay')]:
+        fn = 'category%d.jpg' % cid
+        cv = Canvas(600, 600, (243, 243, 241))
+        draw_shape(cv, kind, hex_rgb(COLORS[color]))
+        cv.result((600, 600)).save(os.path.join(IMG_DIR, fn), 'JPEG', quality=90)
+        sql.append("UPDATE oc_category SET image = %s WHERE category_id = %d;" % (q(IMG_PREFIX + fn), cid))
+
     # --- home page blocks (Homepage Builder: mc_page 'home') -------------
     # The OpenCart banner/featured modules above keep working; these blocks
     # are rendered above them and turn the home page into a full storefront.

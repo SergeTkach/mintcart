@@ -143,6 +143,11 @@
     color: var(--mc-primary);
 }
 
+.mc-benefit__icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
 .mc-benefit__title {
     margin: 0;
     color: var(--mc-text);

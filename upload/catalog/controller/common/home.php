@@ -152,6 +152,12 @@ class ControllerCommonHome extends Controller {
 			return null;
 		}
 
+		$icons = new \MintCart\Design\Icon(DIR_SYSTEM . 'mintcart/icons');
+
+		foreach ($settings['items'] as $key => $item) {
+			$settings['items'][$key]['svg'] = $icons->svg($item['icon']);
+		}
+
 		return $block_renderer->render('benefits', $settings);
 	}
 
@@ -311,7 +317,7 @@ class ControllerCommonHome extends Controller {
 
 		foreach ($results as $result) {
 			if ($result['image']) {
-				$image = $this->model_tool_image->resize($result['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_category_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_category_height'));
+				$image = $this->model_tool_image->resize($result['image'], 300, 300); // block tiles are wider than the 80px theme category size
 			} else {
 				$image = '';
 			}

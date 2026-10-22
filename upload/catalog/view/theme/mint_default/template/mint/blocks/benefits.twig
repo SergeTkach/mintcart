@@ -9,9 +9,7 @@
             {% for item in items %}
                 <div class="col-6 col-lg-3">
                     <div class="mc-benefit">
-                        <span class="mc-benefit__icon" data-mc-icon="{{ item.icon }}" aria-hidden="true">
-                            {# swap for {{ mc_icon(item.icon) }} once the Bootstrap Icons SVG renderer exists (Implementation Guide §21) #}
-                        </span>
+                        <span class="mc-benefit__icon" data-mc-icon="{{ item.icon }}" aria-hidden="true">{{ item.svg }}</span>
                         <h3 class="mc-benefit__title">{{ item.title }}</h3>
                         {% if item.description %}
                             <p class="mc-benefit__description">{{ item.description }}</p>
