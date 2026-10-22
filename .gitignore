@@ -92,3 +92,7 @@ upload/system/storage/session/*
 
 # Logos uploaded through the Setup Wizard (store data, not source)
 upload/image/catalog/logo-*
+
+# Local-only demo photos (build_local_electronics.py): third-party shop photos, never commit.
+upload/image/catalog/products/
+upload/image/catalog/local/

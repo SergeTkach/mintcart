@@ -102,11 +102,15 @@
         padding: var(--mc-space-10, 2.5rem) var(--mc-space-10, 2.5rem) var(--mc-space-10, 2.5rem) 4.5rem;
     }
 
+    /* The picture fills its whole half: absolutely positioned inside the stretched cell. */
     .mc-slide--split .mc-slide__media {
+        position: relative;
         align-self: stretch;
     }
 
     .mc-slide--split .mc-slide__media img {
+        position: absolute;
+        inset: 0;
         max-height: none;
     }
 }
