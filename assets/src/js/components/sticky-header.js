@@ -1,7 +1,7 @@
 /**
  * Sticky header support (`[data-mc-sticky-header]`, mc-header--sticky in
- * header.css): keeps --mc-header-topbar-height in sync with the topbar's
- * real height (it wraps on narrow screens, fonts load late) and toggles
+ * header.css): keeps --mc-header-topbar-height in sync with the topbar's (and
+ * announcement bar's) real height (it wraps on narrow screens, fonts load late) and toggles
  * `is-stuck` once the topbar has scrolled away, for the shadow. Also
  * publishes the height of the part that stays stuck as
  * --mc-header-sticky-offset on <html>, for things that stick under it
@@ -14,7 +14,12 @@ export function initStickyHeader(root = document) {
         return;
     }
 
-    const topbar = header.querySelector('.mc-header__topbar');
+    // Everything above the main row scrolls away: the optional announcement
+    // bar plus the topbar.
+    const bars = [
+        header.querySelector('.mc-header__announcement'),
+        header.querySelector('.mc-header__topbar'),
+    ].filter(Boolean);
     let offset = 0;
     let frame = 0;
 
@@ -24,7 +29,7 @@ export function initStickyHeader(root = document) {
     };
 
     const measure = () => {
-        offset = topbar ? topbar.offsetHeight : 0;
+        offset = bars.reduce((sum, bar) => sum + bar.offsetHeight, 0);
         header.style.setProperty('--mc-header-topbar-height', `${offset}px`);
         document.documentElement.style.setProperty(
             '--mc-header-sticky-offset',
@@ -38,9 +43,7 @@ export function initStickyHeader(root = document) {
 
         observer.observe(header);
 
-        if (topbar) {
-            observer.observe(topbar);
-        }
+        bars.forEach((bar) => observer.observe(bar));
     }
 
     window.addEventListener('scroll', () => {

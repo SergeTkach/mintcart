@@ -9,7 +9,7 @@ Legend: `[x]` done and wired into a real screen/page · `[~]` partly done
 through on a running store; everything else is covered by unit tests,
 headless-browser probes or both.
 
-Branch state: `phase-15-mint-checkout` → PR #190 (open). Follow-up work on
+Branch state: PR #190 merged to master 2026-10-08. Work continues on
 `phase-16-polish`.
 
 ## Foundation
@@ -88,7 +88,9 @@ Branch state: `phase-15-mint-checkout` → PR #190 (open). Follow-up work on
 - [~] Delivery / payment / returns on the product page: built from enabled
       extensions + Return Terms page (2026-10-08); hand-written text not
       supported yet (needs a decision on where it is edited)
-- [ ] Top info bar; configurable (manual) badges
+- [x] Top info bar (Business → Contacts, one text for all languages;
+      not live-checked)
+- [ ] Configurable (manual) badges
 
 ## Productivity
 
@@ -130,14 +132,39 @@ failures are environment-specific and predate this branch
 (`design/media-model-test.php` path separator on Windows,
 `fixes/mc-0020-pgsql-reconnect-test.php` needs pgsql).
 
+## Planned work (agreed 2026-10-22)
+
+Checkout is done interactively with the user, one piece at a time, in this
+order (each builds on the previous; billing address last-but-one because it
+splits `payment_address` / `shipping_address` in `mintcart/checkout.php`):
+
+1. [ ] Address book for logged-in customers (pick saved address / new)
+2. [ ] Registration in checkout (guest "create account" + password)
+3. [ ] Custom fields (from OpenCart custom_field model)
+4. [ ] Captcha (stock OpenCart captcha extensions)
+5. [ ] Separate billing address
+6. [ ] Reward points (next to coupon / gift certificate)
+
+Smaller items, taken autonomously in this order:
+
+1. [ ] Configurable (manual) product badges
+2. [ ] Default system-page URL aliases on install (verify)
+3. [ ] Render Theme API slots in templates (`SlotRegistry` has no consumer)
+4. [ ] hreflang verified on a multi-language store
+5. [ ] Admin settings search: jump to a field, Ukrainian labels
+6. [ ] Entity Picker: create-new in a drawer
+
+Heavy items not in this batch: first end-to-end release (needs a clean DB),
+admin navigation restructure, theme live preview + `settings.json` form,
+full Bulk Editor, rollback action.
+
 ## Shortest path to a first release
 
 1. Live click-through: Setup Wizard in the admin; checkout with an active
    coupon (`docs/MANUAL_VERIFICATION.md`).
-2. Merge PR #190.
-3. Run `npm run release`, install the zip on a clean DB, go install →
+2. Run `npm run release`, install the zip on a clean DB, go install →
    wizard → product → order.
-4. Decide whether the product-page delivery/returns block also needs
+3. Decide whether the product-page delivery/returns block also needs
    hand-written text (the automatic version is in).
-5. Admin navigation restructured in business language.
-6. Early Access.
+4. Admin navigation restructured in business language.
+5. Early Access.

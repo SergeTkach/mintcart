@@ -148,6 +148,10 @@ class ControllerCommonHeader extends Controller {
 						'cart' => $data['cart'],
 						'language' => $data['language'],
 						'currency' => $data['currency']
+					),
+					array(
+						'text' => $this->config->get('mintcart_announcement_text'),
+						'url' => $this->config->get('mintcart_announcement_url')
 					)
 				);
 

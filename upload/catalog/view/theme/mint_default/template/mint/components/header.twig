@@ -1,4 +1,16 @@
 <header class="mc-header mc-header--sticky" data-mc-sticky-header>
+    {% if announcement %}
+        <div class="mc-header__announcement">
+            <div class="container">
+                {% if announcement.url %}
+                    <a class="mc-header__announcement-link" href="{{ announcement.url }}">{{ announcement.text }}</a>
+                {% else %}
+                    <span>{{ announcement.text }}</span>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
     <div class="mc-header__topbar">
         <div class="container d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div class="mc-header__topbar-start">

@@ -27,7 +27,8 @@ $header = (new \MintCart\Design\HeaderViewProvider())->build(
     $contacts, // ['phone' => ...] — OpenCart's own config_telephone
     $links,    // named URLs: account/login/register/order/transaction/
                // download/logout/wishlist/shopping_cart/checkout/contact
-    $widgets   // pre-rendered HTML: menu/search/cart/language/currency
+    $widgets,  // pre-rendered HTML: menu/search/cart/language/currency
+    $announcement // ['text' => ..., 'url' => ...] — top info bar, optional
 );
 ```
 
@@ -140,6 +141,9 @@ longer the blocker.
 ```twig
 {# branding, account, contacts, links, widgets - HeaderViewProvider::build() output #}
 <header class="mc-header">
+    {% if announcement %}
+        {# announcement.text (plain text), announcement.url (nullable, http(s) or "/..." only) #}
+    {% endif %}
     <div class="mc-header__topbar">
         {# contacts.phone, widgets.language, widgets.currency, account menu, links.wishlist #}
     </div>
@@ -153,6 +157,12 @@ longer the blocker.
     {% endif %}
 </header>
 ```
+
+`announcement` is `null` when the store has no message. Its source is
+Business → Contacts → "Top info bar" (settings `mintcart_announcement_text`
+/ `mintcart_announcement_url`, own setting code so the Wizard's Contacts
+step cannot overwrite it). One text for all languages for now. The sticky
+header scrolls the announcement away together with the topbar.
 
 `text_account`, `text_register`, `text_login`, `text_order`,
 `text_transaction`, `text_download`, `text_logout`, `text_search` are

@@ -73,12 +73,20 @@ final class HeaderViewProvider
      *        escaped or otherwise touched here (same trust boundary as
      *        FooterViewProvider's `$powered` string).
      *
+     * @param array{text?: ?string, url?: ?string} $announcement
+     *        Optional top info bar (Business → Contacts): a short plain-text
+     *        message and an optional link. Empty text means "no bar" and the
+     *        whole key is `null`; a url that is not http(s) or a
+     *        site-relative path is dropped so a theme can put it straight
+     *        into an `href`.
+     *
      * @return array{
      *     branding: array{name: string, logo: ?string, home: string},
      *     account: array{logged: bool, first_name: ?string, wishlist_count: ?int},
      *     contacts: array{phone: ?string},
      *     links: array<string, ?string>,
-     *     widgets: array<string, ?string>
+     *     widgets: array<string, ?string>,
+     *     announcement: ?array{text: string, url: ?string}
      * }
      */
     public function build(
@@ -86,7 +94,8 @@ final class HeaderViewProvider
         array $account = [],
         array $contacts = [],
         array $links = [],
-        array $widgets = []
+        array $widgets = [],
+        array $announcement = []
     ): array {
         return [
             'branding' => [
@@ -104,7 +113,29 @@ final class HeaderViewProvider
             ],
             'links' => $this->buildKeyed($links, self::LINK_KEYS),
             'widgets' => $this->buildKeyed($widgets, self::WIDGET_KEYS),
+            'announcement' => $this->buildAnnouncement($announcement),
         ];
+    }
+
+    /**
+     * @param array{text?: ?string, url?: ?string} $announcement
+     * @return ?array{text: string, url: ?string}
+     */
+    private function buildAnnouncement(array $announcement): ?array
+    {
+        $text = trim((string) ($announcement['text'] ?? ''));
+
+        if ($text === '') {
+            return null;
+        }
+
+        $url = trim((string) ($announcement['url'] ?? ''));
+
+        if ($url !== '' && !preg_match('#^(https?://|/(?!/))#i', $url)) {
+            $url = '';
+        }
+
+        return ['text' => $text, 'url' => $url !== '' ? $url : null];
     }
 
     /**

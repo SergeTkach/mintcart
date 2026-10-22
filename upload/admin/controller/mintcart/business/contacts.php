@@ -80,6 +80,16 @@ class ControllerMintcartBusinessContacts extends Controller {
 			$this->error['config_address'] = $this->language->get('error_address');
 		}
 
+		$announcement_url = trim((string)($this->request->post['announcement_url'] ?? ''));
+
+		if (utf8_strlen(trim((string)($this->request->post['announcement_text'] ?? ''))) > 200) {
+			$this->error['announcement_text'] = $this->language->get('error_announcement_text');
+		}
+
+		if ($announcement_url !== '' && !preg_match('#^(https?://|/(?!/))#i', $announcement_url)) {
+			$this->error['announcement_url'] = $this->language->get('error_announcement_url');
+		}
+
 		foreach (\MintCart\Onboarding\SocialProfileLinks::NETWORKS as $network) {
 			$url = trim((string)($this->request->post['social_' . $network] ?? ''));
 
@@ -120,6 +130,13 @@ class ControllerMintcartBusinessContacts extends Controller {
 			$social[$network] = trim((string)($this->request->post['social_' . $network] ?? ''));
 		}
 
+		// Own setting code: the Wizard's Contacts step rewrites the whole
+		// 'mintcart_contacts' code, which would wipe the announcement.
+		$this->model_setting_setting->editSetting('mintcart_announcement', array(
+			'mintcart_announcement_text' => trim((string)$this->request->post['announcement_text']),
+			'mintcart_announcement_url'  => trim((string)$this->request->post['announcement_url'])
+		));
+
 		$this->model_setting_setting->editSetting('mintcart_contacts', array(
 			'mintcart_contacts_social' => \MintCart\Onboarding\SocialProfileLinks::normalize($social)
 		));
@@ -130,6 +147,12 @@ class ControllerMintcartBusinessContacts extends Controller {
 		$data['text_edit'] = $this->language->get('text_edit');
 		$data['text_contact_details'] = $this->language->get('text_contact_details');
 		$data['text_social_links'] = $this->language->get('text_social_links');
+		$data['text_announcement'] = $this->language->get('text_announcement');
+		$data['help_announcement'] = $this->language->get('help_announcement');
+		$data['entry_announcement_text'] = $this->language->get('entry_announcement_text');
+		$data['entry_announcement_url'] = $this->language->get('entry_announcement_url');
+		$data['error_announcement_text'] = $this->error['announcement_text'] ?? '';
+		$data['error_announcement_url'] = $this->error['announcement_url'] ?? '';
 
 		if (isset($this->error['warning'])) {
 			$data['error_warning'] = $this->error['warning'];
@@ -172,6 +195,8 @@ class ControllerMintcartBusinessContacts extends Controller {
 			$data['config_telephone'] = $this->request->post['config_telephone'] ?? '';
 			$data['config_email'] = $this->request->post['config_email'] ?? '';
 			$data['config_address'] = $this->request->post['config_address'] ?? '';
+			$data['announcement_text'] = $this->request->post['announcement_text'] ?? '';
+			$data['announcement_url'] = $this->request->post['announcement_url'] ?? '';
 
 			foreach (\MintCart\Onboarding\SocialProfileLinks::NETWORKS as $network) {
 				$data['social_' . $network] = $this->request->post['social_' . $network] ?? '';
@@ -182,6 +207,10 @@ class ControllerMintcartBusinessContacts extends Controller {
 			$data['config_address'] = $this->config->get('config_address');
 
 			$this->load->model('setting/setting');
+
+			$announcement_setting = $this->model_setting_setting->getSetting('mintcart_announcement');
+			$data['announcement_text'] = $announcement_setting['mintcart_announcement_text'] ?? '';
+			$data['announcement_url'] = $announcement_setting['mintcart_announcement_url'] ?? '';
 
 			$contacts_setting = $this->model_setting_setting->getSetting('mintcart_contacts');
 			$social = isset($contacts_setting['mintcart_contacts_social']) && is_array($contacts_setting['mintcart_contacts_social'])
