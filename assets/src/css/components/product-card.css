@@ -250,3 +250,91 @@
 .mc-product-card--compact .mc-product-card__body {
     padding: var(--mc-space-3);
 }
+
+/* ---------------------------------------------------------------------- */
+/* Tile variant (mint_gallery's product-card.twig): image on a grey tile,   */
+/* text underneath, no frame or shadow, add-to-cart revealed on hover.     */
+/* ---------------------------------------------------------------------- */
+
+.mc-product-card--tile {
+    --mc-product-card-bg: transparent;
+    --mc-product-card-radius: 0;
+    --mc-product-card-shadow: none;
+    --mc-product-card-padding: 0;
+
+    overflow: visible;
+    border: 0;
+}
+
+.mc-product-card--tile .mc-product-card__media {
+    aspect-ratio: 4 / 5;
+}
+
+.mc-product-card--tile .mc-product-card__image {
+    padding: var(--mc-space-4);
+    mix-blend-mode: multiply;
+}
+
+.mc-product-card--tile .mc-product-card__body {
+    align-items: center;
+    gap: var(--mc-space-1);
+    padding: var(--mc-space-3) 0 0;
+    text-align: center;
+}
+
+.mc-product-card--tile .mc-product-card__brand {
+    margin: 0;
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.mc-product-card--tile .mc-product-card__title {
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-normal);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mc-product-card--tile .mc-product-card__action-button {
+    border-color: transparent;
+    background-color: transparent;
+}
+
+.mc-product-card--tile .mc-product-card__actions {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: var(--mc-space-2);
+}
+
+.mc-product-card--tile .mc-product-card__actions .mc-button {
+    width: 100%;
+}
+
+/* Mouse users: the button slides in on hover/focus. Touch users (no hover)
+   always see it, since there is no other way to reveal it. */
+@media (hover: hover) {
+    .mc-product-card--tile .mc-product-card__actions {
+        opacity: 0;
+        transform: translateY(0.5rem);
+        transition:
+            opacity var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+            transform var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+    }
+
+    .mc-product-card--tile:hover .mc-product-card__actions,
+    .mc-product-card--tile:focus-within .mc-product-card__actions {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+    .mc-product-card--tile .mc-product-card__actions {
+        transition: none;
+    }
+}

@@ -29,6 +29,7 @@
 @import './settings/bootstrap-bridge.css';
 @import './presets/clean.css';
 @import './presets/warm.css';
+@import './presets/gallery.css';
 @import './elements/prose.css';
 @import './components/button.css';
 @import './components/alert.css';

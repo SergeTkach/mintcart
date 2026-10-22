@@ -1,0 +1,59 @@
+/**
+ * "Gallery" design preset.
+ *
+ * Image-first, near-monochrome look: white page, light grey tiles, black
+ * actions, square corners, no shadows, hierarchy by whitespace instead of
+ * lines. Like every preset it redefines ONLY semantic-tier tokens already
+ * declared in settings/tokens.css (docs/adr/004-design-token-presets.md) -
+ * the tile product card is a separate DOM variant shipped by the
+ * `mint_gallery` theme, not something a preset can do.
+ *
+ * Activated via `data-mc-preset="gallery"` on `<html>`.
+ */
+
+:root[data-mc-preset='gallery'] {
+    /* Preset-local primitives */
+    --mc-preset-gallery-ink: #111111;
+    --mc-preset-gallery-tile: #f2f2f2;
+    --mc-preset-gallery-line: #e6e6e6;
+    --mc-preset-gallery-grey: #6b6b6b;
+    --mc-preset-gallery-sale: #d4261c;
+
+    /* Color */
+    --mc-primary: var(--mc-preset-gallery-ink);
+    --mc-primary-hover: #333333;
+    --mc-primary-active: #000000;
+    --mc-on-primary: var(--mc-color-white);
+
+    --mc-accent: var(--mc-preset-gallery-ink);
+    --mc-on-accent: var(--mc-color-white);
+
+    --mc-surface: var(--mc-color-white);
+    --mc-surface-alt: var(--mc-preset-gallery-tile);
+    --mc-surface-inverse: var(--mc-preset-gallery-ink);
+
+    --mc-text: var(--mc-preset-gallery-ink);
+    --mc-text-inverse: var(--mc-color-white);
+    --mc-muted: var(--mc-preset-gallery-grey);
+    --mc-border: var(--mc-preset-gallery-line);
+    --mc-border-strong: var(--mc-preset-gallery-ink);
+
+    --mc-danger: var(--mc-preset-gallery-sale);
+
+    /* Square corners everywhere */
+    --mc-radius-sm: 0;
+    --mc-radius-md: 0;
+    --mc-radius-lg: 0;
+    --mc-radius-xl: 0;
+    --mc-radius-pill: 0;
+
+    /* No shadows: separation comes from grey tiles and whitespace */
+    --mc-shadow-sm: none;
+    --mc-shadow-md: none;
+    --mc-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+    /* Roomier rhythm */
+    --mc-space-4: 1.125rem;
+    --mc-space-6: 2rem;
+    --mc-space-8: 3rem;
+}

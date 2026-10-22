@@ -1,0 +1,63 @@
+{# Mint Gallery: "tile" product card. Same contract as mint_default's
+   product-card (product / display / context); only the DOM differs: grey
+   image tile, brand + name + price as plain text underneath, the add-to-cart
+   button appears on hover/focus (always visible on touch). #}
+<article class="mc-product-card mc-product-card--tile">
+    <div class="mc-product-card__media">
+        <a class="mc-product-card__media-link" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
+            <img class="mc-product-card__image" src="{{ product.image }}"{% if product.image_srcset %} srcset="{{ product.image_srcset }}"{% endif %} alt="{{ product.image_alt }}" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
+            {% if display.show_secondary_image and product.secondary_image %}
+                <img class="mc-product-card__image mc-product-card__image--secondary" src="{{ product.secondary_image }}" alt="" loading="lazy"{% if product.image_width %} width="{{ product.image_width }}"{% endif %}{% if product.image_height %} height="{{ product.image_height }}"{% endif %}>
+            {% endif %}
+        </a>
+
+        {% if product.badges %}
+            <ul class="mc-product-card__badges">
+                {% for badge in product.badges %}
+                    <li><span class="mc-badge mc-badge--{{ badge.type }}">{{ badge.label ?: text_badge[badge.type] }}</span></li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="mc-product-card__quick-actions">
+            <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-wishlist" data-product-id="{{ product.id }}" data-mc-text-wishlist-error="{{ text_wishlist_error }}" aria-pressed="false" aria-label="{{ text_wishlist }}">♥</button>
+        </div>
+
+        <div class="mc-product-card__actions">
+            <button
+                type="button"
+                class="mc-button mc-button--primary mc-product-card__add-to-cart"
+                data-mc-action="add-to-cart"
+                data-product-id="{{ product.id }}"
+                data-product-name="{{ product.name }}"
+                data-quantity="{{ product.minimum }}"
+                data-mc-cart-url="{{ cart_url }}"
+                data-mc-text-view-cart="{{ text_view_cart }}"
+                data-mc-text-added="{{ text_added_to_cart }}"
+                data-mc-text-add-error="{{ text_add_to_cart_error }}"
+                {{ product.actions.add_to_cart ? '' : 'disabled' }}
+            >
+                {{ text_add_to_cart }}
+            </button>
+        </div>
+    </div>
+
+    <div class="mc-product-card__body">
+        {% if product.manufacturer %}
+            <p class="mc-product-card__brand">{{ product.manufacturer }}</p>
+        {% endif %}
+
+        <h3 class="mc-product-card__title">
+            <a href="{{ product.url }}">{{ product.name }}</a>
+        </h3>
+
+        <div class="mc-price{% if product.special %} mc-price--special{% endif %}">
+            <span class="mc-price__current">{{ product.special ?: product.price }}</span>
+            {% if product.special %}<span class="mc-price__original">{{ product.price }}</span>{% endif %}
+        </div>
+
+        {% if not product.stock.in_stock and product.stock.label %}
+            <p class="mc-product-card__stock mc-product-card__stock--out">{{ product.stock.label }}</p>
+        {% endif %}
+    </div>
+</article>

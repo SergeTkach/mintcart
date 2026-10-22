@@ -109,6 +109,7 @@ $_['design_no_presets'] = 'Your current theme has no styles to choose from. Cont
 $_['design_preview']    = 'Open the store in a new tab';
 $_['preset_clean']      = 'Clean - cool, minimal';
 $_['preset_warm']       = 'Warm - soft, friendly';
+$_['preset_gallery']    = 'Gallery - white, image-first, square';
 $_['error_preset']      = 'Please choose one of the listed styles.';
 $_['button_go_to_dashboard'] = 'Go to dashboard';
 
