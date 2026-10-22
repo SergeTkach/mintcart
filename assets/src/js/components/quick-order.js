@@ -25,6 +25,7 @@
 import { Modal } from 'bootstrap';
 import { submitQuickOrder } from '../commerce/quick-order-client.js';
 import { createToast, showToast } from './toast.js';
+import { initQuantityStepper } from './quantity.js';
 
 const MODAL_ID = 'mc-quick-order-modal';
 
@@ -34,6 +35,21 @@ function fieldMarkup(name, label, type, describedBy) {
             <label class="mc-field__label" for="${describedBy}">${label}</label>
             <input type="${type}" id="${describedBy}" name="${name}" class="mc-field__control" autocomplete="off">
             <p class="mc-field__error" id="${describedBy}-error" role="alert" hidden></p>
+        </div>
+    `;
+}
+
+// Quantity uses the shared -/+ stepper instead of a bare number input.
+function quantityFieldMarkup(id) {
+    return `
+        <div class="mc-field" data-mc-quick-order-field="quantity">
+            <label class="mc-field__label" for="${id}">Quantity</label>
+            <div class="mc-quantity">
+                <button type="button" class="mc-quantity__button" data-mc-action="quantity-decrement" aria-label="Decrease quantity">&minus;</button>
+                <input type="number" id="${id}" name="quantity" class="mc-quantity__input" value="1" min="1" step="1" inputmode="numeric" autocomplete="off">
+                <button type="button" class="mc-quantity__button" data-mc-action="quantity-increment" aria-label="Increase quantity">+</button>
+            </div>
+            <p class="mc-field__error" id="${id}-error" role="alert" hidden></p>
         </div>
     `;
 }
@@ -56,7 +72,7 @@ function buildModal() {
                         <button type="button" class="mc-modal__close" data-mc-action="close-modal" aria-label="Close">&times;</button>
                     </div>
                     <div class="modal-body">
-                        ${fieldMarkup('quantity', 'Quantity', 'number', 'mc-quick-order-quantity')}
+                        ${quantityFieldMarkup('mc-quick-order-quantity')}
                         ${fieldMarkup('name', 'Name', 'text', 'mc-quick-order-name')}
                         ${fieldMarkup('telephone', 'Phone', 'tel', 'mc-quick-order-telephone')}
                         ${fieldMarkup('email', 'Email', 'email', 'mc-quick-order-email')}
@@ -71,10 +87,6 @@ function buildModal() {
     `;
 
     document.body.appendChild(modal);
-
-    const quantityInput = modal.querySelector('[name="quantity"]');
-    quantityInput.min = '1';
-    quantityInput.value = '1';
 
     modal.querySelector('form').addEventListener('submit', (event) => {
         event.preventDefault();
@@ -91,7 +103,7 @@ function getModal() {
 function clearErrors(modal) {
     modal.querySelectorAll('.mc-field').forEach((field) => {
         field.classList.remove('has-error');
-        const control = field.querySelector('.mc-field__control');
+        const control = field.querySelector('.mc-field__control, .mc-quantity__input');
         const error = field.querySelector('.mc-field__error');
 
         control.removeAttribute('aria-invalid');
@@ -113,7 +125,7 @@ function showErrors(modal, errors) {
 
         field.classList.add('has-error');
 
-        const control = field.querySelector('.mc-field__control');
+        const control = field.querySelector('.mc-field__control, .mc-quantity__input');
         const error = field.querySelector('.mc-field__error');
 
         control.setAttribute('aria-invalid', 'true');
@@ -166,6 +178,7 @@ function openQuickOrder(button) {
     clearErrors(modal);
     form.reset();
     form.querySelector('[name="quantity"]').value = '1';
+    initQuantityStepper(modal);
     form.dataset.productId = button.dataset.productId ?? '';
     modal.querySelector('.mc-modal__title').textContent = button.dataset.productName || 'Quick Order';
 

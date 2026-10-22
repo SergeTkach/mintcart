@@ -111,3 +111,9 @@
     padding: var(--mc-space-1);
     font-size: var(--mc-font-size-sm);
 }
+
+/* Inside an mc-field (a stretching flex column) the stepper keeps its own
+   width instead of drawing its frame across the whole field. */
+.mc-field > .mc-quantity {
+    align-self: flex-start;
+}
