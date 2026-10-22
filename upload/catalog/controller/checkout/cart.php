@@ -240,6 +240,8 @@ class ControllerCheckoutCart extends Controller {
 			$data['footer'] = $this->load->controller('common/footer');
 			$data['header'] = $this->load->controller('common/header');
 
+			$data['mc_slots'] = \MintCart\Design\Slots::shared()->renderMany(array('cart.before_totals', 'cart.after_totals'), array('total_rows' => count($data['totals'])));
+
 			$this->response->setOutput($this->load->view('checkout/cart', $data));
 		} else {
 			$data['text_error'] = $this->language->get('text_empty');

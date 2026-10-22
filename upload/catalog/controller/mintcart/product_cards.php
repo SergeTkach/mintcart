@@ -50,7 +50,9 @@ class ControllerMintcartProductCards extends Controller {
 		$diagnostics = isset($args['diagnostics']) ? $args['diagnostics'] : null;
 
 		$renderer = new \MintCart\Design\ProductCardListRenderer(
-			new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $theme, 'components', $diagnostics)
+			new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $theme, 'components', $diagnostics),
+			null,
+			\MintCart\Design\Slots::shared() // lets an extension fill the card's `product.after_actions` slot
 		);
 
 		$strings = array(

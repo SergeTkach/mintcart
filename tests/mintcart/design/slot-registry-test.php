@@ -84,6 +84,20 @@ $registry->render('header.after');
 
 assertSame____([], $seenContext, 'Scenario 5: render() with no $context passes an empty array to the listener', $failures);
 
+// Scenario 6: renderMany() gives a name => markup map ('' for slots nobody listens to).
+$many = new SlotRegistry();
+$many->listen('product.after_price', static fn (array $c): string => '<i>' . ($c['id'] ?? '') . '</i>');
+$map = $many->renderMany(['product.before_title', 'product.after_price'], ['id' => 7]);
+assertSame____(['product.before_title' => '', 'product.after_price' => '<i>7</i>'], $map, 'Scenario 6: renderMany() maps every requested slot, empty when unused', $failures);
+
+// Scenario 7: Slots::shared() is one registry for the whole request; reset() forgets it.
+require __DIR__ . '/../../../upload/system/library/mintcart/design/slots.php';
+\MintCart\Design\Slots::reset();
+\MintCart\Design\Slots::shared()->listen('header.before', static fn (array $c): string => '<b>promo</b>');
+assertSame____('<b>promo</b>', \MintCart\Design\Slots::shared()->render('header.before'), 'Scenario 7: a listener added to the shared registry is seen by the next caller', $failures);
+\MintCart\Design\Slots::reset();
+assertSame____('', \MintCart\Design\Slots::shared()->render('header.before'), 'Scenario 7: reset() clears the shared registry', $failures);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -92,5 +106,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: SlotRegistry smoke test (' . 5 . " scenarios)\n";
+echo 'PASS: SlotRegistry smoke test (' . 7 . " scenarios)\n";
 exit(0);

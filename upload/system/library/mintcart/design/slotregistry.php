@@ -54,6 +54,25 @@ final class SlotRegistry
     }
 
     /**
+     * Renders several slots at once - what a controller does to hand a template
+     * its `mc_slots` map (slot name => markup, '' when nothing listens).
+     *
+     * @param list<string> $slots
+     * @param array<string, mixed> $context
+     * @return array<string, string>
+     */
+    public function renderMany(array $slots, array $context = []): array
+    {
+        $result = [];
+
+        foreach ($slots as $slot) {
+            $result[$slot] = $this->render($slot, $context);
+        }
+
+        return $result;
+    }
+
+    /**
      * @param array<string, mixed> $context Passed to every listener on this
      *        slot - the shape is up to whoever documents that particular
      *        slot name, not this class.

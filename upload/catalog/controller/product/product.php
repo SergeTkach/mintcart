@@ -256,6 +256,12 @@ class ControllerProductProduct extends Controller {
 
 			$data['heading_title'] = $product_info['name'];
 
+			// Extension slots shown on the product page (docs/developer/theme-api/slots.md).
+			$data['mc_slots'] = \MintCart\Design\Slots::shared()->renderMany(
+				array('product.before_title', 'product.after_title', 'product.before_price', 'product.after_price', 'product.after_actions'),
+				array('product_id' => (int)$product_info['product_id'], 'name' => $product_info['name'])
+			);
+
 			// Manual badges (Marketing → Product Badges), same ones the product cards show.
 			$this->load->model('mintcart/badge');
 

@@ -109,7 +109,9 @@
                         </ul>
                     {% endif %}
 
+                    {{ mc_slots['product.before_title'] }}
                     <h1 class="mb-2">{{ heading_title }}</h1>
+                    {{ mc_slots['product.after_title'] }}
 
                     {% if review_status and rating %}
                         <a class="mc-product-page__rating-link mb-3" href="{{ section_url }}#product-reviews" data-mc-action="scroll-to-section">
@@ -137,11 +139,13 @@
                     {% if price %}
                         {# product-price.js turns this into the live total for the
                            chosen quantity + options (route mintcart/price). #}
+                        {{ mc_slots['product.before_price'] }}
                         <div class="mc-price mc-price--lg mb-3{% if special %} mc-price--special{% endif %}" data-mc-product-price data-mc-product-id="{{ product_id }}" aria-live="polite">
                             <span class="mc-price__current" data-mc-price-current>{{ special ?: price }}</span>
                             <span class="mc-price__original" data-mc-price-original{% if not special %} hidden{% endif %}>{{ special ? price }}</span>
                             {% if tax %}<span class="mc-price__tax d-block">{{ text_tax }} <span data-mc-price-tax>{{ tax }}</span></span>{% endif %}
                         </div>
+                        {{ mc_slots['product.after_price'] }}
 
                         {% if points %}
                             <p>{{ text_points }} {{ points }}</p>
@@ -244,6 +248,7 @@
                             {{ text_quick_order }}
                         </button>
                     </div>
+                    {{ mc_slots['product.after_actions'] }}
 
                     {% if minimum > 1 %}
                         <p class="mc-field__help mt-2">{{ text_minimum }}</p>

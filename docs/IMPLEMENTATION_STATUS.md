@@ -168,8 +168,8 @@ splits `payment_address` / `shipping_address` in `mintcart/checkout.php`):
 Smaller items, taken autonomously in this order:
 
 1. [x] Configurable (manual) product badges
-2. [ ] Default system-page URL aliases on install (verify)
-3. [ ] Render Theme API slots in templates (`SlotRegistry` has no consumer)
+2. [x] Default system-page URL aliases on install (migration 202610221300)
+3. [x] Render Theme API slots in templates (`Slots::shared()`, docs/developer/theme-api/slots.md)
 4. [ ] hreflang verified on a multi-language store
 5. [ ] Admin settings search: jump to a field, Ukrainian labels
 6. [ ] Entity Picker: create-new in a drawer

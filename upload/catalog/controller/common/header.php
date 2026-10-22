@@ -275,6 +275,8 @@ class ControllerCommonHeader extends Controller {
 		// (e.g. mint_gallery's product page) without a page-template copy.
 		$data['mc_theme'] = $mint_render_header ? $mint_theme : '';
 
+		$data['mc_slots'] = \MintCart\Design\Slots::shared()->renderMany(array('header.before', 'header.after'));
+
 		return $this->load->view('common/header', $data);
 	}
 }
