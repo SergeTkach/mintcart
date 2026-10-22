@@ -178,3 +178,46 @@ export function initAdminSearch(context = document) {
         });
     });
 }
+
+/**
+ * On the page a search result opened: `#mc-field=<element id>` in the address. Opens the tab that
+ * holds the field (the stock admin uses Bootstrap 3 tabs), scrolls it to the middle, focuses it and
+ * flashes its row, so the merchant lands on the exact input, not just on the page.
+ */
+export function initFieldJump() {
+    const match = /[#&]mc-field=([A-Za-z0-9_-]+)/.exec(window.location.hash);
+
+    if (!match) {
+        return;
+    }
+
+    const target = document.getElementById(match[1]);
+
+    if (!target) {
+        return;
+    }
+
+    const pane = target.closest('.tab-pane');
+    const link = pane && pane.id ? document.querySelector(`a[href="#${pane.id}"][data-toggle="tab"]`) : null;
+
+    if (link) {
+        if (window.jQuery && window.jQuery.fn.tab) {
+            window.jQuery(link).tab('show');
+        } else {
+            link.click();
+        }
+    }
+
+    const row = target.closest('.form-group') || target;
+
+    window.setTimeout(() => {
+        row.scrollIntoView({ block: 'center' });
+
+        if (/^(INPUT|SELECT|TEXTAREA)$/.test(target.tagName)) {
+            target.focus({ preventScroll: true });
+        }
+
+        row.classList.add('mc-field-flash');
+        window.setTimeout(() => row.classList.remove('mc-field-flash'), 2600);
+    }, link ? 200 : 0);
+}

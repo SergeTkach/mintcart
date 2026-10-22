@@ -87,8 +87,8 @@ foreach ($index->all() as $entry) {
 
 // --- routes are unique (no two entries silently point at the same screen) ---
 
-$routes = array_map(static fn (array $entry) => $entry['route'], $index->all());
-assertSame(count($routes), count(array_unique($routes)), 'all(): every entry has a unique route', $failures);
+$routes = array_map(static fn (array $entry) => $entry['route'] . '#' . ($entry['field'] ?? ''), $index->all());
+assertSame(count($routes), count(array_unique($routes)), 'all(): every entry has a unique route (and field)', $failures);
 
 // --- Ukrainian / Russian synonyms (admin is often used in uk/ru) ---
 
@@ -98,10 +98,17 @@ $firstLabel = static function (array $results): string {
 
 assertSame('Currency', $firstLabel($index->search('валюта')), 'uk: валюта -> Currency', $failures);
 assertSame('Business → Delivery', $firstLabel($index->search('доставка')), 'uk: доставка -> Business → Delivery', $failures);
-assertSame('Store Settings', $firstLabel($index->search('Логотип')), 'uk: Логотип (any case) -> Store Settings', $failures);
+assertSame('Store logo', $firstLabel($index->search('Логотип')), 'uk: Логотип (any case) -> the Store logo field', $failures);
 assertSame('Coupons', $firstLabel($index->search('промокод')), 'uk: промокод -> Coupons', $failures);
 assertSame('Business → Payments', $firstLabel($index->search('оплат')), 'uk prefix: оплат -> Business → Payments', $failures);
 assertSame('Orders', $firstLabel($index->search('заказ')), 'ru: заказ -> Orders', $failures);
+
+// --- field-level results ---
+$hit = $index->search('телефон')[0] ?? null;
+assertTrue($hit !== null && $hit['route'] === 'setting/setting' && $hit['field'] === 'input-telephone', "search: 'телефон' (Ukrainian) jump to a field: the store telephone input", $failures);
+$hit = $index->search('logo')[0] ?? null;
+assertSame('thumb-logo', $hit['field'] ?? null, "search: 'logo' jumps to the logo field", $failures);
+assertSame('', $index->search('delivery')[0]['field'] ?? null, 'search: a page-level entry has an empty field', $failures);
 
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");

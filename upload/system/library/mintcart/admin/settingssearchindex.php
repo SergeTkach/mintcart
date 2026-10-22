@@ -34,10 +34,21 @@ namespace MintCart\Admin;
 final class SettingsSearchIndex
 {
     /**
-     * @var list<array{label:string, route:string, keywords:list<string>}>
+     * @var list<array{label:string, route:string, keywords:list<string>, field?:string}>
      */
     private const ENTRIES = [
         ['label' => 'Store Settings', 'route' => 'setting/store', 'keywords' => ['store name', 'logo', 'email', 'telephone', 'phone', 'address', 'store', 'favicon', 'meta', 'налаштування магазину', 'назва магазину', 'логотип', 'лого', 'телефон', 'адреса', 'пошта', 'іконка', 'настройки магазина', 'название магазина', 'адрес', 'почта']],
+        // Field-level entries: the result opens the page and jumps to this input (`field` is its
+        // element id; the tab that holds it is opened by admin-search.js, `initFieldJump()`).
+        ['label' => 'Store name', 'route' => 'setting/setting', 'field' => 'input-name', 'keywords' => ['store name', 'shop name', 'name', 'назва магазину', 'назва', 'название магазина', 'название']],
+        ['label' => 'Store email', 'route' => 'setting/setting', 'field' => 'input-email', 'keywords' => ['email', 'e-mail', 'store email', 'пошта', 'електронна пошта', 'email магазину', 'почта']],
+        ['label' => 'Store telephone', 'route' => 'setting/setting', 'field' => 'input-telephone', 'keywords' => ['telephone', 'phone', 'phone number', 'телефон', 'номер телефону', 'номер телефона']],
+        ['label' => 'Store address', 'route' => 'setting/setting', 'field' => 'input-address', 'keywords' => ['address', 'store address', 'адреса', 'адреса магазину', 'адрес']],
+        ['label' => 'Store logo', 'route' => 'setting/setting', 'field' => 'thumb-logo', 'keywords' => ['logo', 'store logo', 'логотип', 'лого', 'логотип магазину']],
+        ['label' => 'Favicon', 'route' => 'setting/setting', 'field' => 'thumb-icon', 'keywords' => ['favicon', 'icon', 'tab icon', 'фавікон', 'іконка', 'фавикон', 'иконка']],
+        ['label' => 'Default currency', 'route' => 'setting/setting', 'field' => 'input-currency', 'keywords' => ['default currency', 'main currency', 'основна валюта', 'валюта за замовчуванням', 'основная валюта']],
+        ['label' => 'Default language', 'route' => 'setting/setting', 'field' => 'input-language', 'keywords' => ['default language', 'основна мова', 'мова за замовчуванням', 'основной язык']],
+        ['label' => 'Meta title', 'route' => 'setting/setting', 'field' => 'input-meta-title', 'keywords' => ['meta title', 'title', 'seo title', 'мета заголовок', 'заголовок', 'тайтл']],
         ['label' => 'Currency', 'route' => 'localisation/currency', 'keywords' => ['currency', 'exchange rate', 'money', 'валюта', 'валюти', 'курс', 'гроші', 'валюты', 'деньги']],
         ['label' => 'Language', 'route' => 'localisation/language', 'keywords' => ['language', 'locale', 'мова', 'мови', 'язык', 'языки', 'локаль']],
         ['label' => 'Tax Classes', 'route' => 'localisation/tax_class', 'keywords' => ['tax', 'vat', 'податок', 'податки', 'пдв', 'налог', 'налоги', 'ндс']],
@@ -71,7 +82,7 @@ final class SettingsSearchIndex
     ];
 
     /**
-     * @return list<array{label:string, route:string}> Ranked, highest
+     * @return list<array{label:string, route:string, field:string}> Ranked, highest
      *         score first; empty for a blank query or no match.
      */
     public function search(string $query, int $limit = 8): array
@@ -88,7 +99,12 @@ final class SettingsSearchIndex
             $score = $this->score($query, $entry);
 
             if ($score > 0) {
-                $scored[] = ['label' => $entry['label'], 'route' => $entry['route'], 'score' => $score];
+                // A field-level entry beats a page-level one that matches equally well.
+                if (!empty($entry['field'])) {
+                    $score++;
+                }
+
+                $scored[] = ['label' => $entry['label'], 'route' => $entry['route'], 'field' => $entry['field'] ?? '', 'score' => $score];
             }
         }
 
@@ -99,7 +115,7 @@ final class SettingsSearchIndex
         $scored = array_slice($scored, 0, $limit);
 
         return array_map(static function (array $entry): array {
-            return ['label' => $entry['label'], 'route' => $entry['route']];
+            return ['label' => $entry['label'], 'route' => $entry['route'], 'field' => $entry['field']];
         }, $scored);
     }
 
@@ -125,12 +141,14 @@ final class SettingsSearchIndex
             return 100;
         }
 
-        if (strpos($label, $query) === 0) {
-            return 80;
-        }
+        // The label match and the best keyword match compete: an exact keyword ("logo") must not lose to a
+        // weaker label hit ("Store logo" contains it).
+        $labelScore = 0;
 
-        if (strpos($label, $query) !== false) {
-            return 60;
+        if (strpos($label, $query) === 0) {
+            $labelScore = 80;
+        } elseif (strpos($label, $query) !== false) {
+            $labelScore = 60;
         }
 
         $bestKeywordScore = 0;
@@ -147,6 +165,6 @@ final class SettingsSearchIndex
             }
         }
 
-        return $bestKeywordScore;
+        return max($labelScore, $bestKeywordScore);
     }
 }
