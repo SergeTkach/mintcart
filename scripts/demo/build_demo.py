@@ -8,7 +8,9 @@ OpenCart demo catalog (38 categories, 20 products, 6 brands) with:
 
   8 root categories with 12 subcategories (two third-level), 30 products,
   5 brands, specials,
-  2 home slides, a brand carousel, no category-page banner, and the Featured module's product list.
+  2 home slides, a brand carousel, no category-page banner, the Featured module's product list,
+  and Homepage Builder blocks on the 'home' page (benefits, categories, new arrivals, about,
+  testimonials, FAQ, CTA).
 
 Usage:
     python scripts/demo/build_demo.py <out.sql>
@@ -21,6 +23,7 @@ remove again.
 """
 
 import html
+import json
 import os
 import sys
 
@@ -382,6 +385,43 @@ def main():
         fn = 'brand%d.jpg' % bid
         render_brand(os.path.join(IMG_DIR, fn), name)
         sql.append("INSERT INTO oc_banner_image (banner_id, language_id, title, link, image, sort_order) VALUES (8, 1, %s, %s, %s, %d);" % (q(name), q('index.php?route=product/manufacturer/info&manufacturer_id=%d' % bid), q(IMG_PREFIX + fn), i))
+
+    # --- home page blocks (Homepage Builder: mc_page 'home') -------------
+    # The OpenCart banner/featured modules above keep working; these blocks
+    # are rendered above them and turn the home page into a full storefront.
+    render_banner(os.path.join(IMG_DIR, 'about.jpg'), 'Made to be|used every day', 'Small batches, honest materials.', ['mug', 'candle', 'pillow'], ['Clay', 'White', 'Sage'], ('#f6f4ef', '#e7e3da'))
+    sql.append("INSERT INTO oc_mc_page (code, status, date_added, date_modified) VALUES ('home', 1, NOW(), NOW()) ON DUPLICATE KEY UPDATE status = 1;")
+    sql.append("SET @home_page = (SELECT page_id FROM oc_mc_page WHERE code = 'home');")
+    sql.append("DELETE d FROM oc_mc_block_description d JOIN oc_mc_block b ON b.block_id = d.block_id WHERE b.page_id = @home_page;")
+    sql.append("DELETE FROM oc_mc_block WHERE page_id = @home_page;")
+
+    def block(order, btype, settings, content):
+        sql.append("INSERT INTO oc_mc_block (page_id, type, sort_order, status, settings_json, date_added, date_modified) VALUES (@home_page, %s, %d, 1, %s, NOW(), NOW());" % (q(btype), order, q(json.dumps(settings, ensure_ascii=False))))
+        sql.append("INSERT INTO oc_mc_block_description (block_id, language_id, content_json) VALUES (LAST_INSERT_ID(), 1, %s);" % q(json.dumps(content, ensure_ascii=False)))
+
+    block(10, 'benefits',
+          {'items': [{'icon': 'truck'}, {'icon': 'arrow-repeat'}, {'icon': 'shield-check'}, {'icon': 'headset'}]},
+          {'title': '', 'items': [
+              {'title': 'Free delivery', 'description': 'On orders over $60'},
+              {'title': '30-day returns', 'description': 'Changed your mind? No problem'},
+              {'title': 'Secure payment', 'description': 'Card, bank transfer or cash'},
+              {'title': 'Friendly support', 'description': 'We reply within a day'}]})
+    block(20, 'categories', {'parent_id': 0, 'limit': 8}, {'title': 'Shop by category'})
+    block(30, 'products', {'limit': 8, 'sort': 'p.date_added', 'order': 'DESC'}, {'title': 'New arrivals'})
+    block(40, 'text-image',
+          {'image': IMG_PREFIX + 'about.jpg', 'image_width': 800, 'image_height': 267, 'image_position': 'left'},
+          {'title': 'Things made to be used', 'body': '<p>We pick a small number of well-made things for the home and keep them in stock. Stoneware from small kilns, solid oak, linen and soy wax - no filler.</p><p>Every product is photographed as it really is, and every order ships in recyclable packaging.</p>', 'image_alt': 'Our home collection'})
+    block(50, 'testimonials', {'items': [{'rating': 5}, {'rating': 5}, {'rating': 4}]},
+          {'title': 'What customers say', 'items': [
+              {'quote': 'The mugs feel even better than they look. Arrived well packed and two days early.', 'author_name': 'Olena K.', 'author_role': 'Kyiv'},
+              {'quote': 'Bought the oak chairs for our kitchen - sturdy, light and assembled in minutes.', 'author_name': 'Andrii M.', 'author_role': 'Lviv'},
+              {'quote': 'Great lamps. Support answered my question about bulbs the same afternoon.', 'author_name': 'Marta S.', 'author_role': 'Odesa'}]})
+    block(70, 'faq', {},
+          {'title': 'Questions and answers', 'items': [
+              {'question': 'How long does delivery take?', 'answer': 'Usually 1-3 working days within the country. You get a tracking number by email.'},
+              {'question': 'Can I return an item?', 'answer': 'Yes, within 30 days if it is unused. Write to us and we will arrange a pickup.'},
+              {'question': 'Which payment methods do you accept?', 'answer': 'Bank cards, bank transfer and cash on delivery.'}]})
+    block(80, 'cta', {}, {'title': 'Not sure what to choose?', 'text': 'Tell us about your room and we will suggest a few things that go well together.', 'cta_label': 'Contact us', 'cta_url': 'index.php?route=information/contact'})
 
     sql.append('COMMIT;')
 
