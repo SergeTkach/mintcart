@@ -400,6 +400,18 @@ def main():
     for pid, label, color in [(100, 'Bestseller', '#2457d6'), (106, 'Eco', ''), (118, 'Hit', '#d92d20')]:
         sql.append("INSERT INTO oc_mc_product_badge (product_id, label, color, sort_order, date_added) VALUES (%d, %s, %s, 0, NOW());" % (pid, q(label), q(color)))
 
+    # --- customer reviews (shown on product pages, the Testimonials block and /mintcart/reviews) ---
+    sql.append('DELETE FROM oc_review;')
+    for pid, author, rating, text, days in [
+        (100, 'Olena K.', 5, 'The mug feels even better than it looks. Arrived well packed and two days early.', 3),
+        (113, 'Andrii M.', 5, 'Bought the oak chairs for our kitchen - sturdy, light and assembled in minutes.', 6),
+        (109, 'Marta S.', 4, 'Great lamp. Support answered my question about bulbs the same afternoon.', 9),
+        (106, 'Ivan P.', 5, 'The vase is heavier than expected in a good way, and it really holds water.', 14),
+        (121, 'Natalia D.', 5, 'Soft linen, the colour is exactly as in the photo. Washed twice, no shrinking.', 20),
+        (118, 'Oleh B.', 4, 'Lovely candle, burns evenly. The jar is nice enough to reuse.', 27),
+    ]:
+        sql.append("INSERT INTO oc_review (product_id, customer_id, author, text, rating, status, date_added, date_modified) VALUES (%d, 0, %s, %s, %d, 1, DATE_SUB(NOW(), INTERVAL %d DAY), NOW());" % (pid, q(author), q(text), rating, days))
+
     # --- home page blocks (Homepage Builder: mc_page 'home') -------------
     # The OpenCart banner/featured modules above keep working; these blocks
     # are rendered above them and turn the home page into a full storefront.
@@ -425,11 +437,7 @@ def main():
     block(40, 'text-image',
           {'image': IMG_PREFIX + 'about.jpg', 'image_width': 800, 'image_height': 267, 'image_position': 'left'},
           {'title': 'Things made to be used', 'body': '<p>We pick a small number of well-made things for the home and keep them in stock. Stoneware from small kilns, solid oak, linen and soy wax - no filler.</p><p>Every product is photographed as it really is, and every order ships in recyclable packaging.</p>', 'image_alt': 'Our home collection'})
-    block(50, 'testimonials', {'items': [{'rating': 5}, {'rating': 5}, {'rating': 4}]},
-          {'title': 'What customers say', 'items': [
-              {'quote': 'The mugs feel even better than they look. Arrived well packed and two days early.', 'author_name': 'Olena K.', 'author_role': 'Kyiv'},
-              {'quote': 'Bought the oak chairs for our kitchen - sturdy, light and assembled in minutes.', 'author_name': 'Andrii M.', 'author_role': 'Lviv'},
-              {'quote': 'Great lamps. Support answered my question about bulbs the same afternoon.', 'author_name': 'Marta S.', 'author_role': 'Odesa'}]})
+    block(50, 'testimonials', {'source': 'reviews', 'limit': 3}, {'title': 'What customers say'})
     block(70, 'faq', {},
           {'title': 'Questions and answers', 'items': [
               {'question': 'How long does delivery take?', 'answer': 'Usually 1-3 working days within the country. You get a tracking number by email.'},

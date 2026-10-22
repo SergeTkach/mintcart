@@ -28,6 +28,8 @@ final class TestimonialsBlockProvider
 
     private const MAX_RATING = 5;
 
+    private const DEFAULT_REVIEW_LIMIT = 3;
+
     /**
      * @param array<string, mixed> $settings The block row's decoded
      *        `settings_json` (structural: `title`, `items[].avatar`,
@@ -39,6 +41,9 @@ final class TestimonialsBlockProvider
      *
      * @return array{
      *     title: string,
+     *     source: 'manual'|'reviews',
+     *     limit: int,
+     *     more_label: string,
      *     items: list<array{
      *         quote: string,
      *         author_name: string,
@@ -94,9 +99,17 @@ final class TestimonialsBlockProvider
             ];
         }
 
+        // `source: "reviews"` makes the controller fill the block with the
+        // store's latest approved reviews instead of the hand-written items
+        // above (see docs/developer/commerce/customer-reviews.md).
+        $limit = isset($settings['limit']) ? (int) $settings['limit'] : self::DEFAULT_REVIEW_LIMIT;
+
         return [
             'title' => is_string($content['title'] ?? null) ? $content['title'] : '',
             'items' => $items,
+            'source' => ($settings['source'] ?? '') === 'reviews' ? 'reviews' : 'manual',
+            'limit' => $limit >= 1 && $limit <= 12 ? $limit : self::DEFAULT_REVIEW_LIMIT,
+            'more_label' => is_string($content['more_label'] ?? null) ? trim($content['more_label']) : '',
         ];
     }
 }

@@ -143,7 +143,7 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 
 ## Tests
 
-`php` over `tests/mintcart/**/*-test.php`: 106 files, 104 pass. The 2
+`php` over `tests/mintcart/**/*-test.php`: 107 files, 105 pass. The 2
 failures are environment-specific and predate this branch
 (`design/media-model-test.php` path separator on Windows,
 `fixes/mc-0020-pgsql-reconnect-test.php` needs pgsql).

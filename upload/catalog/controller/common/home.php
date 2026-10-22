@@ -180,6 +180,31 @@ class ControllerCommonHome extends Controller {
 	private function renderTestimonialsBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
 		$settings = (new \MintCart\Blocks\TestimonialsBlockProvider())->build($block['settings'], $block['content']);
 
+		$this->load->language('mintcart/reviews');
+
+		$more_url = '';
+
+		if ($settings['source'] === 'reviews') {
+			// The store's latest approved reviews (docs/developer/commerce/customer-reviews.md).
+			$this->load->model('mintcart/review');
+
+			$settings['items'] = array();
+
+			foreach ($this->model_mintcart_review->getReviews(0, $settings['limit']) as $review) {
+				$settings['items'][] = array(
+					'quote'         => htmlspecialchars(utf8_substr(trim(strip_tags(html_entity_decode($review['text'], ENT_QUOTES, 'UTF-8'))), 0, 180), ENT_QUOTES, 'UTF-8'),
+					'author_name'   => $review['author'],
+					'author_role'   => $review['product_name'],
+					'avatar'        => null,
+					'avatar_width'  => 64,
+					'avatar_height' => 64,
+					'rating'        => (int)$review['rating'] >= 1 && (int)$review['rating'] <= 5 ? (int)$review['rating'] : null
+				);
+			}
+
+			$more_url = $this->url->link('mintcart/reviews');
+		}
+
 		if (!$settings['items']) {
 			return null;
 		}
@@ -196,8 +221,11 @@ class ControllerCommonHome extends Controller {
 		unset($item);
 
 		return $block_renderer->render('testimonials', array(
-			'title' => $settings['title'],
-			'items' => $settings['items']
+			'title'      => $settings['title'],
+			'items'      => $settings['items'],
+			'text_rated' => $this->language->get('text_rated'),
+			'more_url'   => $more_url,
+			'more_label' => $settings['more_label'] !== '' ? $settings['more_label'] : $this->language->get('text_all_reviews')
 		));
 	}
 

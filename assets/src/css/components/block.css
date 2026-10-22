@@ -21,6 +21,11 @@
     padding-bottom: var(--mc-space-8);
 }
 
+.mc-block__more {
+    margin: var(--mc-space-6) 0 0;
+    text-align: center;
+}
+
 .mc-block__title {
     margin: 0 0 var(--mc-space-4);
     color: var(--mc-text);
