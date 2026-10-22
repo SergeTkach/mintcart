@@ -173,3 +173,9 @@ different timing.
 **Not verified:** no live browser/MySQL session in this environment — see
 `docs/MANUAL_VERIFICATION.md`'s new Phase 15 entry for the full manual
 checklist.
+
+## Picture size (2026-10)
+
+`mintcart/viewed/products` returns the card picture size (`theme_*_image_product_*`) plus a 1x/2x `srcset`
+(`srcset`, `width`, `height` per item), not the 47 px cart thumbnail it used before. The strip title is a
+styled label (`mc-product-section__title`), not a decorative `h2`.

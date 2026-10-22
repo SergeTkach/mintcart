@@ -26,7 +26,6 @@
 
 .mc-header {
     background-color: var(--mc-surface);
-    border-bottom: var(--mc-border-width) solid var(--mc-border);
 }
 
 /*

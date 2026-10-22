@@ -299,7 +299,7 @@ class ControllerCommonHome extends Controller {
 		$this->load->model('tool/image');
 
 		// Picture sizes per layout: the half of a split slide, a full slide, a promo card.
-		$slide_size = $settings['layout'] === 'full' ? array(1600, 640) : array(1000, 790);
+		$slide_size = $settings['layout'] === 'full' ? array(1600, 700) : array(1000, 1000);
 
 		foreach ($settings['slides'] as &$slide) {
 			$slide['image'] = ($slide['image'] !== '' && is_file(DIR_IMAGE . $slide['image'])) ? $this->model_tool_image->resize($slide['image'], $slide_size[0], $slide_size[1]) : '';

@@ -92,6 +92,7 @@
    for mouse users; always visible where there is no hover (touch). */
 .mc-product-card--soft .mc-product-card__quick-order {
     position: absolute;
+    z-index: 1;
     right: var(--mc-space-3);
     bottom: var(--mc-space-3);
     left: var(--mc-space-3);
@@ -132,11 +133,11 @@
 /* ====================================================================== */
 
 .mc-header--comfort {
-    /* Menu bar colour: the preset's primary (the logo's green, darkened until
-       white text on it reaches ~4.5:1 contrast). No full-width rule under the
-       header: the bar is container-wide, and while stuck the header's shadow
-       separates it from the page. */
-    --mc-header-nav-bg: var(--mc-primary);
+    /* Menu bar: a soft tint of the preset's primary, like the section bands of the
+       pages, with dark text - not a saturated block that outweighs everything else.
+       No full-width rule under the header: the bar is container-wide, and while
+       stuck the header's shadow separates it from the page. */
+    --mc-header-nav-bg: var(--mc-surface-tint);
 }
 
 .mc-header__row {
@@ -165,39 +166,48 @@
 .mc-header--comfort .mc-header__end {
     display: flex;
     align-items: center;
-    gap: var(--mc-space-4);
+    gap: var(--mc-space-2);
     margin-left: auto;
 }
 
 .mc-header--comfort .mc-header__account-toggle,
 .mc-header--comfort .mc-header__wishlist,
 .mc-header--comfort .mc-header__end .btn-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mc-space-1);
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--mc-radius-pill);
     font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-medium);
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
 .mc-header--comfort .mc-header__account-toggle:hover,
 .mc-header--comfort .mc-header__wishlist:hover,
 .mc-header--comfort .mc-header__end .btn-link:hover {
-    color: var(--mc-primary);
+    background-color: var(--mc-surface-tint);
+    color: var(--mc-primary-hover);
 }
 
 /* Search: short, not a bar across the page. */
 .mc-header--comfort .mc-header__widget--search {
-    flex: 0 1 18rem;
+    flex: 0 1 26rem;
     min-width: 0;
     transition: flex-basis var(--mc-motion-duration-base) var(--mc-motion-easing-standard);
 }
 
 .mc-header--comfort .mc-header__widget--search:focus-within {
-    flex-basis: 24rem;
+    flex-basis: 32rem;
 }
 
 .mc-header--comfort .mc-search-box__input {
-    height: 2.5rem;
-    padding-left: 2.5rem;
-    border: var(--mc-border-width) solid var(--mc-border-strong);
-    border-radius: var(--mc-radius-md);
-    background-color: var(--mc-surface);
+    height: 2.75rem;
+    padding-left: 2.75rem;
+    border: 0;
+    border-radius: var(--mc-radius-pill);
+    background-color: var(--mc-surface-tint);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236b6f76'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: 0.9rem center;
@@ -205,7 +215,6 @@
 }
 
 .mc-header--comfort .mc-search-box__input:focus {
-    border-color: var(--mc-primary);
     background-color: var(--mc-surface);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-primary) 22%, transparent);
     outline: 0;
@@ -215,17 +224,16 @@
    label only. */
 .mc-header--comfort .mc-mini-cart__toggle {
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
     padding: 0;
-    border: var(--mc-border-width) solid var(--mc-border-strong);
-    background-color: var(--mc-surface);
+    border: 0;
+    background-color: var(--mc-surface-tint);
     color: var(--mc-text);
 }
 
 .mc-header--comfort .mc-mini-cart__toggle:hover,
 .mc-header--comfort .mc-mini-cart__toggle[aria-expanded='true'] {
-    border-color: var(--mc-primary);
     background-color: var(--mc-primary);
     color: var(--mc-on-primary);
 }
@@ -249,8 +257,8 @@
 /* Dropdowns (language, currency, account): soft floating panels. */
 .mc-header--comfort .dropdown-menu {
     padding: var(--mc-space-2);
-    border: var(--mc-border-width) solid var(--mc-border);
-    border-radius: var(--mc-radius-lg);
+    border: 0;
+    border-radius: var(--mc-radius-xl);
     background-color: var(--mc-surface);
     box-shadow: var(--mc-shadow-lg);
 }
@@ -306,8 +314,7 @@
     border-radius: var(--mc-radius-md);
 }
 
-/* lg and up: the menu is a brand-green bar the width of the page container -
-   the one strong element on an otherwise quiet page. The colour goes on the
+/* lg and up: the menu is a tinted bar the width of the page container. The colour goes on the
    inner `.container` (Bootstrap forces `.offcanvas-lg` itself transparent).
    Below lg it stays the normal drawer. */
 @media (min-width: 992px) {
@@ -327,7 +334,7 @@
         position: absolute;
         z-index: -1;
         inset: 0 calc(var(--bs-gutter-x, 1.5rem) * 0.5);
-        border-radius: var(--mc-radius-lg);
+        border-radius: var(--mc-radius-xl);
         background-color: var(--mc-header-nav-bg);
         content: '';
     }
@@ -339,27 +346,30 @@
 
     .mc-header--comfort .mc-nav__link {
         padding: var(--mc-space-2) var(--mc-space-4);
-        border-radius: var(--mc-radius-md);
-        color: var(--mc-text-inverse);
+        border-radius: var(--mc-radius-pill);
+        color: var(--mc-text);
+        font-weight: var(--mc-font-weight-semibold);
     }
 
+    /* The hovered / open item becomes a white pill lifted off the bar. */
     .mc-header--comfort .mc-nav__link:hover,
     .mc-header--comfort .mc-nav__link:focus-visible,
     .mc-header--comfort .mc-nav__link[aria-expanded='true'] {
-        background-color: rgb(255 255 255 / 16%);
-        color: var(--mc-text-inverse);
+        background-color: var(--mc-surface);
+        box-shadow: var(--mc-shadow-soft);
+        color: var(--mc-primary-hover);
     }
 
     .mc-header--comfort .mc-nav__link:focus-visible {
-        outline: var(--mc-border-width-thick) solid var(--mc-text-inverse);
-        outline-offset: -2px;
+        outline: var(--mc-border-width-thick) solid var(--mc-primary);
+        outline-offset: 1px;
     }
 }
 
 .mc-header--comfort .mc-header__utility {
     display: flex;
     align-items: center;
-    gap: var(--mc-space-4);
+    gap: var(--mc-space-1);
 }
 
 /* On narrow screens the utility group lives at the top of the menu drawer
@@ -612,4 +622,117 @@
     .mc-header--comfort .mc-nav__all {
         border-radius: 0;
     }
+}
+
+/* ====================================================================== */
+/* Mobile menu drawer                                                       */
+/* ====================================================================== */
+
+/* One column: the categories first, big rows made for a thumb; the small
+   utility links (language, currency, account, wishlist) at the bottom as a
+   row of equal soft buttons - not scattered links of three different styles. */
+@media (max-width: 991.98px) {
+    .mc-header--comfort .mc-header__nav {
+        --bs-offcanvas-width: min(22rem, 88vw);
+        --bs-offcanvas-border-width: 0;
+    }
+
+    .mc-header--comfort .mc-header__nav .offcanvas-header {
+        padding: var(--mc-space-4) var(--mc-space-4) var(--mc-space-2);
+    }
+
+    .mc-header--comfort .mc-header__nav .mc-drawer__title {
+        font-size: var(--mc-font-size-xl);
+        font-weight: var(--mc-font-weight-bold);
+    }
+
+    .mc-header--comfort .mc-header__nav .mc-drawer__close {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: var(--mc-radius-pill);
+        background: var(--mc-surface-tint);
+        color: var(--mc-text);
+        font-size: 1.5rem;
+    }
+
+    .mc-header--comfort .mc-header__nav .offcanvas-body {
+        display: flex;
+        flex-direction: column;
+        padding: var(--mc-space-2) var(--mc-space-3) var(--mc-space-4);
+    }
+
+    .mc-header--comfort .mc-header__nav .offcanvas-body > .container {
+        order: 1;
+        padding: 0;
+    }
+
+    .mc-header--comfort .mc-nav {
+        gap: 0.125rem;
+        padding: 0;
+    }
+
+    .mc-header--comfort .mc-nav__link {
+        padding: 0.875rem var(--mc-space-3);
+        font-size: 1.0625rem;
+    }
+
+    /* The utility group: bottom of the drawer, equal buttons. */
+    .mc-header--comfort .mc-header__utility-slot {
+        order: 2;
+        margin-top: auto;
+        padding: var(--mc-space-4) 0 0;
+        border: 0;
+    }
+
+    .mc-header--comfort .mc-header__utility-slot .mc-header__utility {
+        flex-wrap: wrap;
+        gap: var(--mc-space-2);
+    }
+
+    .mc-header--comfort .mc-header__utility-slot .mc-header__utility > * {
+        flex: 1 1 calc(33% - var(--mc-space-2));
+        min-width: 0;
+        border-radius: var(--mc-radius-lg);
+        background: var(--mc-surface-tint);
+        text-align: center;
+    }
+
+    .mc-header--comfort .mc-header__utility-slot .mc-header__utility .btn,
+    .mc-header--comfort .mc-header__utility-slot .mc-header__account-toggle,
+    .mc-header--comfort .mc-header__utility-slot .mc-header__wishlist {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0 var(--mc-space-2);
+        color: var(--mc-text);
+        font-size: var(--mc-font-size-sm);
+        font-weight: var(--mc-font-weight-medium);
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .mc-header--comfort .mc-header__utility-slot .mc-header__utility .btn-group {
+        display: block;
+        width: 100%;
+    }
+
+    /* Menus of the utility buttons open upward: they sit at the bottom edge. */
+    .mc-header--comfort .mc-header__utility-slot .dropdown-menu {
+        --bs-dropdown-min-width: 10rem;
+    }
+}
+
+/* The menu button (narrow screens): the same tinted circle as the cart. */
+.mc-header--comfort .mc-header__nav-toggle {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0;
+    border-radius: var(--mc-radius-pill);
+    background: var(--mc-surface-tint);
+}
+
+.mc-header--comfort .mc-header__nav-toggle:hover {
+    background: color-mix(in srgb, var(--mc-primary) 14%, var(--mc-surface));
 }

@@ -197,6 +197,14 @@
     content: '';
 }
 
+/* Every real control of the card sits above that stretched link, otherwise a
+   click lands on the link and opens the product page instead of the action. */
+.mc-product-card__quick-order,
+.mc-product-card__actions .mc-button {
+    position: relative;
+    z-index: 1;
+}
+
 .mc-product-card__description {
     margin: 0;
     overflow: hidden;

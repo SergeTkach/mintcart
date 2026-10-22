@@ -149,11 +149,11 @@ def main():
     local = os.path.join(IMAGE_ROOT, 'catalog', 'local')
     os.makedirs(local, exist_ok=True)
     # OpenCart's resize() pads a picture of another ratio with white, so the slider
-    # pictures are cropped to the 760x600 (about 4:3) the Slider block asks for.
+    # pictures are cropped to the square the Slider block asks for (1000 x 1000).
     from PIL import Image, ImageOps
     for fn in {s[0] for s in SLIDES} | {'hero-9.jpg'}:
         im = Image.open(os.path.join(a.source_dir, 'image', 'catalog', 'nolio', 'home', fn)).convert('RGB')
-        ImageOps.fit(im, (1520, 1200), Image.LANCZOS, centering=(0.5, 0.5)).save(os.path.join(local, fn), 'JPEG', quality=88)
+        ImageOps.fit(im, (1400, 1400), Image.LANCZOS, centering=(0.5, 0.5)).save(os.path.join(local, fn), 'JPEG', quality=88)
 
     # ---- reviews, badges, featured module ----
     ids = [int(r[0]) for r in mysql(S, "SELECT product_id FROM oc_product WHERE %s ORDER BY product_id" % pid_filter)]

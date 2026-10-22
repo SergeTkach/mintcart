@@ -95,7 +95,7 @@
 @media (min-width: 768px) {
     .mc-slide--split {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        min-height: 28rem;
+        min-height: 34rem;
     }
 
     .mc-slide--split .mc-slide__body {
@@ -126,7 +126,13 @@
 
 @media (min-width: 992px) {
     .mc-slide--full {
-        min-height: 30rem;
+        min-height: 36rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .mc-slide--split {
+        min-height: 38rem;
     }
 }
 
@@ -248,4 +254,90 @@ a.mc-slide-card:hover .mc-slide-card__image {
     color: var(--mc-primary);
     font-size: var(--mc-font-size-sm);
     font-weight: var(--mc-font-weight-semibold);
+}
+
+/* Phones: the slide is stacked (text, then picture), so arrows centred on the slide
+   would cut through the buttons. They go as a pair into the bottom-right corner of
+   the picture, where they read as carousel controls. */
+@media (max-width: 767.98px) {
+    .mc-slider--rich .mc-slider__arrow {
+        top: auto;
+        bottom: 3rem;
+        transform: none;
+    }
+
+    .mc-slider--rich .mc-slider__arrow--prev {
+        right: calc(var(--mc-space-4) + var(--mc-slider-arrow-size) + var(--mc-space-2));
+        left: auto;
+    }
+
+    .mc-slider--rich .mc-slider__arrow--next {
+        right: var(--mc-space-4);
+    }
+}
+
+/* Arrows: large enough to find and hit on desktop; 2.5 rem on phones (see below). */
+.mc-slider--rich {
+    --mc-slider-arrow-size: 3.25rem;
+}
+
+.mc-slider--rich .mc-slider__arrow {
+    box-shadow: var(--mc-shadow-soft);
+}
+
+.mc-slider--rich .mc-slider__arrow svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.mc-slider--rich .mc-slider__arrow--prev {
+    left: var(--mc-space-4);
+}
+
+.mc-slider--rich .mc-slider__arrow--next {
+    right: var(--mc-space-4);
+}
+
+@media (max-width: 767.98px) {
+    .mc-slider--rich {
+        --mc-slider-arrow-size: 2.5rem;
+    }
+
+    .mc-slider--rich .mc-slider__arrow svg {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .mc-slider--rich .mc-slider__arrow--prev {
+        left: auto;
+        right: calc(var(--mc-space-4) + var(--mc-slider-arrow-size) + var(--mc-space-2));
+    }
+}
+
+/* Phones: the picture sits inside the slide card with padding all round, so text and
+   picture read as one piece (and the arrows lie on the picture). */
+@media (max-width: 767.98px) {
+    .mc-slide--split .mc-slide__media {
+        padding: 0 var(--mc-space-4) var(--mc-space-4);
+    }
+
+    .mc-slide--split .mc-slide__media img {
+        border-radius: var(--mc-radius-lg);
+    }
+
+    .mc-slide--split .mc-slide__body {
+        padding-bottom: var(--mc-space-5);
+    }
+
+    .mc-slider--rich .mc-slider__arrow {
+        bottom: calc(2.75rem + var(--mc-space-3));
+    }
+
+    .mc-slider--rich .mc-slider__arrow--prev {
+        right: calc(var(--mc-space-4) + var(--mc-space-3) + var(--mc-slider-arrow-size) + var(--mc-space-2));
+    }
+
+    .mc-slider--rich .mc-slider__arrow--next {
+        right: calc(var(--mc-space-4) + var(--mc-space-3));
+    }
 }

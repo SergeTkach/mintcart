@@ -51,7 +51,7 @@ matched by position, like Banner Grid and Testimonials.
 - Titles may contain `<em>` (the highlighted word) and `<br>`; every other tag
   and all attributes are escaped by the provider, the template prints the result
   as is. All other text is escaped.
-- Pictures are resized per layout (split 760×600, full 1600×640, cards 640×340)
+- Pictures are resized per layout (split 1000×1000, full 1600×700, cards 640×340)
   and a missing file only removes the picture.
 - Text in slides is not a heading (no h2/h3): the page has one real h1
   (Implementation Guide §19.1).

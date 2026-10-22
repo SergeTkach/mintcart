@@ -340,7 +340,7 @@ def main():
 
     # --- slider / about pictures: cropped to the 760x600 (about 4:3) the block asks for ---
     for i, pexels_id in enumerate(SLIDE_PHOTOS, 1):
-        save(photo(pexels_id), 'slide%d.jpg' % i, (1520, 1200))
+        save(photo(pexels_id), 'slide%d.jpg' % i, (1400, 1400), centering=FOCUS.get(pexels_id, (0.5, 0.5)))
         credits.append('%-28s pexels.com/photo/%d' % ('slide %d' % i, pexels_id))
     save(photo(ABOUT_PHOTO), 'about.jpg', (1600, 1262))
     credits.append('%-28s pexels.com/photo/%d' % ('about', ABOUT_PHOTO))
