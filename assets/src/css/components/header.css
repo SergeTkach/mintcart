@@ -235,6 +235,29 @@
     cursor: pointer;
 }
 
+/* Caret: tells the visitor the name opens a menu. Pure CSS (a chevron drawn
+   with borders), rotated while the dropdown is open. */
+.mc-header__account-toggle::after {
+    content: "";
+    width: 0.4em;
+    height: 0.4em;
+    margin-left: 0.15em;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-0.12em) rotate(45deg);
+    transition: transform var(--mc-duration-fast, 0.15s) ease;
+}
+
+.mc-header__account-toggle[aria-expanded="true"]::after {
+    transform: translateY(0.05em) rotate(-135deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-header__account-toggle::after {
+        transition: none;
+    }
+}
+
 .mc-header__account-menu {
     z-index: var(--mc-z-dropdown);
     min-width: 12rem;

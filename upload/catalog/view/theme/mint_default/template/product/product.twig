@@ -101,6 +101,14 @@
                         <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-compare" data-product-id="{{ product_id }}" aria-pressed="false" aria-label="{{ text_compare }}">⇄</button>
                     </div>
 
+                    {% if mc_badges %}
+                        <ul class="list-unstyled d-flex flex-wrap gap-2 mb-2">
+                            {% for badge in mc_badges %}
+                                <li><span class="mc-badge mc-badge--{{ badge.type }}"{% if badge.color %} style="--mc-badge-bg:{{ badge.color }};--mc-badge-color:{{ badge.on_color }}"{% endif %}>{{ badge.label }}</span></li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
                     <h1 class="mb-2">{{ heading_title }}</h1>
 
                     {% if review_status and rating %}

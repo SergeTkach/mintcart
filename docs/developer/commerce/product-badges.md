@@ -1,41 +1,48 @@
 # Manual product badges ("stickers")
 
 Short labels the store owner puts on chosen products: "Bestseller", "-20%",
-"Eco". They are shown on product cards after the automatic badges (Sale,
-Out of stock, New). Spec: `MINTCART_FUNCTIONAL_SCOPE.md` §11 "configurable
-badges/stickers".
+"Eco". A product that carries a badge shows it everywhere the product appears:
+on its card in every list (category, search, special, manufacturer, home
+blocks, modules) and on the product page. They come after the automatic badges
+(Sale, Out of stock, New). Spec: `MINTCART_FUNCTIONAL_SCOPE.md` §11
+"configurable badges/stickers".
 
-## Where the owner edits them
+## How the owner uses them
 
-Admin → Marketing → **Product Badges** (`route=mintcart/badge`).
-One page: an add/edit form and the list of badges.
-
-- Product: the stock OpenCart admin autocomplete (as in the coupon form).
-  The product of an existing badge cannot be changed; delete and add again.
-- Badge text: 1–32 characters, one text for all languages.
-- Colour: optional `#rrggbb`. Empty means the theme's neutral `mc-badge` look.
-  The text colour (dark or white) is picked automatically for contrast.
-- Sort order: badges of one product are shown in this order.
-
-A product may have several badges.
+1. Admin → Marketing → **Product Badges** (`route=mintcart/badge`): create the
+   set of badges.
+   - Badge text: 1–32 characters, one text for all languages.
+   - Colour: optional `#rrggbb`; empty means the theme's neutral `mc-badge`
+     look. The text colour (dark or white) is picked for contrast.
+   - Sort order: the order badges appear in.
+   - The list shows how many products use each badge. Deleting a badge removes
+     it from all products.
+2. Open a product → **Links** tab → **Badges**: tick the badges this product
+   should carry. A product may have several. Unticking all removes them.
+   Copying a product copies its badges; deleting a product removes them.
 
 ## Storage
 
-Table `mc_product_badge` (migration `202610221200_create_mc_product_badge.php`):
-`badge_id`, `product_id`, `label`, `color`, `sort_order`, `date_added`.
-InnoDB, utf8mb4, no foreign key (as the rest of OpenCart's schema).
-A badge of a deleted product is simply never read; the admin list shows it as
-`#<product_id>` so it can be removed.
+Two tables (migrations `202610221200_create_mc_product_badge.php`,
+`202610221202_product_badge_definitions.php`; InnoDB, utf8mb4, no foreign keys
+like the rest of OpenCart's schema):
+
+- `mc_badge` — `badge_id`, `label`, `color`, `sort_order`, `date_added`
+- `mc_product_badge` — `product_id`, `badge_id` (primary key on both)
+
+The second migration converts the first version of the table (one label/colour
+row per product) into this shape, so nothing is lost.
 
 ## Code
 
 | Part | File |
 |---|---|
 | Validation and colour logic | `upload/system/library/mintcart/commerce/productbadge.php` (`MintCart\Commerce\ProductBadge`) |
-| Admin screen | `upload/admin/controller/mintcart/badge.php`, `admin/model/mintcart/badge.php`, `admin/view/template/mintcart/badge.twig`, `admin/language/en-gb/mintcart/badge.php` |
+| Admin: the set | `upload/admin/controller/mintcart/badge.php`, `admin/model/mintcart/badge.php`, `admin/view/template/mintcart/badge.twig`, `admin/language/en-gb/mintcart/badge.php` |
+| Admin: product form | Links tab row in `product_form.twig`; save/copy/delete in `admin/model/catalog/product.php`; data in `admin/controller/catalog/product.php` (see `docs/upstream-diff.md`) |
 | Storefront read | `upload/catalog/model/mintcart/badge.php` (`getByProductIds()`, one query per list) |
-| Wiring | `upload/catalog/controller/mintcart/product_cards.php` puts `manual_badges` on each product row |
-| Contract | `ProductViewProvider::buildBadges()` appends them to `product.badges[]` |
+| Cards | `upload/catalog/controller/mintcart/product_cards.php` puts `manual_badges` on each product row; `ProductViewProvider::buildBadges()` appends them to `product.badges[]` |
+| Product page | `upload/catalog/controller/product/product.php` sets `mc_badges`; `mint_default/.../product/product.twig` renders them above the title |
 | Permissions | `202610221201_grant_admin_permissions_badges.php` |
 
 ## Contract change (Theme API)
@@ -57,16 +64,22 @@ exception (Implementation Guide §18):
 ```
 
 `mint_default`, `mint_comfort` and `mint_gallery` card templates are updated.
-A custom theme that ignores `color` still shows the label.
+A custom theme that ignores `color` still shows the label. On the product page
+the template receives `mc_badges` with the same entries.
 
 ## Tests
 
 `tests/mintcart/commerce/product-badge-test.php` (validation, contrast,
-injection attempts, provider ordering).
+injection attempts, provider ordering). The migration conversion, the storefront
+list and the product page were checked on the local store; the admin templates
+were compiled with the bundled Twig. The product form save was not exercised
+in a browser.
 
 ## Not done
 
 - Rules ("every product with a special price gets -N%") are not supported;
-  badges are per product.
-- Badges are not shown on the product page itself, only on cards.
+  badges are assigned per product.
 - One text for all languages; a per-language label would need a second table.
+- No bulk assign (many products at once) from the product list.
+- Other themes' `product.twig` (custom child themes) must add the badge list
+  themselves; `mint_comfort` and `mint_gallery` inherit `mint_default`'s.

@@ -506,6 +506,19 @@
                 </div>
               </div>
               <div class="form-group">
+                <label class="col-sm-2 control-label">{{ entry_mc_badges }}</label>
+                <div class="col-sm-10">
+                  {# MintCart: the hidden 0 keeps the field present when nothing is ticked, so unticking all removes the badges. #}
+                  <input type="hidden" name="mc_product_badge[]" value="0"/>
+                  {% for badge in mc_badges %}
+                    <label class="checkbox-inline"><input type="checkbox" name="mc_product_badge[]" value="{{ badge.badge_id }}"{% if badge.checked %} checked="checked"{% endif %}/> <span class="label" style="background:{{ badge.color ?: '#555555' }};color:{{ badge.on_color ?: '#ffffff' }}">{{ badge.label }}</span></label>
+                  {% else %}
+                    <span class="form-control-static text-muted">{{ text_mc_badges_none }}</span>
+                  {% endfor %}
+                  <div class="help-block"><a href="{{ mc_badges_manage }}" target="_blank">{{ text_mc_badges_manage }}</a></div>
+                </div>
+              </div>
+              <div class="form-group">
                 <label class="col-sm-2 control-label" for="input-related"><span data-toggle="tooltip" title="{{ help_related }}">{{ entry_related }}</span></label>
                 <div class="col-sm-10">
                   <input type="text" name="related" value="" placeholder="{{ entry_related }}" id="input-related" class="form-control"/>

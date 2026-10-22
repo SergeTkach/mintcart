@@ -4077,3 +4077,43 @@ inside this controller; there is no extension point for adding an entry.
 
 **Tests:** menu item visible for the Administrator group after
 `202610221201_grant_admin_permissions_badges.php` (checked in the local DB).
+
+---
+
+## Product badges in the product form (`catalog/product`, admin)
+
+Files: `upload/admin/controller/catalog/product.php`,
+`upload/admin/model/catalog/product.php`,
+`upload/admin/view/template/catalog/product_form.twig`,
+`upload/admin/language/en-gb/catalog/product.php`,
+`upload/catalog/controller/product/product.php`,
+`upload/catalog/view/theme/mint_default/template/product/product.twig`.
+
+**Reason:** badges (stickers) are assigned to a product where the owner edits
+the product: a "Badges" row of checkboxes on the Links tab. The set of badges
+is edited in Marketing → Product Badges (own screen, no core change).
+
+**What changed:**
+- admin controller `getForm()`: builds `mc_badges` (the set with ticked state)
+  from POST or from the product; no other behaviour touched.
+- admin model: `addProduct()` / `editProduct()` call
+  `ModelMintcartBadge::setProductBadges()` when the form sent
+  `mc_product_badge`; `copyProduct()` carries the badges over;
+  `deleteProduct()` removes the product's assignments.
+- form template: one `form-group` in the Links tab; a hidden `0` keeps the
+  field present when nothing is ticked.
+- language: three strings (`entry_mc_badges`, `text_mc_badges_none`,
+  `text_mc_badges_manage`).
+- catalog product page: `mc_badges` data key and a badge list above the title.
+
+**Why it cannot live in the Mint layer:** OpenCart 3 has no extension point
+for extra fields in the product form or for saving them with the product, and
+the product page template cannot call a controller.
+
+**Compatibility impact:** additive. Callers of `addProduct()` / `editProduct()`
+that do not send `mc_product_badge` (imports, other extensions) leave badges
+untouched. Requires migration `202610221202_product_badge_definitions.php`
+(`deleteProduct()` deletes from `mc_product_badge`).
+
+**Tests:** `tests/mintcart/commerce/product-badge-test.php`; admin templates
+compile; storefront list and product page checked on the local store.

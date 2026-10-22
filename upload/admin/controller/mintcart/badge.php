@@ -1,15 +1,14 @@
 <?php
 /**
- * `Marketing → Product Badges` - manual product stickers ("Bestseller",
- * "-20%") shown on product cards next to the automatic Sale / New / Out of
- * stock badges (`MINTCART_FUNCTIONAL_SCOPE.md` §11, storage
- * `mc_product_badge`). Documentation: docs/developer/commerce/product-badges.md.
+ * `Marketing → Product Badges` - the set of stickers ("Bestseller", "-20%")
+ * a store owner can put on products (`MINTCART_FUNCTIONAL_SCOPE.md` §11,
+ * storage `mc_badge`). Which products carry which badge is chosen in the
+ * product form (Links tab), not here. Documentation:
+ * docs/developer/commerce/product-badges.md.
  *
- * route=mintcart/badge. One page: the list of badges plus an add/edit form
- * (product picked with OpenCart's stock admin autocomplete, the same widget
- * the coupon form uses). Plain form-POST-then-redirect like
- * `ControllerMintcartQuickorder`. Label/colour validation is
- * `MintCart\Commerce\ProductBadge::normalize()`.
+ * route=mintcart/badge. One page: the list of badges plus an add/edit form.
+ * Plain form-POST-then-redirect like `ControllerMintcartQuickorder`.
+ * Label/colour validation is `MintCart\Commerce\ProductBadge::normalize()`.
  */
 class ControllerMintcartBadge extends Controller {
 	public function index() {
@@ -22,14 +21,13 @@ class ControllerMintcartBadge extends Controller {
 		$this->getPage();
 	}
 
-	// route=mintcart/badge/save - POST badge_id (0 = new), product_id, label, color, sort_order
+	// route=mintcart/badge/save - POST badge_id (0 = new), label, color, sort_order
 	public function save() {
 		$this->load->language('mintcart/badge');
 
 		$this->load->model('mintcart/badge');
 
 		$badge_id = isset($this->request->post['badge_id']) ? (int)$this->request->post['badge_id'] : 0;
-		$product_id = isset($this->request->post['product_id']) ? (int)$this->request->post['product_id'] : 0;
 		$sort_order = isset($this->request->post['sort_order']) ? (int)$this->request->post['sort_order'] : 0;
 
 		$error = '';
@@ -41,12 +39,6 @@ class ControllerMintcartBadge extends Controller {
 			$error = $this->language->get('error_label');
 		} elseif ($badge_id && !$this->model_mintcart_badge->getBadge($badge_id)) {
 			$error = $this->language->get('error_not_found');
-		} elseif (!$badge_id) {
-			$this->load->model('catalog/product');
-
-			if (!$product_id || !$this->model_catalog_product->getProduct($product_id)) {
-				$error = $this->language->get('error_product');
-			}
 		}
 
 		if ($error) {
@@ -55,7 +47,7 @@ class ControllerMintcartBadge extends Controller {
 			if ($badge_id) {
 				$this->model_mintcart_badge->editBadge($badge_id, $badge['label'], $badge['color'], $sort_order);
 			} else {
-				$this->model_mintcart_badge->addBadge($product_id, $badge['label'], $badge['color'], $sort_order);
+				$this->model_mintcart_badge->addBadge($badge['label'], $badge['color'], $sort_order);
 			}
 
 			$this->session->data['success'] = $this->language->get('text_success');
@@ -100,13 +92,12 @@ class ControllerMintcartBadge extends Controller {
 			$view = \MintCart\Commerce\ProductBadge::toView($result);
 
 			$data['badges'][] = array(
-				'badge_id'     => $result['badge_id'],
-				'product_id'   => $result['product_id'],
-				'product_name' => $result['product_name'] !== null ? $result['product_name'] : '#' . $result['product_id'],
-				'label'        => $result['label'],
-				'color'        => $result['color'],
-				'on_color'     => $view['on_color'],
-				'sort_order'   => $result['sort_order']
+				'badge_id'      => $result['badge_id'],
+				'label'         => $result['label'],
+				'color'         => $result['color'],
+				'on_color'      => $view['on_color'],
+				'sort_order'    => $result['sort_order'],
+				'product_total' => $result['product_total']
 			);
 		}
 

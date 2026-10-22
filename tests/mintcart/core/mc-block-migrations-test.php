@@ -109,6 +109,7 @@ check(
         '202610081201_register_wizard_autostart.php',
         '202610221200_create_mc_product_badge.php',
         '202610221201_grant_admin_permissions_badges.php',
+        '202610221202_product_badge_definitions.php',
     ],
     'all real migrations should apply in filename order, got: ' . json_encode($result['applied']),
     $failures

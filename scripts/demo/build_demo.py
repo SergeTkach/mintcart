@@ -395,22 +395,16 @@ def main():
         cv.result((600, 600)).save(os.path.join(IMG_DIR, fn), 'JPEG', quality=90)
         sql.append("UPDATE oc_category SET image = %s WHERE category_id = %d;" % (q(IMG_PREFIX + fn), cid))
 
-    # --- manual product badges (Marketing → Product Badges) ---------------
-    sql.append('DELETE FROM oc_mc_product_badge;')
-    for pid, label, color in [(100, 'Bestseller', '#2457d6'), (106, 'Eco', ''), (118, 'Hit', '#d92d20')]:
-        sql.append("INSERT INTO oc_mc_product_badge (product_id, label, color, sort_order, date_added) VALUES (%d, %s, %s, 0, NOW());" % (pid, q(label), q(color)))
+    # Home layout order: slider (content_top), builder blocks, then featured + brands (content_bottom).
+    sql.append("UPDATE oc_layout_module SET position = 'content_bottom' WHERE code IN ('featured.28', 'carousel.29') AND layout_id = 1;")
 
-    # --- customer reviews (shown on product pages, the Testimonials block and /mintcart/reviews) ---
-    sql.append('DELETE FROM oc_review;')
-    for pid, author, rating, text, days in [
-        (100, 'Olena K.', 5, 'The mug feels even better than it looks. Arrived well packed and two days early.', 3),
-        (113, 'Andrii M.', 5, 'Bought the oak chairs for our kitchen - sturdy, light and assembled in minutes.', 6),
-        (109, 'Marta S.', 4, 'Great lamp. Support answered my question about bulbs the same afternoon.', 9),
-        (106, 'Ivan P.', 5, 'The vase is heavier than expected in a good way, and it really holds water.', 14),
-        (121, 'Natalia D.', 5, 'Soft linen, the colour is exactly as in the photo. Washed twice, no shrinking.', 20),
-        (118, 'Oleh B.', 4, 'Lovely candle, burns evenly. The jar is nice enough to reuse.', 27),
-    ]:
-        sql.append("INSERT INTO oc_review (product_id, customer_id, author, text, rating, status, date_added, date_modified) VALUES (%d, 0, %s, %s, %d, 1, DATE_SUB(NOW(), INTERVAL %d DAY), NOW());" % (pid, q(author), q(text), rating, days))
+    # --- manual product badges: the set (mc_badge) and which products carry them ---
+    sql.append('DELETE FROM oc_mc_product_badge;')
+    sql.append('DELETE FROM oc_mc_badge;')
+    for bid, label, color, pids in [(1, 'Bestseller', '#2457d6', [100, 109]), (2, 'Eco', '', [106]), (3, 'Hit', '#d92d20', [118, 121])]:
+        sql.append("INSERT INTO oc_mc_badge (badge_id, label, color, sort_order, date_added) VALUES (%d, %s, %s, %d, NOW());" % (bid, q(label), q(color), bid))
+        for pid in pids:
+            sql.append("INSERT INTO oc_mc_product_badge (product_id, badge_id) VALUES (%d, %d);" % (pid, bid))
 
     # --- home page blocks (Homepage Builder: mc_page 'home') -------------
     # The OpenCart banner/featured modules above keep working; these blocks

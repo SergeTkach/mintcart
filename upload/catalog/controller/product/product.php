@@ -256,6 +256,17 @@ class ControllerProductProduct extends Controller {
 
 			$data['heading_title'] = $product_info['name'];
 
+			// Manual badges (Marketing → Product Badges), same ones the product cards show.
+			$this->load->model('mintcart/badge');
+
+			$mint_badge_rows = $this->model_mintcart_badge->getByProductIds(array((int)$product_info['product_id']));
+
+			$data['mc_badges'] = array();
+
+			foreach (isset($mint_badge_rows[(int)$product_info['product_id']]) ? $mint_badge_rows[(int)$product_info['product_id']] : array() as $mint_badge_row) {
+				$data['mc_badges'][] = \MintCart\Commerce\ProductBadge::toView($mint_badge_row);
+			}
+
 			$data['text_minimum'] = sprintf($this->language->get('text_minimum'), $product_info['minimum']);
 			$data['text_login'] = sprintf($this->language->get('text_login'), $this->url->link('account/login', '', true), $this->url->link('account/register', '', true));
 
