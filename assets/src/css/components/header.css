@@ -418,3 +418,27 @@
         text-align: center;
     }
 }
+
+/* A logo is usually drawn for a light background: flatten it to white on the
+   dark bar instead of requiring a second logo file. */
+.mc-header--gallery .mc-header__logo img {
+    filter: brightness(0) invert(1);
+}
+
+/* The mini-cart toggle reads as plain text on the dark bar. */
+.mc-header--gallery .mc-mini-cart__toggle {
+    border-color: transparent;
+    background-color: transparent;
+    color: inherit;
+}
+
+.mc-header--gallery .mc-mini-cart__toggle:hover,
+.mc-header--gallery .mc-mini-cart__toggle[aria-expanded='true'] {
+    border-color: transparent;
+    color: inherit;
+    opacity: 0.75;
+}
+
+.mc-header--gallery .mc-mini-cart__toggle:focus-visible {
+    outline-color: var(--mc-text-inverse);
+}

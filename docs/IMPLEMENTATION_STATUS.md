@@ -42,8 +42,9 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
       product-card / header / footer with 0 OCMOD (ADR 002)
 - [x] Phase 9 — Presets: Clean, Warm (ADR 004); Design → Styles
   - [~] Gallery preset + `mint_gallery` theme with tile product card (ADR 013);
-        checked in a static render only, not on a live store; no gallery
-        header/footer yet
+        header + tile card live-checked on the local store (desktop, home +
+        category, headless screenshots; not mobile, product page or
+        checkout); no gallery footer yet
   - [~] Slots: `SlotRegistry` exists, not rendered by any template yet
   - [ ] Theme live preview (ADR 008 decided, not built)
   - [ ] `settings.json`-driven theme settings form
