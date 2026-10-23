@@ -756,7 +756,13 @@ class ControllerMintcartWizard extends Controller
         $this->load->model('localisation/currency');
 
         $back = $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true);
-        $code = (string)($this->request->post['add_currency_code'] ?? '');
+        $code = trim((string)($this->request->post['add_currency_code'] ?? ''));
+
+        // The field is a searchable list: the value is "Title (CODE)" when picked, or a bare code when typed.
+        if (preg_match('/\(([A-Za-z]{3})\)\s*$/', $code, $match)) {
+            $code = $match[1];
+        }
+
         $currency = $this->currencyCatalog()->find($code);
 
         if ($currency && $this->user->hasPermission('modify', 'mintcart/wizard') && !$this->model_localisation_currency->getCurrencyByCode($currency['code'])) {

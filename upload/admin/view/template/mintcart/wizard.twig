@@ -193,12 +193,12 @@
                 {% if error.currency %}<p class="mc-field__error" id="error-config-currency" role="alert">{{ error.currency }}</p>{% endif %}
                 {% if available_currencies %}
                 <div class="d-flex gap-2 mt-2">
-                  <select name="add_currency_code" form="mc-add-currency-form" class="mc-field__control" aria-label="{{ text_add_currency }}">
-                    <option value="">{{ text_add_currency }}</option>
+                  <input type="text" name="add_currency_code" form="mc-add-currency-form" class="mc-field__control" list="mc-currency-options" placeholder="{{ text_add_currency }}" aria-label="{{ text_add_currency }}" autocomplete="off" />
+                  <datalist id="mc-currency-options">
                     {% for code, label in available_currencies %}
-                    <option value="{{ code }}">{{ label }}</option>
+                    <option value="{{ label }}"></option>
                     {% endfor %}
-                  </select>
+                  </datalist>
                   <button type="submit" form="mc-add-currency-form" class="mc-button mc-button--secondary" title="{{ button_add_currency }}" aria-label="{{ button_add_currency }}">+</button>
                 </div>
                 {% endif %}
