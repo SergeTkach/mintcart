@@ -96,7 +96,10 @@ export function initMenuHint() {
     const place = () => {
         const box = link.getBoundingClientRect();
 
-        bubble.style.top = `${Math.max(box.top + window.scrollY - 6, 0)}px`;
+        // Beside the item, but never past the bottom edge of the window.
+        const top = Math.min(box.top - 6, window.innerHeight - bubble.offsetHeight - 8);
+
+        bubble.style.top = `${Math.max(top, 8) + window.scrollY}px`;
         bubble.style.left = `${box.right + window.scrollX + 14}px`;
     };
 

@@ -403,9 +403,11 @@
         </div>
         {% endif %}
 
-        {% if where_url %}
-        <p class="mc-wizard__where">
-          <a href="{{ where_url }}" target="_blank" rel="noopener">{{ text_where }} <strong>{{ where_label }}</strong></a>
+        {% if where_links %}
+        <p class="mc-wizard__where">{{ text_where }}
+          {% for link in where_links %}
+          <a href="{{ link.url }}" target="_blank" rel="noopener"><strong>{{ link.label }}</strong></a>{% if not loop.last %}, {% endif %}
+          {% endfor %}
         </p>
         {% endif %}
 

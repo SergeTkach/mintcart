@@ -649,16 +649,20 @@ class ControllerMintcartWizard extends Controller
         // (assets/src/js/components/menu-hint.js). Delivery and Payment have
         // their own "Manage ..." link.
         $where = [
-            'store'             => ['setting/store', 'where_store'],
-            'contacts'          => ['mintcart/business/contacts', 'where_contacts'],
-            'language_currency' => ['localisation/language', 'where_language_currency'],
-            'design'            => ['mintcart/design/styles', 'where_design'],
-            'first_product'     => ['catalog/product', 'where_first_product'],
+            'store'             => [['setting/store', 'where_store']],
+            'contacts'          => [['mintcart/business/contacts', 'where_contacts']],
+            'language_currency' => [['localisation/language', 'where_language'], ['localisation/currency', 'where_currency']],
+            'design'            => [['mintcart/design/styles', 'where_design']],
+            'first_product'     => [['catalog/product', 'where_first_product']],
         ];
 
-        if ($step !== null && isset($where[$step])) {
-            $data['where_url'] = $this->url->link($where[$step][0], 'user_token=' . $this->session->data['user_token'] . '&mc_hint=1', true);
-            $data['where_label'] = $this->language->get($where[$step][1]);
+        $data['where_links'] = [];
+
+        foreach ($where[$step] ?? [] as [$route, $label]) {
+            $data['where_links'][] = [
+                'url'   => $this->url->link($route, 'user_token=' . $this->session->data['user_token'] . '&mc_hint=1', true),
+                'label' => $this->language->get($label),
+            ];
         }
 
         $data['brand_logo'] = HTTP_SERVER . 'view/image/mintcart/logo.svg';
