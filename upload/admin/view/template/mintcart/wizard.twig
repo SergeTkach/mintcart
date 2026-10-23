@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>{{ heading_title }}</title>
 <link rel="stylesheet" href="{{ asset_base }}assets/dist/css/index.min.css" />
+<script src="{{ asset_base }}assets/dist/js/admin.min.js" defer></script>
 </head>
 <body class="mc-wizard">
 {#
@@ -16,6 +17,31 @@
   <div class="mc-wizard__actions">
     {% if prev_step_url %}<a class="mc-button mc-button--ghost" href="{{ prev_step_url }}">{{ button_back }}</a>{% endif %}
     <button type="submit" class="mc-button mc-button--primary mc-wizard__next">{{ label }}</button>
+  </div>
+{% endmacro %}
+{#
+  "+" adds one more picker row, a separate Save button stores every row
+  (assets/src/js/components/add-rows.js). The rows belong to the form with
+  id mc-add-<kind>-form, which sits outside the step form.
+#}
+{% macro add_rows(kind, field, list_id, options, placeholder, add_label, save_label, remove_label) %}
+  <div class="mt-2" data-mc-add-rows>
+    <div class="d-flex flex-column gap-2" data-mc-add-rows-list></div>
+    <template data-mc-add-rows-template>
+      <div class="d-flex gap-2" data-mc-add-rows-row>
+        <input type="text" name="{{ field }}" form="mc-add-{{ kind }}-form" class="mc-field__control" list="{{ list_id }}" placeholder="{{ placeholder }}" aria-label="{{ placeholder }}" autocomplete="off" />
+        <button type="button" class="mc-button mc-button--ghost" data-mc-add-rows-remove title="{{ remove_label }}" aria-label="{{ remove_label }}">&times;</button>
+      </div>
+    </template>
+    <datalist id="{{ list_id }}">
+      {% for code, label in options %}
+      <option value="{{ label }}"></option>
+      {% endfor %}
+    </datalist>
+    <div class="d-flex gap-2 mt-2">
+      <button type="button" class="mc-button mc-button--secondary" data-mc-add-rows-add title="{{ add_label }}" aria-label="{{ add_label }}">+</button>
+      <button type="submit" form="mc-add-{{ kind }}-form" class="mc-button mc-button--primary" data-mc-add-rows-save hidden>{{ save_label }}</button>
+    </div>
   </div>
 {% endmacro %}
 {% import _self as wizard %}
@@ -180,15 +206,7 @@
                 </select>
                 {% if error.language %}<p class="mc-field__error" id="error-config-language" role="alert">{{ error.language }}</p>{% endif %}
                 {% if available_languages %}
-                <div class="d-flex gap-2 mt-2">
-                  <input type="text" name="add_language_code" form="mc-add-language-form" class="mc-field__control" list="mc-language-options" placeholder="{{ text_add_language }}" aria-label="{{ text_add_language }}" autocomplete="off" />
-                  <datalist id="mc-language-options">
-                    {% for code, label in available_languages %}
-                    <option value="{{ label }}"></option>
-                    {% endfor %}
-                  </datalist>
-                  <button type="submit" form="mc-add-language-form" class="mc-button mc-button--secondary" title="{{ button_add_language }}" aria-label="{{ button_add_language }}">+</button>
-                </div>
+                {{ wizard.add_rows('language', 'add_language_code[]', 'mc-language-options', available_languages, text_add_language, button_add_language_row, button_save_languages, button_remove_row) }}
                 {% endif %}
               </div>
             </div>
@@ -202,15 +220,7 @@
                 </select>
                 {% if error.currency %}<p class="mc-field__error" id="error-config-currency" role="alert">{{ error.currency }}</p>{% endif %}
                 {% if available_currencies %}
-                <div class="d-flex gap-2 mt-2">
-                  <input type="text" name="add_currency_code" form="mc-add-currency-form" class="mc-field__control" list="mc-currency-options" placeholder="{{ text_add_currency }}" aria-label="{{ text_add_currency }}" autocomplete="off" />
-                  <datalist id="mc-currency-options">
-                    {% for code, label in available_currencies %}
-                    <option value="{{ label }}"></option>
-                    {% endfor %}
-                  </datalist>
-                  <button type="submit" form="mc-add-currency-form" class="mc-button mc-button--secondary" title="{{ button_add_currency }}" aria-label="{{ button_add_currency }}">+</button>
-                </div>
+                {{ wizard.add_rows('currency', 'add_currency_code[]', 'mc-currency-options', available_currencies, text_add_currency, button_add_currency_row, button_save_currencies, button_remove_row) }}
                 {% endif %}
               </div>
             </div>

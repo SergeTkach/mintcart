@@ -49,6 +49,7 @@ import { initProgressBars } from './components/progress.js';
 import { createEntityPicker } from './components/entity-picker.js';
 import { createMediaPicker } from './components/media-picker.js';
 import { initAdminSearch, initFieldJump } from './components/admin-search.js';
+import { initAddRows } from './components/add-rows.js';
 
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
@@ -104,6 +105,7 @@ function boot() {
     initProgressBars();
     initAdminSearch();
     initFieldJump();
+    initAddRows();
 }
 
 if (document.readyState === 'loading') {
