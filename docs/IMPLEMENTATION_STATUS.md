@@ -190,6 +190,21 @@ Smaller items, taken autonomously in this order:
 5. [~] Admin settings search: jump to a field (done, not browser-checked); Ukrainian labels need an admin uk-ua pack
 6. [ ] Entity Picker: create-new in a drawer
 
+Shipping carriers (added 2026-10-23, after the first release):
+
+1. [ ] Nova Poshta and Ukrposhta shipping modules, ported from the Cartello project
+   (`C:\laragon\www\themes\cartello`: `ocnp_novaposhta`, `st_ukrposhta`): adapt
+   them to the MintCart design and to the MintCart checkout. Cartello's versions are
+   built around the old checkout, so first check how they behave in ours (city and
+   warehouse pickers, price calculation, API key stored and shown inline in the
+   wizard's delivery card like the core methods). No OCMOD, no controller patches
+2. [ ] US postal carriers (2-3, e.g. USPS, UPS, FedEx) and UK (e.g. Royal Mail,
+   Parcelforce): OpenCart already ships some of them; check what works on the
+   MintCart checkout, then give them inline settings in the wizard
+3. [ ] DHL
+4. [ ] Inline settings for payment methods in the wizard (same mechanism as
+   shipping: `system/mintcart/data/method-fields.json`)
+
 Heavy items not in this batch: first end-to-end release (needs a clean DB),
 admin navigation restructure, theme live preview + `settings.json` form,
 full Bulk Editor, rollback action.

@@ -240,32 +240,57 @@
         <p class="mc-wizard__lead">{{ step == 'delivery' ? delivery_text : payment_text }}</p>
 
         {% set any_enabled = methods|filter(m => m.enabled)|length > 0 %}
-        {% if not any_enabled %}
-        <div class="mc-alert mc-alert--warning mb-4" role="status">
+        <div class="mc-alert mc-alert--warning mb-4" role="status" data-mc-methods-warning{% if any_enabled %} hidden{% endif %}>
           <div class="mc-alert__body">
             <p class="mc-alert__message">{{ step == 'delivery' ? warning_delivery_none : warning_payment_none }}</p>
           </div>
         </div>
-        {% endif %}
 
         {% if methods is empty %}
         <p class="mc-wizard__empty">{{ step == 'delivery' ? text_delivery_empty : text_payment_empty }}</p>
         {% else %}
-        <ul class="mc-wizard__options">
+        <ul class="mc-wizard__options" data-mc-methods>
           {% for extension in methods %}
-          <li class="mc-wizard__option{% if extension.enabled %} is-on{% endif %}">
+          <li class="mc-wizard__option{% if extension.enabled %} is-on{% endif %}" data-mc-method data-text-on="{{ text_enabled }}" data-text-off="{{ text_disabled }}" data-label-enable="{{ button_enable }}" data-label-disable="{{ button_disable }}">
             <span class="mc-wizard__option-name">{{ extension.name }}</span>
-            <span class="mc-badge{% if extension.enabled %} mc-badge--success{% endif %}">{{ extension.enabled ? text_enabled : text_disabled }}</span>
-            <form action="{{ step == 'delivery' ? toggle_delivery : toggle_payment }}" method="post">
+            <span class="mc-badge{% if extension.enabled %} mc-badge--success{% endif %}" data-mc-method-badge>{{ extension.enabled ? text_enabled : text_disabled }}</span>
+            <form action="{{ step == 'delivery' ? toggle_delivery : toggle_payment }}" method="post" data-mc-ajax-form>
               <input type="hidden" name="code" value="{{ extension.code }}" />
               <button type="submit" class="mc-button mc-button--{{ extension.enabled ? 'ghost' : 'secondary' }} mc-button--sm">{{ extension.enabled ? button_disable : button_enable }}</button>
             </form>
+            {% if extension.fields %}
+            <details class="mc-wizard__settings">
+              <summary class="mc-wizard__settings-toggle">{{ button_settings }}</summary>
+              <form action="{{ save_method }}" method="post" class="row g-3 mt-0" data-mc-ajax-form>
+                <input type="hidden" name="code" value="{{ extension.code }}" />
+                {% for field in extension.fields %}
+                <div class="col-md-6">
+                  <label class="mc-field__label" for="field-{{ extension.code }}-{{ field.key }}">{{ field.label }}</label>
+                  {% if field.type == 'select' %}
+                  <select id="field-{{ extension.code }}-{{ field.key }}" name="field[{{ field.key }}]" class="mc-field__control">
+                    {% for option_value, option_label in field.options %}
+                    <option value="{{ option_value }}"{% if option_value == field.value %} selected{% endif %}>{{ option_label }}</option>
+                    {% endfor %}
+                  </select>
+                  {% else %}
+                  <input type="text" inputmode="decimal" id="field-{{ extension.code }}-{{ field.key }}" name="field[{{ field.key }}]" value="{{ field.value }}" class="mc-field__control" />
+                  {% endif %}
+                  <p class="mc-field__error" data-mc-ajax-form-error="{{ field.key }}" role="alert" hidden></p>
+                </div>
+                {% endfor %}
+                <div class="col-12 d-flex align-items-center gap-3">
+                  <button type="submit" class="mc-button mc-button--primary mc-button--sm">{{ button_save }}</button>
+                  <span class="mc-wizard__settings-status" data-mc-ajax-form-status role="status"></span>
+                </div>
+              </form>
+            </details>
+            {% endif %}
           </li>
           {% endfor %}
         </ul>
         {% endif %}
 
-        <a href="{{ step == 'delivery' ? manage_delivery : manage_payment }}" class="mc-wizard__more">{{ step == 'delivery' ? button_manage_delivery : button_manage_payment }}</a>
+        <a href="{{ step == 'delivery' ? manage_delivery : manage_payment }}" class="mc-wizard__more" target="_blank" rel="noopener">{{ step == 'delivery' ? button_manage_delivery : button_manage_payment }}</a>
 
         <form action="{{ action }}" method="post">
           <input type="hidden" name="step" value="{{ step }}" />

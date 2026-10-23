@@ -51,6 +51,7 @@ import { createMediaPicker } from './components/media-picker.js';
 import { initAdminSearch, initFieldJump } from './components/admin-search.js';
 import { initAddRows } from './components/add-rows.js';
 import { initSelectSearch } from './components/select-search.js';
+import { initAjaxForms } from './components/ajax-form.js';
 
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
@@ -108,6 +109,7 @@ function boot() {
     initFieldJump();
     initAddRows();
     initSelectSearch();
+    initAjaxForms();
 }
 
 if (document.readyState === 'loading') {

@@ -709,6 +709,7 @@ class ControllerMintcartWizard extends Controller
         if ($step === 'delivery') {
             $data['shipping_extensions'] = $this->loadShippingExtensions();
             $data['toggle_delivery'] = $this->url->link('mintcart/wizard/toggleDelivery', 'user_token=' . $this->session->data['user_token'] . '&step=delivery', true);
+            $data['save_method'] = $this->url->link('mintcart/wizard/saveMethod', 'user_token=' . $this->session->data['user_token'], true);
             $data['manage_delivery'] = $this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'], true);
         }
 
@@ -961,6 +962,7 @@ class ControllerMintcartWizard extends Controller
         $this->load->model('setting/setting');
 
         $code = isset($this->request->post['code']) ? (string)$this->request->post['code'] : '';
+        $enabled = null;
 
         if ($code !== '' && in_array($code, $this->model_setting_extension->getInstalled('shipping'), true)) {
             // Merge-then-save, never a bare editSetting('shipping_<code>', [...]) -
@@ -976,9 +978,11 @@ class ControllerMintcartWizard extends Controller
             $existing['shipping_' . $code . '_status'] = empty($existing['shipping_' . $code . '_status']) ? '1' : '0';
 
             $this->model_setting_setting->editSetting('shipping_' . $code, $existing);
+
+            $enabled = $existing['shipping_' . $code . '_status'] === '1';
         }
 
-        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=delivery', true));
+        $this->finishToggle('delivery', $enabled);
     }
 
     /**
@@ -996,6 +1000,7 @@ class ControllerMintcartWizard extends Controller
         $this->load->model('setting/setting');
 
         $code = isset($this->request->post['code']) ? (string)$this->request->post['code'] : '';
+        $enabled = null;
 
         if ($code !== '' && in_array($code, $this->model_setting_extension->getInstalled('payment'), true)) {
             // Merge-then-save - see toggleDelivery()'s identical comment for
@@ -1006,9 +1011,27 @@ class ControllerMintcartWizard extends Controller
             $existing['payment_' . $code . '_status'] = empty($existing['payment_' . $code . '_status']) ? '1' : '0';
 
             $this->model_setting_setting->editSetting('payment_' . $code, $existing);
+
+            $enabled = $existing['payment_' . $code . '_status'] === '1';
         }
 
-        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=payment', true));
+        $this->finishToggle('payment', $enabled);
+    }
+
+    /**
+     * End of toggleDelivery()/togglePayment(): JSON for the page's fetch()
+     * call, a redirect back to the step for a plain form post.
+     */
+    private function finishToggle(string $step, ?bool $enabled): void
+    {
+        if (($this->request->server['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest') {
+            $this->response->addHeader('Content-Type: application/json');
+            $this->response->setOutput(json_encode(['ok' => $enabled !== null, 'enabled' => $enabled]));
+
+            return;
+        }
+
+        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=' . $step, true));
     }
 
     /**
@@ -1070,10 +1093,127 @@ class ControllerMintcartWizard extends Controller
                 'code' => $code,
                 'name' => $this->language->get('extension')->get('heading_title'),
                 'enabled' => (bool)$this->config->get('shipping_' . $code . '_status'),
+                'fields' => $this->methodFields('shipping', $code),
             ];
         }
 
         return $rows;
+    }
+
+    /**
+     * The settings a shipping method shows inline in its wizard card, from
+     * `system/mintcart/data/method-fields.json` (the same keys OpenCart's own
+     * settings form stores: `shipping_<code>_<key>`). A method that is not
+     * listed there gets no inline form.
+     *
+     * @return array<int, array{key: string, type: string, label: string, value: string, options: array<int|string, string>}>
+     */
+    private function methodFields(string $type, string $code): array
+    {
+        $schema = json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/method-fields.json'), true)[$type][$code] ?? [];
+        $fields = [];
+
+        foreach ($schema as $field) {
+            $options = [];
+
+            if ($field['type'] === 'select') {
+                $options = $this->fieldOptions($field['source']);
+            }
+
+            $value = $this->config->get($type . '_' . $code . '_' . $field['key']);
+
+            $fields[] = [
+                'key'     => $field['key'],
+                'type'    => $field['type'],
+                'label'   => $this->language->get('field_' . $field['key']),
+                'value'   => $value !== null ? (string)$value : (string)($field['default'] ?? ''),
+                'options' => $options,
+            ];
+        }
+
+        return $fields;
+    }
+
+    /**
+     * @return array<int|string, string> id => title, with a leading "none / all" entry
+     */
+    private function fieldOptions(string $source): array
+    {
+        if ($source === 'tax_class') {
+            $this->load->model('localisation/tax_class');
+
+            $options = [0 => $this->language->get('text_tax_none')];
+
+            foreach ($this->model_localisation_tax_class->getTaxClasses() as $row) {
+                $options[(int)$row['tax_class_id']] = $row['title'];
+            }
+
+            return $options;
+        }
+
+        $this->load->model('localisation/geo_zone');
+
+        $options = [0 => $this->language->get('text_geo_all')];
+
+        foreach ($this->model_localisation_geo_zone->getGeoZones() as $row) {
+            $options[(int)$row['geo_zone_id']] = $row['name'];
+        }
+
+        return $options;
+    }
+
+    /**
+     * Saves one shipping method's inline settings (field[<key>] values) over
+     * fetch(). Only keys listed in method-fields.json are accepted, and the
+     * method's other settings (status, sort order, ...) are kept - the same
+     * merge-then-save rule toggleDelivery() documents.
+     */
+    public function saveMethod(): void
+    {
+        $this->load->language('mintcart/wizard');
+        $this->load->model('setting/extension');
+        $this->load->model('setting/setting');
+
+        $code = (string)($this->request->post['code'] ?? '');
+        $result = ['ok' => false, 'message' => '', 'errors' => []];
+        $fields = in_array($code, $this->model_setting_extension->getInstalled('shipping'), true) ? $this->methodFields('shipping', $code) : [];
+
+        if (!$fields) {
+            $result['message'] = $this->language->get('error_method');
+        } elseif (!$this->user->hasPermission('modify', 'mintcart/wizard')) {
+            $result['message'] = $this->language->get('text_no_permission');
+        } else {
+            $posted = (array)($this->request->post['field'] ?? []);
+            $values = [];
+
+            foreach ($fields as $field) {
+                $value = trim((string)($posted[$field['key']] ?? ''));
+
+                if ($field['type'] === 'number') {
+                    $value = str_replace(',', '.', $value);
+
+                    if ($value === '' || !is_numeric($value) || (float)$value < 0) {
+                        $result['errors'][$field['key']] = $this->language->get('error_number');
+                    }
+                } elseif (!array_key_exists((int)$value, $field['options'])) {
+                    $result['errors'][$field['key']] = $this->language->get('error_option');
+                }
+
+                $values['shipping_' . $code . '_' . $field['key']] = $value;
+            }
+
+            if ($result['errors']) {
+                $result['message'] = $this->language->get('error_check_fields');
+            } else {
+                $this->model_setting_setting->editSetting('shipping_' . $code, array_merge($this->model_setting_setting->getSetting('shipping_' . $code), $values));
+
+                $result['ok'] = true;
+                $result['message'] = $this->language->get('text_saved');
+            }
+        }
+
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($result));
     }
 
     /**

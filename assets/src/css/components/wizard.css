@@ -302,6 +302,33 @@ a.mc-wizard__step-link:focus-visible {
     font-weight: var(--mc-font-weight-medium);
 }
 
+/* A method's inline settings: a row of its own under the name/toggle. */
+.mc-wizard__option {
+    flex-wrap: wrap;
+}
+
+.mc-wizard__settings {
+    flex: 0 0 100%;
+    padding-bottom: var(--mc-space-2);
+}
+
+.mc-wizard__settings-toggle {
+    width: fit-content;
+    margin-bottom: var(--mc-space-3);
+    color: var(--mc-primary);
+    font-size: var(--mc-font-size-sm);
+    cursor: pointer;
+}
+
+.mc-wizard__settings-status {
+    font-size: var(--mc-font-size-sm);
+    color: var(--mc-success);
+}
+
+.mc-wizard__settings-status.has-error {
+    color: var(--mc-danger);
+}
+
 /* Readiness score ---------------------------------------------------------- */
 
 .mc-wizard__readiness {
