@@ -151,6 +151,14 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
       MintCart logo, own home-goods demo catalogue via `install/mintcart-demo.sql`),
       MintCart admin logo/footer. Still to do: wizard steps 5-9 click-through and a
       real test order on the clean install
+- [x] Storage outside the web root from the first install (`StorageLocation`, installers
+      web + CLI) so OpenCart's security notice never appears; System > Maintenance >
+      Storage moves it later (2026-10-23)
+- [x] Setup Wizard: shipping methods set up inline (cost, tax class, zone) and toggled
+      over AJAX; steps passed but not set up get an amber `!`, unmet readiness rows link
+      back to their step; admin menu pointer (red) shows where each setting lives
+      (`menu-hint.js`, `mc_hint` / `mc_point`); first product has optional per-language
+      text; MintCart favicon on the wizard and the admin
 - [x] Setup Wizard Language & currency: currency picked from a bundled ISO list with live
       rates (ECB, then open.er-api.com), `uk-ua` / `ru-ru` packs, Select2-style
       searchable selects, "+" rows saved over AJAX (`add-rows.js`, `select-search.js`)
@@ -189,6 +197,11 @@ Smaller items, taken autonomously in this order:
 4. [ ] hreflang verified on a multi-language store
 5. [~] Admin settings search: jump to a field (done, not browser-checked); Ukrainian labels need an admin uk-ua pack
 6. [ ] Entity Picker: create-new in a drawer
+
+Agreed 2026-10-23, next up: Business > Delivery / Payments become the one place to
+manage methods (an "Add a method" button that installs an available extension,
+inline settings instead of the pencil to another page), Extensions stays under
+Advanced; the wizard's Delivery and Payment steps use the same screen.
 
 Shipping carriers (added 2026-10-23, after the first release):
 
