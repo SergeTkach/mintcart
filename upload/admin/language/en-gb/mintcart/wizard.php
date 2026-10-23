@@ -52,6 +52,8 @@ $_['language_currency_title'] = 'Language & currency';
 $_['language_currency_text']  = 'Choose the default language and currency shoppers see on your storefront. You can add more of either later in Settings.';
 $_['entry_language']          = 'Default language';
 $_['entry_currency']          = 'Default currency';
+$_['text_add_language']       = 'Add another language (opens in a new tab; reload this page afterwards)';
+$_['text_add_currency']       = 'Add another currency (opens in a new tab; reload this page afterwards)';
 
 // Delivery step
 

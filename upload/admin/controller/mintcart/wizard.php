@@ -693,6 +693,8 @@ class ControllerMintcartWizard extends Controller
             $data['config_currency'] = $this->request->post['config_currency'] ?? $this->config->get('config_currency');
             $data['languages'] = $this->model_localisation_language->getLanguages();
             $data['currencies'] = $this->model_localisation_currency->getCurrencies();
+            $data['add_language'] = $this->url->link('localisation/language/add', 'user_token=' . $this->session->data['user_token'], true);
+            $data['add_currency'] = $this->url->link('localisation/currency/add', 'user_token=' . $this->session->data['user_token'], true);
         }
 
         if ($step === 'delivery') {
