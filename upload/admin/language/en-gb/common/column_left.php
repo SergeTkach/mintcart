@@ -32,6 +32,7 @@ $_['text_layout']               = 'Layouts';
 $_['text_localisation']         = 'Localisation';
 $_['text_location']             = 'Store Location';
 $_['text_contact']              = 'Mail';
+$_['text_mintcart_wizard']            = 'Setup Wizard';
 $_['text_mintcart_business']          = 'Business';
 $_['text_mintcart_business_contacts'] = 'Contacts';
 $_['text_mintcart_business_delivery'] = 'Delivery';

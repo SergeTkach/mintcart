@@ -16,6 +16,18 @@ class ControllerCommonColumnLeft extends Controller {
 				'children' => array()
 			);
 
+			// Setup Wizard: reachable from the menu on every admin page, not
+			// only through the Store Readiness dashboard widget.
+			if ($this->user->hasPermission('access', 'mintcart/wizard')) {
+				$data['menus'][] = array(
+					'id'       => 'menu-mintcart-wizard',
+					'icon'	   => 'fa-magic',
+					'name'	   => $this->language->get('text_mintcart_wizard'),
+					'href'     => $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			// Catalog
 			$catalog = array();
 
