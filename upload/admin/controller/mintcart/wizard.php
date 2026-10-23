@@ -649,7 +649,7 @@ class ControllerMintcartWizard extends Controller
         // (assets/src/js/components/menu-hint.js). Delivery and Payment have
         // their own "Manage ..." link.
         $where = [
-            'store'             => [['setting/store', 'where_store']],
+            'store'             => [['setting/store', 'where_store', 'setting/setting']],
             'contacts'          => [['mintcart/business/contacts', 'where_contacts']],
             'language_currency' => [['localisation/language', 'where_language'], ['localisation/currency', 'where_currency']],
             'design'            => [['mintcart/design/styles', 'where_design']],
@@ -658,9 +658,11 @@ class ControllerMintcartWizard extends Controller
 
         $data['where_links'] = [];
 
-        foreach ($where[$step] ?? [] as [$route, $label]) {
+        foreach ($where[$step] ?? [] as $entry) {
+            [$route, $label, $point] = array_pad($entry, 3, null);
+
             $data['where_links'][] = [
-                'url'   => $this->url->link($route, 'user_token=' . $this->session->data['user_token'] . '&mc_hint=1', true),
+                'url'   => $this->url->link($route, 'user_token=' . $this->session->data['user_token'] . '&mc_hint=1' . ($point ? '&mc_point=' . $point : ''), true),
                 'label' => $this->language->get($label),
             ];
         }

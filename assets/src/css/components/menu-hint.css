@@ -56,6 +56,33 @@
     cursor: pointer;
 }
 
+/* The bubble under a button on the page: the arrow points up, at its right end. */
+.mc-menu-hint__bubble--below::before {
+    top: -7px;
+    right: 18px;
+    left: auto;
+    border-top: 1px solid var(--mc-accent);
+    border-right: 1px solid var(--mc-accent);
+    border-bottom: 0;
+    border-left: 0;
+}
+
+/* The button on the page that opens the thing the hint is about. */
+.mc-point-hint {
+    animation: mc-point-hint-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes mc-point-hint-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--mc-accent) 55%, transparent);
+    }
+
+    50% {
+        box-shadow: 0 0 0 7px color-mix(in srgb, var(--mc-accent) 0%, transparent);
+    }
+}
+
 @keyframes mc-menu-hint-pulse {
     0%,
     100% {
@@ -68,6 +95,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .mc-point-hint {
+        animation: none;
+        outline: 2px solid var(--mc-accent);
+        outline-offset: 2px;
+    }
+
     #menu a.mc-menu-hint {
         animation: none;
         background-color: color-mix(in srgb, var(--mc-accent) 28%, transparent);
