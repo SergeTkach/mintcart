@@ -92,6 +92,16 @@ class ControllerInstallStep3 extends Controller {
 
 			fclose($file);
 
+			// MintCart: storage goes next to the web root, not inside it. If
+			// that is not possible here (read-only parent folder, say) the
+			// store keeps working and System > Maintenance > Storage can move
+			// it later.
+			\MintCart\Core\StorageLocation::move(
+				DIR_STORAGE,
+				\MintCart\Core\StorageLocation::suggest(DIR_OPENCART),
+				array(DIR_OPENCART . 'config.php', DIR_OPENCART . 'admin/config.php')
+			);
+
 			$this->response->redirect($this->url->link('install/step_4'));
 		}
 

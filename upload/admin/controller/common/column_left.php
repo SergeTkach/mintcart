@@ -736,6 +736,14 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			if ($this->user->hasPermission('access', 'mintcart/maintenance/storage')) {
+				$maintenance[] = array(
+					'name'	   => $this->language->get('text_mc_storage'),
+					'href'     => $this->url->link('mintcart/maintenance/storage', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			if ($maintenance) {
 				$system[] = array(
 					'id'       => 'menu-maintenance',

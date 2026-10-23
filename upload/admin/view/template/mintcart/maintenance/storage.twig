@@ -1,0 +1,62 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-hdd-o"></i> {{ heading_title }}</h3>
+      </div>
+      <div class="panel-body">
+        <p>{{ text_intro }}</p>
+
+        <table class="table table-bordered">
+          <tbody>
+            <tr>
+              <td class="text-left" style="width: 25%;">{{ text_current }}</td>
+              <td class="text-left"><code>{{ storage }}</code></td>
+            </tr>
+            <tr>
+              <td class="text-left">{{ text_status }}</td>
+              <td class="text-left">
+                {% if inside %}
+                <span class="label label-danger">{{ text_inside }}</span> {{ text_inside_help }}
+                {% else %}
+                <span class="label label-success">{{ text_outside }}</span> {{ text_outside_help }}
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>{{ text_move_title }}</h4>
+        <p class="text-muted">{{ text_move_help }}</p>
+
+        <form action="{{ action }}" method="post" class="form-horizontal" data-mc-ajax-form>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-path">{{ entry_path }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="field[path]" id="input-path" value="{{ suggested }}" class="form-control" />
+              <p class="help-block text-danger" data-mc-ajax-form-error="path" role="alert" hidden></p>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+              <button type="submit" class="btn btn-primary"><i class="fa fa-arrows"></i> {{ button_move }}</button>
+              <span data-mc-ajax-form-status role="status"></span>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{ footer }}

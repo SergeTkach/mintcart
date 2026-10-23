@@ -89,3 +89,4 @@ $_['text_other_status']         = 'Other Statuses';
 $_['text_mc_menu_hint']    = 'Next time you will find this here:';
 $_['text_mc_menu_hint_ok'] = 'Got it';
 $_['text_mc_menu_hint_click'] = 'Click here to open it';
+$_['text_mc_storage']         = 'Storage';
