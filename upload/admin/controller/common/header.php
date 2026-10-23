@@ -2,6 +2,7 @@
 class ControllerCommonHeader extends Controller {
 	public function index() {
 		$data['title'] = $this->document->getTitle();
+		$data['mc_favicon'] = HTTP_CATALOG . 'image/catalog/mintcart-favicon.png';
 
 		if ($this->request->server['HTTPS']) {
 			$data['base'] = HTTPS_SERVER;

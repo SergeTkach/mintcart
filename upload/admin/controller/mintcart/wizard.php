@@ -556,12 +556,21 @@ class ControllerMintcartWizard extends Controller
 
         $productDescription = [];
 
+        $translations = (array)($this->request->post['translation'] ?? []);
+
         foreach ($this->model_localisation_language->getLanguages() as $language) {
+            // The form's main fields are the default language; another
+            // language uses its own text when it was filled in, the main text
+            // otherwise (translations are optional).
+            $own = (array)($translations[$language['language_id']] ?? []);
+            $languageName = trim((string)($own['name'] ?? ''));
+            $languageDescription = trim((string)($own['description'] ?? ''));
+
             $productDescription[$language['language_id']] = [
-                'name'             => $name,
-                'description'      => $description,
+                'name'             => $languageName !== '' ? $languageName : $name,
+                'description'      => $languageDescription !== '' ? $languageDescription : $description,
                 'tag'              => '',
-                'meta_title'       => $name,
+                'meta_title'       => $languageName !== '' ? $languageName : $name,
                 'meta_description' => '',
                 'meta_keyword'     => '',
             ];
@@ -758,6 +767,13 @@ class ControllerMintcartWizard extends Controller
             $data['description'] = $this->request->post['description'] ?? '';
             $data['price'] = $this->request->post['price'] ?? '';
             $data['quantity'] = $this->request->post['quantity'] ?? '';
+
+            $this->load->model('localisation/language');
+
+            $data['translation_languages'] = array_values(array_filter($this->model_localisation_language->getLanguages(), function ($language) {
+                return $language['code'] !== $this->config->get('config_language');
+            }));
+            $data['translation'] = (array)($this->request->post['translation'] ?? []);
         }
 
         if ($step === 'ready') {

@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>{{ heading_title }}</title>
+<link rel="icon" href="{{ asset_base }}image/catalog/mintcart-favicon.png" type="image/png" />
 <link rel="stylesheet" href="{{ asset_base }}assets/dist/css/index.min.css" />
 <script src="{{ asset_base }}assets/dist/js/admin.min.js" defer></script>
 </head>
@@ -358,6 +359,27 @@
                 <textarea id="input-description" name="description" rows="4" class="mc-field__control">{{ description }}</textarea>
               </div>
             </div>
+            {% if translation_languages %}
+            <div class="col-12">
+              <details class="mc-wizard__translations">
+                <summary class="mc-wizard__settings-toggle">{{ text_translations }}</summary>
+                <p class="mc-wizard__lead">{{ text_translations_help }}</p>
+                {% for language in translation_languages %}
+                <div class="row g-3 mb-3">
+                  <div class="col-12"><strong>{{ language.name }}</strong></div>
+                  <div class="col-12">
+                    <label class="mc-field__label" for="input-name-{{ language.language_id }}">{{ entry_product_name }}</label>
+                    <input type="text" id="input-name-{{ language.language_id }}" name="translation[{{ language.language_id }}][name]" value="{{ translation[language.language_id].name }}" class="mc-field__control" />
+                  </div>
+                  <div class="col-12">
+                    <label class="mc-field__label" for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
+                    <textarea id="input-description-{{ language.language_id }}" name="translation[{{ language.language_id }}][description]" rows="3" class="mc-field__control">{{ translation[language.language_id].description }}</textarea>
+                  </div>
+                </div>
+                {% endfor %}
+              </details>
+            </div>
+            {% endif %}
           </div>
 
           {{ wizard.actions(prev_step_url, button_back, button_add_product) }}
