@@ -144,7 +144,16 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 - [x] Home page rhythm (ADR 015) and retail header (ADR 016): tinted bands, soft
       shapes, dark top bar with phone, one-row header, discount tags, ratings
 - [x] Demo data: `npm run demo:home` (Pexels photos) / `demo:electronics` (local only)
-- [ ] Fresh install from `upload/` → wizard → first order, end to end
+- [~] Fresh install from `upload/` → wizard → first order, end to end: the release zip
+      installs on a clean DB and the storefront/admin/wizard open (2026-10-23); fixed on
+      the way: `.gitignore` dropped `system/storage/*` (placeholders, Twig vendor, Test
+      classes), admin header lost its assets, install defaults (Mint Comfort theme,
+      MintCart logo, own home-goods demo catalogue via `install/mintcart-demo.sql`),
+      MintCart admin logo/footer. Still to do: wizard steps 5-9 click-through and a
+      real test order on the clean install
+- [x] Setup Wizard Language & currency: currency picked from a bundled ISO list with live
+      rates (ECB, then open.er-api.com), `uk-ua` / `ru-ru` packs, Select2-style
+      searchable selects, "+" rows saved over AJAX (`add-rows.js`, `select-search.js`)
 - [ ] Smoke tests per Implementation Guide §78 (browser)
 
 ## Early Access / 1.0
