@@ -39,6 +39,8 @@ upload/**/.htaccess
 upload/**/config.php
 upload/**/install.lock
 upload/**/test*
+# vendor libraries legitimately contain Test/ dirs and Test* classes (Twig needs them)
+!upload/system/storage/vendor/**/test*
 # ...except the real, source-controlled Theme API milestone-proof theme
 # (docs/IMPLEMENTATION_STATUS.md Phase 8) - not runtime/scratch test data.
 !upload/catalog/view/theme/test_theme/
