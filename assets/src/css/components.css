@@ -68,6 +68,8 @@
 @import './components/alert.css';
 @import './components/field.css';
 @import './components/select.css';
+@import './components/select-search.css';
+@import './components/add-rows.css';
 @import './components/checkbox.css';
 @import './components/radio.css';
 @import './components/badge.css';

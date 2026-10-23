@@ -1,0 +1,15 @@
+/**
+ * mc-add-rows
+ *
+ * Layout of the "+" rows in `assets/src/js/components/add-rows.js`: a picker
+ * that takes the free width of the row, with the remove button beside it.
+ * A select's intrinsic width is its longest option, so the control is
+ * told to start from zero and grow (otherwise a long currency name pushes the
+ * remove button onto the next line in a narrow column).
+ */
+
+.mc-add-rows__control {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+}

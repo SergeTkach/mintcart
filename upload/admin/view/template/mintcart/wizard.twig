@@ -24,20 +24,20 @@
   (assets/src/js/components/add-rows.js). The rows belong to the form with
   id mc-add-<kind>-form, which sits outside the step form.
 #}
-{% macro add_rows(kind, field, list_id, options, placeholder, add_label, save_label, remove_label) %}
-  <div class="mt-2" data-mc-add-rows>
+{% macro add_rows(kind, field, options, placeholder, add_label, save_label, remove_label, target_id, search_label, empty_label, pick_label) %}
+  <div class="mt-2" data-mc-add-rows data-mc-add-rows-form="mc-add-{{ kind }}-form" data-mc-add-rows-target="{{ target_id }}" data-mc-add-rows-empty="{{ pick_label }}">
     <div class="d-flex flex-column gap-2" data-mc-add-rows-list></div>
     <template data-mc-add-rows-template>
-      <div class="d-flex gap-2" data-mc-add-rows-row>
-        <input type="text" name="{{ field }}" form="mc-add-{{ kind }}-form" class="mc-field__control" list="{{ list_id }}" placeholder="{{ placeholder }}" aria-label="{{ placeholder }}" autocomplete="off" />
+      <div class="d-flex flex-wrap gap-2" data-mc-add-rows-row>
+        <select name="{{ field }}" form="mc-add-{{ kind }}-form" class="mc-field__control mc-add-rows__control" aria-label="{{ placeholder }}" data-mc-select-search data-mc-select-search-placeholder="{{ search_label }}" data-mc-select-search-empty="{{ empty_label }}">
+          <option value="">{{ placeholder }}</option>
+          {% for code, label in options %}
+          <option value="{{ code }}">{{ label }}</option>
+          {% endfor %}
+        </select>
         <button type="button" class="mc-button mc-button--ghost" data-mc-add-rows-remove title="{{ remove_label }}" aria-label="{{ remove_label }}">&times;</button>
       </div>
     </template>
-    <datalist id="{{ list_id }}">
-      {% for code, label in options %}
-      <option value="{{ label }}"></option>
-      {% endfor %}
-    </datalist>
     <div class="d-flex gap-2 mt-2">
       <button type="button" class="mc-button mc-button--secondary" data-mc-add-rows-add title="{{ add_label }}" aria-label="{{ add_label }}">+</button>
       <button type="submit" form="mc-add-{{ kind }}-form" class="mc-button mc-button--primary" data-mc-add-rows-save hidden>{{ save_label }}</button>
@@ -185,13 +185,15 @@
         {% if step == 'language_currency' %}
         <h1 class="mc-wizard__title">{{ language_currency_title }}</h1>
         <p class="mc-wizard__lead">{{ language_currency_text }}</p>
-        {% if notice %}
-        <div class="mc-alert mc-alert--{{ notice_type }} mb-4" role="status">
-          <div class="mc-alert__body">
-            <p class="mc-alert__message">{{ notice }}</p>
+        <div data-mc-wizard-notice>
+          {% if notice %}
+          <div class="mc-alert mc-alert--{{ notice_type }} mb-4" role="status">
+            <div class="mc-alert__body">
+              <p class="mc-alert__message">{{ notice }}</p>
+            </div>
           </div>
+          {% endif %}
         </div>
-        {% endif %}
         <form action="{{ action }}" method="post" novalidate>
           <input type="hidden" name="step" value="language_currency" />
 
@@ -199,28 +201,28 @@
             <div class="col-md-6">
               <div class="mc-field {% if error.language %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-config-language">{{ entry_language }}</label>
-                <select id="input-config-language" name="config_language" class="mc-field__control" {% if error.language %}aria-invalid="true" aria-describedby="error-config-language"{% endif %}>
+                <select id="input-config-language" name="config_language" class="mc-field__control" data-mc-select-search data-mc-select-search-placeholder="{{ text_search_placeholder }}" data-mc-select-search-empty="{{ text_no_matches }}" {% if error.language %}aria-invalid="true" aria-describedby="error-config-language"{% endif %}>
                   {% for language in languages %}
                   <option value="{{ language.code }}" {% if language.code == config_language %}selected="selected"{% endif %}>{{ language.name }}</option>
                   {% endfor %}
                 </select>
                 {% if error.language %}<p class="mc-field__error" id="error-config-language" role="alert">{{ error.language }}</p>{% endif %}
                 {% if available_languages %}
-                {{ wizard.add_rows('language', 'add_language_code[]', 'mc-language-options', available_languages, text_add_language, button_add_language_row, button_save_languages, button_remove_row) }}
+                {{ wizard.add_rows('language', 'add_language_code[]', available_languages, text_add_language, button_add_language_row, button_save_languages, button_remove_row, 'input-config-language', text_search_placeholder, text_no_matches, text_rows_empty) }}
                 {% endif %}
               </div>
             </div>
             <div class="col-md-6">
               <div class="mc-field {% if error.currency %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-config-currency">{{ entry_currency }}</label>
-                <select id="input-config-currency" name="config_currency" class="mc-field__control" {% if error.currency %}aria-invalid="true" aria-describedby="error-config-currency"{% endif %}>
+                <select id="input-config-currency" name="config_currency" class="mc-field__control" data-mc-select-search data-mc-select-search-placeholder="{{ text_search_placeholder }}" data-mc-select-search-empty="{{ text_no_matches }}" {% if error.currency %}aria-invalid="true" aria-describedby="error-config-currency"{% endif %}>
                   {% for currency in currencies %}
                   <option value="{{ currency.code }}" {% if currency.code == config_currency %}selected="selected"{% endif %}>{{ currency.title }} ({{ currency.code }})</option>
                   {% endfor %}
                 </select>
                 {% if error.currency %}<p class="mc-field__error" id="error-config-currency" role="alert">{{ error.currency }}</p>{% endif %}
                 {% if available_currencies %}
-                {{ wizard.add_rows('currency', 'add_currency_code[]', 'mc-currency-options', available_currencies, text_add_currency, button_add_currency_row, button_save_currencies, button_remove_row) }}
+                {{ wizard.add_rows('currency', 'add_currency_code[]', available_currencies, text_add_currency, button_add_currency_row, button_save_currencies, button_remove_row, 'input-config-currency', text_search_placeholder, text_no_matches, text_rows_empty) }}
                 {% endif %}
               </div>
             </div>

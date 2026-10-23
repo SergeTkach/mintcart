@@ -758,21 +758,21 @@ class ControllerMintcartWizard extends Controller
     /**
      * Saves every currency picked in the "+" rows (add_currency_code[]).
      * A row holds "Title (CODE)" when picked from the list, or a bare code
-     * when typed.
+     * when typed. Answers JSON for the page's fetch() call (one result per
+     * row, so a failed row can stay on screen), or redirects when the form
+     * was submitted without JavaScript.
      */
     public function addCurrency(): void
     {
         $this->load->language('mintcart/wizard');
         $this->load->model('localisation/currency');
 
-        $back = $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true);
         $base = (string)$this->config->get('config_currency');
-        $added = [];
+        $results = [];
         $manualRate = [];
-        $unknown = 0;
         $rateTables = null;
 
-        foreach ($this->postedRows('add_currency_code') as $row) {
+        foreach ($this->postedRows('add_currency_code') as $index => $row) {
             if (preg_match('/\(([A-Za-z]{3})\)\s*$/', $row, $match)) {
                 $row = $match[1];
             }
@@ -780,11 +780,17 @@ class ControllerMintcartWizard extends Controller
             $currency = $this->currencyCatalog()->find($row);
 
             if (!$currency) {
-                $unknown++;
+                $results[$index] = ['ok' => false, 'message' => $this->language->get('text_currency_unknown')];
                 continue;
             }
 
-            if (!$this->user->hasPermission('modify', 'mintcart/wizard') || $this->model_localisation_currency->getCurrencyByCode($currency['code'])) {
+            if ($this->model_localisation_currency->getCurrencyByCode($currency['code'])) {
+                $results[$index] = ['ok' => false, 'message' => sprintf($this->language->get('text_currency_exists'), $currency['code'])];
+                continue;
+            }
+
+            if (!$this->user->hasPermission('modify', 'mintcart/wizard')) {
+                $results[$index] = ['ok' => false, 'message' => $this->language->get('text_no_permission')];
                 continue;
             }
 
@@ -811,38 +817,73 @@ class ControllerMintcartWizard extends Controller
 
             $this->model_localisation_currency->addCurrency($currency);
 
-            $added[] = $currency['code'];
+            $results[$index] = ['ok' => true, 'value' => $currency['code'], 'label' => $currency['title'] . ' (' . $currency['code'] . ')'];
 
             if ($rate === null) {
                 $manualRate[] = $currency['code'];
             }
         }
 
-        if ($manualRate) {
-            $this->session->data['mintcart_wizard_notice'] = ['type' => 'warning', 'text' => sprintf($this->language->get('text_currency_rate_manual'), implode(', ', $manualRate))];
-        } elseif ($added) {
-            $this->session->data['mintcart_wizard_notice'] = ['type' => 'success', 'text' => sprintf($this->language->get('text_currency_added'), implode(', ', $added))];
-        } elseif ($unknown || !$this->postedRows('add_currency_code')) {
-            $this->session->data['mintcart_wizard_notice'] = ['type' => 'warning', 'text' => $this->language->get('text_currency_unknown')];
-        }
+        $this->respondAdded($results, 'text_currency_added', $manualRate ? sprintf($this->language->get('text_currency_rate_manual'), implode(', ', $manualRate)) : '', 'added');
+    }
+
+    /**
+     * Shared tail of addCurrency()/addLanguage(): the notice for what was
+     * saved, then JSON (fetch) or a redirect back to the step (plain form).
+     *
+     * @param array<int, array{ok: bool, message?: string, value?: string, label?: string}> $results
+     */
+    private function respondAdded(array $results, string $addedText, string $warning, string $selectParam): void
+    {
+        $added = array_values(array_filter($results, function ($result) {
+            return $result['ok'];
+        }));
+        $failed = count($results) - count($added);
 
         if ($added) {
-            $back .= '&added=' . end($added);
+            $notice = ['type' => $warning !== '' || $failed ? 'warning' : 'success', 'text' => sprintf($this->language->get($addedText), implode(', ', array_column($added, 'value')))];
+
+            if ($warning !== '') {
+                $notice['text'] .= ' ' . $warning;
+            }
+        } else {
+            $notice = ['type' => 'warning', 'text' => $results ? $this->language->get('text_rows_failed') : $this->language->get('text_rows_empty')];
+        }
+
+        if (($this->request->server['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest') {
+            $this->response->addHeader('Content-Type: application/json');
+            $this->response->setOutput(json_encode(['rows' => $results, 'notice' => $notice]));
+
+            return;
+        }
+
+        $this->session->data['mintcart_wizard_notice'] = $notice;
+
+        $back = $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true);
+
+        if ($added) {
+            $back .= '&' . $selectParam . '=' . end($added)['value'];
         }
 
         $this->response->redirect($back);
     }
 
     /**
-     * @return string[] non-empty trimmed values of a POSTed field that may be a scalar or an array
+     * @return array<int, string> non-empty trimmed values of a POSTed field (scalar or array), keyed by their position in the form
      */
     private function postedRows(string $field): array
     {
-        $value = $this->request->post[$field] ?? [];
+        $rows = [];
 
-        return array_values(array_filter(array_map(function ($row) {
-            return trim((string)$row);
-        }, (array)$value), 'strlen'));
+        foreach ((array)($this->request->post[$field] ?? []) as $index => $row) {
+            $row = trim((string)$row);
+
+            if ($row !== '') {
+                $rows[(int)$index] = $row;
+            }
+        }
+
+        return $rows;
     }
 
     /**
@@ -873,16 +914,21 @@ class ControllerMintcartWizard extends Controller
         $this->load->language('mintcart/wizard');
         $this->load->model('localisation/language');
 
-        $back = $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true);
         $available = $this->availableLanguages();
-        $added = [];
+        $results = [];
 
-        foreach ($this->postedRows('add_language_code') as $row) {
+        foreach ($this->postedRows('add_language_code') as $index => $row) {
             if (preg_match('/\(([a-z]{2}-[a-z]{2})\)\s*$/i', $row, $match)) {
                 $row = strtolower($match[1]);
             }
 
-            if (!isset($available[$row]) || !$this->user->hasPermission('modify', 'mintcart/wizard')) {
+            if (!isset($available[$row])) {
+                $results[$index] = ['ok' => false, 'message' => $this->language->get('text_language_unknown')];
+                continue;
+            }
+
+            if (!$this->user->hasPermission('modify', 'mintcart/wizard')) {
+                $results[$index] = ['ok' => false, 'message' => $this->language->get('text_no_permission')];
                 continue;
             }
 
@@ -897,17 +943,10 @@ class ControllerMintcartWizard extends Controller
             ]);
 
             unset($available[$row]);
-            $added[$language['code']] = $language['name'];
+            $results[$index] = ['ok' => true, 'value' => $language['code'], 'label' => $language['name']];
         }
 
-        if ($added) {
-            $this->session->data['mintcart_wizard_notice'] = ['type' => 'success', 'text' => sprintf($this->language->get('text_language_added'), implode(', ', $added))];
-            $back .= '&added_language=' . array_key_last($added);
-        } else {
-            $this->session->data['mintcart_wizard_notice'] = ['type' => 'warning', 'text' => $this->language->get('text_language_unknown')];
-        }
-
-        $this->response->redirect($back);
+        $this->respondAdded($results, 'text_language_added', '', 'added_language');
     }
 
     private function currencyCatalog(): \MintCart\Onboarding\CurrencyCatalog
