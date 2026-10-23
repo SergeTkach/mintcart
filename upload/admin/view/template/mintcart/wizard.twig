@@ -61,7 +61,7 @@
       <nav class="mc-wizard__nav" aria-label="{{ text_steps }}">
         <div class="mc-wizard__progress-head">
           <span>{{ text_step_of|format(step_number, step_total) }}</span>
-          <span>{{ text_progress|format(progress_percent) }}</span>
+          {% if step != 'ready' %}<span>{{ text_progress|format(progress_percent) }}</span>{% endif %}
         </div>
         <div class="mc-wizard__progress" role="progressbar" aria-label="{{ text_steps }}" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100" style="--mc-wizard-progress: {{ progress_percent }}%">
           <span class="mc-wizard__progress-bar"></span>
@@ -69,14 +69,14 @@
 
         <ol class="mc-wizard__steps">
           {% for nav_step in nav_steps %}
-          <li class="mc-wizard__step{% if nav_step.completed and not nav_step.current %} is-done{% endif %}"{% if nav_step.current %} aria-current="step"{% endif %}>
+          <li class="mc-wizard__step{% if nav_step.completed and not nav_step.current %} {{ nav_step.attention ? 'is-attention' : 'is-done' }}{% endif %}"{% if nav_step.current %} aria-current="step"{% endif %}>
             {% if nav_step.reachable and not nav_step.current %}
             <a class="mc-wizard__step-link" href="{{ action }}&amp;step={{ nav_step.code }}">
             {% else %}
             <span class="mc-wizard__step-link">
             {% endif %}
-              <span class="mc-wizard__step-marker" aria-hidden="true">{% if nav_step.completed and not nav_step.current %}&#10003;{% else %}{{ loop.index }}{% endif %}</span>
-              <span class="mc-wizard__step-label">{{ nav_step.label }}</span>
+              <span class="mc-wizard__step-marker" aria-hidden="true">{% if nav_step.completed and not nav_step.current %}{{ nav_step.attention ? '!' : '&#10003;' }}{% else %}{{ loop.index }}{% endif %}</span>
+              <span class="mc-wizard__step-label">{{ nav_step.label }}{% if nav_step.attention and not nav_step.current %} <span class="visually-hidden">({{ text_step_attention }})</span>{% endif %}</span>
             {% if nav_step.reachable and not nav_step.current %}</a>{% else %}</span>{% endif %}
           </li>
           {% endfor %}
@@ -407,6 +407,7 @@
           <li class="mc-wizard__option{% if check.complete %} is-on{% endif %}">
             <span class="mc-wizard__option-name">{{ check.label }}</span>
             <span class="mc-badge{% if check.complete %} mc-badge--success{% endif %}">{{ check.complete ? text_check_done : text_check_pending }}</span>
+            {% if check.fix_url %}<a class="mc-button mc-button--secondary mc-button--sm" href="{{ check.fix_url }}">{{ button_fix }}</a>{% endif %}
           </li>
           {% endfor %}
         </ul>

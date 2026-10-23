@@ -691,6 +691,26 @@ class ControllerMintcartWizard extends Controller
             ? $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=' . $steps[$index - 1], true)
             : '';
 
+        // A step the visitor has been through is not necessarily finished
+        // (Delivery and Payment are optional): the readiness checks that
+        // belong to a step decide whether it gets a tick or a "needs
+        // attention" mark, so the menu never disagrees with the checklist.
+        $stepChecks = [
+            'store'             => ['logo'],
+            'contacts'          => ['contacts'],
+            'language_currency' => ['language', 'currency'],
+            'delivery'          => ['shipping'],
+            'payment'           => ['payment'],
+            'first_product'     => ['first_product'],
+        ];
+        $unmet = [];
+
+        foreach ($this->loadReadiness()['checks'] as $check) {
+            if (!$check['complete']) {
+                $unmet[$check['key']] = true;
+            }
+        }
+
         $data['nav_steps'] = [];
 
         foreach ($progress->steps() as $navStep) {
@@ -698,6 +718,7 @@ class ControllerMintcartWizard extends Controller
                 'code'      => $navStep,
                 'label'     => $this->language->get('step_' . $navStep),
                 'completed' => $progress->isCompleted($navStep),
+                'attention' => $progress->isCompleted($navStep) && array_intersect_key(array_flip($stepChecks[$navStep] ?? []), $unmet) !== [],
                 'current'   => $navStep === $step,
                 'reachable' => $progress->isImplemented($navStep)
                     && ($progress->isCompleted($navStep) || $navStep === $progress->currentStep()),
@@ -778,6 +799,25 @@ class ControllerMintcartWizard extends Controller
 
         if ($step === 'ready') {
             $data['readiness'] = $this->loadReadiness();
+
+            // Each unmet check links back to the step that fixes it.
+            $stepOf = [
+                'logo'          => 'store',
+                'contacts'      => 'contacts',
+                'language'      => 'language_currency',
+                'currency'      => 'language_currency',
+                'shipping'      => 'delivery',
+                'payment'       => 'payment',
+                'first_product' => 'first_product',
+            ];
+
+            foreach ($data['readiness']['checks'] as &$check) {
+                $check['fix_url'] = !$check['complete'] && isset($stepOf[$check['key']])
+                    ? $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=' . $stepOf[$check['key']], true)
+                    : '';
+            }
+
+            unset($check);
         }
 
         $this->response->setOutput($this->load->view('mintcart/wizard', $data));

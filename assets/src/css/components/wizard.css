@@ -173,6 +173,17 @@ a.mc-wizard__step-link:focus-visible {
     border-color: var(--mc-primary);
 }
 
+/* Passed through, but what the step is for is not set up yet. */
+.mc-wizard__step.is-attention .mc-wizard__step-marker {
+    color: var(--mc-on-primary);
+    background: var(--mc-warning);
+    border-color: var(--mc-warning);
+}
+
+.mc-wizard__step.is-attention .mc-wizard__step-link {
+    color: var(--mc-text);
+}
+
 .mc-wizard__step.is-done .mc-wizard__step-link {
     color: var(--mc-text);
 }

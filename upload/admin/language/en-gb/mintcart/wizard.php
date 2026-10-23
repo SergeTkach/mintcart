@@ -166,3 +166,5 @@ $_['where_design']             = 'Design › Styles';
 $_['where_first_product']      = 'Catalog › Products';
 $_['text_translations']        = 'Translations (optional)';
 $_['text_translations_help']   = 'Leave a language empty and it will show the text above. You can translate it later from the product page.';
+$_['text_step_attention'] = 'needs attention';
+$_['button_fix']          = 'Set up';
