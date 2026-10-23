@@ -246,6 +246,10 @@ function setup_db($data) {
 
 		$migrations = new \MintCart\Core\Migration\MigrationManager($db, $data['db_prefix'], DIR_SYSTEM . 'mintcart/migrations');
 		$migrations->run();
+
+		// MintCart: the starter catalogue (replaces OpenCart's demo products);
+		// needs the mc_* tables, so it runs after the migrations.
+		\MintCart\Core\DemoData::apply($db, $data['db_prefix'], DIR_APPLICATION . 'mintcart-demo.sql');
 	}
 }
 
