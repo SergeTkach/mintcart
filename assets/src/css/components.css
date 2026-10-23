@@ -107,6 +107,7 @@
 @import './components/gallery.css';
 @import './components/entity-picker.css';
 @import './components/admin-search.css';
+@import './components/menu-hint.css';
 @import './components/viewed-products.css';
 @import './components/search-box.css';
 @import './components/media-picker.css';

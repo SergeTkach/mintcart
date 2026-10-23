@@ -86,3 +86,5 @@ $_['text_order_recurring']      = 'Recurring Orders';
 $_['text_complete_status']      = 'Orders Completed';
 $_['text_processing_status']    = 'Orders Processing';
 $_['text_other_status']         = 'Other Statuses';
+$_['text_mc_menu_hint']    = 'Next time you will find this here:';
+$_['text_mc_menu_hint_ok'] = 'Got it';

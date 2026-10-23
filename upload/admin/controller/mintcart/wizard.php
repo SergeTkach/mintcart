@@ -710,13 +710,13 @@ class ControllerMintcartWizard extends Controller
             $data['shipping_extensions'] = $this->loadShippingExtensions();
             $data['toggle_delivery'] = $this->url->link('mintcart/wizard/toggleDelivery', 'user_token=' . $this->session->data['user_token'] . '&step=delivery', true);
             $data['save_method'] = $this->url->link('mintcart/wizard/saveMethod', 'user_token=' . $this->session->data['user_token'], true);
-            $data['manage_delivery'] = $this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'], true);
+            $data['manage_delivery'] = $this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'] . '&mc_hint=1', true);
         }
 
         if ($step === 'payment') {
             $data['payment_extensions'] = $this->loadPaymentExtensions();
             $data['toggle_payment'] = $this->url->link('mintcart/wizard/togglePayment', 'user_token=' . $this->session->data['user_token'] . '&step=payment', true);
-            $data['manage_payment'] = $this->url->link('mintcart/business/payments', 'user_token=' . $this->session->data['user_token'], true);
+            $data['manage_payment'] = $this->url->link('mintcart/business/payments', 'user_token=' . $this->session->data['user_token'] . '&mc_hint=1', true);
         }
 
         if ($step === 'design') {

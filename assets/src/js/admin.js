@@ -52,6 +52,7 @@ import { initAdminSearch, initFieldJump } from './components/admin-search.js';
 import { initAddRows } from './components/add-rows.js';
 import { initSelectSearch } from './components/select-search.js';
 import { initAjaxForms } from './components/ajax-form.js';
+import { initMenuHint } from './components/menu-hint.js';
 
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
@@ -110,6 +111,7 @@ function boot() {
     initAddRows();
     initSelectSearch();
     initAjaxForms();
+    initMenuHint();
 }
 
 if (document.readyState === 'loading') {
