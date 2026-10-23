@@ -159,6 +159,13 @@
         {% if step == 'language_currency' %}
         <h1 class="mc-wizard__title">{{ language_currency_title }}</h1>
         <p class="mc-wizard__lead">{{ language_currency_text }}</p>
+        {% if notice %}
+        <div class="mc-alert mc-alert--warning mb-4" role="status">
+          <div class="mc-alert__body">
+            <p class="mc-alert__message">{{ notice }}</p>
+          </div>
+        </div>
+        {% endif %}
         <form action="{{ action }}" method="post" novalidate>
           <input type="hidden" name="step" value="language_currency" />
 
@@ -184,13 +191,24 @@
                   {% endfor %}
                 </select>
                 {% if error.currency %}<p class="mc-field__error" id="error-config-currency" role="alert">{{ error.currency }}</p>{% endif %}
-                <p class="mc-field__help"><a href="{{ add_currency }}" target="_blank" rel="noopener">{{ text_add_currency }}</a></p>
+                {% if available_currencies %}
+                <div class="d-flex gap-2 mt-2">
+                  <select name="add_currency_code" form="mc-add-currency-form" class="mc-field__control" aria-label="{{ text_add_currency }}">
+                    <option value="">{{ text_add_currency }}</option>
+                    {% for code, label in available_currencies %}
+                    <option value="{{ code }}">{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" form="mc-add-currency-form" class="mc-button mc-button--secondary" title="{{ button_add_currency }}" aria-label="{{ button_add_currency }}">+</button>
+                </div>
+                {% endif %}
               </div>
             </div>
           </div>
 
           {{ wizard.actions(prev_step_url, button_back, button_continue) }}
         </form>
+        <form id="mc-add-currency-form" action="{{ add_currency_action }}" method="post"></form>
         {% endif %}
 
         {% if step == 'delivery' or step == 'payment' %}

@@ -53,7 +53,9 @@ $_['language_currency_text']  = 'Choose the default language and currency shoppe
 $_['entry_language']          = 'Default language';
 $_['entry_currency']          = 'Default currency';
 $_['text_add_language']       = 'Add another language (opens in a new tab; reload this page afterwards)';
-$_['text_add_currency']       = 'Add another currency (opens in a new tab; reload this page afterwards)';
+$_['text_add_currency']       = 'Add a currency...';
+$_['button_add_currency']     = 'Add this currency';
+$_['text_currency_rate_manual'] = 'Added %s, but the exchange rate could not be fetched - set it in Localisation > Currencies.';
 
 // Delivery step
 

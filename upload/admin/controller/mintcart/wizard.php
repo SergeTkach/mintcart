@@ -636,6 +636,9 @@ class ControllerMintcartWizard extends Controller
         $data['dashboard'] = $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true);
         $data['skip_wizard'] = $this->url->link('mintcart/wizard/skip', 'user_token=' . $this->session->data['user_token'], true);
 
+        $data['notice'] = $this->session->data['mintcart_wizard_notice'] ?? '';
+        unset($this->session->data['mintcart_wizard_notice']);
+
         $data['step'] = $step;
         $data['is_ready'] = $step === null;
 
@@ -694,7 +697,8 @@ class ControllerMintcartWizard extends Controller
             $data['languages'] = $this->model_localisation_language->getLanguages();
             $data['currencies'] = $this->model_localisation_currency->getCurrencies();
             $data['add_language'] = $this->url->link('localisation/language/add', 'user_token=' . $this->session->data['user_token'], true);
-            $data['add_currency'] = $this->url->link('localisation/currency/add', 'user_token=' . $this->session->data['user_token'], true);
+            $data['add_currency_action'] = $this->url->link('mintcart/wizard/addCurrency', 'user_token=' . $this->session->data['user_token'], true);
+            $data['available_currencies'] = $this->currencyCatalog()->available(array_column($data['currencies'], 'code'));
         }
 
         if ($step === 'delivery') {
@@ -746,6 +750,46 @@ class ControllerMintcartWizard extends Controller
      * call `docs/developer/onboarding/business-delivery-payments.md` already
      * made for Business -> Delivery vs. Business -> Payments.
      */
+    public function addCurrency(): void
+    {
+        $this->load->language('mintcart/wizard');
+        $this->load->model('localisation/currency');
+
+        $back = $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true);
+        $code = (string)($this->request->post['add_currency_code'] ?? '');
+        $currency = $this->currencyCatalog()->find($code);
+
+        if ($currency && $this->user->hasPermission('modify', 'mintcart/wizard') && !$this->model_localisation_currency->getCurrencyByCode($currency['code'])) {
+            $base = (string)$this->config->get('config_currency');
+            $rate = null;
+
+            foreach (['fetchEcbRates', 'fetchOpenRates'] as $source) {
+                $rates = \MintCart\Onboarding\CurrencyCatalog::$source();
+                $rate = $rates ? \MintCart\Onboarding\CurrencyCatalog::rate($rates, $currency['code'], $base) : null;
+
+                if ($rate !== null) {
+                    break;
+                }
+            }
+
+            $currency['value'] = $rate !== null ? round($rate, 8) : 1;
+            $currency['status'] = 1;
+
+            $this->model_localisation_currency->addCurrency($currency);
+
+            if ($rate === null) {
+                $this->session->data['mintcart_wizard_notice'] = sprintf($this->language->get('text_currency_rate_manual'), $currency['code']);
+            }
+        }
+
+        $this->response->redirect($back);
+    }
+
+    private function currencyCatalog(): \MintCart\Onboarding\CurrencyCatalog
+    {
+        return \MintCart\Onboarding\CurrencyCatalog::fromFile(DIR_SYSTEM . 'mintcart/data/currencies.json');
+    }
+
     public function toggleDelivery(): void
     {
         $this->load->language('mintcart/wizard');
