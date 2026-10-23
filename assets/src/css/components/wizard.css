@@ -437,3 +437,10 @@ a.mc-wizard__step-link:focus-visible {
 .mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(1) { background: #c1552c; }
 .mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(2) { background: #d69e2e; }
 .mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(3) { background: #f8ede0; }
+
+/* "You can change this later in the menu: ..." under a step. */
+.mc-wizard__where {
+    margin: var(--mc-space-6) 0 0;
+    font-size: var(--mc-font-size-sm);
+    color: var(--mc-muted);
+}

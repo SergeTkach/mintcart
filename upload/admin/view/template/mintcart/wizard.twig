@@ -403,6 +403,12 @@
         </div>
         {% endif %}
 
+        {% if where_url %}
+        <p class="mc-wizard__where">
+          <a href="{{ where_url }}" target="_blank" rel="noopener">{{ text_where }} <strong>{{ where_label }}</strong></a>
+        </p>
+        {% endif %}
+
       </section>
     </div>
   </div>

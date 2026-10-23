@@ -644,6 +644,23 @@ class ControllerMintcartWizard extends Controller
         $data['step'] = $step;
         $data['is_ready'] = $step === null;
 
+        // "Find it later in the menu": where each step's settings live in the
+        // admin menu, as a link that opens that screen with the menu pointer
+        // (assets/src/js/components/menu-hint.js). Delivery and Payment have
+        // their own "Manage ..." link.
+        $where = [
+            'store'             => ['setting/store', 'where_store'],
+            'contacts'          => ['mintcart/business/contacts', 'where_contacts'],
+            'language_currency' => ['localisation/language', 'where_language_currency'],
+            'design'            => ['mintcart/design/styles', 'where_design'],
+            'first_product'     => ['catalog/product', 'where_first_product'],
+        ];
+
+        if ($step !== null && isset($where[$step])) {
+            $data['where_url'] = $this->url->link($where[$step][0], 'user_token=' . $this->session->data['user_token'] . '&mc_hint=1', true);
+            $data['where_label'] = $this->language->get($where[$step][1]);
+        }
+
         $data['brand_logo'] = HTTP_SERVER . 'view/image/mintcart/logo.svg';
 
         // Step N of M, progress bar and the Back link (the step before this

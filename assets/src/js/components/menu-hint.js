@@ -126,6 +126,9 @@ export function initMenuHint() {
     // A click that opened the page must not close the bubble at once.
     setTimeout(() => document.addEventListener('click', onClick), 0);
 
-    params.delete('mc_hint');
-    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}${window.location.hash}`);
+    // Drop only the hint from the address. Re-serialising the query with
+    // URLSearchParams would turn the route's "/" into "%2F".
+    const search = window.location.search.replace(/([?&])mc_hint=[^&]*&?/, '$1').replace(/[?&]$/, '');
+
+    window.history.replaceState(null, '', `${window.location.pathname}${search}${window.location.hash}`);
 }
