@@ -636,7 +636,9 @@ class ControllerMintcartWizard extends Controller
         $data['dashboard'] = $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true);
         $data['skip_wizard'] = $this->url->link('mintcart/wizard/skip', 'user_token=' . $this->session->data['user_token'], true);
 
-        $data['notice'] = $this->session->data['mintcart_wizard_notice'] ?? '';
+        $notice = $this->session->data['mintcart_wizard_notice'] ?? ['type' => '', 'text' => ''];
+        $data['notice'] = $notice['text'];
+        $data['notice_type'] = $notice['type'];
         unset($this->session->data['mintcart_wizard_notice']);
 
         $data['step'] = $step;
@@ -693,7 +695,7 @@ class ControllerMintcartWizard extends Controller
             $this->load->model('localisation/currency');
 
             $data['config_language'] = $this->request->post['config_language'] ?? $this->config->get('config_language');
-            $data['config_currency'] = $this->request->post['config_currency'] ?? $this->config->get('config_currency');
+            $data['config_currency'] = $this->request->post['config_currency'] ?? $this->request->get['added'] ?? $this->config->get('config_currency');
             $data['languages'] = $this->model_localisation_language->getLanguages();
             $data['currencies'] = $this->model_localisation_currency->getCurrencies();
             $data['add_language'] = $this->url->link('localisation/language/add', 'user_token=' . $this->session->data['user_token'], true);
@@ -765,6 +767,10 @@ class ControllerMintcartWizard extends Controller
 
         $currency = $this->currencyCatalog()->find($code);
 
+        if (!$currency) {
+            $this->session->data['mintcart_wizard_notice'] = ['type' => 'warning', 'text' => $this->language->get('text_currency_unknown')];
+        }
+
         if ($currency && $this->user->hasPermission('modify', 'mintcart/wizard') && !$this->model_localisation_currency->getCurrencyByCode($currency['code'])) {
             $base = (string)$this->config->get('config_currency');
             $rate = null;
@@ -783,9 +789,11 @@ class ControllerMintcartWizard extends Controller
 
             $this->model_localisation_currency->addCurrency($currency);
 
-            if ($rate === null) {
-                $this->session->data['mintcart_wizard_notice'] = sprintf($this->language->get('text_currency_rate_manual'), $currency['code']);
-            }
+            $this->session->data['mintcart_wizard_notice'] = $rate === null
+                ? ['type' => 'warning', 'text' => sprintf($this->language->get('text_currency_rate_manual'), $currency['code'])]
+                : ['type' => 'success', 'text' => sprintf($this->language->get('text_currency_added'), $currency['title'], $currency['code'])];
+
+            $back .= '&added=' . $currency['code'];
         }
 
         $this->response->redirect($back);

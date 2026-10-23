@@ -160,7 +160,7 @@
         <h1 class="mc-wizard__title">{{ language_currency_title }}</h1>
         <p class="mc-wizard__lead">{{ language_currency_text }}</p>
         {% if notice %}
-        <div class="mc-alert mc-alert--warning mb-4" role="status">
+        <div class="mc-alert mc-alert--{{ notice_type }} mb-4" role="status">
           <div class="mc-alert__body">
             <p class="mc-alert__message">{{ notice }}</p>
           </div>

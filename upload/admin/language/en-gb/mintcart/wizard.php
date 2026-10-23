@@ -55,6 +55,8 @@ $_['entry_currency']          = 'Default currency';
 $_['text_add_language']       = 'Add another language (opens in a new tab; reload this page afterwards)';
 $_['text_add_currency']       = 'Add a currency...';
 $_['button_add_currency']     = 'Add this currency';
+$_['text_currency_added'] = '%s (%s) added and selected. Press Continue to keep it as the default.';
+$_['text_currency_unknown'] = 'That currency is not in the list. Start typing a name or code and pick one of the suggestions.';
 $_['text_currency_rate_manual'] = 'Added %s, but the exchange rate could not be fetched - set it in Localisation > Currencies.';
 
 // Delivery step
