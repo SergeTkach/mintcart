@@ -694,11 +694,14 @@ class ControllerMintcartWizard extends Controller
             $this->load->model('localisation/language');
             $this->load->model('localisation/currency');
 
-            $data['config_language'] = $this->request->post['config_language'] ?? $this->config->get('config_language');
+            $data['config_language'] = $this->request->post['config_language'] ?? $this->request->get['added_language'] ?? $this->config->get('config_language');
             $data['config_currency'] = $this->request->post['config_currency'] ?? $this->request->get['added'] ?? $this->config->get('config_currency');
             $data['languages'] = $this->model_localisation_language->getLanguages();
             $data['currencies'] = $this->model_localisation_currency->getCurrencies();
-            $data['add_language'] = $this->url->link('localisation/language/add', 'user_token=' . $this->session->data['user_token'], true);
+            $data['add_language_action'] = $this->url->link('mintcart/wizard/addLanguage', 'user_token=' . $this->session->data['user_token'], true);
+            $data['available_languages'] = array_map(function ($language) {
+                return $language['name'] . ' (' . $language['code'] . ')';
+            }, $this->availableLanguages());
             $data['add_currency_action'] = $this->url->link('mintcart/wizard/addCurrency', 'user_token=' . $this->session->data['user_token'], true);
             $data['available_currencies'] = $this->currencyCatalog()->available(array_column($data['currencies'], 'code'));
         }
@@ -794,6 +797,63 @@ class ControllerMintcartWizard extends Controller
                 : ['type' => 'success', 'text' => sprintf($this->language->get('text_currency_added'), $currency['title'], $currency['code'])];
 
             $back .= '&added=' . $currency['code'];
+        }
+
+        $this->response->redirect($back);
+    }
+
+    /**
+     * Bundled language packs (`system/mintcart/data/languages.json`) that are
+     * on disk for both the storefront and the admin but not installed yet.
+     *
+     * @return array<string, array{code: string, name: string, locale: string}>
+     */
+    private function availableLanguages(): array
+    {
+        $this->load->model('localisation/language');
+
+        $installed = array_column($this->model_localisation_language->getLanguages(), 'code');
+        $catalog = json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/languages.json'), true) ?: [];
+        $available = [];
+
+        foreach ($catalog as $code => $language) {
+            if (!in_array($code, $installed, true) && is_dir(DIR_LANGUAGE . $code) && is_dir(DIR_CATALOG . 'language/' . $code)) {
+                $available[$code] = ['code' => $code, 'name' => $language['name'], 'locale' => $language['locale']];
+            }
+        }
+
+        return $available;
+    }
+
+    public function addLanguage(): void
+    {
+        $this->load->language('mintcart/wizard');
+        $this->load->model('localisation/language');
+
+        $back = $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true);
+        $code = trim((string)($this->request->post['add_language_code'] ?? ''));
+
+        if (preg_match('/\(([a-z]{2}-[a-z]{2})\)\s*$/i', $code, $match)) {
+            $code = strtolower($match[1]);
+        }
+
+        $available = $this->availableLanguages();
+
+        if (isset($available[$code]) && $this->user->hasPermission('modify', 'mintcart/wizard')) {
+            $language = $available[$code];
+
+            $this->model_localisation_language->addLanguage([
+                'name'       => $language['name'],
+                'code'       => $language['code'],
+                'locale'     => $language['locale'],
+                'sort_order' => count($this->model_localisation_language->getLanguages()) + 1,
+                'status'     => 1,
+            ]);
+
+            $this->session->data['mintcart_wizard_notice'] = ['type' => 'success', 'text' => sprintf($this->language->get('text_language_added'), $language['name'])];
+            $back .= '&added_language=' . $language['code'];
+        } else {
+            $this->session->data['mintcart_wizard_notice'] = ['type' => 'warning', 'text' => $this->language->get('text_language_unknown')];
         }
 
         $this->response->redirect($back);

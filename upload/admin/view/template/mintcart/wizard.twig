@@ -179,7 +179,17 @@
                   {% endfor %}
                 </select>
                 {% if error.language %}<p class="mc-field__error" id="error-config-language" role="alert">{{ error.language }}</p>{% endif %}
-                <p class="mc-field__help"><a href="{{ add_language }}" target="_blank" rel="noopener">{{ text_add_language }}</a></p>
+                {% if available_languages %}
+                <div class="d-flex gap-2 mt-2">
+                  <input type="text" name="add_language_code" form="mc-add-language-form" class="mc-field__control" list="mc-language-options" placeholder="{{ text_add_language }}" aria-label="{{ text_add_language }}" autocomplete="off" />
+                  <datalist id="mc-language-options">
+                    {% for code, label in available_languages %}
+                    <option value="{{ label }}"></option>
+                    {% endfor %}
+                  </datalist>
+                  <button type="submit" form="mc-add-language-form" class="mc-button mc-button--secondary" title="{{ button_add_language }}" aria-label="{{ button_add_language }}">+</button>
+                </div>
+                {% endif %}
               </div>
             </div>
             <div class="col-md-6">
@@ -209,6 +219,7 @@
           {{ wizard.actions(prev_step_url, button_back, button_continue) }}
         </form>
         <form id="mc-add-currency-form" action="{{ add_currency_action }}" method="post"></form>
+        <form id="mc-add-language-form" action="{{ add_language_action }}" method="post"></form>
         {% endif %}
 
         {% if step == 'delivery' or step == 'payment' %}
