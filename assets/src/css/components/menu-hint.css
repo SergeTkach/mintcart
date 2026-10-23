@@ -7,9 +7,16 @@
  * sizes are in px (see admin-search.css) and every selector is namespaced.
  */
 
+/* The pointers are red on purpose: they must stand out from the blue admin theme. */
+#menu a.mc-menu-hint,
+.mc-menu-hint__bubble,
+.mc-point-hint {
+    --mc-hint-color: var(--mc-danger);
+}
+
 #menu a.mc-menu-hint {
     position: relative;
-    outline: 2px solid var(--mc-accent);
+    outline: 2px solid var(--mc-hint-color);
     outline-offset: -2px;
     animation: mc-menu-hint-pulse 1.8s ease-in-out infinite;
 }
@@ -20,7 +27,7 @@
     width: 260px;
     padding: 12px 14px;
     background: var(--mc-surface);
-    border: 1px solid var(--mc-accent);
+    border: 1px solid var(--mc-hint-color);
     border-radius: var(--mc-radius-md);
     box-shadow: var(--mc-shadow-md);
     color: var(--mc-text);
@@ -37,8 +44,8 @@
     width: 12px;
     height: 12px;
     background: var(--mc-surface);
-    border-bottom: 1px solid var(--mc-accent);
-    border-left: 1px solid var(--mc-accent);
+    border-bottom: 1px solid var(--mc-hint-color);
+    border-left: 1px solid var(--mc-hint-color);
     transform: rotate(45deg);
 }
 
@@ -61,8 +68,8 @@
     top: -7px;
     right: 18px;
     left: auto;
-    border-top: 1px solid var(--mc-accent);
-    border-right: 1px solid var(--mc-accent);
+    border-top: 1px solid var(--mc-hint-color);
+    border-right: 1px solid var(--mc-hint-color);
     border-bottom: 0;
     border-left: 0;
 }
@@ -75,11 +82,11 @@
 @keyframes mc-point-hint-pulse {
     0%,
     100% {
-        box-shadow: 0 0 0 0 color-mix(in srgb, var(--mc-accent) 55%, transparent);
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--mc-hint-color) 55%, transparent);
     }
 
     50% {
-        box-shadow: 0 0 0 7px color-mix(in srgb, var(--mc-accent) 0%, transparent);
+        box-shadow: 0 0 0 7px color-mix(in srgb, var(--mc-hint-color) 0%, transparent);
     }
 }
 
@@ -90,19 +97,19 @@
     }
 
     50% {
-        background-color: color-mix(in srgb, var(--mc-accent) 28%, transparent);
+        background-color: color-mix(in srgb, var(--mc-hint-color) 28%, transparent);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .mc-point-hint {
         animation: none;
-        outline: 2px solid var(--mc-accent);
+        outline: 2px solid var(--mc-hint-color);
         outline-offset: 2px;
     }
 
     #menu a.mc-menu-hint {
         animation: none;
-        background-color: color-mix(in srgb, var(--mc-accent) 28%, transparent);
+        background-color: color-mix(in srgb, var(--mc-hint-color) 28%, transparent);
     }
 }
