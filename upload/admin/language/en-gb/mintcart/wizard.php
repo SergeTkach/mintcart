@@ -68,7 +68,7 @@ $_['text_currency_rate_manual'] = 'Added, but the exchange rate for %s could not
 // Delivery step
 
 $_['delivery_title']         = 'How will you ship orders?';
-$_['delivery_text']          = 'Enable the shipping methods you plan to offer. You can configure each one\'s cost and settings any time from Business > Delivery. This step is optional — skip it for now and come back later.';
+$_['delivery_text']          = 'Enable the shipping methods you plan to offer. Open Settings on a method to set its cost right here; you can change it any time from Business > Delivery. This step is optional — skip it for now and come back later.';
 $_['text_delivery_empty']    = 'No shipping methods are installed yet.';
 $_['warning_delivery_none']  = 'No delivery method is enabled, so customers cannot check out products that need shipping. Enable at least one.';
 $_['text_enabled']           = 'Enabled';
