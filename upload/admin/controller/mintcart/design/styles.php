@@ -235,6 +235,14 @@ class ControllerMintcartDesignStyles extends Controller {
 			$data['values'][$key] = $value !== '' ? $value : (isset($defaults[$key]) ? $defaults[$key] : '');
 		}
 
+		$data['palettes'] = array();
+
+		foreach ((array)json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/design-palettes.json'), true) as $palette) {
+			$palette['desc'] = $this->language->get('palette_' . $palette['key']);
+
+			$data['palettes'][] = $palette;
+		}
+
 		$data['error_primary'] = $this->error['primary'] ?? '';
 		$data['error_accent'] = $this->error['accent'] ?? '';
 

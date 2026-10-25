@@ -140,6 +140,8 @@ export function initDesignStyles(context = document) {
                 }
             }
 
+            markPalettes();
+
             ['primary', 'accent'].forEach((key) => {
                 const hex = normalizeHex(hexField(key).value);
 
@@ -191,7 +193,29 @@ export function initDesignStyles(context = document) {
             }
         });
 
+        function markPalettes() {
+            const primary = normalizeHex(hexField('primary').value);
+            const accent = normalizeHex(hexField('accent').value);
+
+            form.querySelectorAll('[data-mc-design-palette]').forEach((tile) => {
+                const active = primary === tile.dataset.primary && accent === tile.dataset.accent;
+
+                tile.classList.toggle('is-active', active);
+                tile.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+        }
+
         form.addEventListener('click', (event) => {
+            const palette = event.target.closest('[data-mc-design-palette]');
+
+            if (palette) {
+                hexField('primary').value = palette.dataset.primary;
+                hexField('accent').value = palette.dataset.accent;
+                paint();
+
+                return;
+            }
+
             const reset = event.target.closest('[data-mc-design-reset]');
 
             if (reset) {

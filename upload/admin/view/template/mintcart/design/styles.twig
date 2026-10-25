@@ -60,6 +60,24 @@
             </div>
           </section>
 
+          {% if palettes %}
+          <section class="panel panel-default">
+            <div class="panel-heading"><h3 class="panel-title">{{ text_section_palettes }}</h3></div>
+            <div class="panel-body">
+              <p class="help-block">{{ help_palettes }}</p>
+              <div class="mc-design__palettes">
+                {% for palette in palettes %}
+                <button type="button" class="mc-design__palette" data-mc-design-palette data-primary="{{ palette.primary }}" data-accent="{{ palette.accent }}" aria-pressed="false">
+                  <span class="mc-design__strip" style="--mc-swatch-1:{{ palette.colors[0] }};--mc-swatch-2:{{ palette.colors[1] }};--mc-swatch-3:{{ palette.colors[2] }};--mc-swatch-4:{{ palette.colors[3] }};--mc-swatch-5:{{ palette.colors[4] }}"><i></i><i></i><i></i><i></i><i></i></span>
+                  <strong>{{ palette.label }}</strong>
+                  <small>{{ palette.desc }}</small>
+                </button>
+                {% endfor %}
+              </div>
+            </div>
+          </section>
+          {% endif %}
+
           <section class="panel panel-default">
             <div class="panel-heading"><h3 class="panel-title">{{ text_section_colors }}</h3></div>
             <div class="panel-body">
