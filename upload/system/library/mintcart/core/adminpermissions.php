@@ -21,6 +21,12 @@ namespace MintCart\Core;
 final class AdminPermissions
 {
     /**
+     * MintCart screens that live outside `admin/controller/mintcart/`
+     * (Design > Homepage and its media picker endpoint).
+     */
+    private const EXTRA_ROUTES = ['design/homepage', 'design/media'];
+
+    /**
      * Permission routes for controller files given relative to
      * admin/controller/ (e.g. "mintcart/business/delivery.php").
      *
@@ -68,11 +74,8 @@ final class AdminPermissions
             }
         }
 
-        $routes = self::routes($files);
-
-        if (!$routes) {
-            return [];
-        }
+        $routes = array_values(array_unique(array_merge(self::routes($files), self::EXTRA_ROUTES)));
+        sort($routes);
 
         $groups = $db->query("SELECT user_group_id, permission FROM `" . $prefix . "user_group`");
 
