@@ -194,18 +194,27 @@ Smaller items, taken autonomously in this order:
 1. [x] Configurable (manual) product badges
 2. [x] Default system-page URL aliases on install (migration 202610221300)
 3. [x] Render Theme API slots in templates (`Slots::shared()`, docs/developer/theme-api/slots.md)
-4. [ ] hreflang verified on a multi-language store
+4. [ ] hreflang: `HreflangBuilder` exists but nothing emits it, and stock OpenCart 3 serves every
+   language at the same URL (language comes from session / cookie / Accept-Language), so there are
+   no per-language URLs to point at. Needs a decision on language-in-URL (prefix or `?language=`)
+   before it can be wired
 5. [~] Admin settings search: jump to a field (done, not browser-checked); Ukrainian labels need an admin uk-ua pack
 6. [ ] Entity Picker: create-new in a drawer
 
-Agreed 2026-10-23, next up: Business > Delivery / Payments become the one place to
+Done 2026-10-25 (browser check pending): Business > Delivery / Payments become the one place to
 manage methods (an "Add a method" button that installs an available extension,
 inline settings instead of the pencil to another page), Extensions stays under
 Advanced; the wizard's Delivery and Payment steps use the same screen.
 
 Shipping carriers (added 2026-10-23, after the first release):
 
-1. [ ] Nova Poshta and Ukrposhta shipping modules, ported from the Cartello project
+1. [x] Nova Poshta (`mc_novaposhta`, live API, no sync tables) and Ukrposhta (`mc_ukrposhta`, own
+   directory in `mc_ukrposhta_city` / `mc_ukrposhta_branch`, region-by-region admin sync): city and
+   point form comes from the extension itself through the checkout hook
+   (`docs/developer/commerce/shipping-method-forms.md`), no shared city field. Written without API
+   keys: client parsing is unit-tested, the live API calls and the checkout form still need a
+   click-through. Original plan was:
+   ported from the Cartello project
    (`C:\laragon\www\themes\cartello`: `ocnp_novaposhta`, `st_ukrposhta`): adapt
    them to the MintCart design and to the MintCart checkout. Cartello's versions are
    built around the old checkout, so first check how they behave in ours (city and
@@ -216,7 +225,8 @@ Shipping carriers (added 2026-10-23, after the first release):
    MintCart checkout, then give them inline settings in the wizard
 3. [ ] DHL
 4. [ ] Inline settings for payment methods in the wizard (same mechanism as
-   shipping: `system/mintcart/data/method-fields.json`)
+   shipping: `system/mintcart/data/method-fields.json`; the Business screens and
+   `ModelMintcartMethods` already take any type)
 
 Heavy items not in this batch: first end-to-end release (needs a clean DB),
 admin navigation restructure, theme live preview + `settings.json` form,
