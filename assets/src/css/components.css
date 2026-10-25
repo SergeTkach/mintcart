@@ -63,6 +63,7 @@
 @import './presets/warm.css';
 @import './presets/gallery.css';
 @import './presets/comfort.css';
+@import './presets/cool.css';
 @import './elements/prose.css';
 @import './components/button.css';
 @import './components/alert.css';

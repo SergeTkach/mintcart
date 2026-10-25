@@ -284,5 +284,44 @@
   ],
   "primary": "#ef626c",
   "accent": "#84dccf"
+ },
+ {
+  "key": "electric",
+  "label": "Electric",
+  "colors": [
+   "#0a0f1e",
+   "#1e40ff",
+   "#ffb000",
+   "#eceeff",
+   "#f4f6fa"
+  ],
+  "primary": "#1e40ff",
+  "accent": "#ffb000"
+ },
+ {
+  "key": "pulse",
+  "label": "Pulse",
+  "colors": [
+   "#0f0b1a",
+   "#7b3ff2",
+   "#00c2a8",
+   "#f0eafe",
+   "#f6f4fb"
+  ],
+  "primary": "#7b3ff2",
+  "accent": "#00c2a8"
+ },
+ {
+  "key": "plum",
+  "label": "Plum",
+  "colors": [
+   "#170d1b",
+   "#7b2d8b",
+   "#4f1c56",
+   "#f4e9f6",
+   "#f8f4f8"
+  ],
+  "primary": "#7b2d8b",
+  "accent": "#7b2d8b"
  }
 ]

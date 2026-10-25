@@ -66,8 +66,8 @@
             <p class="mc-design__tune-help">{{ text_tune_help }}</p>
 
           {% if palettes %}
-          <section class="panel panel-default">
-            <div class="panel-heading"><h3 class="panel-title">{{ text_section_palettes }}</h3></div>
+          <details class="panel panel-default mc-design__acc" open>
+            <summary class="panel-heading"><h3 class="panel-title">{{ text_section_palettes }}</h3></summary>
             <div class="panel-body">
               <p class="help-block">{{ help_palettes }}</p>
               <div class="mc-design__palettes">
@@ -80,11 +80,11 @@
                 {% endfor %}
               </div>
             </div>
-          </section>
+          </details>
           {% endif %}
 
-          <section class="panel panel-default">
-            <div class="panel-heading"><h3 class="panel-title">{{ text_section_colors }}</h3></div>
+          <details class="panel panel-default mc-design__acc" open>
+            <summary class="panel-heading"><h3 class="panel-title">{{ text_section_colors }}</h3></summary>
             <div class="panel-body">
               <p class="help-block">{{ help_colors }}</p>
               <div class="mc-design__colors">
@@ -102,10 +102,10 @@
                 {% endfor %}
               </div>
             </div>
-          </section>
+          </details>
 
-          <section class="panel panel-default">
-            <div class="panel-heading"><h3 class="panel-title">{{ text_section_shape }}</h3></div>
+          <details class="panel panel-default mc-design__acc">
+            <summary class="panel-heading"><h3 class="panel-title">{{ text_section_shape }}</h3></summary>
             <div class="panel-body">
               <div class="mc-design__group">
                 <span class="mc-design__label">{{ entry_radius }}</span>
@@ -132,10 +132,10 @@
                 </div>
               </div>
             </div>
-          </section>
+          </details>
 
-          <section class="panel panel-default">
-            <div class="panel-heading"><h3 class="panel-title">{{ text_section_buttons }}</h3></div>
+          <details class="panel panel-default mc-design__acc">
+            <summary class="panel-heading"><h3 class="panel-title">{{ text_section_buttons }}</h3></summary>
             <div class="panel-body">
               <div class="mc-design__group">
                 <span class="mc-design__label">{{ entry_button_style }}</span>
@@ -146,10 +146,10 @@
                 </div>
               </div>
             </div>
-          </section>
+          </details>
 
-          <section class="panel panel-default">
-            <div class="panel-heading"><h3 class="panel-title">{{ text_section_fonts }}</h3></div>
+          <details class="panel panel-default mc-design__acc">
+            <summary class="panel-heading"><h3 class="panel-title">{{ text_section_fonts }}</h3></summary>
             <div class="panel-body">
               <p class="help-block">{{ help_fonts }}</p>
               {% for key, label in {'font_heading': entry_font_heading, 'font_body': entry_font_body} %}
@@ -163,7 +163,7 @@
               </div>
               {% endfor %}
             </div>
-          </section>
+          </details>
           </div>
         </div>
 

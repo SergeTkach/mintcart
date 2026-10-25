@@ -74,5 +74,24 @@
    "accent": "#111111",
    "radius": "sharp"
   }
+ },
+ "cool": {
+  "label": "Cool",
+  "description": "Blues with a violet accent.",
+  "swatches": [
+   "#2459e0",
+   "#111a2e",
+   "#f4f6fd"
+  ],
+  "defaults": {
+   "border": "",
+   "container": "",
+   "button_style": "",
+   "font_body": "system",
+   "font_heading": "system",
+   "primary": "#2459e0",
+   "accent": "#6d3fe0",
+   "radius": "soft"
+  }
  }
 }

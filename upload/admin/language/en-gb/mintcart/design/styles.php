@@ -38,6 +38,9 @@ $_['palette_duskrose'] = 'beauty tech, care';
 $_['palette_morningsky'] = 'home appliances';
 $_['palette_neoncoast'] = 'gadgets, wearables';
 $_['palette_coralnight'] = 'electronics, audio';
+$_['palette_electric'] = 'electronics, gadgets';
+$_['palette_pulse'] = 'gaming, peripherals';
+$_['palette_plum'] = 'perfume, premium beauty';
 $_['text_section_look']    = '1. Preset';
 $_['text_tune_title']       = '2. Fine-tune the preset';
 $_['text_tune_help']        = 'Everything below starts from the preset you picked. Choosing another preset resets these settings to its own.';
@@ -50,6 +53,7 @@ $_['text_section_fonts']   = 'Fonts';
 $_['preset_clean']   = 'Fresh green on white, neutral and light.';
 $_['preset_warm']    = 'Terracotta and gold on cream, serif headings.';
 $_['preset_comfort'] = 'Friendly and easy on the eyes: quiet greys, one green accent.';
+$_['preset_cool']    = 'Blues with a violet accent.';
 $_['preset_gallery'] = 'Image first: near-monochrome, black actions, square corners.';
 
 // Entry

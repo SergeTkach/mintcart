@@ -351,3 +351,35 @@
     margin: 0 0 var(--mc-space-4);
     color: var(--mc-muted);
 }
+
+/* Fine-tune sections collapse like an accordion (native <details>). */
+.mc-design__acc > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    list-style: none;
+}
+
+.mc-design__acc > summary::-webkit-details-marker {
+    display: none;
+}
+
+.mc-design__acc > summary::after {
+    content: '';
+    width: 0.55rem;
+    height: 0.55rem;
+    border-right: 2px solid var(--mc-muted);
+    border-bottom: 2px solid var(--mc-muted);
+    transform: rotate(45deg);
+    transition: transform var(--mc-motion-duration-base) var(--mc-motion-easing-standard);
+}
+
+.mc-design__acc[open] > summary::after {
+    transform: rotate(225deg);
+}
+
+.mc-design__acc > summary:focus-visible {
+    outline: 2px solid var(--mc-accent);
+    outline-offset: -2px;
+}
