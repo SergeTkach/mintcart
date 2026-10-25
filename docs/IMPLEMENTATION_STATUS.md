@@ -124,6 +124,10 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 
 ## SEO / Fixes / Performance
 
+- [x] SEO menu section: Meta Tags (title / description templates per page type and language, live preview),
+      System Pages, All URLs (ADR 018); URL Generator (templates, transliteration, auto-fill of the SEO URL fields in the
+      product / category / page / brand forms, batch for items without a URL). Browser-checked only through the server
+      endpoints and screenshots; the auto-fill JS in the forms is not clicked through yet
 - [x] Meta builder, canonical, robots, Schema.org (Product, Breadcrumb,
       Organization), XML sitemap
 - [~] hreflang: builder + one consumer; not verified multi-language

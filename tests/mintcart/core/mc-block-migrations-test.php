@@ -114,6 +114,9 @@ check(
         '202610221301_alias_reviews_page.php',
         '202610231500_grant_admin_permissions_maintenance.php',
         '202610251000_create_ukrposhta_directory.php',
+        '202610251200_grant_admin_permissions_homepage.php',
+        '202610251300_grant_admin_permissions_seo_meta.php',
+        '202610251400_seo_url_autofill.php',
     ],
     'all real migrations should apply in filename order, got: ' . json_encode($result['applied']),
     $failures

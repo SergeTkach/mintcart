@@ -57,6 +57,7 @@ import { initMenuHint } from './components/menu-hint.js';
 import { initDesignStyles } from './components/design-styles.js';
 import { initHomepageItems } from './components/homepage-items.js';
 import { initHomepageAiTranslate } from './components/homepage-ai-translate.js';
+import { initSeoUrlAutofill } from './components/seo-url-autofill.js';
 
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
@@ -119,6 +120,7 @@ function boot() {
     initDesignStyles();
     initHomepageItems();
     initHomepageAiTranslate();
+    initSeoUrlAutofill();
 }
 
 if (document.readyState === 'loading') {

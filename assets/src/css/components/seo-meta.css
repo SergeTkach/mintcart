@@ -116,3 +116,63 @@
     font-size: 12px;
     border-left-color: #ddd;
 }
+
+
+/* ---------------------------------------------------------------------- */
+/* SEO -> URL Generator (mintcart/seo/url_generator)                        */
+/* ---------------------------------------------------------------------- */
+
+.mc-urlgen__row {
+    max-width: 880px;
+    margin-bottom: 16px;
+}
+
+.mc-urlgen__label {
+    display: block;
+    margin-bottom: 4px;
+    color: #999;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mc-urlgen .form-control {
+    color: #444;
+    font-size: 13px;
+    border-color: #e0e2e5;
+    border-radius: 3px;
+    box-shadow: none;
+}
+
+.mc-urlgen .form-control:focus {
+    border-color: #66afe9;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04), 0 0 5px rgba(102, 175, 233, 0.5);
+}
+
+.mc-urlgen__vars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.mc-urlgen__var {
+    padding: 2px 8px;
+    color: #5a4fcf;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    background: #f4f2ff;
+    border: 1px solid #d9d3ff;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.mc-urlgen__var:hover {
+    background: #e8e4ff;
+}
+
+.mc-urlgen__note {
+    margin-left: 10px;
+    color: #2f7d32;
+}

@@ -1,0 +1,24 @@
+<?php
+$_['heading_title'] = 'URL Generator';
+$_['text_success'] = 'Success: the URL templates are saved!';
+$_['error_permission'] = 'Warning: you do not have permission to modify the URL templates!';
+$_['text_templates'] = 'URL templates';
+$_['text_intro'] = 'A URL keyword is made from the name of the page, transliterated to Latin (Ukrainian and Russian included): "Горня для кави" becomes "hornia-dlia-kavy". The product, category, page and brand forms fill an empty "SEO URL" field with it while you type the name. Choose here what the keyword is made of. A keyword is unique in the store (a repeat gets -2).';
+$_['text_missing'] = 'Items without a URL';
+$_['text_missing_intro'] = 'Creates the missing keywords for items that have none (for example after an import). Keywords that already exist are never changed: changing a URL breaks links and indexed pages.';
+$_['column_type'] = 'Type';
+$_['column_language'] = 'Language';
+$_['column_missing'] = 'Without a URL';
+$_['button_generate'] = 'Generate';
+$_['button_generate_all'] = 'Generate all missing';
+$_['text_working'] = 'Working…';
+$_['text_done'] = 'Done.';
+$_['text_type_product'] = 'Products';
+$_['text_type_category'] = 'Categories';
+$_['text_type_information'] = 'Information pages';
+$_['text_type_manufacturer'] = 'Brands';
+$_['var_name'] = 'Name of the item';
+$_['var_brand'] = 'Brand of the product';
+$_['var_category'] = 'First category of the product';
+$_['var_model'] = 'Model';
+$_['var_parent'] = 'Parent category';

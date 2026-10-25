@@ -32,6 +32,7 @@ Wizard runs it when the Ukrainian language is added.
 
 import html
 import json
+import re
 import os
 import sys
 import urllib.request
@@ -90,7 +91,7 @@ def esc(text):
 
 
 def slug(text):
-    return ''.join(ch.lower() if ch.isalnum() else '-' for ch in text).strip('-').replace('--', '-')
+    return re.sub(r'-+', '-', ''.join(ch.lower() if ch.isalnum() else '-' for ch in text)).strip('-')
 
 
 # --------------------------------------------------------------------------
@@ -289,7 +290,7 @@ def main():
             sql.append('INSERT INTO oc_category_path (category_id, path_id, level) VALUES (%d, %d, %d);' % (cid, anc, level))
         sql.append('INSERT INTO oc_category_to_store (category_id, store_id) VALUES (%d, 0);' % cid)
         sql.append('INSERT INTO oc_category_to_layout (category_id, store_id, layout_id) VALUES (%d, 0, 0);' % cid)
-        sql.append("INSERT INTO oc_seo_url (store_id, language_id, query, keyword) VALUES (0, 1, 'path=%d', %s);" % (cid, q(kw)))
+        sql.append("INSERT INTO oc_seo_url (store_id, language_id, query, keyword) VALUES (0, 1, 'category_id=%d', %s);" % (cid, q(kw)))
 
     # --- specification attributes --------------------------------------------
     sql.append("INSERT INTO oc_attribute_group (attribute_group_id, sort_order) VALUES (100, 1);")
@@ -424,7 +425,7 @@ def main():
     # (brand names and URL slugs are the same in every language).
     uk.append("DELETE FROM oc_banner_image WHERE banner_id = 8 AND language_id = @uk;")
     uk.append("INSERT INTO oc_banner_image (banner_id, language_id, title, link, image, sort_order) SELECT banner_id, @uk, title, link, image, sort_order FROM oc_banner_image WHERE banner_id = 8 AND language_id = 1 AND @uk IS NOT NULL;")
-    demo_keys = "(`query` REGEXP '^path=1[0-2][0-9]$' OR `query` REGEXP '^product_id=1[0-4][0-9]$' OR `query` REGEXP '^manufacturer_id=2[0-4]$')"
+    demo_keys = "(`query` REGEXP '^(path|category_id)=1[0-2][0-9]$' OR `query` REGEXP '^product_id=1[0-4][0-9]$' OR `query` REGEXP '^manufacturer_id=2[0-4]$')"
     uk.append("DELETE FROM oc_seo_url WHERE language_id = @uk AND %s;" % demo_keys)
     uk.append("INSERT INTO oc_seo_url (store_id, language_id, `query`, keyword) SELECT store_id, @uk, `query`, keyword FROM oc_seo_url WHERE language_id = 1 AND store_id = 0 AND %s AND @uk IS NOT NULL;" % demo_keys)
 

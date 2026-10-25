@@ -142,3 +142,4 @@ $_['text_mintcart_seo_meta'] = 'Мета-теги';
 $_['text_mintcart_seo'] = 'SEO';
 $_['text_mintcart_seo_urls'] = 'Все адреса';
 $_['text_mintcart_seo_system_pages'] = 'Системные страницы';
+$_['text_mintcart_seo_url_generator'] = 'Генератор URL';

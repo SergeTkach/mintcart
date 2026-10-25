@@ -1,0 +1,180 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="form-url-templates" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> {{ success }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-link"></i> {{ text_templates }}</h3>
+      </div>
+      <div class="panel-body">
+        <p class="text-muted">{{ text_intro }}</p>
+        <form action="{{ action }}" method="post" id="form-url-templates" class="mc-urlgen">
+          {% for type in types %}
+          <div class="mc-urlgen__row">
+            <label class="mc-urlgen__label" for="template-{{ type.code }}">{{ type.name }}</label>
+            <input type="text" name="template[{{ type.code }}]" id="template-{{ type.code }}" value="{{ type.template|e }}" class="form-control" />
+            <div class="mc-urlgen__vars">
+              {% for variable in type.variables %}
+              <button type="button" class="mc-urlgen__var" data-mc-urlgen-var="{{ variable.token }}" data-target="template-{{ type.code }}" title="{{ variable.label }}">{{ variable.token }}</button>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </form>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-magic"></i> {{ text_missing }}</h3>
+      </div>
+      <div class="panel-body">
+        <p class="text-muted">{{ text_missing_intro }}</p>
+        <div class="table-responsive">
+          <table class="table table-bordered mc-urlgen__table" data-mc-urlgen-table data-run-url="{{ run_url }}">
+            <thead>
+              <tr>
+                <td class="text-left">{{ column_type }}</td>
+                <td class="text-left">{{ column_language }}</td>
+                <td class="text-right">{{ column_missing }}</td>
+                <td class="text-right"></td>
+              </tr>
+            </thead>
+            <tbody>
+              {% for type in types %}
+              {% for count in type.counts %}
+              <tr data-type="{{ type.code }}" data-language="{{ count.language_id }}">
+                <td class="text-left">{{ type.name }}</td>
+                <td class="text-left"><img src="language/{{ count.code }}/{{ count.code }}.png" title="{{ count.name }}" /> {{ count.name }}</td>
+                <td class="text-right"><span class="mc-status {{ count.missing ? 'mc-status--off' : 'mc-status--on' }}" data-mc-urlgen-count>{{ count.missing }}</span></td>
+                <td class="text-right"><button type="button" class="btn btn-primary btn-sm" data-mc-urlgen-run{% if not count.missing %} disabled{% endif %}><i class="fa fa-magic"></i> {{ button_generate }}</button></td>
+              </tr>
+              {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn-success" data-mc-urlgen-all><i class="fa fa-magic"></i> {{ button_generate_all }}</button>
+        <span class="mc-urlgen__note" data-mc-urlgen-note role="status" aria-live="polite"></span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+/**
+ * Variable buttons (insert into the template field) and the "generate the missing keywords" runs:
+ * one request makes up to 50 keywords; the screen repeats until nothing is left.
+ */
+(function () {
+    'use strict';
+
+    var table = document.querySelector('[data-mc-urlgen-table]');
+    var note = document.querySelector('[data-mc-urlgen-note]');
+    var textDone = {{ text_done|json_encode|raw }};
+    var textWorking = {{ text_working|json_encode|raw }};
+    var busy = false;
+
+    document.addEventListener('click', function (event) {
+        var variable = event.target.closest('[data-mc-urlgen-var]');
+
+        if (variable) {
+            var input = document.getElementById(variable.dataset.target);
+            var start = input.selectionStart === undefined ? input.value.length : input.selectionStart;
+            var end = input.selectionEnd === undefined ? start : input.selectionEnd;
+
+            input.value = input.value.slice(0, start) + variable.dataset.mcUrlgenVar + input.value.slice(end);
+            input.focus();
+            input.selectionStart = input.selectionEnd = start + variable.dataset.mcUrlgenVar.length;
+        }
+    });
+
+    if (!table) {
+        return;
+    }
+
+    function setCount(row, remaining) {
+        var badge = row.querySelector('[data-mc-urlgen-count]');
+
+        badge.textContent = remaining;
+        badge.classList.toggle('mc-status--on', remaining === 0);
+        badge.classList.toggle('mc-status--off', remaining !== 0);
+        row.querySelector('[data-mc-urlgen-run]').disabled = remaining === 0;
+    }
+
+    function runRow(row) {
+        var params = new URLSearchParams({ type: row.dataset.type, language_id: row.dataset.language });
+
+        return fetch(table.dataset.runUrl, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        }).then(function (response) {
+            return response.json();
+        }).then(function (json) {
+            setCount(row, json.remaining);
+
+            // Nothing created but something left: stop, it would never end.
+            return json.remaining > 0 && json.created > 0 ? runRow(row) : null;
+        });
+    }
+
+    function runRows(rows) {
+        if (busy) {
+            return;
+        }
+
+        busy = true;
+        note.textContent = textWorking;
+
+        rows.reduce(function (chain, row) {
+            return chain.then(function () {
+                return runRow(row);
+            });
+        }, Promise.resolve()).then(function () {
+            note.textContent = textDone;
+            busy = false;
+        }, function () {
+            note.textContent = '';
+            busy = false;
+        });
+    }
+
+    table.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-mc-urlgen-run]');
+
+        if (button) {
+            runRows([button.closest('tr')]);
+        }
+    });
+
+    document.querySelector('[data-mc-urlgen-all]').addEventListener('click', function () {
+        runRows(Array.prototype.filter.call(table.querySelectorAll('tbody tr'), function (row) {
+            return !row.querySelector('[data-mc-urlgen-run]').disabled;
+        }));
+    });
+})();
+</script>
+{{ footer }}

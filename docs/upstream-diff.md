@@ -40,6 +40,26 @@ governed by the store's allowed file extensions / MIME settings, unchanged.
 
 ---
 
+## Coloured status in the product and category lists
+
+**Files:** `upload/admin/view/template/catalog/product_list.twig` (the status cell is wrapped in a
+`mc-status` badge), `upload/admin/model/catalog/category.php` (`getCategories()` also selects
+`c1.status`), `upload/admin/controller/catalog/category.php` (the list rows carry `status` / `status_on`),
+`upload/admin/view/template/catalog/category_list.twig` (a Status column).
+
+**Reason:** the stock category list does not show whether a category is enabled at all; the product list
+shows the word only. A coloured badge (green / red) is readable at a glance.
+
+**Why not the MintCart layer:** the list markup and the category query are built inside these files.
+
+**Compatibility impact:** one more column in the category list and one more selected column in the
+category query; no behaviour change. Manufacturers have no status in OpenCart's schema, so their list is
+unchanged.
+
+**Tests:** manual (Catalog > Products, Catalog > Categories).
+
+---
+
 ## `upload/catalog/controller/event/theme.php`
 
 **Reason:** Found via live manual verification (`docs/MANUAL_VERIFICATION.md`,
