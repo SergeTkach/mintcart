@@ -1,0 +1,280 @@
+/**
+ * Design > Styles (admin): look tiles, colour pickers, segmented choices and
+ * the live preview. Lives in the legacy Bootstrap 3 admin chrome, so it only
+ * uses MintCart tokens and its own `mc-design__*` classes.
+ */
+
+.mc-design {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    gap: var(--mc-space-6);
+    align-items: start;
+}
+
+@media (max-width: 1100px) {
+    .mc-design {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.mc-design__sticky {
+    position: sticky;
+    top: var(--mc-space-4);
+}
+
+.mc-design__aside-title {
+    margin: 0 0 var(--mc-space-3);
+    font-size: var(--mc-font-size-lg);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+/* Look tiles */
+.mc-design__tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: var(--mc-space-3);
+}
+
+.mc-design__tile {
+    display: block;
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.mc-design__tile input {
+    position: absolute;
+    opacity: 0;
+}
+
+.mc-design__tile-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-1);
+    height: 100%;
+    padding: var(--mc-space-3);
+    border: 2px solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+    background: var(--mc-surface);
+}
+
+.mc-design__tile input:checked + .mc-design__tile-body {
+    border-color: var(--mc-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-primary) 22%, transparent);
+}
+
+.mc-design__tile input:focus-visible + .mc-design__tile-body {
+    outline: 2px solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+.mc-design__tile small {
+    color: var(--mc-muted);
+    line-height: var(--mc-line-height-normal);
+}
+
+.mc-design__strip {
+    display: flex;
+    height: 2.5rem;
+    margin-bottom: var(--mc-space-2);
+    overflow: hidden;
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-design__strip i {
+    flex: 1;
+    background: var(--mc-border);
+}
+
+.mc-design__strip i:nth-child(1) { background: var(--mc-swatch-1, var(--mc-border)); }
+.mc-design__strip i:nth-child(2) { background: var(--mc-swatch-2, var(--mc-border)); }
+.mc-design__strip i:nth-child(3) { background: var(--mc-swatch-3, var(--mc-border)); }
+
+/* Colours */
+.mc-design__colors {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: var(--mc-space-4);
+}
+
+.mc-design__color-row {
+    display: flex;
+    gap: var(--mc-space-2);
+    align-items: center;
+}
+
+.mc-design__color-row input[type='color'] {
+    width: 3rem;
+    height: 2.5rem;
+    padding: 2px;
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    background: var(--mc-surface);
+    cursor: pointer;
+}
+
+.mc-design__color-row .form-control {
+    max-width: 9rem;
+    font-family: var(--mc-font-family-mono);
+}
+
+/* Segmented choices */
+.mc-design__group {
+    margin-bottom: var(--mc-space-4);
+}
+
+.mc-design__label {
+    display: block;
+    margin-bottom: var(--mc-space-2);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-design__seg {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+}
+
+.mc-design__seg label {
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.mc-design__seg input {
+    position: absolute;
+    opacity: 0;
+}
+
+.mc-design__seg-item {
+    display: inline-block;
+    padding: var(--mc-space-2) var(--mc-space-4);
+    border: 2px solid var(--mc-border);
+    background: var(--mc-surface);
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-design__seg-item--sharp { border-radius: 0; }
+.mc-design__seg-item--soft { border-radius: 0.5rem; }
+.mc-design__seg-item--rounded { border-radius: 1.25rem; }
+
+.mc-design__seg input:checked + .mc-design__seg-item {
+    border-color: var(--mc-primary);
+    background: color-mix(in srgb, var(--mc-primary) 10%, var(--mc-surface));
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-design__seg input:focus-visible + .mc-design__seg-item {
+    outline: 2px solid var(--mc-accent);
+    outline-offset: 2px;
+}
+
+/* Live preview: its own variables, set from the form by design-styles.js */
+.mc-design__preview {
+    --pv-primary: #059669;
+    --pv-on-primary: #ffffff;
+    --pv-accent: #0d6efd;
+    --pv-text: #212529;
+    --pv-bg: #ffffff;
+    --pv-tint: #f8f9fa;
+    --pv-border: #ced4da;
+    --pv-border-width: 1px;
+    --pv-radius: 0.375rem;
+    --pv-radius-lg: 0.5rem;
+    --pv-button-radius: var(--pv-radius-lg);
+    --pv-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --pv-font-heading: var(--pv-font-body);
+
+    padding: var(--mc-space-5);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+    background: var(--pv-tint);
+    color: var(--pv-text);
+    font-family: var(--pv-font-body);
+}
+
+.mc-design__pv-heading {
+    margin: 0 0 var(--mc-space-2);
+    font-family: var(--pv-font-heading);
+    font-size: 1.375rem;
+    line-height: 1.2;
+}
+
+.mc-design__pv-text {
+    margin: 0 0 var(--mc-space-4);
+    line-height: 1.5;
+}
+
+.mc-design__pv-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+    margin-bottom: var(--mc-space-4);
+}
+
+.mc-design__pv-btn {
+    padding: 0.5rem 1.1rem;
+    border: var(--pv-border-width) solid transparent;
+    border-radius: var(--pv-button-radius);
+    font-family: var(--pv-font-body);
+    font-weight: 600;
+}
+
+.mc-design__pv-btn--primary {
+    background: var(--pv-btn-bg, var(--pv-primary));
+    border-color: var(--pv-btn-border, transparent);
+    color: var(--pv-btn-color, var(--pv-on-primary));
+}
+
+.mc-design__pv-btn--quiet {
+    background: transparent;
+    border-color: var(--pv-border);
+    color: var(--pv-text);
+}
+
+.mc-design__pv-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-2);
+    padding: var(--mc-space-3);
+    border: var(--pv-border-width) solid var(--pv-border);
+    border-radius: var(--pv-radius-lg);
+    background: var(--pv-bg);
+}
+
+.mc-design__pv-image {
+    height: 5rem;
+    border-radius: var(--pv-radius);
+    background: color-mix(in srgb, var(--pv-primary) 14%, var(--pv-bg));
+}
+
+.mc-design__pv-badge {
+    position: absolute;
+    top: var(--mc-space-4);
+    left: var(--mc-space-4);
+    padding: 0.1rem 0.5rem;
+    border-radius: var(--pv-radius);
+    background: var(--pv-accent);
+    color: var(--pv-on-accent, #fff);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.mc-design__pv-name {
+    font-family: var(--pv-font-heading);
+}
+
+.mc-design__pv-price {
+    color: var(--pv-primary);
+    font-weight: 700;
+}
+
+.mc-design__pv-input {
+    padding: 0.4rem 0.7rem;
+    border: var(--pv-border-width) solid var(--pv-border);
+    border-radius: var(--pv-radius);
+    background: var(--pv-bg);
+    color: var(--pv-text);
+    font-family: var(--pv-font-body);
+}

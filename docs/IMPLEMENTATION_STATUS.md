@@ -228,6 +228,10 @@ Shipping carriers (added 2026-10-23, after the first release):
    shipping: `system/mintcart/data/method-fields.json`; the Business screens and
    `ModelMintcartMethods` already take any type)
 
+Design > Styles rebuilt 2026-10-25 (docs/developer/theme-api/styles-screen.md): look tiles with real swatches,
+main / accent colour, corners, borders, page width, button style and shape, heading / body fonts, live preview. Written,
+unit-tested, storefront output checked; the admin screen itself not yet clicked through.
+
 Heavy items not in this batch: first end-to-end release (needs a clean DB),
 admin navigation restructure, theme live preview + `settings.json` form,
 full Bulk Editor, rollback action.

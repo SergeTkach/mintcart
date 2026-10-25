@@ -24,40 +24,157 @@
       <button type="button" class="close" data-dismiss="alert">&times;</button>
     </div>
     {% endif %}
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }}</h3>
-      </div>
-      <div class="panel-body">
-        <p>{{ text_intro }}</p>
-        <form action="{{ action }}" method="post" id="form-mintcart-design-styles" class="form-horizontal">
-          {% if presets %}
-          <div class="form-group">
-            <label class="col-sm-2 control-label">{{ entry_preset }}</label>
-            <div class="col-sm-10">
-              <div class="radio">
-                <label>
-                  <input type="radio" name="mintcart_design_preset" value=""{% if selected == '' %} checked="checked"{% endif %} />
-                  {{ text_default }}
+    {% if fonts_url %}<link href="{{ fonts_url }}" rel="stylesheet" />{% endif %}
+    <p>{{ text_intro }}</p>
+    <form action="{{ action }}" method="post" id="form-mintcart-design-styles" data-mc-design-styles>
+      <div class="mc-design">
+        <div class="mc-design__controls">
+
+          <section class="panel panel-default">
+            <div class="panel-heading"><h3 class="panel-title">{{ text_section_look }}</h3></div>
+            <div class="panel-body">
+              {% if presets %}
+              <div class="mc-design__tiles">
+                {% for preset in presets %}
+                <label class="mc-design__tile">
+                  <input type="radio" name="mintcart_design_preset" value="{{ preset.code }}" data-mc-design-preset data-swatches="{{ preset.swatches|join(',') }}"{% if selected == preset.code %} checked="checked"{% endif %} />
+                  <span class="mc-design__tile-body">
+                    <span class="mc-design__strip" style="--mc-swatch-1:{{ preset.swatches[0]|default('#059669') }};--mc-swatch-2:{{ preset.swatches[1]|default('#212529') }};--mc-swatch-3:{{ preset.swatches[2]|default('#f8f9fa') }}"><i></i><i></i><i></i></span>
+                    <strong>{{ preset.label }}</strong>
+                    <small>{{ preset.description }}</small>
+                  </span>
+                </label>
+                {% endfor %}
+                <label class="mc-design__tile">
+                  <input type="radio" name="mintcart_design_preset" value="" data-mc-design-preset data-swatches=""{% if selected == '' %} checked="checked"{% endif %} />
+                  <span class="mc-design__tile-body">
+                    <span class="mc-design__strip"><i></i><i></i><i></i></span>
+                    <strong>{{ text_default }}</strong>
+                    <small>{{ help_default }}</small>
+                  </span>
                 </label>
               </div>
-              {% for preset in presets %}
-              <div class="radio">
-                <label>
-                  <input type="radio" name="mintcart_design_preset" value="{{ preset.code }}"{% if selected == preset.code %} checked="checked"{% endif %} />
-                  {{ preset.label }}
-                </label>
+              {% else %}
+              <p class="text-muted">{{ text_no_presets }}</p>
+              {% endif %}
+            </div>
+          </section>
+
+          <section class="panel panel-default">
+            <div class="panel-heading"><h3 class="panel-title">{{ text_section_colors }}</h3></div>
+            <div class="panel-body">
+              <p class="help-block">{{ help_colors }}</p>
+              <div class="mc-design__colors">
+                {% for key, label in {'primary': entry_primary, 'accent': entry_accent} %}
+                <div class="mc-design__color{% if (key == 'primary' and error_primary) or (key == 'accent' and error_accent) %} has-error{% endif %}">
+                  <label for="mc-design-{{ key }}-text">{{ label }}</label>
+                  <div class="mc-design__color-row">
+                    <input type="color" value="{{ values[key] ? values[key] : '#059669' }}" data-mc-design-color="{{ key }}" aria-label="{{ label }}" />
+                    <input type="text" id="mc-design-{{ key }}-text" name="mintcart_design_{{ key }}" value="{{ values[key] }}" placeholder="{{ text_from_preset }}" maxlength="7" class="form-control" data-mc-design-hex="{{ key }}" autocomplete="off" />
+                    <button type="button" class="btn btn-default" data-mc-design-reset="{{ key }}" title="{{ text_reset }}"><i class="fa fa-undo"></i></button>
+                  </div>
+                  {% if key == 'primary' and error_primary %}<div class="text-danger">{{ error_primary }}</div>{% endif %}
+                  {% if key == 'accent' and error_accent %}<div class="text-danger">{{ error_accent }}</div>{% endif %}
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </section>
+
+          <section class="panel panel-default">
+            <div class="panel-heading"><h3 class="panel-title">{{ text_section_shape }}</h3></div>
+            <div class="panel-body">
+              <div class="mc-design__group">
+                <span class="mc-design__label">{{ entry_radius }}</span>
+                <div class="mc-design__seg" role="radiogroup">
+                  {% for code, label in {'': text_from_preset, 'sharp': text_radius_sharp, 'soft': text_radius_soft, 'rounded': text_radius_rounded} %}
+                  <label><input type="radio" name="mintcart_design_radius" value="{{ code }}" data-mc-design-field="radius"{% if values.radius == code %} checked="checked"{% endif %} /><span class="mc-design__seg-item mc-design__seg-item--{{ code ? code : 'preset' }}">{{ label }}</span></label>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="mc-design__group">
+                <span class="mc-design__label">{{ entry_border }}</span>
+                <div class="mc-design__seg" role="radiogroup">
+                  {% for code, label in {'': text_from_preset, 'light': text_border_light, 'strong': text_border_strong} %}
+                  <label><input type="radio" name="mintcart_design_border" value="{{ code }}" data-mc-design-field="border"{% if values.border == code %} checked="checked"{% endif %} /><span class="mc-design__seg-item">{{ label }}</span></label>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="mc-design__group">
+                <span class="mc-design__label">{{ entry_container }}</span>
+                <div class="mc-design__seg" role="radiogroup">
+                  {% for code, label in {'narrow': text_container_narrow, '': text_container_normal, 'wide': text_container_wide} %}
+                  <label><input type="radio" name="mintcart_design_container" value="{{ code }}" data-mc-design-field="container"{% if values.container == code %} checked="checked"{% endif %} /><span class="mc-design__seg-item">{{ label }}</span></label>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel panel-default">
+            <div class="panel-heading"><h3 class="panel-title">{{ text_section_buttons }}</h3></div>
+            <div class="panel-body">
+              <div class="mc-design__group">
+                <span class="mc-design__label">{{ entry_button_style }}</span>
+                <div class="mc-design__seg" role="radiogroup">
+                  {% for code, label in {'': text_button_solid, 'outline': text_button_outline, 'soft': text_button_soft} %}
+                  <label><input type="radio" name="mintcart_design_button_style" value="{{ code }}" data-mc-design-field="button_style"{% if values.button_style == code %} checked="checked"{% endif %} /><span class="mc-design__seg-item">{{ label }}</span></label>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="mc-design__group">
+                <span class="mc-design__label">{{ entry_button_shape }}</span>
+                <div class="mc-design__seg" role="radiogroup">
+                  {% for code, label in {'': text_shape_corners, 'square': text_shape_square, 'pill': text_shape_pill} %}
+                  <label><input type="radio" name="mintcart_design_button_shape" value="{{ code }}" data-mc-design-field="button_shape"{% if values.button_shape == code %} checked="checked"{% endif %} /><span class="mc-design__seg-item">{{ label }}</span></label>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel panel-default">
+            <div class="panel-heading"><h3 class="panel-title">{{ text_section_fonts }}</h3></div>
+            <div class="panel-body">
+              <p class="help-block">{{ help_fonts }}</p>
+              {% for key, label in {'font_heading': entry_font_heading, 'font_body': entry_font_body} %}
+              <div class="mc-design__group">
+                <label class="mc-design__label" for="mc-design-{{ key }}">{{ label }}</label>
+                <select name="mintcart_design_{{ key }}" id="mc-design-{{ key }}" class="form-control" data-mc-design-field="{{ key }}">
+                  <option value="">{{ text_from_preset }}</option>
+                  {% for font in fonts %}
+                  <option value="{{ font.id }}" data-stack="{{ font.stack }}"{% if values[key] == font.id %} selected="selected"{% endif %}>{{ font.label }}</option>
+                  {% endfor %}
+                </select>
               </div>
               {% endfor %}
-              <div class="help-block">{{ help_preset }}</div>
             </div>
+          </section>
+        </div>
+
+        <aside class="mc-design__aside" aria-label="{{ text_preview }}">
+          <div class="mc-design__sticky">
+            <h2 class="mc-design__aside-title">{{ text_preview }}</h2>
+            <div class="mc-design__preview" data-mc-design-preview>
+              <h3 class="mc-design__pv-heading">{{ text_pv_heading }}</h3>
+              <p class="mc-design__pv-text">{{ text_pv_text }}</p>
+              <div class="mc-design__pv-buttons">
+                <button type="button" class="mc-design__pv-btn mc-design__pv-btn--primary" tabindex="-1">{{ text_pv_buy }}</button>
+                <button type="button" class="mc-design__pv-btn mc-design__pv-btn--quiet" tabindex="-1">{{ text_pv_details }}</button>
+              </div>
+              <div class="mc-design__pv-card">
+                <span class="mc-design__pv-badge">{{ text_pv_badge }}</span>
+                <div class="mc-design__pv-image"></div>
+                <strong class="mc-design__pv-name">{{ text_pv_product }}</strong>
+                <span class="mc-design__pv-price">$24.00</span>
+                <input type="text" class="mc-design__pv-input" value="{{ text_pv_input }}" tabindex="-1" readonly />
+              </div>
+            </div>
+            <p class="help-block">{{ help_preview }}</p>
           </div>
-          {% else %}
-          <p class="text-muted">{{ text_no_presets }}</p>
-          {% endif %}
-        </form>
+        </aside>
       </div>
-    </div>
+    </form>
   </div>
 </div>
 {{ footer }}
