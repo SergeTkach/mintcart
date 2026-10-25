@@ -1,0 +1,19 @@
+<?php
+$_['text_title']          = 'Нова Пошта';
+$_['text_method_warehouse'] = 'Відділення Нової Пошти';
+$_['text_method_postomat']  = 'Поштомат Нової Пошти';
+$_['text_method_courier']   = 'Кур\'єр Нової Пошти';
+$_['text_carrier_rates']  = 'За тарифами перевізника';
+$_['text_free']           = 'Безкоштовно';
+$_['text_free_from']      = 'Безкоштовно від %s';
+$_['text_city']           = 'Місто';
+$_['text_city_hint']      = 'Почніть вводити назву міста';
+$_['text_warehouse']      = 'Відділення';
+$_['text_postomat']       = 'Поштомат';
+$_['text_courier_address'] = 'Адреса доставки';
+$_['text_choose']         = 'Оберіть...';
+$_['text_loading']        = 'Завантаження...';
+$_['text_no_results']     = 'Нічого не знайдено';
+$_['error_city']          = 'Оберіть місто зі списку';
+$_['error_point']         = 'Оберіть пункт видачі';
+$_['error_courier']       = 'Вкажіть адресу доставки';

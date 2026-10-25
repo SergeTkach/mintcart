@@ -280,3 +280,24 @@
         transition: none;
     }
 }
+
+/* Fields a shipping extension adds under its chosen option */
+.mc-checkout__option-form {
+    padding: var(--mc-space-3) 0 var(--mc-space-3) var(--mc-space-6);
+}
+
+.mc-np__city {
+    position: relative;
+}
+
+.mc-np__list {
+    position: absolute;
+    z-index: var(--mc-z-dropdown, 1000);
+    inset-inline: 0;
+    max-height: 16rem;
+    overflow-y: auto;
+}
+
+.mc-np__list [data-id] {
+    cursor: pointer;
+}

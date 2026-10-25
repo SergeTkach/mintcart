@@ -273,6 +273,8 @@
                     <option value="{{ option_value }}"{% if option_value == field.value %} selected{% endif %}>{{ option_label }}</option>
                     {% endfor %}
                   </select>
+                  {% elseif field.type == 'text' %}
+                  <input type="text" id="field-{{ extension.code }}-{{ field.key }}" name="field[{{ field.key }}]" value="{{ field.value }}" class="mc-field__control" autocomplete="off" />
                   {% else %}
                   <input type="text" inputmode="decimal" id="field-{{ extension.code }}-{{ field.key }}" name="field[{{ field.key }}]" value="{{ field.value }}" class="mc-field__control" />
                   {% endif %}

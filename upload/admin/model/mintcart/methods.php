@@ -109,6 +109,7 @@ class ModelMintcartMethods extends Model {
 				'key'     => $field['key'],
 				'type'    => $field['type'],
 				'label'   => $this->language->get('field_' . $field['key']),
+				'optional' => !empty($field['optional']),
 				'value'   => $value !== null ? (string)$value : (string)($field['default'] ?? ''),
 				'options' => $field['type'] === 'select' ? $this->getOptions($field['source']) : array()
 			);
@@ -144,10 +145,12 @@ class ModelMintcartMethods extends Model {
 		foreach ($fields as $field) {
 			$value = trim((string)($posted[$field['key']] ?? ''));
 
-			if ($field['type'] === 'number') {
+			if ($field['type'] === 'text') {
+				$value = utf8_substr(strip_tags($value), 0, 128);
+			} elseif ($field['type'] === 'number') {
 				$value = str_replace(',', '.', $value);
 
-				if ($value === '' || !is_numeric($value) || (float)$value < 0) {
+				if (!($field['optional'] && $value === '') && ($value === '' || !is_numeric($value) || (float)$value < 0)) {
 					$result['errors'][$field['key']] = $this->language->get('error_number');
 				}
 			} elseif (!array_key_exists((int)$value, $field['options'])) {
