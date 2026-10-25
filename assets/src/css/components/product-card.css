@@ -244,6 +244,38 @@
     flex: 1 1 auto;
 }
 
+/* Pill buttons in the card. Quick Order is the secondary action: a small button that
+   keeps its own width, so "Add to cart" gets the room. */
+.mc-product-card__actions .mc-button {
+    --mc-button-radius: var(--mc-radius-pill);
+}
+
+.mc-product-card__actions .mc-product-card__quick-order {
+    --mc-button-padding-y: 0.375rem;
+    --mc-button-padding-x: 0.875rem;
+    --mc-button-font-size: var(--mc-font-size-sm);
+
+    flex: 0 0 auto;
+}
+
+@media (max-width: 575.98px) {
+    .mc-product-card__actions {
+        gap: var(--mc-space-1);
+    }
+
+    .mc-product-card__actions .mc-button {
+        --mc-button-padding-y: 0.4375rem;
+        --mc-button-padding-x: 0.75rem;
+        --mc-button-font-size: var(--mc-font-size-sm);
+    }
+
+    .mc-product-card__actions .mc-product-card__quick-order {
+        --mc-button-padding-y: 0.3125rem;
+        --mc-button-padding-x: 0.625rem;
+        --mc-button-font-size: var(--mc-font-size-xs);
+    }
+}
+
 /* ---------------------------------------------------------------------- */
 /* Slots (MINTCART_TECHNICAL_PLAN.md §15, MINTCART_IMPLEMENTATION_GUIDE.md */
 /* §35) - a pass-through container for whatever markup an extension's      */

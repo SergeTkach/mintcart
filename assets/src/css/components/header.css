@@ -464,3 +464,19 @@
 .mc-header--gallery .mc-mini-cart__toggle:focus-visible {
     outline-color: var(--mc-text-inverse);
 }
+
+/* Language / currency dropdown (legacy markup in `mc-legacy`): items read left to right,
+   the flag with a gap before the name, instead of Bootstrap-3-shim's centred block buttons. */
+.mc-header .mc-legacy .dropdown-menu .btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--mc-space-2);
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.mc-header .mc-legacy .dropdown-menu .btn img {
+    flex: 0 0 auto;
+}

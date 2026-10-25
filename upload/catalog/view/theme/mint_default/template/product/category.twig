@@ -33,15 +33,8 @@
 
             <h1 class="mb-4">{{ heading_title }}</h1>
 
-            {% if thumb or description_intro %}
-                <div class="d-flex flex-column flex-sm-row align-items-sm-start gap-3 gap-sm-4 mb-4">
-                    {% if thumb %}
-                        <img src="{{ thumb }}" alt="{{ heading_title }}" class="flex-shrink-0 rounded"{% if thumb_width %} width="{{ thumb_width }}"{% endif %}{% if thumb_height %} height="{{ thumb_height }}"{% endif %}>
-                    {% endif %}
-                    {% if description_intro %}
-                        <div class="mc-prose flex-grow-1">{{ description_intro }}</div>
-                    {% endif %}
-                </div>
+            {% if description_intro %}
+                <div class="mc-prose mb-4">{{ description_intro }}</div>
             {% endif %}
 
             {% if categories %}
@@ -101,8 +94,14 @@
                 </div>
             {% endif %}
 
+            {# A long description (more than the short intro above) comes with the category picture, below the products. #}
             {% if description_rest %}
-                <div class="mc-prose mt-5">{{ description_rest }}</div>
+                <div class="d-flex flex-column flex-md-row align-items-md-start gap-3 gap-md-4 mt-5">
+                    {% if thumb %}
+                        <img src="{{ thumb }}" alt="{{ heading_title }}" class="col-md-5 flex-shrink-0 rounded mw-100 h-auto"{% if thumb_width %} width="{{ thumb_width }}"{% endif %}{% if thumb_height %} height="{{ thumb_height }}"{% endif %} loading="lazy">
+                    {% endif %}
+                    <div class="mc-prose flex-grow-1">{{ description_rest }}</div>
+                </div>
             {% endif %}
 
             {{ content_bottom }}

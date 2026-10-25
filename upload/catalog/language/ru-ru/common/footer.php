@@ -21,3 +21,9 @@ $_['text_order']        = 'История заказов';
 $_['text_wishlist']     = 'Закладки';
 $_['text_newsletter']   = 'Рассылка';
 $_['text_powered']      = 'Работает на <a href="http://www.opencart.com">OpenCart</a><br /> %s &copy; %s';
+
+// MintCart
+$_['text_mc_reviews'] = 'Отзывы покупателей';
+$_['text_contact_us'] = 'Свяжитесь с нами';
+$_['text_newsletter_email'] = 'Электронная почта';
+$_['text_newsletter_submit'] = 'Подписаться';

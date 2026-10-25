@@ -31,6 +31,12 @@ final class QuickOrderService
     private const MIN_QUANTITY = 1;
 
     /**
+     * Texts of the Quick Order dialog (`text_<key>` in `mintcart/quickorder`
+     * language file); the controllers hand them to `quick-order.js` as JSON.
+     */
+    public const TEXT_KEYS = ['title', 'quantity', 'decrease', 'increase', 'name', 'phone', 'email', 'cancel', 'submit', 'close', 'ok', 'failed'];
+
+    /**
      * @param array{
      *     product_id?: mixed,
      *     quantity?: mixed,
@@ -40,6 +46,8 @@ final class QuickOrderService
      * } $request Raw submitted values (form-encoded, so everything arrives
      *        as a string) — this method does the trimming/casting/format
      *        checks that `checkout/*` controllers normally do inline.
+     *
+     * @param string $phoneMask the store's phone mask (`PhoneMask`), '' = any phone
      *
      * @return array{
      *     valid: bool,
@@ -54,7 +62,7 @@ final class QuickOrderService
      *        `valid`, so a controller can echo them back into a re-shown
      *        form without re-parsing the raw request itself.
      */
-    public function validate(array $request): array
+    public function validate(array $request, string $phoneMask = ''): array
     {
         $errors = [];
 
@@ -82,6 +90,8 @@ final class QuickOrderService
 
         if ($telephone === '' && $email === '') {
             $errors['contact'] = 'error_contact';
+        } elseif ($telephone !== '' && !PhoneMask::isComplete($telephone, $phoneMask)) {
+            $errors['contact'] = 'error_telephone';
         } elseif ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
             $errors['contact'] = 'error_email';
         }

@@ -197,7 +197,9 @@ class ControllerCommonHeader extends Controller {
 					'text_call' => $this->language->get('text_mc_call'),
 					'text_menu' => $this->language->get('text_menu'),
 					'text_close' => $this->language->get('text_close'),
-					'text_search' => $this->language->get('text_search')
+					'text_search' => $this->language->get('text_search'),
+					'text_search_empty' => $this->language->get('text_mc_search_empty'),
+					'text_search_all' => $this->language->get('text_mc_search_all')
 				));
 			} catch (\Throwable $e) {
 				// Same rationale as ControllerCommonFooter's own catch: a

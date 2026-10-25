@@ -53,6 +53,14 @@
         box-shadow var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
 }
 
+/* `a.mc-button`: keep the text colour on hover (Bootstrap's `a:hover` would otherwise win and
+   paint the label in the link colour - invisible on a button of that colour). */
+.mc-button:hover,
+.mc-button:focus,
+.mc-button:active {
+    color: var(--mc-button-color);
+}
+
 .mc-button:hover {
     background-color: var(--mc-button-bg-hover);
     border-color: var(--mc-button-bg-hover);

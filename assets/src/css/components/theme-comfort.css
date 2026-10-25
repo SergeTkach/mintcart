@@ -1025,3 +1025,11 @@
         grid-column: 1 / -1;
     }
 }
+
+/* Language / currency menu items in the narrow-screen drawer: left-aligned, with a gap after the flag
+   (the rule above centres every button of the utility grid, the menu items included). */
+.mc-header--comfort .mc-header__utility-slot .mc-header__utility .dropdown-menu .btn {
+    justify-content: flex-start;
+    gap: var(--mc-space-2);
+    text-align: left;
+}

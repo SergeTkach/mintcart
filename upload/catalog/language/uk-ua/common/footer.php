@@ -19,3 +19,9 @@ $_['text_order']        = 'Історія замовлень';
 $_['text_wishlist']     = 'Закладки';
 $_['text_newsletter']   = 'Розсилка';
 $_['text_powered']      = '%s &copy; %s';
+
+// MintCart
+$_['text_mc_reviews'] = 'Відгуки покупців';
+$_['text_contact_us'] = 'Зв’язатися з нами';
+$_['text_newsletter_email'] = 'Електронна пошта';
+$_['text_newsletter_submit'] = 'Підписатися';

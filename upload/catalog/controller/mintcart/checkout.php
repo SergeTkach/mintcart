@@ -471,7 +471,11 @@ class ControllerMintcartCheckout extends Controller {
 		$errors = array();
 
 		if (!$this->customer->isLogged()) {
-			$errors += $service->validateContact($this->contact());
+			$this->load->model('localisation/country');
+
+			$store_country = $this->model_localisation_country->getCountry((int)$this->config->get('config_country_id'));
+			$phone_mask = \MintCart\Commerce\PhoneMask::forStore((string)$this->config->get('config_mc_phone_mask'), $store_country ? (string)$store_country['iso_code_2'] : '', DIR_SYSTEM . 'mintcart/data/phone-masks.json');
+			$errors += $service->validateContact($this->contact(), $phone_mask);
 		}
 
 		$input = $this->addressInput();

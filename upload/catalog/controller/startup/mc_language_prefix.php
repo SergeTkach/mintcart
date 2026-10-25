@@ -8,8 +8,10 @@
  *   /foo, /       -> the default language (never the session / cookie /
  *                    Accept-Language guess: one URL, one language)
  *   /en/foo       -> 301 to /foo when `en` is the default language's folder
- *   index.php?route=... (no `_route_`) -> session language kept, so AJAX
- *                    calls (built without a folder) answer in the page language
+ *   index.php?route=... (no `_route_`) -> a browser navigation is the default
+ *                    language (the switcher's link); AJAX calls (built without
+ *                    a folder) keep the session language and answer in the
+ *                    page language
  *
  * Active only with SEO URLs on and at least two enabled languages. Outgoing
  * links: `startup/mc_language_url`. See docs/developer/seo/language-urls.md.
@@ -50,9 +52,36 @@ class ControllerStartupMcLanguagePrefix extends Controller {
 		}
 
 		// A page request without a folder is the default language.
-		if (isset($get['_route_']) || !isset($get['route'])) {
+		if (isset($get['_route_']) || !isset($get['route']) || $this->isPageNavigation()) {
 			$this->session->data['language'] = $this->setting('config_language');
 		}
+	}
+
+	/**
+	 * `index.php?route=...` without a folder is either a link to a page in the
+	 * default language (language switcher, a non-SEO link) or an AJAX call that
+	 * must keep answering in the page's language. A browser navigation (GET)
+	 * is the first; fetch()/XHR is the second. Payment/API callbacks are left
+	 * alone.
+	 */
+	private function isPageNavigation() {
+		$server = $this->request->server;
+
+		if (($server['REQUEST_METHOD'] ?? 'GET') !== 'GET' || preg_match('#^(extension|api)/#', (string)$this->request->get['route'])) {
+			return false;
+		}
+
+		if (strtolower($server['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
+			return false;
+		}
+
+		$mode = strtolower($server['HTTP_SEC_FETCH_MODE'] ?? '');
+
+		if ($mode !== '') {
+			return $mode === 'navigate';
+		}
+
+		return strpos($server['HTTP_ACCEPT'] ?? '', 'text/html') !== false;
 	}
 
 	// This controller runs before startup/startup, which is what loads the

@@ -16,6 +16,7 @@
 
 declare(strict_types=1);
 
+require __DIR__ . '/../../../upload/system/library/mintcart/commerce/phonemask.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/commerce/checkoutservice.php';
 
 use MintCart\Commerce\CheckoutService;

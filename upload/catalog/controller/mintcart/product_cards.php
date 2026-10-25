@@ -55,7 +55,16 @@ class ControllerMintcartProductCards extends Controller {
 			\MintCart\Design\Slots::shared() // lets an extension fill the card's `product.after_actions` slot
 		);
 
+		$this->load->language('mintcart/quickorder', 'quickorder');
+
+		$quick_order_texts = array();
+
+		foreach (\MintCart\Commerce\QuickOrderService::TEXT_KEYS as $key) {
+			$quick_order_texts[$key] = $this->language->get('quickorder')->get('text_' . $key);
+		}
+
 		$strings = array(
+			'quick_order_texts'      => json_encode($quick_order_texts, JSON_UNESCAPED_UNICODE),
 			'text_badge'             => array(
 				'sale'         => $this->language->get('text_badge_sale'),
 				'out-of-stock' => $this->language->get('text_badge_out_of_stock'),

@@ -4,3 +4,6 @@
 
 // Text
 $_['text_all']           = 'Смотреть Все';
+
+// MintCart
+$_['text_category'] = 'Категории';

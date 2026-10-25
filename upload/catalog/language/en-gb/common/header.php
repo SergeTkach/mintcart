@@ -18,3 +18,5 @@ $_['text_search']        = 'Search';
 $_['text_all']           = 'Show All';
 $_['text_menu']          = 'Menu';
 $_['text_close']         = 'Close';
+$_['text_mc_search_empty'] = 'Nothing found';
+$_['text_mc_search_all']   = 'Show all results';

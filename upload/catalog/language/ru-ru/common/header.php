@@ -17,3 +17,12 @@ $_['text_download']      = 'Файлы для скачивания';
 $_['text_logout']        = 'Выход';
 $_['text_checkout']      = 'Оформление заказа';
 $_['text_search']        = 'Поиск';
+$_['text_mc_search_empty'] = 'Ничего не найдено';
+$_['text_mc_search_all']   = 'Показать все результаты';
+
+// MintCart
+$_['text_mc_compare'] = 'Сравнение';
+$_['text_mc_call'] = 'Позвоните';
+$_['text_all'] = 'Показать все';
+$_['text_menu'] = 'Меню';
+$_['text_close'] = 'Закрыть';

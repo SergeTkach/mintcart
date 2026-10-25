@@ -12,6 +12,7 @@
 
 declare(strict_types=1);
 
+require __DIR__ . '/../../../upload/system/library/mintcart/commerce/phonemask.php';
 require __DIR__ . '/../../../upload/system/library/mintcart/commerce/quickorderservice.php';
 
 use MintCart\Commerce\QuickOrderService;
@@ -46,6 +47,12 @@ assertTrue($result['valid'], 'validate: name+email (no phone) is valid', $failur
 assertSame(1, $result['quantity'], 'validate: omitted quantity defaults to 1', $failures);
 
 // 3. Missing name is an error.
+$result = $service->validate(['name' => 'Jane', 'telephone' => '+380 (67) 123-4'], '+380 (##) ###-##-##');
+$check = isset($result['errors']['contact']) && $result['errors']['contact'] === 'error_telephone';
+if (!$check) { $failures[] = 'incomplete phone for the mask is rejected'; }
+$result = $service->validate(['name' => 'Jane', 'telephone' => '+380 (67) 123-45-67'], '+380 (##) ###-##-##');
+if (!$result['valid']) { $failures[] = 'full phone for the mask is accepted'; }
+
 $result = $service->validate(['name' => '', 'telephone' => '555-0100']);
 assertTrue(!$result['valid'], 'validate: empty name is invalid', $failures);
 assertSame('error_name', $result['errors']['name'] ?? null, 'validate: empty name reports error_name', $failures);

@@ -95,9 +95,9 @@
                         <div class="mc-search-box__results" data-mc-search-box-results hidden>
                             <ul class="mc-search-box__list" role="listbox" data-mc-search-box-list></ul>
 
-                            <p class="mc-search-box__empty" data-mc-search-box-empty hidden></p>
+                            <p class="mc-search-box__empty" data-mc-search-box-empty hidden>{{ text_search_empty|default('') }}</p>
 
-                            <a class="mc-search-box__view-all" data-mc-search-box-view-all hidden></a>
+                            <a class="mc-search-box__view-all" data-mc-search-box-view-all hidden>{{ text_search_all|default('') }}</a>
                         </div>
                     </div>
                 </div>

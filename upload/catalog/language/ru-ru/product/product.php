@@ -52,3 +52,22 @@ $_['tab_review']               = 'Отзывов (%s)';
 $_['error_name']               = 'Имя должно содержать от 3 до 25 символов!';
 $_['error_text']               = 'Текст отзыва должен содержать от 25 до 1000 символов!';
 $_['error_rating']             = 'Пожалуйста, выберите оценку!';
+
+// MintCart
+$_['text_viewed'] = 'Недавно просмотренные';
+$_['text_rated'] = 'Оценка %s из 5';
+$_['text_quick_order'] = 'Быстрый заказ';
+$_['text_badge_sale'] = 'Акция';
+$_['text_badge_out_of_stock'] = 'Нет в наличии';
+$_['text_badge_new'] = 'Новинка';
+$_['text_added_to_cart'] = 'Добавлено в корзину';
+$_['text_view_cart'] = 'Перейти в корзину';
+$_['text_continue_shopping'] = 'Продолжить покупки';
+$_['text_add_to_cart_error'] = 'Не удалось добавить товар в корзину';
+$_['text_wishlist_error'] = 'Не удалось обновить список желаний';
+$_['tab_overview'] = 'Обзор';
+$_['text_section_nav'] = 'Разделы товара';
+$_['text_mc_delivery'] = 'Доставка';
+$_['text_mc_payment'] = 'Оплата';
+$_['text_mc_returns'] = 'Возврат';
+$_['text_mc_from'] = 'от %s';
