@@ -775,8 +775,14 @@ class ControllerMintcartWizard extends Controller
         if ($step === 'design') {
             $data['presets'] = [];
 
+            $preset_info = (array)json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/design-presets.json'), true);
+
             foreach ($this->availablePresets() as $code) {
-                $data['presets'][] = ['code' => $code, 'label' => $this->language->get('preset_' . $code) !== 'preset_' . $code ? $this->language->get('preset_' . $code) : ucfirst($code)];
+                $data['presets'][] = [
+                    'code' => $code,
+                    'label' => $this->language->get('preset_' . $code) !== 'preset_' . $code ? $this->language->get('preset_' . $code) : ucfirst($code),
+                    'swatches' => $preset_info[$code]['swatches'] ?? []
+                ];
             }
 
             $data['selected_preset'] = $this->request->post['mintcart_design_preset'] ?? ((string)$this->config->get('mintcart_design_preset') ?: ($data['presets'][0]['code'] ?? ''));

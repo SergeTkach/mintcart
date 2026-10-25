@@ -435,19 +435,16 @@ a.mc-wizard__step-link:focus-visible {
     border-radius: var(--mc-radius-md);
 }
 
+.mc-wizard__swatch > span:nth-child(1) { background: var(--mc-swatch-1, var(--mc-primary)); }
+.mc-wizard__swatch > span:nth-child(2) { background: var(--mc-swatch-2, var(--mc-text)); }
+.mc-wizard__swatch > span:nth-child(3) { background: var(--mc-swatch-3, var(--mc-surface-alt)); }
+
 .mc-wizard__swatch > span {
     flex: 1;
     background: var(--mc-border);
 }
 
-/* Swatch colours mirror presets/clean.css and presets/warm.css. */
-.mc-wizard__choice--clean .mc-wizard__swatch > span:nth-child(1) { background: var(--mc-color-mint-600); }
-.mc-wizard__choice--clean .mc-wizard__swatch > span:nth-child(2) { background: var(--mc-color-blue-500); }
-.mc-wizard__choice--clean .mc-wizard__swatch > span:nth-child(3) { background: var(--mc-color-gray-50); }
 
-.mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(1) { background: #c1552c; }
-.mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(2) { background: #d69e2e; }
-.mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(3) { background: #f8ede0; }
 
 /* "You can change this later in the menu: ..." under a step. */
 .mc-wizard__where {

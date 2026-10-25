@@ -82,15 +82,41 @@ class ControllerMintcartDesignStyles extends Controller {
 			$this->error['warning'] = $this->language->get('error_preset');
 		}
 
+		foreach (array('primary', 'accent') as $key) {
+			$value = trim((string)($this->request->post['mintcart_design_' . $key] ?? ''));
+
+			if ($value !== '' && \MintCart\Design\StyleOverrides::hex($value) === '') {
+				$this->error[$key] = $this->language->get('error_color');
+			}
+		}
+
+		if ($this->error && !isset($this->error['warning'])) {
+			$this->error['warning'] = $this->language->get('error_check');
+		}
+
 		return !$this->error;
 	}
 
 	protected function save() {
 		$preset = isset($this->request->post['mintcart_design_preset']) ? (string)$this->request->post['mintcart_design_preset'] : '';
 
-		$this->model_setting_setting->editSetting('mintcart_design', array(
-			'mintcart_design_preset' => $preset
-		));
+		$values = array('mintcart_design_preset' => $preset);
+
+		foreach (\MintCart\Design\StyleOverrides::normalize($this->postedOverrides()) as $key => $value) {
+			$values['mintcart_design_' . $key] = $value;
+		}
+
+		$this->model_setting_setting->editSetting('mintcart_design', $values);
+	}
+
+	private function postedOverrides() {
+		$raw = array();
+
+		foreach (array('primary', 'accent', 'radius', 'border', 'button_style', 'button_shape', 'container', 'font_heading', 'font_body') as $key) {
+			$raw[$key] = isset($this->request->post['mintcart_design_' . $key]) ? $this->request->post['mintcart_design_' . $key] : '';
+		}
+
+		return $raw;
 	}
 
 	/**
@@ -152,9 +178,13 @@ class ControllerMintcartDesignStyles extends Controller {
 
 		$presets = array();
 
+		$preset_info = (array)json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/design-presets.json'), true);
+
 		foreach ($this->availablePresets() as $code) {
 			$presets[] = array(
-				'code' => $code,
+				'code'        => $code,
+				'description' => isset($preset_info[$code]['description']) ? $this->language->get('preset_' . $code) : '',
+				'swatches'    => isset($preset_info[$code]['swatches']) ? $preset_info[$code]['swatches'] : array(),
 				// No per-preset language key: preset codes are an
 				// open-ended, theme-declared set (CLAUDE.md §85/§86 - no
 				// abstraction/translation table built ahead of more than
@@ -168,6 +198,34 @@ class ControllerMintcartDesignStyles extends Controller {
 
 		$data['presets'] = $presets;
 		$data['selected'] = $selected;
+
+		// The owner's overrides on top of the preset (empty = what the preset says).
+		$data['values'] = \MintCart\Design\StyleOverrides::normalize($this->request->server['REQUEST_METHOD'] == 'POST' ? $this->postedOverrides() : array(
+			'primary'      => $this->config->get('mintcart_design_primary'),
+			'accent'       => $this->config->get('mintcart_design_accent'),
+			'radius'       => $this->config->get('mintcart_design_radius'),
+			'border'       => $this->config->get('mintcart_design_border'),
+			'button_style' => $this->config->get('mintcart_design_button_style'),
+			'button_shape' => $this->config->get('mintcart_design_button_shape'),
+			'container'    => $this->config->get('mintcart_design_container'),
+			'font_heading' => $this->config->get('mintcart_design_font_heading'),
+			'font_body'    => $this->config->get('mintcart_design_font_body')
+		));
+
+		$data['error_primary'] = $this->error['primary'] ?? '';
+		$data['error_accent'] = $this->error['accent'] ?? '';
+
+		$data['fonts'] = array();
+
+		foreach (\MintCart\Design\StyleOverrides::FONTS as $id => $font) {
+			$data['fonts'][] = array('id' => $id, 'label' => $id === 'system' ? $this->language->get('font_system') : ($id === 'georgia' ? $this->language->get('font_georgia') : $font[0]), 'stack' => $font[1]);
+		}
+
+		$data['fonts_url'] = \MintCart\Design\StyleOverrides::fontsUrl(array_keys(array_filter(\MintCart\Design\StyleOverrides::FONTS, function ($font) {
+			return $font[2];
+		})));
+		$data['container_widths'] = \MintCart\Design\StyleOverrides::CONTAINER;
+		$data['radius_scales'] = \MintCart\Design\StyleOverrides::RADIUS;
 
 		$data['header'] = $this->load->controller('common/header');
 		$data['column_left'] = $this->load->controller('common/column_left');

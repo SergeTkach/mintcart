@@ -1,0 +1,38 @@
+{
+ "clean": {
+  "label": "Clean",
+  "description": "Fresh green on white, neutral and light.",
+  "swatches": [
+   "#059669",
+   "#212529",
+   "#f8f9fa"
+  ]
+ },
+ "warm": {
+  "label": "Warm",
+  "description": "Terracotta and gold on cream, serif headings.",
+  "swatches": [
+   "#c1552c",
+   "#362013",
+   "#f8ede0"
+  ]
+ },
+ "comfort": {
+  "label": "Comfort",
+  "description": "Friendly and easy on the eyes: quiet greys, one green accent.",
+  "swatches": [
+   "#14806a",
+   "#1d1f23",
+   "#f5f5f6"
+  ]
+ },
+ "gallery": {
+  "label": "Gallery",
+  "description": "Image first: near-monochrome, black actions, square corners.",
+  "swatches": [
+   "#111111",
+   "#111111",
+   "#f2f2f2"
+  ]
+ }
+}

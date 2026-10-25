@@ -324,7 +324,7 @@
               {% for preset in presets %}
               <label class="mc-wizard__choice mc-wizard__choice--{{ preset.code }}">
                 <input type="radio" class="mc-wizard__choice-input" name="mintcart_design_preset" value="{{ preset.code }}"{% if preset.code == selected_preset %} checked{% endif %} />
-                <span class="mc-wizard__swatch" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="mc-wizard__swatch" aria-hidden="true"{% if preset.swatches|length == 3 %} style="--mc-swatch-1:{{ preset.swatches[0] }};--mc-swatch-2:{{ preset.swatches[1] }};--mc-swatch-3:{{ preset.swatches[2] }}"{% endif %}><span></span><span></span><span></span></span>
                 <span class="mc-wizard__choice-label">{{ preset.label }}</span>
               </label>
               {% endfor %}
