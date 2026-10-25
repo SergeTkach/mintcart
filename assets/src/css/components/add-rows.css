@@ -13,3 +13,13 @@
     width: auto;
     min-width: 0;
 }
+
+/* Languages / currencies already connected, under their select in the wizard */
+.mc-wizard__connected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-2);
+    margin: 0 0 var(--mc-space-3);
+    padding: 0;
+    list-style: none;
+}

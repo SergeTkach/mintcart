@@ -299,6 +299,22 @@ class ControllerCommonHeader extends Controller {
 
 		$data['mc_preset'] = $mc_preset;
 
+		// Design > Styles: the owner's colours / corners / fonts on top of the preset.
+		$mc_styles = \MintCart\Design\StyleOverrides::build(array(
+			'primary'      => $this->config->get('mintcart_design_primary'),
+			'accent'       => $this->config->get('mintcart_design_accent'),
+			'radius'       => $this->config->get('mintcart_design_radius'),
+			'border'       => $this->config->get('mintcart_design_border'),
+			'button_style' => $this->config->get('mintcart_design_button_style'),
+			'button_shape' => $this->config->get('mintcart_design_button_shape'),
+			'container'    => $this->config->get('mintcart_design_container'),
+			'font_heading' => $this->config->get('mintcart_design_font_heading'),
+			'font_body'    => $this->config->get('mintcart_design_font_body')
+		));
+
+		$data['mc_style_css'] = $mint_render_header ? $mc_styles['css'] : '';
+		$data['mc_fonts_url'] = $mint_render_header ? $mc_styles['fonts_url'] : '';
+
 		// <html data-mc-theme>: lets a theme scope its own CSS to its pages
 		// (e.g. mint_gallery's product page) without a page-template copy.
 		$data['mc_theme'] = $mint_render_header ? $mint_theme : '';

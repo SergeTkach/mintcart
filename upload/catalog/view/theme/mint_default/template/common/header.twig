@@ -39,6 +39,14 @@
 {% for style in styles %}
 <link href="{{ style.href }}" type="text/css" rel="{{ style.rel }}" media="{{ style.media }}" />
 {% endfor %}
+{% if mc_fonts_url %}
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="{{ mc_fonts_url }}" rel="stylesheet" />
+{% endif %}
+{% if mc_style_css %}
+<style id="mc-style-overrides">{{ mc_style_css|raw }}</style>
+{% endif %}
 {% for script in scripts %}
 <script src="{{ script }}" type="text/javascript"></script>
 {% endfor %}

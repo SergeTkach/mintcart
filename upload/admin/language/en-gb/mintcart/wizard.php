@@ -168,3 +168,6 @@ $_['text_translations']        = 'Translations (optional)';
 $_['text_translations_help']   = 'Leave a language empty and it will show the text above. You can translate it later from the product page.';
 $_['text_step_attention'] = 'needs attention';
 $_['button_fix']          = 'Set up';
+$_['text_connected_languages']  = 'Connected languages:';
+$_['text_connected_currencies'] = 'Connected currencies:';
+$_['text_default_marker']        = 'default';

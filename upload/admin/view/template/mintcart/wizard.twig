@@ -208,6 +208,12 @@
                   {% endfor %}
                 </select>
                 {% if error.language %}<p class="mc-field__error" id="error-config-language" role="alert">{{ error.language }}</p>{% endif %}
+                <p class="mc-field__help mt-2 mb-1">{{ text_connected_languages }}</p>
+                <ul class="mc-wizard__connected" aria-label="{{ text_connected_languages }}">
+                  {% for language in languages %}{% if language.status %}
+                  <li class="mc-badge{% if language.code == config_language %} mc-badge--success{% endif %}">{{ language.name }}{% if language.code == config_language %} · {{ text_default_marker }}{% endif %}</li>
+                  {% endif %}{% endfor %}
+                </ul>
                 {% if available_languages %}
                 {{ wizard.add_rows('language', 'add_language_code[]', available_languages, text_add_language, button_add_language_row, button_save_languages, button_remove_row, 'input-config-language', text_search_placeholder, text_no_matches, text_rows_empty) }}
                 {% endif %}
@@ -222,6 +228,12 @@
                   {% endfor %}
                 </select>
                 {% if error.currency %}<p class="mc-field__error" id="error-config-currency" role="alert">{{ error.currency }}</p>{% endif %}
+                <p class="mc-field__help mt-2 mb-1">{{ text_connected_currencies }}</p>
+                <ul class="mc-wizard__connected" aria-label="{{ text_connected_currencies }}">
+                  {% for currency in currencies %}{% if currency.status %}
+                  <li class="mc-badge{% if currency.code == config_currency %} mc-badge--success{% endif %}">{{ currency.code }}{% if currency.code == config_currency %} · {{ text_default_marker }}{% endif %}</li>
+                  {% endif %}{% endfor %}
+                </ul>
                 {% if available_currencies %}
                 {{ wizard.add_rows('currency', 'add_currency_code[]', available_currencies, text_add_currency, button_add_currency_row, button_save_currencies, button_remove_row, 'input-config-currency', text_search_placeholder, text_no_matches, text_rows_empty) }}
                 {% endif %}
