@@ -35,8 +35,15 @@ class ControllerCommonHeader extends Controller {
 		$mint_render_header = \MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme);
 
 		if ($mint_render_header) {
-			$this->document->addStyle($server . 'assets/dist/css/index.min.css');
-			$this->document->addScript($server . 'assets/dist/js/catalog.min.js');
+			// ?v= = the file's modification time, so a rebuilt asset is never served from a stale browser cache.
+			$asset = function ($path) use ($server) {
+				$file = dirname(rtrim(DIR_APPLICATION, '/' . chr(92))) . '/' . $path;
+
+				return $server . $path . (is_file($file) ? '?v=' . filemtime($file) : '');
+			};
+
+			$this->document->addStyle($asset('assets/dist/css/index.min.css'));
+			$this->document->addScript($asset('assets/dist/js/catalog.min.js'));
 		}
 
 		if (is_file(DIR_IMAGE . $this->config->get('config_icon'))) {

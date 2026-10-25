@@ -48,7 +48,7 @@ assertSame(1, $result['quantity'], 'validate: omitted quantity defaults to 1', $
 
 // 3. Missing name is an error.
 $result = $service->validate(['name' => 'Jane', 'telephone' => '+380 (67) 123-4'], '+380 (##) ###-##-##');
-$check = isset($result['errors']['contact']) && $result['errors']['contact'] === 'error_telephone';
+$check = $result['errors']['telephone'] === 'error_telephone';
 if (!$check) { $failures[] = 'incomplete phone for the mask is rejected'; }
 $result = $service->validate(['name' => 'Jane', 'telephone' => '+380 (67) 123-45-67'], '+380 (##) ###-##-##');
 if (!$result['valid']) { $failures[] = 'full phone for the mask is accepted'; }
@@ -69,7 +69,7 @@ assertSame('error_contact', $result['errors']['contact'] ?? null, 'validate: mis
 // 6. An invalid email format is an error, even with a phone also present.
 $result = $service->validate(['name' => 'Jane Doe', 'telephone' => '555-0100', 'email' => 'not-an-email']);
 assertTrue(!$result['valid'], 'validate: malformed email is invalid', $failures);
-assertSame('error_email', $result['errors']['contact'] ?? null, 'validate: malformed email reports error_email', $failures);
+assertSame('error_email', $result['errors']['email'] ?? null, 'validate: malformed email reports error_email', $failures);
 
 // 7. Zero/negative quantity is an error, clamped to 1 in the returned value.
 $result = $service->validate(['quantity' => '0', 'name' => 'Jane Doe', 'telephone' => '555-0100']);

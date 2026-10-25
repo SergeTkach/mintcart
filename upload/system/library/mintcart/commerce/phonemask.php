@@ -37,17 +37,20 @@ class PhoneMask
     }
 
     /**
-     * Whether `$phone` holds a full number for `$mask`: as many digits as the
+     * Whether `$phone` is a usable number for `$mask`: as many digits as the
      * mask has `#`. Mirrors `nationalDigits()` in `phone-mask.js` - the country
-     * code or a leading trunk `0` may be typed, and are not counted. An empty
-     * mask accepts anything.
+     * code or a leading trunk `0` may be typed, and are not counted. Without a
+     * mask any international number passes: only digits and `+ ( ) - . space`,
+     * 7 to 15 digits (E.164).
      */
     public static function isComplete(string $phone, string $mask): bool
     {
         $slots = substr_count($mask, '#');
 
         if ($slots === 0) {
-            return true;
+            $digits = strlen((string) preg_replace('/\D/', '', $phone));
+
+            return preg_match('/^[\d\s+().\-]+$/', $phone) === 1 && $digits >= 7 && $digits <= 15;
         }
 
         $prefix = preg_replace('/\D/', '', substr($mask, 0, (int) strpos($mask, '#')));

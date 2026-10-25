@@ -181,7 +181,7 @@ PRODUCTS = [
 ]
 
 # Pictures of the home page slider (Pexels id, how the slide links): a wide scene each.
-SLIDE_PHOTOS = [7303151, 34636335, 6755744]
+SLIDE_PHOTOS = [18688394, 34636335, 6755744]
 ABOUT_PHOTO = 3097112
 
 BADGES = [(1, 'Bestseller', '#2457d6', ['Stoneware Mug - White', 'Wishbone Chair', 'Soy Candle - Vanilla']),
@@ -221,7 +221,7 @@ def save(im, filename, size, centering=(0.5, 0.5), quality=84):
 
 
 # Photos whose subject is not in the middle: where to centre the square crop (x, y, 0..1).
-FOCUS = {7303151: (0.86, 0.5)}
+FOCUS = {7303151: (0.86, 0.5), 18688394: (0.5, 0.62)}
 
 
 def detail_crop(im, focus=(0.5, 0.42)):

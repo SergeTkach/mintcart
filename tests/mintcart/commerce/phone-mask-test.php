@@ -38,7 +38,9 @@ $check(PhoneMask::isComplete('671234567', $ua), 'bare national digits are comple
 $check(!PhoneMask::isComplete('+380 (67) 123-4', $ua), 'partial number is incomplete');
 $check(!PhoneMask::isComplete('+380 (67) 123-45-678', $ua), 'too many digits are rejected');
 $check(PhoneMask::isComplete('+1 (555) 123-4567', '+1 (###) ###-####'), 'US number is complete');
-$check(PhoneMask::isComplete('anything', ''), 'no mask accepts anything');
+$check(PhoneMask::isComplete('+44 20 7946 0958', ''), 'no mask: an international number passes');
+$check(!PhoneMask::isComplete('anything', ''), 'no mask: letters are rejected');
+$check(!PhoneMask::isComplete('12345', ''), 'no mask: too few digits are rejected');
 
 if ($failures) {
     echo implode("\n", $failures), "\n";

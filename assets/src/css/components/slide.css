@@ -314,30 +314,48 @@ a.mc-slide-card:hover .mc-slide-card__image {
     }
 }
 
-/* Phones: the picture sits inside the slide card with padding all round, so text and
-   picture read as one piece (and the arrows lie on the picture). */
+/* Phones: the picture goes first, edge to edge inside the slide card (its rounded corners crop
+   it), the text sits below it, the arrows on the picture's left and right edges and the dots
+   below the card. One simple stack instead of a picture inset into a padded card. */
 @media (max-width: 767.98px) {
+    .mc-slider--rich {
+        container-type: inline-size;
+    }
+
+    .mc-slide--split {
+        min-height: 0;
+    }
+
     .mc-slide--split .mc-slide__media {
-        padding: 0 var(--mc-space-4) var(--mc-space-4);
+        order: -1;
+        padding: 0;
     }
 
     .mc-slide--split .mc-slide__media img {
-        border-radius: var(--mc-radius-lg);
+        height: auto;
+        max-height: none;
+        aspect-ratio: 4 / 3;
+        border-radius: 0;
     }
 
     .mc-slide--split .mc-slide__body {
-        padding-bottom: var(--mc-space-5);
+        padding: var(--mc-space-5);
     }
 
+    /* The picture is 4:3 of the slider's width: its middle is 37.5cqw from the top. */
     .mc-slider--rich .mc-slider__arrow {
-        bottom: calc(2.75rem + var(--mc-space-3));
+        top: calc(37.5cqw - var(--mc-slider-arrow-size) / 2);
+        bottom: auto;
+        transform: none;
     }
 
     .mc-slider--rich .mc-slider__arrow--prev {
-        right: calc(var(--mc-space-4) + var(--mc-space-3) + var(--mc-slider-arrow-size) + var(--mc-space-2));
+        right: auto;
+        left: var(--mc-space-3);
     }
 
     .mc-slider--rich .mc-slider__arrow--next {
-        right: calc(var(--mc-space-4) + var(--mc-space-3));
+        right: var(--mc-space-3);
+        left: auto;
     }
 }

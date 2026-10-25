@@ -56,7 +56,7 @@ final class QuickOrderService
      *     name: string,
      *     telephone: string,
      *     email: string
-     * } `errors` is keyed by field name (`quantity`, `name`, `contact`),
+     * } `errors` is keyed by field name (`quantity`, `name`, `telephone`, `email`, or `contact` when neither is given),
      *        empty when `valid` is true. `quantity`/`name`/`telephone`/
      *        `email` are always the trimmed/cast values regardless of
      *        `valid`, so a controller can echo them back into a re-shown
@@ -88,12 +88,17 @@ final class QuickOrderService
         $telephone = trim((string) ($request['telephone'] ?? ''));
         $email = trim((string) ($request['email'] ?? ''));
 
+        // `contact`: neither given; otherwise the error belongs to the field that is wrong.
         if ($telephone === '' && $email === '') {
             $errors['contact'] = 'error_contact';
-        } elseif ($telephone !== '' && !PhoneMask::isComplete($telephone, $phoneMask)) {
-            $errors['contact'] = 'error_telephone';
-        } elseif ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-            $errors['contact'] = 'error_email';
+        }
+
+        if ($telephone !== '' && !PhoneMask::isComplete($telephone, $phoneMask)) {
+            $errors['telephone'] = 'error_telephone';
+        }
+
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            $errors['email'] = 'error_email';
         }
 
         return [

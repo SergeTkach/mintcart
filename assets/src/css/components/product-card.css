@@ -258,7 +258,35 @@
     flex: 0 0 auto;
 }
 
+/* The cart icon is for phones only: there "Add to cart" is a round icon button (the label stays
+   for screen readers), so a long translated label can't squash it into an oval. */
+.mc-product-card:not(.mc-product-card--soft) .mc-product-card__add-icon {
+    display: none;
+}
+
 @media (max-width: 575.98px) {
+    .mc-product-card__actions .mc-product-card__add-to-cart {
+        flex: 0 0 auto;
+        width: 2.5rem;
+        height: 2.5rem;
+        padding: 0;
+    }
+
+    .mc-product-card:not(.mc-product-card--soft) .mc-product-card__actions .mc-product-card__add-icon {
+        display: block;
+        width: 1.1rem;
+        height: 1.1rem;
+    }
+
+    .mc-product-card__actions .mc-product-card__add-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
     .mc-product-card__actions {
         gap: var(--mc-space-1);
     }
