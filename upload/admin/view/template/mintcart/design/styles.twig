@@ -30,9 +30,10 @@
       <div class="mc-design">
         <div class="mc-design__controls">
 
-          <section class="panel panel-default">
+          <section class="panel panel-default mc-design__parent">
             <div class="panel-heading"><h3 class="panel-title">{{ text_section_look }}</h3></div>
             <div class="panel-body">
+              <p class="help-block">{{ help_preset_parent }}</p>
               {% if presets %}
               <div class="mc-design__tiles">
                 {% for preset in presets %}
@@ -59,6 +60,10 @@
               {% endif %}
             </div>
           </section>
+
+          <div class="mc-design__tune">
+            <h2 class="mc-design__tune-title">{{ text_tune_title }}</h2>
+            <p class="mc-design__tune-help">{{ text_tune_help }}</p>
 
           {% if palettes %}
           <section class="panel panel-default">
@@ -159,6 +164,7 @@
               {% endfor %}
             </div>
           </section>
+          </div>
         </div>
 
         <aside class="mc-design__aside" aria-label="{{ text_preview }}">

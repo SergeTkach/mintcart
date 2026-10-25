@@ -115,8 +115,8 @@ $_['help_logo']  = 'SVG, PNG, JPG, GIF or WebP, up to 2 MB. Leave empty to keep 
 $_['error_logo'] = 'The logo must be an SVG, PNG, JPG, GIF or WebP image up to 2 MB. SVG files with scripts, event handlers or external links are not accepted.';
 
 // Design
-$_['design_title']      = 'Choose a look';
-$_['design_text']       = 'Pick a style for your storefront. It changes colours, fonts and shapes - you can switch it any time under Design -> Styles.';
+$_['design_title']      = 'Choose a preset';
+$_['design_text']       = 'Pick a preset for your storefront. It sets colours, fonts and shapes together - you can switch it and fine-tune it any time under Design -> Styles.';
 $_['design_no_presets'] = 'Your current theme has no styles to choose from. Continue to the next step.';
 $_['design_preview']    = 'Open the store in a new tab';
 $_['preset_clean']      = 'Clean - fresh green, minimal';

@@ -323,3 +323,31 @@
     outline: 2px solid var(--mc-accent);
     outline-offset: 2px;
 }
+
+/* The preset is the parent; everything fine-tuning it is nested under it. */
+.mc-design__parent {
+    border-width: 2px;
+    border-color: var(--mc-primary);
+}
+
+.mc-design__parent > .panel-heading {
+    background: color-mix(in srgb, var(--mc-primary) 8%, var(--mc-surface));
+}
+
+.mc-design__tune {
+    position: relative;
+    margin-left: var(--mc-space-4);
+    padding-left: var(--mc-space-5);
+    border-left: 3px solid color-mix(in srgb, var(--mc-primary) 45%, var(--mc-surface));
+}
+
+.mc-design__tune-title {
+    margin: 0 0 var(--mc-space-1);
+    font-size: var(--mc-font-size-lg);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-design__tune-help {
+    margin: 0 0 var(--mc-space-4);
+    color: var(--mc-muted);
+}
