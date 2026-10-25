@@ -42,6 +42,9 @@
  * docs/developer/commerce/checkout-service.md.
  */
 class ControllerMintcartCheckout extends Controller {
+	// Field errors reported by the selected carrier's own form (see carrierModel()).
+	private $carrier_errors = array();
+
 	// route=mintcart/checkout/totals - GET, no mutation
 	public function totals() {
 		$taxes = $this->cart->getTaxes();
@@ -355,6 +358,60 @@ class ControllerMintcartCheckout extends Controller {
 			isset($post['shipping_method']) ? (string)$post['shipping_method'] : null,
 			isset($post['payment_method']) ? (string)$post['payment_method'] : null
 		);
+
+		$this->applyCarrierForm($post);
+	}
+
+	// A shipping extension can bring its own checkout fields (city, pickup
+	// point, ...): optional methods on its catalog model, so no theme or
+	// OCMOD is involved. Contract: docs/developer/commerce/shipping-method-forms.md
+	//   getCheckoutForm(string $quote_key): string  HTML fragment, shown under the chosen option
+	//   processCheckout(string $quote_key, array $post, array $address): array
+	//       ['errors' => [field => message], 'address' => [shipping_address overrides]]
+	private function carrierModel($quote_id, $method) {
+		$parts = explode('.', (string)$quote_id, 2);
+
+		if (count($parts) !== 2 || !preg_match('/^[a-z0-9_]+$/', $parts[0]) || !is_file(DIR_APPLICATION . 'model/extension/shipping/' . $parts[0] . '.php')) {
+			return null;
+		}
+
+		$this->load->model('extension/shipping/' . $parts[0]);
+
+		$model = $this->{'model_extension_shipping_' . $parts[0]};
+
+		return method_exists($model, $method) ? array($model, $parts[1]) : null;
+	}
+
+	private function applyCarrierForm($post) {
+		$this->carrier_errors = array();
+
+		if (!$this->cart->hasShipping() || empty($this->session->data['shipping_method']['code']) || empty($this->session->data['shipping_address'])) {
+			return;
+		}
+
+		$carrier = $this->carrierModel($this->session->data['shipping_method']['code'], 'processCheckout');
+
+		if (!$carrier) {
+			return;
+		}
+
+		$result = $carrier[0]->processCheckout($carrier[1], $post, $this->session->data['shipping_address']);
+
+		if (!empty($result['address'])) {
+			$this->session->data['shipping_address'] = array_merge($this->session->data['shipping_address'], $result['address']);
+		}
+
+		$this->carrier_errors = !empty($result['errors']) ? (array)$result['errors'] : array();
+	}
+
+	private function carrierFormHtml() {
+		if (!$this->cart->hasShipping() || empty($this->session->data['shipping_method']['code'])) {
+			return '';
+		}
+
+		$carrier = $this->carrierModel($this->session->data['shipping_method']['code'], 'getCheckoutForm');
+
+		return $carrier ? (string)$carrier[0]->getCheckoutForm($carrier[1]) : '';
 	}
 
 	// Re-quotes shipping for the session address, then re-offers payment
@@ -444,6 +501,10 @@ class ControllerMintcartCheckout extends Controller {
 			$messages[$field] = $this->language->get($key);
 		}
 
+		foreach ($this->carrier_errors as $field => $message) {
+			$messages[$field] = $message;
+		}
+
 		$agree_info = $this->agreeInformation();
 
 		if ($agree_info && empty($this->request->post['agree'])) {
@@ -510,7 +571,8 @@ class ControllerMintcartCheckout extends Controller {
 
 		$state['shipping'] = array(
 			'methods'  => $shipping_service->normalize(isset($this->session->data['shipping_methods']) ? $this->session->data['shipping_methods'] : array()),
-			'selected' => isset($this->session->data['shipping_method']['code']) ? $this->session->data['shipping_method']['code'] : ''
+			'selected' => isset($this->session->data['shipping_method']['code']) ? $this->session->data['shipping_method']['code'] : '',
+			'form_html' => $this->carrierFormHtml()
 		);
 
 		$state['payment'] = array(

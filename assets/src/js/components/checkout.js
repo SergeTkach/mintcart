@@ -196,6 +196,36 @@ function initCheckoutRoot(root) {
         });
     }
 
+    // A shipping extension can bring its own fields (city, pickup point, ...):
+    // `state.shipping.form_html` is its markup for the chosen option. One host
+    // element is moved under that option and refilled only when the chosen
+    // option changes, so what the customer typed survives every recalculation.
+    // Contract: docs/developer/commerce/shipping-method-forms.md
+    const shippingFormHost = document.createElement('div');
+    let shippingFormFor = null;
+
+    shippingFormHost.className = 'mc-checkout__option-form';
+
+    function renderShippingForm(shipping) {
+        const checked = root.querySelector('[data-mc-checkout-shipping] input[name="shipping_method"]:checked');
+
+        if (!shipping.form_html || !checked) {
+            shippingFormHost.remove();
+            shippingFormHost.replaceChildren();
+            shippingFormFor = null;
+
+            return;
+        }
+
+        if (shippingFormFor !== shipping.selected) {
+            shippingFormHost.innerHTML = shipping.form_html;
+            runScripts(shippingFormHost);
+            shippingFormFor = shipping.selected;
+        }
+
+        checked.closest('label').after(shippingFormHost);
+    }
+
     function renderSummary(state) {
         const items = root.querySelector('[data-mc-checkout-items]');
 
@@ -312,6 +342,8 @@ function initCheckoutRoot(root) {
             state.shipping.selected,
             text.mcTextNoShipping
         );
+
+        renderShippingForm(state.shipping);
 
         renderOptions(
             root.querySelector('[data-mc-checkout-payment-methods]'),
