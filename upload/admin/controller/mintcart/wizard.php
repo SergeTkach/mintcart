@@ -1028,6 +1028,13 @@ class ControllerMintcartWizard extends Controller
                 'status'     => 1,
             ]);
 
+            // The home-goods demo catalogue, if it is still in the store, gets its
+            // Ukrainian text (a no-op without it); other languages keep the
+            // English copy OpenCart makes for a new language.
+            if ($language['code'] === 'uk-ua') {
+                \MintCart\Core\DemoData::apply($this->db, DB_PREFIX, DIR_SYSTEM . 'mintcart/data/demo-uk-ua.sql');
+            }
+
             unset($available[$row]);
             $results[$index] = ['ok' => true, 'value' => $language['code'], 'label' => $language['name']];
         }

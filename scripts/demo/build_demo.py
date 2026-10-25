@@ -15,13 +15,19 @@ stock OpenCart demo catalog with:
   arrivals, about, reviews, FAQ, CTA).
 
 Usage:
-    python scripts/demo/build_demo.py <out.sql>
+    python scripts/demo/build_demo.py <out.sql> [<out-uk.sql>]
     mysql -uroot <database> --default-character-set=utf8mb4 < <out.sql>
 
 The SQL deletes the existing catalog rows first (orders and customers are left
 alone). Take a database dump before applying it. Product ids 100+, category ids
 100+, brand ids 20+, so the content is easy to recognise and remove again.
 Replace the photos with your own before launch.
+
+The optional second file holds the Ukrainian (uk-ua) text of the same content
+(scripts/demo/uk_ua.py). It only touches rows of an installed `uk-ua` language
+and does nothing when there is none, so it is safe to run at any time; the
+installer ships it as upload/system/mintcart/data/demo-uk-ua.sql and the Setup
+Wizard runs it when the Ukrainian language is added.
 """
 
 import html
@@ -31,6 +37,8 @@ import sys
 import urllib.request
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
+
+import uk_ua
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 IMG_DIR = os.path.join(ROOT, 'upload', 'image', 'catalog', 'demo', 'shop')
@@ -226,12 +234,16 @@ def detail_crop(im, focus=(0.5, 0.42)):
 
 
 def main():
-    if len(sys.argv) != 2:
+    if len(sys.argv) not in (2, 3):
         sys.exit(__doc__)
 
     out_sql = sys.argv[1]
+    out_uk = sys.argv[2] if len(sys.argv) == 3 else None
     os.makedirs(IMG_DIR, exist_ok=True)
     sql = ['SET NAMES utf8mb4;', 'START TRANSACTION;']
+    # Ukrainian text: REPLACE ... SELECT from the English parent row, so it
+    # applies only where the demo row exists and the language is installed.
+    uk = ['SET NAMES utf8mb4;', "SET @uk = (SELECT language_id FROM oc_language WHERE code = 'uk-ua' LIMIT 1);"]
 
     # --- wipe the stock catalog (orders/customers untouched) -------------
     for table in [
@@ -271,6 +283,8 @@ def main():
         top = 1 if parent is None else 0
         sql.append("INSERT INTO oc_category (category_id, image, parent_id, top, `column`, sort_order, status, date_added, date_modified) VALUES (%d, NULL, %d, %d, 1, %d, 1, NOW(), NOW());" % (cid, parent or 0, top, i))
         sql.append('INSERT INTO oc_category_description (category_id, language_id, name, description, meta_title, meta_description, meta_keyword) VALUES (%d, 1, %s, %s, %s, %s, \'\');' % (cid, q(esc(name)), q(esc('<p>%s</p>' % blurb)), q(esc(name)), q(blurb)))
+        uk_name, uk_blurb = uk_ua.CATEGORIES[cid]
+        uk.append("REPLACE INTO oc_category_description (category_id, language_id, name, description, meta_title, meta_description, meta_keyword) SELECT category_id, @uk, %s, %s, %s, %s, '' FROM oc_category WHERE category_id = %d AND @uk IS NOT NULL;" % (q(esc(uk_name)), q(esc('<p>%s</p>' % uk_blurb)), q(esc(uk_name)), q(uk_blurb), cid))
         for level, anc in enumerate(ancestors(cid)):
             sql.append('INSERT INTO oc_category_path (category_id, path_id, level) VALUES (%d, %d, %d);' % (cid, anc, level))
         sql.append('INSERT INTO oc_category_to_store (category_id, store_id) VALUES (%d, 0);' % cid)
@@ -280,7 +294,9 @@ def main():
     # --- specification attributes --------------------------------------------
     sql.append("INSERT INTO oc_attribute_group (attribute_group_id, sort_order) VALUES (100, 1);")
     sql.append("INSERT INTO oc_attribute_group_description (attribute_group_id, language_id, name) VALUES (100, 1, 'Details');")
+    uk.append("REPLACE INTO oc_attribute_group_description (attribute_group_id, language_id, name) SELECT attribute_group_id, @uk, %s FROM oc_attribute_group WHERE attribute_group_id = 100 AND @uk IS NOT NULL;" % q(uk_ua.ATTRIBUTE_GROUP))
     for aid, aname in ((100, 'Material'), (101, 'Size'), (102, 'Care')):
+        uk.append("REPLACE INTO oc_attribute_description (attribute_id, language_id, name) SELECT attribute_id, @uk, %s FROM oc_attribute WHERE attribute_id = %d AND @uk IS NOT NULL;" % (q(uk_ua.ATTRIBUTES[aid]), aid))
         sql.append("INSERT INTO oc_attribute (attribute_id, attribute_group_id, sort_order) VALUES (%d, 100, %d);" % (aid, aid))
         sql.append("INSERT INTO oc_attribute_description (attribute_id, language_id, name) VALUES (%d, 1, %s);" % (aid, q(aname)))
 
@@ -303,6 +319,10 @@ def main():
             "VALUES (%d, %s, %s, '', '', '', '', '', '', 40, 7, %s, %d, 1, %.4f, 0, 9, CURDATE(), 0.5, 2, 0, 0, 0, 1, 1, 1, %d, 1, 0, DATE_SUB(NOW(), INTERVAL %d DAY), NOW());"
             % (pid, q('MC-%03d' % n), q('MC-%03d' % n), q(IMG_PREFIX + main_img), brand, price, n, (position * 11) % len(PRODUCTS) + 1))  # added 1-48 days ago, spread over the categories
         sql.append("INSERT INTO oc_product_description (product_id, language_id, name, description, tag, meta_title, meta_description, meta_keyword) VALUES (%d, 1, %s, %s, '', %s, %s, '');" % (pid, q(esc(name)), q(esc(desc)), q(esc(name)), q(blurb)))
+        uk_name, uk_blurb = uk_ua.PRODUCTS[name]
+        uk.append("REPLACE INTO oc_product_description (product_id, language_id, name, description, tag, meta_title, meta_description, meta_keyword) SELECT product_id, @uk, %s, %s, '', %s, %s, '' FROM oc_product WHERE product_id = %d AND @uk IS NOT NULL;" % (q(esc(uk_name)), q(esc('<p>%s</p>' % uk_blurb)), q(esc(uk_name)), q(uk_blurb), pid))
+        for aid, value in zip((100, 101, 102), uk_ua.specs(material, size, care)):
+            uk.append("REPLACE INTO oc_product_attribute (product_id, attribute_id, language_id, text) SELECT product_id, %d, @uk, %s FROM oc_product WHERE product_id = %d AND @uk IS NOT NULL;" % (aid, q(value), pid))
         sql.append('INSERT INTO oc_product_to_store (product_id, store_id) VALUES (%d, 0);' % pid)
         sql.append('INSERT INTO oc_product_to_layout (product_id, store_id, layout_id) VALUES (%d, 0, 0);' % pid)
         # In every category on the way up, like the stock OpenCart demo does,
@@ -363,6 +383,7 @@ def main():
     def block(order, btype, settings, content):
         sql.append("INSERT INTO oc_mc_block (page_id, type, sort_order, status, settings_json, date_added, date_modified) VALUES (@home_page, %s, %d, 1, %s, NOW(), NOW());" % (q(btype), order, q(json.dumps(settings, ensure_ascii=False))))
         sql.append("INSERT INTO oc_mc_block_description (block_id, language_id, content_json) VALUES (LAST_INSERT_ID(), 1, %s);" % q(json.dumps(content, ensure_ascii=False)))
+        uk.append("REPLACE INTO oc_mc_block_description (block_id, language_id, content_json) SELECT block_id, @uk, %s FROM oc_mc_block WHERE page_id = (SELECT page_id FROM oc_mc_page WHERE code = 'home') AND type = %s AND @uk IS NOT NULL;" % (q(json.dumps(uk_ua.BLOCKS[btype], ensure_ascii=False)), q(btype)))
 
     cat = 'index.php?route=product/category&path='
     block(5, 'slider',
@@ -399,8 +420,20 @@ def main():
 
     sql.append('COMMIT;')
 
+    # Brand carousel and SEO keywords of the language: copies of the English rows
+    # (brand names and URL slugs are the same in every language).
+    uk.append("DELETE FROM oc_banner_image WHERE banner_id = 8 AND language_id = @uk;")
+    uk.append("INSERT INTO oc_banner_image (banner_id, language_id, title, link, image, sort_order) SELECT banner_id, @uk, title, link, image, sort_order FROM oc_banner_image WHERE banner_id = 8 AND language_id = 1 AND @uk IS NOT NULL;")
+    demo_keys = "(`query` REGEXP '^path=1[0-2][0-9]$' OR `query` REGEXP '^product_id=1[0-4][0-9]$' OR `query` REGEXP '^manufacturer_id=2[0-4]$')"
+    uk.append("DELETE FROM oc_seo_url WHERE language_id = @uk AND %s;" % demo_keys)
+    uk.append("INSERT INTO oc_seo_url (store_id, language_id, `query`, keyword) SELECT store_id, @uk, `query`, keyword FROM oc_seo_url WHERE language_id = 1 AND store_id = 0 AND %s AND @uk IS NOT NULL;" % demo_keys)
+
     with open(out_sql, 'w', encoding='utf-8') as fh:
         fh.write('\n'.join(sql) + '\n')
+
+    if out_uk:
+        with open(out_uk, 'w', encoding='utf-8') as fh:
+            fh.write('\n'.join(uk) + '\n')
 
     with open(os.path.join(IMG_DIR, 'CREDITS.txt'), 'w', encoding='utf-8') as fh:
         fh.write('Demo photos. Source: Pexels (Pexels License: free for commercial use, attribution not required).\n'

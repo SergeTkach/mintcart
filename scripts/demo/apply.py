@@ -45,7 +45,8 @@ def main():
     out_sql = os.path.join(tempfile.gettempdir(), 'mintcart-demo-%s.sql' % kind)
 
     print('1/3 building the %s demo ...' % kind)
-    subprocess.run([sys.executable, os.path.join(HERE, SCRIPTS[kind]), out_sql], check=True)
+    out_uk = os.path.join(tempfile.gettempdir(), 'mintcart-demo-%s-uk.sql' % kind)
+    subprocess.run([sys.executable, os.path.join(HERE, SCRIPTS[kind]), out_sql] + ([out_uk] if kind == 'home' else []), check=True)
 
     print('2/3 backing up database "%s" to %s ...' % (db, backup))
     with open(backup, 'wb') as fh:
@@ -54,6 +55,11 @@ def main():
     print('3/3 applying ...')
     with open(out_sql, 'rb') as fh:
         subprocess.run([BIN + '/mysql.exe'] + auth + ['--default-character-set=utf8mb4', db], stdin=fh, check=True)
+
+    if kind == 'home':
+        print('   + Ukrainian text (only lands if the uk-ua language is installed) ...')
+        with open(out_uk, 'rb') as fh:
+            subprocess.run([BIN + '/mysql.exe'] + auth + ['--default-character-set=utf8mb4', db], stdin=fh, check=True)
 
     print('done. To undo: mysql %s < "%s"' % (db, backup))
 
