@@ -1044,6 +1044,20 @@ class ControllerMintcartWizard extends Controller
                 \MintCart\Core\DemoData::apply($this->db, DB_PREFIX, DIR_SYSTEM . 'mintcart/data/demo-uk-ua.sql');
             }
 
+            // SEO URL keywords of the new language, made from its own names (transliterated), so
+            // /uk/hornia-dlia-kavy instead of a copy of the English keyword. The first 300 items of
+            // each kind here; a bigger catalogue finishes in SEO > URL Generator.
+            $this->load->model('mintcart/seo_url');
+
+            $new_language = $this->model_localisation_language->getLanguageByCode($language['code']);
+            $templates = $this->config->get('mintcart_seo_url');
+
+            if ($new_language) {
+                foreach (array_keys(\MintCart\Seo\UrlTemplates::TYPES) as $kind) {
+                    $this->model_mintcart_seo_url->generateMissing($kind, (int)$new_language['language_id'], $language['code'], \MintCart\Seo\UrlTemplates::forType($templates, $kind), 300);
+                }
+            }
+
             unset($available[$row]);
             $results[$index] = ['ok' => true, 'value' => $language['code'], 'label' => $language['name']];
         }

@@ -36,3 +36,12 @@ them in batches of 50 (`run`): `{created, remaining}`. Existing keywords are nev
 indexed pages. An item whose name gives an empty keyword gets `<type>-<id>`.
 
 Tests: `tests/mintcart/seo/slugger-test.php`.
+
+## A language added in the Setup Wizard
+
+`ControllerMintcartWizard::addLanguage()` (Language & currency step), after the language is created: for `uk-ua` the Ukrainian
+text of the demo catalogue is applied (`system/mintcart/data/demo-uk-ua.sql`), then keywords are generated for the new
+language from its own names (`ModelMintcartSeoUrl::generateMissing()`, the first 300 items of each type; a bigger catalogue
+finishes in SEO -> URL Generator). The Ukrainian demo file does not copy the English keywords: they would repeat, and a keyword
+must be unique in the store. A language added directly in Localisation > Languages gets neither the translation nor the
+keywords - run URL Generator for it.

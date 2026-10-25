@@ -193,23 +193,7 @@ class ControllerMintcartSeoUrlGenerator extends Controller {
 		$language = $this->model_localisation_language->getLanguage($language_id);
 
 		if (isset(\MintCart\Seo\UrlTemplates::TYPES[$type]) && $language && $this->user->hasPermission('modify', 'mintcart/seo/url_generator')) {
-			$template = \MintCart\Seo\UrlTemplates::forType($this->config->get(self::SETTING_KEY), $type);
-
-			foreach ($this->model_mintcart_seo_url->missing($type, 0, $language_id, self::BATCH) as $id) {
-				$variables = $this->model_mintcart_seo_url->variables($type, $id, $language_id);
-				$base = \MintCart\Seo\UrlTemplates::keyword($template, $variables, $language['code']);
-
-				// An item without a usable name (or a nameless translation): the type and id.
-				if ($base === '') {
-					$base = $type . '-' . $id;
-				}
-
-				$keyword = $this->model_mintcart_seo_url->uniqueKeyword($base, 0);
-
-				$this->model_mintcart_seo_url->add($this->model_mintcart_seo_url->queryOf($type, $id), $keyword, 0, $language_id);
-
-				$json['created']++;
-			}
+			$json['created'] = $this->model_mintcart_seo_url->generateMissing($type, $language_id, $language['code'], \MintCart\Seo\UrlTemplates::forType($this->config->get(self::SETTING_KEY), $type), self::BATCH);
 
 			$json['remaining'] = $this->model_mintcart_seo_url->totalMissing($type, 0, $language_id);
 		}

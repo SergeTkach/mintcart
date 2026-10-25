@@ -89,6 +89,33 @@ class ModelMintcartSeoUrl extends Model {
 	}
 
 	/**
+	 * Makes the missing keywords of one type in one language (the URL Generator screen, and a language just added
+	 * in the Setup Wizard). Never touches a keyword that exists.
+	 *
+	 * @param string $template   a `UrlTemplates` template
+	 * @param string $code       language code (the transliteration hint)
+	 * @return int how many keywords were created
+	 */
+	public function generateMissing($type, $language_id, $code, $template, $limit) {
+		$created = 0;
+
+		foreach ($this->missing($type, 0, $language_id, $limit) as $id) {
+			$base = \MintCart\Seo\UrlTemplates::keyword($template, $this->variables($type, $id, $language_id), $code);
+
+			// An item without a usable name (or a nameless translation): the type and id.
+			if ($base === '') {
+				$base = $type . '-' . $id;
+			}
+
+			$this->add($this->queryOf($type, $id), $this->uniqueKeyword($base, 0), 0, $language_id);
+
+			$created++;
+		}
+
+		return $created;
+	}
+
+	/**
 	 * The template variables of one entity in one language (empty values for what the store does not have).
 	 *
 	 * @return array<string, string>

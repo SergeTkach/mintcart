@@ -421,13 +421,11 @@ def main():
 
     sql.append('COMMIT;')
 
-    # Brand carousel and SEO keywords of the language: copies of the English rows
-    # (brand names and URL slugs are the same in every language).
+    # Brand carousel of the language: a copy of the English rows (brand names are the same in
+    # every language). SEO keywords are not copied: the Setup Wizard makes them from the Ukrainian
+    # names (SEO -> URL Generator), because a keyword must be unique in the store.
     uk.append("DELETE FROM oc_banner_image WHERE banner_id = 8 AND language_id = @uk;")
     uk.append("INSERT INTO oc_banner_image (banner_id, language_id, title, link, image, sort_order) SELECT banner_id, @uk, title, link, image, sort_order FROM oc_banner_image WHERE banner_id = 8 AND language_id = 1 AND @uk IS NOT NULL;")
-    demo_keys = "(`query` REGEXP '^(path|category_id)=1[0-2][0-9]$' OR `query` REGEXP '^product_id=1[0-4][0-9]$' OR `query` REGEXP '^manufacturer_id=2[0-4]$')"
-    uk.append("DELETE FROM oc_seo_url WHERE language_id = @uk AND %s;" % demo_keys)
-    uk.append("INSERT INTO oc_seo_url (store_id, language_id, `query`, keyword) SELECT store_id, @uk, `query`, keyword FROM oc_seo_url WHERE language_id = 1 AND store_id = 0 AND %s AND @uk IS NOT NULL;" % demo_keys)
 
     with open(out_sql, 'w', encoding='utf-8') as fh:
         fh.write('\n'.join(sql) + '\n')
