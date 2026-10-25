@@ -237,10 +237,35 @@ class ControllerProductProduct extends Controller {
 			// copy of the title. Mirrors category.php/home.php's MC-0015
 			// wiring. See docs/developer/seo/meta-builder.md, "Live wiring".
 			// Pure string logic, cannot throw - no try/catch needed.
-			$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+			// Marketing -> SEO -> Meta tags: the merchant's templates, with the product's values.
+			$meta_category = '';
+
+			$this->load->model('catalog/category');
+
+			foreach ($this->model_catalog_product->getCategories($product_id) as $meta_row) {
+				$meta_category_info = $this->model_catalog_category->getCategory($meta_row['category_id']);
+
+				if ($meta_category_info) {
+					$meta_category = $meta_category_info['name'];
+
+					break;
+				}
+			}
+
+			$mint_meta = (new \MintCart\Seo\MetaBuilder(\MintCart\Seo\MetaRules::forPage($this->config->get('mintcart_seo_meta'), 'product', (int)$this->config->get('config_language_id'))))->build(
 				$product_info['meta_title'],
 				$product_info['meta_description'],
-				$product_info['name']
+				$product_info['name'],
+				null,
+				array(
+					'name'        => $product_info['name'],
+					'store'       => $this->config->get('config_name'),
+					'brand'       => $product_info['manufacturer'],
+					'category'    => $meta_category,
+					'model'       => $product_info['model'],
+					'price'       => $this->currency->format($this->tax->calculate($product_info['price'], $product_info['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']),
+					'description' => $product_info['description']
+				)
 			);
 
 			$this->document->setTitle($mint_meta['title']);

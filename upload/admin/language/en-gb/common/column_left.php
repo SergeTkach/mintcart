@@ -90,3 +90,6 @@ $_['text_mc_menu_hint']    = 'Next time you will find this here:';
 $_['text_mc_menu_hint_ok'] = 'Got it';
 $_['text_mc_menu_hint_click'] = 'Click here to open it';
 $_['text_mc_storage']         = 'Storage';
+$_['text_mintcart_seo_meta'] = 'Meta Tags';
+$_['text_mintcart_seo'] = 'SEO';
+$_['text_mintcart_seo_urls'] = 'All URLs';

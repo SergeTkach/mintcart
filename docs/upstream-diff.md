@@ -23,6 +23,23 @@ in the OpenCart 3.0.5.1 baseline belong on this list.
 
 ---
 
+## `upload/admin/controller/common/filemanager.php`
+
+**Reason:** OpenCart's file manager lists only jpg / jpeg / png / gif / webp, so the MintCart logo
+(`image/catalog/mintcart-logo.svg`) and any SVG icon or logo a store uses was invisible in it and could not
+be picked in a form. `svg` is added to the listing glob; an SVG's thumbnail is the file itself, because GD
+cannot resize it (`model/tool/image` would warn).
+
+**Why not the MintCart layer:** the listing is built inside `ControllerCommonFilemanager::getFiles()` from a
+hard-coded glob; there is no event or setting between the glob and the view.
+
+**Compatibility impact:** SVG files now show in the grid like images (two-line change). Uploading SVG is still
+governed by the store's allowed file extensions / MIME settings, unchanged.
+
+**Tests:** manual (open the file manager in `image/catalog`, `mintcart-logo.svg` is listed with a thumbnail).
+
+---
+
 ## `upload/catalog/controller/event/theme.php`
 
 **Reason:** Found via live manual verification (`docs/MANUAL_VERIFICATION.md`,

@@ -131,7 +131,20 @@ class ControllerProductManufacturer extends Controller {
 		$manufacturer_info = $this->model_catalog_manufacturer->getManufacturer($manufacturer_id);
 
 		if ($manufacturer_info) {
-			$this->document->setTitle($manufacturer_info['name']);
+			// Marketing -> SEO -> Meta tags (no template = the plain brand name, as before).
+			$mint_meta = (new \MintCart\Seo\MetaBuilder(\MintCart\Seo\MetaRules::forPage($this->config->get('mintcart_seo_meta'), 'manufacturer', (int)$this->config->get('config_language_id'))))->build(
+				'',
+				'',
+				$manufacturer_info['name'],
+				null,
+				array('name' => $manufacturer_info['name'], 'store' => $this->config->get('config_name'))
+			);
+
+			$this->document->setTitle($mint_meta['title']);
+
+			if ($mint_meta['description'] !== '') {
+				$this->document->setDescription($mint_meta['description']);
+			}
 
 			$url = '';
 

@@ -1,0 +1,196 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="form-meta" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> {{ success }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-tags"></i> {{ heading_title }}</h3>
+      </div>
+      <div class="panel-body">
+        <p class="text-muted">{{ text_intro }}</p>
+
+        <form action="{{ action }}" method="post" id="form-meta" class="mc-meta" data-mc-meta data-preview-url="{{ preview_url }}">
+          {% if languages|length > 1 %}
+          <ul class="nav nav-tabs mc-meta__langs">
+            {% for language in languages %}
+            <li{% if loop.first %} class="active"{% endif %}><a href="#" data-mc-meta-lang="{{ language.language_id }}"><img src="language/{{ language.code }}/{{ language.code }}.png" title="{{ language.name }}" /> {{ language.name }}</a></li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+
+          {% for type in types %}
+          <fieldset class="mc-meta__type" data-mc-meta-type="{{ type.code }}">
+            <legend>{{ type.name }}</legend>
+            <p class="mc-meta__hint">{{ type.hint }}</p>
+            <div class="mc-meta__vars">
+              <span class="mc-meta__vars-label">{{ text_variables }}:</span>
+              {% for variable in type.variables %}
+              <button type="button" class="mc-meta__var" data-mc-meta-var="{{ variable.token }}" title="{{ variable.label }}">{{ variable.token }}</button>
+              {% endfor %}
+            </div>
+
+            {% for language in languages %}
+            <div class="mc-meta__lang" data-mc-meta-pane="{{ language.language_id }}"{% if not loop.first %} hidden{% endif %}>
+              {% for field in ['title', 'description'] %}
+              <div class="mc-meta__field">
+                <label class="mc-meta__label" for="meta-{{ type.code }}-{{ language.language_id }}-{{ field }}">{{ field == 'title' ? entry_meta_title : entry_meta_description }}</label>
+                {% if field == 'title' %}
+                <input type="text" id="meta-{{ type.code }}-{{ language.language_id }}-title" name="meta[{{ type.code }}][{{ language.language_id }}][title][template]" value="{{ type.languages[language.language_id].title.template|e }}" class="form-control" placeholder="{{ placeholder_title }}" data-mc-meta-template="title" />
+                {% else %}
+                <textarea id="meta-{{ type.code }}-{{ language.language_id }}-description" name="meta[{{ type.code }}][{{ language.language_id }}][description][template]" rows="2" class="form-control" placeholder="{{ placeholder_description }}" data-mc-meta-template="description">{{ type.languages[language.language_id].description.template|e }}</textarea>
+                {% endif %}
+                <label class="mc-meta__always">
+                  <input type="checkbox" name="meta[{{ type.code }}][{{ language.language_id }}][{{ field }}][always]" value="1"{% if type.languages[language.language_id][field].always %} checked{% endif %} />
+                  {{ text_always }}
+                </label>
+                <div class="mc-meta__preview" data-mc-meta-preview="{{ field }}" aria-live="polite"></div>
+              </div>
+              {% endfor %}
+            </div>
+            {% endfor %}
+          </fieldset>
+          {% endfor %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+/**
+ * Language tabs, variable buttons (insert at the caret of the last template field) and the live
+ * preview (a real page of that type, POST mintcart/seo/meta/preview). Plain non-module inline
+ * script, like every admin Twig template here.
+ */
+(function () {
+    'use strict';
+
+    var form = document.querySelector('[data-mc-meta]');
+
+    if (!form) {
+        return;
+    }
+
+    var lastField = null;
+    var timers = {};
+    var textNone = {{ text_preview_none|json_encode|raw }};
+    var textSample = {{ text_preview_sample|json_encode|raw }};
+
+    function showLanguage(id) {
+        form.querySelectorAll('[data-mc-meta-lang]').forEach(function (tab) {
+            tab.parentElement.classList.toggle('active', tab.dataset.mcMetaLang === String(id));
+        });
+
+        form.querySelectorAll('[data-mc-meta-pane]').forEach(function (pane) {
+            pane.hidden = pane.dataset.mcMetaPane !== String(id);
+        });
+
+        form.querySelectorAll('[data-mc-meta-pane]:not([hidden]) [data-mc-meta-template]').forEach(preview);
+    }
+
+    function preview(input) {
+        var pane = input.closest('[data-mc-meta-pane]');
+        var type = input.closest('[data-mc-meta-type]').dataset.mcMetaType;
+        var field = input.dataset.mcMetaTemplate;
+        var box = input.closest('.mc-meta__field').querySelector('[data-mc-meta-preview]');
+        var params = new URLSearchParams({ type: type, language_id: pane.dataset.mcMetaPane });
+
+        params.set(field, input.value);
+
+        if (input.value.trim() === '') {
+            box.textContent = textNone;
+            box.classList.add('is-empty');
+
+            return;
+        }
+
+        fetch(form.dataset.previewUrl, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        }).then(function (response) {
+            return response.json();
+        }).then(function (json) {
+            box.classList.remove('is-empty');
+            box.textContent = '';
+
+            var value = document.createElement('strong');
+            value.textContent = json[field] || '—';
+            box.appendChild(value);
+
+            if (json.sample) {
+                var small = document.createElement('span');
+                small.textContent = ' ' + textSample.replace('%s', json.sample) + ' · ' + (json[field] || '').length;
+                box.appendChild(small);
+            }
+        });
+    }
+
+    form.addEventListener('click', function (event) {
+        var tab = event.target.closest('[data-mc-meta-lang]');
+
+        if (tab) {
+            event.preventDefault();
+            showLanguage(tab.dataset.mcMetaLang);
+
+            return;
+        }
+
+        var variable = event.target.closest('[data-mc-meta-var]');
+
+        if (variable) {
+            var scope = variable.closest('[data-mc-meta-type]');
+            var target = lastField && scope.contains(lastField) ? lastField : scope.querySelector('[data-mc-meta-pane]:not([hidden]) [data-mc-meta-template]');
+            var start = target.selectionStart === undefined ? target.value.length : target.selectionStart;
+            var end = target.selectionEnd === undefined ? start : target.selectionEnd;
+
+            target.value = target.value.slice(0, start) + variable.dataset.mcMetaVar + target.value.slice(end);
+            target.focus();
+            target.selectionStart = target.selectionEnd = start + variable.dataset.mcMetaVar.length;
+            preview(target);
+        }
+    });
+
+    form.addEventListener('focusin', function (event) {
+        if (event.target.matches('[data-mc-meta-template]')) {
+            lastField = event.target;
+        }
+    });
+
+    form.addEventListener('input', function (event) {
+        var input = event.target;
+
+        if (!input.matches('[data-mc-meta-template]')) {
+            return;
+        }
+
+        clearTimeout(timers[input.id]);
+        timers[input.id] = setTimeout(function () { preview(input); }, 350);
+    });
+
+    form.querySelectorAll('[data-mc-meta-pane]:not([hidden]) [data-mc-meta-template]').forEach(preview);
+})();
+</script>
+{{ footer }}

@@ -48,6 +48,7 @@ final class SettingsSearchIndex
         ['label' => 'Favicon', 'route' => 'setting/setting', 'field' => 'thumb-icon', 'keywords' => ['favicon', 'icon', 'tab icon', 'фавікон', 'іконка', 'фавикон', 'иконка']],
         ['label' => 'Default currency', 'route' => 'setting/setting', 'field' => 'input-currency', 'keywords' => ['default currency', 'main currency', 'основна валюта', 'валюта за замовчуванням', 'основная валюта']],
         ['label' => 'Default language', 'route' => 'setting/setting', 'field' => 'input-language', 'keywords' => ['default language', 'основна мова', 'мова за замовчуванням', 'основной язык']],
+        ['label' => 'Meta tags (templates)', 'route' => 'mintcart/seo/meta', 'keywords' => ['meta tags', 'meta title', 'meta description', 'title template', 'seo', 'мета-теги', 'мета теги', 'шаблон заголовка', 'шаблон мета', 'сео', 'шаблон заголовка']],
         ['label' => 'Meta title', 'route' => 'setting/setting', 'field' => 'input-meta-title', 'keywords' => ['meta title', 'title', 'seo title', 'мета заголовок', 'заголовок', 'тайтл']],
         ['label' => 'Currency', 'route' => 'localisation/currency', 'keywords' => ['currency', 'exchange rate', 'money', 'валюта', 'валюти', 'курс', 'гроші', 'валюты', 'деньги']],
         ['label' => 'Language', 'route' => 'localisation/language', 'keywords' => ['language', 'locale', 'мова', 'мови', 'язык', 'языки', 'локаль']],

@@ -190,3 +190,21 @@ test file needed — scenario 6 already covers this exact shape. Full
 `tests/mintcart/` suite (77 files) re-run end to end — all passing, no
 regressions. Not verified: same no-live-install gap as MC-0015 — see
 `docs/fixes/registry.md` MC-0016 for the manual step a human should run.
+
+## Templates (Marketing -> Meta tags)
+
+`MetaBuilder` takes the merchant's templates in its constructor (`new MetaBuilder(MetaRules::forPage(...))`)
+and the page's values as the fifth `build()` argument. Each controller (home, product, category, brand,
+information page) passes both; with no template saved nothing changes.
+
+- Storage: setting `mintcart_seo_meta` (JSON) under the setting code `mintcart_seo`; shape and
+  validation in `MintCart\Seo\MetaRules` (type -> language id -> `title` / `description` ->
+  `{template, always}`). Edited in `admin/controller/mintcart/seo/meta.php` (menu Marketing -> Meta Tags).
+- Template syntax (`MintCart\Seo\MetaTemplate`): `{name}`, `{store}`, `{brand}`, `{category}`, `{model}`,
+  `{price}`, `{parent}`, `{description}`; `{description:160}` cuts to 160 characters on a word boundary.
+  HTML is stripped; a missing value drops the separator next to it (`Mug - Shop`, not `Mug -  - Shop`).
+- Rule: a template applies when the page's own meta field is blank, or always when "Also use when the page
+  has its own text" is ticked. A template that renders empty falls back to the plain rule (title = page name,
+  description empty). The result is HTML-escaped like the stored values.
+- The admin preview (`mintcart/seo/meta/preview`) renders the typed templates for the first real page of
+  that type.

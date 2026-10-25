@@ -13,10 +13,12 @@ class ControllerCommonHome extends Controller {
 		// description field in stock OpenCart), so the description simply
 		// stays '' when config_meta_description is blank, same as today.
 		// The third argument is title-only; see docs/developer/seo/meta-builder.md.
-		$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+		$mint_meta = (new \MintCart\Seo\MetaBuilder(\MintCart\Seo\MetaRules::forPage($this->config->get('mintcart_seo_meta'), 'home', (int)$this->config->get('config_language_id'))))->build(
 			$this->config->get('config_meta_title'),
 			$this->config->get('config_meta_description'),
-			$this->config->get('config_name')
+			$this->config->get('config_name'),
+			null,
+			array('store' => $this->config->get('config_name'))
 		);
 
 		$this->document->setTitle($mint_meta['title']);

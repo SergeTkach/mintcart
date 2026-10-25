@@ -137,3 +137,7 @@ $_['text_blog_setting']                = 'Налаштування блогу';
 $_['text_complete_status']             = 'Завершених замовлень'; 
 $_['text_processing_status']           = 'Замовлень в процесі'; 
 $_['text_other_status']                = 'Інші замовлення';
+$_['text_mintcart_seo_meta'] = 'Мета-теги';
+$_['text_mintcart_seo'] = 'SEO';
+$_['text_mintcart_seo_urls'] = 'Усі адреси';
+$_['text_mintcart_seo_system_pages'] = 'Системні сторінки';

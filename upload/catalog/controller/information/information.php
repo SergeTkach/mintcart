@@ -21,8 +21,17 @@ class ControllerInformationInformation extends Controller {
 		$information_info = $this->model_catalog_information->getInformation($information_id);
 
 		if ($information_info) {
-			$this->document->setTitle($information_info['meta_title']);
-			$this->document->setDescription($information_info['meta_description']);
+			// Marketing -> SEO -> Meta tags: a blank meta title falls back to the page title.
+			$mint_meta = (new \MintCart\Seo\MetaBuilder(\MintCart\Seo\MetaRules::forPage($this->config->get('mintcart_seo_meta'), 'information', (int)$this->config->get('config_language_id'))))->build(
+				$information_info['meta_title'],
+				$information_info['meta_description'],
+				$information_info['title'],
+				null,
+				array('name' => $information_info['title'], 'store' => $this->config->get('config_name'), 'description' => $information_info['description'])
+			);
+
+			$this->document->setTitle($mint_meta['title']);
+			$this->document->setDescription($mint_meta['description']);
 			$this->document->setKeywords($information_info['meta_keyword']);
 
 			$data['breadcrumbs'][] = array(
