@@ -27,12 +27,12 @@ class ControllerStartupMcLanguagePrefix extends Controller {
 		if (isset($get['_route_'])) {
 			$split = $prefix->split($get['_route_']);
 
-			if ($split['code'] !== null && $split['code'] === $this->config->get('config_language')) {
+			if ($split['code'] !== null && $split['code'] === $this->setting('config_language')) {
 				$query = $get;
 
 				unset($query['_route_']);
 
-				$this->response->redirect($this->config->get('config_url') . $split['rest'] . ($query ? '?' . http_build_query($query) : ''), 301);
+				$this->response->redirect($this->setting('config_url', HTTP_SERVER) . $split['rest'] . ($query ? '?' . http_build_query($query) : ''), 301);
 			}
 
 			if ($split['code'] !== null) {
@@ -51,15 +51,29 @@ class ControllerStartupMcLanguagePrefix extends Controller {
 
 		// A page request without a folder is the default language.
 		if (isset($get['_route_']) || !isset($get['route'])) {
-			$this->session->data['language'] = $this->config->get('config_language');
+			$this->session->data['language'] = $this->setting('config_language');
 		}
+	}
+
+	// This controller runs before startup/startup, which is what loads the
+	// store settings into config; read the few it needs from the table then.
+	private function setting($key, $fallback = '') {
+		$value = $this->config->get($key);
+
+		if ($value === null) {
+			$query = $this->db->query("SELECT `value` FROM `" . DB_PREFIX . "setting` WHERE `store_id` = '0' AND `key` = '" . $this->db->escape($key) . "'");
+
+			$value = $query->num_rows ? $query->row['value'] : $fallback;
+		}
+
+		return $value;
 	}
 
 	/**
 	 * @return \MintCart\Seo\LanguagePrefix|null null when the scheme is off
 	 */
 	public function prefix() {
-		if (!$this->config->get('config_seo_url')) {
+		if (!$this->setting('config_seo_url')) {
 			return null;
 		}
 
@@ -73,6 +87,6 @@ class ControllerStartupMcLanguagePrefix extends Controller {
 			}
 		}
 
-		return count($codes) > 1 ? new \MintCart\Seo\LanguagePrefix($codes, $this->config->get('config_language')) : null;
+		return count($codes) > 1 ? new \MintCart\Seo\LanguagePrefix($codes, $this->setting('config_language')) : null;
 	}
 }

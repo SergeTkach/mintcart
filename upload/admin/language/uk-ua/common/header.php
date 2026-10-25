@@ -43,3 +43,7 @@ $_['text_front']           	 	  = 'Магазин';
 $_['button_clearallcache']        = 'Видалити весь кеш';
 $_['button_clearcache']           = 'Видалити кеш зображень';
 $_['button_clearsystemcache']     = 'Видалити системний кеш';
+
+// MintCart Functional Scope §23 (P1) - quick settings search
+$_['text_mc_admin_search_placeholder'] = 'Пошук налаштувань…';
+$_['text_mc_admin_search_empty']       = 'Відповідних налаштувань не знайдено';

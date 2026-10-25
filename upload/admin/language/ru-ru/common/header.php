@@ -20,3 +20,7 @@ $_['text_new_customer']    		  = 'Пользователя';
 $_['text_new_download']           = 'Загрузку';
 $_['text_new_manufacturer']		  = 'Производителя';
 $_['text_new_product']     		  = 'Товар';
+
+// MintCart Functional Scope §23 (P1) - quick settings search
+$_['text_mc_admin_search_placeholder'] = 'Поиск настроек…';
+$_['text_mc_admin_search_empty']       = 'Подходящих настроек не найдено';

@@ -37,17 +37,27 @@ class ControllerMintcartAdminsearch extends Controller {
 
 		$query = isset($this->request->get['q']) ? (string)$this->request->get['q'] : '';
 
+		$this->load->language('mintcart/adminsearch');
+
 		$index = new \MintCart\Admin\SettingsSearchIndex();
 
 		$results = array();
 
 		foreach ($index->search($query) as $match) {
 			$results[] = array(
-				'label' => $match['label'],
+				'label' => $this->label($match['label']),
 				'url'   => str_replace('&amp;', '&', $this->url->link($match['route'], 'user_token=' . $this->session->data['user_token'], true)) . ($match['field'] !== '' ? '#mc-field=' . $match['field'] : '')
 			);
 		}
 
 		$this->response->setOutput(json_encode(array('results' => $results)));
+	}
+
+	// The index holds English labels; the language file translates them (the English text is the fallback).
+	private function label($label) {
+		$key = 'label_' . trim(preg_replace('/[^a-z0-9]+/', '_', strtolower($label)), '_');
+		$text = $this->language->get($key);
+
+		return $text !== $key ? $text : $label;
 	}
 }
