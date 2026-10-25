@@ -37,7 +37,7 @@
               <div class="mc-design__tiles">
                 {% for preset in presets %}
                 <label class="mc-design__tile">
-                  <input type="radio" name="mintcart_design_preset" value="{{ preset.code }}" data-mc-design-preset data-swatches="{{ preset.swatches|join(',') }}" data-defaults="{{ preset.defaults }}"{% if selected == preset.code %} checked="checked"{% endif %} />
+                  <input type="radio" name="mintcart_design_preset" value="{{ preset.code }}" data-mc-design-preset data-swatches="{{ preset.swatches|join(',') }}" data-defaults="{{ preset.defaults|e('html_attr') }}"{% if selected == preset.code %} checked="checked"{% endif %} />
                   <span class="mc-design__tile-body">
                     <span class="mc-design__strip" style="--mc-swatch-1:{{ preset.swatches[0]|default('#059669') }};--mc-swatch-2:{{ preset.swatches[1]|default('#212529') }};--mc-swatch-3:{{ preset.swatches[2]|default('#f8f9fa') }}"><i></i><i></i><i></i></span>
                     <strong>{{ preset.label }}</strong>
@@ -46,7 +46,7 @@
                 </label>
                 {% endfor %}
                 <label class="mc-design__tile">
-                  <input type="radio" name="mintcart_design_preset" value="" data-mc-design-preset data-swatches="" data-defaults="{{ presets[0].defaults|default('{}') }}"{% if selected == '' %} checked="checked"{% endif %} />
+                  <input type="radio" name="mintcart_design_preset" value="" data-mc-design-preset data-swatches="" data-defaults="{{ presets[0].defaults|default('{}')|e('html_attr') }}"{% if selected == '' %} checked="checked"{% endif %} />
                   <span class="mc-design__tile-body">
                     <span class="mc-design__strip"><i></i><i></i><i></i></span>
                     <strong>{{ text_default }}</strong>
