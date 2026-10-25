@@ -286,11 +286,11 @@
     padding: var(--mc-space-3) 0 var(--mc-space-3) var(--mc-space-6);
 }
 
-.mc-np__city {
+.mc-points__city {
     position: relative;
 }
 
-.mc-np__list {
+.mc-points__list {
     position: absolute;
     z-index: var(--mc-z-dropdown, 1000);
     inset-inline: 0;
@@ -298,6 +298,6 @@
     overflow-y: auto;
 }
 
-.mc-np__list [data-id] {
+.mc-points__list [data-id] {
     cursor: pointer;
 }

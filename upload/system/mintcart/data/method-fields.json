@@ -64,6 +64,18 @@
     "optional": true,
     "default": ""
    }
+  ],
+  "mc_ukrposhta": [
+   {
+    "key": "api_key",
+    "type": "text"
+   },
+   {
+    "key": "free_from",
+    "type": "number",
+    "optional": true,
+    "default": ""
+   }
   ]
  }
 }

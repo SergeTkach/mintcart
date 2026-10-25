@@ -103,13 +103,14 @@ class ModelExtensionShippingMcNovaposhta extends Model {
 
 		$data = array(
 			'method'        => $quote_key,
+			'prefix'        => 'np',
 			'cities_url'    => $route . 'cities',
 			'points_url'    => $route . 'points',
 			'city_ref'      => isset($stored['city_ref']) ? $stored['city_ref'] : '',
 			'city_text'     => isset($stored['city_text']) ? $stored['city_text'] : '',
 			'point_id'      => isset($stored['point_id']) ? $stored['point_id'] : '',
 			'courier'       => isset($stored['courier']) ? $stored['courier'] : '',
-			'script'        => 'catalog/view/javascript/mintcart/novaposhta.js',
+			'script'        => 'catalog/view/javascript/mintcart/carrier-points.js',
 			'label_city'    => $this->language->get('text_city'),
 			'label_point'   => $this->language->get($quote_key === 'postomat' ? 'text_postomat' : 'text_warehouse'),
 			'label_courier' => $this->language->get('text_courier_address'),
@@ -119,7 +120,7 @@ class ModelExtensionShippingMcNovaposhta extends Model {
 			'text_none'     => $this->language->get('text_no_results')
 		);
 
-		return $this->load->view('extension/shipping/mc_novaposhta', $data);
+		return $this->load->view('extension/shipping/mc_carrier_points', $data);
 	}
 
 	public function processCheckout($quote_key, $post, $address) {

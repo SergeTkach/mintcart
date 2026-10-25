@@ -1,0 +1,25 @@
+<div class="mc-points" data-mc-points data-method="{{ method }}" data-cities-url="{{ cities_url }}" data-points-url="{{ points_url }}" data-text-choose="{{ text_choose }}" data-text-loading="{{ text_loading }}" data-text-none="{{ text_none }}">
+  <div class="mc-field mc-points__city" data-mc-checkout-field="{{ prefix }}_city">
+    <label class="mc-field__label" for="mc-points-city">{{ label_city }}</label>
+    <input type="text" id="mc-points-city" class="mc-field__control" data-mc-points-city autocomplete="off" role="combobox" aria-expanded="false" aria-controls="mc-points-cities" value="{{ city_text }}" placeholder="{{ hint_city }}">
+    <input type="hidden" name="{{ prefix }}_city" value="{{ city_ref }}" data-mc-points-city-ref>
+    <ul class="list-group mc-points__list" id="mc-points-cities" role="listbox" data-mc-points-cities hidden></ul>
+    <p class="mc-field__error" role="alert" hidden></p>
+  </div>
+  {% if method == 'courier' %}
+  <div class="mc-field" data-mc-checkout-field="{{ prefix }}_courier">
+    <label class="mc-field__label" for="mc-points-courier">{{ label_courier }}</label>
+    <input type="text" id="mc-points-courier" name="{{ prefix }}_courier" class="mc-field__control" value="{{ courier }}">
+    <p class="mc-field__error" role="alert" hidden></p>
+  </div>
+  {% else %}
+  <div class="mc-field" data-mc-checkout-field="{{ prefix }}_point">
+    <label class="mc-field__label" for="mc-points-point">{{ label_point }}</label>
+    <select id="mc-points-point" name="{{ prefix }}_point" class="mc-field__control" data-mc-points-point data-selected="{{ point_id }}" disabled>
+      <option value="">{{ text_choose }}</option>
+    </select>
+    <p class="mc-field__error" role="alert" hidden></p>
+  </div>
+  {% endif %}
+  <script src="{{ script }}"></script>
+</div>

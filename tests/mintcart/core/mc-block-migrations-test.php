@@ -112,6 +112,8 @@ check(
         '202610221202_product_badge_definitions.php',
         '202610221300_default_system_url_aliases.php',
         '202610221301_alias_reviews_page.php',
+        '202610231500_grant_admin_permissions_maintenance.php',
+        '202610251000_create_ukrposhta_directory.php',
     ],
     'all real migrations should apply in filename order, got: ' . json_encode($result['applied']),
     $failures
