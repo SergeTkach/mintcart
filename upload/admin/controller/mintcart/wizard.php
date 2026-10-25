@@ -1157,88 +1157,9 @@ class ControllerMintcartWizard extends Controller
      */
     private function loadShippingExtensions(): array
     {
-        $this->load->model('setting/extension');
+        $this->load->model('mintcart/methods');
 
-        $rows = [];
-
-        foreach ($this->model_setting_extension->getInstalled('shipping') as $code) {
-            if (!is_file(DIR_APPLICATION . 'controller/extension/shipping/' . $code . '.php')) {
-                continue;
-            }
-
-            $this->load->language('extension/shipping/' . $code, 'extension');
-
-            $rows[] = [
-                'code' => $code,
-                'name' => $this->language->get('extension')->get('heading_title'),
-                'enabled' => (bool)$this->config->get('shipping_' . $code . '_status'),
-                'fields' => $this->methodFields('shipping', $code),
-            ];
-        }
-
-        return $rows;
-    }
-
-    /**
-     * The settings a shipping method shows inline in its wizard card, from
-     * `system/mintcart/data/method-fields.json` (the same keys OpenCart's own
-     * settings form stores: `shipping_<code>_<key>`). A method that is not
-     * listed there gets no inline form.
-     *
-     * @return array<int, array{key: string, type: string, label: string, value: string, options: array<int|string, string>}>
-     */
-    private function methodFields(string $type, string $code): array
-    {
-        $schema = json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/method-fields.json'), true)[$type][$code] ?? [];
-        $fields = [];
-
-        foreach ($schema as $field) {
-            $options = [];
-
-            if ($field['type'] === 'select') {
-                $options = $this->fieldOptions($field['source']);
-            }
-
-            $value = $this->config->get($type . '_' . $code . '_' . $field['key']);
-
-            $fields[] = [
-                'key'     => $field['key'],
-                'type'    => $field['type'],
-                'label'   => $this->language->get('field_' . $field['key']),
-                'value'   => $value !== null ? (string)$value : (string)($field['default'] ?? ''),
-                'options' => $options,
-            ];
-        }
-
-        return $fields;
-    }
-
-    /**
-     * @return array<int|string, string> id => title, with a leading "none / all" entry
-     */
-    private function fieldOptions(string $source): array
-    {
-        if ($source === 'tax_class') {
-            $this->load->model('localisation/tax_class');
-
-            $options = [0 => $this->language->get('text_tax_none')];
-
-            foreach ($this->model_localisation_tax_class->getTaxClasses() as $row) {
-                $options[(int)$row['tax_class_id']] = $row['title'];
-            }
-
-            return $options;
-        }
-
-        $this->load->model('localisation/geo_zone');
-
-        $options = [0 => $this->language->get('text_geo_all')];
-
-        foreach ($this->model_localisation_geo_zone->getGeoZones() as $row) {
-            $options[(int)$row['geo_zone_id']] = $row['name'];
-        }
-
-        return $options;
+        return $this->model_mintcart_methods->getInstalled('shipping');
     }
 
     /**
@@ -1250,45 +1171,12 @@ class ControllerMintcartWizard extends Controller
     public function saveMethod(): void
     {
         $this->load->language('mintcart/wizard');
-        $this->load->model('setting/extension');
-        $this->load->model('setting/setting');
+        $this->load->model('mintcart/methods');
 
-        $code = (string)($this->request->post['code'] ?? '');
-        $result = ['ok' => false, 'message' => '', 'errors' => []];
-        $fields = in_array($code, $this->model_setting_extension->getInstalled('shipping'), true) ? $this->methodFields('shipping', $code) : [];
-
-        if (!$fields) {
-            $result['message'] = $this->language->get('error_method');
-        } elseif (!$this->user->hasPermission('modify', 'mintcart/wizard')) {
-            $result['message'] = $this->language->get('text_no_permission');
+        if (!$this->user->hasPermission('modify', 'mintcart/wizard')) {
+            $result = ['ok' => false, 'message' => $this->language->get('text_no_permission'), 'errors' => []];
         } else {
-            $posted = (array)($this->request->post['field'] ?? []);
-            $values = [];
-
-            foreach ($fields as $field) {
-                $value = trim((string)($posted[$field['key']] ?? ''));
-
-                if ($field['type'] === 'number') {
-                    $value = str_replace(',', '.', $value);
-
-                    if ($value === '' || !is_numeric($value) || (float)$value < 0) {
-                        $result['errors'][$field['key']] = $this->language->get('error_number');
-                    }
-                } elseif (!array_key_exists((int)$value, $field['options'])) {
-                    $result['errors'][$field['key']] = $this->language->get('error_option');
-                }
-
-                $values['shipping_' . $code . '_' . $field['key']] = $value;
-            }
-
-            if ($result['errors']) {
-                $result['message'] = $this->language->get('error_check_fields');
-            } else {
-                $this->model_setting_setting->editSetting('shipping_' . $code, array_merge($this->model_setting_setting->getSetting('shipping_' . $code), $values));
-
-                $result['ok'] = true;
-                $result['message'] = $this->language->get('text_saved');
-            }
+            $result = $this->model_mintcart_methods->saveFields('shipping', (string)($this->request->post['code'] ?? ''), (array)($this->request->post['field'] ?? []));
         }
 
         $this->response->addHeader('Content-Type: application/json');

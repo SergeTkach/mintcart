@@ -51,7 +51,11 @@
                   {% endif %}
                 </td>
                 <td class="text-right">
+                  {% if extension.fields %}
+                  <button type="button" class="btn btn-default btn-sm" data-toggle="collapse" data-target="#method-{{ extension.code }}" title="{{ text_settings }}"><i class="fa fa-sliders"></i></button>
+                  {% else %}
                   <a href="{{ extension.edit }}" data-toggle="tooltip" title="{{ text_configure }}" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i></a>
+                  {% endif %}
                   <form method="post" action="{{ action_toggle }}" style="display: inline-block;">
                     <input type="hidden" name="code" value="{{ extension.code }}" />
                     {% if extension.enabled %}
@@ -62,6 +66,39 @@
                   </form>
                 </td>
               </tr>
+              {% if extension.fields %}
+              <tr id="method-{{ extension.code }}" class="collapse">
+                <td colspan="3">
+                  <form action="{{ action_save }}" method="post" class="form-horizontal" data-method-form>
+                    <input type="hidden" name="code" value="{{ extension.code }}" />
+                    {% for field in extension.fields %}
+                    <div class="form-group">
+                      <label class="col-sm-3 control-label" for="field-{{ extension.code }}-{{ field.key }}">{{ field.label }}</label>
+                      <div class="col-sm-4">
+                        {% if field.type == 'select' %}
+                        <select id="field-{{ extension.code }}-{{ field.key }}" name="field[{{ field.key }}]" class="form-control">
+                          {% for option_value, option_label in field.options %}
+                          <option value="{{ option_value }}"{% if option_value == field.value %} selected{% endif %}>{{ option_label }}</option>
+                          {% endfor %}
+                        </select>
+                        {% else %}
+                        <input type="text" inputmode="decimal" id="field-{{ extension.code }}-{{ field.key }}" name="field[{{ field.key }}]" value="{{ field.value }}" class="form-control" />
+                        {% endif %}
+                        <div class="text-danger" data-error="{{ field.key }}"></div>
+                      </div>
+                    </div>
+                    {% endfor %}
+                    <div class="form-group">
+                      <div class="col-sm-offset-3 col-sm-9">
+                        <button type="submit" class="btn btn-primary btn-sm">{{ text_save }}</button>
+                        <a href="{{ extension.edit }}" class="btn btn-link btn-sm">{{ text_more }}</a>
+                        <span data-status></span>
+                      </div>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+              {% endif %}
               {% endfor %}
             </tbody>
           </table>
@@ -71,6 +108,46 @@
         {% endif %}
       </div>
     </div>
+    {% if available %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-plus-circle"></i> {{ text_add }}</h3>
+      </div>
+      <div class="panel-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <tbody>
+              {% for extension in available %}
+              <tr>
+                <td class="text-left">{{ extension.name }}</td>
+                <td class="text-right">
+                  <form method="post" action="{{ action_install }}" style="display: inline-block;">
+                    <input type="hidden" name="code" value="{{ extension.code }}" />
+                    <button type="submit" class="btn btn-success btn-sm"><i class="fa fa-plus-circle"></i> {{ text_install }}</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
+<script>
+$('[data-method-form]').on('submit', function (event) {
+  event.preventDefault();
+  var $form = $(this);
+  $form.find('[data-error]').text('');
+  $form.find('[data-status]').text('');
+  $.post($form.attr('action'), $form.serialize(), null, 'json').done(function (json) {
+    $.each(json.errors || {}, function (key, message) {
+      $form.find('[data-error="' + key + '"]').text(message);
+    });
+    $form.find('[data-status]').attr('class', json.ok ? 'text-success' : 'text-danger').text(json.message);
+  });
+});
+</script>
 {{ footer }}
