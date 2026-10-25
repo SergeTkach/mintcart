@@ -34,14 +34,19 @@ final class SitemapBuilder
 
     private const IMAGE_NAMESPACE = 'http://www.google.com/schemas/sitemap-image/1.1';
 
+    private const XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
+
     /**
      * @param list<array{
      *     loc: string,
      *     lastmod?: string|\DateTimeInterface|null,
      *     changefreq?: string|null,
      *     priority?: float|int|null,
-     *     images?: list<array{loc: string, caption?: string|null, title?: string|null}>
-     * }> $entries Already-resolved absolute URLs (via `$this->url->link(...)`
+     *     images?: list<array{loc: string, caption?: string|null, title?: string|null}>,
+     *     alternates?: list<array{hreflang: string, href: string}>
+     * }> $entries `alternates` are the same page in every language
+     *        (`<xhtml:link rel="alternate" hreflang>`, Google's multi-language
+     *        sitemap form); list the page itself among them. Already-resolved absolute URLs (via `$this->url->link(...)`
      *        upstream, the same "presentation values already resolved
      *        upstream" contract `SearchService::results()`/
      *        `ProductViewProvider::build()` use) — this class does no URL
@@ -71,9 +76,20 @@ final class SitemapBuilder
         }
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $hasAlternates = false;
+        foreach ($normalized as $entry) {
+            if ($entry['alternates']) {
+                $hasAlternates = true;
+                break;
+            }
+        }
+
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
         if ($hasImages) {
             $xml .= ' xmlns:image="' . self::IMAGE_NAMESPACE . '"';
+        }
+        if ($hasAlternates) {
+            $xml .= ' xmlns:xhtml="' . self::XHTML_NAMESPACE . '"';
         }
         $xml .= '>' . "\n";
 
@@ -91,6 +107,10 @@ final class SitemapBuilder
 
             if ($entry['priority'] !== null) {
                 $xml .= "\t\t<priority>" . $entry['priority'] . "</priority>\n";
+            }
+
+            foreach ($entry['alternates'] as $alternate) {
+                $xml .= "\t\t<xhtml:link rel=\"alternate\" hreflang=\"" . $this->escape($alternate['hreflang']) . "\" href=\"" . $this->escape($alternate['href']) . "\" />\n";
             }
 
             foreach ($entry['images'] as $image) {
@@ -192,7 +212,33 @@ final class SitemapBuilder
                 'changefreq' => $changefreq,
                 'priority' => $priority,
                 'images' => $this->normalizeImages($entry['images'] ?? []),
+                'alternates' => $this->normalizeAlternates($entry['alternates'] ?? []),
             ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param list<array{hreflang?: string, href?: string}> $alternates
+     *
+     * @return list<array{hreflang: string, href: string}> blanks and repeated hreflang values dropped
+     */
+    private function normalizeAlternates(array $alternates): array
+    {
+        $seen = [];
+        $result = [];
+
+        foreach ($alternates as $alternate) {
+            $hreflang = trim((string) ($alternate['hreflang'] ?? ''));
+            $href = trim((string) ($alternate['href'] ?? ''));
+
+            if ($hreflang === '' || $href === '' || isset($seen[$hreflang])) {
+                continue;
+            }
+
+            $seen[$hreflang] = true;
+            $result[] = ['hreflang' => $hreflang, 'href' => $href];
         }
 
         return $result;

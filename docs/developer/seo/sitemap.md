@@ -199,3 +199,13 @@ MySQL/OpenCart bootstrap in this environment — a human should confirm on
 a real install that `index.php?route=mintcart/seo/sitemap` returns a
 well-formed `<urlset>` XML document (see `docs/MANUAL_VERIFICATION.md`'s
 Phase 18 section, "MintCart sitemap route" entry).
+
+## Languages and images (2026-10-25)
+
+`/sitemap.xml` (the `.htaccess` rule) now points at `mintcart/seo/sitemap`, not the stock Google
+Sitemap feed. With language folders in the URL every page is listed once per language, each entry
+carrying `<xhtml:link rel="alternate" hreflang>` for all versions and `x-default`
+(`SitemapBuilder` entry key `alternates`). The URLs come from `MintCart\Seo\SitemapUrlMap`, one
+in-memory copy of `seo_url`, so there is no query per link. No `<image:image>` blocks: resizing a
+picture per product on the fly is what made a big sitemap stall; `SitemapBuilder` still supports
+`images` for anyone who wants them back. Test: `tests/mintcart/seo/sitemap-url-map-test.php`.
