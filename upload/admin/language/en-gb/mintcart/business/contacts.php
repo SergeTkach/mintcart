@@ -29,3 +29,6 @@ $_['error_address']    = 'Address must be between 3 and 256 characters!';
 $_['error_announcement_text'] = 'Message must be 200 characters or fewer!';
 $_['error_announcement_url']  = 'Link must start with http://, https:// or a single /!';
 $_['error_social']     = '%s must be a valid URL!';
+$_['entry_phone_mask'] = 'Phone format';
+$_['help_phone_mask']  = "Optional. Phone fields (checkout, Quick Order) follow it; # is one digit, e.g. +380 (##) ###-##-##. Leave empty to use your country's default.";
+$_['error_phone_mask'] = 'Use digits, # for each digit to type, and + ( ) - or spaces; at least one #.';

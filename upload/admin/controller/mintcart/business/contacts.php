@@ -67,6 +67,11 @@ class ControllerMintcartBusinessContacts extends Controller {
 		$telephone = trim((string)($this->request->post['config_telephone'] ?? ''));
 		$email = trim((string)($this->request->post['config_email'] ?? ''));
 		$address = trim((string)($this->request->post['config_address'] ?? ''));
+		$phone_mask = trim((string)($this->request->post['config_mc_phone_mask'] ?? ''));
+
+		if ($phone_mask !== '' && !\MintCart\Commerce\PhoneMask::isValid($phone_mask)) {
+			$this->error['config_mc_phone_mask'] = $this->language->get('error_phone_mask');
+		}
 
 		if ((utf8_strlen($telephone) < 3) || (utf8_strlen($telephone) > 32)) {
 			$this->error['config_telephone'] = $this->language->get('error_telephone');
@@ -119,7 +124,8 @@ class ControllerMintcartBusinessContacts extends Controller {
 		$merged = array_merge($existing, array(
 			'config_telephone' => trim((string)$this->request->post['config_telephone']),
 			'config_email'     => trim((string)$this->request->post['config_email']),
-			'config_address'   => trim((string)$this->request->post['config_address'])
+			'config_address'   => trim((string)$this->request->post['config_address']),
+			'config_mc_phone_mask' => trim((string)($this->request->post['config_mc_phone_mask'] ?? ''))
 		));
 
 		$this->model_setting_setting->editSetting('config', $merged);
@@ -160,7 +166,7 @@ class ControllerMintcartBusinessContacts extends Controller {
 			$data['error_warning'] = '';
 		}
 
-		foreach (array('config_telephone', 'config_email', 'config_address') as $key) {
+		foreach (array('config_telephone', 'config_email', 'config_address', 'config_mc_phone_mask') as $key) {
 			$data['error_' . $key] = $this->error[$key] ?? '';
 		}
 
@@ -195,6 +201,7 @@ class ControllerMintcartBusinessContacts extends Controller {
 			$data['config_telephone'] = $this->request->post['config_telephone'] ?? '';
 			$data['config_email'] = $this->request->post['config_email'] ?? '';
 			$data['config_address'] = $this->request->post['config_address'] ?? '';
+			$data['config_mc_phone_mask'] = $this->request->post['config_mc_phone_mask'] ?? '';
 			$data['announcement_text'] = $this->request->post['announcement_text'] ?? '';
 			$data['announcement_url'] = $this->request->post['announcement_url'] ?? '';
 
@@ -205,6 +212,7 @@ class ControllerMintcartBusinessContacts extends Controller {
 			$data['config_telephone'] = $this->config->get('config_telephone');
 			$data['config_email'] = $this->config->get('config_email');
 			$data['config_address'] = $this->config->get('config_address');
+			$data['config_mc_phone_mask'] = $this->config->get('config_mc_phone_mask');
 
 			$this->load->model('setting/setting');
 

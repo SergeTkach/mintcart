@@ -96,6 +96,17 @@ class ControllerCommonHeader extends Controller {
 		$data['cart'] = $this->load->controller('common/cart');
 		$data['menu'] = $this->load->controller('common/menu');
 
+		// MintCart: phone input mask (the store's own format, else the country default).
+		$this->load->model('localisation/country');
+
+		$country_info = $this->model_localisation_country->getCountry((int)$this->config->get('config_country_id'));
+
+		$data['mc_phone_mask'] = \MintCart\Commerce\PhoneMask::resolve(
+			(string)$this->config->get('config_mc_phone_mask'),
+			$country_info ? (string)$country_info['iso_code_2'] : '',
+			(array)json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/phone-masks.json'), true)
+		);
+
 		// MintCart\Design\ComponentRenderer / MintCart\Design\HeaderViewProvider
 		// wiring (MINTCART_TECHNICAL_PLAN.md §14, Phase 7), via the shared
 		// MintCart\Design\ActiveTheme resolver every other listing/common
