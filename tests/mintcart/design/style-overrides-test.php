@@ -34,7 +34,7 @@ $check($n['border'] === 'strong' && $n['button_style'] === 'outline' && $n['cont
 
 $full = StyleOverrides::build([
     'primary' => '#0a7b5c', 'accent' => '#ffd400', 'radius' => 'rounded', 'border' => 'strong',
-    'button_style' => 'outline', 'button_shape' => 'pill', 'container' => 'wide',
+    'button_style' => 'outline', 'container' => 'wide',
     'font_heading' => 'Playfair Display', 'font_body' => 'Inter',
 ]);
 $css = $full['css'];
@@ -43,7 +43,7 @@ $check(strpos($css, '--mc-radius-lg:1rem') !== false, 'radius scale');
 $check(strpos($css, '--mc-border-width:2px') !== false, 'strong border');
 $check(strpos($css, '--mc-font-family-heading:"Playfair Display", serif') !== false && strpos($css, '--mc-font-family-base:"Inter", sans-serif') !== false, 'fonts');
 $check(strpos($css, 'max-width:1520px') !== false, 'wide container');
-$check(strpos($css, '--mc-button-radius:var(--mc-radius-pill)') !== false && strpos($css, '--mc-button-bg:transparent') !== false, 'button shape + outline');
+$check(strpos($css, '--mc-button-bg:transparent') !== false && strpos($css, 'button-radius') === false, 'outline button, shape always follows the corners');
 $check($full['fonts_url'] === 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;600;700&display=swap', 'Google Fonts URL');
 
 $system = StyleOverrides::build(['font_body' => 'system', 'font_heading' => 'georgia']);

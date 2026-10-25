@@ -1,6 +1,6 @@
 /**
- * Design > Styles (admin): keeps the colour picker and the hex field in step,
- * and paints the live preview from the form.
+ * Design > Styles (admin): Pickr colour pickers kept in step with their hex fields,
+ * and the live preview painted from the form.
  *
  * The preview is an approximation of the storefront drawn with its own
  * `--pv-*` variables. The token values here repeat the ones in
@@ -10,6 +10,8 @@
  *
  * Markup contract: `docs/developer/theme-api/styles-screen.md`
  */
+
+import Pickr from '@simonwep/pickr';
 
 const RADIUS = {
     sharp: ['0', '0'],
@@ -60,7 +62,34 @@ export function initDesignStyles(context = document) {
             ?? '';
 
         const hexField = (key) => form.querySelector(`[data-mc-design-hex="${key}"]`);
-        const picker = (key) => form.querySelector(`[data-mc-design-color="${key}"]`);
+        // One Pickr per colour button; the hex text field stays the value that is posted.
+        const pickers = {};
+
+        form.querySelectorAll('[data-mc-design-color]').forEach((button) => {
+            const key = button.dataset.mcDesignColor;
+            const pickr = Pickr.create({
+                el: button,
+                useAsButton: true,
+                theme: 'nano',
+                default: normalizeHex(hexField(key).value) || '#059669',
+                defaultRepresentation: 'HEX',
+                components: {
+                    preview: true,
+                    opacity: false,
+                    hue: true,
+                    interaction: { hex: true, input: true, save: true },
+                },
+                i18n: { 'btn:save': button.dataset.labelSave || 'OK' },
+            });
+
+            pickr.on('change', (color) => {
+                hexField(key).value = color.toHEXA().toString().slice(0, 7).toLowerCase();
+                paint();
+            });
+            pickr.on('save', () => pickr.hide());
+
+            pickers[key] = pickr;
+        });
 
         function paint() {
             const checked = form.querySelector('[data-mc-design-preset]:checked');
@@ -90,10 +119,6 @@ export function initDesignStyles(context = document) {
             set('--pv-border-width', border === 'strong' ? '2px' : '1px');
             set('--pv-border', border === 'light' ? '#e4e7ea' : (border === 'strong' ? '#6c757d' : '#ced4da'));
 
-            const shape = value('button_shape');
-
-            set('--pv-button-radius', shape === 'pill' ? '999px' : (shape === 'square' ? '0' : 'var(--pv-radius-lg)'));
-
             const style = value('button_style');
 
             set('--pv-btn-bg', style === 'outline' ? 'transparent' : (style === 'soft' ? `color-mix(in srgb, ${primary} 12%, #fff)` : primary));
@@ -119,29 +144,49 @@ export function initDesignStyles(context = document) {
                 const hex = normalizeHex(hexField(key).value);
 
                 if (hex) {
-                    picker(key).value = hex;
+                    pickers[key]?.setColor(hex, true);
+                    form.querySelector(`[data-mc-design-color="${key}"]`)?.style.setProperty('--pcr-color', hex);
+                }
+            });
+        }
+
+        // Picking a look sets every control to what that look uses; tweak from there.
+        function applyLook(defaults) {
+            ['primary', 'accent'].forEach((key) => {
+                hexField(key).value = defaults[key] || '';
+            });
+
+            ['radius', 'border', 'button_style', 'container'].forEach((name) => {
+                const radio = form.querySelector(`[data-mc-design-field="${name}"][value="${defaults[name] ?? ''}"]`);
+
+                if (radio) {
+                    radio.checked = true;
+                }
+            });
+
+            ['font_heading', 'font_body'].forEach((name) => {
+                const select = form.querySelector(`select[data-mc-design-field="${name}"]`);
+
+                if (select) {
+                    select.value = defaults[name] || 'system';
                 }
             });
         }
 
         form.addEventListener('change', (event) => {
-            const color = event.target.closest('[data-mc-design-color]');
-
-            if (color) {
-                hexField(color.dataset.mcDesignColor).value = color.value;
+            if (event.target.matches('[data-mc-design-preset]')) {
+                try {
+                    applyLook(JSON.parse(event.target.dataset.defaults || '{}'));
+                } catch {
+                    // a malformed attribute leaves the controls as they are
+                }
             }
 
             paint();
         });
 
         form.addEventListener('input', (event) => {
-            const color = event.target.closest('[data-mc-design-color]');
-
-            if (color) {
-                hexField(color.dataset.mcDesignColor).value = color.value;
-            }
-
-            if (color || event.target.closest('[data-mc-design-hex]')) {
+            if (event.target.closest('[data-mc-design-hex]')) {
                 paint();
             }
         });
@@ -150,7 +195,14 @@ export function initDesignStyles(context = document) {
             const reset = event.target.closest('[data-mc-design-reset]');
 
             if (reset) {
-                hexField(reset.dataset.mcDesignReset).value = '';
+                try {
+                    const defaults = JSON.parse(form.querySelector('[data-mc-design-preset]:checked')?.dataset.defaults || '{}');
+
+                    hexField(reset.dataset.mcDesignReset).value = defaults[reset.dataset.mcDesignReset] || '';
+                } catch {
+                    hexField(reset.dataset.mcDesignReset).value = '';
+                }
+
                 paint();
             }
         });

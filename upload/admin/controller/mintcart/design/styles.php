@@ -102,17 +102,33 @@ class ControllerMintcartDesignStyles extends Controller {
 
 		$values = array('mintcart_design_preset' => $preset);
 
+		$defaults = $this->lookDefaults($preset);
+
 		foreach (\MintCart\Design\StyleOverrides::normalize($this->postedOverrides()) as $key => $value) {
-			$values['mintcart_design_' . $key] = $value;
+			// What the chosen look already does is not stored as an override.
+			$values['mintcart_design_' . $key] = ($value === ($defaults[$key] ?? '')) ? '' : $value;
 		}
 
 		$this->model_setting_setting->editSetting('mintcart_design', $values);
 	}
 
+	/**
+	 * What a look itself uses for every control on this screen
+	 * (`system/mintcart/data/design-presets.json`); "no look" uses the
+	 * base tokens, which are the Clean look's.
+	 *
+	 * @return array<string, string>
+	 */
+	private function lookDefaults($preset) {
+		$info = (array)json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/design-presets.json'), true);
+
+		return isset($info[$preset]['defaults']) ? $info[$preset]['defaults'] : (isset($info['clean']['defaults']) ? $info['clean']['defaults'] : array());
+	}
+
 	private function postedOverrides() {
 		$raw = array();
 
-		foreach (array('primary', 'accent', 'radius', 'border', 'button_style', 'button_shape', 'container', 'font_heading', 'font_body') as $key) {
+		foreach (array('primary', 'accent', 'radius', 'border', 'button_style', 'container', 'font_heading', 'font_body') as $key) {
 			$raw[$key] = isset($this->request->post['mintcart_design_' . $key]) ? $this->request->post['mintcart_design_' . $key] : '';
 		}
 
@@ -185,6 +201,7 @@ class ControllerMintcartDesignStyles extends Controller {
 				'code'        => $code,
 				'description' => isset($preset_info[$code]['description']) ? $this->language->get('preset_' . $code) : '',
 				'swatches'    => isset($preset_info[$code]['swatches']) ? $preset_info[$code]['swatches'] : array(),
+				'defaults'    => json_encode(isset($preset_info[$code]['defaults']) ? $preset_info[$code]['defaults'] : new \stdClass()),
 				// No per-preset language key: preset codes are an
 				// open-ended, theme-declared set (CLAUDE.md §85/§86 - no
 				// abstraction/translation table built ahead of more than
@@ -199,18 +216,24 @@ class ControllerMintcartDesignStyles extends Controller {
 		$data['presets'] = $presets;
 		$data['selected'] = $selected;
 
-		// The owner's overrides on top of the preset (empty = what the preset says).
-		$data['values'] = \MintCart\Design\StyleOverrides::normalize($this->request->server['REQUEST_METHOD'] == 'POST' ? $this->postedOverrides() : array(
+		// What the controls show: the owner's override, else what the chosen look uses.
+		$overrides = \MintCart\Design\StyleOverrides::normalize($this->request->server['REQUEST_METHOD'] == 'POST' ? $this->postedOverrides() : array(
 			'primary'      => $this->config->get('mintcart_design_primary'),
 			'accent'       => $this->config->get('mintcart_design_accent'),
 			'radius'       => $this->config->get('mintcart_design_radius'),
 			'border'       => $this->config->get('mintcart_design_border'),
 			'button_style' => $this->config->get('mintcart_design_button_style'),
-			'button_shape' => $this->config->get('mintcart_design_button_shape'),
 			'container'    => $this->config->get('mintcart_design_container'),
 			'font_heading' => $this->config->get('mintcart_design_font_heading'),
 			'font_body'    => $this->config->get('mintcart_design_font_body')
 		));
+
+		$defaults = $this->lookDefaults($selected);
+		$data['values'] = array();
+
+		foreach ($overrides as $key => $value) {
+			$data['values'][$key] = $value !== '' ? $value : (isset($defaults[$key]) ? $defaults[$key] : '');
+		}
 
 		$data['error_primary'] = $this->error['primary'] ?? '';
 		$data['error_accent'] = $this->error['accent'] ?? '';

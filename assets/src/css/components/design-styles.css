@@ -103,14 +103,19 @@
     align-items: center;
 }
 
-.mc-design__color-row input[type='color'] {
+.mc-design__pickr {
     width: 3rem;
     height: 2.5rem;
-    padding: 2px;
+    padding: 0;
     border: 1px solid var(--mc-border);
     border-radius: var(--mc-radius-md);
-    background: var(--mc-surface);
+    background: var(--pcr-color, #059669);
     cursor: pointer;
+}
+
+.mc-design__pickr:focus-visible {
+    outline: 2px solid var(--mc-accent);
+    outline-offset: 2px;
 }
 
 .mc-design__color-row .form-control {

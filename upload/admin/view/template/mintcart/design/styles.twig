@@ -37,7 +37,7 @@
               <div class="mc-design__tiles">
                 {% for preset in presets %}
                 <label class="mc-design__tile">
-                  <input type="radio" name="mintcart_design_preset" value="{{ preset.code }}" data-mc-design-preset data-swatches="{{ preset.swatches|join(',') }}"{% if selected == preset.code %} checked="checked"{% endif %} />
+                  <input type="radio" name="mintcart_design_preset" value="{{ preset.code }}" data-mc-design-preset data-swatches="{{ preset.swatches|join(',') }}" data-defaults="{{ preset.defaults }}"{% if selected == preset.code %} checked="checked"{% endif %} />
                   <span class="mc-design__tile-body">
                     <span class="mc-design__strip" style="--mc-swatch-1:{{ preset.swatches[0]|default('#059669') }};--mc-swatch-2:{{ preset.swatches[1]|default('#212529') }};--mc-swatch-3:{{ preset.swatches[2]|default('#f8f9fa') }}"><i></i><i></i><i></i></span>
                     <strong>{{ preset.label }}</strong>
@@ -46,7 +46,7 @@
                 </label>
                 {% endfor %}
                 <label class="mc-design__tile">
-                  <input type="radio" name="mintcart_design_preset" value="" data-mc-design-preset data-swatches=""{% if selected == '' %} checked="checked"{% endif %} />
+                  <input type="radio" name="mintcart_design_preset" value="" data-mc-design-preset data-swatches="" data-defaults="{{ presets[0].defaults|default('{}') }}"{% if selected == '' %} checked="checked"{% endif %} />
                   <span class="mc-design__tile-body">
                     <span class="mc-design__strip"><i></i><i></i><i></i></span>
                     <strong>{{ text_default }}</strong>
@@ -69,8 +69,8 @@
                 <div class="mc-design__color{% if (key == 'primary' and error_primary) or (key == 'accent' and error_accent) %} has-error{% endif %}">
                   <label for="mc-design-{{ key }}-text">{{ label }}</label>
                   <div class="mc-design__color-row">
-                    <input type="color" value="{{ values[key] ? values[key] : '#059669' }}" data-mc-design-color="{{ key }}" aria-label="{{ label }}" />
-                    <input type="text" id="mc-design-{{ key }}-text" name="mintcart_design_{{ key }}" value="{{ values[key] }}" placeholder="{{ text_from_preset }}" maxlength="7" class="form-control" data-mc-design-hex="{{ key }}" autocomplete="off" />
+                    <button type="button" class="mc-design__pickr" data-mc-design-color="{{ key }}" data-label-save="{{ button_ok }}" aria-label="{{ label }}"></button>
+                    <input type="text" id="mc-design-{{ key }}-text" name="mintcart_design_{{ key }}" value="{{ values[key] }}" maxlength="7" class="form-control" data-mc-design-hex="{{ key }}" autocomplete="off" />
                     <button type="button" class="btn btn-default" data-mc-design-reset="{{ key }}" title="{{ text_reset }}"><i class="fa fa-undo"></i></button>
                   </div>
                   {% if key == 'primary' and error_primary %}<div class="text-danger">{{ error_primary }}</div>{% endif %}
@@ -87,7 +87,7 @@
               <div class="mc-design__group">
                 <span class="mc-design__label">{{ entry_radius }}</span>
                 <div class="mc-design__seg" role="radiogroup">
-                  {% for code, label in {'': text_from_preset, 'sharp': text_radius_sharp, 'soft': text_radius_soft, 'rounded': text_radius_rounded} %}
+                  {% for code, label in {'sharp': text_radius_sharp, 'soft': text_radius_soft, 'rounded': text_radius_rounded} %}
                   <label><input type="radio" name="mintcart_design_radius" value="{{ code }}" data-mc-design-field="radius"{% if values.radius == code %} checked="checked"{% endif %} /><span class="mc-design__seg-item mc-design__seg-item--{{ code ? code : 'preset' }}">{{ label }}</span></label>
                   {% endfor %}
                 </div>
@@ -95,7 +95,7 @@
               <div class="mc-design__group">
                 <span class="mc-design__label">{{ entry_border }}</span>
                 <div class="mc-design__seg" role="radiogroup">
-                  {% for code, label in {'': text_from_preset, 'light': text_border_light, 'strong': text_border_strong} %}
+                  {% for code, label in {'light': text_border_light, '': text_border_normal, 'strong': text_border_strong} %}
                   <label><input type="radio" name="mintcart_design_border" value="{{ code }}" data-mc-design-field="border"{% if values.border == code %} checked="checked"{% endif %} /><span class="mc-design__seg-item">{{ label }}</span></label>
                   {% endfor %}
                 </div>
@@ -122,14 +122,6 @@
                   {% endfor %}
                 </div>
               </div>
-              <div class="mc-design__group">
-                <span class="mc-design__label">{{ entry_button_shape }}</span>
-                <div class="mc-design__seg" role="radiogroup">
-                  {% for code, label in {'': text_shape_corners, 'square': text_shape_square, 'pill': text_shape_pill} %}
-                  <label><input type="radio" name="mintcart_design_button_shape" value="{{ code }}" data-mc-design-field="button_shape"{% if values.button_shape == code %} checked="checked"{% endif %} /><span class="mc-design__seg-item">{{ label }}</span></label>
-                  {% endfor %}
-                </div>
-              </div>
             </div>
           </section>
 
@@ -141,7 +133,6 @@
               <div class="mc-design__group">
                 <label class="mc-design__label" for="mc-design-{{ key }}">{{ label }}</label>
                 <select name="mintcart_design_{{ key }}" id="mc-design-{{ key }}" class="form-control" data-mc-design-field="{{ key }}">
-                  <option value="">{{ text_from_preset }}</option>
                   {% for font in fonts %}
                   <option value="{{ font.id }}" data-stack="{{ font.stack }}"{% if values[key] == font.id %} selected="selected"{% endif %}>{{ font.label }}</option>
                   {% endfor %}

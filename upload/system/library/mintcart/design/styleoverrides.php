@@ -23,8 +23,6 @@ final class StyleOverrides
 
     public const BUTTON_STYLE = ['outline', 'soft'];
 
-    public const BUTTON_SHAPE = ['square', 'pill'];
-
     /** Page width: Bootstrap's own 1320px container is the default. */
     public const CONTAINER = ['narrow' => '1140px', 'wide' => '1520px'];
 
@@ -59,7 +57,7 @@ final class StyleOverrides
      * Drops anything that is not a known value, so a hand-edited setting or
      * form can never put arbitrary text into the stylesheet.
      *
-     * @param array<string, mixed> $raw keys: primary, accent, radius, border, button_style, button_shape, container, font_heading, font_body
+     * @param array<string, mixed> $raw keys: primary, accent, radius, border, button_style, container, font_heading, font_body
      * @return array<string, string> the same keys, '' when unset or invalid
      */
     public static function normalize(array $raw): array
@@ -76,7 +74,6 @@ final class StyleOverrides
             'radius'       => $pick($raw['radius'] ?? '', array_keys(self::RADIUS)),
             'border'       => $pick($raw['border'] ?? '', self::BORDER),
             'button_style' => $pick($raw['button_style'] ?? '', self::BUTTON_STYLE),
-            'button_shape' => $pick($raw['button_shape'] ?? '', self::BUTTON_SHAPE),
             'container'    => $pick($raw['container'] ?? '', array_keys(self::CONTAINER)),
             'font_heading' => $pick($raw['font_heading'] ?? '', array_keys(self::FONTS)),
             'font_body'    => $pick($raw['font_body'] ?? '', array_keys(self::FONTS)),
@@ -163,10 +160,6 @@ final class StyleOverrides
         } elseif ($s['button_style'] === 'soft') {
             $rules[] = $primaryButton . '{--mc-button-bg:color-mix(in srgb,var(--mc-primary) 12%,var(--mc-surface));--mc-button-bg-hover:color-mix(in srgb,var(--mc-primary) 20%,var(--mc-surface));--mc-button-bg-active:color-mix(in srgb,var(--mc-primary) 28%,var(--mc-surface));--mc-button-color:var(--mc-primary-hover);box-shadow:none}';
             $rules[] = ':root:root .mc-button--primary:hover,:root:root .mc-button:not([class*="mc-button--"]):hover{box-shadow:none}';
-        }
-
-        if ($s['button_shape'] !== '') {
-            $rules[] = ':root:root .mc-button{--mc-button-radius:' . ($s['button_shape'] === 'pill' ? 'var(--mc-radius-pill)' : '0') . '}';
         }
 
         if ($s['container'] !== '') {

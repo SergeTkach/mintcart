@@ -306,7 +306,6 @@ class ControllerCommonHeader extends Controller {
 			'radius'       => $this->config->get('mintcart_design_radius'),
 			'border'       => $this->config->get('mintcart_design_border'),
 			'button_style' => $this->config->get('mintcart_design_button_style'),
-			'button_shape' => $this->config->get('mintcart_design_button_shape'),
 			'container'    => $this->config->get('mintcart_design_container'),
 			'font_heading' => $this->config->get('mintcart_design_font_heading'),
 			'font_body'    => $this->config->get('mintcart_design_font_body')
