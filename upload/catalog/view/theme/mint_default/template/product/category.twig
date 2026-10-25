@@ -33,13 +33,13 @@
 
             <h1 class="mb-4">{{ heading_title }}</h1>
 
-            {% if thumb or description %}
+            {% if thumb or description_intro %}
                 <div class="d-flex flex-column flex-sm-row align-items-sm-start gap-3 gap-sm-4 mb-4">
                     {% if thumb %}
                         <img src="{{ thumb }}" alt="{{ heading_title }}" class="flex-shrink-0 rounded"{% if thumb_width %} width="{{ thumb_width }}"{% endif %}{% if thumb_height %} height="{{ thumb_height }}"{% endif %}>
                     {% endif %}
-                    {% if description %}
-                        <div class="mc-prose flex-grow-1">{{ description }}</div>
+                    {% if description_intro %}
+                        <div class="mc-prose flex-grow-1">{{ description_intro }}</div>
                     {% endif %}
                 </div>
             {% endif %}
@@ -99,6 +99,10 @@
                 <div class="text-end">
                     <a href="{{ continue }}" class="mc-button mc-button--primary">{{ button_continue }}</a>
                 </div>
+            {% endif %}
+
+            {% if description_rest %}
+                <div class="mc-prose mt-5">{{ description_rest }}</div>
             {% endif %}
 
             {{ content_bottom }}

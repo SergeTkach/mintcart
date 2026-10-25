@@ -134,6 +134,11 @@ class ControllerProductCategory extends Controller {
 			}
 
 			$data['description'] = html_entity_decode($category_info['description'], ENT_QUOTES, 'UTF-8');
+
+			// MintCart: a short intro above the product list, the rest below it.
+			$description_parts = (new \MintCart\Catalog\DescriptionSplitter())->split($data['description'], 360);
+			$data['description_intro'] = $description_parts['intro'];
+			$data['description_rest'] = $description_parts['rest'];
 			$data['compare'] = $this->url->link('product/compare');
 
 			$url = '';
