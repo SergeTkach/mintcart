@@ -6,11 +6,7 @@
  * model or template is modified, same "0 controller patches" shape as
  * ControllerMintcartCart (Phase 15). Standalone page: it does not include
  * common/header, common/column_left or common/footer, so it never shares a
- * page with the legacy Bootstrap 3 admin chrome (the exact conflict that
- * forced the storefront's own asset-enqueue attempt to be reverted - see
- * docs/IMPLEMENTATION_STATUS.md's Phase 15 "human session" update). This is
- * the first live page anywhere in MintCart to actually load
- * assets/dist/css/index.min.css.
+ * page with the legacy Bootstrap 3 admin chrome
  *
  * Step order/resume logic lives in MintCart\Onboarding\WizardProgress (pure,
  * no OpenCart dependency, unit-tested standalone). This controller only:
@@ -825,6 +821,19 @@ class ControllerMintcartWizard extends Controller
 
             unset($check);
         }
+
+        // The normal admin page: the stock header / menu / footer around the wizard.
+        $this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
+        $this->document->addScript(HTTP_CATALOG . 'assets/dist/js/admin.min.js');
+
+        $data['breadcrumbs'] = [
+            ['text' => $this->language->get('text_home'), 'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)],
+            ['text' => $this->language->get('heading_title'), 'href' => $data['action']],
+        ];
+
+        $data['header'] = $this->load->controller('common/header');
+        $data['column_left'] = $this->load->controller('common/column_left');
+        $data['footer'] = $this->load->controller('common/footer');
 
         $this->response->setOutput($this->load->view('mintcart/wizard', $data));
     }

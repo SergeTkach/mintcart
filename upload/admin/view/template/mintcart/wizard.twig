@@ -1,63 +1,23 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>{{ heading_title }}</title>
-<link rel="icon" href="{{ asset_base }}image/catalog/mintcart-favicon.png" type="image/png" />
-<link rel="stylesheet" href="{{ asset_base }}assets/dist/css/index.min.css" />
-<script src="{{ asset_base }}assets/dist/js/admin.min.js" defer></script>
-</head>
-<body class="mc-wizard">
-{#
-  Setup Wizard - a standalone onboarding page (no legacy admin chrome).
-  Component: assets/src/css/components/wizard.css,
-  docs/developer/onboarding/setup-wizard.md.
-#}
-{% macro actions(prev_step_url, button_back, label) %}
-  <div class="mc-wizard__actions">
-    {% if prev_step_url %}<a class="mc-button mc-button--ghost" href="{{ prev_step_url }}">{{ button_back }}</a>{% endif %}
-    <button type="submit" class="mc-button mc-button--primary mc-wizard__next">{{ label }}</button>
+{%- import _self as wizard -%}
+{{ header }}{{ column_left }}
+<div id="content" class="mc-wizard">
+<div class="page-header">
+  <div class="container-fluid">
+    {% if step and step != 'ready' %}
+    <div class="pull-right"><a class="btn btn-default" href="{{ skip_wizard }}">{{ button_skip_wizard }}</a></div>
+    {% endif %}
+    <h1>{{ heading_title }}</h1>
+    <ul class="breadcrumb">
+      {% for breadcrumb in breadcrumbs %}
+      <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+      {% endfor %}
+    </ul>
   </div>
-{% endmacro %}
-{#
-  "+" adds one more picker row, a separate Save button stores every row
-  (assets/src/js/components/add-rows.js). The rows belong to the form with
-  id mc-add-<kind>-form, which sits outside the step form.
-#}
-{% macro add_rows(kind, field, options, placeholder, add_label, save_label, remove_label, target_id, search_label, empty_label, pick_label) %}
-  <div class="mt-2" data-mc-add-rows data-mc-add-rows-form="mc-add-{{ kind }}-form" data-mc-add-rows-target="{{ target_id }}" data-mc-add-rows-empty="{{ pick_label }}">
-    <div class="d-flex flex-column gap-2" data-mc-add-rows-list></div>
-    <template data-mc-add-rows-template>
-      <div class="d-flex flex-wrap gap-2" data-mc-add-rows-row>
-        <select name="{{ field }}" form="mc-add-{{ kind }}-form" class="mc-field__control mc-add-rows__control" aria-label="{{ placeholder }}" data-mc-select-search data-mc-select-search-placeholder="{{ search_label }}" data-mc-select-search-empty="{{ empty_label }}">
-          <option value="">{{ placeholder }}</option>
-          {% for code, label in options %}
-          <option value="{{ code }}">{{ label }}</option>
-          {% endfor %}
-        </select>
-        <button type="button" class="mc-button mc-button--ghost" data-mc-add-rows-remove title="{{ remove_label }}" aria-label="{{ remove_label }}">&times;</button>
-      </div>
-    </template>
-    <div class="d-flex gap-2 mt-2">
-      <button type="button" class="mc-button mc-button--secondary" data-mc-add-rows-add title="{{ add_label }}" aria-label="{{ add_label }}">+</button>
-      <button type="submit" form="mc-add-{{ kind }}-form" class="mc-button mc-button--primary" data-mc-add-rows-save hidden>{{ save_label }}</button>
-    </div>
-  </div>
-{% endmacro %}
-{% import _self as wizard %}
+</div>
 
-<header class="mc-wizard__topbar">
-  <div class="container mc-wizard__topbar-inner">
-    <img class="mc-wizard__brand" src="{{ brand_logo }}" alt="MintCart" width="140" height="48" />
-    <span class="mc-wizard__topbar-title">{{ heading_title }}</span>
-    {% if step and step != 'ready' %}<a class="mc-wizard__skip" href="{{ skip_wizard }}">{{ button_skip_wizard }}</a>{% endif %}
-  </div>
-</header>
-
-<main class="container mc-wizard__layout">
-  <div class="row g-4 g-lg-5">
-    <div class="col-lg-4">
+<div class="container-fluid">
+  <div class="mc-wizard__grid">
+    <div class="mc-wizard__aside">
       <nav class="mc-wizard__nav" aria-label="{{ text_steps }}">
         <div class="mc-wizard__progress-head">
           <span>{{ text_step_of|format(step_number, step_total) }}</span>
@@ -84,7 +44,7 @@
       </nav>
     </div>
 
-    <div class="col-lg-8">
+    <div class="mc-wizard__main">
       <section class="mc-wizard__panel">
 
         {% if error.warning %}
@@ -110,36 +70,36 @@
         <form action="{{ action }}" method="post" enctype="multipart/form-data" novalidate>
           <input type="hidden" name="step" value="store" />
 
-          <div class="row g-3">
-            <div class="col-md-6">
+          <div class="mc-wizard__fields">
+            <div class="mc-wizard__col">
               <div class="mc-field {% if error.name %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-config-name">{{ entry_name }}</label>
                 <input type="text" id="input-config-name" name="config_name" value="{{ config_name }}" class="mc-field__control" {% if error.name %}aria-invalid="true" aria-describedby="error-config-name"{% endif %} />
                 {% if error.name %}<p class="mc-field__error" id="error-config-name" role="alert">{{ error.name }}</p>{% endif %}
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="mc-wizard__col">
               <div class="mc-field {% if error.email %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-config-email">{{ entry_email }}</label>
                 <input type="email" id="input-config-email" name="config_email" value="{{ config_email }}" class="mc-field__control" {% if error.email %}aria-invalid="true" aria-describedby="error-config-email"{% endif %} />
                 {% if error.email %}<p class="mc-field__error" id="error-config-email" role="alert">{{ error.email }}</p>{% endif %}
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="mc-wizard__col">
               <div class="mc-field {% if error.telephone %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-config-telephone">{{ entry_telephone }}</label>
                 <input type="tel" id="input-config-telephone" name="config_telephone" value="{{ config_telephone }}" class="mc-field__control" {% if error.telephone %}aria-invalid="true" aria-describedby="error-config-telephone"{% endif %} />
                 {% if error.telephone %}<p class="mc-field__error" id="error-config-telephone" role="alert">{{ error.telephone }}</p>{% endif %}
               </div>
             </div>
-            <div class="col-12">
+            <div class="mc-wizard__col mc-wizard__col--full">
               <div class="mc-field {% if error.address %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-config-address">{{ entry_address }}</label>
                 <textarea id="input-config-address" name="config_address" rows="3" class="mc-field__control" {% if error.address %}aria-invalid="true" aria-describedby="error-config-address"{% endif %}>{{ config_address }}</textarea>
                 {% if error.address %}<p class="mc-field__error" id="error-config-address" role="alert">{{ error.address }}</p>{% endif %}
               </div>
             </div>
-            <div class="col-12">
+            <div class="mc-wizard__col mc-wizard__col--full">
               <div class="mc-field {% if error.logo %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-config-logo">{{ entry_logo }}</label>
                 <div class="mc-wizard__logo">
@@ -162,14 +122,14 @@
         <form action="{{ action }}" method="post" novalidate>
           <input type="hidden" name="step" value="contacts" />
 
-          <div class="row g-3">
+          <div class="mc-wizard__fields">
             {% for network in [
               {code: 'facebook', label: entry_social_facebook, placeholder: 'https://facebook.com/yourstore', value: social_facebook, error: error.social_facebook},
               {code: 'instagram', label: entry_social_instagram, placeholder: 'https://instagram.com/yourstore', value: social_instagram, error: error.social_instagram},
               {code: 'twitter', label: entry_social_twitter, placeholder: 'https://x.com/yourstore', value: social_twitter, error: error.social_twitter},
               {code: 'youtube', label: entry_social_youtube, placeholder: 'https://youtube.com/@yourstore', value: social_youtube, error: error.social_youtube}
             ] %}
-            <div class="col-md-6">
+            <div class="mc-wizard__col">
               <div class="mc-field {% if network.error %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-social-{{ network.code }}">{{ network.label }}</label>
                 <input type="url" id="input-social-{{ network.code }}" name="social_{{ network.code }}" value="{{ network.value }}" placeholder="{{ network.placeholder }}" class="mc-field__control" {% if network.error %}aria-invalid="true" aria-describedby="error-social-{{ network.code }}"{% endif %} />
@@ -198,8 +158,8 @@
         <form action="{{ action }}" method="post" novalidate>
           <input type="hidden" name="step" value="language_currency" />
 
-          <div class="row g-3">
-            <div class="col-md-6">
+          <div class="mc-wizard__fields">
+            <div class="mc-wizard__col">
               <div class="mc-field {% if error.language %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-config-language">{{ entry_language }}</label>
                 <select id="input-config-language" name="config_language" class="mc-field__control" data-mc-select-search data-mc-select-search-placeholder="{{ text_search_placeholder }}" data-mc-select-search-empty="{{ text_no_matches }}" {% if error.language %}aria-invalid="true" aria-describedby="error-config-language"{% endif %}>
@@ -219,7 +179,7 @@
                 {% endif %}
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="mc-wizard__col">
               <div class="mc-field {% if error.currency %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-config-currency">{{ entry_currency }}</label>
                 <select id="input-config-currency" name="config_currency" class="mc-field__control" data-mc-select-search data-mc-select-search-placeholder="{{ text_search_placeholder }}" data-mc-select-search-empty="{{ text_no_matches }}" {% if error.currency %}aria-invalid="true" aria-describedby="error-config-currency"{% endif %}>
@@ -274,10 +234,10 @@
             {% if extension.fields %}
             <details class="mc-wizard__settings">
               <summary class="mc-wizard__settings-toggle">{{ button_settings }}</summary>
-              <form action="{{ save_method }}" method="post" class="row g-3 mt-0" data-mc-ajax-form>
+              <form action="{{ save_method }}" method="post" class="mc-wizard__fields" data-mc-ajax-form>
                 <input type="hidden" name="code" value="{{ extension.code }}" />
                 {% for field in extension.fields %}
-                <div class="col-md-6">
+                <div class="mc-wizard__col">
                   <label class="mc-field__label" for="field-{{ extension.code }}-{{ field.key }}">{{ field.label }}</label>
                   {% if field.type == 'select' %}
                   <select id="field-{{ extension.code }}-{{ field.key }}" name="field[{{ field.key }}]" class="mc-field__control">
@@ -293,7 +253,7 @@
                   <p class="mc-field__error" data-mc-ajax-form-error="{{ field.key }}" role="alert" hidden></p>
                 </div>
                 {% endfor %}
-                <div class="col-12 d-flex align-items-center gap-3">
+                <div class="mc-wizard__col mc-wizard__col--full d-flex align-items-center gap-3">
                   <button type="submit" class="mc-button mc-button--primary mc-button--sm">{{ button_save }}</button>
                   <span class="mc-wizard__settings-status" data-mc-ajax-form-status role="status"></span>
                 </div>
@@ -346,46 +306,46 @@
           <input type="hidden" name="step" value="first_product" />
           <input type="hidden" name="first_product_action" value="add" />
 
-          <div class="row g-3">
-            <div class="col-12">
+          <div class="mc-wizard__fields">
+            <div class="mc-wizard__col mc-wizard__col--full">
               <div class="mc-field {% if error.product_name %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-product-name">{{ entry_product_name }}</label>
                 <input type="text" id="input-product-name" name="product_name" value="{{ product_name }}" class="mc-field__control" {% if error.product_name %}aria-invalid="true" aria-describedby="error-product-name"{% endif %} />
                 {% if error.product_name %}<p class="mc-field__error" id="error-product-name" role="alert">{{ error.product_name }}</p>{% endif %}
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="mc-wizard__col">
               <div class="mc-field {% if error.price %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-price">{{ entry_price }}</label>
                 <input type="text" inputmode="decimal" id="input-price" name="price" value="{{ price }}" class="mc-field__control" {% if error.price %}aria-invalid="true" aria-describedby="error-price"{% endif %} />
                 {% if error.price %}<p class="mc-field__error" id="error-price" role="alert">{{ error.price }}</p>{% endif %}
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="mc-wizard__col">
               <div class="mc-field">
                 <label class="mc-field__label" for="input-quantity">{{ entry_quantity }}</label>
                 <input type="number" min="0" id="input-quantity" name="quantity" value="{{ quantity }}" placeholder="100" class="mc-field__control" />
               </div>
             </div>
-            <div class="col-12">
+            <div class="mc-wizard__col mc-wizard__col--full">
               <div class="mc-field">
                 <label class="mc-field__label" for="input-description">{{ entry_description }}</label>
                 <textarea id="input-description" name="description" rows="4" class="mc-field__control">{{ description }}</textarea>
               </div>
             </div>
             {% if translation_languages %}
-            <div class="col-12">
+            <div class="mc-wizard__col mc-wizard__col--full">
               <details class="mc-wizard__translations">
                 <summary class="mc-wizard__settings-toggle">{{ text_translations }}</summary>
                 <p class="mc-wizard__lead">{{ text_translations_help }}</p>
                 {% for language in translation_languages %}
-                <div class="row g-3 mb-3">
-                  <div class="col-12"><strong>{{ language.name }}</strong></div>
-                  <div class="col-12">
+                <div class="mc-wizard__fields">
+                  <div class="mc-wizard__col mc-wizard__col--full"><strong>{{ language.name }}</strong></div>
+                  <div class="mc-wizard__col mc-wizard__col--full">
                     <label class="mc-field__label" for="input-name-{{ language.language_id }}">{{ entry_product_name }}</label>
                     <input type="text" id="input-name-{{ language.language_id }}" name="translation[{{ language.language_id }}][name]" value="{{ translation[language.language_id].name }}" class="mc-field__control" />
                   </div>
-                  <div class="col-12">
+                  <div class="mc-wizard__col mc-wizard__col--full">
                     <label class="mc-field__label" for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
                     <textarea id="input-description-{{ language.language_id }}" name="translation[{{ language.language_id }}][description]" rows="3" class="mc-field__control">{{ translation[language.language_id].description }}</textarea>
                   </div>
@@ -451,6 +411,42 @@
       </section>
     </div>
   </div>
-</main>
-</body>
-</html>
+</div>
+</div>
+{{ footer }}
+{#
+  Setup Wizard - a standalone onboarding page (no legacy admin chrome).
+  Component: assets/src/css/components/wizard.css,
+  docs/developer/onboarding/setup-wizard.md.
+#}
+{% macro actions(prev_step_url, button_back, label) %}
+  <div class="mc-wizard__actions">
+    {% if prev_step_url %}<a class="mc-button mc-button--ghost" href="{{ prev_step_url }}">{{ button_back }}</a>{% endif %}
+    <button type="submit" class="mc-button mc-button--primary mc-wizard__next">{{ label }}</button>
+  </div>
+{% endmacro %}
+{#
+  "+" adds one more picker row, a separate Save button stores every row
+  (assets/src/js/components/add-rows.js). The rows belong to the form with
+  id mc-add-<kind>-form, which sits outside the step form.
+#}
+{% macro add_rows(kind, field, options, placeholder, add_label, save_label, remove_label, target_id, search_label, empty_label, pick_label) %}
+  <div class="mt-2" data-mc-add-rows data-mc-add-rows-form="mc-add-{{ kind }}-form" data-mc-add-rows-target="{{ target_id }}" data-mc-add-rows-empty="{{ pick_label }}">
+    <div class="d-flex flex-column gap-2" data-mc-add-rows-list></div>
+    <template data-mc-add-rows-template>
+      <div class="d-flex flex-wrap gap-2" data-mc-add-rows-row>
+        <select name="{{ field }}" form="mc-add-{{ kind }}-form" class="mc-field__control mc-add-rows__control" aria-label="{{ placeholder }}" data-mc-select-search data-mc-select-search-placeholder="{{ search_label }}" data-mc-select-search-empty="{{ empty_label }}">
+          <option value="">{{ placeholder }}</option>
+          {% for code, label in options %}
+          <option value="{{ code }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button type="button" class="mc-button mc-button--ghost" data-mc-add-rows-remove title="{{ remove_label }}" aria-label="{{ remove_label }}">&times;</button>
+      </div>
+    </template>
+    <div class="d-flex gap-2 mt-2">
+      <button type="button" class="mc-button mc-button--secondary" data-mc-add-rows-add title="{{ add_label }}" aria-label="{{ add_label }}">+</button>
+      <button type="submit" form="mc-add-{{ kind }}-form" class="mc-button mc-button--primary" data-mc-add-rows-save hidden>{{ save_label }}</button>
+    </div>
+  </div>
+{% endmacro %}

@@ -36,6 +36,7 @@
  * OpenCart core, so this isn't a `docs/upstream-diff.md` entry).
  */
 
+import './compat/keep-bootstrap3-jquery.js';
 import 'bootstrap';
 
 import { initAlertDismiss } from './components/alert.js';
@@ -54,6 +55,8 @@ import { initSelectSearch } from './components/select-search.js';
 import { initAjaxForms } from './components/ajax-form.js';
 import { initMenuHint } from './components/menu-hint.js';
 import { initDesignStyles } from './components/design-styles.js';
+import { initHomepageItems } from './components/homepage-items.js';
+import { initHomepageAiTranslate } from './components/homepage-ai-translate.js';
 
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
@@ -114,6 +117,8 @@ function boot() {
     initAjaxForms();
     initMenuHint();
     initDesignStyles();
+    initHomepageItems();
+    initHomepageAiTranslate();
 }
 
 if (document.readyState === 'loading') {

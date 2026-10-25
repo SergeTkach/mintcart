@@ -56,6 +56,10 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 
 - [x] Phase 10 — Homepage Blocks: 15 block providers + templates,
       Design → Homepage with drag & drop
+- [x] Design → Homepage block form: slides, promo cards, banners, benefits, testimonials, brands, photos
+      and FAQ are edited as rows (drag & drop, add / remove, up / down buttons, language tabs, pictures
+      through OpenCart's file manager) instead of JSON textareas (2026-10-25). Server round-trip checked
+      on the demo blocks; the file-manager pick and drag in the browser not yet clicked through
 - [x] Phase 11 — Mint Admin primitives (drawer, modal, toast, confirm, tabs,
       sortable, progress)
 - [~] Phase 12 — Entity Picker: picker + 7 entity backends, live in several
