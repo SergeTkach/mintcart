@@ -48,7 +48,7 @@ $_['text_container_wide']   = 'Wide';
 $_['text_button_solid']   = 'Solid';
 $_['text_button_outline'] = 'Outline';
 $_['text_button_soft']    = 'Soft';
-$_['font_system']         = 'System font';
+$_['font_system']         = 'Recommended default font';
 $_['font_georgia']        = 'Georgia (serif)';
 
 $_['text_pv_heading'] = 'Everything for your home';
@@ -62,7 +62,7 @@ $_['text_pv_input']   = 'Your e-mail';
 // Help
 $_['help_preset'] = 'Presets only change design tokens (colors, fonts, spacing, radius, shadows) - the page layout and components stay exactly the same.';
 $_['help_colors'] = "Text on buttons turns white or dark by itself so it stays readable.";
-$_['help_fonts']  = 'Web fonts are loaded from Google Fonts and all of them include Cyrillic. "System font" loads nothing.';
+$_['help_fonts']  = 'Web fonts are loaded from Google Fonts and all of them include Cyrillic. "Recommended default font" loads nothing.';
 
 // Error
 $_['error_permission'] = 'Warning: You do not have permission to modify styles!';
