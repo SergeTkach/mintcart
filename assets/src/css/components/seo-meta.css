@@ -176,3 +176,68 @@
     margin-left: 10px;
     color: #2f7d32;
 }
+
+
+/* ---------------------------------------------------------------------- */
+/* SEO -> Redirects (mintcart/seo/redirects)                                */
+/* ---------------------------------------------------------------------- */
+
+.mc-redirects__option {
+    display: block;
+    margin: 0 0 10px;
+    font-weight: 400;
+}
+
+.mc-redirects__option input {
+    margin-right: 6px;
+}
+
+.mc-redirects__help {
+    display: block;
+    margin-left: 22px;
+    color: #999;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+}
+
+.mc-redirects__arrow {
+    color: #2f7d32;
+    font-weight: 600;
+}
+
+.mc-redirects__add {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.mc-redirects__field {
+    flex: 1 1 220px;
+}
+
+.mc-redirects__field--small {
+    flex: 0 1 170px;
+}
+
+.mc-redirects__field--button {
+    flex: 0 0 auto;
+}
+
+.mc-redirects__label {
+    display: block;
+    margin-bottom: 4px;
+    color: #999;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mc-redirects .form-control {
+    color: #444;
+    font-size: 13px;
+    border-color: #e0e2e5;
+    border-radius: 3px;
+    box-shadow: none;
+}

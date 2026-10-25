@@ -142,3 +142,4 @@ $_['text_mintcart_seo'] = 'SEO';
 $_['text_mintcart_seo_urls'] = 'Усі адреси';
 $_['text_mintcart_seo_system_pages'] = 'Системні сторінки';
 $_['text_mintcart_seo_url_generator'] = 'Генератор URL';
+$_['text_mintcart_seo_redirects'] = 'Редиректи';

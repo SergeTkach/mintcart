@@ -37,7 +37,8 @@ $_['action_pre_action']  = array(
 	'startup/event',
 	'startup/maintenance',
 	'startup/seo_url',
-	'startup/mc_language_url'
+	'startup/mc_language_url',
+	'startup/mc_seo_redirect'
 );
 
 // Action Events

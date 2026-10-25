@@ -94,3 +94,4 @@ $_['text_mintcart_seo_meta'] = 'Meta Tags';
 $_['text_mintcart_seo'] = 'SEO';
 $_['text_mintcart_seo_urls'] = 'All URLs';
 $_['text_mintcart_seo_url_generator'] = 'URL Generator';
+$_['text_mintcart_seo_redirects'] = 'Redirects';

@@ -60,6 +60,23 @@ unchanged.
 
 ---
 
+## `upload/system/config/catalog.php` - `startup/mc_seo_redirect`
+
+**Reason:** one more pre-action, after `startup/mc_language_url`, that 301-redirects a page reached by a duplicate
+address (`index.php?route=product/product&product_id=5`, `/kitchen/white-mug`, `/white-mug/`, `?page=1`) to its one SEO URL,
+and an old keyword to the page's current address (SEO -> Redirects, `docs/developer/seo/redirects.md`).
+
+**Why not the MintCart layer:** a redirect has to happen after the request is decoded (`startup/seo_url`) and before the
+router runs; OpenCart's event system cannot stop the request there. The same list already carries `startup/mc_language_prefix`
+and `startup/mc_language_url`.
+
+**Compatibility impact:** GET page requests only (never POST, AJAX, `extension/`, `api/`, `common/`); each kind of redirect can be
+switched off in the admin; a page without a SEO keyword is untouched.
+
+**Tests:** `tests/mintcart/seo/redirect-planner-test.php`; the redirects checked by hand with curl.
+
+---
+
 ## `upload/catalog/controller/event/theme.php`
 
 **Reason:** Found via live manual verification (`docs/MANUAL_VERIFICATION.md`,

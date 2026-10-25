@@ -502,6 +502,14 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			if ($this->user->hasPermission('access', 'mintcart/seo/redirects')) {
+				$seo[] = array(
+					'name'	   => $this->language->get('text_mintcart_seo_redirects'),
+					'href'     => $this->url->link('mintcart/seo/redirects', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			if ($seo) {
 				$data['menus'][] = array(
 					'id'       => 'menu-seo',

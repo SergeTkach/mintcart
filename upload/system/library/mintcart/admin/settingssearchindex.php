@@ -49,6 +49,7 @@ final class SettingsSearchIndex
         ['label' => 'Default currency', 'route' => 'setting/setting', 'field' => 'input-currency', 'keywords' => ['default currency', 'main currency', 'основна валюта', 'валюта за замовчуванням', 'основная валюта']],
         ['label' => 'Default language', 'route' => 'setting/setting', 'field' => 'input-language', 'keywords' => ['default language', 'основна мова', 'мова за замовчуванням', 'основной язык']],
         ['label' => 'URL Generator (SEO URL keywords)', 'route' => 'mintcart/seo/url_generator', 'keywords' => ['seo url', 'slug', 'url generator', 'keyword', 'transliteration', 'чпу', 'генератор url', 'генератор чпу', 'транслітерація', 'адреса сторінки', 'транслитерация']],
+        ['label' => 'Redirects (301)', 'route' => 'mintcart/seo/redirects', 'keywords' => ['redirect', '301', 'seo redirect', 'duplicate', 'canonical', 'редирект', 'редиректи', 'перенаправлення', 'дублі', 'редиректы', 'дубли']],
         ['label' => 'Meta tags (templates)', 'route' => 'mintcart/seo/meta', 'keywords' => ['meta tags', 'meta title', 'meta description', 'title template', 'seo', 'мета-теги', 'мета теги', 'шаблон заголовка', 'шаблон мета', 'сео', 'шаблон заголовка']],
         ['label' => 'Meta title', 'route' => 'setting/setting', 'field' => 'input-meta-title', 'keywords' => ['meta title', 'title', 'seo title', 'мета заголовок', 'заголовок', 'тайтл']],
         ['label' => 'Currency', 'route' => 'localisation/currency', 'keywords' => ['currency', 'exchange rate', 'money', 'валюта', 'валюти', 'курс', 'гроші', 'валюты', 'деньги']],
