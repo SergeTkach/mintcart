@@ -194,10 +194,10 @@ Smaller items, taken autonomously in this order:
 1. [x] Configurable (manual) product badges
 2. [x] Default system-page URL aliases on install (migration 202610221300)
 3. [x] Render Theme API slots in templates (`Slots::shared()`, docs/developer/theme-api/slots.md)
-4. [ ] hreflang: `HreflangBuilder` exists but nothing emits it, and stock OpenCart 3 serves every
-   language at the same URL (language comes from session / cookie / Accept-Language), so there are
-   no per-language URLs to point at. Needs a decision on language-in-URL (prefix or `?language=`)
-   before it can be wired
+4. [x] Language folder in the URL (`/uk/...`, default language at the root) + hreflang and a link-based
+   language switcher (ADR 017, docs/developer/seo/language-urls.md). Written, unit-tested for the URL logic,
+   not yet clicked through on a two-language store; sitemap per language and redirects for already indexed
+   stores are not done
 5. [~] Admin settings search: jump to a field (done, not browser-checked); Ukrainian labels need an admin uk-ua pack
 6. [ ] Entity Picker: create-new in a drawer
 

@@ -96,6 +96,23 @@ class ControllerCommonHeader extends Controller {
 		$data['cart'] = $this->load->controller('common/cart');
 		$data['menu'] = $this->load->controller('common/menu');
 
+		// MintCart: hreflang alternates when the store has language folders in
+		// the URL (startup/mc_language_url). Pages that are not for search
+		// engines (cart, checkout, account, errors, ...) get none.
+		$data['mc_hreflang'] = array();
+
+		$hreflang_route = isset($this->request->get['route']) ? $this->request->get['route'] : 'common/home';
+
+		if (!preg_match('#^(error|checkout|account|mintcart|extension|api)/#', $hreflang_route)) {
+			$alternates = array();
+
+			foreach ($this->load->controller('startup/mc_language_url/alternates') as $code => $href) {
+				$alternates[] = array('hreflang' => $code, 'href' => $href);
+			}
+
+			$data['mc_hreflang'] = (new \MintCart\Seo\HreflangBuilder())->build($alternates, $this->config->get('config_language'));
+		}
+
 		// MintCart: phone input mask (the store's own format, else the country default).
 		$this->load->model('localisation/country');
 

@@ -4182,3 +4182,28 @@ stock `default` theme templates ignore it.
 
 **Tests:** `tests/mintcart/design/slot-registry-test.php`; pages checked on the local store with
 temporary listeners.
+
+---
+
+## Language folder in the URL (`/uk/...`)
+
+Files: `upload/system/config/catalog.php` (two entries in `action_pre_action`),
+`upload/catalog/controller/common/language.php` (an `href` per language),
+`upload/catalog/controller/common/header.php` (hreflang data), `mint_default/.../common/header.twig`.
+
+**Reason:** stock OpenCart 3 serves every language at one URL (session / cookie / Accept-Language),
+so there is nothing for hreflang to point at and search engines see one page in changing languages.
+The new `startup/mc_language_prefix` (before `startup/startup`) and `startup/mc_language_url` (after
+`startup/seo_url`) are MintCart files; the core edits only register them and let the switcher and
+header ask them for the per-language URLs (docs/developer/seo/language-urls.md).
+
+**Why it cannot live in the Mint layer:** pre-actions are a fixed list in the config file, and the
+language must be chosen before `startup/startup` runs. The switcher and header controllers build the
+data their templates print.
+
+**Compatibility impact:** off unless SEO URLs are on and two or more languages are enabled. The
+default language keeps its current URLs; other languages move under `/<folder>/`, so existing
+non-default-language URLs change (add redirects when migrating a live store). Requests with
+`route=` and no `_route_` (AJAX, payment callbacks) keep the session language.
+
+**Tests:** `tests/mintcart/seo/language-prefix-test.php`; browser check on a two-language store pending.

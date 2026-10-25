@@ -12,6 +12,9 @@
 {% if keywords %}
 <meta name="keywords" content="{{ keywords }}" />
 {% endif %}
+{% for alternate in mc_hreflang %}
+<link rel="alternate" hreflang="{{ alternate.hreflang }}" href="{{ alternate.href }}" />
+{% endfor %}
 {% if mc_robots_content %}
 <meta name="robots" content="{{ mc_robots_content }}" />
 {% endif %}

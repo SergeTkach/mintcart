@@ -31,11 +31,13 @@ $_['library_autoload']   = array();
 // Actions
 $_['action_pre_action']  = array(
 	'startup/session',
+	'startup/mc_language_prefix',
 	'startup/startup',
 	'startup/error',
 	'startup/event',
 	'startup/maintenance',
-	'startup/seo_url'
+	'startup/seo_url',
+	'startup/mc_language_url'
 );
 
 // Action Events
