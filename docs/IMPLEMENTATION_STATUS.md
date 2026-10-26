@@ -165,6 +165,10 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 - [x] Storage lives in the site root, `<root>/storage`, next to `system` (installers write
       `DIR_STORAGE = dirname(DIR_SYSTEM) . '/storage/'`; the `.htaccess` blocks `^storage/`). System >
       Maintenance > Storage has a selector: site root / inside `system` / outside the site root (2026-10-26)
+- [x] Languages: uk-ua, ru-ru, tr-tr, es-es, ro-ro bundled (`system/mintcart/data/languages.json`, offered in the Setup Wizard).
+      Admin + storefront strings and all MintCart screens are translated in all five; third-party payment gateways and carriers
+      (PayPal, Square, Fedex, Royal Mail, ...) fall back to English for ro-ro. Still English: the demo catalogue for tr/es/ro, hardcoded
+      strings in templates/JS (not audited) (2026-10-26)
 - [x] Setup Wizard: shipping methods set up inline (cost, tax class, zone) and toggled
       over AJAX; steps passed but not set up get an amber `!`, unmet readiness rows link
       back to their step; admin menu pointer (red) shows where each setting lives
