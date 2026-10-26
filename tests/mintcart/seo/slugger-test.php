@@ -37,6 +37,11 @@ $check(Slugger::slug('  --  ') === '' && Slugger::slug('日本') === '', 'nothin
 $long = Slugger::slug(str_repeat('word ', 60));
 $check(strlen($long) <= 100 && !str_ends_with($long, '-'), 'long text is cut on a dash');
 
+// Turkish, Romanian and Spanish names (the bundled language packs)
+$check(Slugger::slug('Çok Güzel Şık Ürün İstanbul ığ', 'tr-tr') === 'cok-guzel-sik-urun-istanbul-ig', 'Turkish incl. dotted capital I');
+$check(Slugger::slug('Cană din gresie, șosete țesute', 'ro-ro') === 'cana-din-gresie-sosete-tesute', 'Romanian comma-below s and t');
+$check(Slugger::slug('Niño pequeño: camión de juguete', 'es-es') === 'nino-pequeno-camion-de-juguete', 'Spanish');
+
 $taken = ['mug' => true, 'mug-2' => true];
 $check(Slugger::unique('mug', fn (string $k): bool => isset($taken[$k])) === 'mug-3', 'unique adds -3');
 $check(Slugger::unique('cup', fn (string $k): bool => isset($taken[$k])) === 'cup', 'a free keyword is kept');

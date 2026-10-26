@@ -33,7 +33,7 @@ final class Slugger
         'ē' => 'e', 'ę' => 'e', 'ě' => 'e', 'ğ' => 'g', 'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ī' => 'i',
         'ı' => 'i', 'ł' => 'l', 'ĺ' => 'l', 'ľ' => 'l', 'ñ' => 'n', 'ń' => 'n', 'ň' => 'n', 'ò' => 'o', 'ó' => 'o',
         'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o', 'ő' => 'o', 'ŕ' => 'r', 'ř' => 'r', 'ś' => 's', 'š' => 's',
-        'ş' => 's', 'ť' => 't', 'ţ' => 't', 'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u', 'ū' => 'u', 'ů' => 'u',
+        'ş' => 's', 'ș' => 's', 'ť' => 't', 'ţ' => 't', 'ț' => 't', 'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u', 'ū' => 'u', 'ů' => 'u',
         'ű' => 'u', 'ý' => 'y', 'ÿ' => 'y', 'ź' => 'z', 'ż' => 'z', 'ž' => 'z', 'ß' => 'ss', 'æ' => 'ae', 'œ' => 'oe',
     ];
 
@@ -43,7 +43,8 @@ final class Slugger
     public static function slug(string $text, string $language = ''): string
     {
         $text = html_entity_decode(strip_tags(html_entity_decode($text, ENT_QUOTES, 'UTF-8')), ENT_QUOTES, 'UTF-8');
-        $text = mb_strtolower($text, 'UTF-8');
+        // Turkish dotted capital İ lowercases to "i" + a combining dot, which would split the word.
+        $text = mb_strtolower(str_replace('İ', 'i', $text), 'UTF-8');
 
         $ukrainian = self::isUkrainian($text, $language);
         $out = '';
