@@ -1,0 +1,43 @@
+<?php
+
+// MintCart
+$_['label_store_settings'] = 'Ajustes de la tienda';
+$_['label_store_name'] = 'Nombre de la tienda';
+$_['label_store_email'] = 'Correo de la tienda';
+$_['label_store_telephone'] = 'Teléfono de la tienda';
+$_['label_store_address'] = 'Dirección de la tienda';
+$_['label_store_logo'] = 'Logotipo de la tienda';
+$_['label_favicon'] = 'Favicon';
+$_['label_default_currency'] = 'Divisa predeterminada';
+$_['label_default_language'] = 'Idioma predeterminado';
+$_['label_meta_title'] = 'Metatítulo';
+$_['label_currency'] = 'Divisa';
+$_['label_language'] = 'Idioma';
+$_['label_tax_classes'] = 'Clases de impuestos';
+$_['label_tax_rates'] = 'Tasas de impuestos';
+$_['label_order_statuses'] = 'Estados de pedido';
+$_['label_stock_statuses'] = 'Estados de existencias';
+$_['label_countries'] = 'Países';
+$_['label_zones'] = 'Zonas';
+$_['label_geo_zones'] = 'Zonas geográficas';
+$_['label_seo_urls'] = 'URL SEO';
+$_['label_system_pages_seo'] = 'SEO de páginas del sistema';
+$_['label_business_contacts'] = 'Negocio → Contacto';
+$_['label_business_delivery'] = 'Negocio → Entrega';
+$_['label_business_payments'] = 'Negocio → Pagos';
+$_['label_design_homepage'] = 'Diseño → Página de inicio';
+$_['label_design_layouts'] = 'Diseño → Diseños';
+$_['label_design_themes'] = 'Diseño → Temas';
+$_['label_design_banners'] = 'Diseño → Banners';
+$_['label_diagnostics'] = 'Diagnóstico';
+$_['label_products'] = 'Productos';
+$_['label_categories'] = 'Categorías';
+$_['label_manufacturers'] = 'Fabricantes';
+$_['label_orders'] = 'Pedidos';
+$_['label_customers'] = 'Clientes';
+$_['label_coupons'] = 'Cupones';
+$_['label_marketing'] = 'Marketing';
+$_['label_extensions'] = 'Extensiones';
+$_['label_users'] = 'Usuarios';
+$_['label_backup_restore'] = 'Copia de seguridad / Restaurar';
+$_['label_error_log'] = 'Registro de errores';

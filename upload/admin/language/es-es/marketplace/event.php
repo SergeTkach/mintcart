@@ -17,3 +17,10 @@ $_['column_action']     = 'Action';
 
 // Error
 $_['error_permission']  = 'Warning: You do not have permission to modify extensions!';
+
+// MintCart
+$_['text_info'] = 'Información del evento';
+$_['text_trigger'] = 'Disparador';
+
+// MintCart
+$_['text_action'] = 'Acción';

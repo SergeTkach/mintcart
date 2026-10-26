@@ -19,3 +19,6 @@ $_['nombre_entrada'] = 'Nombre de tipo de devoluci&oacute;n';
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar las acciones de devoluciones';
 $_['error_name'] = 'El nombre del tipo de devoluci&oacute;n debe tener entre 3 y 64 caracteres!';
 $_['error_return'] = 'Advertencia: Esta tipo de devoluci&oacute;n no se puede eliminar ya que se asigna actualmente a% s productos devueltos ';
+
+// MintCart
+$_['entry_name'] = 'Nombre de la acción de devolución';

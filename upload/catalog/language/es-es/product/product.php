@@ -50,3 +50,24 @@ $_['error_name']                              = 'Advertencia: Revisi&oacute;n El
 $_['error_text']                              = 'Advertencia: Comentario de texto debe estar entre los 25 y los 1000 caracteres!';
 $_['error_rating']                            = 'Advertencia: Por favor, seleccione una clasificaci&oacute;n opini&oacute;n!';
 $_['error_captcha']                           = 'Advertencia: C&oacute;digo de verificaci&oacute;n no coincide con la imagen!';
+
+// MintCart
+$_['text_viewed'] = 'Vistos recientemente';
+$_['text_view_cart'] = 'Ver carrito';
+$_['text_continue_shopping'] = 'Seguir comprando';
+$_['tab_overview'] = 'Resumen';
+$_['text_section_nav'] = 'Secciones del producto';
+$_['text_mc_delivery'] = 'Entrega';
+$_['text_mc_payment'] = 'Pago';
+$_['text_mc_returns'] = 'Devoluciones';
+$_['text_mc_from'] = 'en pedidos superiores a %s';
+$_['error_product'] = 'Advertencia: ¡Se necesita un producto para añadir la reseña!';
+$_['text_add_to_cart_error'] = 'No se pudo añadir este producto al carrito';
+$_['text_added_to_cart'] = 'Añadido al carrito';
+$_['text_badge_new'] = 'Nuevo';
+$_['text_badge_out_of_stock'] = 'Agotado';
+$_['text_badge_sale'] = 'Oferta';
+$_['text_payment_cancel'] = '%s cada %d %s hasta que se cancele';
+$_['text_quick_order'] = 'Pedido rápido';
+$_['text_rated'] = 'Valorado con %s de 5 estrellas';
+$_['text_wishlist_error'] = 'No se pudo actualizar su lista de deseos';

@@ -12,3 +12,7 @@ $_['error_shipping_method']  = 'M&eacute;todo de env&iacute;o necesario!';
 $_['error_stock']            = 'Los productos marcados con *** no est&aacute;n disponibles en la cantidad deseada o no est&aacute;n en stock!';
 $_['error_minimum']          = 'Cantidad mínima de pedido para %s es %s!';
 $_['error_not_found']        = 'Advertencia: El producto no se pudo encontrar!';
+
+// MintCart
+$_['error_no_payment'] = 'Advertencia: ¡No hay opciones de pago disponibles!';
+$_['error_no_shipping'] = 'Advertencia: ¡No hay opciones de envío disponibles!';

@@ -38,3 +38,10 @@ $_ ['error_name'] = 'Nombre de la opci&oacute;n debe estar entre 1 y 128 caracte
 $_ ['tipo_error'] = 'Advertencia: Los valores de opci&oacute;n requeridos!';
 $_ ['error_option_value'] = 'Opci&oacute;n Valor Nombre debe estar entre 1 y 128 caracteres!';
 $_ ['error_product'] = 'Advertencia: Esta opci&oacute;n no se puede eliminar ya que se asigna actualmente a los productos de% s';
+
+// MintCart
+$_['error_type'] = 'Advertencia: ¡Se requieren valores de la opción!';
+
+// MintCart
+$_['text_option'] = 'Opción';
+$_['text_value'] = 'Valores de la opción';

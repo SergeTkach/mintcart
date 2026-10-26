@@ -11,3 +11,6 @@ $_['entry_status'] = 'Estado';
 
 // Error
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar el m&oacute;dulo cuenta';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

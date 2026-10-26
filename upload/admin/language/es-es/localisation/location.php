@@ -36,3 +36,6 @@ $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar ubi
 $_['error_name'] = 'Nombre del negocio debe ser de al menos 1 car&aacute;cter!';
 $_['error_address'] = 'Direcci&oacute;n debe tener entre 3 y 128 caracteres!';
 $_['error_telephone'] = 'Tel&eacute;fono debe tener entre 3 y 32 caracteres!';
+
+// MintCart
+$_['entry_name'] = 'Nombre de la tienda';

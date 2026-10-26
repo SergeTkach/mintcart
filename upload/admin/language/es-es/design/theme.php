@@ -15,3 +15,15 @@ $_['text_begin']       = 'Select a theme file from the left side to begin editin
 
 // Error
 $_['error_permission'] = 'Warning: You do not have permission to modify the theme editor!';
+
+// MintCart
+$_['text_history'] = 'Historial del tema';
+$_['text_twig'] = 'El editor de temas usa el lenguaje de plantillas Twig. Puede leer sobre la <a href="https://twig.symfony.com/doc/" target="_blank" class="alert-link">sintaxis de Twig aquí</a>.';
+$_['column_store'] = 'Tienda';
+$_['column_route'] = 'Ruta';
+$_['column_theme'] = 'Tema';
+$_['error_twig'] = 'Advertencia: ¡Solo puede guardar archivos .twig!';
+
+// MintCart
+$_['column_action'] = 'Acción';
+$_['column_date_added'] = 'Fecha de alta';

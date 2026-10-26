@@ -20,3 +20,9 @@ $_['error_directory'] = 'Advertencia: El directorio no existe!';
 $_['error_filetype'] = 'Advertencia: Tipo de archivo incorrecto ';
 $_['error_upload'] = 'Advertencia: El archivo no puede ser cargado por una raz&oacute;n desconocida';
 $_['error_delete'] = 'Advertencia: No se puede eliminar este directorio!';
+
+// MintCart
+$_['error_folder'] = 'Advertencia: ¡El nombre de la carpeta debe tener entre 3 y 255 caracteres!';
+
+// MintCart
+$_['error_filesize'] = 'Advertencia: ¡Tamaño de archivo incorrecto!';

@@ -31,3 +31,9 @@ $_['help_example'] = 'De modo que el sistema puede rastrear refferals que neeed 
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar el seguimiento de la comercializaci&oacute;n';
 $_['error_name'] = 'Campa&ntilde;a debe estar entre 1 y 32 caracteres!';
 $_['error_code'] = 'c&oacute;digo de seguimiento requerido!';
+
+// MintCart
+$_['text_filter'] = 'Filtro';
+
+// MintCart
+$_['error_exists'] = '¡El código de seguimiento está siendo usado por otra campaña!';

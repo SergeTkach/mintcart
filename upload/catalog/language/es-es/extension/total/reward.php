@@ -12,3 +12,7 @@ $_['entry_reward']  = 'Puntos a usar (Max %s)';
 $_['error_reward']  = 'Advertencia: Por favor, introduzca la cantidad de puntos de recompensa para utilizar!';
 $_['error_points']  = 'Advertencia: Usted no tiene %s puntos de recompensa!';
 $_['error_maximum'] = 'Advertencia: El n&uacute;mero m&aacute;ximo de puntos que se puede aplicar es %s!';
+
+// MintCart
+$_['text_reward'] = 'Puntos de recompensa (%s)';
+$_['text_order_id'] = 'ID del pedido: #%s';

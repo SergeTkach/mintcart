@@ -47,3 +47,14 @@ $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar los
 $_['error_name'] = 'El nombre del Campo Personalizado debe estar entre 1 y 128 caracteres';
 $_['tipo_error'] = 'Advertencia: valores de campos personalizados requeridos!';
 $_['error_custom_value'] = 'Nombre del campo personalizado debe estar entre 1 y 128 caracteres';
+
+// MintCart
+$_['error_type'] = 'Advertencia: ¡Se requieren valores del campo personalizado!';
+
+// MintCart
+$_['text_affiliate'] = 'Afiliado';
+$_['text_regex'] = 'Expresión regular';
+$_['text_custom_field'] = 'Campo personalizado';
+$_['text_value'] = 'Valores del campo personalizado';
+$_['entry_validation'] = 'Validación';
+$_['help_regex'] = 'Use una expresión regular. Ej.: /[a-zA-Z0-9_-]/';

@@ -19,3 +19,7 @@ $_['text_order_id']             = 'Pedido ID:';
 $_['text_transaction_subject']  = '%s - Comisi&oacute;n de Afiliado';
 $_['text_transaction_received'] = 'Usted ha recibido %s comisi&oacute;n!';
 $_['text_transaction_total']    = 'Su total de comisiones es de %s.';
+
+// MintCart
+$_['text_service'] = 'Al iniciar sesión podrá generar códigos de seguimiento, consultar los pagos de comisiones y editar los datos de su cuenta.';
+$_['text_customer_group'] = 'Grupo de clientes:';

@@ -62,3 +62,6 @@ $_['error_model']        = 'Modelo Producto debe ser superior a 3 y menos de 64 
 $_['error_reason']       = 'Debe seleccionar un motivo devoluci&oacute;n de producto!';
 $_['error_captcha']      = 'C&oacute;digo de verificaci&oacute;n no coincide con la imagen!';
 $_['error_agree']        = 'Advertencia: Usted debe estar de acuerdo con la %s!';
+
+// MintCart
+$_['text_reason'] = 'Motivo de la devolución';

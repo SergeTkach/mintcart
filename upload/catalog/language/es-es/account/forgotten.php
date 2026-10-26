@@ -14,3 +14,10 @@ $_['entry_email']     = 'E-Mail';
 
 // Error
 $_['error_email']     = 'Advertencia: La direcci&oacute;n de correo electr&oacute;nico no se encuentra en nuestros registros, por favor, int&eacute;ntalo de nuevo!';
+
+// MintCart
+$_['entry_password'] = 'Nueva contraseña';
+$_['entry_confirm'] = 'Confirmar';
+$_['error_approved'] = 'Advertencia: su cuenta requiere aprobación antes de poder iniciar sesión.';
+$_['error_password'] = '¡La contraseña debe tener entre 4 y 20 caracteres!';
+$_['error_confirm'] = '¡La contraseña y su confirmación no coinciden!';

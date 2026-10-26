@@ -32,3 +32,10 @@ $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar los
 $_['error_name'] = '! Nombre del fabricante debe tener entre 2 y 64 caracteres';
 $_['error_keyword'] = 'palabra clave SEO ya en uso!';
 $_['error_product'] = 'Advertencia: Este fabricante no puede ser eliminado, ya que se asigna actualmente a los productos de% s';
+
+// MintCart
+$_['text_keyword'] = 'No use espacios; sustitúyalos por - y asegúrese de que la URL SEO sea única en toda la tienda.';
+$_['entry_name'] = 'Nombre del fabricante';
+
+// MintCart
+$_['error_unique'] = '¡La URL SEO debe ser única!';

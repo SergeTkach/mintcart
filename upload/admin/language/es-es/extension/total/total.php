@@ -13,3 +13,6 @@ $_['entry_sort_order'] = 'Pedido';
 
 // Error
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar los totales totales';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

@@ -54,3 +54,6 @@ $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar cup
 $_['error_exists'] = 'Advertencia: C&oacute;digo de descuento ya est&aacute; en uso!';
 $_['error_name'] = 'Cup&oacute;n nombre debe tener entre 3 y 128 caracteres!';
 $_['error_code'] = 'C&oacute;digo debe tener entre 3 y 10 caracteres!';
+
+// MintCart
+$_['text_coupon'] = 'Historial del cupón';

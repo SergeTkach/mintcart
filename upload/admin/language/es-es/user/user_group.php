@@ -21,3 +21,6 @@ $_['entry_modify'] = 'Modificar Permiso';
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar grupos de usuarios';
 $_['error_name'] = 'usuario Nombre de grupo debe tener entre 3 y 64 caracteres!';
 $_['error_user'] = 'Advertencia: Este grupo de usuarios no se puede eliminar ya que se asigna actualmente a los usuarios% s';
+
+// MintCart
+$_['entry_name'] = 'Nombre del grupo de usuarios';

@@ -25,3 +25,9 @@ $_['help_weight_class'] = 'Se establece en gramos.';
 // Error
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar el env&iacute;o Australia Post';
 $_['error_postcode'] = 'C&oacute;digo postal debe ser de 4 d&iacute;gitos!';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';
+
+// MintCart
+$_['entry_api'] = 'Clave de API';

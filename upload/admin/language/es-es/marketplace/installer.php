@@ -27,3 +27,7 @@ $_['error_install']     = 'Extension installation taking place please wait a few
 $_['error_upload']      = 'File could not be uploaded!';
 $_['error_filetype']    = 'Invalid file type!';
 $_['error_file']        = 'File could not be found!';
+
+// MintCart
+$_['text_history'] = 'Historial de instalación';
+$_['help_upload'] = 'Requiere un archivo de modificación con extensión \'.ocmod.zip\'.';

@@ -45,3 +45,6 @@ $_['tab_international_economy'] = 'Econom&iacute;a Internacional';
 
 // Error
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar el env&iacute;o de Royal Mail';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

@@ -19,3 +19,6 @@ $_['help_total'] = 'El Pagar Total de la orden debe alcanzar antes de que se des
 
 // Error
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar la baja total del importe del pedido';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

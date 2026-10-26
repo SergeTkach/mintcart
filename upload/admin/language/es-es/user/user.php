@@ -34,3 +34,11 @@ $_['error_password'] = 'La contrase&ntilde;a debe tener entre 4 y 20 caracteres!
 $_['error_confirm'] = 'contrase&ntilde;a y la confirmaci&oacute;n de contrase&ntilde;a no coinciden!';
 $_['error_firstname'] = 'Nombre debe estar entre 1 y 32 caracteres!';
 $_['error_lastname'] = 'Apellido debe estar entre 1 y 32 caracteres!';
+
+// MintCart
+$_['error_email'] = '¡La dirección de correo no parece válida!';
+
+// MintCart
+$_['error_exists_username'] = 'Advertencia: ¡El nombre de usuario ya está en uso!';
+$_['error_exists_email'] = 'Advertencia: ¡La dirección de correo ya está registrada!';
+$_['error_single_user'] = 'Advertencia: ¡No puede desactivar su propia cuenta!';

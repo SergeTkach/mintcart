@@ -28,3 +28,6 @@ $_['error_store'] = 'Advertencia: Esta zona no se puede eliminar ya que se asign
 $_['error_address'] = 'Advertencia: Esta zona no puede ser eliminado, ya que est&aacute; actualmente asignado a las entradas de la libreta de direcciones% s';
 $_['error_affiliate'] = 'Advertencia: Esta zona no se puede eliminar ya que se asigna actualmente a los afiliados% s';
 $_['error_zone_to_geo_zone'] = 'Advertencia: Esta zona no puede ser eliminado, ya que est&aacute; actualmente asignada a las zonas de% s para geo zonas';
+
+// MintCart
+$_['entry_name'] = 'Nombre de la zona';

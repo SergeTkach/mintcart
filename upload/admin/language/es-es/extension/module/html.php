@@ -16,3 +16,6 @@ $_['entry_status'] = 'Estado';
 // Error
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar HTML m&oacute;dulo de contenido';
 $_['error_name'] = 'El Nombre del m&oacute;dulo debe estar entre 3 y 64 caracteres';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

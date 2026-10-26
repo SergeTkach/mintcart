@@ -15,3 +15,15 @@ $_['entry_backup'] = 'Copia de seguridad';
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar las copias de seguridad!';
 $_['error_backup'] = 'Advertencia: Debe seleccionar al menos una tabla de copia de seguridad';
 $_['error_empty'] = 'Advertencia: El archivo que has subido estaba vac&iacute;a';
+
+// MintCart
+$_['entry_progress'] = 'Progreso';
+$_['entry_export'] = 'Exportar';
+$_['tab_backup'] = 'Copia de seguridad';
+$_['tab_restore'] = 'Restaurar';
+
+// MintCart
+$_['error_export'] = 'Advertencia: ¡Debe seleccionar al menos una tabla para exportar!';
+
+// MintCart
+$_['error_file'] = '¡No se pudo encontrar el archivo!';

@@ -15,3 +15,9 @@ $_['text_order']        = 'Historial de Pedidos';
 $_['text_wishlist']     = 'Lista de Deseos';
 $_['text_newsletter']   = 'Bolet&iacute;n Noticias';
 $_['text_powered']      = 'Creado con <a href="https://wuam.es">Dise&ntilde;o Web</a><br /> %s &copy; %s';
+
+// MintCart
+$_['text_mc_reviews'] = 'Opiniones de clientes';
+$_['text_contact_us'] = 'Contacto';
+$_['text_newsletter_email'] = 'Correo electrónico';
+$_['text_newsletter_submit'] = 'Suscribirse';

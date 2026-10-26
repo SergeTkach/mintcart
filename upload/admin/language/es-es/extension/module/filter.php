@@ -12,3 +12,6 @@ $_['entry_status']     = 'Estado';
 
 // Error
 $_['error_permission'] = 'Atenci&oacute;n: No tiene permisos para modificar los filtros!';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

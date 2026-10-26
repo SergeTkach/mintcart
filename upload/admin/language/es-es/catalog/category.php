@@ -46,3 +46,13 @@ $_ ['error_meta_title'] = 'Meta T&iacute;tulo debe ser superior a 3 y menos de 2
 $_ ['error_keyword'] = 'palabra clave SEO ya en uso!';
 $_['error_unique']           = 'SEO URL Tiene que ser &uacute;nica!';
 $_['error_parent']           = 'La categor&iacute;a padre uqe usted ha elegido es una subcategor&iacute;a de la actual!';
+
+// MintCart
+$_['text_drag_hint'] = 'Arrastre una fila (o use los botones de subir/bajar) para reordenar las categorías. El nuevo orden se guarda automáticamente.';
+$_['text_move_up'] = 'Subir';
+$_['text_move_down'] = 'Bajar';
+$_['text_order_saved'] = 'Orden guardado.';
+$_['text_order_failed'] = 'No se pudo guardar el nuevo orden. La lista se ha restablecido.';
+$_['text_sort_by_order_first'] = 'Ordene por Orden para reordenar las categorías arrastrando y soltando.';
+$_['error_category'] = '¡Categoría no encontrada!';
+$_['column_status'] = 'Estado';

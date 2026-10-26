@@ -20,3 +20,9 @@ $_['entry_name']       = 'Nombre del M&oacute;dulo';
 $_['error_permission'] = 'Anteci&oacute;n: Usted no tiene permisos para modificar los m&oacute;dulos!';
 $_['error_name']       = 'El nombre del M&oacute;dulo debe contener entre 3 y 64 caracteres!';
 $_['error_code']       = 'Requiere Extensi&oacute;n!';
+
+// MintCart
+$_['column_status'] = 'Estado';
+
+// MintCart
+$_['error_code_name'] = '¡El código del módulo debe tener entre 3 y 32 caracteres!';

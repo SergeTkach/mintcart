@@ -19,3 +19,10 @@ $_['entry_date_added'] = 'Fecha Alta';
 
 // Error
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar los archivos subidos!';
+
+// MintCart
+$_['entry_name'] = 'Nombre de la subida';
+
+// MintCart
+$_['error_upload'] = '¡Subida no válida!';
+$_['error_file'] = '¡No se encuentra el archivo subido!';

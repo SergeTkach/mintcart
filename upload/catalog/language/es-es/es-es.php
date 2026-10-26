@@ -71,3 +71,7 @@ $_['error_upload_7']        = 'Atenci&oacute;n: Error al escribir el archivo en 
 $_['error_upload_8']        = 'Atenci&oacute;n: Carga de archivos se detuvo por extensi&oacute;n!';
 $_['error_upload_999']      = 'Atenci&oacute;n: No hay c&oacute;digo de error disponible!';
 $_['error_curl']            = 'CURL: C&oacute;digo de Error(%s): %s';
+
+// MintCart
+$_['text_no_results'] = '¡Sin resultados!';
+$_['datepicker'] = 'es';

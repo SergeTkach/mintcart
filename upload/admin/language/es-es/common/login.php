@@ -17,3 +17,6 @@ $_['button_login']   = 'Ingresar';
 // Error
 $_['error_login']    = 'No hay resultados para el nombre de usuario y / o contrase&ntilde;a.';
 $_['error_token']    = 'Sesi&oacute;n no v&aacute;lida. Por favor ingresa de nuevo.';
+
+// MintCart
+$_['error_attempts'] = 'Advertencia: su cuenta ha superado el número permitido de intentos de inicio de sesión. Inténtelo de nuevo en 1 hora o restablezca la contraseña.';

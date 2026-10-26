@@ -24,3 +24,6 @@ $_['error_path']       = 'Warning: Invalid path!';
 $_['error_directory']  = 'Warning: Invalid directory!';
 $_['error_exists']     = 'Warning: Directory already exists!';
 $_['error_writable']   = 'Warning: config.php and admin/config.php need to be made writable!';
+
+// MintCart
+$_['entry_directory'] = 'Directorio';

@@ -19,3 +19,6 @@ $_['help_rate'] = 'Ejemplo: 5: 10.00,7: 12,00 Peso: Costo, Peso: Costo, etc ..';
 
 // Error
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar el env&iacute;o basado en el peso';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

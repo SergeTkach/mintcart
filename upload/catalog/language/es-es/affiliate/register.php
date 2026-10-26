@@ -56,3 +56,12 @@ $_['error_country']             = 'Por favor, seleccione un pa&iacute;s!';
 $_['error_zone']                = 'Por favor, seleccione una regi&oacute;n / estado!';
 $_['error_postcode']            = 'C&oacute;digo Postal debe tener entre 2 y 10 caracteres!';
 $_['error_agree']               = 'Advertencia: Usted debe estar de acuerdo con la %s!';
+
+// MintCart
+$_['text_your_affiliate'] = 'Sus datos de afiliado';
+$_['entry_customer_group'] = 'Grupo de clientes';
+$_['error_custom_field'] = '¡%s es obligatorio!';
+$_['error_cheque'] = '¡El nombre del beneficiario del cheque es obligatorio!';
+$_['error_paypal'] = '¡El correo de PayPal no parece válido!';
+$_['error_bank_account_name'] = '¡El titular de la cuenta es obligatorio!';
+$_['error_bank_account_number'] = '¡El número de cuenta es obligatorio!';

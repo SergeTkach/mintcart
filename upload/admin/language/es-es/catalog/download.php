@@ -32,3 +32,7 @@ $_['error_exists'] = 'El archivo no existe!';
 $_['error_mask'] = 'M&acute;scara debe estar entre 3 y 128 caracteres!';
 $_['error_filetype'] = 'tipo de archivo no v&acute;lida! ';
 $_['error_product'] = 'Advertencia: Esta descarga no se puede eliminar ya que se asigna actualmente a los productos de% s';
+
+// MintCart
+$_['heading_title'] = 'Descargas';
+$_['entry_name'] = 'Nombre de la descarga';

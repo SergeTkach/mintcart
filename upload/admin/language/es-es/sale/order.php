@@ -142,3 +142,24 @@ $_['error_warning'] = 'Advertencia: Por favor, consulte el formulario cuidadosam
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar &oacute;rdenes!';
 $_['error_curl'] = 'Advertencia: error CURL% s (% s)';
 $_['ERROR_ACTION'] = 'Advertencia: No se pudo completar esta acci&oacute;n!';
+
+// MintCart
+$_['text_store'] = 'Tienda';
+$_['text_shipping_address'] = 'Dirección de envío';
+$_['text_browser'] = 'Navegador';
+$_['entry_override'] = 'Anular';
+$_['help_override'] = 'Si una extensión antifraude impide cambiar el estado del pedido del cliente, active la anulación.';
+$_['error_action'] = 'Advertencia: ¡No se pudo completar esta acción!';
+$_['error_filetype'] = '¡Tipo de archivo no válido!';
+
+// MintCart
+$_['text_filter'] = 'Filtro';
+
+// MintCart
+$_['text_success'] = 'Éxito: ¡Ha modificado los pedidos!';
+$_['text_customer_picker_browse'] = 'Explorar clientes';
+$_['text_customer_picker_search'] = 'Buscar clientes';
+$_['text_customer_picker_empty'] = 'No se encontraron clientes.';
+$_['text_customer_picker_prev'] = 'Anterior';
+$_['text_customer_picker_next'] = 'Siguiente';
+$_['text_customer_picker_confirm'] = 'Seleccionar';

@@ -28,3 +28,6 @@ $_['error_permission'] = 'Atenci&oacute;n: Usted no tiene permisos para modifica
 $_['error_query']      = 'Quey must be between 3 and 64 characters!';
 $_['error_keyword']    = 'Keyword must be between 3 and 64 characters!';
 $_['error_exists']     = 'Keyword already in use!';
+
+// MintCart
+$_['error_query_exists'] = '¡La consulta ya está en uso!';

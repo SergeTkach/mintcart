@@ -22,3 +22,7 @@ $_['entry_sort_order'] = 'Orden';
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar los filtros!';
 $_['error_group'] = ' Filtro Nombre del grupo debe estar entre 1 y 64 caracteres';
 $_['error_name'] = 'Nombre del filtro debe tener entre 1 y 64 caracteres!';
+
+// MintCart
+$_['text_group'] = 'Grupo de filtros';
+$_['text_value'] = 'Valores del filtro';

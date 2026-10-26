@@ -28,3 +28,6 @@ $_['error_email']    = 'E-Mail no parece ser v&aacute;lido!';
 $_['error_enquiry']  = 'Solicitud debe estar entre 10 y 3000 caracteres!';
 $_['error_captcha']  = 'C&oacute;digo de verificaci&oacute;n no coincide con la imagen!';
 $_['text_store_email'] = 'Correo electrónico';
+
+// MintCart
+$_['text_message'] = '<p>¡Su consulta se ha enviado correctamente al propietario de la tienda!</p>';

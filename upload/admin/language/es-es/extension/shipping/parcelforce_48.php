@@ -27,3 +27,11 @@ $_['help_display_time'] = '¿Quieres m&oacute;strar el tiemp&oacute; del env&iac
 
 // Err&oacute;r
 $_['err&oacute;r_permissi&oacute;n'] = 'Advertencia: Usted n&oacute; tiene permis&oacute; para m&oacute;dificar Parcelf&oacute;rce 48 del env&iacute;&oacute;';
+
+// MintCart
+$_['entry_geo_zone'] = 'Zona geográfica';
+$_['error_permission'] = 'Advertencia: ¡No tiene permiso para modificar el envío Parcelforce 48!';
+
+// MintCart
+$_['entry_sort_order'] = 'Orden';
+$_['text_extension'] = 'Extensiones';

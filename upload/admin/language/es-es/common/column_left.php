@@ -112,3 +112,30 @@ $_['text_paypal_search'] = 'Buscar';
 $_['text_complete_status']      = 'Pedidos Completados';
 $_['text_processing_status']    = 'Pedidos en Proceso';
 $_['text_other_status']         = 'Otros Estados';
+
+// MintCart
+$_['text_log'] = 'Registros de errores';
+
+// MintCart
+$_['text_homepage'] = 'Página de inicio';
+$_['text_mintcart_wizard'] = 'Asistente de configuración';
+$_['text_mintcart_business'] = 'Negocio';
+$_['text_mintcart_business_contacts'] = 'Contacto';
+$_['text_mintcart_business_delivery'] = 'Entrega';
+$_['text_mintcart_business_payments'] = 'Pagos';
+$_['text_mintcart_quickorder'] = 'Solicitudes de pedido rápido';
+$_['text_mintcart_badge'] = 'Insignias de producto';
+$_['text_mintcart_seo_system_pages'] = 'Páginas del sistema';
+$_['text_mintcart_design_styles'] = 'Estilos';
+$_['text_mintcart_settings_diagnostics'] = 'Diagnóstico';
+$_['text_mintcart_compatibility'] = 'Comprobador de compatibilidad';
+$_['text_translation'] = 'Traducciones';
+$_['text_mc_menu_hint'] = 'La próxima vez lo encontrará aquí:';
+$_['text_mc_menu_hint_ok'] = 'Entendido';
+$_['text_mc_menu_hint_click'] = 'Haga clic aquí para abrirlo';
+$_['text_mc_storage'] = 'Almacenamiento';
+$_['text_mintcart_seo_meta'] = 'Metaetiquetas';
+$_['text_mintcart_seo'] = 'SEO';
+$_['text_mintcart_seo_urls'] = 'Todas las URL';
+$_['text_mintcart_seo_url_generator'] = 'Generador de URL';
+$_['text_mintcart_seo_redirects'] = 'Redirecciones';

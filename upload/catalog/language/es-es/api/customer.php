@@ -9,3 +9,6 @@ $_['error_lastname']     = 'Apellido debe tener entre 1 y 32 caracteres!';
 $_['error_email']        = 'E-Mail no parece ser v&aacute;lido!';
 $_['error_telephone']    = 'Tel&eacute;fono debe tener entre 3 y 32 caracteres!';
 $_['error_custom_field'] = '%s necesario!';
+
+// MintCart
+$_['error_customer'] = '¡Debe seleccionar un cliente!';

@@ -50,3 +50,18 @@ $_['text_transaction_expired'] = 'Expirado';
 $_['error_not_cancelled'] = 'Error: %s';
 $_['error_not_found'] = 'No se pudo cancelar recurrentes';
 $_['text_cancelled'] = 'Pago peri&oacute;dico ha sido cancelado ';
+
+// MintCart
+$_['text_order_recurring_id'] = 'ID recurrente:';
+$_['text_order_id'] = 'ID del pedido:';
+$_['text_description'] = 'Descripción';
+$_['text_reference'] = 'Referencia';
+$_['text_transaction'] = 'Transacciones';
+$_['text_status_1'] = 'Activo';
+$_['text_status_2'] = 'Inactivo';
+$_['text_status_3'] = 'Cancelado';
+$_['text_status_4'] = 'Suspendido';
+$_['text_status_5'] = 'Caducado';
+$_['text_status_6'] = 'Pendiente';
+$_['text_error'] = '¡No se encontró el pedido recurrente solicitado!';
+$_['column_order_recurring_id'] = 'ID recurrente';

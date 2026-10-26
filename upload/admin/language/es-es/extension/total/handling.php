@@ -19,3 +19,6 @@ $_['help_total'] = 'El Pagar Total de la orden debe alcanzar antes de que esta o
 
 // Error
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar el manejo total de tarifa';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

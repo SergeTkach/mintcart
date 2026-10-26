@@ -13,3 +13,9 @@ $_['entry_status']     = 'Estado';
 
 // Error
 $_['error_permission'] = 'Atenci&oacute;n: No tiene permisos para modificar este m&oacute;dulo!';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';
+
+// MintCart
+$_['help_admin'] = 'Si es «Sí», la lista de tiendas solo será visible cuando inicie sesión un administrador.';

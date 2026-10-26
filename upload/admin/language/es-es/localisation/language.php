@@ -41,3 +41,9 @@ $_['error_default'] = 'Advertencia: Este lenguaje no se puede eliminar, ya que e
 $_['error_admin'] = 'Advertencia: Este lenguaje no se puede eliminar, ya que est&aacute; actualmente asignado como el idioma administraci&oacute;n';
 $_['error_store'] = 'Advertencia: Este lenguaje no se puede eliminar ya que se asigna actualmente a las tiendas de% s';
 $_['error_order'] = 'Advertencia: Este lenguaje no se puede eliminar ya que se asigna actualmente a las &oacute;rdenes% s';
+
+// MintCart
+$_['entry_name'] = 'Nombre del idioma';
+
+// MintCart
+$_['error_exists'] = 'Advertencia: ¡Ya había añadido este idioma!';

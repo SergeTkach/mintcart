@@ -34,3 +34,6 @@ $_['error_product'] = 'requiere Producto!';
 $_['error_author'] = 'Autor debe tener entre 3 y 64 caracteres!';
 $_['ERROR_TEXT'] = 'Comentario de texto debe ser de al menos 1 car&aacute;cter!';
 $_['error_rating'] = 'calificaci&oacute;n revisi&oacute;n requiere!';
+
+// MintCart
+$_['error_text'] = '¡El texto de la reseña debe tener al menos 1 carácter!';

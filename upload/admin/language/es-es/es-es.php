@@ -156,3 +156,10 @@ $_['error_upload_7'] = 'Advertencia: Error al escribir el archivo en el disco';
 $_['error_upload_8'] = 'Advertencia: carga de archivos se detuvo por extensi&oacute;n!';
 $_['error_upload_999'] = 'Advertencia: No disponible c&oacute;digo de error';
 $_['error_curl']                    = 'CURL: Error Code(%s): %s';
+
+// MintCart
+$_['datepicker'] = 'es';
+
+// MintCart
+$_['button_deny'] = 'Denegar';
+$_['button_developer'] = 'Ajuste de desarrollador';

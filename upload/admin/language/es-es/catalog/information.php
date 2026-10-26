@@ -44,3 +44,6 @@ $_['error_checkout'] = 'Advertencia: Esta p&aacute;gina de informaci&oacute;n no
 $_['error_affiliate'] = 'Advertencia: Esta p&aacute;gina de informaci&oacute;n no puede ser eliminado, ya que actualmente est&aacute; asignado como los t&eacute;rminos tienda de afiliados';
 $_['error_return'] = 'Advertencia: Esta p&aacute;gina de informaci&oacute;n no puede ser eliminado, ya que actualmente est&aacute; asignado como los t&eacute;rminos tienda retorno';
 $_['error_store'] = 'Advertencia: Esta p&aacute;gina de informaci&oacute;n no se puede eliminar como actualmente utilizado por las tiendas% s';
+
+// MintCart
+$_['error_unique'] = '¡La URL SEO debe ser única!';

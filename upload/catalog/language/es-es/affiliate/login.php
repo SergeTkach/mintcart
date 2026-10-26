@@ -19,3 +19,6 @@ $_['entry_password']                = 'Contrase&ntilde;a';
 // Error
 $_['error_login']                   = 'Advertencia: No hay resultados para la direcci&oacute;n de correo electr&oacute;nico y / o contrase&ntilde;a.';
 $_['error_approved']                = 'Advertencia: Tu cuenta requiere aprobaci&oacute;n antes de que pueda iniciar sesi&oacute;n.';
+
+// MintCart
+$_['error_attempts'] = 'Advertencia: su cuenta ha superado el número permitido de intentos de inicio de sesión. Inténtelo de nuevo en 1 hora.';

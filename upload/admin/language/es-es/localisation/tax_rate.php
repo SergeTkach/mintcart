@@ -31,3 +31,6 @@ $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar las
 $_['error_tax_rule'] = 'Advertencia: No se puede eliminar este tipo de gravamen, ya que se asigna actualmente a las clases de impuestos% s';
 $_['error_name'] = 'El Nombre Fiscal debe tener entre 3 y 32 caracteres';
 $_['error_rate'] = 'Tasa de Impuesto necesaria!';
+
+// MintCart
+$_['column_type'] = 'Tipo';

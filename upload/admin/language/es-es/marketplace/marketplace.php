@@ -54,3 +54,27 @@ $_['error_api']          = 'Warning: OpenCart extension OPENCART_USERNAME / OPEN
 $_['error_install']      = 'Extension installation taking place please wait a few seconds before trying to install!';
 $_['error_purchase']     = 'Extension could not be purchased!';
 $_['error_download']     = 'Extension could not be downloaded!';
+
+// MintCart
+$_['text_language'] = 'Idiomas';
+$_['text_reviews'] = 'reseñas';
+$_['text_member_since'] = 'Miembro desde:';
+$_['text_purchase'] = '¡Confirme quién es!';
+$_['text_pin'] = 'Introduzca su PIN de 4 dígitos. Este PIN protege su cuenta.';
+$_['text_secure'] = 'No comparta su PIN con nadie, incluidos los desarrolladores. Si necesita que el vendedor de una extensión se la instale, envíele por correo la extensión necesaria.';
+$_['text_progress'] = 'Progreso';
+$_['text_available'] = 'Instalaciones disponibles';
+$_['entry_pin'] = 'PIN';
+$_['button_opencart'] = 'API del Marketplace';
+$_['button_purchase'] = 'Comprar';
+$_['button_view_all'] = 'Ver todas las extensiones';
+$_['button_get_support'] = 'Obtener soporte';
+$_['error_opencart'] = 'Advertencia: ¡Debe introducir la información de su API de OpenCart antes de poder realizar compras!';
+
+// MintCart
+$_['text_action'] = 'Acción';
+$_['text_filter'] = 'Filtro';
+
+// MintCart
+$_['text_see_more'] = 'ver más respuestas...';
+$_['button_refresh'] = 'Actualizar';

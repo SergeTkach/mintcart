@@ -22,3 +22,6 @@ $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar tem
 $_['error_name'] = 'Vale Nombre del tema debe ser entre 3 y 32 caracteres!';
 $_['error_image'] = 'Imagen requerido!';
 $_['error_voucher'] = 'Advertencia: Este tema bono no se puede eliminar ya que se asigna actualmente a los vales% s';
+
+// MintCart
+$_['entry_name'] = 'Nombre del tema del cheque regalo';

@@ -24,3 +24,9 @@ $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar geo
 $_['error_name'] = 'Nombre de geo zona debe tener entre 3 y 32 caracteres!';
 $_['error_description'] = 'El nombre de la Descripci&oacute;n debe tener entre 3 y 255 caracteres!';
 $_['error_tax_rate'] = 'Advertencia: Esta zona geogr&aacute;fica no puede ser eliminado, ya que est&aacute; actualmente asignado a una o m&aacute;s tasas de impuestos!';
+
+// MintCart
+$_['heading_title'] = 'Zonas geográficas';
+
+// MintCart
+$_['text_geo_zone'] = 'Zonas geográficas';

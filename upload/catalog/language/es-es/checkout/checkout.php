@@ -91,3 +91,29 @@ $_['error_no_shipping']              = '&iexcl;Advertencia: No hay opciones de e
 $_['error_payment']                  = '&iexcl;Advertencia: Forma de pago requerida!';
 $_['error_no_payment']               = '&iexcl;Advertencia: No hay opciones de pago disponibles. Por favor, <a href="%s">contacte</a> para recibir asistencia!';
 $_['error_custom_field']             = '&iexcl;%s necesario!';
+
+// MintCart
+$_['text_recurring_item'] = 'Artículo recurrente';
+$_['error_telephone_mask'] = '¡Introduzca el número de teléfono completo!';
+$_['text_mc_contact'] = 'Datos de contacto';
+$_['text_mc_address'] = 'Dirección de entrega';
+$_['text_mc_shipping'] = 'Entrega';
+$_['text_mc_payment'] = 'Pago';
+$_['text_mc_comment'] = 'Comentario del pedido';
+$_['text_mc_summary'] = 'Su pedido';
+$_['text_mc_login'] = '¿Ya tiene una cuenta? <a href="%s">Inicie sesión</a>';
+$_['text_mc_login_required'] = 'La compra como invitado no está disponible para este pedido. Inicie sesión o cree una cuenta para continuar.';
+$_['text_mc_no_shipping'] = 'No hay opciones de entrega disponibles para esta dirección.';
+$_['text_mc_no_payment'] = 'No hay opciones de pago disponibles.';
+$_['text_mc_payment_ready'] = 'Su pedido se ha creado. Complete el paso de pago de abajo.';
+$_['text_mc_error'] = 'Algo ha salido mal. Inténtelo de nuevo.';
+$_['button_mc_place_order'] = 'Realizar pedido';
+$_['button_mc_close'] = 'Cerrar';
+$_['error_mc_no_payment'] = 'Esta tienda no puede recibir pedidos en línea ahora mismo (no hay ningún método de pago disponible). Póngase en contacto con la tienda para pedir.';
+$_['entry_mc_code'] = 'Cupón o cheque regalo';
+$_['button_mc_code_apply'] = 'Aplicar';
+$_['button_mc_code_remove'] = 'Quitar el código %s';
+$_['error_mc_code_empty'] = 'Introduzca un código.';
+$_['error_mc_code'] = 'Este código no es válido, ha caducado o ya se ha agotado.';
+$_['error_attempts'] = 'Advertencia: su cuenta ha superado el número permitido de intentos de inicio de sesión. Inténtelo de nuevo en 1 hora.';
+$_['text_payment_cancel'] = '%s cada %d %s hasta que se cancele';

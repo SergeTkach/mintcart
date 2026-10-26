@@ -60,3 +60,6 @@ $_['error_email'] = 'E-Mail no parece ser v&aacute;lida!';
 $_['error_telephone'] = 'Tel&eacute;fono debe tener entre 3 y 32 caracteres!';
 $_['error_product'] = 'Nombre del producto debe ser mayor que 3 y menos de 255 caracteres!';
 $_['error_model'] = 'Modelo Producto debe ser superior a 3 y menos de 64 caracteres!';
+
+// MintCart
+$_['text_history_add'] = 'Añadir al historial';

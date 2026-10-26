@@ -13,3 +13,6 @@ $_['entry_data_feed']  = 'Url de Feed de datos';
 
 // Error
 $_['error_permission'] = 'Atenci&oacute;n: Usted no tiene permiso para modificar el feed de Google Sitemap!';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

@@ -13,3 +13,6 @@ $_['entry_sort_order'] = 'Pedido';
 
 // Error
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar el total del vale regalo';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

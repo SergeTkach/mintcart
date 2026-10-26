@@ -23,3 +23,6 @@ $_['entry_sort_order']      = 'Orden';
 $_['error_permission']      = 'Advertencia: Usted no tiene permiso para modificar atributos';
 $_['error_name']            = 'Nombre de atributo debe tener entre 3 y 64 caracteres!';
 $_['error_product']         = 'Advertencia: Este atributo no puede ser eliminado, ya que se asigna actualmente a los productos de% s';
+
+// MintCart
+$_['error_attribute_group'] = '¡Grupo de atributos obligatorio!';

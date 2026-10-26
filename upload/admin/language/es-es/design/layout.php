@@ -33,3 +33,8 @@ $_['error_store'] = 'Advertencia: Esta disposición no se puede eliminar ya que 
 $_['error_product'] = 'Advertencia: Esta disposición no se puede eliminar ya que se asigna actualmente a los productos de% s';
 $_['error_category'] = 'Advertencia: Esta disposición no se puede eliminar ya que se asigna actualmente a% s categorías';
 $_['error_information'] = 'Advertencia: Esta disposición no se puede eliminar ya que se asigna actualmente a% s páginas de información';
+
+// MintCart
+$_['text_remove'] = 'Eliminar';
+$_['text_route'] = 'Elija la tienda y las rutas que usarán este diseño';
+$_['text_module'] = 'Elija la posición de los módulos';

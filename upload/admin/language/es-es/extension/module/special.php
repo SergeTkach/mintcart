@@ -19,3 +19,6 @@ $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar el 
 $_['error_name'] = 'El Nombre del m&oacute;dulo debe estar entre 3 y 64 caracteres!';
 $_['error_width'] = 'Ancho requerido!';
 $_['error_height'] = 'Altura requerida!';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

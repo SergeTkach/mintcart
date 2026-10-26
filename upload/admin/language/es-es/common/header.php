@@ -22,3 +22,7 @@ $_['text_homepage'] = 'Opencart';
 $_['text_support'] = 'Foro de Apoyo';
 $_['text_documentation'] = 'Documentaci&oacute;n';
 $_['text_logout'] = 'Salir';
+
+// MintCart
+$_['text_mc_admin_search_placeholder'] = 'Buscar ajustes…';
+$_['text_mc_admin_search_empty'] = 'No se encontraron ajustes coincidentes';

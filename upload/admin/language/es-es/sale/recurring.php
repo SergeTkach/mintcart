@@ -49,3 +49,47 @@ $_['entry_payment_method'] = 'Forma de pago ';
 $_['error_not_cancelled'] = 'Error:% s';
 $_['error_not_found'] = 'No se puede cancelar el perfil recurrentes';
 $_['text_cancelled'] = 'El pago recurrente ha sido cancelado';
+
+// MintCart
+$_['column_order_recurring_id'] = 'ID recurrente';
+$_['column_order_id'] = 'ID del pedido';
+$_['column_reference'] = 'Referencia de pago';
+$_['column_customer'] = 'Cliente';
+$_['column_amount'] = 'Importe';
+$_['entry_order_recurring_id'] = 'ID recurrente';
+
+// MintCart
+$_['column_action'] = 'Acción';
+$_['column_date_added'] = 'Fecha de alta';
+$_['column_status'] = 'Estado';
+$_['column_type'] = 'Tipo';
+$_['text_action'] = 'Acción';
+$_['text_filter'] = 'Filtro';
+
+// MintCart
+$_['text_recurring_detail'] = 'Detalles del pago recurrente';
+$_['text_order_detail'] = 'Detalles del pedido';
+$_['text_product_detail'] = 'Detalles del producto';
+$_['text_transaction'] = 'Transacciones';
+$_['text_order_recurring_id'] = 'ID del pedido recurrente';
+$_['text_reference'] = 'Referencia de pago';
+$_['text_recurring_name'] = 'Perfil recurrente';
+$_['text_recurring_description'] = 'Descripción';
+$_['text_recurring_status'] = 'Estado del pago recurrente';
+$_['text_payment_method'] = 'Método de pago';
+$_['text_order_id'] = 'ID del pedido';
+$_['text_customer'] = 'Cliente';
+$_['text_email'] = 'Correo';
+$_['text_date_added'] = 'Fecha de alta';
+$_['text_order_status'] = 'Estado del pedido';
+$_['text_type'] = 'Tipo';
+$_['text_product'] = 'Producto';
+$_['text_quantity'] = 'Cantidad';
+$_['text_amount'] = 'Importe';
+$_['text_cancel_payment'] = 'Cancelar pago';
+$_['text_status_1'] = 'Activo';
+$_['text_status_2'] = 'Inactivo';
+$_['text_status_3'] = 'Cancelado';
+$_['text_status_4'] = 'Suspendido';
+$_['text_status_5'] = 'Caducado';
+$_['text_status_6'] = 'Pendiente';

@@ -123,3 +123,15 @@ $_['error_image_cart'] = 'Tama&ntilde;o de la compra im&aacute;gen dimensiones r
 $_['error_image_location'] = 'Tama&ntilde;o tienda im&aacute;gen dimensiones requeridos!';
 $_['error_default'] = 'Advertencia: No se puede eliminar el almac&eacute;n predeterminado!';
 $_['error_store'] = 'Advertencia: Esta tienda no se puede eliminar ya que se asigna actualmente a las &oacute;rdenes% s';
+
+// MintCart
+$_['help_url'] = 'Incluya la URL completa de su tienda. Asegúrese de añadir \'/\' al final. Ejemplo: http://www.sudominio.com/ruta/<br /><br />No use directorios para crear una tienda nueva. Apunte siempre otro dominio o subdominio a su hosting.';
+
+// MintCart
+$_['entry_theme'] = 'Tema';
+$_['text_information_picker_browse'] = 'Explorar páginas';
+$_['text_information_picker_search'] = 'Buscar páginas';
+$_['text_information_picker_empty'] = 'No se encontraron páginas.';
+$_['text_information_picker_prev'] = 'Anterior';
+$_['text_information_picker_next'] = 'Siguiente';
+$_['text_information_picker_confirm'] = 'Seleccionar';

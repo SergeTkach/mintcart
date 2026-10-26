@@ -18,3 +18,6 @@ $_['help_total'] = 'cantidad Sub-total necesaria antes de que el módulo libre d
 
 // Error
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar el env&iacute;o libre';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';

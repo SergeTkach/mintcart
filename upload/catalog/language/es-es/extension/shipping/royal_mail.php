@@ -15,3 +15,12 @@ $_['text_airmail']               = 'Airmail';
 $_['text_international_signed']  = 'International Signed';
 $_['text_airsure']               = 'Airsure';
 $_['text_surface']               = 'Surface';
+
+// MintCart
+$_['text_special_delivery'] = 'Entrega especial al día siguiente';
+$_['text_1st_class_signed'] = 'Correo de primera clase con firma';
+$_['text_2nd_class_signed'] = 'Correo de segunda clase con firma';
+$_['text_international_standard'] = 'Internacional estándar';
+$_['text_international_tracked_signed'] = 'Internacional con seguimiento y firma';
+$_['text_international_tracked'] = 'Internacional con seguimiento';
+$_['text_international_economy'] = 'Internacional económico';

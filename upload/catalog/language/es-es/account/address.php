@@ -35,3 +35,8 @@ $_['error_city']           = 'Ciudad debe tener entre 2 y 128 caracteres!';
 $_['error_country']        = 'Por favor, seleccione un pa&iacute;s!';
 $_['error_zone']           = 'Por favor, seleccione una regi&oacute;n / estado!';
 $_['error_custom_field']   = '%s se requiere!';
+
+// MintCart
+$_['text_address_add'] = 'Añadir dirección';
+$_['text_address_edit'] = 'Editar dirección';
+$_['text_confirm'] = '¿Está seguro?';

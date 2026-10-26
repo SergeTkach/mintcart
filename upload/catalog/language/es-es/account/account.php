@@ -19,3 +19,10 @@ $_['text_transaction']   = 'Tus Transacciones';
 $_['text_newsletter']    = 'Subscribirse / desubscribirse del Bolet&iacute;n';
 $_['text_recurring']     = 'Pagos Recurrentes';
 $_['text_transactions']  = 'Transactiones';
+
+// MintCart
+$_['text_my_affiliate'] = 'Mi cuenta de afiliado';
+$_['text_credit_card'] = 'Gestionar tarjetas de crédito guardadas';
+$_['text_affiliate_add'] = 'Registrarse como afiliado';
+$_['text_affiliate_edit'] = 'Editar sus datos de afiliado';
+$_['text_tracking'] = 'Código de seguimiento de afiliado personalizado';

@@ -35,3 +35,9 @@ $_['error_code'] = 'C&oacute;digo Monedas debe contener 3 caracteres!';
 $_['error_default'] = 'Advertencia: Esta Monedas no se puede eliminar, ya que est&aacute; actualmente asignado como el almacén predeterminado Monedas';
 $_['error_store'] = 'Advertencia: Esta Monedas no se puede eliminar ya que se asigna actualmente a las tiendas de% s!';
 $_['error_order'] = 'Advertencia: Esta Monedas no se puede eliminar ya que se asigna actualmente a las &oacute;rdenes% s!';
+
+// MintCart
+$_['text_iso'] = 'Puede encontrar la lista completa de códigos y ajustes de divisas ISO <a href="http://www.xe.com/iso4217.php" target="_blank" class="alert-link">aquí</a>.';
+
+// MintCart
+$_['error_currency_engine'] = 'Advertencia: ¡No se encontró ningún motor de tipos de cambio activo!';

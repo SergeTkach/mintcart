@@ -28,3 +28,7 @@ $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar las
 $_['error_title'] = 'El tipo de clase Tributaria debe tener entre 3 y 32 caracteres';
 $_['error_description'] = 'Descripci&oacute;n debe estar entre 3 y 255 caracteres!';
 $_['error_product'] = 'Advertencia: Esta clase de impuestos no puede ser eliminado, ya que se asigna actualmente a los productos de% s';
+
+// MintCart
+$_['text_tax_class'] = 'Clase de impuestos';
+$_['text_tax_rate'] = 'Tasas de impuestos';

@@ -34,3 +34,9 @@ $_['help_product'] = 'Enviar s&oacute;lo a los clientes que han ordenado los pro
 $_ ['error_permission'] = 'Advertencia: Usted no tiene permiso para enviar e-mails';
 $_ ['error_subject'] = 'E-Mail Asunto necesario!';
 $_ ['mensaje_error'] = 'mensaje de correo electr&oacute;nico necesario!';
+
+// MintCart
+$_['error_message'] = '¡El mensaje de correo es obligatorio!';
+
+// MintCart
+$_['error_email'] = '¡El correo es obligatorio!';

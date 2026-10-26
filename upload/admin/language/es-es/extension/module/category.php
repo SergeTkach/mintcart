@@ -12,3 +12,6 @@ $_['entry_status']     = 'Estado';
 
 // Error
 $_['error_permission'] = 'Atenci&oacute;n: No tiene permisos para modificar el m&oacute;dulo de categor&iacute;as!';
+
+// MintCart
+$_['text_extension'] = 'Extensiones';
