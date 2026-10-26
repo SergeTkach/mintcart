@@ -1,0 +1,8 @@
+<?php
+
+// MintCart
+$_['heading_title'] = 'Contul dumneavoastră a fost creat!';
+$_['text_message'] = '<p>Felicitări! Noul dumneavoastră cont a fost creat cu succes!</p><p>Acum puteți beneficia de avantajele membrilor pentru o experiență de cumpărare mai bună.</p><p>Dacă aveți ORICE întrebări despre funcționarea acestui magazin online, trimiteți un e-mail proprietarului magazinului.</p><p>A fost trimisă o confirmare la adresa de e-mail furnizată. Dacă nu o primiți în decurs de o oră, <a href="%s">contactați-ne</a>.</p>';
+$_['text_approval'] = '<p>Vă mulțumim că v-ați înregistrat la %s!</p><p>Veți fi înștiințat prin e-mail după ce contul dumneavoastră va fi activat de proprietarul magazinului.</p><p>Dacă aveți ORICE întrebări despre funcționarea acestui magazin online, <a href="%s">contactați proprietarul magazinului</a>.</p>';
+$_['text_account'] = 'Cont';
+$_['text_success'] = 'Succes';

@@ -6,5 +6,17 @@
  "ru-ru": {
   "name": "Русский",
   "locale": "ru_RU.UTF-8,ru_RU,ru-ru,russian"
+ },
+ "tr-tr": {
+  "name": "Türkçe",
+  "locale": "tr_TR.UTF-8,tr_TR,tr-tr,turkish"
+ },
+ "es-es": {
+  "name": "Español",
+  "locale": "es_ES.UTF-8,es_ES,es-es,spanish"
+ },
+ "ro-ro": {
+  "name": "Română",
+  "locale": "ro_RO.UTF-8,ro_RO,ro-ro,romanian"
  }
 }

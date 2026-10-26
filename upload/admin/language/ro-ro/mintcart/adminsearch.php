@@ -1,0 +1,43 @@
+<?php
+
+// MintCart
+$_['label_store_settings'] = 'Setările magazinului';
+$_['label_store_name'] = 'Denumirea magazinului';
+$_['label_store_email'] = 'E-mailul magazinului';
+$_['label_store_telephone'] = 'Telefonul magazinului';
+$_['label_store_address'] = 'Adresa magazinului';
+$_['label_store_logo'] = 'Logoul magazinului';
+$_['label_favicon'] = 'Favicon';
+$_['label_default_currency'] = 'Moneda implicită';
+$_['label_default_language'] = 'Limba implicită';
+$_['label_meta_title'] = 'Titlu meta';
+$_['label_currency'] = 'Monedă';
+$_['label_language'] = 'Limbă';
+$_['label_tax_classes'] = 'Clase de taxe';
+$_['label_tax_rates'] = 'Cote de taxe';
+$_['label_order_statuses'] = 'Stări de comandă';
+$_['label_stock_statuses'] = 'Stări de stoc';
+$_['label_countries'] = 'Țări';
+$_['label_zones'] = 'Zone';
+$_['label_geo_zones'] = 'Zone geografice';
+$_['label_seo_urls'] = 'URL-uri SEO';
+$_['label_system_pages_seo'] = 'SEO pagini de sistem';
+$_['label_business_contacts'] = 'Afacere → Contact';
+$_['label_business_delivery'] = 'Afacere → Livrare';
+$_['label_business_payments'] = 'Afacere → Plăți';
+$_['label_design_homepage'] = 'Design → Pagina principală';
+$_['label_design_layouts'] = 'Design → Aspecte';
+$_['label_design_themes'] = 'Design → Teme';
+$_['label_design_banners'] = 'Design → Bannere';
+$_['label_diagnostics'] = 'Diagnosticare';
+$_['label_products'] = 'Produse';
+$_['label_categories'] = 'Categorii';
+$_['label_manufacturers'] = 'Producători';
+$_['label_orders'] = 'Comenzi';
+$_['label_customers'] = 'Clienți';
+$_['label_coupons'] = 'Cupoane';
+$_['label_marketing'] = 'Marketing';
+$_['label_extensions'] = 'Extensii';
+$_['label_users'] = 'Utilizatori';
+$_['label_backup_restore'] = 'Copie de rezervă / Restaurare';
+$_['label_error_log'] = 'Jurnal de erori';

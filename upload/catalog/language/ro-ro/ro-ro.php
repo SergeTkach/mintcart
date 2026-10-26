@@ -6,8 +6,8 @@ $_['date_format_short']     = 'd/m/Y';
 $_['date_format_long']      = 'l d F Y';
 $_['time_format']           = 'h:i:s A';
 $_['datetime_format']       = 'd/m/Y H:i:s';
-$_['decimal_point']         = '.';
-$_['thousand_point']        = ',';
+$_['decimal_point']           = ',';
+$_['thousand_point']          = '.';
 
 // Text
 $_['text_home']             = '<i class="fa fa-home"></i>';
@@ -72,4 +72,4 @@ $_['error_curl']            = 'CURL: Cod eroare (%s): %s';
 
 /* When doing translations only include the matching language code */
 
-$_['datepicker']            = 'ro-ro';
+$_['datepicker']            = 'ro';

@@ -1,0 +1,45 @@
+<?php
+
+// MintCart
+$_['heading_title'] = 'Plăți recurente';
+$_['text_recurring'] = 'Informații despre plata recurentă';
+$_['text_recurring_detail'] = 'Detalii despre plata recurentă';
+$_['text_order_recurring_id'] = 'ID recurent:';
+$_['text_product'] = 'Produs:';
+$_['text_quantity'] = 'Cantitate:';
+$_['text_description'] = 'Descriere';
+$_['text_reference'] = 'Referință';
+$_['text_status_1'] = 'Activ';
+$_['text_status_2'] = 'Inactiv';
+$_['text_status_3'] = 'Anulat';
+$_['text_status_4'] = 'Suspendat';
+$_['text_status_5'] = 'Expirat';
+$_['text_status_6'] = 'În așteptare';
+$_['text_transaction_date_added'] = 'Creat';
+$_['text_transaction_payment'] = 'Plată';
+$_['text_transaction_outstanding_payment'] = 'Plată restantă';
+$_['text_transaction_skipped'] = 'Plată omisă';
+$_['text_transaction_failed'] = 'Plată eșuată';
+$_['text_transaction_cancelled'] = 'Anulat';
+$_['text_transaction_suspended'] = 'Suspendat';
+$_['text_transaction_suspended_failed'] = 'Suspendat din cauza unei plăți eșuate';
+$_['text_transaction_outstanding_failed'] = 'Plata restantă a eșuat';
+$_['text_transaction_expired'] = 'Expirat';
+$_['text_empty'] = 'Nu s-au găsit plăți recurente!';
+$_['text_error'] = 'Comanda recurentă solicitată nu a fost găsită!';
+$_['text_cancelled'] = 'Plata recurentă a fost anulată';
+$_['column_type'] = 'Tip';
+$_['column_amount'] = 'Sumă';
+$_['column_product'] = 'Produs';
+$_['column_order_recurring_id'] = 'ID recurent';
+$_['error_not_cancelled'] = 'Eroare: %s';
+$_['error_not_found'] = 'Plata recurentă nu a putut fi anulată';
+$_['button_return'] = 'Înapoi';
+$_['column_date_added'] = 'Data adăugării';
+$_['column_status'] = 'Stare';
+$_['text_account'] = 'Cont';
+$_['text_date_added'] = 'Data adăugării:';
+$_['text_order_id'] = 'ID comandă:';
+$_['text_payment_method'] = 'Metodă de plată:';
+$_['text_status'] = 'Stare:';
+$_['text_transaction'] = 'Tranzacții';
