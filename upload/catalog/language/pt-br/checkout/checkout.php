@@ -93,3 +93,26 @@ $_['error_payment']                  = 'Atenção: Selecione o pagamento que des
 $_['error_no_payment']               = 'Atenção: Não há opções de pagamento disponíveis. Entre em <a href="%s">contato</a> e informe os detalhes do pedido.';
 $_['error_custom_field']             = 'O campo %s é obrigatório.';
 $_['error_custom_field_validate']    = 'O campo %s não é válido.';
+
+// MintCart
+$_['button_mc_close'] = 'Fechar';
+$_['button_mc_code_apply'] = 'Aplicar';
+$_['button_mc_code_remove'] = 'Remover o código %s';
+$_['button_mc_place_order'] = 'Fazer pedido';
+$_['entry_mc_code'] = 'Cupom ou vale-presente';
+$_['error_mc_code'] = 'Este código é inválido, expirou ou já foi totalmente usado.';
+$_['error_mc_code_empty'] = 'Digite um código.';
+$_['error_mc_no_payment'] = 'Esta loja não pode receber pedidos online no momento (nenhuma forma de pagamento disponível). Entre em contato com a loja para fazer o pedido.';
+$_['error_telephone_mask'] = 'Digite o número de telefone completo!';
+$_['text_mc_address'] = 'Endereço de entrega';
+$_['text_mc_comment'] = 'Observação do pedido';
+$_['text_mc_contact'] = 'Dados de contato';
+$_['text_mc_error'] = 'Algo deu errado. Tente novamente.';
+$_['text_mc_login'] = 'Já tem uma conta? <a href="%s">Entrar</a>';
+$_['text_mc_login_required'] = 'A compra como visitante não está disponível para este pedido. Entre ou crie uma conta para continuar.';
+$_['text_mc_no_payment'] = 'Nenhuma opção de pagamento disponível.';
+$_['text_mc_no_shipping'] = 'Nenhuma opção de entrega disponível para este endereço.';
+$_['text_mc_payment'] = 'Pagamento';
+$_['text_mc_payment_ready'] = 'Seu pedido foi criado. Conclua a etapa de pagamento abaixo.';
+$_['text_mc_shipping'] = 'Entrega';
+$_['text_mc_summary'] = 'Seu pedido';

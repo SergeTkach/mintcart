@@ -27,3 +27,6 @@ $_['error_name']     = 'Nazwa musi mieć od 3 do 32 znaków!';
 $_['error_email']    = 'Adres e-mail wygląda na nieprawidłowy!';
 $_['error_enquiry']  = 'Zapytanie musi mieć od 10 do 3000 znaków!';
 $_['error_captcha']  = 'Kod weryfikacyjny nie pasuje do obrazu!';
+
+// MintCart
+$_['text_message'] = '<p>Twoja wiadomość została pomyślnie wysłana do właściciela sklepu!</p>';

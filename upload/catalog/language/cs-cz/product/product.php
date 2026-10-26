@@ -48,3 +48,23 @@ $_['tab_review']               = 'Recenze (%s)';
 $_['error_name']               = 'Varování: Jméno recenzenta musí mít mezi 3 a 25 znaky!';
 $_['error_text']               = 'Varování: Text recenze musí mít mezi 25 a 1000 znaky!';
 $_['error_rating']             = 'Varování: Vyberte prosím hodnocení recenze!';
+
+// MintCart
+$_['error_product'] = 'Upozornění: K přidání recenze je potřeba produkt!';
+$_['tab_overview'] = 'Přehled';
+$_['text_add_to_cart_error'] = 'Tento produkt se nepodařilo přidat do košíku';
+$_['text_added_to_cart'] = 'Přidáno do košíku';
+$_['text_badge_new'] = 'Novinka';
+$_['text_badge_out_of_stock'] = 'Není skladem';
+$_['text_badge_sale'] = 'Akce';
+$_['text_continue_shopping'] = 'Pokračovat v nákupu';
+$_['text_mc_delivery'] = 'Doprava';
+$_['text_mc_from'] = 'při objednávce nad %s';
+$_['text_mc_payment'] = 'Platba';
+$_['text_mc_returns'] = 'Vrácení zboží';
+$_['text_quick_order'] = 'Rychlá objednávka';
+$_['text_rated'] = 'Hodnocení %s z 5 hvězdiček';
+$_['text_section_nav'] = 'Sekce produktu';
+$_['text_view_cart'] = 'Zobrazit košík';
+$_['text_viewed'] = 'Naposledy zobrazené';
+$_['text_wishlist_error'] = 'Seznam přání se nepodařilo aktualizovat';

@@ -49,3 +49,22 @@ $_['error_name']               = 'Atenção: Seu nome deve ter entre 3 e 25 cara
 $_['error_text']               = 'Atenção: Seu comentário deve ter entre 25 e 1000 caracteres.';
 $_['error_rating']             = 'Atenção: Faça a avaliação.';
 $_['error_product']            = "Atenção: Não foi informado qual produto está vinculado ao comentário.";
+
+// MintCart
+$_['tab_overview'] = 'Visão geral';
+$_['text_add_to_cart_error'] = 'Não foi possível adicionar este produto ao carrinho';
+$_['text_added_to_cart'] = 'Adicionado ao carrinho';
+$_['text_badge_new'] = 'Novo';
+$_['text_badge_out_of_stock'] = 'Esgotado';
+$_['text_badge_sale'] = 'Promoção';
+$_['text_continue_shopping'] = 'Continuar comprando';
+$_['text_mc_delivery'] = 'Entrega';
+$_['text_mc_from'] = 'em pedidos acima de %s';
+$_['text_mc_payment'] = 'Pagamento';
+$_['text_mc_returns'] = 'Devoluções';
+$_['text_quick_order'] = 'Pedido rápido';
+$_['text_rated'] = 'Avaliado com %s de 5 estrelas';
+$_['text_section_nav'] = 'Seções do produto';
+$_['text_view_cart'] = 'Ver carrinho';
+$_['text_viewed'] = 'Vistos recentemente';
+$_['text_wishlist_error'] = 'Não foi possível atualizar sua lista de desejos';

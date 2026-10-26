@@ -25,3 +25,6 @@ $_['email_subject']  = 'Dotaz %s';
 $_['error_name']     = 'Jméno musí mít mezi 3 a 32 znaky!';
 $_['error_email']    = 'E-mailová adresa se nezdá být platná!';
 $_['error_enquiry']  = 'Dotaz musí mít mezi 10 a 3000 znaky!';
+
+// MintCart
+$_['text_message'] = '<p>Váš dotaz byl úspěšně odeslán majiteli obchodu!</p>';

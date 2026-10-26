@@ -15,3 +15,9 @@ $_['text_order']        = 'Historia zamówień';
 $_['text_wishlist']     = 'Lista życzeń';
 $_['text_newsletter']   = 'Newsletter';
 $_['text_powered']      = 'Platforma <a href="http://www.opencart.com"> OpenCart</a><br /> %s &copy; %s';
+
+// MintCart
+$_['text_contact_us'] = 'Kontakt';
+$_['text_mc_reviews'] = 'Opinie klientów';
+$_['text_newsletter_email'] = 'E-mail';
+$_['text_newsletter_submit'] = 'Subskrybuj';

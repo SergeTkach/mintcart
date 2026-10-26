@@ -34,3 +34,6 @@ $_['error_password']   	= 'Uwaga: Hasło musi zawierać od 4 do 20 znaków!';
 $_['error_confirm']    	= 'Uwaga: Hasło różni się od potwierdzenia hasła!';
 $_['error_firstname']  	= 'Uwaga: Imię musi zawierać od 1 do 32 znaków!';
 $_['error_lastname']   	= 'Uwaga: Nazwisko musi zawierać od 1 do 32 znaków!';
+
+// MintCart
+$_['error_single_user'] = 'Uwaga: nie możesz wyłączyć własnego konta!';

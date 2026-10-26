@@ -36,3 +36,6 @@ $_['error_firstname']       = 'Nome deve ter entre 1 e 32 caracteres!';
 $_['error_lastname']        = 'Sobrenome deve ter entre 1 e 32 caracteres!';
 $_['error_email']           = 'O e-mail não é válido!';
 $_['error_exists_email']    = 'Atenção: O e-mail já está em uso!';
+
+// MintCart
+$_['error_single_user'] = 'Atenção: você não pode desativar a sua própria conta!';

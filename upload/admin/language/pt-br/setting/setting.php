@@ -203,3 +203,17 @@ $_['error_log_required']           = 'O nome do arquivo de log de erros é neces
 $_['error_log_invalid']            = 'O nome do arquivo de log de erros é inválido!';
 $_['error_log_extension']          = 'A extensão do arquivo de log de erros deve ser .log!';
 $_['error_encryption']             = 'A chave de criptografia deve ter entre 32 e 1024 caracteres!';
+
+// MintCart
+$_['entry_currency_engine'] = 'Mecanismo de cotação de moedas';
+$_['entry_symbol_left_space'] = 'Espaço no símbolo de moeda à esquerda';
+$_['entry_symbol_right_space'] = 'Espaço no símbolo de moeda à direita';
+$_['entry_timezone'] = 'Fuso horário';
+$_['help_symbol_left_space'] = 'Adiciona opcionalmente um espaço após o símbolo de moeda à esquerda.';
+$_['help_symbol_right_space'] = 'Adiciona opcionalmente um espaço antes do símbolo de moeda à direita.';
+$_['text_information_picker_browse'] = 'Procurar páginas';
+$_['text_information_picker_confirm'] = 'Selecionar';
+$_['text_information_picker_empty'] = 'Nenhuma página encontrada.';
+$_['text_information_picker_next'] = 'Próximo';
+$_['text_information_picker_prev'] = 'Anterior';
+$_['text_information_picker_search'] = 'Pesquisar páginas';

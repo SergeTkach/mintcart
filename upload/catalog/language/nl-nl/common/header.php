@@ -20,3 +20,7 @@ $_['text_close'] = 'Sluiten';
 $_['text_mc_call'] = 'Bel ons';
 $_['text_mc_compare'] = 'Vergelijken';
 $_['text_mc_search_all'] = 'Alle resultaten tonen';
+
+// MintCart
+$_['text_mc_search_empty'] = 'Niets gevonden';
+$_['text_menu'] = 'Menu';

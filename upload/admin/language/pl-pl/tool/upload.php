@@ -19,3 +19,7 @@ $_['entry_date_added'] 	= 'Data dodania';
 
 // Error
 $_['error_permission']  = 'Uwaga: Nie masz uprawnień do modyfikowania pobieranych plików!';
+
+// MintCart
+$_['error_file'] = 'Nie znaleziono wgrywanego pliku!';
+$_['error_upload'] = 'Nieprawidłowe wgranie!';

@@ -48,3 +48,23 @@ $_['tab_review']               = 'Visszajelzések (%s)';
 $_['error_name']               = 'Warning: Neved 3 és 25 karakternek kell lennie!';
 $_['error_text']               = 'Warning: A szöveg 25 és 1000 karakternek kell lennie!';
 $_['error_rating']             = 'Figyelem: Kérem válassz egy értékelést!';
+
+// MintCart
+$_['error_product'] = 'Figyelem: Vélemény írásához termék szükséges!';
+$_['tab_overview'] = 'Áttekintés';
+$_['text_add_to_cart_error'] = 'A terméket nem sikerült a kosárba tenni';
+$_['text_added_to_cart'] = 'Kosárba téve';
+$_['text_badge_new'] = 'Új';
+$_['text_badge_out_of_stock'] = 'Elfogyott';
+$_['text_badge_sale'] = 'Akció';
+$_['text_continue_shopping'] = 'Vásárlás folytatása';
+$_['text_mc_delivery'] = 'Szállítás';
+$_['text_mc_from'] = '%s feletti rendelésnél';
+$_['text_mc_payment'] = 'Fizetés';
+$_['text_mc_returns'] = 'Visszaküldés';
+$_['text_quick_order'] = 'Gyorsrendelés';
+$_['text_rated'] = '%s értékelés az 5 csillagból';
+$_['text_section_nav'] = 'Termékszekciók';
+$_['text_view_cart'] = 'Kosár megtekintése';
+$_['text_viewed'] = 'Nemrég megtekintett';
+$_['text_wishlist_error'] = 'A kívánságlistát nem sikerült frissíteni';

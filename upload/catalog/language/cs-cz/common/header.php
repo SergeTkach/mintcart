@@ -20,3 +20,7 @@ $_['text_close'] = 'Zavřít';
 $_['text_mc_call'] = 'Zavolejte nám';
 $_['text_mc_compare'] = 'Porovnat';
 $_['text_mc_search_all'] = 'Zobrazit všechny výsledky';
+
+// MintCart
+$_['text_mc_search_empty'] = 'Nic nebylo nalezeno';
+$_['text_menu'] = 'Nabídka';

@@ -92,3 +92,26 @@ $_['error_no_shipping']              = 'Ostrzeżenie: Brak dostępnych opcji dos
 $_['error_payment']                  = 'Ostrzeżenie: Musisz wybrać sposób zapłaty!';
 $_['error_no_payment']               = 'Ostrzeżenie: Brak dostępnych opcji zapłaty. Prosimy o <a href="%s">kontakt z nami</a> w celu uzyskania pomocy!';
 $_['error_custom_field']             = '%s wymagane!';
+
+// MintCart
+$_['button_mc_close'] = 'Zamknij';
+$_['button_mc_code_apply'] = 'Zastosuj';
+$_['button_mc_code_remove'] = 'Usuń kod %s';
+$_['button_mc_place_order'] = 'Złóż zamówienie';
+$_['entry_mc_code'] = 'Kupon lub bon upominkowy';
+$_['error_mc_code'] = 'Ten kod jest nieprawidłowy, wygasł lub został już w pełni wykorzystany.';
+$_['error_mc_code_empty'] = 'Wpisz kod.';
+$_['error_mc_no_payment'] = 'Ten sklep nie może teraz przyjmować zamówień online (brak dostępnej metody płatności). Skontaktuj się ze sklepem, aby zamówić.';
+$_['error_telephone_mask'] = 'Wpisz pełny numer telefonu!';
+$_['text_mc_address'] = 'Adres dostawy';
+$_['text_mc_comment'] = 'Uwagi do zamówienia';
+$_['text_mc_contact'] = 'Dane kontaktowe';
+$_['text_mc_error'] = 'Coś poszło nie tak. Spróbuj ponownie.';
+$_['text_mc_login'] = 'Masz już konto? <a href="%s">Zaloguj się</a>';
+$_['text_mc_login_required'] = 'Zakup bez konta nie jest dostępny dla tego zamówienia. Zaloguj się lub załóż konto, aby kontynuować.';
+$_['text_mc_no_payment'] = 'Brak dostępnych opcji płatności.';
+$_['text_mc_no_shipping'] = 'Brak dostępnych opcji dostawy dla tego adresu.';
+$_['text_mc_payment'] = 'Płatność';
+$_['text_mc_payment_ready'] = 'Twoje zamówienie zostało utworzone. Zakończ krok płatności poniżej.';
+$_['text_mc_shipping'] = 'Dostawa';
+$_['text_mc_summary'] = 'Twoje zamówienie';

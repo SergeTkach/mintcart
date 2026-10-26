@@ -48,3 +48,23 @@ $_['tab_review']               = 'Reviews (%s)';
 $_['error_name']               = 'Naam van review moet tussen 2 en 25 tekens bevatten!';
 $_['error_text']               = 'Review moet tussen 25 en 1000 tekens bevatten!';
 $_['error_rating']             = 'Selecteer een beoordeling voor je review!';
+
+// MintCart
+$_['error_product'] = 'Waarschuwing: een product is vereist om de beoordeling toe te voegen!';
+$_['tab_overview'] = 'Overzicht';
+$_['text_add_to_cart_error'] = 'Dit product kon niet aan uw winkelwagen worden toegevoegd';
+$_['text_added_to_cart'] = 'Toegevoegd aan winkelwagen';
+$_['text_badge_new'] = 'Nieuw';
+$_['text_badge_out_of_stock'] = 'Uitverkocht';
+$_['text_badge_sale'] = 'Aanbieding';
+$_['text_continue_shopping'] = 'Verder winkelen';
+$_['text_mc_delivery'] = 'Levering';
+$_['text_mc_from'] = 'bij bestellingen boven %s';
+$_['text_mc_payment'] = 'Betaling';
+$_['text_mc_returns'] = 'Retouren';
+$_['text_quick_order'] = 'Snelbestelling';
+$_['text_rated'] = 'Beoordeeld met %s van de 5 sterren';
+$_['text_section_nav'] = 'Productsecties';
+$_['text_view_cart'] = 'Winkelwagen bekijken';
+$_['text_viewed'] = 'Onlangs bekeken';
+$_['text_wishlist_error'] = 'Uw verlanglijst kon niet worden bijgewerkt';

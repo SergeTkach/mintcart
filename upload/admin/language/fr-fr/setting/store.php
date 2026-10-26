@@ -96,3 +96,11 @@ $_['error_telephone']              = 'Le téléphone doit contenir entre 3 et 32
 $_['error_customer_group_display'] = 'Vous devez inclure le groupe de clients par défaut si vous allez utiliser cette fonctionnalité !';
 $_['error_default']                = 'Attention : Vous ne pouvez pas supprimer votre boutique par défaut !';
 $_['error_store']                  = 'Attention : Cette boutique ne peut pas être supprimée car elle est actuellement attribuée à %s commandes !';
+
+// MintCart
+$_['text_information_picker_browse'] = 'Parcourir les pages';
+$_['text_information_picker_confirm'] = 'Sélectionner';
+$_['text_information_picker_empty'] = 'Aucune page trouvée.';
+$_['text_information_picker_next'] = 'Suivant';
+$_['text_information_picker_prev'] = 'Précédent';
+$_['text_information_picker_search'] = 'Rechercher des pages';

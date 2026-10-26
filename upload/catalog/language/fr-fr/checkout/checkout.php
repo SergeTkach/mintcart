@@ -91,3 +91,26 @@ $_['error_no_shipping']              = 'Attention : Aucune option d\'expédition
 $_['error_payment']                  = 'Attention : Méthode de paiement requise !';
 $_['error_no_payment']               = 'Attention : Aucune option de paiement disponible. Veuillez <a href="%s">nous contacter</a> pour obtenir de l\'aide !';
 $_['error_custom_field']             = '%s requis !';
+
+// MintCart
+$_['button_mc_close'] = 'Fermer';
+$_['button_mc_code_apply'] = 'Appliquer';
+$_['button_mc_code_remove'] = 'Retirer le code %s';
+$_['button_mc_place_order'] = 'Passer la commande';
+$_['entry_mc_code'] = 'Coupon ou chèque-cadeau';
+$_['error_mc_code'] = 'Ce code est invalide, expiré ou déjà entièrement utilisé.';
+$_['error_mc_code_empty'] = 'Veuillez saisir un code.';
+$_['error_mc_no_payment'] = 'Cette boutique ne peut pas prendre de commandes en ligne pour le moment (aucun mode de paiement disponible). Veuillez contacter la boutique pour commander.';
+$_['error_telephone_mask'] = 'Veuillez saisir le numéro de téléphone complet !';
+$_['text_mc_address'] = 'Adresse de livraison';
+$_['text_mc_comment'] = 'Commentaire de commande';
+$_['text_mc_contact'] = 'Coordonnées';
+$_['text_mc_error'] = 'Une erreur s\'est produite. Veuillez réessayer.';
+$_['text_mc_login'] = 'Vous avez déjà un compte ? <a href="%s">Connectez-vous</a>';
+$_['text_mc_login_required'] = 'La commande en tant qu\'invité n\'est pas disponible pour cette commande. Connectez-vous ou créez un compte pour continuer.';
+$_['text_mc_no_payment'] = 'Aucune option de paiement disponible.';
+$_['text_mc_no_shipping'] = 'Aucune option de livraison disponible pour cette adresse.';
+$_['text_mc_payment'] = 'Paiement';
+$_['text_mc_payment_ready'] = 'Votre commande a été créée. Terminez l\'étape de paiement ci-dessous.';
+$_['text_mc_shipping'] = 'Livraison';
+$_['text_mc_summary'] = 'Votre commande';

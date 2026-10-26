@@ -32,3 +32,13 @@ $_['text_limit']        = 'Zobrazit:';
 // Entry
 $_['entry_search']      = 'Kritéria vyhledávání';
 $_['entry_description'] = 'Hledat v popisech produktů';
+
+// MintCart
+$_['text_add_to_cart_error'] = 'Tento produkt se nepodařilo přidat do košíku';
+$_['text_added_to_cart'] = 'Přidáno do košíku';
+$_['text_badge_new'] = 'Novinka';
+$_['text_badge_out_of_stock'] = 'Není skladem';
+$_['text_badge_sale'] = 'Akce';
+$_['text_quick_order'] = 'Rychlá objednávka';
+$_['text_rated'] = 'Hodnocení %s z 5 hvězdiček';
+$_['text_wishlist_error'] = 'Seznam přání se nepodařilo aktualizovat';

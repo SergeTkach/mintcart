@@ -14,3 +14,13 @@ $_['text_logout']        = 'Sair';
 $_['text_checkout']      = 'Finalizar pedido';
 $_['text_search']        = 'Busca';
 $_['text_all']           = 'Exibir';
+
+// MintCart
+$_['text_close'] = 'Fechar';
+$_['text_mc_call'] = 'Ligue para nós';
+$_['text_mc_compare'] = 'Comparar';
+$_['text_mc_search_all'] = 'Mostrar todos os resultados';
+
+// MintCart
+$_['text_mc_search_empty'] = 'Nada encontrado';
+$_['text_menu'] = 'Menu';

@@ -122,3 +122,11 @@ $_['error_image_cart']                 = 'Uwaga: Wymagane podanie wymiarów obra
 $_['error_image_location']             = 'Uwaga: Wymagane podanie wymiarów obrazu sklepu!';
 $_['error_default']                    = 'Uwaga: Nie można usunąć domyślnego sklepu!';
 $_['error_store']                      = 'Uwaga: Nie można usunąć sklepu, ponieważ ma aktywne %s zamówienia!';
+
+// MintCart
+$_['text_information_picker_browse'] = 'Przeglądaj strony';
+$_['text_information_picker_confirm'] = 'Wybierz';
+$_['text_information_picker_empty'] = 'Nie znaleziono stron.';
+$_['text_information_picker_next'] = 'Następna';
+$_['text_information_picker_prev'] = 'Poprzednia';
+$_['text_information_picker_search'] = 'Szukaj stron';

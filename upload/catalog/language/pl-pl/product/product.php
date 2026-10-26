@@ -50,3 +50,23 @@ $_['error_name']                              = 'Uwaga: Imię i nazwisko musi za
 $_['error_text']                              = 'Uwaga: Opinia musi zawierać od 25 do 1000 znaków!';
 $_['error_rating']                            = 'Uwaga: Wybierz ocenę opinii!';
 $_['error_captcha']                           = 'Uwaga: Kod weryfikacyjny nie pasuje do obrazu!';
+
+// MintCart
+$_['error_product'] = 'Uwaga: do dodania opinii wymagany jest produkt!';
+$_['tab_overview'] = 'Przegląd';
+$_['text_add_to_cart_error'] = 'Nie udało się dodać tego produktu do koszyka';
+$_['text_added_to_cart'] = 'Dodano do koszyka';
+$_['text_badge_new'] = 'Nowość';
+$_['text_badge_out_of_stock'] = 'Brak w magazynie';
+$_['text_badge_sale'] = 'Promocja';
+$_['text_continue_shopping'] = 'Kontynuuj zakupy';
+$_['text_mc_delivery'] = 'Dostawa';
+$_['text_mc_from'] = 'przy zamówieniach powyżej %s';
+$_['text_mc_payment'] = 'Płatność';
+$_['text_mc_returns'] = 'Zwroty';
+$_['text_quick_order'] = 'Szybkie zamówienie';
+$_['text_rated'] = 'Oceniono na %s z 5 gwiazdek';
+$_['text_section_nav'] = 'Sekcje produktu';
+$_['text_view_cart'] = 'Zobacz koszyk';
+$_['text_viewed'] = 'Ostatnio oglądane';
+$_['text_wishlist_error'] = 'Nie udało się zaktualizować listy życzeń';

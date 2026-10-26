@@ -236,3 +236,12 @@ $_['error_warning']                           = 'Uwaga: Sprawdź dokładnie bł�
 $_['error_permission']                        = 'Uwaga: Nie masz uprawnień do modyfikowania zamówień!';
 $_['error_curl']                              = 'Uwaga: CURL błąd %s(%s)!';
 $_['error_action']                            = 'Uwaga: Nie można wykonać tej akcji!';
+
+// MintCart
+$_['text_customer_picker_browse'] = 'Przeglądaj klientów';
+$_['text_customer_picker_confirm'] = 'Wybierz';
+$_['text_customer_picker_empty'] = 'Nie znaleziono klientów.';
+$_['text_customer_picker_next'] = 'Następna';
+$_['text_customer_picker_prev'] = 'Poprzednia';
+$_['text_customer_picker_search'] = 'Szukaj klientów';
+$_['text_filter'] = 'Filtr';

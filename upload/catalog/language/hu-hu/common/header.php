@@ -14,3 +14,7 @@ $_['text_logout']        = 'Kijelentkezés';
 $_['text_checkout']      = 'Fizetés';
 $_['text_search']        = 'Keresés';
 $_['text_all']           = 'Mutass mindent';
+
+// MintCart
+$_['text_mc_search_empty'] = 'Nincs találat';
+$_['text_menu'] = 'Menü';

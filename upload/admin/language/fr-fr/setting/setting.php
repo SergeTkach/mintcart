@@ -205,3 +205,15 @@ $_['error_log_required']             = 'Nom du fichier journal d\'erreurs requis
 $_['error_log_invalid']              = 'Nom du fichier journal d\'erreurs invalide !';
 $_['error_log_extension']            = 'L\'extension du nom du fichier journal d\'erreurs doit être .log !';
 $_['error_encryption']               = 'La clé de chiffrement doit contenir entre 32 et 1024 caractères !';
+
+// MintCart
+$_['entry_symbol_left_space'] = 'Espace du symbole de devise à gauche';
+$_['entry_symbol_right_space'] = 'Espace du symbole de devise à droite';
+$_['help_symbol_left_space'] = 'Ajoute éventuellement un espace après le symbole de devise de gauche.';
+$_['help_symbol_right_space'] = 'Ajoute éventuellement un espace avant le symbole de devise de droite.';
+$_['text_information_picker_browse'] = 'Parcourir les pages';
+$_['text_information_picker_confirm'] = 'Sélectionner';
+$_['text_information_picker_empty'] = 'Aucune page trouvée.';
+$_['text_information_picker_next'] = 'Suivant';
+$_['text_information_picker_prev'] = 'Précédent';
+$_['text_information_picker_search'] = 'Rechercher des pages';

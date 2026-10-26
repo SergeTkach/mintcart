@@ -22,3 +22,13 @@ $_['text_rating_desc']  = 'Hodnocení (nejvyšší)';
 $_['text_model_asc']    = 'Modelu (A - Z)';
 $_['text_model_desc']   = 'Modelu (Z - A)';
 $_['text_limit']        = 'Zobrazit:';
+
+// MintCart
+$_['text_add_to_cart_error'] = 'Tento produkt se nepodařilo přidat do košíku';
+$_['text_added_to_cart'] = 'Přidáno do košíku';
+$_['text_badge_new'] = 'Novinka';
+$_['text_badge_out_of_stock'] = 'Není skladem';
+$_['text_badge_sale'] = 'Akce';
+$_['text_quick_order'] = 'Rychlá objednávka';
+$_['text_rated'] = 'Hodnocení %s z 5 hvězdiček';
+$_['text_wishlist_error'] = 'Seznam přání se nepodařilo aktualizovat';

@@ -49,3 +49,22 @@ $_['error_name']               = 'Attention : Le Nom de l\'Avis doit contenir en
 $_['error_text']               = 'Attention : Le Texte de l\'Avis doit contenir entre 25 et 1000 caractères !';
 $_['error_rating']             = 'Attention : Veuillez sélectionner une évaluation pour l\'avis !';
 $_['error_product']            = "Attention : Le produit est requis pour ajouter l'avis !";
+
+// MintCart
+$_['tab_overview'] = 'Aperçu';
+$_['text_add_to_cart_error'] = 'Impossible d\'ajouter ce produit à votre panier';
+$_['text_added_to_cart'] = 'Ajouté au panier';
+$_['text_badge_new'] = 'Nouveau';
+$_['text_badge_out_of_stock'] = 'Rupture de stock';
+$_['text_badge_sale'] = 'Promo';
+$_['text_continue_shopping'] = 'Continuer vos achats';
+$_['text_mc_delivery'] = 'Livraison';
+$_['text_mc_from'] = 'pour toute commande de plus de %s';
+$_['text_mc_payment'] = 'Paiement';
+$_['text_mc_returns'] = 'Retours';
+$_['text_quick_order'] = 'Commande rapide';
+$_['text_rated'] = 'Noté %s sur 5 étoiles';
+$_['text_section_nav'] = 'Sections du produit';
+$_['text_view_cart'] = 'Voir le panier';
+$_['text_viewed'] = 'Consultés récemment';
+$_['text_wishlist_error'] = 'Impossible de mettre à jour votre liste de souhaits';

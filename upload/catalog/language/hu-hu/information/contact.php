@@ -25,3 +25,6 @@ $_['email_subject']  = 'Kérdések %s';
 $_['error_name']     = 'Neved 3 és 32 karakternek kell lennie!';
 $_['error_email']    = 'Helytelen email cím!';
 $_['error_enquiry']  = 'Szöveged 10 és 3000 karakternek kell lennie!';
+
+// MintCart
+$_['text_message'] = '<p>Üzenetét sikeresen elküldtük az üzlet tulajdonosának!</p>';

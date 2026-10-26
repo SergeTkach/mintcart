@@ -1,0 +1,16 @@
+<?php
+
+// MintCart
+$_['error_city'] = 'Escolha uma cidade na lista';
+$_['error_point'] = 'Escolha uma agência dos correios';
+$_['text_branch'] = 'Agência dos correios';
+$_['text_carrier_rates'] = 'Pelas tarifas da transportadora';
+$_['text_choose'] = 'Escolher...';
+$_['text_city'] = 'Cidade';
+$_['text_city_hint'] = 'Comece a digitar o nome da cidade';
+$_['text_free'] = 'Grátis';
+$_['text_free_from'] = 'Grátis a partir de %s';
+$_['text_loading'] = 'Carregando...';
+$_['text_method_branch'] = 'Agência dos correios Ukrposhta';
+$_['text_no_results'] = 'Nada encontrado';
+$_['text_title'] = 'Ukrposhta';

@@ -20,3 +20,7 @@ $_['text_close'] = 'Затвори';
 $_['text_mc_call'] = 'Обадете ни се';
 $_['text_mc_compare'] = 'Сравни';
 $_['text_mc_search_all'] = 'Покажи всички резултати';
+
+// MintCart
+$_['text_mc_search_empty'] = 'Нищо не е намерено';
+$_['text_menu'] = 'Меню';

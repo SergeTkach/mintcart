@@ -34,3 +34,6 @@ $_['text_mailaddress']      = 'E:';
 $_['text_kvk']              = 'KVK nummer';
 $_['text_btw']              = 'BTW ID';
 $_['text_iban']             = 'Bank/IBAN';
+
+// MintCart
+$_['text_message'] = '<p>Uw bericht is succesvol verzonden naar de winkeleigenaar!</p>';

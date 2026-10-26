@@ -35,3 +35,7 @@ $_['error_city']           = 'Miejscowość musi mieć od 2 do 128 znaków!';
 $_['error_country']        = 'Wybierz kraj!';
 $_['error_zone']           = 'Wybierz województwo!';
 $_['error_custom_field']   = '%s wymagane!';
+
+// MintCart
+$_['text_address_edit'] = 'Edytuj adres';
+$_['text_confirm'] = 'Czy na pewno?';

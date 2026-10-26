@@ -96,3 +96,11 @@ $_['error_telephone']              = 'Telefone da loja deve ter entre 10 e 32 ca
 $_['error_customer_group_display'] = 'Você deve selecionar um tipo de cliente padrão!';
 $_['error_default']                = 'Atenção: Você não pode excluir a loja principal!';
 $_['error_store']                  = 'Atenção: Esta loja não pode ser excluída, pois ela possui %s pedidos!';
+
+// MintCart
+$_['text_information_picker_browse'] = 'Procurar páginas';
+$_['text_information_picker_confirm'] = 'Selecionar';
+$_['text_information_picker_empty'] = 'Nenhuma página encontrada.';
+$_['text_information_picker_next'] = 'Próximo';
+$_['text_information_picker_prev'] = 'Anterior';
+$_['text_information_picker_search'] = 'Pesquisar páginas';

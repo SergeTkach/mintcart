@@ -25,3 +25,14 @@ $_['text_rating_desc']  = 'Ocena (Najwyższa)';
 $_['text_model_asc']    = 'Model (A - Z)';
 $_['text_model_desc']   = 'Model (Z - A)';
 $_['text_limit']        = 'Pokaż:';
+
+// MintCart
+$_['text_add_to_cart_error'] = 'Nie udało się dodać tego produktu do koszyka';
+$_['text_added_to_cart'] = 'Dodano do koszyka';
+$_['text_badge_new'] = 'Nowość';
+$_['text_badge_out_of_stock'] = 'Brak w magazynie';
+$_['text_badge_sale'] = 'Promocja';
+$_['text_no_results'] = 'Brak marek do wyświetlenia.';
+$_['text_quick_order'] = 'Szybkie zamówienie';
+$_['text_rated'] = 'Oceniono na %s z 5 gwiazdek';
+$_['text_wishlist_error'] = 'Nie udało się zaktualizować listy życzeń';

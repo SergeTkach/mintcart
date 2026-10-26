@@ -228,3 +228,17 @@ $_['error_ftp_username']               = 'Uwaga: Wymagana nazwa użytkownika FTP
 $_['error_ftp_password']               = 'Uwaga: Wymagane hasło FTP!';
 $_['error_error_filename']             = 'Uwaga: Wymagana nazwa pliku dziennika błędów!';
 $_['error_encryption']                 = 'Uwaga: Klucz szyfrowania musi zawierać od 3 do 32 znaków!';
+
+// MintCart
+$_['entry_currency_engine'] = 'Silnik kursów walut';
+$_['entry_symbol_left_space'] = 'Spacja przy lewym symbolu waluty';
+$_['entry_symbol_right_space'] = 'Spacja przy prawym symbolu waluty';
+$_['entry_timezone'] = 'Strefa czasowa';
+$_['help_symbol_left_space'] = 'Opcjonalnie dodaje spację po lewym symbolu waluty.';
+$_['help_symbol_right_space'] = 'Opcjonalnie dodaje spację przed prawym symbolem waluty.';
+$_['text_information_picker_browse'] = 'Przeglądaj strony';
+$_['text_information_picker_confirm'] = 'Wybierz';
+$_['text_information_picker_empty'] = 'Nie znaleziono stron.';
+$_['text_information_picker_next'] = 'Następna';
+$_['text_information_picker_prev'] = 'Poprzednia';
+$_['text_information_picker_search'] = 'Szukaj stron';

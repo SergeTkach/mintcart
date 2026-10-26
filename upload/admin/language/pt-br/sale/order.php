@@ -130,3 +130,11 @@ $_['error_warning']              = 'Atenção: Faltou preencher alguma informaç
 $_['error_permission']           = 'Atenção: Você não tem permissão para modificar os pedidos!';
 $_['error_action']               = 'Atenção: Não foi possível concluir esta ação!';
 $_['error_filetype']             = 'O tipo de arquivo não é válido!';
+
+// MintCart
+$_['text_customer_picker_browse'] = 'Procurar clientes';
+$_['text_customer_picker_confirm'] = 'Selecionar';
+$_['text_customer_picker_empty'] = 'Nenhum cliente encontrado.';
+$_['text_customer_picker_next'] = 'Próximo';
+$_['text_customer_picker_prev'] = 'Anterior';
+$_['text_customer_picker_search'] = 'Pesquisar clientes';

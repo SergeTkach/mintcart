@@ -25,3 +25,14 @@ $_['text_rating_desc']  = 'Рейтинг (низх.)';
 $_['text_model_asc']    = 'Модел (възх.)';
 $_['text_model_desc']   = 'Модел (низх.)';
 $_['text_limit']        = 'Покажи:';
+
+// MintCart
+$_['text_add_to_cart_error'] = 'Този продукт не можа да бъде добавен в количката';
+$_['text_added_to_cart'] = 'Добавено в количката';
+$_['text_badge_new'] = 'Ново';
+$_['text_badge_out_of_stock'] = 'Изчерпано';
+$_['text_badge_sale'] = 'Промоция';
+$_['text_no_results'] = 'Няма марки за показване.';
+$_['text_quick_order'] = 'Бърза поръчка';
+$_['text_rated'] = 'Оценка %s от 5 звезди';
+$_['text_wishlist_error'] = 'Списъкът с желания не можа да бъде обновен';
