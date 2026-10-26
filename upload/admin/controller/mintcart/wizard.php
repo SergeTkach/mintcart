@@ -1003,6 +1003,8 @@ class ControllerMintcartWizard extends Controller
             }
         }
 
+        ksort($available);
+
         return $available;
     }
 
