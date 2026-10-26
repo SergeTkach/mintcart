@@ -40,3 +40,6 @@ $_['label_extensions'] = 'Розширення';
 $_['label_users'] = 'Користувачі';
 $_['label_backup_restore'] = 'Резервні копії';
 $_['label_error_log'] = 'Журнал помилок';
+$_['label_storage_cache_logs_sessions'] = 'Сховище (кеш, логи, сесії)';
+$_['label_design_styles'] = 'Дизайн → Стилі';
+$_['label_compatibility_checker'] = 'Перевірка сумісності';
