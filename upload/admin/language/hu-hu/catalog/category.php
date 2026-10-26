@@ -45,3 +45,13 @@ $_['error_meta_title']       = 'Meta Title must be greater than 1 and less than 
 $_['error_keyword']          = 'SEO URL already in use!';
 $_['error_unique']           = 'SEO URL must be unique!';
 $_['error_parent']           = 'The parent category you have chosen is a child of the current one!';
+
+// MintCart
+$_['column_status'] = 'Állapot';
+$_['error_category'] = 'A kategória nem található!';
+$_['text_drag_hint'] = 'Húzzon egy sort (vagy használja a fel/le gombokat) a kategóriák átrendezéséhez. Az új sorrend automatikusan mentésre kerül.';
+$_['text_move_down'] = 'Lefelé';
+$_['text_move_up'] = 'Felfelé';
+$_['text_order_failed'] = 'Az új sorrendet nem sikerült menteni. A lista visszaállt.';
+$_['text_order_saved'] = 'Sorrend mentve.';
+$_['text_sort_by_order_first'] = 'A kategóriák húzással történő átrendezéséhez rendezzen Sorrend szerint.';

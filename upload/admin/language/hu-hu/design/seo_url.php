@@ -28,3 +28,6 @@ $_['error_permission'] = 'Warning: You do not have permission to modify SEO URL!
 $_['error_query']      = 'Query must be between 3 and 64 characters!';
 $_['error_keyword']    = 'Keyword must be between 3 and 64 characters!';
 $_['error_exists']     = 'Keyword already in use!';
+
+// MintCart
+$_['error_query_exists'] = 'A lekérdezés már használatban van!';

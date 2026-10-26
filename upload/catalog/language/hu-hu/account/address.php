@@ -35,3 +35,6 @@ $_['error_city']         = 'City must be between 2 and 128 characters!';
 $_['error_country']      = 'Válassz egy országot!';
 $_['error_zone']         = 'Válassz egy régiót!';
 $_['error_custom_field'] = '%s szükséges!';
+
+// MintCart
+$_['text_confirm'] = 'Biztos benne?';

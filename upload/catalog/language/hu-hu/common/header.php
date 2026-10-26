@@ -18,3 +18,9 @@ $_['text_all']           = 'Mutass mindent';
 // MintCart
 $_['text_mc_search_empty'] = 'Nincs találat';
 $_['text_menu'] = 'Menü';
+
+// MintCart
+$_['text_close'] = 'Bezárás';
+$_['text_mc_call'] = 'Hívjon minket';
+$_['text_mc_compare'] = 'Összehasonlítás';
+$_['text_mc_search_all'] = 'Összes találat megjelenítése';

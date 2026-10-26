@@ -70,3 +70,7 @@ $_['error_opencart']     = 'Warning: You must enter your OpenCart API informatio
 $_['error_install']      = 'Extension installation taking place please wait a few seconds before trying to install!';
 $_['error_purchase']     = 'Extension could not be purchased!';
 $_['error_download']     = 'Extension could not be downloaded!';
+
+// MintCart
+$_['button_refresh'] = 'Frissítés';
+$_['text_see_more'] = 'további válaszok megtekintése...';

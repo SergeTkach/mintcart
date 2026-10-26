@@ -93,3 +93,26 @@ $_['error_custom_field']             = '%s kötelező!';
 $_['text_day'] = 'nap';
 $_['text_week'] = 'hét';
 $_['entry_city'] = 'Város';
+
+// MintCart
+$_['button_mc_close'] = 'Bezárás';
+$_['button_mc_code_apply'] = 'Alkalmaz';
+$_['button_mc_code_remove'] = 'A(z) %s kód eltávolítása';
+$_['button_mc_place_order'] = 'Rendelés leadása';
+$_['entry_mc_code'] = 'Kupon vagy ajándékutalvány';
+$_['error_mc_code'] = 'Ez a kód érvénytelen, lejárt vagy már felhasználták.';
+$_['error_mc_code_empty'] = 'Adjon meg egy kódot.';
+$_['error_mc_no_payment'] = 'Ez az üzlet jelenleg nem tud online rendelést fogadni (nincs elérhető fizetési mód). Rendeléséhez vegye fel velünk a kapcsolatot.';
+$_['error_telephone_mask'] = 'Adja meg a teljes telefonszámot!';
+$_['text_mc_address'] = 'Szállítási cím';
+$_['text_mc_comment'] = 'Megjegyzés a rendeléshez';
+$_['text_mc_contact'] = 'Elérhetőségek';
+$_['text_mc_error'] = 'Valami hiba történt. Próbálja újra.';
+$_['text_mc_login'] = 'Már van fiókja? <a href="%s">Jelentkezzen be</a>';
+$_['text_mc_login_required'] = 'Ehhez a rendeléshez a vendég-pénztár nem érhető el. A folytatáshoz jelentkezzen be, vagy hozzon létre fiókot.';
+$_['text_mc_no_payment'] = 'Nincs elérhető fizetési lehetőség.';
+$_['text_mc_no_shipping'] = 'Erre a címre nincs elérhető szállítási lehetőség.';
+$_['text_mc_payment'] = 'Fizetés';
+$_['text_mc_payment_ready'] = 'A rendelése létrejött. Fejezze be a fizetést az alábbi lépésben.';
+$_['text_mc_shipping'] = 'Szállítás';
+$_['text_mc_summary'] = 'Az Ön rendelése';

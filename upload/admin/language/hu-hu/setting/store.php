@@ -96,3 +96,11 @@ $_['error_telephone']              = 'Telephone must be between 3 and 32 charact
 $_['error_customer_group_display'] = 'You must include the default customer group if you are going to use this feature!';
 $_['error_default']                = 'Warning: You can not delete your default store!';
 $_['error_store']                  = 'Warning: This Store cannot be deleted as it is currently assigned to %s orders!';
+
+// MintCart
+$_['text_information_picker_browse'] = 'Oldalak tallózása';
+$_['text_information_picker_confirm'] = 'Kiválasztás';
+$_['text_information_picker_empty'] = 'Nem található oldal.';
+$_['text_information_picker_next'] = 'Következő';
+$_['text_information_picker_prev'] = 'Előző';
+$_['text_information_picker_search'] = 'Oldalak keresése';

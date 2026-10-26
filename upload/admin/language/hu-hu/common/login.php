@@ -17,3 +17,6 @@ $_['button_login']   = 'Login';
 // Error
 $_['error_login']    = 'No match for Username and/or Password.';
 $_['error_token']    = 'Invalid token session. Please login again.';
+
+// MintCart
+$_['error_attempts'] = 'Figyelem: A fiókja túllépte a megengedett bejelentkezési kísérletek számát. Próbálja újra 1 óra múlva, vagy állítsa vissza a jelszót.';

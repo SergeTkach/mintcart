@@ -19,3 +19,7 @@ $_['entry_date_added']  = 'Date Added';
 
 // Error
 $_['error_permission']  = 'Warning: You do not have permission to modify uploads!';
+
+// MintCart
+$_['error_file'] = 'A feltöltött fájl nem található!';
+$_['error_upload'] = 'Érvénytelen feltöltés!';

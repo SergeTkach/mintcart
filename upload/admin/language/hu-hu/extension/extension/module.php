@@ -21,3 +21,6 @@ $_['entry_name']       = 'Module Name';
 $_['error_permission'] = 'Warning: You do not have permission to modify modules!';
 $_['error_name']       = 'Module Name must be between 3 and 64 characters!';
 $_['error_code']       = 'Extension required!';
+
+// MintCart
+$_['error_code_name'] = 'A modul kódja 3 és 32 karakter között legyen!';

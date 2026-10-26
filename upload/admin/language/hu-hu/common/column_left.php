@@ -88,3 +88,26 @@ $_['text_paypal_search']        = 'Search';
 $_['text_complete_status']      = 'Orders Completed';
 $_['text_processing_status']    = 'Orders Processing';
 $_['text_other_status']         = 'Other Statuses';
+
+// MintCart
+$_['text_homepage'] = 'Főoldal';
+$_['text_mc_menu_hint'] = 'Legközelebb itt találja:';
+$_['text_mc_menu_hint_click'] = 'Kattintson ide a megnyitáshoz';
+$_['text_mc_menu_hint_ok'] = 'Értem';
+$_['text_mc_storage'] = 'Tárhely';
+$_['text_mintcart_badge'] = 'Termékjelvények';
+$_['text_mintcart_business'] = 'Üzlet';
+$_['text_mintcart_business_contacts'] = 'Kapcsolat';
+$_['text_mintcart_business_delivery'] = 'Szállítás';
+$_['text_mintcart_business_payments'] = 'Fizetés';
+$_['text_mintcart_compatibility'] = 'Kompatibilitás-ellenőrző';
+$_['text_mintcart_design_styles'] = 'Stílusok';
+$_['text_mintcart_quickorder'] = 'Gyorsrendelési kérések';
+$_['text_mintcart_seo'] = 'SEO';
+$_['text_mintcart_seo_meta'] = 'Meta címkék';
+$_['text_mintcart_seo_redirects'] = 'Átirányítások';
+$_['text_mintcart_seo_system_pages'] = 'Rendszeroldalak';
+$_['text_mintcart_seo_url_generator'] = 'URL-generátor';
+$_['text_mintcart_seo_urls'] = 'Összes URL';
+$_['text_mintcart_settings_diagnostics'] = 'Diagnosztika';
+$_['text_mintcart_wizard'] = 'Beállítási varázsló';

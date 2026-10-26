@@ -130,3 +130,11 @@ $_['error_warning']              = 'Warning: Please check the form carefully for
 $_['error_permission']           = 'Warning: You do not have permission to modify orders!';
 $_['error_action']               = 'Warning: Could not complete this action!';
 $_['error_filetype']             = 'Invalid file type!';
+
+// MintCart
+$_['text_customer_picker_browse'] = 'Vásárlók tallózása';
+$_['text_customer_picker_confirm'] = 'Kiválasztás';
+$_['text_customer_picker_empty'] = 'Nem található vásárló.';
+$_['text_customer_picker_next'] = 'Következő';
+$_['text_customer_picker_prev'] = 'Előző';
+$_['text_customer_picker_search'] = 'Vásárlók keresése';

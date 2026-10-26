@@ -15,3 +15,9 @@ $_['text_order']        = 'Rendelés Történet';
 $_['text_wishlist']     = 'Kívánságlista';
 $_['text_newsletter']   = 'Hírlevél';
 $_['text_powered']      = 'Powered By <a href="http://www.phonelock.net">PhoneLock</a><br /> %s &copy; %s';
+
+// MintCart
+$_['text_contact_us'] = 'Kapcsolat';
+$_['text_mc_reviews'] = 'Vásárlói vélemények';
+$_['text_newsletter_email'] = 'E-mail';
+$_['text_newsletter_submit'] = 'Feliratkozás';

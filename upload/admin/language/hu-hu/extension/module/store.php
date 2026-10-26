@@ -13,3 +13,6 @@ $_['entry_status']     = 'Status';
 
 // Error
 $_['error_permission'] = 'Warning: You do not have permission to modify store module!';
+
+// MintCart
+$_['help_admin'] = 'Ha igen, a több-áruházas lista csak az adminisztrátori bejelentkezéskor lesz látható!';

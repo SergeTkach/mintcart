@@ -203,3 +203,17 @@ $_['error_log_required']             = 'Error Log Filename required!';
 $_['error_log_invalid']              = 'Error Log Filename invalid!';
 $_['error_log_extension']            = 'Error Log Filename extension needs to be .log!';
 $_['error_encryption']               = 'Encryption Key must be between 32 and 1024 characters!';
+
+// MintCart
+$_['entry_currency_engine'] = 'Árfolyamszolgáltató';
+$_['entry_symbol_left_space'] = 'Szóköz a bal oldali pénznemjel után';
+$_['entry_symbol_right_space'] = 'Szóköz a jobb oldali pénznemjel előtt';
+$_['entry_timezone'] = 'Időzóna';
+$_['help_symbol_left_space'] = 'Opcionálisan szóköz hozzáadása a bal oldali pénznemjel után.';
+$_['help_symbol_right_space'] = 'Opcionálisan szóköz hozzáadása a jobb oldali pénznemjel elé.';
+$_['text_information_picker_browse'] = 'Oldalak tallózása';
+$_['text_information_picker_confirm'] = 'Kiválasztás';
+$_['text_information_picker_empty'] = 'Nem található oldal.';
+$_['text_information_picker_next'] = 'Következő';
+$_['text_information_picker_prev'] = 'Előző';
+$_['text_information_picker_search'] = 'Oldalak keresése';
