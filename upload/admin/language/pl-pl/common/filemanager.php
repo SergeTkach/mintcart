@@ -20,3 +20,6 @@ $_['error_directory']  = 'Ostrzeżenie: Katalog nie istnieje!';
 $_['error_filetype']   = 'Ostrzeżenie: Nieprawidłowy typ pliku!';
 $_['error_upload']     = 'Ostrzeżenie: Plik nie może być załadowany z nieznanego powodu!';
 $_['error_delete']     = 'Ostrzeżenie: Nie można usunąć tego katalogu!';
+
+// MintCart
+$_['error_filesize'] = 'Uwaga: nieprawidłowy rozmiar pliku!';

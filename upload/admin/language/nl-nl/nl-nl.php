@@ -274,3 +274,6 @@ $_['datepicker']            = 'nl';
 //$_['datepicker']            = 'zh-cn';
 //$_['datepicker']            = 'zh-hk';
 //$_['datepicker']            = 'zh-tw';
+
+// MintCart
+$_['button_developer'] = 'Ontwikkelaarsinstelling';

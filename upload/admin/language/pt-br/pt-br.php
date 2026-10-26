@@ -158,3 +158,6 @@ $_['error_curl']                    = 'CURL: Código do erro (%s): %s';
 
 $_['summernote']                    = 'pt-BR';
 $_['datepicker']                    = 'pt-br';
+
+// MintCart
+$_['button_developer'] = 'Configuração do desenvolvedor';

@@ -43,3 +43,16 @@ $_['error_permission']       = 'Ostrzeżenie: Nie masz uprawnień do modyfikowan
 $_['error_name']             = 'Kategoria nazwa musi być od 2 do 32 znaków!';
 $_['error_meta_title']       = 'Meta tytuł musi być większa niż 3, a mniej niż 255 znaków!';
 $_['error_keyword']          = 'SEO słowo kluczowe już w użyciu!';
+
+// MintCart
+$_['column_status'] = 'Status';
+$_['error_category'] = 'Nie znaleziono kategorii!';
+$_['error_parent'] = 'Wybrana kategoria nadrzędna jest podkategorią bieżącej!';
+$_['error_unique'] = 'Adres SEO URL musi być unikalny!';
+$_['text_drag_hint'] = 'Przeciągnij wiersz (lub użyj przycisków w górę/w dół), aby zmienić kolejność kategorii. Nowa kolejność zapisuje się automatycznie.';
+$_['text_keyword'] = 'Nie używaj spacji, zastąp je znakiem - i upewnij się, że SEO URL jest unikalny w całym sklepie.';
+$_['text_move_down'] = 'Przesuń w dół';
+$_['text_move_up'] = 'Przesuń w górę';
+$_['text_order_failed'] = 'Nie udało się zapisać nowej kolejności. Lista została przywrócona.';
+$_['text_order_saved'] = 'Kolejność zapisana.';
+$_['text_sort_by_order_first'] = 'Posortuj według Kolejności sortowania, aby zmieniać kolejność kategorii przeciąganiem.';

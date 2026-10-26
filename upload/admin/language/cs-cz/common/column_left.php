@@ -88,3 +88,26 @@ $_['text_paypal_search']        = 'Hledat';
 $_['text_complete_status']      = 'Dokončené objednávky';
 $_['text_processing_status']    = 'Zpracovávané objednávky';
 $_['text_other_status']         = 'Ostatní stavy';
+
+// MintCart
+$_['text_homepage'] = 'Úvodní stránka';
+$_['text_mc_menu_hint'] = 'Příště to najdete zde:';
+$_['text_mc_menu_hint_click'] = 'Kliknutím to otevřete';
+$_['text_mc_menu_hint_ok'] = 'Rozumím';
+$_['text_mc_storage'] = 'Úložiště';
+$_['text_mintcart_badge'] = 'Štítky produktů';
+$_['text_mintcart_business'] = 'Obchod';
+$_['text_mintcart_business_contacts'] = 'Kontakty';
+$_['text_mintcart_business_delivery'] = 'Doprava';
+$_['text_mintcart_business_payments'] = 'Platby';
+$_['text_mintcart_compatibility'] = 'Kontrola kompatibility';
+$_['text_mintcart_design_styles'] = 'Styly';
+$_['text_mintcart_quickorder'] = 'Požadavky na rychlou objednávku';
+$_['text_mintcart_seo'] = 'SEO';
+$_['text_mintcart_seo_meta'] = 'Meta tagy';
+$_['text_mintcart_seo_redirects'] = 'Přesměrování';
+$_['text_mintcart_seo_system_pages'] = 'Systémové stránky';
+$_['text_mintcart_seo_url_generator'] = 'Generátor URL';
+$_['text_mintcart_seo_urls'] = 'Všechny URL';
+$_['text_mintcart_settings_diagnostics'] = 'Diagnostika';
+$_['text_mintcart_wizard'] = 'Průvodce nastavením';

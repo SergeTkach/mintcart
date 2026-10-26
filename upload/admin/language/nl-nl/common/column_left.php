@@ -88,3 +88,26 @@ $_['text_paypal_search']        = 'Zoeken';
 $_['text_complete_status']      = 'Bestellingen voltooid';
 $_['text_processing_status']    = 'Bestellingen in behandeling';
 $_['text_other_status']         = 'Andere statussen';
+
+// MintCart
+$_['text_homepage'] = 'Homepage';
+$_['text_mc_menu_hint'] = 'De volgende keer vindt u dit hier:';
+$_['text_mc_menu_hint_click'] = 'Klik hier om het te openen';
+$_['text_mc_menu_hint_ok'] = 'Begrepen';
+$_['text_mc_storage'] = 'Opslag';
+$_['text_mintcart_badge'] = 'Productbadges';
+$_['text_mintcart_business'] = 'Zakelijk';
+$_['text_mintcart_business_contacts'] = 'Contact';
+$_['text_mintcart_business_delivery'] = 'Levering';
+$_['text_mintcart_business_payments'] = 'Betalingen';
+$_['text_mintcart_compatibility'] = 'Compatibiliteitscontrole';
+$_['text_mintcart_design_styles'] = 'Stijlen';
+$_['text_mintcart_quickorder'] = 'Snelbestelverzoeken';
+$_['text_mintcart_seo'] = 'SEO';
+$_['text_mintcart_seo_meta'] = 'Meta-tags';
+$_['text_mintcart_seo_redirects'] = 'Omleidingen';
+$_['text_mintcart_seo_system_pages'] = 'Systeempagina\'s';
+$_['text_mintcart_seo_url_generator'] = 'URL-generator';
+$_['text_mintcart_seo_urls'] = 'Alle URL\'s';
+$_['text_mintcart_settings_diagnostics'] = 'Diagnostiek';
+$_['text_mintcart_wizard'] = 'Installatiewizard';

@@ -33,3 +33,6 @@ $_['error_product']     = 'Produkt wymagany!';
 $_['error_author']      = 'Autor musi mieć od 3 do 64 znaków!';
 $_['error_text']        = 'Treść opinii musi mieć co najmniej 1 znak!';
 $_['error_rating']      = 'Ocena wymagana!';
+
+// MintCart
+$_['text_filter'] = 'Filtr';

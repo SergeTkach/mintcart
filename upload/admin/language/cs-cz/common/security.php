@@ -24,3 +24,6 @@ $_['error_path']       = 'Varování: Neplatná cesta!';
 $_['error_directory']  = 'Varování: Neplatný adresář!';
 $_['error_exists']     = 'Varování: Adresář již existuje!';
 $_['error_writable']   = 'Varování: config.php a admin/config.php musí být zapisovatelné!';
+
+// MintCart
+$_['entry_directory'] = 'Adresář';

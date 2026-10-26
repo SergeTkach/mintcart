@@ -45,3 +45,13 @@ $_['error_meta_title']       = 'Meta title musí mít více než 1 a méně než
 $_['error_keyword']          = 'SEO URL se již používá!';
 $_['error_unique']           = 'SEO URL musí být jedinečné!';
 $_['error_parent']           = 'Vybraná nadřazená kategorie je potomkem aktuální!';
+
+// MintCart
+$_['column_status'] = 'Stav';
+$_['error_category'] = 'Kategorie nebyla nalezena!';
+$_['text_drag_hint'] = 'Přetáhněte řádek (nebo použijte tlačítka nahoru/dolů) pro změnu pořadí kategorií. Nové pořadí se uloží automaticky.';
+$_['text_move_down'] = 'Posunout dolů';
+$_['text_move_up'] = 'Posunout nahoru';
+$_['text_order_failed'] = 'Nové pořadí se nepodařilo uložit. Seznam byl obnoven.';
+$_['text_order_saved'] = 'Pořadí uloženo.';
+$_['text_sort_by_order_first'] = 'Seřaďte podle pořadí řazení, abyste mohli kategorie přeuspořádat přetažením.';

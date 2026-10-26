@@ -21,3 +21,8 @@ $_['text_homepage']        = 'Strona domowa';
 $_['text_support']         = 'Forum wsparcia';
 $_['text_documentation']   = 'Dokumentacja';
 $_['text_logout']          = 'Wyloguj się';
+
+// MintCart
+$_['text_mc_admin_search_empty'] = 'Nie znaleziono pasujących ustawień';
+$_['text_mc_admin_search_placeholder'] = 'Szukaj ustawień…';
+$_['text_profile'] = 'Twój profil';

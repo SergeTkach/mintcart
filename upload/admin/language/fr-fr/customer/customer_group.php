@@ -1,0 +1,30 @@
+<?php
+// Heading
+$_['heading_title']     = 'Groupes de Clients';
+
+// Text
+$_['text_success']      = 'Succès : Vous avez modifié les groupes de clients !';
+$_['text_list']         = 'Liste des Groupes de Clients';
+$_['text_add']          = 'Ajouter un Groupe de Clients';
+$_['text_edit']         = 'Modifier un Groupe de Clients';
+
+// Column
+$_['column_name']       = 'Nom du Groupe de Clients';
+$_['column_sort_order'] = 'Ordre de Tri';
+$_['column_action']     = 'Action';
+
+// Entry
+$_['entry_name']        = 'Nom du Groupe de Clients';
+$_['entry_description'] = 'Description';
+$_['entry_approval']    = 'Approuver les Nouveaux Clients';
+$_['entry_sort_order']  = 'Ordre de Tri';
+
+// Help
+$_['help_approval']     = 'Les clients doivent être approuvés par un administrateur avant de pouvoir se connecter.';
+
+// Error
+$_['error_permission']  = 'Attention : Vous n\'avez pas la permission de modifier les groupes de clients !';
+$_['error_name']        = 'Le nom du groupe de clients doit contenir entre 3 et 32 caractères !';
+$_['error_default']     = 'Attention : Ce groupe de clients ne peut pas être supprimé car il est actuellement attribué comme groupe de clients par défaut de la boutique !';
+$_['error_store']       = 'Attention : Ce groupe de clients ne peut pas être supprimé car il est actuellement attribué à %s boutiques !';
+$_['error_customer']    = 'Attention : Ce groupe de clients ne peut pas être supprimé car il est actuellement attribué à %s clients !';

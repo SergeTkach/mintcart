@@ -17,3 +17,6 @@ $_['button_login']   = 'Zaloguj';
 // Error
 $_['error_login']    = 'Nazwa użytkownika i/lub hasło są niepoprawne.';
 $_['error_token']    = 'Nieprawidłowy token sesji. Zaloguj się ponownie.';
+
+// MintCart
+$_['error_attempts'] = 'Uwaga: Twoje konto przekroczyło dozwoloną liczbę prób logowania. Spróbuj ponownie za 1 godzinę lub zresetuj hasło.';

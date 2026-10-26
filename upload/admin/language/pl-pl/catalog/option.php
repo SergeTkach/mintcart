@@ -38,3 +38,7 @@ $_['error_name']          = 'Nazwa opcji musi mieć od 1 do 128 znaków!';
 $_['error_type']          = 'Ostrzeżenie: Wartości opcji wymagane!';
 $_['error_option_value']  = 'Nazwa wartości opcji musi mieć od 1 do 128 znaków!';
 $_['error_product']       = 'Ostrzeżenie: Ten atrybut nie może być usunięty, ponieważ jest aktualnie przypisany do %s produktów!';
+
+// MintCart
+$_['text_option'] = 'Opcja';
+$_['text_value'] = 'Wartości opcji';

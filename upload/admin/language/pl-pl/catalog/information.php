@@ -43,3 +43,7 @@ $_['error_checkout']         = 'Ostrzeżenie: Nie można usunąć tej strony inf
 $_['error_affiliate']        = 'Ostrzeżenie: Nie można usunąć tej strony informacyjnej, ponieważ jest obecnie przypisana jako regulamin sklepu partnerskiego!';
 $_['error_return']           = 'Ostrzeżenie: Nie można usunąć tej strony informacyjnej, ponieważ jest obecnie przypisana jako warunki zwrotów sklepu!';
 $_['error_store']            = 'Ostrzeżenie: Ta strona informacyjna nie można zostać usunięta, ponieważ jest aktualnie używana przez %s sklepów!';
+
+// MintCart
+$_['error_unique'] = 'Adres SEO URL musi być unikalny!';
+$_['text_keyword'] = 'Nie używaj spacji, zastąp je znakiem - i upewnij się, że SEO URL jest unikalny w całym sklepie.';

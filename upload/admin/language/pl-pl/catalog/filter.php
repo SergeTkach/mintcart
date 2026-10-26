@@ -22,3 +22,7 @@ $_['entry_sort_order']  = 'Kolejność sortowania';
 $_['error_permission']  = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania filtrów!';
 $_['error_group']       = 'Nazwa filtru grupy musi mieścić się w przedziale od 1 do 64 znaków!';
 $_['error_name']        = 'Nazwa filtru musi mieścić się w przedziale od 1 do 64 znaków!';
+
+// MintCart
+$_['text_group'] = 'Grupa filtrów';
+$_['text_value'] = 'Wartości filtra';

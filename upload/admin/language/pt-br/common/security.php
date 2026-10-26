@@ -24,3 +24,6 @@ $_['error_path']       = 'Atenção: Caminho inválido!';
 $_['error_directory']  = 'Atenção: Diretório inválido!';
 $_['error_exists']     = 'Atenção: O diretório já existe!';
 $_['error_writable']   = 'Atenção: Os arquivos config.php e admin/config.php não tem permissão de escrita!';
+
+// MintCart
+$_['entry_directory'] = 'Diretório';

@@ -47,3 +47,11 @@ $_['error_permission']      = 'Ostrzeżenie: Nie masz uprawnień do modyfikowani
 $_['error_name']            = 'Nazwa pola niestandardowego musi mieć od 1 do 128 znaków!';
 $_['error_type']            = 'Ostrzeżenie: Wartości pola niestandardowego wymagane!';
 $_['error_custom_value']    = 'Nazwa wartości pola niestandardowego musi mieć od 1 do 128 znaków!';
+
+// MintCart
+$_['entry_validation'] = 'Walidacja';
+$_['help_regex'] = 'Użyj wyrażenia regularnego. Np.: /[a-zA-Z0-9_-]/';
+$_['text_affiliate'] = 'Afiliant';
+$_['text_custom_field'] = 'Pole niestandardowe';
+$_['text_regex'] = 'Wyrażenie regularne';
+$_['text_value'] = 'Wartości pola niestandardowego';

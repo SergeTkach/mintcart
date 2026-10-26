@@ -45,3 +45,13 @@ $_['error_meta_title']       = 'Meta título deve ter entre 3 e 255 caracteres!'
 $_['error_keyword']          = 'A URL amigável já está em uso!';
 $_['error_unique']           = 'A URL amigável deve ser exclusiva!';
 $_['error_parent']           = 'O departamento principal que você escolheu não pode ser utilizado, pois ele é filho deste departamento!';
+
+// MintCart
+$_['column_status'] = 'Status';
+$_['error_category'] = 'Categoria não encontrada!';
+$_['text_drag_hint'] = 'Arraste uma linha (ou use os botões para cima/para baixo) para reordenar as categorias. A nova ordem é salva automaticamente.';
+$_['text_move_down'] = 'Mover para baixo';
+$_['text_move_up'] = 'Mover para cima';
+$_['text_order_failed'] = 'Não foi possível salvar a nova ordem. A lista foi restaurada.';
+$_['text_order_saved'] = 'Ordem salva.';
+$_['text_sort_by_order_first'] = 'Ordene por Ordem de exibição para reordenar as categorias arrastando e soltando.';

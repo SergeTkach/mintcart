@@ -316,3 +316,6 @@ $_['datepicker']                    = 'zh-tw';
 //$_['datepicker']                    = 'zh-cn';
 //$_['datepicker']                    = 'zh-hk';
 //$_['datepicker']                    = 'zh-tw';
+
+// MintCart
+$_['button_developer'] = 'Nastavení pro vývojáře';

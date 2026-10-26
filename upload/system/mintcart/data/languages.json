@@ -42,5 +42,9 @@
  "pt-br": {
   "name": "Português (Brasil)",
   "locale": "pt_BR.UTF-8,pt_BR,pt-br,portuguese"
+ },
+ "fr-fr": {
+  "name": "Français",
+  "locale": "fr_FR.UTF-8,fr_FR,fr-fr,french"
  }
 }

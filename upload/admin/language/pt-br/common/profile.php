@@ -33,3 +33,6 @@ $_['error_lastname']        = 'Sobrenome deve ter entre 1 e 32 caracteres!';
 $_['error_email']           = 'O e-mail não é válido!';
 $_['error_exists_username'] = 'Atenção: O e-mail já está em uso!';
 $_['error_email_exists']    = 'Atenção: O e-mail já está em uso!';
+
+// MintCart
+$_['error_exists_email'] = 'Atenção: o endereço de e-mail já está cadastrado!';

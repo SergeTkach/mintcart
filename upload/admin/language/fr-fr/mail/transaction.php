@@ -1,0 +1,6 @@
+<?php
+// Text
+$_['text_subject']  = '%s - Crédit d\'Affilié';
+$_['text_received'] = 'Vous avez reçu %s de crédit !';
+$_['text_total']    = 'Votre montant total de crédit est maintenant de %s.';
+$_['text_credit']   = 'Le crédit de votre compte peut être déduit de votre prochain achat.';

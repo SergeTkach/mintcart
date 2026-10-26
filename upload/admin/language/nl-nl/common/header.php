@@ -10,3 +10,7 @@ $_['text_homepage']      = 'OpenCart-home';
 $_['text_support']       = 'Ondersteuning';
 $_['text_documentation'] = 'Documentatie';
 $_['text_logout']        = 'Uitloggen';
+
+// MintCart
+$_['text_mc_admin_search_empty'] = 'Geen overeenkomende instellingen gevonden';
+$_['text_mc_admin_search_placeholder'] = 'Instellingen zoeken…';

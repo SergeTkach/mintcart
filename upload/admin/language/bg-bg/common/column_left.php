@@ -88,3 +88,26 @@ $_['text_paypal_search']        = 'Търсене';
 $_['text_complete_status']      = 'Завършени поръчки';
 $_['text_processing_status']    = 'Поръчки в обработка';
 $_['text_other_status']         = 'Статус на поръчките';
+
+// MintCart
+$_['text_homepage'] = 'Начална страница';
+$_['text_mc_menu_hint'] = 'Следващия път ще го намерите тук:';
+$_['text_mc_menu_hint_click'] = 'Щракнете тук, за да го отворите';
+$_['text_mc_menu_hint_ok'] = 'Разбрах';
+$_['text_mc_storage'] = 'Хранилище';
+$_['text_mintcart_badge'] = 'Значки на продукти';
+$_['text_mintcart_business'] = 'Бизнес';
+$_['text_mintcart_business_contacts'] = 'Контакти';
+$_['text_mintcart_business_delivery'] = 'Доставка';
+$_['text_mintcart_business_payments'] = 'Плащания';
+$_['text_mintcart_compatibility'] = 'Проверка за съвместимост';
+$_['text_mintcart_design_styles'] = 'Стилове';
+$_['text_mintcart_quickorder'] = 'Заявки за бърза поръчка';
+$_['text_mintcart_seo'] = 'SEO';
+$_['text_mintcart_seo_meta'] = 'Мета тагове';
+$_['text_mintcart_seo_redirects'] = 'Пренасочвания';
+$_['text_mintcart_seo_system_pages'] = 'Системни страници';
+$_['text_mintcart_seo_url_generator'] = 'Генератор на URL';
+$_['text_mintcart_seo_urls'] = 'Всички URL';
+$_['text_mintcart_settings_diagnostics'] = 'Диагностика';
+$_['text_mintcart_wizard'] = 'Помощник за настройка';

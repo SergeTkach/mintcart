@@ -17,3 +17,6 @@ $_['button_login']   = 'Inloggen';
 // Error
 $_['error_login']    = 'De gebruikersnaam en het wachtwoord komen niet overeen.';
 $_['error_token']    = 'Invalid token session. Please login again.';
+
+// MintCart
+$_['error_attempts'] = 'Waarschuwing: uw account heeft het toegestane aantal inlogpogingen overschreden. Probeer het over 1 uur opnieuw of herstel uw wachtwoord.';

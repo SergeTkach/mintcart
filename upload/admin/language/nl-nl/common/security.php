@@ -24,3 +24,6 @@ $_['error_path']       = 'Onbekend pad!';
 $_['error_directory']  = 'Onbekende map!';
 $_['error_exists']     = 'Map bestaat al!';
 $_['error_writable']   = 'config.php en admin/config.php moeten schrijfbaar worden gemaakt!';
+
+// MintCart
+$_['entry_directory'] = 'Map';

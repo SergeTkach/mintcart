@@ -17,3 +17,6 @@ $_['button_login']   = 'Přihlásit';
 // Error
 $_['error_login']    = 'Nesprávné uživatelské jméno a/nebo heslo.';
 $_['error_token']    = 'Neplatný token relace. Přihlaste se prosím znovu.';
+
+// MintCart
+$_['error_attempts'] = 'Upozornění: Váš účet překročil povolený počet pokusů o přihlášení. Zkuste to znovu za 1 hodinu nebo obnovte heslo.';

@@ -45,3 +45,13 @@ $_['error_meta_title']       = 'Meta titel moet tussen 1 en 255 tekens bevatten!
 $_['error_keyword']          = 'SEO URL is al in gebruik!';
 $_['error_unique']           = 'SEO URL moet uniek zijn!';
 $_['error_parent']           = 'De bovenliggende categorie die je hebt gekozen is een onderliggende van de huidige!';
+
+// MintCart
+$_['column_status'] = 'Status';
+$_['error_category'] = 'Categorie niet gevonden!';
+$_['text_drag_hint'] = 'Sleep een rij (of gebruik de omhoog/omlaag-knoppen) om categorieën te herordenen. De nieuwe volgorde wordt automatisch opgeslagen.';
+$_['text_move_down'] = 'Omlaag';
+$_['text_move_up'] = 'Omhoog';
+$_['text_order_failed'] = 'De nieuwe volgorde kon niet worden opgeslagen. De lijst is hersteld.';
+$_['text_order_saved'] = 'Volgorde opgeslagen.';
+$_['text_sort_by_order_first'] = 'Sorteer op sorteervolgorde om categorieën met slepen te herordenen.';

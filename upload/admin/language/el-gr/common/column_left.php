@@ -88,3 +88,26 @@ $_['text_paypal_search']        = 'Αναζήτηση';
 $_['text_complete_status']      = 'Ολοκληρωμένες Παραγγελίες';
 $_['text_processing_status']    = 'Παραγγελίες σε Επεξεργασία';
 $_['text_other_status']         = 'Άλλες Καταστάσεις';
+
+// MintCart
+$_['text_homepage'] = 'Αρχική σελίδα';
+$_['text_mc_menu_hint'] = 'Την επόμενη φορά θα το βρείτε εδώ:';
+$_['text_mc_menu_hint_click'] = 'Κάντε κλικ εδώ για να το ανοίξετε';
+$_['text_mc_menu_hint_ok'] = 'Κατάλαβα';
+$_['text_mc_storage'] = 'Αποθήκευση';
+$_['text_mintcart_badge'] = 'Σήματα προϊόντων';
+$_['text_mintcart_business'] = 'Επιχείρηση';
+$_['text_mintcart_business_contacts'] = 'Επικοινωνία';
+$_['text_mintcart_business_delivery'] = 'Παράδοση';
+$_['text_mintcart_business_payments'] = 'Πληρωμές';
+$_['text_mintcart_compatibility'] = 'Έλεγχος συμβατότητας';
+$_['text_mintcart_design_styles'] = 'Στυλ';
+$_['text_mintcart_quickorder'] = 'Αιτήματα γρήγορης παραγγελίας';
+$_['text_mintcart_seo'] = 'SEO';
+$_['text_mintcart_seo_meta'] = 'Meta tags';
+$_['text_mintcart_seo_redirects'] = 'Ανακατευθύνσεις';
+$_['text_mintcart_seo_system_pages'] = 'Σελίδες συστήματος';
+$_['text_mintcart_seo_url_generator'] = 'Δημιουργός URL';
+$_['text_mintcart_seo_urls'] = 'Όλα τα URL';
+$_['text_mintcart_settings_diagnostics'] = 'Διαγνωστικά';
+$_['text_mintcart_wizard'] = 'Οδηγός ρύθμισης';

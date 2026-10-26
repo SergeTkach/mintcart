@@ -32,3 +32,7 @@ $_['error_permission']   = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania p
 $_['error_name']         = 'Nazwa producenta musi mieć od 2 do 64 znaków!';
 $_['error_keyword']      = 'Słowo kluczowe SEO jest już użyte!';
 $_['error_product']      = 'Ostrzeżenie: Nie można usunąć tego producenta, ponieważ jest obecnie przypisany do %s produktów!';
+
+// MintCart
+$_['error_unique'] = 'Adres SEO URL musi być unikalny!';
+$_['text_keyword'] = 'Nie używaj spacji, zastąp je znakiem - i upewnij się, że SEO URL jest unikalny w całym sklepie.';

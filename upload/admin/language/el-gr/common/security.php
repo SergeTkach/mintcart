@@ -24,3 +24,6 @@ $_['error_path']       = 'Λάθος Διαδρομή (path)!';
 $_['error_directory']  = 'Λάθος καταλογος!';
 $_['error_exists']     = 'WΟ κατάλογος υπάρχει ήδη!';
 $_['error_writable']   = 'Τα αρχεία config.php και admin/config.php ΔΕΝ πρέπει να είναι μόνο για ανάγνωση (READ ONLY)';
+
+// MintCart
+$_['entry_directory'] = 'Κατάλογος';
