@@ -205,3 +205,15 @@ $_['error_log_required']             = 'Nome File Log Errori obbligatorio!';
 $_['error_log_invalid']              = 'Nome File Log Errori non valido!';
 $_['error_log_extension']            = 'L\'estensione del Nome File Log Errori deve essere .log!';
 $_['error_encryption']               = 'La Chiave di Crittografia deve essere compresa tra 32 e 1024 caratteri!';
+
+// MintCart
+$_['entry_symbol_left_space'] = 'Spazio dopo il simbolo di valuta a sinistra';
+$_['entry_symbol_right_space'] = 'Spazio prima del simbolo di valuta a destra';
+$_['help_symbol_left_space'] = 'Facoltativamente aggiunge uno spazio dopo il simbolo di valuta a sinistra.';
+$_['help_symbol_right_space'] = 'Facoltativamente aggiunge uno spazio prima del simbolo di valuta a destra.';
+$_['text_information_picker_browse'] = 'Sfoglia pagine';
+$_['text_information_picker_confirm'] = 'Seleziona';
+$_['text_information_picker_empty'] = 'Nessuna pagina trovata.';
+$_['text_information_picker_next'] = 'Avanti';
+$_['text_information_picker_prev'] = 'Indietro';
+$_['text_information_picker_search'] = 'Cerca pagine';

@@ -91,3 +91,26 @@ $_['error_no_shipping']              = 'Attenzione: Nessuna opzione di spedizion
 $_['error_payment']                  = 'Attenzione: Metodo di pagamento obbligatorio!';
 $_['error_no_payment']               = 'Attenzione: Nessuna opzione di pagamento disponibile. <a href="%s">Contattaci</a> per assistenza!';
 $_['error_custom_field']             = '%s obbligatorio!';
+
+// MintCart
+$_['button_mc_close'] = 'Chiudi';
+$_['button_mc_code_apply'] = 'Applica';
+$_['button_mc_code_remove'] = 'Rimuovi il codice %s';
+$_['button_mc_place_order'] = 'Effettua l\'ordine';
+$_['entry_mc_code'] = 'Coupon o buono regalo';
+$_['error_mc_code'] = 'Questo codice non è valido, è scaduto o è già stato esaurito.';
+$_['error_mc_code_empty'] = 'Inserisci un codice.';
+$_['error_mc_no_payment'] = 'Questo negozio al momento non può ricevere ordini online (nessun metodo di pagamento disponibile). Contatta il negozio per ordinare.';
+$_['error_telephone_mask'] = 'Inserisci il numero di telefono completo!';
+$_['text_mc_address'] = 'Indirizzo di consegna';
+$_['text_mc_comment'] = 'Commento all\'ordine';
+$_['text_mc_contact'] = 'Dati di contatto';
+$_['text_mc_error'] = 'Qualcosa è andato storto. Riprova.';
+$_['text_mc_login'] = 'Hai già un account? <a href="%s">Accedi</a>';
+$_['text_mc_login_required'] = 'Il checkout come ospite non è disponibile per questo ordine. Accedi o crea un account per continuare.';
+$_['text_mc_no_payment'] = 'Nessuna opzione di pagamento disponibile.';
+$_['text_mc_no_shipping'] = 'Nessuna opzione di consegna disponibile per questo indirizzo.';
+$_['text_mc_payment'] = 'Pagamento';
+$_['text_mc_payment_ready'] = 'Il tuo ordine è stato creato. Completa il pagamento nel passaggio qui sotto.';
+$_['text_mc_shipping'] = 'Consegna';
+$_['text_mc_summary'] = 'Il tuo ordine';

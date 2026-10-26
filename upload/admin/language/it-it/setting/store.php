@@ -96,3 +96,11 @@ $_['error_telephone']              = 'Il Telefono deve essere compreso tra 3 e 3
 $_['error_customer_group_display'] = 'Devi includere il gruppo clienti predefinito se hai intenzione di utilizzare questa funzionalità!';
 $_['error_default']                = 'Attenzione: Non puoi eliminare il tuo negozio predefinito!';
 $_['error_store']                  = 'Attenzione: Questo Negozio non può essere eliminato poiché è attualmente assegnato a %s ordini!';
+
+// MintCart
+$_['text_information_picker_browse'] = 'Sfoglia pagine';
+$_['text_information_picker_confirm'] = 'Seleziona';
+$_['text_information_picker_empty'] = 'Nessuna pagina trovata.';
+$_['text_information_picker_next'] = 'Avanti';
+$_['text_information_picker_prev'] = 'Indietro';
+$_['text_information_picker_search'] = 'Cerca pagine';

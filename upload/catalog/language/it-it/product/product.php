@@ -49,3 +49,22 @@ $_['error_name']               = 'Attenzione: Il Nome della Recensione deve esse
 $_['error_text']               = 'Attenzione: Il Testo della Recensione deve essere compreso tra 25 e 1000 caratteri!';
 $_['error_rating']             = 'Attenzione: Seleziona una valutazione per la recensione!';
 $_['error_product']            = "Wanring: Product required to add the review!";
+
+// MintCart
+$_['tab_overview'] = 'Panoramica';
+$_['text_add_to_cart_error'] = 'Impossibile aggiungere questo prodotto al carrello';
+$_['text_added_to_cart'] = 'Aggiunto al carrello';
+$_['text_badge_new'] = 'Novità';
+$_['text_badge_out_of_stock'] = 'Esaurito';
+$_['text_badge_sale'] = 'Saldi';
+$_['text_continue_shopping'] = 'Continua gli acquisti';
+$_['text_mc_delivery'] = 'Consegna';
+$_['text_mc_from'] = 'per ordini superiori a %s';
+$_['text_mc_payment'] = 'Pagamento';
+$_['text_mc_returns'] = 'Resi';
+$_['text_quick_order'] = 'Ordine rapido';
+$_['text_rated'] = 'Valutato %s su 5 stelle';
+$_['text_section_nav'] = 'Sezioni del prodotto';
+$_['text_view_cart'] = 'Vai al carrello';
+$_['text_viewed'] = 'Visti di recente';
+$_['text_wishlist_error'] = 'Impossibile aggiornare la tua lista dei desideri';

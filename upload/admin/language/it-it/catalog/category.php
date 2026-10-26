@@ -45,3 +45,13 @@ $_['error_meta_title']       = 'Il Meta Titolo deve essere maggiore di 1 e minor
 $_['error_keyword']          = 'URL SEO già in uso!';
 $_['error_unique']           = 'L\'URL SEO deve essere univoco!';
 $_['error_parent']           = 'La categoria genitore che hai scelto è figlia di quella corrente!';
+
+// MintCart
+$_['column_status'] = 'Stato';
+$_['error_category'] = 'Categoria non trovata!';
+$_['text_drag_hint'] = 'Trascina una riga (o usa i pulsanti su/giù) per riordinare le categorie. Il nuovo ordine viene salvato automaticamente.';
+$_['text_move_down'] = 'Sposta giù';
+$_['text_move_up'] = 'Sposta su';
+$_['text_order_failed'] = 'Impossibile salvare il nuovo ordine. L\'elenco è stato ripristinato.';
+$_['text_order_saved'] = 'Ordine salvato.';
+$_['text_sort_by_order_first'] = 'Ordina per Ordinamento per riordinare le categorie con il trascinamento.';
