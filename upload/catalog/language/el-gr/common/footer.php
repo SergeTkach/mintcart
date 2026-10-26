@@ -15,3 +15,9 @@ $_['text_order']        = 'Ιστορικό Παραγγελιών';
 $_['text_wishlist']     = 'Λίστα Επιθυμιών';
 $_['text_newsletter']   = 'Ενημερώσεις';
 $_['text_powered']      = 'Powered By <a href="http://www.opencart.com">OpenCart</a><br /> %s &copy; %s';
+
+// MintCart
+$_['text_contact_us'] = 'Επικοινωνία';
+$_['text_mc_reviews'] = 'Αξιολογήσεις πελατών';
+$_['text_newsletter_email'] = 'E-mail';
+$_['text_newsletter_submit'] = 'Εγγραφή';

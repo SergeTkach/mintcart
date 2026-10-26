@@ -35,3 +35,6 @@ $_['error_city']         = 'Plaats moet tussen 2 en 128 tekens bevatten!';
 $_['error_country']      = 'Selecteer een land!';
 $_['error_zone']         = 'Selecteer een provincie!';
 $_['error_custom_field'] = '%s is vereist!';
+
+// MintCart
+$_['text_confirm'] = 'Weet u het zeker?';

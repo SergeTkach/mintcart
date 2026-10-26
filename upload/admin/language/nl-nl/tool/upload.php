@@ -19,3 +19,7 @@ $_['entry_date_added']  = 'Datum toegevoegd';
 
 // Error
 $_['error_permission']  = 'Je hebt geen toestemming om uploads te bewerken!';
+
+// MintCart
+$_['error_file'] = 'Het te uploaden bestand is niet gevonden!';
+$_['error_upload'] = 'Ongeldige upload!';

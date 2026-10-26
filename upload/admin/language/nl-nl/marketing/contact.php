@@ -34,3 +34,6 @@ $_['help_product']         = 'Alléén naar klanten sturen die producten in de l
 $_['error_permission']     = 'Je hebt geen toestemming om e-mails te versturen!';
 $_['error_subject']        = 'E-mail onderwerp is vereist!';
 $_['error_message']        = 'E-mail bericht is vereist!';
+
+// MintCart
+$_['error_email'] = 'E-mail is verplicht!';

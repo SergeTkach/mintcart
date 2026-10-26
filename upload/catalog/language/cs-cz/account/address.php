@@ -35,3 +35,6 @@ $_['error_city']         = 'Město musí mít mezi 2 a 128 znaky!';
 $_['error_country']      = 'Prosím vyberte zemi!';
 $_['error_zone']         = 'Prosím vyberte kraj / stát!';
 $_['error_custom_field'] = '%s je povinné!';
+
+// MintCart
+$_['text_confirm'] = 'Jste si jisti?';

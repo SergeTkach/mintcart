@@ -203,3 +203,17 @@ $_['error_log_required']             = 'Název souboru protokolu chyb je povinn�
 $_['error_log_invalid']              = 'Název souboru protokolu chyb je neplatný!';
 $_['error_log_extension']            = 'Přípona názvu souboru protokolu chyb musí být .log!';
 $_['error_encryption']               = 'Šifrovací klíč musí mít mezi 32 a 1024 znaky!';
+
+// MintCart
+$_['entry_currency_engine'] = 'Modul kurzů měn';
+$_['entry_symbol_left_space'] = 'Mezera u levého symbolu měny';
+$_['entry_symbol_right_space'] = 'Mezera u pravého symbolu měny';
+$_['entry_timezone'] = 'Časové pásmo';
+$_['help_symbol_left_space'] = 'Volitelně přidá mezeru za levý symbol měny.';
+$_['help_symbol_right_space'] = 'Volitelně přidá mezeru před pravý symbol měny.';
+$_['text_information_picker_browse'] = 'Procházet stránky';
+$_['text_information_picker_confirm'] = 'Vybrat';
+$_['text_information_picker_empty'] = 'Nebyly nalezeny žádné stránky.';
+$_['text_information_picker_next'] = 'Další';
+$_['text_information_picker_prev'] = 'Předchozí';
+$_['text_information_picker_search'] = 'Hledat stránky';

@@ -203,3 +203,17 @@ $_['error_log_required']             = 'Bestandsnaam van error-logbestand is ver
 $_['error_log_invalid']              = 'Bestandsnaam van error-logbestand is niet correct!';
 $_['error_log_extension']            = 'De bestandsextentie van het error-logbestand moet .log zijn!';
 $_['error_encryption']               = 'Encriptiesleutel moet tussen 32 en 1024 tekens bevatten!';
+
+// MintCart
+$_['entry_currency_engine'] = 'Wisselkoersmodule';
+$_['entry_symbol_left_space'] = 'Spatie bij linker valutasymbool';
+$_['entry_symbol_right_space'] = 'Spatie bij rechter valutasymbool';
+$_['entry_timezone'] = 'Tijdzone';
+$_['help_symbol_left_space'] = 'Voegt optioneel een spatie toe na het linker valutasymbool.';
+$_['help_symbol_right_space'] = 'Voegt optioneel een spatie toe vóór het rechter valutasymbool.';
+$_['text_information_picker_browse'] = 'Pagina\'s bekijken';
+$_['text_information_picker_confirm'] = 'Selecteren';
+$_['text_information_picker_empty'] = 'Geen pagina\'s gevonden.';
+$_['text_information_picker_next'] = 'Volgende';
+$_['text_information_picker_prev'] = 'Vorige';
+$_['text_information_picker_search'] = 'Pagina\'s zoeken';

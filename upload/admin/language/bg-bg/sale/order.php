@@ -130,3 +130,12 @@ $_['error_warning']              = 'Внимание: Моля, проверет
 $_['error_permission']           = 'Внимание: Нямате права за редакция на поръчки!';
 $_['error_action']               = 'Внимание: Не можа да завърши това действие!';
 $_['error_filetype']			       = 'Невалиден тип файл!';
+
+// MintCart
+$_['text_customer_picker_browse'] = 'Преглед на клиентите';
+$_['text_customer_picker_confirm'] = 'Избери';
+$_['text_customer_picker_empty'] = 'Не са намерени клиенти.';
+$_['text_customer_picker_next'] = 'Напред';
+$_['text_customer_picker_prev'] = 'Назад';
+$_['text_customer_picker_search'] = 'Търсене на клиенти';
+$_['text_filter'] = 'Филтър';

@@ -13,3 +13,6 @@ $_['entry_status']     = 'Status';
 
 // Error
 $_['error_permission'] = 'Warning: You do not have permission to modify store module!';
+
+// MintCart
+$_['help_admin'] = 'Indien ja, is de lijst met winkels alleen zichtbaar als een beheerder is ingelogd!';

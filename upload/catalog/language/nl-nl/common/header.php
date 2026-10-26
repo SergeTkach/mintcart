@@ -14,3 +14,9 @@ $_['text_logout']        = 'Uitloggen';
 $_['text_checkout']      = 'Afrekenen';
 $_['text_search']        = 'Zoeken';
 $_['text_all']           = 'Alles weergeven';
+
+// MintCart
+$_['text_close'] = 'Sluiten';
+$_['text_mc_call'] = 'Bel ons';
+$_['text_mc_compare'] = 'Vergelijken';
+$_['text_mc_search_all'] = 'Alle resultaten tonen';

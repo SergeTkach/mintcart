@@ -203,3 +203,17 @@ $_['error_log_required']             = 'Σφάλμα το αρχείο κατα�
 $_['error_log_invalid']              = 'Σφάλμα το όνομα του αρχείου καταγραφής σφαλμάτων δεν ειναιέγκυρο!';
 $_['error_log_extension']            = 'Σφάλμα η επέκταση του αρχείου καταγραφής σφαλμάτων πρέπει να είναι .log!';
 $_['error_encryption']               = 'Το κλειδί Κρυπτογράφησης πρέπει να είναι απο 32 έως 1024 χαρακτήρες!';
+
+// MintCart
+$_['entry_currency_engine'] = 'Μηχανή ισοτιμιών νομισμάτων';
+$_['entry_symbol_left_space'] = 'Κενό στο αριστερό σύμβολο νομίσματος';
+$_['entry_symbol_right_space'] = 'Κενό στο δεξί σύμβολο νομίσματος';
+$_['entry_timezone'] = 'Ζώνη ώρας';
+$_['help_symbol_left_space'] = 'Προαιρετικά προσθέτει ένα κενό μετά το αριστερό σύμβολο νομίσματος.';
+$_['help_symbol_right_space'] = 'Προαιρετικά προσθέτει ένα κενό πριν από το δεξί σύμβολο νομίσματος.';
+$_['text_information_picker_browse'] = 'Περιήγηση στις σελίδες';
+$_['text_information_picker_confirm'] = 'Επιλογή';
+$_['text_information_picker_empty'] = 'Δεν βρέθηκαν σελίδες.';
+$_['text_information_picker_next'] = 'Επόμενο';
+$_['text_information_picker_prev'] = 'Προηγούμενο';
+$_['text_information_picker_search'] = 'Αναζήτηση σελίδων';

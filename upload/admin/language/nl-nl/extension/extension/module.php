@@ -21,3 +21,6 @@ $_['entry_name']       = 'Modulenaam';
 $_['error_permission'] = 'Je hebt geen toestemming om modules te bewerken!';
 $_['error_name']       = 'Modulenaam moet tussen 3 en 64 tekens bevatten!';
 $_['error_code']       = 'Extensie vereist!';
+
+// MintCart
+$_['error_code_name'] = 'Modulecode moet tussen 3 en 32 tekens bevatten!';

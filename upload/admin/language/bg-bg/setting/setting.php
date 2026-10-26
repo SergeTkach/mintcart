@@ -203,3 +203,17 @@ $_['error_log_required']             = 'Error Log Filename required!';
 $_['error_log_invalid']              = 'Error Log Filename invalid!';
 $_['error_log_extension']            = 'Error Log Filename extension needs to be .log!';
 $_['error_encryption']               = 'Encryption Key must be between 32 and 1024 characters!';
+
+// MintCart
+$_['entry_currency_engine'] = 'Модул за валутни курсове';
+$_['entry_symbol_left_space'] = 'Интервал при левия символ на валутата';
+$_['entry_symbol_right_space'] = 'Интервал при десния символ на валутата';
+$_['entry_timezone'] = 'Часова зона';
+$_['help_symbol_left_space'] = 'По избор добавя интервал след левия символ на валутата.';
+$_['help_symbol_right_space'] = 'По избор добавя интервал преди десния символ на валутата.';
+$_['text_information_picker_browse'] = 'Преглед на страниците';
+$_['text_information_picker_confirm'] = 'Избери';
+$_['text_information_picker_empty'] = 'Не са намерени страници.';
+$_['text_information_picker_next'] = 'Напред';
+$_['text_information_picker_prev'] = 'Назад';
+$_['text_information_picker_search'] = 'Търсене на страници';

@@ -35,3 +35,6 @@ $_['error_code']           = 'Kod waluty musi mieć 3 znaki!';
 $_['error_default']        = 'Ostrzeżenie: Nie można usunąć tej waluty, ponieważ jest ona obecnie przypisana jako domyślna waluta sklepu!';
 $_['error_store']          = 'Ostrzeżenie: Nie można usunąć tej waluty, ponieważ jest ona obecnie przypisana do %s sklepów!';
 $_['error_order']          = 'Ostrzeżenie: Nie można usunąć tej waluty, ponieważ jest ona obecnie przypisana do %s zamówień!';
+
+// MintCart
+$_['error_currency_engine'] = 'Uwaga: nie znaleziono aktywnego silnika kursów walut!';

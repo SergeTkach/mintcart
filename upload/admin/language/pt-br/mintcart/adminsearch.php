@@ -1,0 +1,43 @@
+<?php
+
+// MintCart
+$_['label_backup_restore'] = 'Backup / Restauração';
+$_['label_business_contacts'] = 'Negócio → Contatos';
+$_['label_business_delivery'] = 'Negócio → Entrega';
+$_['label_business_payments'] = 'Negócio → Pagamentos';
+$_['label_categories'] = 'Categorias';
+$_['label_countries'] = 'Países';
+$_['label_coupons'] = 'Cupons';
+$_['label_currency'] = 'Moeda';
+$_['label_customers'] = 'Clientes';
+$_['label_default_currency'] = 'Moeda padrão';
+$_['label_default_language'] = 'Idioma padrão';
+$_['label_design_banners'] = 'Design → Banners';
+$_['label_design_homepage'] = 'Design → Página inicial';
+$_['label_design_layouts'] = 'Design → Layouts';
+$_['label_design_themes'] = 'Design → Temas';
+$_['label_diagnostics'] = 'Diagnóstico';
+$_['label_error_log'] = 'Registro de erros';
+$_['label_extensions'] = 'Extensões';
+$_['label_favicon'] = 'Favicon';
+$_['label_geo_zones'] = 'Zonas geográficas';
+$_['label_language'] = 'Idioma';
+$_['label_manufacturers'] = 'Fabricantes';
+$_['label_marketing'] = 'Marketing';
+$_['label_meta_title'] = 'Meta título';
+$_['label_order_statuses'] = 'Status de pedidos';
+$_['label_orders'] = 'Pedidos';
+$_['label_products'] = 'Produtos';
+$_['label_seo_urls'] = 'URLs amigáveis';
+$_['label_stock_statuses'] = 'Status de estoque';
+$_['label_store_address'] = 'Endereço da loja';
+$_['label_store_email'] = 'E-mail da loja';
+$_['label_store_logo'] = 'Logotipo da loja';
+$_['label_store_name'] = 'Nome da loja';
+$_['label_store_settings'] = 'Configurações da loja';
+$_['label_store_telephone'] = 'Telefone da loja';
+$_['label_system_pages_seo'] = 'SEO das páginas do sistema';
+$_['label_tax_classes'] = 'Classes de impostos';
+$_['label_tax_rates'] = 'Alíquotas de impostos';
+$_['label_users'] = 'Usuários';
+$_['label_zones'] = 'Zonas';

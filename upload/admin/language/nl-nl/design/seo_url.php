@@ -28,3 +28,6 @@ $_['error_permission'] = 'Je hebt geen toestemming om SEO URL\'s te bewerken!';
 $_['error_query']      = 'Query moet tussen 3 en 64 tekens bevatten!';
 $_['error_keyword']    = 'Sleutelwoord moet tussen 3 en 64 tekens bevatten!';
 $_['error_exists']     = 'Sleutelwoord wordt al gebruikt!';
+
+// MintCart
+$_['error_query_exists'] = 'Query is al in gebruik!';

@@ -6,3 +6,6 @@ $_['text_from']     = 'Ten bon został wysłany do Ciebie od %s';
 $_['text_message']  = 'Z wiadomością';
 $_['text_redeem']   = 'Aby zrealizować ten bon upominkowy, zanotuj kod <b>%s</b>, po czym kliknij link poniżej i zakup wybrane przez siebie produkty. Możesz wprowadzić kod na stronie z koszykiem, przed przejściem do kasy.';
 $_['text_footer']   = 'Jeśli masz jakiekolwiek pytania, odpowiedz na tą wiadomość.';
+
+// MintCart
+$_['text_sent'] = 'Sukces: e-mail z bonem upominkowym został wysłany!';

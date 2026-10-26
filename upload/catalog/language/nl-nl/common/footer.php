@@ -15,3 +15,9 @@ $_['text_order']        = 'Geschiedenis';
 $_['text_wishlist']     = 'Verlanglijstje';
 $_['text_newsletter']   = 'Updates';
 $_['text_powered']      = 'Ontwikkeld door <a href="http://www.opencart.com">OpenCart</a><br /> %s &copy; %s en vertaald door <a href="http://www.elmigo.nl">Elmigo</a>';
+
+// MintCart
+$_['text_contact_us'] = 'Contact';
+$_['text_mc_reviews'] = 'Klantbeoordelingen';
+$_['text_newsletter_email'] = 'E-mail';
+$_['text_newsletter_submit'] = 'Abonneren';

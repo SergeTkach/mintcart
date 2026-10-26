@@ -13,3 +13,6 @@ $_['entry_status']     = 'Situação';
 
 // Error
 $_['error_permission'] = 'Atenção: Você não tem permissão para modificar a extensão Menu de lojas!';
+
+// MintCart
+$_['help_admin'] = 'Se sim, a lista de lojas só ficará visível quando um administrador estiver conectado!';

@@ -34,3 +34,6 @@ $_['help_product']         = 'Odeslat pouze zákazníkům, kteří objednali pro
 $_['error_permission']     = 'Varování: Nemáte oprávnění odesílat e-maily!';
 $_['error_subject']        = 'Předmět e-mailu je povinný!';
 $_['error_message']        = 'Zpráva e-mailu je povinná!';
+
+// MintCart
+$_['error_email'] = 'E-mail je povinný!';

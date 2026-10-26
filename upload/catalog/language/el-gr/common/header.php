@@ -14,3 +14,9 @@ $_['text_logout']        = 'Αποσύνδεση';
 $_['text_checkout']      = 'Αγορά';
 $_['text_search']        = 'Αναζήτηση';
 $_['text_all']           = 'Εμφάνιση όλων';
+
+// MintCart
+$_['text_close'] = 'Κλείσιμο';
+$_['text_mc_call'] = 'Καλέστε μας';
+$_['text_mc_compare'] = 'Σύγκριση';
+$_['text_mc_search_all'] = 'Εμφάνιση όλων των αποτελεσμάτων';

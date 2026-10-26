@@ -130,3 +130,11 @@ $_['error_warning']              = 'Παρακαλώ ελέγξτε προσεκ
 $_['error_permission']           = 'Δεν έχετε Δικαίωμα για Επεξεργασία της Παραγγελίας';
 $_['error_action']               = 'Η Ενέργεια Δεν ολοκληρώθηκε!';
 $_['error_filetype']             = 'Μη έγκυρος τύπος αρχείού!';
+
+// MintCart
+$_['text_customer_picker_browse'] = 'Περιήγηση στους πελάτες';
+$_['text_customer_picker_confirm'] = 'Επιλογή';
+$_['text_customer_picker_empty'] = 'Δεν βρέθηκαν πελάτες.';
+$_['text_customer_picker_next'] = 'Επόμενο';
+$_['text_customer_picker_prev'] = 'Προηγούμενο';
+$_['text_customer_picker_search'] = 'Αναζήτηση πελατών';

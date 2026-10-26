@@ -13,3 +13,6 @@ $_['entry_status']     = 'Status';
 
 // Error
 $_['error_permission'] = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania modułu Sklep!';
+
+// MintCart
+$_['help_admin'] = 'Jeśli tak, lista sklepów będzie widoczna tylko po zalogowaniu administratora!';

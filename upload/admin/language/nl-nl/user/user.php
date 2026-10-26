@@ -36,3 +36,6 @@ $_['error_firstname']       = 'Voornaam moet tussen 1 en 32 tekens bevatten!';
 $_['error_lastname']        = 'Achternaam moet tussen 1 en 32 tekens bevatten!';
 $_['error_email']           = 'Dit e-mail adres is niet correct!';
 $_['error_exists_email']    = 'Dit e-mail adres is al geregistreerd!';
+
+// MintCart
+$_['error_single_user'] = 'Waarschuwing: u kunt uw eigen account niet uitschakelen!';

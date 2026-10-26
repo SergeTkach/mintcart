@@ -36,3 +36,6 @@ $_['error_code']           = 'Valuta code moet 3 tekens bevatten!';
 $_['error_default']        = 'Deze valuta kan niet worden verwijderd omdat deze wordt gebruikt als de standaardvaluta van de winkel!';
 $_['error_store']          = 'Deze valuta kan niet worden verwijderd omdat deze is toegewezen aan %s winkels!';
 $_['error_order']          = 'Deze valuta kan niet worden verwijderd omdat deze is toegewezen aan %s bestellingen!';
+
+// MintCart
+$_['error_currency_engine'] = 'Waarschuwing: geen actieve wisselkoersmodule gevonden!';

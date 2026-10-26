@@ -21,3 +21,6 @@ $_['entry_name']       = 'Název modulu';
 $_['error_permission'] = 'Varování: Nemáte oprávnění upravovat moduly!';
 $_['error_name']       = 'Název modulu musí mít mezi 3 a 64 znaky!';
 $_['error_code']       = 'Rozšíření je povinné!';
+
+// MintCart
+$_['error_code_name'] = 'Kód modulu musí mít od 3 do 32 znaků!';

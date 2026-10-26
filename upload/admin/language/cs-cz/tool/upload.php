@@ -19,3 +19,7 @@ $_['entry_date_added']  = 'Datum přidání';
 
 // Error
 $_['error_permission']  = 'Varování: Nemáte oprávnění upravovat nahrání!';
+
+// MintCart
+$_['error_file'] = 'Nahraný soubor nebyl nalezen!';
+$_['error_upload'] = 'Neplatné nahrání!';

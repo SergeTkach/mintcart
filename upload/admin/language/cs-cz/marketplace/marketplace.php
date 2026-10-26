@@ -70,3 +70,7 @@ $_['error_opencart']     = 'Varování: Než budete moci provádět nákupy, mus
 $_['error_install']      = 'Probíhá instalace rozšíření, počkejte prosím několik sekund před pokusem o instalaci!';
 $_['error_purchase']     = 'Rozšíření nelze zakoupit!';
 $_['error_download']     = 'Rozšíření nelze stáhnout!';
+
+// MintCart
+$_['button_refresh'] = 'Obnovit';
+$_['text_see_more'] = 'zobrazit další odpovědi...';

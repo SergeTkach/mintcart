@@ -96,3 +96,11 @@ $_['error_telephone']              = 'Dit telefoonnummer is niet correct!';
 $_['error_customer_group_display'] = 'Je moet een standaard klantengroep selecteren wanneer je van deze functie gebruik maakt!';
 $_['error_default']                = 'Je kunt je standaardwinkel niet verwijderen!';
 $_['error_store']                  = 'De winkel kan niet worden verwijderd wanneer deze is toegewezen aan %s bestellingen!';
+
+// MintCart
+$_['text_information_picker_browse'] = 'Pagina\'s bekijken';
+$_['text_information_picker_confirm'] = 'Selecteren';
+$_['text_information_picker_empty'] = 'Geen pagina\'s gevonden.';
+$_['text_information_picker_next'] = 'Volgende';
+$_['text_information_picker_prev'] = 'Vorige';
+$_['text_information_picker_search'] = 'Pagina\'s zoeken';

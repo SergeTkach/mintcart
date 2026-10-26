@@ -13,3 +13,6 @@ $_['column_action']    = 'Działania';
 
 // Error
 $_['error_permission'] = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania modułów!';
+
+// MintCart
+$_['error_code_name'] = 'Kod modułu musi mieć od 3 do 32 znaków!';

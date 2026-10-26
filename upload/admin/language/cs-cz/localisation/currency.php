@@ -36,3 +36,6 @@ $_['error_code']           = 'Kód měny musí obsahovat 3 znaky!';
 $_['error_default']        = 'Varování: Tuto měnu nelze smazat, protože je přiřazena jako výchozí měna obchodu!';
 $_['error_store']          = 'Varování: Tuto měnu nelze smazat, protože je přiřazena k %s obchodům!';
 $_['error_order']          = 'Varování: Tuto měnu nelze smazat, protože je přiřazena k %s objednávkám!';
+
+// MintCart
+$_['error_currency_engine'] = 'Upozornění: Nebyl nalezen žádný aktivní modul kurzů měn!';

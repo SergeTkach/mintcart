@@ -1,0 +1,43 @@
+<?php
+
+// MintCart
+$_['label_backup_restore'] = 'Záloha / Obnova';
+$_['label_business_contacts'] = 'Obchod → Kontakty';
+$_['label_business_delivery'] = 'Obchod → Doprava';
+$_['label_business_payments'] = 'Obchod → Platby';
+$_['label_categories'] = 'Kategorie';
+$_['label_countries'] = 'Země';
+$_['label_coupons'] = 'Kupóny';
+$_['label_currency'] = 'Měna';
+$_['label_customers'] = 'Zákazníci';
+$_['label_default_currency'] = 'Výchozí měna';
+$_['label_default_language'] = 'Výchozí jazyk';
+$_['label_design_banners'] = 'Vzhled → Bannery';
+$_['label_design_homepage'] = 'Vzhled → Úvodní stránka';
+$_['label_design_layouts'] = 'Vzhled → Rozvržení';
+$_['label_design_themes'] = 'Vzhled → Motivy';
+$_['label_diagnostics'] = 'Diagnostika';
+$_['label_error_log'] = 'Protokol chyb';
+$_['label_extensions'] = 'Rozšíření';
+$_['label_favicon'] = 'Favicon';
+$_['label_geo_zones'] = 'Geografické zóny';
+$_['label_language'] = 'Jazyk';
+$_['label_manufacturers'] = 'Výrobci';
+$_['label_marketing'] = 'Marketing';
+$_['label_meta_title'] = 'Meta titulek';
+$_['label_order_statuses'] = 'Stavy objednávek';
+$_['label_orders'] = 'Objednávky';
+$_['label_products'] = 'Produkty';
+$_['label_seo_urls'] = 'SEO URL';
+$_['label_stock_statuses'] = 'Stavy skladu';
+$_['label_store_address'] = 'Adresa obchodu';
+$_['label_store_email'] = 'E-mail obchodu';
+$_['label_store_logo'] = 'Logo obchodu';
+$_['label_store_name'] = 'Název obchodu';
+$_['label_store_settings'] = 'Nastavení obchodu';
+$_['label_store_telephone'] = 'Telefon obchodu';
+$_['label_system_pages_seo'] = 'SEO systémových stránek';
+$_['label_tax_classes'] = 'Daňové třídy';
+$_['label_tax_rates'] = 'Daňové sazby';
+$_['label_users'] = 'Uživatelé';
+$_['label_zones'] = 'Zóny';

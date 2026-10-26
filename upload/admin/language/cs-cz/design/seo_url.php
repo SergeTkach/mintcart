@@ -28,3 +28,6 @@ $_['error_permission'] = 'Varování: Nemáte oprávnění upravovat SEO URL!';
 $_['error_query']      = 'Dotaz musí mít mezi 3 a 64 znaky!';
 $_['error_keyword']    = 'Klíčové slovo musí mít mezi 3 a 64 znaky!';
 $_['error_exists']     = 'Klíčové slovo se již používá!';
+
+// MintCart
+$_['error_query_exists'] = 'Dotaz se již používá!';

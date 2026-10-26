@@ -36,3 +36,6 @@ $_['error_firstname']       = 'Jméno musí mít mezi 1 a 32 znaky!';
 $_['error_lastname']        = 'Příjmení musí mít mezi 1 a 32 znaky!';
 $_['error_email']           = 'E-mailová adresa se nezdá být platná!';
 $_['error_exists_email']    = 'Varování: E-mailová adresa je již registrována!';
+
+// MintCart
+$_['error_single_user'] = 'Upozornění: Nemůžete zakázat vlastní účet!';

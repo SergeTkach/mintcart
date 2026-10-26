@@ -22,3 +22,6 @@ $_['entry_date_start']  = 'Data rozpoczęcia';
 $_['entry_date_end']    = 'Data zakończenia';
 $_['entry_group']       = 'Grupuj według';
 $_['entry_status']      = 'Status zamówienia';
+
+// MintCart
+$_['text_filter'] = 'Filtr';

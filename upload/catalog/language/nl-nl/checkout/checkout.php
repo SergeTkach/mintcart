@@ -91,3 +91,26 @@ $_['error_no_shipping']              = 'Er zijn geen verzendopties beschikbaar. 
 $_['error_payment']                  = 'Betaalmethode is vereist!';
 $_['error_no_payment']               = 'Er zijn geen betaalopties beschikbaar. <a href="%s">Neem contact op</a> voor meer informatie.';
 $_['error_custom_field']             = '%s is vereist!';
+
+// MintCart
+$_['button_mc_close'] = 'Sluiten';
+$_['button_mc_code_apply'] = 'Toepassen';
+$_['button_mc_code_remove'] = 'Code %s verwijderen';
+$_['button_mc_place_order'] = 'Bestelling plaatsen';
+$_['entry_mc_code'] = 'Kortingsbon of cadeaubon';
+$_['error_mc_code'] = 'Deze code is ongeldig, verlopen of al volledig gebruikt.';
+$_['error_mc_code_empty'] = 'Voer een code in.';
+$_['error_mc_no_payment'] = 'Deze winkel kan momenteel geen online bestellingen aannemen (er is geen betaalmethode beschikbaar). Neem contact op met de winkel om te bestellen.';
+$_['error_telephone_mask'] = 'Voer het volledige telefoonnummer in!';
+$_['text_mc_address'] = 'Afleveradres';
+$_['text_mc_comment'] = 'Opmerking bij bestelling';
+$_['text_mc_contact'] = 'Contactgegevens';
+$_['text_mc_error'] = 'Er is iets misgegaan. Probeer het opnieuw.';
+$_['text_mc_login'] = 'Hebt u al een account? <a href="%s">Inloggen</a>';
+$_['text_mc_login_required'] = 'Afrekenen als gast is niet beschikbaar voor deze bestelling. Log in of maak een account aan om door te gaan.';
+$_['text_mc_no_payment'] = 'Er zijn geen betaalopties beschikbaar.';
+$_['text_mc_no_shipping'] = 'Er zijn geen leveringsopties beschikbaar voor dit adres.';
+$_['text_mc_payment'] = 'Betaling';
+$_['text_mc_payment_ready'] = 'Uw bestelling is aangemaakt. Voltooi hieronder de betaalstap.';
+$_['text_mc_shipping'] = 'Levering';
+$_['text_mc_summary'] = 'Uw bestelling';

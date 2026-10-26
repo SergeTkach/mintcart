@@ -91,3 +91,26 @@ $_['error_no_shipping']              = 'Varování: Nejsou k dispozici žádné 
 $_['error_payment']                  = 'Varování: Způsob platby je povinný!';
 $_['error_no_payment']               = 'Varování: Nejsou k dispozici žádné platební možnosti. Prosím <a href="%s">kontaktujte nás</a>!';
 $_['error_custom_field']             = '%s je povinné!';
+
+// MintCart
+$_['button_mc_close'] = 'Zavřít';
+$_['button_mc_code_apply'] = 'Použít';
+$_['button_mc_code_remove'] = 'Odebrat kód %s';
+$_['button_mc_place_order'] = 'Odeslat objednávku';
+$_['entry_mc_code'] = 'Kupón nebo dárkový poukaz';
+$_['error_mc_code'] = 'Tento kód je neplatný, vypršel nebo byl již vyčerpán.';
+$_['error_mc_code_empty'] = 'Zadejte kód.';
+$_['error_mc_no_payment'] = 'Tento obchod momentálně nemůže přijímat objednávky online (není dostupný žádný způsob platby). Pro objednání kontaktujte obchod.';
+$_['error_telephone_mask'] = 'Zadejte celé telefonní číslo!';
+$_['text_mc_address'] = 'Dodací adresa';
+$_['text_mc_comment'] = 'Poznámka k objednávce';
+$_['text_mc_contact'] = 'Kontaktní údaje';
+$_['text_mc_error'] = 'Něco se pokazilo. Zkuste to prosím znovu.';
+$_['text_mc_login'] = 'Už máte účet? <a href="%s">Přihlaste se</a>';
+$_['text_mc_login_required'] = 'Pro tuto objednávku není dostupný nákup bez registrace. Přihlaste se nebo vytvořte účet a pokračujte.';
+$_['text_mc_no_payment'] = 'Nejsou dostupné žádné možnosti platby.';
+$_['text_mc_no_shipping'] = 'Pro tuto adresu nejsou dostupné žádné možnosti doručení.';
+$_['text_mc_payment'] = 'Platba';
+$_['text_mc_payment_ready'] = 'Vaše objednávka byla vytvořena. Dokončete krok platby níže.';
+$_['text_mc_shipping'] = 'Doručení';
+$_['text_mc_summary'] = 'Vaše objednávka';

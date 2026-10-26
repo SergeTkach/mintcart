@@ -34,3 +34,6 @@ $_['help_product']        = 'Wyślij tylko do klientów, którzy zamawiali produ
 $_['error_permission']     = 'Ostrzeżenie: Nie masz uprawnień do wysyłania e-maili!';
 $_['error_subject']        = 'Temat wiadomości e-mail wymagany!';
 $_['error_message']        = 'Treść wiadomości e-mail wymagana!';
+
+// MintCart
+$_['error_email'] = 'E-mail jest wymagany!';

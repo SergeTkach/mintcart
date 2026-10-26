@@ -130,3 +130,11 @@ $_['error_warning']              = 'Varování: Zkontrolujte prosím formulář 
 $_['error_permission']           = 'Varování: Nemáte oprávnění upravovat objednávky!';
 $_['error_action']               = 'Varování: Tuto akci nelze dokončit!';
 $_['error_filetype']             = 'Neplatný typ souboru!';
+
+// MintCart
+$_['text_customer_picker_browse'] = 'Procházet zákazníky';
+$_['text_customer_picker_confirm'] = 'Vybrat';
+$_['text_customer_picker_empty'] = 'Nebyli nalezeni žádní zákazníci.';
+$_['text_customer_picker_next'] = 'Další';
+$_['text_customer_picker_prev'] = 'Předchozí';
+$_['text_customer_picker_search'] = 'Hledat zákazníky';

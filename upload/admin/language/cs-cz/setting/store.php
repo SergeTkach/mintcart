@@ -96,3 +96,11 @@ $_['error_telephone']              = 'Telefon musí mít mezi 3 a 32 znaky!';
 $_['error_customer_group_display'] = 'Pokud budete používat tuto funkci, musíte zahrnout výchozí skupinu zákazníků!';
 $_['error_default']                = 'Varování: Nemůžete smazat svůj výchozí obchod!';
 $_['error_store']                  = 'Varování: Tento obchod nelze smazat, protože je přiřazen k %s objednávkám!';
+
+// MintCart
+$_['text_information_picker_browse'] = 'Procházet stránky';
+$_['text_information_picker_confirm'] = 'Vybrat';
+$_['text_information_picker_empty'] = 'Nebyly nalezeny žádné stránky.';
+$_['text_information_picker_next'] = 'Další';
+$_['text_information_picker_prev'] = 'Předchozí';
+$_['text_information_picker_search'] = 'Hledat stránky';

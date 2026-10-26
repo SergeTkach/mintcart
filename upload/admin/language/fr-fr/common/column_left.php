@@ -74,3 +74,26 @@ $_['text_order_recurring']      = 'Commandes Récurrentes';
 $_['text_complete_status']      = 'Commandes Terminées';
 $_['text_processing_status']    = 'Commandes en Traitement';
 $_['text_other_status']         = 'Autres Statuts';
+
+// MintCart
+$_['text_homepage'] = 'Page d\'accueil';
+$_['text_mc_menu_hint'] = 'La prochaine fois, vous le trouverez ici :';
+$_['text_mc_menu_hint_click'] = 'Cliquez ici pour l\'ouvrir';
+$_['text_mc_menu_hint_ok'] = 'Compris';
+$_['text_mc_storage'] = 'Stockage';
+$_['text_mintcart_badge'] = 'Badges produits';
+$_['text_mintcart_business'] = 'Entreprise';
+$_['text_mintcart_business_contacts'] = 'Contacts';
+$_['text_mintcart_business_delivery'] = 'Livraison';
+$_['text_mintcart_business_payments'] = 'Paiements';
+$_['text_mintcart_compatibility'] = 'Vérificateur de compatibilité';
+$_['text_mintcart_design_styles'] = 'Styles';
+$_['text_mintcart_quickorder'] = 'Demandes de commande rapide';
+$_['text_mintcart_seo'] = 'SEO';
+$_['text_mintcart_seo_meta'] = 'Balises meta';
+$_['text_mintcart_seo_redirects'] = 'Redirections';
+$_['text_mintcart_seo_system_pages'] = 'Pages système';
+$_['text_mintcart_seo_url_generator'] = 'Générateur d\'URL';
+$_['text_mintcart_seo_urls'] = 'Toutes les URL';
+$_['text_mintcart_settings_diagnostics'] = 'Diagnostic';
+$_['text_mintcart_wizard'] = 'Assistant de configuration';

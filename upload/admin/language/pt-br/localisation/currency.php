@@ -36,3 +36,6 @@ $_['error_code']           = 'Código deve conter 3 caracteres!';
 $_['error_default']        = 'Atenção: Esta moeda não pode ser excluída, pois ela está definida como a moeda padrão!';
 $_['error_store']          = 'Atenção: Esta moeda não pode ser excluída, pois está vinculada a %s lojas!';
 $_['error_order']          = 'Atenção: Esta moeda não pode ser excluída, pois está vinculada a %s pedidos!';
+
+// MintCart
+$_['error_currency_engine'] = 'Atenção: nenhum mecanismo de cotação de moedas ativo foi encontrado!';

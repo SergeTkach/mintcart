@@ -1,0 +1,43 @@
+<?php
+
+// MintCart
+$_['label_backup_restore'] = 'Αντίγραφο ασφαλείας / Επαναφορά';
+$_['label_business_contacts'] = 'Επιχείρηση → Επικοινωνία';
+$_['label_business_delivery'] = 'Επιχείρηση → Παράδοση';
+$_['label_business_payments'] = 'Επιχείρηση → Πληρωμές';
+$_['label_categories'] = 'Κατηγορίες';
+$_['label_countries'] = 'Χώρες';
+$_['label_coupons'] = 'Κουπόνια';
+$_['label_currency'] = 'Νόμισμα';
+$_['label_customers'] = 'Πελάτες';
+$_['label_default_currency'] = 'Προεπιλεγμένο νόμισμα';
+$_['label_default_language'] = 'Προεπιλεγμένη γλώσσα';
+$_['label_design_banners'] = 'Εμφάνιση → Banner';
+$_['label_design_homepage'] = 'Εμφάνιση → Αρχική σελίδα';
+$_['label_design_layouts'] = 'Εμφάνιση → Διατάξεις';
+$_['label_design_themes'] = 'Εμφάνιση → Θέματα';
+$_['label_diagnostics'] = 'Διαγνωστικά';
+$_['label_error_log'] = 'Αρχείο σφαλμάτων';
+$_['label_extensions'] = 'Επεκτάσεις';
+$_['label_favicon'] = 'Favicon';
+$_['label_geo_zones'] = 'Γεωγραφικές ζώνες';
+$_['label_language'] = 'Γλώσσα';
+$_['label_manufacturers'] = 'Κατασκευαστές';
+$_['label_marketing'] = 'Μάρκετινγκ';
+$_['label_meta_title'] = 'Meta τίτλος';
+$_['label_order_statuses'] = 'Καταστάσεις παραγγελιών';
+$_['label_orders'] = 'Παραγγελίες';
+$_['label_products'] = 'Προϊόντα';
+$_['label_seo_urls'] = 'SEO URL';
+$_['label_stock_statuses'] = 'Καταστάσεις αποθέματος';
+$_['label_store_address'] = 'Διεύθυνση καταστήματος';
+$_['label_store_email'] = 'E-mail καταστήματος';
+$_['label_store_logo'] = 'Λογότυπο καταστήματος';
+$_['label_store_name'] = 'Όνομα καταστήματος';
+$_['label_store_settings'] = 'Ρυθμίσεις καταστήματος';
+$_['label_store_telephone'] = 'Τηλέφωνο καταστήματος';
+$_['label_system_pages_seo'] = 'SEO σελίδων συστήματος';
+$_['label_tax_classes'] = 'Φορολογικές κλάσεις';
+$_['label_tax_rates'] = 'Φορολογικοί συντελεστές';
+$_['label_users'] = 'Χρήστες';
+$_['label_zones'] = 'Ζώνες';

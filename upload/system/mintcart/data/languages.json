@@ -46,5 +46,17 @@
  "fr-fr": {
   "name": "Français",
   "locale": "fr_FR.UTF-8,fr_FR,fr-fr,french"
+ },
+ "hu-hu": {
+  "name": "Magyar",
+  "locale": "hu_HU.UTF-8,hu_HU,hu-hu,hungarian"
+ },
+ "de-de": {
+  "name": "Deutsch",
+  "locale": "de_DE.UTF-8,de_DE,de-de,german"
+ },
+ "it-it": {
+  "name": "Italiano",
+  "locale": "it_IT.UTF-8,it_IT,it-it,italian"
  }
 }

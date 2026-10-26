@@ -14,3 +14,9 @@ $_['text_logout']        = 'Odhlásit';
 $_['text_checkout']      = 'Pokladna';
 $_['text_search']        = 'Hledat';
 $_['text_all']           = 'Zobrazit vše';
+
+// MintCart
+$_['text_close'] = 'Zavřít';
+$_['text_mc_call'] = 'Zavolejte nám';
+$_['text_mc_compare'] = 'Porovnat';
+$_['text_mc_search_all'] = 'Zobrazit všechny výsledky';

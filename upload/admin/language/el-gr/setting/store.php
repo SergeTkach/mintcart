@@ -96,3 +96,11 @@ $_['error_telephone']              = 'Το τηλέφωνο πρέπει να ε
 $_['error_customer_group_display'] = 'Θα πρέπει να συμπεριλάβετε την προεπιλεγμένη ομάδα πελατών, εάν πρόκειται να χρησιμοποιήσετε αυτήν τη δυνατότητα!';
 $_['error_default']                = 'Ειδοποίηση: Δεν μπορείτε να διαγράψετε το προεπιλεγμένο κατάστημα!';
 $_['error_store']                  = 'Ειδοποίηση: Αυτό το κατάστημα δεν μπορεί να διαγραφεί, καθώς έχει ανατεθεί σε %s παραγγελίες!';
+
+// MintCart
+$_['text_information_picker_browse'] = 'Περιήγηση στις σελίδες';
+$_['text_information_picker_confirm'] = 'Επιλογή';
+$_['text_information_picker_empty'] = 'Δεν βρέθηκαν σελίδες.';
+$_['text_information_picker_next'] = 'Επόμενο';
+$_['text_information_picker_prev'] = 'Προηγούμενο';
+$_['text_information_picker_search'] = 'Αναζήτηση σελίδων';

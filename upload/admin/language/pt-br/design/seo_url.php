@@ -28,3 +28,6 @@ $_['error_permission'] = 'Atenção: Você não tem permissão para utilizar o E
 $_['error_query']      = 'A Query deve ter entre 3 e 64 caracteres!';
 $_['error_keyword']    = 'A URL amigável deve ter entre 3 e 64 caracteres!';
 $_['error_exists']     = 'A URL amigável já está em uso!';
+
+// MintCart
+$_['error_query_exists'] = 'Consulta já em uso!';

@@ -130,3 +130,11 @@ $_['error_warning']              = 'Controleer het formulier!';
 $_['error_permission']           = 'Je hebt geen toestemming om bestellingen te bewerken!';
 $_['error_action']               = 'Kan deze actie niet uitvoeren!';
 $_['error_filetype']             = 'Onbekend bestandstype!';
+
+// MintCart
+$_['text_customer_picker_browse'] = 'Klanten bekijken';
+$_['text_customer_picker_confirm'] = 'Selecteren';
+$_['text_customer_picker_empty'] = 'Geen klanten gevonden.';
+$_['text_customer_picker_next'] = 'Volgende';
+$_['text_customer_picker_prev'] = 'Vorige';
+$_['text_customer_picker_search'] = 'Klanten zoeken';
