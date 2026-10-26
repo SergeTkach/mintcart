@@ -171,3 +171,5 @@ $_['button_fix']             = 'Настроить';
 $_['text_connected_languages']  = 'Подключённые языки:';
 $_['text_connected_currencies'] = 'Подключённые валюты:';
 $_['text_default_marker']       = 'по умолчанию';
+$_['text_language_removed'] = 'Язык удалён: %s.';
+$_['text_currency_removed'] = 'Валюта удалена: %s.';

@@ -136,3 +136,5 @@ $_['button_fix'] = 'Configurează';
 $_['text_connected_languages'] = 'Limbi conectate:';
 $_['text_connected_currencies'] = 'Monede conectate:';
 $_['text_default_marker'] = 'implicit';
+$_['text_language_removed'] = 'Limbă eliminată: %s.';
+$_['text_currency_removed'] = 'Monedă eliminată: %s.';

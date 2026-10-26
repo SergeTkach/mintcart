@@ -138,3 +138,5 @@ $_['error_method'] = 'Ese método de envío no está disponible.';
 $_['error_number'] = 'Introduzca un número, por ejemplo 5.00.';
 $_['error_option'] = 'Elija uno de los valores de la lista.';
 $_['error_check_fields'] = 'Revise los campos resaltados.';
+$_['text_language_removed'] = 'Idioma eliminado: %s.';
+$_['text_currency_removed'] = 'Moneda eliminada: %s.';

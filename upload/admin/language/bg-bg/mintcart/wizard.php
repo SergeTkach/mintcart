@@ -134,3 +134,5 @@ $_['where_design'] = 'Дизайн › Външен вид на магазина
 $_['where_first_product'] = 'Каталог › Продукти';
 $_['where_language'] = 'Система › Локализация › Езици';
 $_['where_store'] = 'Система › Настройки';
+$_['text_language_removed'] = 'Езикът е премахнат: %s.';
+$_['text_currency_removed'] = 'Валутата е премахната: %s.';

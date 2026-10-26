@@ -134,3 +134,5 @@ $_['where_design'] = 'Design › Apparence de la boutique';
 $_['where_first_product'] = 'Catalogue › Produits';
 $_['where_language'] = 'Système › Localisation › Langues';
 $_['where_store'] = 'Système › Paramètres';
+$_['text_language_removed'] = 'Langue supprimée : %s.';
+$_['text_currency_removed'] = 'Devise supprimée : %s.';

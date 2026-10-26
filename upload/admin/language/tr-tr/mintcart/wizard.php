@@ -136,3 +136,5 @@ $_['button_fix'] = 'Ayarla';
 $_['text_connected_languages'] = 'Bağlı diller:';
 $_['text_connected_currencies'] = 'Bağlı para birimleri:';
 $_['text_default_marker'] = 'varsayılan';
+$_['text_language_removed'] = 'Dil kaldırıldı: %s.';
+$_['text_currency_removed'] = 'Para birimi kaldırıldı: %s.';

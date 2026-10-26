@@ -181,6 +181,9 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 - [x] Setup Wizard Language & currency: currency picked from a bundled ISO list with live
       rates (ECB, then open.er-api.com), `uk-ua` / `ru-ru` packs, Select2-style
       searchable selects, "+" rows saved over AJAX (`add-rows.js`, `select-search.js`)
+      Connected languages / currencies have an "x" (not on the default one) with a confirm dialog;
+      refused like Localisation > Languages / Currencies (default, admin language, used by a store or orders),
+      written, twig/PHP lint only - not exercised in the browser (2026-10-26)
 - [ ] Smoke tests per Implementation Guide §78 (browser)
 
 ## Early Access / 1.0

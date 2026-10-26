@@ -171,3 +171,5 @@ $_['button_fix']             = 'Налаштувати';
 $_['text_connected_languages']  = 'Підключені мови:';
 $_['text_connected_currencies'] = 'Підключені валюти:';
 $_['text_default_marker']       = 'за замовчуванням';
+$_['text_language_removed'] = 'Мову видалено: %s.';
+$_['text_currency_removed'] = 'Валюту видалено: %s.';

@@ -134,3 +134,5 @@ $_['where_design'] = 'Ontwerp › Uiterlijk van de winkel';
 $_['where_first_product'] = 'Catalogus › Producten';
 $_['where_language'] = 'Systeem › Lokalisatie › Talen';
 $_['where_store'] = 'Systeem › Instellingen';
+$_['text_language_removed'] = 'Taal verwijderd: %s.';
+$_['text_currency_removed'] = 'Valuta verwijderd: %s.';

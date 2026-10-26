@@ -172,3 +172,5 @@ $_['button_fix']          = 'Set up';
 $_['text_connected_languages']  = 'Connected languages:';
 $_['text_connected_currencies'] = 'Connected currencies:';
 $_['text_default_marker']        = 'default';
+$_['text_language_removed'] = 'Language removed: %s.';
+$_['text_currency_removed'] = 'Currency removed: %s.';

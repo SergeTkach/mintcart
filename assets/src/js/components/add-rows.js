@@ -20,6 +20,8 @@
  * stays hidden until at least one row exists.
  */
 
+import { mcConfirm } from './confirm.js';
+
 function syncSave(root) {
     const save = root.querySelector('[data-mc-add-rows-save]');
 
@@ -127,6 +129,30 @@ async function save(host, form) {
 }
 
 export function initAddRows(root = document) {
+    // A connected language / currency "x": ask first, then submit its own form
+    // (the button carries the code; `requestSubmit(button)` sends it as the submitter).
+    root.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-mc-confirm-remove]');
+
+        if (!button || !button.form) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const confirmed = await mcConfirm({
+            title: button.dataset.mcConfirmTitle,
+            message: button.dataset.mcConfirmMessage,
+            confirmLabel: button.dataset.mcConfirmAccept,
+            cancelLabel: button.dataset.mcConfirmCancel,
+            variant: 'danger',
+        });
+
+        if (confirmed) {
+            button.form.requestSubmit(button);
+        }
+    });
+
     root.addEventListener('click', (event) => {
         const add = event.target.closest('[data-mc-add-rows-add]');
         const remove = event.target.closest('[data-mc-add-rows-remove]');

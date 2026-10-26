@@ -134,3 +134,5 @@ $_['where_design'] = 'Megjelenés › Az áruház megjelenése';
 $_['where_first_product'] = 'Katalógus › Termékek';
 $_['where_language'] = 'Rendszer › Helyi beállítások › Nyelvek';
 $_['where_store'] = 'Rendszer › Beállítások';
+$_['text_language_removed'] = 'Nyelv eltávolítva: %s.';
+$_['text_currency_removed'] = 'Pénznem eltávolítva: %s.';

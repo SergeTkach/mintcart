@@ -171,7 +171,7 @@
                 <p class="mc-field__help mt-2 mb-1">{{ text_connected_languages }}</p>
                 <ul class="mc-wizard__connected" aria-label="{{ text_connected_languages }}">
                   {% for language in languages %}{% if language.status %}
-                  <li class="mc-badge{% if language.code == config_language %} mc-badge--success{% endif %}">{{ language.name }}{% if language.code == config_language %} · {{ text_default_marker }}{% endif %}</li>
+                  <li class="mc-badge{% if language.code == config_language %} mc-badge--success{% endif %}">{{ language.name }}{% if language.code == config_language %} · {{ text_default_marker }}{% else %}<button type="submit" form="mc-remove-language-form" name="code" value="{{ language.code }}" class="mc-badge__remove" data-mc-confirm-remove data-mc-confirm-title="{{ text_confirm }}" data-mc-confirm-message="{{ button_remove_row }}: {{ language.name }}" data-mc-confirm-accept="{{ button_remove_row }}" data-mc-confirm-cancel="{{ button_cancel }}" aria-label="{{ button_remove_row }}: {{ language.name }}" title="{{ button_remove_row }}">&times;</button>{% endif %}</li>
                   {% endif %}{% endfor %}
                 </ul>
                 {% if available_languages %}
@@ -191,7 +191,7 @@
                 <p class="mc-field__help mt-2 mb-1">{{ text_connected_currencies }}</p>
                 <ul class="mc-wizard__connected" aria-label="{{ text_connected_currencies }}">
                   {% for currency in currencies %}{% if currency.status %}
-                  <li class="mc-badge{% if currency.code == config_currency %} mc-badge--success{% endif %}">{{ currency.code }}{% if currency.code == config_currency %} · {{ text_default_marker }}{% endif %}</li>
+                  <li class="mc-badge{% if currency.code == config_currency %} mc-badge--success{% endif %}">{{ currency.code }}{% if currency.code == config_currency %} · {{ text_default_marker }}{% else %}<button type="submit" form="mc-remove-currency-form" name="code" value="{{ currency.code }}" class="mc-badge__remove" data-mc-confirm-remove data-mc-confirm-title="{{ text_confirm }}" data-mc-confirm-message="{{ button_remove_row }}: {{ currency.code }}" data-mc-confirm-accept="{{ button_remove_row }}" data-mc-confirm-cancel="{{ button_cancel }}" aria-label="{{ button_remove_row }}: {{ currency.code }}" title="{{ button_remove_row }}">&times;</button>{% endif %}</li>
                   {% endif %}{% endfor %}
                 </ul>
                 {% if available_currencies %}
@@ -205,6 +205,8 @@
         </form>
         <form id="mc-add-currency-form" action="{{ add_currency_action }}" method="post"></form>
         <form id="mc-add-language-form" action="{{ add_language_action }}" method="post"></form>
+        <form id="mc-remove-language-form" action="{{ remove_language_action }}" method="post"></form>
+        <form id="mc-remove-currency-form" action="{{ remove_currency_action }}" method="post"></form>
         {% endif %}
 
         {% if step == 'delivery' or step == 'payment' %}

@@ -23,3 +23,27 @@
     padding: 0;
     list-style: none;
 }
+
+/* The "x" that takes a connected language / currency out (not on the default one) */
+.mc-badge__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline-start: var(--mc-space-2);
+    margin-inline-end: calc(var(--mc-space-1) * -1);
+    padding: 0 var(--mc-space-1);
+    border: 0;
+    border-radius: var(--mc-radius-pill);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: 1;
+    opacity: 0.75;
+    cursor: pointer;
+}
+
+.mc-badge__remove:hover,
+.mc-badge__remove:focus-visible {
+    opacity: 1;
+    background-color: rgb(255 255 255 / 0.25);
+}

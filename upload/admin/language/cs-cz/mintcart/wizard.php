@@ -134,3 +134,5 @@ $_['where_design'] = 'Vzhled › Vzhled obchodu';
 $_['where_first_product'] = 'Katalog › Produkty';
 $_['where_language'] = 'Systém › Lokalizace › Jazyky';
 $_['where_store'] = 'Systém › Nastavení';
+$_['text_language_removed'] = 'Jazyk odstraněn: %s.';
+$_['text_currency_removed'] = 'Měna odstraněna: %s.';
