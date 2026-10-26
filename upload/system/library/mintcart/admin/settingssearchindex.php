@@ -34,44 +34,61 @@ namespace MintCart\Admin;
 final class SettingsSearchIndex
 {
     /**
-     * @var list<array{label:string, route:string, keywords:list<string>}>
+     * @var list<array{label:string, route:string, keywords:list<string>, field?:string}>
      */
     private const ENTRIES = [
-        ['label' => 'Store Settings', 'route' => 'setting/store', 'keywords' => ['store name', 'logo', 'email', 'telephone', 'phone', 'address', 'store', 'favicon', 'meta']],
-        ['label' => 'Currency', 'route' => 'localisation/currency', 'keywords' => ['currency', 'exchange rate', 'money']],
-        ['label' => 'Language', 'route' => 'localisation/language', 'keywords' => ['language', 'locale']],
-        ['label' => 'Tax Classes', 'route' => 'localisation/tax_class', 'keywords' => ['tax', 'vat']],
-        ['label' => 'Tax Rates', 'route' => 'localisation/tax_rate', 'keywords' => ['tax rate', 'vat rate']],
-        ['label' => 'Order Statuses', 'route' => 'localisation/order_status', 'keywords' => ['checkout', 'order status']],
-        ['label' => 'Stock Statuses', 'route' => 'localisation/stock_status', 'keywords' => ['stock', 'inventory status']],
-        ['label' => 'Countries', 'route' => 'localisation/country', 'keywords' => ['country', 'region']],
-        ['label' => 'Zones', 'route' => 'localisation/zone', 'keywords' => ['zone', 'state', 'province']],
-        ['label' => 'Geo Zones', 'route' => 'localisation/geo_zone', 'keywords' => ['geo zone', 'shipping zone', 'tax zone']],
-        ['label' => 'SEO URLs', 'route' => 'design/seo_url', 'keywords' => ['seo', 'url', 'alias', 'slug', 'pretty url', 'keyword']],
-        ['label' => 'System Pages SEO', 'route' => 'mintcart/seo/system_pages', 'keywords' => ['seo', 'cart url', 'checkout url', 'system pages', 'wishlist url']],
-        ['label' => 'Business → Contacts', 'route' => 'mintcart/business/contacts', 'keywords' => ['contacts', 'phone', 'email', 'address', 'social media']],
-        ['label' => 'Business → Delivery', 'route' => 'mintcart/business/delivery', 'keywords' => ['delivery', 'shipping']],
-        ['label' => 'Business → Payments', 'route' => 'mintcart/business/payments', 'keywords' => ['payment', 'payments', 'gateway']],
-        ['label' => 'Design → Homepage', 'route' => 'design/homepage', 'keywords' => ['homepage', 'blocks', 'builder']],
-        ['label' => 'Design → Layouts', 'route' => 'design/layout', 'keywords' => ['layout', 'positions']],
-        ['label' => 'Design → Themes', 'route' => 'design/theme', 'keywords' => ['theme', 'design']],
-        ['label' => 'Design → Banners', 'route' => 'design/banner', 'keywords' => ['banner', 'slider']],
-        ['label' => 'Diagnostics', 'route' => 'mintcart/settings/diagnostics', 'keywords' => ['diagnostics', 'debug', 'dev mode', 'query count']],
-        ['label' => 'Products', 'route' => 'catalog/product', 'keywords' => ['product', 'catalog']],
-        ['label' => 'Categories', 'route' => 'catalog/category', 'keywords' => ['category']],
-        ['label' => 'Manufacturers', 'route' => 'catalog/manufacturer', 'keywords' => ['manufacturer', 'brand']],
-        ['label' => 'Orders', 'route' => 'sale/order', 'keywords' => ['order', 'sale']],
-        ['label' => 'Customers', 'route' => 'customer/customer', 'keywords' => ['customer']],
-        ['label' => 'Coupons', 'route' => 'marketing/coupon', 'keywords' => ['coupon', 'discount code', 'promotion']],
-        ['label' => 'Marketing', 'route' => 'marketing/marketing', 'keywords' => ['marketing', 'affiliate', 'tracking']],
-        ['label' => 'Extensions', 'route' => 'marketplace/extension', 'keywords' => ['extension', 'module', 'shipping method', 'payment method']],
-        ['label' => 'Users', 'route' => 'user/user', 'keywords' => ['user', 'admin account']],
-        ['label' => 'Backup / Restore', 'route' => 'tool/backup', 'keywords' => ['backup', 'restore', 'database']],
-        ['label' => 'Error Log', 'route' => 'tool/log', 'keywords' => ['log', 'error log']],
+        ['label' => 'Store Settings', 'route' => 'setting/store', 'keywords' => ['store name', 'logo', 'email', 'telephone', 'phone', 'address', 'store', 'favicon', 'meta', 'налаштування магазину', 'назва магазину', 'логотип', 'лого', 'телефон', 'адреса', 'пошта', 'іконка', 'настройки магазина', 'название магазина', 'адрес', 'почта']],
+        // Field-level entries: the result opens the page and jumps to this input (`field` is its
+        // element id; the tab that holds it is opened by admin-search.js, `initFieldJump()`).
+        ['label' => 'Store name', 'route' => 'setting/setting', 'field' => 'input-name', 'keywords' => ['store name', 'shop name', 'name', 'назва магазину', 'назва', 'название магазина', 'название']],
+        ['label' => 'Store email', 'route' => 'setting/setting', 'field' => 'input-email', 'keywords' => ['email', 'e-mail', 'store email', 'пошта', 'електронна пошта', 'email магазину', 'почта']],
+        ['label' => 'Store telephone', 'route' => 'setting/setting', 'field' => 'input-telephone', 'keywords' => ['telephone', 'phone', 'phone number', 'телефон', 'номер телефону', 'номер телефона']],
+        ['label' => 'Store address', 'route' => 'setting/setting', 'field' => 'input-address', 'keywords' => ['address', 'store address', 'адреса', 'адреса магазину', 'адрес']],
+        ['label' => 'Store logo', 'route' => 'setting/setting', 'field' => 'thumb-logo', 'keywords' => ['logo', 'store logo', 'логотип', 'лого', 'логотип магазину']],
+        ['label' => 'Favicon', 'route' => 'setting/setting', 'field' => 'thumb-icon', 'keywords' => ['favicon', 'icon', 'tab icon', 'фавікон', 'іконка', 'фавикон', 'иконка']],
+        ['label' => 'Default currency', 'route' => 'setting/setting', 'field' => 'input-currency', 'keywords' => ['default currency', 'main currency', 'основна валюта', 'валюта за замовчуванням', 'основная валюта']],
+        ['label' => 'Default language', 'route' => 'setting/setting', 'field' => 'input-language', 'keywords' => ['default language', 'основна мова', 'мова за замовчуванням', 'основной язык']],
+        ['label' => 'URL Generator (SEO URL keywords)', 'route' => 'mintcart/seo/url_generator', 'keywords' => ['seo url', 'slug', 'url generator', 'keyword', 'transliteration', 'чпу', 'генератор url', 'генератор чпу', 'транслітерація', 'адреса сторінки', 'транслитерация']],
+        ['label' => 'Redirects (301)', 'route' => 'mintcart/seo/redirects', 'keywords' => ['redirect', '301', 'seo redirect', 'duplicate', 'canonical', 'редирект', 'редиректи', 'перенаправлення', 'дублі', 'редиректы', 'дубли']],
+        ['label' => 'Meta tags (templates)', 'route' => 'mintcart/seo/meta', 'keywords' => ['meta tags', 'meta title', 'meta description', 'title template', 'seo', 'мета-теги', 'мета теги', 'шаблон заголовка', 'шаблон мета', 'сео', 'шаблон заголовка']],
+        ['label' => 'Meta title', 'route' => 'setting/setting', 'field' => 'input-meta-title', 'keywords' => ['meta title', 'title', 'seo title', 'мета заголовок', 'заголовок', 'тайтл']],
+        ['label' => 'Currency', 'route' => 'localisation/currency', 'keywords' => ['currency', 'exchange rate', 'money', 'валюта', 'валюти', 'курс', 'гроші', 'валюты', 'деньги']],
+        ['label' => 'Language', 'route' => 'localisation/language', 'keywords' => ['language', 'locale', 'мова', 'мови', 'язык', 'языки', 'локаль']],
+        ['label' => 'Tax Classes', 'route' => 'localisation/tax_class', 'keywords' => ['tax', 'vat', 'податок', 'податки', 'пдв', 'налог', 'налоги', 'ндс']],
+        ['label' => 'Tax Rates', 'route' => 'localisation/tax_rate', 'keywords' => ['tax rate', 'vat rate', 'ставка податку', 'ставка пдв', 'ставка налога']],
+        ['label' => 'Order Statuses', 'route' => 'localisation/order_status', 'keywords' => ['checkout', 'order status', 'статус замовлення', 'статуси замовлень', 'статус заказа']],
+        ['label' => 'Stock Statuses', 'route' => 'localisation/stock_status', 'keywords' => ['stock', 'inventory status', 'наявність', 'залишок', 'склад', 'статус наявності', 'наличие', 'остаток']],
+        ['label' => 'Countries', 'route' => 'localisation/country', 'keywords' => ['country', 'region', 'країна', 'країни', 'страна', 'страны']],
+        ['label' => 'Zones', 'route' => 'localisation/zone', 'keywords' => ['zone', 'state', 'province', 'область', 'регіон', 'штат', 'регион']],
+        ['label' => 'Geo Zones', 'route' => 'localisation/geo_zone', 'keywords' => ['geo zone', 'shipping zone', 'tax zone', 'геозона', 'зона доставки', 'податкова зона', 'геозоны']],
+        ['label' => 'SEO URLs', 'route' => 'design/seo_url', 'keywords' => ['seo', 'url', 'alias', 'slug', 'pretty url', 'keyword', 'чпу', 'сео', 'seo урл', 'посилання', 'адреса сторінки', 'ссылка']],
+        ['label' => 'System Pages SEO', 'route' => 'mintcart/seo/system_pages', 'keywords' => ['seo', 'cart url', 'checkout url', 'system pages', 'wishlist url', 'чпу системних сторінок', 'сео', 'адреса кошика', 'адреса оформлення', 'системные страницы']],
+        ['label' => 'Business → Contacts', 'route' => 'mintcart/business/contacts', 'keywords' => ['contacts', 'phone', 'email', 'address', 'social media', 'контакти', 'телефон', 'пошта', 'адреса', 'соцмережі', 'соціальні мережі', 'контакты', 'соцсети']],
+        ['label' => 'Business → Delivery', 'route' => 'mintcart/business/delivery', 'keywords' => ['delivery', 'shipping', 'доставка', 'відправка', 'нова пошта', 'способи доставки', 'отправка']],
+        ['label' => 'Business → Payments', 'route' => 'mintcart/business/payments', 'keywords' => ['payment', 'payments', 'gateway', 'оплата', 'платежі', 'способи оплати', 'платежи', 'способы оплаты']],
+        ['label' => 'Design → Homepage', 'route' => 'design/homepage', 'keywords' => ['homepage', 'blocks', 'builder', 'головна', 'головна сторінка', 'блоки', 'конструктор', 'главная']],
+        ['label' => 'Design → Layouts', 'route' => 'design/layout', 'keywords' => ['layout', 'positions', 'схеми', 'макети', 'позиції', 'макеты', 'позиции']],
+        ['label' => 'Design → Themes', 'route' => 'design/theme', 'keywords' => ['theme', 'design', 'тема', 'дизайн', 'шаблон']],
+        ['label' => 'Design → Banners', 'route' => 'design/banner', 'keywords' => ['banner', 'slider', 'банер', 'банери', 'слайдер', 'баннер', 'баннеры']],
+        ['label' => 'Diagnostics', 'route' => 'mintcart/settings/diagnostics', 'keywords' => ['diagnostics', 'debug', 'dev mode', 'query count', 'діагностика', 'налагодження', 'отладка']],
+        ['label' => 'Products', 'route' => 'catalog/product', 'keywords' => ['product', 'catalog', 'товар', 'товари', 'каталог', 'продукт', 'товары']],
+        ['label' => 'Categories', 'route' => 'catalog/category', 'keywords' => ['category', 'категорія', 'категорії', 'розділ', 'категория', 'категории']],
+        ['label' => 'Manufacturers', 'route' => 'catalog/manufacturer', 'keywords' => ['manufacturer', 'brand', 'виробник', 'бренд', 'бренди', 'производитель']],
+        ['label' => 'Orders', 'route' => 'sale/order', 'keywords' => ['order', 'sale', 'замовлення', 'продажі', 'заказ', 'заказы']],
+        ['label' => 'Customers', 'route' => 'customer/customer', 'keywords' => ['customer', 'клієнт', 'клієнти', 'покупець', 'покупці', 'клиент', 'покупатель']],
+        ['label' => 'Coupons', 'route' => 'marketing/coupon', 'keywords' => ['coupon', 'discount code', 'promotion', 'купон', 'промокод', 'знижка', 'купоны', 'скидка']],
+        ['label' => 'Marketing', 'route' => 'marketing/marketing', 'keywords' => ['marketing', 'affiliate', 'tracking', 'маркетинг', 'партнери', 'відстеження']],
+        ['label' => 'Extensions', 'route' => 'marketplace/extension', 'keywords' => ['extension', 'module', 'shipping method', 'payment method', 'розширення', 'модуль', 'модулі', 'доповнення', 'расширения', 'модули']],
+        ['label' => 'Users', 'route' => 'user/user', 'keywords' => ['user', 'admin account', 'користувач', 'користувачі', 'адміністратор', 'пользователь']],
+        ['label' => 'Backup / Restore', 'route' => 'tool/backup', 'keywords' => ['backup', 'restore', 'database', 'резервна копія', 'бекап', 'відновлення', 'база даних', 'резервная копия']],
+        ['label' => 'Error Log', 'route' => 'tool/log', 'keywords' => ['log', 'error log', 'журнал', 'лог', 'помилки', 'журнал помилок', 'ошибки']],
+        ['label' => 'Storage (cache, logs, sessions)', 'route' => 'mintcart/maintenance/storage', 'keywords' => ['storage', 'storage folder', 'storage directory', 'move storage', 'cache', 'sessions', 'logs folder', 'сховище', 'папка storage', 'перенести storage', 'кеш', 'сесії', 'хранилище', 'папка storage', 'перенести хранилище', 'сессии']],
+        ['label' => 'Design → Styles', 'route' => 'mintcart/design/styles', 'keywords' => ['styles', 'colors', 'fonts', 'typography', 'preset', 'стилі', 'кольори', 'шрифти', 'пресет', 'стили', 'цвета', 'шрифты']],
+        ['label' => 'Compatibility checker', 'route' => 'mintcart/compatibility', 'keywords' => ['compatibility', 'ocmod', 'extension check', 'install.xml', 'сумісність', 'перевірка розширення', 'совместимость']],
     ];
 
     /**
-     * @return list<array{label:string, route:string}> Ranked, highest
+     * @return list<array{label:string, route:string, field:string}> Ranked, highest
      *         score first; empty for a blank query or no match.
      */
     public function search(string $query, int $limit = 8): array
@@ -88,7 +105,12 @@ final class SettingsSearchIndex
             $score = $this->score($query, $entry);
 
             if ($score > 0) {
-                $scored[] = ['label' => $entry['label'], 'route' => $entry['route'], 'score' => $score];
+                // A field-level entry beats a page-level one that matches equally well.
+                if (!empty($entry['field'])) {
+                    $score++;
+                }
+
+                $scored[] = ['label' => $entry['label'], 'route' => $entry['route'], 'field' => $entry['field'] ?? '', 'score' => $score];
             }
         }
 
@@ -99,7 +121,7 @@ final class SettingsSearchIndex
         $scored = array_slice($scored, 0, $limit);
 
         return array_map(static function (array $entry): array {
-            return ['label' => $entry['label'], 'route' => $entry['route']];
+            return ['label' => $entry['label'], 'route' => $entry['route'], 'field' => $entry['field']];
         }, $scored);
     }
 
@@ -125,12 +147,14 @@ final class SettingsSearchIndex
             return 100;
         }
 
-        if (strpos($label, $query) === 0) {
-            return 80;
-        }
+        // The label match and the best keyword match compete: an exact keyword ("logo") must not lose to a
+        // weaker label hit ("Store logo" contains it).
+        $labelScore = 0;
 
-        if (strpos($label, $query) !== false) {
-            return 60;
+        if (strpos($label, $query) === 0) {
+            $labelScore = 80;
+        } elseif (strpos($label, $query) !== false) {
+            $labelScore = 60;
         }
 
         $bestKeywordScore = 0;
@@ -147,6 +171,6 @@ final class SettingsSearchIndex
             }
         }
 
-        return $bestKeywordScore;
+        return max($labelScore, $bestKeywordScore);
     }
 }

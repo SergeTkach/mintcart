@@ -1,0 +1,43 @@
+<?php
+
+// MintCart
+$_['label_backup_restore'] = 'Архив / Възстановяване';
+$_['label_business_contacts'] = 'Бизнес → Контакти';
+$_['label_business_delivery'] = 'Бизнес → Доставка';
+$_['label_business_payments'] = 'Бизнес → Плащания';
+$_['label_categories'] = 'Категории';
+$_['label_countries'] = 'Държави';
+$_['label_coupons'] = 'Купони';
+$_['label_currency'] = 'Валута';
+$_['label_customers'] = 'Клиенти';
+$_['label_default_currency'] = 'Валута по подразбиране';
+$_['label_default_language'] = 'Език по подразбиране';
+$_['label_design_banners'] = 'Дизайн → Банери';
+$_['label_design_homepage'] = 'Дизайн → Начална страница';
+$_['label_design_layouts'] = 'Дизайн → Оформления';
+$_['label_design_themes'] = 'Дизайн → Теми';
+$_['label_diagnostics'] = 'Диагностика';
+$_['label_error_log'] = 'Журнал за грешки';
+$_['label_extensions'] = 'Разширения';
+$_['label_favicon'] = 'Favicon';
+$_['label_geo_zones'] = 'Географски зони';
+$_['label_language'] = 'Език';
+$_['label_manufacturers'] = 'Производители';
+$_['label_marketing'] = 'Маркетинг';
+$_['label_meta_title'] = 'Мета заглавие';
+$_['label_order_statuses'] = 'Статуси на поръчки';
+$_['label_orders'] = 'Поръчки';
+$_['label_products'] = 'Продукти';
+$_['label_seo_urls'] = 'SEO URL';
+$_['label_stock_statuses'] = 'Статуси на наличност';
+$_['label_store_address'] = 'Адрес на магазина';
+$_['label_store_email'] = 'E-mail на магазина';
+$_['label_store_logo'] = 'Лого на магазина';
+$_['label_store_name'] = 'Име на магазина';
+$_['label_store_settings'] = 'Настройки на магазина';
+$_['label_store_telephone'] = 'Телефон на магазина';
+$_['label_system_pages_seo'] = 'SEO на системните страници';
+$_['label_tax_classes'] = 'Данъчни класове';
+$_['label_tax_rates'] = 'Данъчни ставки';
+$_['label_users'] = 'Потребители';
+$_['label_zones'] = 'Зони';

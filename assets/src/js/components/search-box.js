@@ -245,6 +245,13 @@ export function createSearchBox(root, {
             return;
         }
 
+        // Enter in the field goes to the full results page (a focused suggestion has its own handler).
+        if (event.key === 'Enter' && input.value.trim() !== '') {
+            event.preventDefault();
+            window.location.href = `index.php?route=${searchRoute}&search=${encodeURIComponent(input.value.trim())}`;
+            return;
+        }
+
         if (event.key === 'Escape') {
             close();
             input.focus();
@@ -302,6 +309,16 @@ export function createSearchBox(root, {
             close();
         }
     }
+
+    // The submit button (themes that render one: `[data-mc-search-box-submit]`).
+    root.querySelector('[data-mc-search-box-submit]')?.addEventListener('click', () => {
+        if (input.value.trim() === '') {
+            input.focus();
+            return;
+        }
+
+        window.location.href = `index.php?route=${searchRoute}&search=${encodeURIComponent(input.value.trim())}`;
+    });
 
     input.addEventListener('input', handleInput);
     input.addEventListener('keydown', handleInputKeydown);

@@ -77,7 +77,7 @@ putFile($installRoot1 . '/catalog/controller/product/category.php', 'old categor
 putFile($installRoot1 . '/system/config/default.php', 'old config');
 $plan1 = [
     'package' => 'mint_default',
-    'snapshot_dir' => 'system/storage/mintcart/backup/mint_default/20260918120000',
+    'snapshot_dir' => 'storage/mintcart/backup/mint_default/20260918120000',
     'files' => [
         'system/config/default.php',
         'catalog/controller/product/category.php',
@@ -111,7 +111,7 @@ $installRoot2 = $workspace . '/install-2';
 putFile($installRoot2 . '/catalog/still-here.php', 'still here');
 $plan2 = [
     'package' => 'mint_default',
-    'snapshot_dir' => 'system/storage/mintcart/backup/mint_default/20260918130000',
+    'snapshot_dir' => 'storage/mintcart/backup/mint_default/20260918130000',
     'files' => ['catalog/still-here.php', 'catalog/already-gone.php'],
     'total_bytes' => 10,
 ];
@@ -124,7 +124,7 @@ $installRoot3 = $workspace . '/install-3';
 mkdir($installRoot3, 0777, true);
 $plan3 = [
     'package' => 'mint_default',
-    'snapshot_dir' => 'system/storage/mintcart/backup/mint_default/20260918140000',
+    'snapshot_dir' => 'storage/mintcart/backup/mint_default/20260918140000',
     'files' => [],
     'total_bytes' => 0,
 ];
@@ -137,11 +137,11 @@ assertTrue(is_dir($installRoot3 . '/' . $plan3['snapshot_dir']), '3. backup: an 
 // attempt must not survive).
 $installRoot4 = $workspace . '/install-4';
 putFile($installRoot4 . '/fresh.php', 'fresh contents');
-$snapshotDir4 = $installRoot4 . '/system/storage/mintcart/backup/mint_default/20260918150000';
+$snapshotDir4 = $installRoot4 . '/storage/mintcart/backup/mint_default/20260918150000';
 putFile($snapshotDir4 . '/stale-leftover.txt', 'stale');
 $plan4 = [
     'package' => 'mint_default',
-    'snapshot_dir' => 'system/storage/mintcart/backup/mint_default/20260918150000',
+    'snapshot_dir' => 'storage/mintcart/backup/mint_default/20260918150000',
     'files' => ['fresh.php'],
     'total_bytes' => 14,
 ];
@@ -151,7 +151,7 @@ assertTrue(is_file($snapshotDir4 . '/fresh.php'), '4. backup: the new backup is 
 
 // 5. backup(): no leftover ".part-*" temp directory remains after a
 // successful backup (atomic replace via temp-dir-then-rename).
-$tempLeftovers = glob($installRoot4 . '/system/storage/mintcart/backup/mint_default/*.part-*') ?: [];
+$tempLeftovers = glob($installRoot4 . '/storage/mintcart/backup/mint_default/*.part-*') ?: [];
 assertSame([], $tempLeftovers, '5. backup: no leftover temp directory after a successful backup', $failures);
 
 // 6. backup(): rejects a plan file path containing a ".." segment before
@@ -160,7 +160,7 @@ $installRoot6 = $workspace . '/install-6';
 mkdir($installRoot6, 0777, true);
 $plan6 = [
     'package' => 'mint_default',
-    'snapshot_dir' => 'system/storage/mintcart/backup/mint_default/20260918160000',
+    'snapshot_dir' => 'storage/mintcart/backup/mint_default/20260918160000',
     'files' => ['../escape.php'],
     'total_bytes' => 0,
 ];
@@ -171,7 +171,7 @@ try {
     // expected
 }
 assertTrue(
-    !is_dir($installRoot6 . '/system/storage/mintcart/backup/mint_default'),
+    !is_dir($installRoot6 . '/storage/mintcart/backup/mint_default'),
     '6. backup: nothing is written when a ".." plan file path is rejected',
     $failures
 );

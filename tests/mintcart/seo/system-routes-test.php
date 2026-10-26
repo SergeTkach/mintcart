@@ -32,12 +32,12 @@ function assertSame($expected, $actual, string $message, array &$failures): void
     }
 }
 
-// 1. The whitelist matches the twelve system pages MINTCART_FUNCTIONAL_SCOPE.md
+// 1. The whitelist matches the thirteen system pages MINTCART_FUNCTIONAL_SCOPE.md
 // §4 names explicitly, keyed by a short code.
 assertSame(
-    ['search', 'cart', 'checkout', 'contact', 'account', 'login', 'register', 'wishlist', 'compare', 'special', 'manufacturer', 'sitemap'],
+    ['search', 'cart', 'checkout', 'contact', 'account', 'login', 'register', 'wishlist', 'compare', 'special', 'manufacturer', 'sitemap', 'reviews'],
     array_keys(SystemRoutes::ROUTES),
-    'ROUTES: has exactly the twelve documented system-page codes, in order',
+    'ROUTES: has exactly the thirteen documented system-page codes, in order',
     $failures
 );
 

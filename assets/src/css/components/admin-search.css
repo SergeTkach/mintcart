@@ -107,3 +107,21 @@
 .mc-admin-search__empty[hidden] {
     display: none;
 }
+
+/* The row a search result jumped to: a brief highlight. */
+.mc-field-flash {
+    animation: mc-field-flash 2.6s ease-out;
+}
+
+@keyframes mc-field-flash {
+    0%,
+    60% {
+        background-color: rgb(255 243 163 / 90%);
+        box-shadow: 0 0 0 6px rgb(255 243 163 / 90%);
+    }
+
+    100% {
+        background-color: transparent;
+        box-shadow: 0 0 0 6px transparent;
+    }
+}

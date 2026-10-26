@@ -2,67 +2,82 @@
  * mc-wizard - the Setup Wizard onboarding page
  * (admin/view/template/mintcart/wizard.twig).
  *
- * A standalone page, not legacy admin chrome: top bar with the MintCart
- * mark, a vertical stepper with progress on the left, the step panel with
- * Back / Continue on the right. Below lg the stepper collapses to
- * "Step N of M" + progress bar.
+ * An ordinary admin page (stock header, menu and footer around it): a vertical
+ * stepper with progress on the left, the step panel with Back / Continue on the
+ * right. Below lg the stepper collapses to "Step N of M" + progress bar.
+ * The legacy admin is Bootstrap 3 with `html { font-size: 10px }`, so the page
+ * puts the root back to 16px (the stock admin CSS uses px, not rem).
  *
  * Doc: docs/developer/onboarding/setup-wizard.md
  */
 
+html:has(.mc-wizard) {
+    font-size: 16px;
+}
+
 .mc-wizard {
-    min-height: 100vh;
-    background: var(--mc-surface-alt);
+    --mc-wizard-gap: var(--mc-space-6);
 }
 
-/* Top bar ---------------------------------------------------------------- */
-
-.mc-wizard__topbar {
-    background: var(--mc-surface);
-    border-bottom: var(--mc-border-width) solid var(--mc-border);
+/* The Bootstrap 5 reboot that carries `[hidden] { display: none !important }` is not loaded on admin pages. */
+.mc-wizard [hidden] {
+    display: none !important;
 }
 
-.mc-wizard__topbar-inner {
+/* Layout: stepper | panel ----------------------------------------------- */
+
+.mc-wizard__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--mc-wizard-gap);
     max-width: 68rem;
-    display: flex;
-    align-items: center;
-    gap: var(--mc-space-4);
-    min-height: 4rem;
+    padding-block: var(--mc-space-2) var(--mc-space-8);
 }
 
-.mc-wizard__brand {
-    width: auto;
-    height: 2rem;
-}
-
-.mc-wizard__topbar-title {
-    padding-left: var(--mc-space-4);
-    font-weight: var(--mc-font-weight-medium);
-    color: var(--mc-muted);
-    border-left: var(--mc-border-width) solid var(--mc-border);
-}
-
-@media (max-width: 575.98px) {
-    .mc-wizard__topbar-title {
-        display: none;
+@media (min-width: 992px) {
+    .mc-wizard__grid {
+        grid-template-columns: 18rem minmax(0, 1fr);
+        gap: var(--mc-space-10);
     }
 }
 
-.mc-wizard__skip {
-    margin-left: auto;
-    font-size: var(--mc-font-size-sm);
-    color: var(--mc-muted);
-    text-decoration: none;
+/* Form fields in one or two columns. */
+.mc-wizard__fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--mc-space-4);
 }
 
-.mc-wizard__skip:hover {
-    color: var(--mc-text);
-    text-decoration: underline;
+@media (min-width: 768px) {
+    .mc-wizard__fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mc-wizard__col--full {
+        grid-column: 1 / -1;
+    }
 }
 
-.mc-wizard__layout {
-    max-width: 68rem;
-    padding-block: var(--mc-space-8) var(--mc-space-16);
+/* The few spacing / flex helpers the step markup uses (the Bootstrap 5 utility layer is not
+   loaded on admin pages). */
+.mc-wizard .d-flex { display: flex; }
+.mc-wizard .flex-wrap { flex-wrap: wrap; }
+.mc-wizard .flex-column { flex-direction: column; }
+.mc-wizard .align-items-center { align-items: center; }
+.mc-wizard .gap-2 { gap: var(--mc-space-2); }
+.mc-wizard .gap-3 { gap: var(--mc-space-3); }
+.mc-wizard .mt-0 { margin-top: 0; }
+.mc-wizard .mt-2 { margin-top: var(--mc-space-2); }
+.mc-wizard .mb-1 { margin-bottom: var(--mc-space-1); }
+.mc-wizard .mb-3 { margin-bottom: var(--mc-space-3); }
+.mc-wizard .mb-4 { margin-bottom: var(--mc-space-4); }
+.mc-wizard .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
 }
 
 /* Progress --------------------------------------------------------------- */
@@ -96,7 +111,7 @@
 
 .mc-wizard__nav {
     position: sticky;
-    top: var(--mc-space-6);
+    top: var(--mc-space-4);
 }
 
 .mc-wizard__steps {
@@ -171,6 +186,17 @@ a.mc-wizard__step-link:focus-visible {
     color: var(--mc-on-primary);
     background: var(--mc-primary);
     border-color: var(--mc-primary);
+}
+
+/* Passed through, but what the step is for is not set up yet. */
+.mc-wizard__step.is-attention .mc-wizard__step-marker {
+    color: var(--mc-on-primary);
+    background: var(--mc-warning);
+    border-color: var(--mc-warning);
+}
+
+.mc-wizard__step.is-attention .mc-wizard__step-link {
+    color: var(--mc-text);
 }
 
 .mc-wizard__step.is-done .mc-wizard__step-link {
@@ -302,6 +328,33 @@ a.mc-wizard__step-link:focus-visible {
     font-weight: var(--mc-font-weight-medium);
 }
 
+/* A method's inline settings: a row of its own under the name/toggle. */
+.mc-wizard__option {
+    flex-wrap: wrap;
+}
+
+.mc-wizard__settings {
+    flex: 0 0 100%;
+    padding-bottom: var(--mc-space-2);
+}
+
+.mc-wizard__settings-toggle {
+    width: fit-content;
+    margin-bottom: var(--mc-space-3);
+    color: var(--mc-primary);
+    font-size: var(--mc-font-size-sm);
+    cursor: pointer;
+}
+
+.mc-wizard__settings-status {
+    font-size: var(--mc-font-size-sm);
+    color: var(--mc-success);
+}
+
+.mc-wizard__settings-status.has-error {
+    color: var(--mc-danger);
+}
+
 /* Readiness score ---------------------------------------------------------- */
 
 .mc-wizard__readiness {
@@ -397,16 +450,20 @@ a.mc-wizard__step-link:focus-visible {
     border-radius: var(--mc-radius-md);
 }
 
+.mc-wizard__swatch > span:nth-child(1) { background: var(--mc-swatch-1, var(--mc-primary)); }
+.mc-wizard__swatch > span:nth-child(2) { background: var(--mc-swatch-2, var(--mc-text)); }
+.mc-wizard__swatch > span:nth-child(3) { background: var(--mc-swatch-3, var(--mc-surface-alt)); }
+
 .mc-wizard__swatch > span {
     flex: 1;
     background: var(--mc-border);
 }
 
-/* Swatch colours mirror presets/clean.css and presets/warm.css. */
-.mc-wizard__choice--clean .mc-wizard__swatch > span:nth-child(1) { background: var(--mc-color-mint-600); }
-.mc-wizard__choice--clean .mc-wizard__swatch > span:nth-child(2) { background: var(--mc-color-blue-500); }
-.mc-wizard__choice--clean .mc-wizard__swatch > span:nth-child(3) { background: var(--mc-color-gray-50); }
 
-.mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(1) { background: #c1552c; }
-.mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(2) { background: #d69e2e; }
-.mc-wizard__choice--warm .mc-wizard__swatch > span:nth-child(3) { background: #f8ede0; }
+
+/* "You can change this later in the menu: ..." under a step. */
+.mc-wizard__where {
+    margin: var(--mc-space-6) 0 0;
+    font-size: var(--mc-font-size-sm);
+    color: var(--mc-muted);
+}

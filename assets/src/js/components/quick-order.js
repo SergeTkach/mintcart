@@ -25,8 +25,31 @@
 import { Modal } from 'bootstrap';
 import { submitQuickOrder } from '../commerce/quick-order-client.js';
 import { createToast, showToast } from './toast.js';
+import { readOptions, readQuantity } from './product-card.js';
+import { initQuantityStepper } from './quantity.js';
 
 const MODAL_ID = 'mc-quick-order-modal';
+
+// Fallbacks for a button without `data-mc-texts` (server-translated JSON, see QuickOrderService::TEXT_KEYS).
+const DEFAULT_TEXTS = {
+    title: 'Quick Order', quantity: 'Quantity', decrease: 'Decrease quantity', increase: 'Increase quantity',
+    name: 'Name', phone: 'Phone', email: 'Email', cancel: 'Cancel', submit: 'Submit', close: 'Close', ok: 'OK',
+    failed: 'Could not submit your request',
+};
+
+let texts = DEFAULT_TEXTS;
+
+function readTexts(button) {
+    try {
+        return { ...DEFAULT_TEXTS, ...JSON.parse(button.dataset.mcTexts || '{}') };
+    } catch {
+        return DEFAULT_TEXTS;
+    }
+}
+
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+}
 
 function fieldMarkup(name, label, type, describedBy) {
     return `
@@ -34,6 +57,21 @@ function fieldMarkup(name, label, type, describedBy) {
             <label class="mc-field__label" for="${describedBy}">${label}</label>
             <input type="${type}" id="${describedBy}" name="${name}" class="mc-field__control" autocomplete="off">
             <p class="mc-field__error" id="${describedBy}-error" role="alert" hidden></p>
+        </div>
+    `;
+}
+
+// Quantity uses the shared -/+ stepper instead of a bare number input.
+function quantityFieldMarkup(id) {
+    return `
+        <div class="mc-field" data-mc-quick-order-field="quantity">
+            <label class="mc-field__label" for="${id}">${escapeHtml(texts.quantity)}</label>
+            <div class="mc-quantity">
+                <button type="button" class="mc-quantity__button" data-mc-action="quantity-decrement" aria-label="${escapeHtml(texts.decrease)}">&minus;</button>
+                <input type="number" id="${id}" name="quantity" class="mc-quantity__input" value="1" min="1" step="1" inputmode="numeric" autocomplete="off">
+                <button type="button" class="mc-quantity__button" data-mc-action="quantity-increment" aria-label="${escapeHtml(texts.increase)}">+</button>
+            </div>
+            <p class="mc-field__error" id="${id}-error" role="alert" hidden></p>
         </div>
     `;
 }
@@ -53,28 +91,34 @@ function buildModal() {
                 <form class="mc-quick-order-form" novalidate>
                     <div class="modal-header">
                         <h2 class="modal-title mc-modal__title" id="${MODAL_ID}-title"></h2>
-                        <button type="button" class="mc-modal__close" data-mc-action="close-modal" aria-label="Close">&times;</button>
+                        <button type="button" class="mc-modal__close" data-mc-action="close-modal" aria-label="${escapeHtml(texts.close)}">&times;</button>
                     </div>
                     <div class="modal-body">
-                        ${fieldMarkup('quantity', 'Quantity', 'number', 'mc-quick-order-quantity')}
-                        ${fieldMarkup('name', 'Name', 'text', 'mc-quick-order-name')}
-                        ${fieldMarkup('telephone', 'Phone', 'tel', 'mc-quick-order-telephone')}
-                        ${fieldMarkup('email', 'Email', 'email', 'mc-quick-order-email')}
+                        ${quantityFieldMarkup('mc-quick-order-quantity')}
+                        ${fieldMarkup('name', escapeHtml(texts.name), 'text', 'mc-quick-order-name')}
+                        ${fieldMarkup('telephone', escapeHtml(texts.phone), 'tel', 'mc-quick-order-telephone')}
+                        ${fieldMarkup('email', escapeHtml(texts.email), 'email', 'mc-quick-order-email')}
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="mc-button mc-button--secondary" data-mc-action="close-modal">Cancel</button>
-                        <button type="submit" class="mc-button mc-button--primary">Submit</button>
+                        <button type="button" class="mc-button mc-button--secondary" data-mc-action="close-modal">${escapeHtml(texts.cancel)}</button>
+                        <button type="submit" class="mc-button mc-button--primary">${escapeHtml(texts.submit)}</button>
                     </div>
                 </form>
+                <div class="mc-quick-order-done" role="status" hidden>
+                    <div class="modal-body mc-quick-order-done__body">
+                        <svg class="mc-quick-order-done__icon" width="56" height="56" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05"/></svg>
+                        <p class="mc-quick-order-done__message"></p>
+                        <p class="mc-quick-order-done__product"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="mc-button mc-button--primary" data-mc-action="close-modal">${escapeHtml(texts.ok)}</button>
+                    </div>
+                </div>
             </div>
         </div>
     `;
 
     document.body.appendChild(modal);
-
-    const quantityInput = modal.querySelector('[name="quantity"]');
-    quantityInput.min = '1';
-    quantityInput.value = '1';
 
     modal.querySelector('form').addEventListener('submit', (event) => {
         event.preventDefault();
@@ -91,7 +135,7 @@ function getModal() {
 function clearErrors(modal) {
     modal.querySelectorAll('.mc-field').forEach((field) => {
         field.classList.remove('has-error');
-        const control = field.querySelector('.mc-field__control');
+        const control = field.querySelector('.mc-field__control, .mc-quantity__input');
         const error = field.querySelector('.mc-field__error');
 
         control.removeAttribute('aria-invalid');
@@ -113,7 +157,7 @@ function showErrors(modal, errors) {
 
         field.classList.add('has-error');
 
-        const control = field.querySelector('.mc-field__control');
+        const control = field.querySelector('.mc-field__control, .mc-quantity__input');
         const error = field.querySelector('.mc-field__error');
 
         control.setAttribute('aria-invalid', 'true');
@@ -133,6 +177,7 @@ async function handleSubmit(modal) {
 
     try {
         const result = await submitQuickOrder(productId, {
+            options: form.dataset.options ? JSON.parse(form.dataset.options) : {},
             quantity: form.querySelector('[name="quantity"]').value,
             name: form.querySelector('[name="name"]').value,
             telephone: form.querySelector('[name="telephone"]').value,
@@ -149,10 +194,13 @@ async function handleSubmit(modal) {
             return;
         }
 
-        Modal.getInstance(modal)?.hide();
-        showToast(createToast({ title: 'Quick Order', message: result.message, variant: 'success' }));
+        // Confirmation in the same dialog (a corner toast is easy to miss).
+        modal.querySelector('.mc-quick-order-done__message').textContent = result.message;
+        modal.querySelector('.mc-quick-order-done__product').textContent = modal.querySelector('.mc-modal__title').textContent;
+        form.hidden = true;
+        modal.querySelector('.mc-quick-order-done').hidden = false;
     } catch {
-        showToast(createToast({ title: 'Quick Order', message: 'Could not submit your request', variant: 'danger' }));
+        showToast(createToast({ title: texts.title, message: texts.failed, variant: 'danger' }));
     } finally {
         submitButton.disabled = false;
         submitButton.classList.remove('is-loading');
@@ -160,14 +208,22 @@ async function handleSubmit(modal) {
 }
 
 function openQuickOrder(button) {
+    texts = readTexts(button);
+
     const modal = getModal();
     const form = modal.querySelector('form');
 
     clearErrors(modal);
     form.reset();
-    form.querySelector('[name="quantity"]').value = '1';
+    form.hidden = false;
+    modal.querySelector('.mc-quick-order-done').hidden = true;
+    // On the product page the button carries the quantity input and sits inside the product
+    // form, so the chosen quantity and options go into the request (a card has neither).
+    form.querySelector('[name="quantity"]').value = String(button.dataset.quantityInput ? readQuantity(button) : 1);
+    form.dataset.options = JSON.stringify(readOptions(button));
+    initQuantityStepper(modal);
     form.dataset.productId = button.dataset.productId ?? '';
-    modal.querySelector('.mc-modal__title').textContent = button.dataset.productName || 'Quick Order';
+    modal.querySelector('.mc-modal__title').textContent = button.dataset.productName || texts.title;
 
     Modal.getOrCreateInstance(modal).show();
 }

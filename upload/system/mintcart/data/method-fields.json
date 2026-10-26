@@ -1,0 +1,81 @@
+{
+ "shipping": {
+  "flat": [
+   {
+    "key": "cost",
+    "type": "number",
+    "default": "5.00"
+   },
+   {
+    "key": "tax_class_id",
+    "type": "select",
+    "source": "tax_class"
+   },
+   {
+    "key": "geo_zone_id",
+    "type": "select",
+    "source": "geo_zone"
+   }
+  ],
+  "free": [
+   {
+    "key": "total",
+    "type": "number",
+    "default": "0"
+   },
+   {
+    "key": "geo_zone_id",
+    "type": "select",
+    "source": "geo_zone"
+   }
+  ],
+  "item": [
+   {
+    "key": "cost",
+    "type": "number",
+    "default": "0"
+   },
+   {
+    "key": "tax_class_id",
+    "type": "select",
+    "source": "tax_class"
+   },
+   {
+    "key": "geo_zone_id",
+    "type": "select",
+    "source": "geo_zone"
+   }
+  ],
+  "pickup": [
+   {
+    "key": "geo_zone_id",
+    "type": "select",
+    "source": "geo_zone"
+   }
+  ],
+  "mc_novaposhta": [
+   {
+    "key": "api_key",
+    "type": "text"
+   },
+   {
+    "key": "free_from",
+    "type": "number",
+    "optional": true,
+    "default": ""
+   }
+  ],
+  "mc_ukrposhta": [
+   {
+    "key": "api_key",
+    "type": "text"
+   },
+   {
+    "key": "free_from",
+    "type": "number",
+    "optional": true,
+    "default": ""
+   }
+  ]
+ }
+}

@@ -28,6 +28,9 @@
  * visual toggle" upgrade `add-to-cart` already got. See
  * `docs/developer/commerce/wishlist-service.md`.
  *
+ * A successful `add-to-cart` opens the "Added to cart" modal (`cart-added-modal.js`);
+ * errors stay toasts.
+ *
  * `add-to-cart` calls `MintCart\Commerce\CartService` via
  * `../commerce/cart-client.js`'s `addToCart()` - the first real Phase 15
  * Commerce API consumer. A card needing options it can't offer a picker for
@@ -45,6 +48,7 @@
 import { addToCart } from '../commerce/cart-client.js';
 import { addToWishlist, removeFromWishlist } from '../commerce/wishlist-client.js';
 import { createToast, showToast } from './toast.js';
+import { showCartAdded } from './cart-added-modal.js';
 
 function toggleAction(root, actionName, eventName) {
     root.addEventListener('click', (event) => {
@@ -77,7 +81,7 @@ function toggleAction(root, actionName, eventName) {
  * cards have no such input and keep using the static attribute, this only
  * changes behavior where `data-quantity-input` is actually present.
  */
-function readQuantity(button) {
+export function readQuantity(button) {
     const inputId = button.dataset.quantityInput;
     const input = inputId ? document.getElementById(inputId) : null;
 
@@ -98,7 +102,7 @@ function readQuantity(button) {
  * checkbox options aren't fully supported by `addToCart()`'s single-value
  * `option` shape yet (`docs/developer/commerce/cart-client.md`).
  */
-function readOptions(button) {
+export function readOptions(button) {
     const options = {};
     const container = button.closest('[data-mc-product-form]')?.querySelector('[data-mc-product-options]');
 
@@ -267,14 +271,8 @@ function initAddToCart(root) {
                 markMissingOptions(form, []);
             }
 
-            const { productName, mcCartUrl, mcTextViewCart } = button.dataset;
-
-            showToast(createToast({
-                title: addedText,
-                message: productName || addedText,
-                variant: 'success',
-                action: mcCartUrl && mcTextViewCart ? { text: mcTextViewCart, href: mcCartUrl } : null,
-            }));
+            // A confirmation with a next step (keep shopping / go to the cart), not a corner toast.
+            showCartAdded(button);
         } catch {
             showToast(createToast({ title: errorText, message: errorText, variant: 'danger' }));
         } finally {

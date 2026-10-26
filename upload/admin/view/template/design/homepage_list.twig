@@ -4,7 +4,6 @@
     <div class="container-fluid">
       <div class="pull-right">
         <a href="{{ add }}" data-toggle="tooltip" title="{{ text_add }}" class="btn btn-primary"><i class="fa fa-plus"></i></a>
-        <button type="submit" form="form-homepage" formaction="{{ delete }}" data-toggle="tooltip" title="{{ button_delete }}" class="btn btn-danger" onclick="return confirm('{{ text_confirm }}');"><i class="fa fa-trash-o"></i></button>
       </div>
       <h1>{{ heading_title }}</h1>
       <ul class="breadcrumb">
@@ -31,36 +30,31 @@
       </div>
       <div class="panel-body">
         {% if blocks %}
-        <p class="text-muted">
-          <input type="checkbox" onclick="$('input[name*=\'selected\']').prop('checked', this.checked);" />
-          {{ text_drag_hint }}
-        </p>
+        <p class="text-muted">{{ text_drag_hint }} <span class="mc-blocks__saved" data-mc-blocks-saved role="status" aria-live="polite"></span></p>
         {% endif %}
         <form method="post" id="form-homepage">
           {% if blocks %}
-          <ul class="mc-sortable" data-mc-sortable data-mc-sortable-handle id="homepage-block-list">
+          <ul class="mc-blocks" data-mc-sortable data-mc-sortable-handle id="homepage-block-list" data-save-order="{{ save_order }}" data-status-url="{{ status_url }}" data-text-saving="{{ text_order_saving }}" data-text-saved="{{ text_order_saved }}">
             {% for block in blocks %}
-            <li class="mc-sortable__item" data-mc-sortable-item="{{ block.block_id }}">
-              <button type="button" class="mc-sortable__handle" data-mc-action="sortable-handle" aria-label="{{ text_drag_handle }}">⠿</button>
-              {% if block.block_id in selected %}
-              <input type="checkbox" name="selected[]" value="{{ block.block_id }}" checked="checked" />
-              {% else %}
-              <input type="checkbox" name="selected[]" value="{{ block.block_id }}" />
-              {% endif %}
-              <span class="mc-sortable__label">
-                <strong>{{ block.type }}</strong> — {{ block.title }}
-                <span class="label label-default">{{ block.status }}</span>
-              </span>
+            <li class="mc-blocks__row{% if not block.status_on %} is-off{% endif %}" data-mc-sortable-item="{{ block.block_id }}">
+              <div class="mc-blocks__handle">
+                <button type="button" class="mc-blocks__grip" data-mc-action="sortable-handle" title="{{ text_drag_handle }}" aria-label="{{ text_drag_handle }}"><i class="fa fa-arrows"></i></button>
+              </div>
+              <div class="mc-blocks__icon"><i class="fa {{ block.icon }}" aria-hidden="true"></i></div>
+              <div class="mc-blocks__main">
+                <a href="{{ block.edit }}" class="mc-blocks__name">{{ block.type }}</a>
+                {% if block.summary %}<div class="mc-blocks__summary">{{ block.summary }}</div>{% endif %}
+              </div>
               <input type="hidden" name="order[{{ block.block_id }}]" value="{{ loop.index0 }}" />
-              <div class="mc-sortable__controls">
-                <button type="button" class="mc-sortable__move" data-mc-action="sortable-move-up" aria-label="{{ text_move_up }}">↑</button>
-                <button type="button" class="mc-sortable__move" data-mc-action="sortable-move-down" aria-label="{{ text_move_down }}">↓</button>
+              <div class="mc-blocks__actions">
+                <button type="button" class="mc-blocks__status{% if block.status_on %} is-on{% endif %}" data-mc-block-status="{{ block.block_id }}" data-text-on="{{ text_enabled }}" data-text-off="{{ text_disabled }}" aria-pressed="{{ block.status_on ? 'true' : 'false' }}" title="{{ text_status_toggle }}">{{ block.status_on ? text_enabled : text_disabled }}</button>
                 <a href="{{ block.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary btn-sm"><i class="fa fa-pencil"></i></a>
+                <button type="submit" formaction="{{ block.delete }}" name="selected[]" value="{{ block.block_id }}" data-toggle="tooltip" title="{{ button_delete }}" class="btn btn-danger btn-sm" onclick="return confirm('{{ text_confirm }}');"><i class="fa fa-trash-o"></i></button>
               </div>
             </li>
             {% endfor %}
           </ul>
-          <button type="submit" formaction="{{ save_order }}" class="btn btn-default"><i class="fa fa-sort"></i> {{ button_save_order }}</button>
+          <noscript><button type="submit" formaction="{{ save_order }}" class="btn btn-default"><i class="fa fa-sort"></i> {{ button_save_order }}</button></noscript>
           {% else %}
           <p class="text-muted">{{ text_no_results }}</p>
           {% endif %}
@@ -72,22 +66,10 @@
 {{ footer }}
 <script>
 /**
- * Persists McSortable's reorder (assets/src/js/components/sortable.js,
- * auto-initialized from admin.min.js - enqueued by
- * ControllerDesignHomepage::enqueueMintAssets(), docs/developer/admin/asset-enqueue.md)
- * into the same per-row order[<block_id>] hidden inputs saveOrder() already
- * reads - that controller method's contract did not need to change for
- * this. Plain non-module inline <script>, same convention every admin
- * Twig template already follows (docs/developer/admin/asset-enqueue.md's
- * "Calling createEntityPicker/createMediaPicker from a legacy template").
- *
- * Known interim limitation: mc-sortable's own pointer/touch drag only
- * initializes if admin.min.js's init calls run after this list's markup
- * exists in the DOM - see assets/src/js/admin.js's own "Boot timing"
- * comment if present, or docs/developer/components/sortable.md. Until
- * that's true, the keyboard-usable move-up/move-down buttons below still
- * work (their listener is delegated on `document`, independent of when the
- * list markup renders), so reordering stays possible either way.
+ * The block list: dragging (McSortable, assets/src/js/components/sortable.js - it fires
+ * `mc:sortable:reorder` after a drag and after the up/down buttons) saves the new order at
+ * once; the Enabled / Disabled switch toggles a block without opening it. Plain non-module
+ * inline script, like every admin Twig template here.
  */
 (function () {
     'use strict';
@@ -98,13 +80,61 @@
         return;
     }
 
+    var note = document.querySelector('[data-mc-blocks-saved]');
+
+    function post(url, params) {
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        }).then(function (response) {
+            return response.json();
+        });
+    }
+
     list.addEventListener('mc:sortable:reorder', function (event) {
+        var params = new URLSearchParams();
+
         event.detail.order.forEach(function (blockId, index) {
             var input = list.querySelector('input[name="order[' + blockId + ']"]');
 
             if (input) {
                 input.value = index;
             }
+
+            params.append('order[' + blockId + ']', index);
+        });
+
+        if (note) {
+            note.textContent = list.dataset.textSaving;
+        }
+
+        post(list.dataset.saveOrder, params).then(function (json) {
+            if (note) {
+                note.textContent = json.success ? list.dataset.textSaved : '';
+            }
+        });
+    });
+
+    list.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-mc-block-status]');
+
+        if (!button) {
+            return;
+        }
+
+        var turnOn = !button.classList.contains('is-on');
+        var params = new URLSearchParams({ block_id: button.dataset.mcBlockStatus, status: turnOn ? '1' : '0' });
+
+        post(list.dataset.statusUrl, params).then(function (json) {
+            if (!json.success) {
+                return;
+            }
+
+            button.classList.toggle('is-on', turnOn);
+            button.setAttribute('aria-pressed', turnOn ? 'true' : 'false');
+            button.textContent = turnOn ? button.dataset.textOn : button.dataset.textOff;
+            button.closest('.mc-blocks__row').classList.toggle('is-off', !turnOn);
         });
     });
 })();

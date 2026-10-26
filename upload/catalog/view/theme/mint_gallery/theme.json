@@ -1,0 +1,14 @@
+{
+  "name": "Mint Gallery",
+  "code": "mint_gallery",
+  "version": "1.0.0",
+  "mint_api": "^1.0",
+  "parent": "mint_default",
+  "presets": [
+    "gallery",
+    "comfort",
+    "clean",
+    "warm",
+    "cool"
+  ]
+}

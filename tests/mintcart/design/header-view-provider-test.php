@@ -76,7 +76,7 @@ $view = $provider->build([], [], [], [
     'not_a_real_link' => 'index.php?route=malicious/thing',
 ]);
 
-assertSame(count(['account', 'login', 'register', 'order', 'transaction', 'download', 'logout', 'wishlist', 'shopping_cart', 'checkout', 'contact']), count($view['links']), 'links: every documented key present', $failures);
+assertSame(count(['account', 'login', 'register', 'order', 'transaction', 'download', 'logout', 'wishlist', 'compare', 'shopping_cart', 'checkout', 'contact']), count($view['links']), 'links: every documented key present', $failures);
 assertSame('index.php?route=account/account', $view['links']['account'], 'links: account passes through', $failures);
 assertSame('index.php?route=checkout/checkout', $view['links']['checkout'], 'links: checkout passes through', $failures);
 assertSame(null, $view['links']['login'], 'links: unsupplied key defaults to null', $failures);
@@ -103,6 +103,22 @@ $view = $provider->build([], [], [], ['login' => ''], ['search' => '']);
 assertSame(null, $view['links']['login'], 'links: empty string normalized to null', $failures);
 assertSame(null, $view['widgets']['search'], 'widgets: empty string normalized to null', $failures);
 
+// 8. Announcement: absent/blank text -> null; text is trimmed; only http(s)
+// or site-relative urls survive (no javascript:, no protocol-relative).
+assertSame(null, $provider->build()['announcement'], 'announcement: default null', $failures);
+assertSame(null, $provider->build([], [], [], [], [], ['text' => '   ', 'url' => 'https://x.test'])['announcement'], 'announcement: blank text -> null', $failures);
+
+$view = $provider->build([], [], [], [], [], ['text' => ' Free shipping over $50 ', 'url' => 'https://shop.test/sale']);
+assertSame(['text' => 'Free shipping over $50', 'url' => 'https://shop.test/sale'], $view['announcement'], 'announcement: text trimmed, https url kept', $failures);
+
+$view = $provider->build([], [], [], [], [], ['text' => 'Sale', 'url' => '/index.php?route=product/special']);
+assertSame('/index.php?route=product/special', $view['announcement']['url'], 'announcement: relative url kept', $failures);
+
+foreach (['javascript:alert(1)', '//evil.test', 'ftp://x.test'] as $bad) {
+    $view = $provider->build([], [], [], [], [], ['text' => 'Sale', 'url' => $bad]);
+    assertSame(null, $view['announcement']['url'], 'announcement: unsafe url dropped (' . $bad . ')', $failures);
+}
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -111,5 +127,5 @@ if ($failures) {
     exit(1);
 }
 
-echo 'PASS: HeaderViewProvider smoke test (' . 7 . " scenarios)\n";
+echo 'PASS: HeaderViewProvider smoke test (' . 8 . " scenarios)\n";
 exit(0);

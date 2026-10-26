@@ -1,0 +1,109 @@
+/**
+ * mint_gallery page styling.
+ *
+ * Rules scoped to `<html data-mc-theme="mint_gallery">` (set by
+ * common/header.php + header.twig). Pages that mint_gallery does not give its
+ * own template - the product page here - are restyled this way instead of
+ * copying mint_default's template and its behaviour hooks. Colours, radii and
+ * shadows still come from the `gallery` preset tokens.
+ */
+
+/* ---------------------------------------------------------------------- */
+/* Product page: gallery                                                    */
+/* ---------------------------------------------------------------------- */
+
+[data-mc-theme='mint_gallery'] .mc-product-gallery__main-link {
+    background: var(--mc-surface-alt);
+}
+
+[data-mc-theme='mint_gallery'] .mc-product-gallery__main {
+    aspect-ratio: 1 / 1;
+    height: auto;
+    margin-bottom: 0;
+    padding: var(--mc-space-6);
+    background: transparent;
+    border: 0;
+    mix-blend-mode: multiply;
+}
+
+[data-mc-theme='mint_gallery'] .mc-product-gallery__thumbs {
+    margin-top: var(--mc-space-2);
+}
+
+[data-mc-theme='mint_gallery'] .mc-product-gallery__thumb {
+    width: 5rem;
+    height: 5rem;
+    background: var(--mc-surface-alt);
+    border-color: transparent;
+}
+
+[data-mc-theme='mint_gallery'] .mc-product-gallery__thumb-image {
+    padding: var(--mc-space-2);
+    mix-blend-mode: multiply;
+}
+
+[data-mc-theme='mint_gallery'] .mc-product-gallery__thumb.is-active {
+    border-color: var(--mc-text);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Product page: purchase column                                            */
+/* ---------------------------------------------------------------------- */
+
+[data-mc-theme='mint_gallery'] [data-mc-product-form] h1 {
+    font-size: var(--mc-font-size-2xl);
+    font-weight: var(--mc-font-weight-medium);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+[data-mc-theme='mint_gallery'] [data-mc-product-form] .mc-price--lg .mc-price__current {
+    font-size: var(--mc-font-size-2xl);
+}
+
+/* Size / option choices: square, black when picked. */
+[data-mc-theme='mint_gallery'] .mc-choice-group .mc-radio:has(:checked),
+[data-mc-theme='mint_gallery'] .mc-choice-group .mc-checkbox:has(:checked) {
+    background: var(--mc-primary);
+    color: var(--mc-on-primary);
+    box-shadow: none;
+}
+
+/* Add to cart: the wide black button, quantity beside it. */
+[data-mc-theme='mint_gallery'] [data-mc-product-form] .mc-button[data-mc-action='add-to-cart'] {
+    flex: 1 1 12rem;
+    padding-block: var(--mc-space-3);
+    font-weight: var(--mc-font-weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* Wishlist / compare: quiet square buttons. */
+[data-mc-theme='mint_gallery'] [data-mc-product-form] .mc-product-card__action-button {
+    border-color: var(--mc-border);
+    color: var(--mc-text);
+}
+
+/* Delivery / payment / returns: grey block, no frame. */
+[data-mc-theme='mint_gallery'] .mc-purchase-info {
+    padding: var(--mc-space-4) var(--mc-space-6);
+}
+
+/* Section tabs: plain caps with a black underline on the current one. */
+[data-mc-theme='mint_gallery'] .mc-section-nav__link {
+    font-weight: var(--mc-font-weight-bold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+[data-mc-theme='mint_gallery'] .mc-product-section__title {
+    font-size: var(--mc-font-size-lg);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* Utility labels stay on one line. */
+.mc-header--gallery .mc-header__account-toggle,
+.mc-header--gallery .mc-header__wishlist {
+    white-space: nowrap;
+}

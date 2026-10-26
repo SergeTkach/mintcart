@@ -1,0 +1,69 @@
+/**
+ * "Comfort" design preset.
+ *
+ * A plain, friendly look that is easy on the eyes: white page, quiet neutral
+ * greys, the brand green as the single accent, comfortable reading rhythm, medium-soft
+ * corners and gentle shadows. Nothing decorative - it is meant to be read, not admired.
+ * Like every preset it redefines ONLY semantic-tier tokens already declared
+ * in settings/tokens.css (docs/adr/004-design-token-presets.md); shapes that
+ * need different markup live in the `mint_comfort` theme.
+ *
+ * Activated via `data-mc-preset="comfort"` on `<html>`.
+ */
+
+:root[data-mc-preset='comfort'] {
+    /* Preset-local primitives */
+    --mc-preset-comfort-ink: #1d1f23;
+    --mc-preset-comfort-grey-50: #f5f5f6;
+    --mc-preset-comfort-grey-200: #e4e4e7;
+    --mc-preset-comfort-grey-400: #c9c9ce;
+    --mc-preset-comfort-grey-600: #6b6f76;
+    --mc-preset-comfort-brand-600: #14806a;
+    --mc-preset-comfort-brand-700: #0f6957;
+    --mc-preset-comfort-brand-800: #0b5545;
+    --mc-preset-comfort-red: #d14343;
+        --mc-preset-comfort-shadow: 20, 22, 26;
+
+    /* Color */
+    --mc-primary: var(--mc-preset-comfort-brand-600);
+    --mc-primary-hover: var(--mc-preset-comfort-brand-700);
+    --mc-primary-active: var(--mc-preset-comfort-brand-800);
+    --mc-on-primary: var(--mc-color-white);
+
+    --mc-accent: var(--mc-preset-comfort-brand-600);
+    --mc-on-accent: var(--mc-color-white);
+
+    --mc-surface: var(--mc-color-white);
+    --mc-surface-alt: var(--mc-preset-comfort-grey-50);
+    --mc-surface-inverse: var(--mc-preset-comfort-ink);
+
+    --mc-text: var(--mc-preset-comfort-ink);
+    --mc-text-inverse: var(--mc-color-white);
+    --mc-muted: var(--mc-preset-comfort-grey-600);
+    --mc-border: var(--mc-preset-comfort-grey-200);
+    --mc-border-strong: var(--mc-preset-comfort-grey-400);
+
+    --mc-success: var(--mc-preset-comfort-brand-600);
+    --mc-danger: var(--mc-preset-comfort-red);
+
+    /* Reading rhythm */
+    --mc-line-height-normal: 1.6;
+    --mc-line-height-relaxed: 1.8;
+    --mc-font-weight-semibold: 600;
+
+    /* Medium-soft corners */
+    --mc-radius-sm: 0.375rem;
+    --mc-radius-md: 0.625rem;
+    --mc-radius-lg: 0.875rem;
+    --mc-radius-xl: 1.25rem;
+
+    /* A little more air */
+    --mc-space-4: 1.125rem;
+    --mc-space-6: 1.75rem;
+    --mc-space-8: 2.5rem;
+
+    /* Gentle shadows */
+    --mc-shadow-sm: 0 1px 2px rgba(var(--mc-preset-comfort-shadow), 0.05);
+    --mc-shadow-md: 0 4px 16px rgba(var(--mc-preset-comfort-shadow), 0.08);
+    --mc-shadow-lg: 0 12px 32px rgba(var(--mc-preset-comfort-shadow), 0.12);
+}

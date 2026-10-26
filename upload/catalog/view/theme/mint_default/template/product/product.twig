@@ -101,7 +101,17 @@
                         <button type="button" class="mc-product-card__action-button" data-mc-action="toggle-compare" data-product-id="{{ product_id }}" aria-pressed="false" aria-label="{{ text_compare }}">⇄</button>
                     </div>
 
+                    {% if mc_badges %}
+                        <ul class="list-unstyled d-flex flex-wrap gap-2 mb-2">
+                            {% for badge in mc_badges %}
+                                <li><span class="mc-badge mc-badge--{{ badge.type }}"{% if badge.color %} style="--mc-badge-bg:{{ badge.color }};--mc-badge-color:{{ badge.on_color }}"{% endif %}>{{ badge.label }}</span></li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    {{ mc_slots['product.before_title'] }}
                     <h1 class="mb-2">{{ heading_title }}</h1>
+                    {{ mc_slots['product.after_title'] }}
 
                     {% if review_status and rating %}
                         <a class="mc-product-page__rating-link mb-3" href="{{ section_url }}#product-reviews" data-mc-action="scroll-to-section">
@@ -129,11 +139,13 @@
                     {% if price %}
                         {# product-price.js turns this into the live total for the
                            chosen quantity + options (route mintcart/price). #}
+                        {{ mc_slots['product.before_price'] }}
                         <div class="mc-price mc-price--lg mb-3{% if special %} mc-price--special{% endif %}" data-mc-product-price data-mc-product-id="{{ product_id }}" aria-live="polite">
                             <span class="mc-price__current" data-mc-price-current>{{ special ?: price }}</span>
                             <span class="mc-price__original" data-mc-price-original{% if not special %} hidden{% endif %}>{{ special ? price }}</span>
                             {% if tax %}<span class="mc-price__tax d-block">{{ text_tax }} <span data-mc-price-tax>{{ tax }}</span></span>{% endif %}
                         </div>
+                        {{ mc_slots['product.after_price'] }}
 
                         {% if points %}
                             <p>{{ text_points }} {{ points }}</p>
@@ -215,126 +227,188 @@
                             data-mc-cart-url="{{ cart_url }}"
                             data-mc-text-view-cart="{{ text_view_cart }}"
                             data-mc-text-added="{{ text_added_to_cart }}"
+                            data-mc-text-continue="{{ text_continue_shopping }}"
                             data-mc-text-add-error="{{ text_add_to_cart_error }}"
                             {{ price is same as(false) ? 'disabled' : '' }}
                         >
                             {{ text_add_to_cart }}
                         </button>
+
+                        {# Quick Order: the same modal the listing cards open; here it also takes the
+                           quantity and the chosen options from this page (quick-order.js). #}
+                        <button
+                            type="button"
+                            class="mc-button mc-button--secondary"
+                            data-mc-action="quick-order"
+                            data-mc-texts="{{ quick_order_texts }}"
+                            data-product-id="{{ product_id }}"
+                            data-product-name="{{ heading_title }}"
+                            data-quantity-input="input-quantity"
+                            {{ price is same as(false) ? 'disabled' : '' }}
+                        >
+                            {{ text_quick_order }}
+                        </button>
                     </div>
+                    {{ mc_slots['product.after_actions'] }}
 
                     {% if minimum > 1 %}
                         <p class="mc-field__help mt-2">{{ text_minimum }}</p>
                     {% endif %}
+
+                    {# Delivery / payment / returns, from the store's enabled
+                       extensions and Return Terms page (mintcart/purchase_info). #}
+                    {% if mc_purchase_info.delivery or mc_purchase_info.payment or mc_purchase_info.returns %}
+                        <dl class="mc-purchase-info mt-4">
+                            {% if mc_purchase_info.delivery %}
+                                <div class="mc-purchase-info__row">
+                                    <dt class="mc-purchase-info__label">{{ text_mc_delivery }}</dt>
+                                    <dd class="mc-purchase-info__value">{{ mc_purchase_info.delivery|join(' · ') }}</dd>
+                                </div>
+                            {% endif %}
+                            {% if mc_purchase_info.payment %}
+                                <div class="mc-purchase-info__row">
+                                    <dt class="mc-purchase-info__label">{{ text_mc_payment }}</dt>
+                                    <dd class="mc-purchase-info__value">{{ mc_purchase_info.payment|join(' · ') }}</dd>
+                                </div>
+                            {% endif %}
+                            {% if mc_purchase_info.returns %}
+                                <div class="mc-purchase-info__row">
+                                    <dt class="mc-purchase-info__label">{{ text_mc_returns }}</dt>
+                                    <dd class="mc-purchase-info__value"><a href="{{ mc_purchase_info.returns.href }}">{{ mc_purchase_info.returns.title }}</a></dd>
+                                </div>
+                            {% endif %}
+                        </dl>
+                    {% endif %}
                 </div>
             </div>
 
-            {% if description %}
-                <div class="mc-product-section" id="product-description" data-mc-section>
-                    <p class="mc-product-section__title">{{ tab_description }}</p>
-                    <div class="mc-prose">
-                        {{ description|raw }}
-                    </div>
-                </div>
-            {% endif %}
-
-            {% if attribute_groups %}
-                <div class="mc-product-section" id="product-specs" data-mc-section>
-                    <p class="mc-product-section__title">{{ tab_attribute }}</p>
-                    {% for attribute_group in attribute_groups %}
-                        <p class="mc-product-section__subtitle">{{ attribute_group.name }}</p>
-                        <table class="table table-striped">
-                            <tbody>
-                                {% for attribute in attribute_group.attribute %}
-                                    <tr>
-                                        <td>{{ attribute.name }}</td>
-                                        <td>{{ attribute.text }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
-            {% if review_status %}
-                <div class="mc-product-section" id="product-reviews" data-mc-section>
-                    <p class="mc-product-section__title">{{ tab_review }}</p>
-                    <div class="mc-reviews" data-mc-reviews data-mc-reviews-product-id="{{ product_id }}">
-                        <div class="mc-reviews__list" data-mc-reviews-list aria-live="polite">
-                            <p class="mc-reviews__empty">{{ text_no_reviews }}</p>
-                        </div>
-
-                        <div class="mc-reviews__form-wrapper">
-                            <p class="mc-reviews__form-title">{{ text_write }}</p>
-
-                            {% if review_guest %}
-                                <form class="mc-reviews__form" data-mc-reviews-form novalidate>
-                                    <div class="mc-field mb-3">
-                                        <label class="mc-field__label" for="input-review-name">{{ entry_name }}</label>
-                                        <input type="text" name="name" value="{{ customer_name }}" id="input-review-name" class="mc-field__control" required minlength="3" maxlength="25">
-                                    </div>
-
-                                    <div class="mc-field mb-3">
-                                        <label class="mc-field__label" for="input-review-text">{{ entry_review }}</label>
-                                        <textarea name="text" rows="5" id="input-review-text" class="mc-field__control" required minlength="25" maxlength="1000"></textarea>
-                                        <p class="mc-field__help">{{ text_note|raw }}</p>
-                                    </div>
-
-                                    <fieldset class="mc-rating-input mb-3">
-                                        <legend class="mc-field__label">{{ entry_rating }}</legend>
-                                        <div class="mc-rating-input__stars">
-                                            {% for value in [5, 4, 3, 2, 1] %}
-                                                <input type="radio" class="mc-rating-input__control visually-hidden" name="rating" id="input-review-rating-{{ value }}" value="{{ value }}" required>
-                                                <label class="mc-rating-input__star" for="input-review-rating-{{ value }}">
-                                                    <span class="visually-hidden">
-                                                        {% if value == 1 %}1 - {{ entry_bad }}{% elseif value == 5 %}5 - {{ entry_good }}{% else %}{{ value }}{% endif %}
-                                                    </span>
-                                                    <span aria-hidden="true">★</span>
-                                                </label>
-                                            {% endfor %}
-                                        </div>
-                                    </fieldset>
-
-                                    {% if captcha %}
-                                        <div class="mc-field mb-3">{{ captcha|raw }}</div>
-                                    {% endif %}
-
-                                    <div data-mc-reviews-message></div>
-
-                                    <button type="submit" class="mc-button mc-button--primary" data-mc-reviews-submit>{{ button_continue }}</button>
-                                </form>
-                            {% else %}
-                                <p>{{ text_login|raw }}</p>
-                            {% endif %}
+            <div class="mc-product-body">
+                <div class="mc-product-body__main">
+                {% if description %}
+                    <div class="mc-product-section" id="product-description" data-mc-section>
+                        <p class="mc-product-section__title">{{ tab_description }}</p>
+                        <div class="mc-prose">
+                            {{ description|raw }}
                         </div>
                     </div>
-                </div>
-            {% endif %}
+                {% endif %}
 
-            {% if tags %}
-                <p class="mb-4">
-                    {{ text_tags }}
-                    {% for tag in tags %}
-                        <a href="{{ tag.href }}">{{ tag.tag }}</a>{% if not loop.last %}, {% endif %}
-                    {% endfor %}
-                </p>
-            {% endif %}
-
-            {% if product_cards %}
-                <div class="mc-product-section" id="product-related" data-mc-section>
-                    <p class="mc-product-section__title">{{ text_related }}</p>
-                    <div class="row g-4">
-                        {% for product_card in product_cards %}
-                            <div class="col-6 col-lg-3">
-                                {{ product_card }}
-                            </div>
+                {% if attribute_groups %}
+                    <div class="mc-product-section" id="product-specs" data-mc-section>
+                        <p class="mc-product-section__title">{{ tab_attribute }}</p>
+                        {% for attribute_group in attribute_groups %}
+                            <p class="mc-product-section__subtitle">{{ attribute_group.name }}</p>
+                            <table class="table table-striped">
+                                <tbody>
+                                    {% for attribute in attribute_group.attribute %}
+                                        <tr>
+                                            <td>{{ attribute.name }}</td>
+                                            <td>{{ attribute.text }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         {% endfor %}
                     </div>
+                {% endif %}
+
+                {% if review_status %}
+                    <div class="mc-product-section" id="product-reviews" data-mc-section>
+                        <p class="mc-product-section__title">{{ tab_review }}</p>
+                        <div class="mc-reviews" data-mc-reviews data-mc-reviews-product-id="{{ product_id }}">
+                            <div class="mc-reviews__list" data-mc-reviews-list aria-live="polite">
+                                <p class="mc-reviews__empty">{{ text_no_reviews }}</p>
+                            </div>
+
+                            <div class="mc-reviews__form-wrapper">
+                                <p class="mc-reviews__form-title">{{ text_write }}</p>
+
+                                {% if review_guest %}
+                                    <form class="mc-reviews__form" data-mc-reviews-form novalidate>
+                                        <div class="mc-field mb-3">
+                                            <label class="mc-field__label" for="input-review-name">{{ entry_name }}</label>
+                                            <input type="text" name="name" value="{{ customer_name }}" id="input-review-name" class="mc-field__control" required minlength="3" maxlength="25">
+                                        </div>
+
+                                        <div class="mc-field mb-3">
+                                            <label class="mc-field__label" for="input-review-text">{{ entry_review }}</label>
+                                            <textarea name="text" rows="5" id="input-review-text" class="mc-field__control" required minlength="25" maxlength="1000"></textarea>
+                                            <p class="mc-field__help">{{ text_note|raw }}</p>
+                                        </div>
+
+                                        <fieldset class="mc-rating-input mb-3">
+                                            <legend class="mc-field__label">{{ entry_rating }}</legend>
+                                            <div class="mc-rating-input__stars">
+                                                {% for value in [5, 4, 3, 2, 1] %}
+                                                    <input type="radio" class="mc-rating-input__control visually-hidden" name="rating" id="input-review-rating-{{ value }}" value="{{ value }}" required>
+                                                    <label class="mc-rating-input__star" for="input-review-rating-{{ value }}">
+                                                        <span class="visually-hidden">
+                                                            {% if value == 1 %}1 - {{ entry_bad }}{% elseif value == 5 %}5 - {{ entry_good }}{% else %}{{ value }}{% endif %}
+                                                        </span>
+                                                        <span aria-hidden="true">★</span>
+                                                    </label>
+                                                {% endfor %}
+                                            </div>
+                                        </fieldset>
+
+                                        {% if captcha %}
+                                            <div class="mc-field mb-3">{{ captcha|raw }}</div>
+                                        {% endif %}
+
+                                        <div data-mc-reviews-message></div>
+
+                                        <button type="submit" class="mc-button mc-button--primary" data-mc-reviews-submit>{{ button_continue }}</button>
+                                    </form>
+                                {% else %}
+                                    <p>{{ text_login|raw }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if tags %}
+                    <p class="mb-4">
+                        {{ text_tags }}
+                        {% for tag in tags %}
+                            <a href="{{ tag.href }}">{{ tag.tag }}</a>{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                {% endif %}
+
+                {% if product_cards %}
+                    <div class="mc-product-section" id="product-related" data-mc-section>
+                        <p class="mc-product-section__title">{{ text_related }}</p>
+                        <div class="row g-4">
+                            {% for product_card in product_cards %}
+                                <div class="col-6 col-lg-3">
+                                    {{ product_card }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
                 </div>
+
+            {% if price %}
+                {# Desktop buy box (buy-bar.js): sticks beside the lower sections, like the
+                   mobile bottom bar does on phones. Its button clicks the real Add to Cart. #}
+                <aside class="mc-buy-box" data-mc-buy-box aria-label="{{ heading_title }}">
+                    <div class="mc-buy-box__inner">
+                        <div class="mc-buy-box__product">
+                            {% if thumb %}<img class="mc-buy-box__thumb" src="{{ thumb }}" alt="" width="64" height="64" loading="lazy">{% endif %}
+                            <p class="mc-buy-box__name">{{ heading_title }}</p>
+                        </div>
+                        <p class="mc-buy-box__price{% if special %} mc-buy-box__price--special{% endif %}" data-mc-price-current>{{ special ?: price }}</p>
+                        <button type="button" class="mc-button mc-button--primary mc-buy-box__button" data-mc-action="buy-bar-add">{{ text_add_to_cart }}</button>
+                    </div>
+                </aside>
             {% endif %}
+            </div>
 
             <div class="mc-viewed-products" data-mc-viewed-products data-mc-viewed-products-exclude="{{ product_id }}" hidden>
-                <h2 class="h4 mb-3">{{ text_viewed }}</h2>
+                <p class="mc-product-section__title">{{ text_viewed }}</p>
                 <div class="row g-4" data-mc-viewed-products-list></div>
             </div>
 

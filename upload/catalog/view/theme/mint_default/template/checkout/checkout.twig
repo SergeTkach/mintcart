@@ -147,6 +147,8 @@
                         <p class="mc-field__error" data-mc-checkout-error="agree" role="alert" hidden></p>
                     </div>
 
+                    {{ mc_slots['checkout.before_confirm'] }}
+
                     <button type="submit" form="mc-checkout-form" class="mc-button mc-button--primary mc-button--lg mc-checkout__submit" data-mc-checkout-submit disabled>{{ button_mc_place_order }}</button>
 
                     <div class="mc-checkout__payment" data-mc-checkout-payment hidden>

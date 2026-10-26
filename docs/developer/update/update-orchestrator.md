@@ -174,7 +174,7 @@ a real zip fixture (built with `ZipArchive`, same technique
 with `extract` inserted into `completed_steps` between `download` and
 `verify`; **new:** injecting `BackupPlanner`+`BackupExecutor` together
 snapshots a pre-existing file about to be overwritten into
-`system/storage/mintcart/backup/<package>/<timestamp>/` before
+`storage/mintcart/backup/<package>/<timestamp>/` before
 `maintenance` runs, verified by reading the snapshotted content back off
 disk and confirming it holds the *pre-update* value while the live file
 holds the *post-update* value; **new:** passing only one of

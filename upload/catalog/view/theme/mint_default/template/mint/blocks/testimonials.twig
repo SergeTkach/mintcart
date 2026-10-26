@@ -35,6 +35,10 @@
                 </div>
             {% endfor %}
         </div>
+
+        {% if more_url %}
+            <p class="mc-block__more"><a class="mc-button mc-button--secondary" href="{{ more_url }}">{{ more_label }}</a></p>
+        {% endif %}
     </div>
 </section>
 {% endif %}

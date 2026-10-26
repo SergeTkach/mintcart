@@ -1,0 +1,43 @@
+<?php
+
+// MintCart
+$_['label_backup_restore'] = 'Back-up / Herstel';
+$_['label_business_contacts'] = 'Zakelijk → Contact';
+$_['label_business_delivery'] = 'Zakelijk → Levering';
+$_['label_business_payments'] = 'Zakelijk → Betalingen';
+$_['label_categories'] = 'Categorieën';
+$_['label_countries'] = 'Landen';
+$_['label_coupons'] = 'Kortingsbonnen';
+$_['label_currency'] = 'Valuta';
+$_['label_customers'] = 'Klanten';
+$_['label_default_currency'] = 'Standaardvaluta';
+$_['label_default_language'] = 'Standaardtaal';
+$_['label_design_banners'] = 'Ontwerp → Banners';
+$_['label_design_homepage'] = 'Ontwerp → Homepage';
+$_['label_design_layouts'] = 'Ontwerp → Lay-outs';
+$_['label_design_themes'] = 'Ontwerp → Thema\'s';
+$_['label_diagnostics'] = 'Diagnostiek';
+$_['label_error_log'] = 'Foutlogboek';
+$_['label_extensions'] = 'Extensies';
+$_['label_favicon'] = 'Favicon';
+$_['label_geo_zones'] = 'Geozones';
+$_['label_language'] = 'Taal';
+$_['label_manufacturers'] = 'Fabrikanten';
+$_['label_marketing'] = 'Marketing';
+$_['label_meta_title'] = 'Metatitel';
+$_['label_order_statuses'] = 'Bestelstatussen';
+$_['label_orders'] = 'Bestellingen';
+$_['label_products'] = 'Producten';
+$_['label_seo_urls'] = 'SEO-URL\'s';
+$_['label_stock_statuses'] = 'Voorraadstatussen';
+$_['label_store_address'] = 'Winkeladres';
+$_['label_store_email'] = 'E-mailadres van de winkel';
+$_['label_store_logo'] = 'Winkellogo';
+$_['label_store_name'] = 'Winkelnaam';
+$_['label_store_settings'] = 'Winkelinstellingen';
+$_['label_store_telephone'] = 'Telefoonnummer van de winkel';
+$_['label_system_pages_seo'] = 'SEO van systeempagina\'s';
+$_['label_tax_classes'] = 'Belastingklassen';
+$_['label_tax_rates'] = 'Belastingtarieven';
+$_['label_users'] = 'Gebruikers';
+$_['label_zones'] = 'Zones';

@@ -1,0 +1,55 @@
+/**
+ * "Cool" design preset.
+ *
+ * A clean, modern store in blues with a violet accent: white page, a faint
+ * blue-tinted alternate background, slate text, blue actions, soft corners
+ * and shadows tinted blue. Like every preset it redefines ONLY semantic-tier
+ * tokens already declared in settings/tokens.css
+ * (docs/adr/004-design-token-presets.md).
+ *
+ * Activated via `data-mc-preset="cool"` on `<html>`.
+ */
+
+:root[data-mc-preset='cool'] {
+    /* Preset-local primitives */
+    --mc-preset-cool-ink: #111a2e;
+    --mc-preset-cool-slate-500: #5b6785;
+    --mc-preset-cool-mist-50: #f4f6fd;
+    --mc-preset-cool-mist-200: #dde2f3;
+    --mc-preset-cool-mist-400: #a3acd0;
+    --mc-preset-cool-blue-600: #2459e0;
+    --mc-preset-cool-blue-700: #1c47b8;
+    --mc-preset-cool-blue-800: #173a96;
+    --mc-preset-cool-violet-600: #6d3fe0;
+    --mc-preset-cool-shadow: 23, 58, 150;
+
+    /* Color */
+    --mc-primary: var(--mc-preset-cool-blue-600);
+    --mc-primary-hover: var(--mc-preset-cool-blue-700);
+    --mc-primary-active: var(--mc-preset-cool-blue-800);
+    --mc-on-primary: var(--mc-color-white);
+
+    --mc-accent: var(--mc-preset-cool-violet-600);
+    --mc-on-accent: var(--mc-color-white);
+
+    --mc-surface: var(--mc-color-white);
+    --mc-surface-alt: var(--mc-preset-cool-mist-50);
+    --mc-surface-inverse: var(--mc-preset-cool-ink);
+
+    --mc-text: var(--mc-preset-cool-ink);
+    --mc-text-inverse: var(--mc-color-white);
+    --mc-muted: var(--mc-preset-cool-slate-500);
+    --mc-border: var(--mc-preset-cool-mist-200);
+    --mc-border-strong: var(--mc-preset-cool-mist-400);
+
+    /* Soft corners */
+    --mc-radius-sm: 0.375rem;
+    --mc-radius-md: 0.5rem;
+    --mc-radius-lg: 0.75rem;
+    --mc-radius-xl: 1rem;
+
+    /* Blue-tinted shadows */
+    --mc-shadow-sm: 0 1px 2px rgba(var(--mc-preset-cool-shadow), 0.08);
+    --mc-shadow-md: 0 4px 14px rgba(var(--mc-preset-cool-shadow), 0.12);
+    --mc-shadow-lg: 0 12px 32px rgba(var(--mc-preset-cool-shadow), 0.16);
+}

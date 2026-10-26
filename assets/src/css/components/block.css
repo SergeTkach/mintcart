@@ -16,16 +16,72 @@
  * wrapper itself.
  */
 
+/* Rhythm: generous, fluid vertical space between sections. Sections that
+   carry a band (benefits, about, FAQ, CTA) get a full-width background
+   instead of a border, so the page reads as a sequence of distinct areas. */
 .mc-block {
+    padding-top: clamp(2.5rem, 5vw, 4.5rem);
+    padding-bottom: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+.mc-block[data-mc-block-type="slider"] {
+    padding-top: var(--mc-space-6);
+    padding-bottom: var(--mc-space-8);
+}
+
+.mc-block[data-mc-block-type="benefits"],
+.mc-block[data-mc-block-type="text-image"],
+.mc-block[data-mc-block-type="faq"] {
+    background: var(--mc-surface-tint);
+}
+
+.mc-block[data-mc-block-type="benefits"] {
     padding-top: var(--mc-space-8);
     padding-bottom: var(--mc-space-8);
 }
 
+/* A section title with a "View all" link at the right end. */
+.mc-block__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--mc-space-4);
+    margin-bottom: var(--mc-space-6);
+}
+
+.mc-block__head .mc-block__title {
+    margin: 0;
+}
+
+.mc-block__link {
+    flex: none;
+    color: var(--mc-primary-hover);
+    font-weight: var(--mc-font-weight-semibold);
+    text-decoration: none;
+}
+
+.mc-block__link::after {
+    content: " \2192";
+}
+
+.mc-block__link:hover,
+.mc-block__link:focus-visible {
+    text-decoration: underline;
+}
+
+.mc-block__more {
+    margin: var(--mc-space-6) 0 0;
+    text-align: center;
+}
+
 .mc-block__title {
-    margin: 0 0 var(--mc-space-4);
+    margin: 0 0 var(--mc-space-6);
     color: var(--mc-text);
     font-family: var(--mc-font-family-heading);
-    font-weight: var(--mc-font-weight-semibold);
+    font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.125rem);
+    font-weight: var(--mc-font-weight-bold);
+    letter-spacing: -0.015em;
+    line-height: 1.15;
 }
 
 /**
@@ -87,9 +143,7 @@
 .mc-category-card {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--mc-space-2);
-    text-align: center;
+    gap: var(--mc-space-3);
     color: var(--mc-text);
     text-decoration: none;
 }
@@ -97,21 +151,46 @@
 .mc-category-card__media {
     display: block;
     width: 100%;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 4 / 3;
     overflow: hidden;
-    border-radius: var(--mc-radius-md);
-    background: var(--mc-surface);
+    border-radius: var(--mc-radius-xl);
+    background: var(--mc-surface-tint);
 }
 
 .mc-category-card__media img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.5s var(--mc-motion-easing-standard, ease);
+}
+
+.mc-category-card:hover .mc-category-card__media img,
+.mc-category-card:focus-visible .mc-category-card__media img {
+    transform: scale(1.05);
 }
 
 .mc-category-card__name {
-    font-family: var(--mc-font-family-base);
-    font-weight: var(--mc-font-weight-medium);
+    font-family: var(--mc-font-family-heading);
+    font-size: var(--mc-font-size-lg);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+.mc-category-card__name::after {
+    content: " \2192";
+    color: var(--mc-primary);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.mc-category-card:hover .mc-category-card__name::after,
+.mc-category-card:focus-visible .mc-category-card__name::after {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-category-card__media img {
+        transition: none;
+    }
 }
 
 /**
@@ -124,35 +203,46 @@
  * second consumer).
  */
 
+/* An icon on the left, a short title and a line of text on the right. */
 .mc-benefit {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: var(--mc-space-3);
     align-items: center;
-    gap: var(--mc-space-2);
-    text-align: center;
 }
 
 .mc-benefit__icon {
     display: inline-flex;
+    grid-row: 1 / span 2;
     align-items: center;
     justify-content: center;
-    width: var(--mc-space-10);
-    height: var(--mc-space-10);
+    width: 3rem;
+    height: 3rem;
     border-radius: var(--mc-radius-pill);
-    background: var(--mc-surface-alt);
+    background: var(--mc-surface);
+    box-shadow: var(--mc-shadow-soft);
     color: var(--mc-primary);
+}
+
+.mc-benefit__icon svg {
+    width: 1.375rem;
+    height: 1.375rem;
 }
 
 .mc-benefit__title {
     margin: 0;
+    align-self: end;
     color: var(--mc-text);
     font-family: var(--mc-font-family-heading);
+    font-size: var(--mc-font-size-base);
     font-weight: var(--mc-font-weight-semibold);
 }
 
 .mc-benefit__description {
     margin: 0;
+    align-self: start;
     color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
 }
 
 /**
@@ -171,16 +261,48 @@
     gap: var(--mc-space-3);
 }
 
+.mc-block[data-mc-block-type="faq"] .mc-block__title,
+.mc-block[data-mc-block-type="cta"] .mc-block__title {
+    text-align: center;
+}
+
+.mc-faq {
+    max-width: 52rem;
+    margin-inline: auto;
+}
+
 .mc-faq__item {
-    padding: var(--mc-space-4);
-    border: var(--mc-border-width) solid var(--mc-border);
-    border-radius: var(--mc-radius-md);
+    padding: var(--mc-space-4) var(--mc-space-5);
+    background: var(--mc-surface);
+    border-radius: var(--mc-radius-lg);
 }
 
 .mc-faq__question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-4);
     color: var(--mc-text);
     font-weight: var(--mc-font-weight-semibold);
     cursor: pointer;
+    list-style: none;
+}
+
+.mc-faq__question::-webkit-details-marker {
+    display: none;
+}
+
+.mc-faq__question::after {
+    content: "+";
+    flex: none;
+    color: var(--mc-primary);
+    font-size: 1.5rem;
+    font-weight: var(--mc-font-weight-regular, 400);
+    line-height: 1;
+}
+
+.mc-faq__item[open] .mc-faq__question::after {
+    content: "\2212";
 }
 
 .mc-faq__item[open] .mc-faq__question {
@@ -204,16 +326,17 @@
     gap: var(--mc-space-3);
     height: 100%;
     margin: 0;
-    padding: var(--mc-space-5);
-    background: var(--mc-surface);
-    border: 1px solid var(--mc-border);
-    border-radius: var(--mc-radius-md);
+    padding: var(--mc-space-6);
+    background: var(--mc-surface-tint);
+    border-radius: var(--mc-radius-xl);
 }
 
 .mc-testimonial__quote {
     margin: 0;
     color: var(--mc-text);
+    font-size: var(--mc-font-size-lg);
     font-style: normal;
+    line-height: 1.5;
 }
 
 .mc-testimonial__author {
@@ -297,7 +420,8 @@
     display: block;
     width: 100%;
     height: auto;
-    border-radius: var(--mc-radius-md);
+    border-radius: var(--mc-radius-xl);
+    box-shadow: var(--mc-shadow-soft);
 }
 
 /**
@@ -309,15 +433,34 @@
  * abstraction before a real second consumer).
  */
 
+.mc-block[data-mc-block-type="cta"] {
+    background: var(--mc-primary);
+    color: var(--mc-on-primary);
+}
+
 .mc-block__cta-inner {
     max-width: 640px;
     margin-inline: auto;
     text-align: center;
 }
 
+.mc-block[data-mc-block-type="cta"] .mc-block__title {
+    color: inherit;
+}
+
 .mc-block__cta-text {
-    margin: 0 0 var(--mc-space-4);
-    color: var(--mc-muted);
+    margin: 0 0 var(--mc-space-5);
+    color: inherit;
+    font-size: var(--mc-font-size-lg);
+    opacity: 0.9;
+}
+
+/* On the brand-colour band the button turns around: light button, brand-colour text. */
+.mc-block[data-mc-block-type="cta"] .mc-button {
+    --mc-button-bg: var(--mc-surface);
+    --mc-button-bg-hover: var(--mc-surface-tint);
+    --mc-button-bg-active: var(--mc-surface-tint);
+    --mc-button-color: var(--mc-primary);
 }
 
 /**

@@ -6,11 +6,7 @@
  * model or template is modified, same "0 controller patches" shape as
  * ControllerMintcartCart (Phase 15). Standalone page: it does not include
  * common/header, common/column_left or common/footer, so it never shares a
- * page with the legacy Bootstrap 3 admin chrome (the exact conflict that
- * forced the storefront's own asset-enqueue attempt to be reverted - see
- * docs/IMPLEMENTATION_STATUS.md's Phase 15 "human session" update). This is
- * the first live page anywhere in MintCart to actually load
- * assets/dist/css/index.min.css.
+ * page with the legacy Bootstrap 3 admin chrome
  *
  * Step order/resume logic lives in MintCart\Onboarding\WizardProgress (pure,
  * no OpenCart dependency, unit-tested standalone). This controller only:
@@ -556,12 +552,21 @@ class ControllerMintcartWizard extends Controller
 
         $productDescription = [];
 
+        $translations = (array)($this->request->post['translation'] ?? []);
+
         foreach ($this->model_localisation_language->getLanguages() as $language) {
+            // The form's main fields are the default language; another
+            // language uses its own text when it was filled in, the main text
+            // otherwise (translations are optional).
+            $own = (array)($translations[$language['language_id']] ?? []);
+            $languageName = trim((string)($own['name'] ?? ''));
+            $languageDescription = trim((string)($own['description'] ?? ''));
+
             $productDescription[$language['language_id']] = [
-                'name'             => $name,
-                'description'      => $description,
+                'name'             => $languageName !== '' ? $languageName : $name,
+                'description'      => $languageDescription !== '' ? $languageDescription : $description,
                 'tag'              => '',
-                'meta_title'       => $name,
+                'meta_title'       => $languageName !== '' ? $languageName : $name,
                 'meta_description' => '',
                 'meta_keyword'     => '',
             ];
@@ -636,8 +641,36 @@ class ControllerMintcartWizard extends Controller
         $data['dashboard'] = $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true);
         $data['skip_wizard'] = $this->url->link('mintcart/wizard/skip', 'user_token=' . $this->session->data['user_token'], true);
 
+        $notice = $this->session->data['mintcart_wizard_notice'] ?? ['type' => '', 'text' => ''];
+        $data['notice'] = $notice['text'];
+        $data['notice_type'] = $notice['type'];
+        unset($this->session->data['mintcart_wizard_notice']);
+
         $data['step'] = $step;
         $data['is_ready'] = $step === null;
+
+        // "Find it later in the menu": where each step's settings live in the
+        // admin menu, as a link that opens that screen with the menu pointer
+        // (assets/src/js/components/menu-hint.js). Delivery and Payment have
+        // their own "Manage ..." link.
+        $where = [
+            'store'             => [['setting/store', 'where_store', 'setting/setting']],
+            'contacts'          => [['mintcart/business/contacts', 'where_contacts']],
+            'language_currency' => [['localisation/language', 'where_language'], ['localisation/currency', 'where_currency']],
+            'design'            => [['mintcart/design/styles', 'where_design']],
+            'first_product'     => [['catalog/product', 'where_first_product']],
+        ];
+
+        $data['where_links'] = [];
+
+        foreach ($where[$step] ?? [] as $entry) {
+            [$route, $label, $point] = array_pad($entry, 3, null);
+
+            $data['where_links'][] = [
+                'url'   => $this->url->link($route, 'user_token=' . $this->session->data['user_token'] . '&mc_hint=1' . ($point ? '&mc_point=' . $point : ''), true),
+                'label' => $this->language->get($label),
+            ];
+        }
 
         $data['brand_logo'] = HTTP_SERVER . 'view/image/mintcart/logo.svg';
 
@@ -654,6 +687,26 @@ class ControllerMintcartWizard extends Controller
             ? $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=' . $steps[$index - 1], true)
             : '';
 
+        // A step the visitor has been through is not necessarily finished
+        // (Delivery and Payment are optional): the readiness checks that
+        // belong to a step decide whether it gets a tick or a "needs
+        // attention" mark, so the menu never disagrees with the checklist.
+        $stepChecks = [
+            'store'             => ['logo'],
+            'contacts'          => ['contacts'],
+            'language_currency' => ['language', 'currency'],
+            'delivery'          => ['shipping'],
+            'payment'           => ['payment'],
+            'first_product'     => ['first_product'],
+        ];
+        $unmet = [];
+
+        foreach ($this->loadReadiness()['checks'] as $check) {
+            if (!$check['complete']) {
+                $unmet[$check['key']] = true;
+            }
+        }
+
         $data['nav_steps'] = [];
 
         foreach ($progress->steps() as $navStep) {
@@ -661,6 +714,7 @@ class ControllerMintcartWizard extends Controller
                 'code'      => $navStep,
                 'label'     => $this->language->get('step_' . $navStep),
                 'completed' => $progress->isCompleted($navStep),
+                'attention' => $progress->isCompleted($navStep) && array_intersect_key(array_flip($stepChecks[$navStep] ?? []), $unmet) !== [],
                 'current'   => $navStep === $step,
                 'reachable' => $progress->isImplemented($navStep)
                     && ($progress->isCompleted($navStep) || $navStep === $progress->currentStep()),
@@ -689,29 +743,42 @@ class ControllerMintcartWizard extends Controller
             $this->load->model('localisation/language');
             $this->load->model('localisation/currency');
 
-            $data['config_language'] = $this->request->post['config_language'] ?? $this->config->get('config_language');
-            $data['config_currency'] = $this->request->post['config_currency'] ?? $this->config->get('config_currency');
+            $data['config_language'] = $this->request->post['config_language'] ?? $this->request->get['added_language'] ?? $this->config->get('config_language');
+            $data['config_currency'] = $this->request->post['config_currency'] ?? $this->request->get['added'] ?? $this->config->get('config_currency');
             $data['languages'] = $this->model_localisation_language->getLanguages();
             $data['currencies'] = $this->model_localisation_currency->getCurrencies();
+            $data['add_language_action'] = $this->url->link('mintcart/wizard/addLanguage', 'user_token=' . $this->session->data['user_token'], true);
+            $data['available_languages'] = array_map(function ($language) {
+                return $language['name'] . ' (' . $language['code'] . ')';
+            }, $this->availableLanguages());
+            $data['add_currency_action'] = $this->url->link('mintcart/wizard/addCurrency', 'user_token=' . $this->session->data['user_token'], true);
+            $data['available_currencies'] = $this->currencyCatalog()->available(array_column($data['currencies'], 'code'));
         }
 
         if ($step === 'delivery') {
             $data['shipping_extensions'] = $this->loadShippingExtensions();
             $data['toggle_delivery'] = $this->url->link('mintcart/wizard/toggleDelivery', 'user_token=' . $this->session->data['user_token'] . '&step=delivery', true);
-            $data['manage_delivery'] = $this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'], true);
+            $data['save_method'] = $this->url->link('mintcart/wizard/saveMethod', 'user_token=' . $this->session->data['user_token'], true);
+            $data['manage_delivery'] = $this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'] . '&mc_hint=1', true);
         }
 
         if ($step === 'payment') {
             $data['payment_extensions'] = $this->loadPaymentExtensions();
             $data['toggle_payment'] = $this->url->link('mintcart/wizard/togglePayment', 'user_token=' . $this->session->data['user_token'] . '&step=payment', true);
-            $data['manage_payment'] = $this->url->link('mintcart/business/payments', 'user_token=' . $this->session->data['user_token'], true);
+            $data['manage_payment'] = $this->url->link('mintcart/business/payments', 'user_token=' . $this->session->data['user_token'] . '&mc_hint=1', true);
         }
 
         if ($step === 'design') {
             $data['presets'] = [];
 
+            $preset_info = (array)json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/design-presets.json'), true);
+
             foreach ($this->availablePresets() as $code) {
-                $data['presets'][] = ['code' => $code, 'label' => $this->language->get('preset_' . $code) !== 'preset_' . $code ? $this->language->get('preset_' . $code) : ucfirst($code)];
+                $data['presets'][] = [
+                    'code' => $code,
+                    'label' => $this->language->get('preset_' . $code) !== 'preset_' . $code ? $this->language->get('preset_' . $code) : ucfirst($code),
+                    'swatches' => $preset_info[$code]['swatches'] ?? []
+                ];
             }
 
             $data['selected_preset'] = $this->request->post['mintcart_design_preset'] ?? ((string)$this->config->get('mintcart_design_preset') ?: ($data['presets'][0]['code'] ?? ''));
@@ -723,11 +790,52 @@ class ControllerMintcartWizard extends Controller
             $data['description'] = $this->request->post['description'] ?? '';
             $data['price'] = $this->request->post['price'] ?? '';
             $data['quantity'] = $this->request->post['quantity'] ?? '';
+
+            $this->load->model('localisation/language');
+
+            $data['translation_languages'] = array_values(array_filter($this->model_localisation_language->getLanguages(), function ($language) {
+                return $language['code'] !== $this->config->get('config_language');
+            }));
+            $data['translation'] = (array)($this->request->post['translation'] ?? []);
         }
 
         if ($step === 'ready') {
             $data['readiness'] = $this->loadReadiness();
+
+            // Each unmet check links back to the step that fixes it.
+            $stepOf = [
+                'logo'          => 'store',
+                'contacts'      => 'contacts',
+                'language'      => 'language_currency',
+                'currency'      => 'language_currency',
+                'shipping'      => 'delivery',
+                'payment'       => 'payment',
+                'first_product' => 'first_product',
+            ];
+
+            foreach ($data['readiness']['checks'] as &$check) {
+                $check['fix_url'] = !$check['complete'] && isset($stepOf[$check['key']])
+                    ? $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=' . $stepOf[$check['key']], true)
+                    : '';
+            }
+
+            unset($check);
         }
+
+        $this->document->setTitle($this->language->get('heading_title'));
+
+        // The normal admin page: the stock header / menu / footer around the wizard.
+        $this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
+        $this->document->addScript(HTTP_CATALOG . 'assets/dist/js/admin.min.js');
+
+        $data['breadcrumbs'] = [
+            ['text' => $this->language->get('text_home'), 'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)],
+            ['text' => $this->language->get('heading_title'), 'href' => $data['action']],
+        ];
+
+        $data['header'] = $this->load->controller('common/header');
+        $data['column_left'] = $this->load->controller('common/column_left');
+        $data['footer'] = $this->load->controller('common/footer');
 
         $this->response->setOutput($this->load->view('mintcart/wizard', $data));
     }
@@ -744,6 +852,228 @@ class ControllerMintcartWizard extends Controller
      * call `docs/developer/onboarding/business-delivery-payments.md` already
      * made for Business -> Delivery vs. Business -> Payments.
      */
+    /**
+     * Saves every currency picked in the "+" rows (add_currency_code[]).
+     * A row holds "Title (CODE)" when picked from the list, or a bare code
+     * when typed. Answers JSON for the page's fetch() call (one result per
+     * row, so a failed row can stay on screen), or redirects when the form
+     * was submitted without JavaScript.
+     */
+    public function addCurrency(): void
+    {
+        $this->load->language('mintcart/wizard');
+        $this->load->model('localisation/currency');
+
+        $base = (string)$this->config->get('config_currency');
+        $results = [];
+        $manualRate = [];
+        $rateTables = null;
+
+        foreach ($this->postedRows('add_currency_code') as $index => $row) {
+            if (preg_match('/\(([A-Za-z]{3})\)\s*$/', $row, $match)) {
+                $row = $match[1];
+            }
+
+            $currency = $this->currencyCatalog()->find($row);
+
+            if (!$currency) {
+                $results[$index] = ['ok' => false, 'message' => $this->language->get('text_currency_unknown')];
+                continue;
+            }
+
+            if ($this->model_localisation_currency->getCurrencyByCode($currency['code'])) {
+                $results[$index] = ['ok' => false, 'message' => sprintf($this->language->get('text_currency_exists'), $currency['code'])];
+                continue;
+            }
+
+            if (!$this->user->hasPermission('modify', 'mintcart/wizard')) {
+                $results[$index] = ['ok' => false, 'message' => $this->language->get('text_no_permission')];
+                continue;
+            }
+
+            if ($rateTables === null) {
+                $rateTables = [];
+
+                foreach (['fetchEcbRates', 'fetchOpenRates'] as $source) {
+                    $rateTables[] = \MintCart\Onboarding\CurrencyCatalog::$source();
+                }
+            }
+
+            $rate = null;
+
+            foreach ($rateTables as $rates) {
+                $rate = $rates ? \MintCart\Onboarding\CurrencyCatalog::rate($rates, $currency['code'], $base) : null;
+
+                if ($rate !== null) {
+                    break;
+                }
+            }
+
+            $currency['value'] = $rate !== null ? round($rate, 8) : 1;
+            $currency['status'] = 1;
+
+            $this->model_localisation_currency->addCurrency($currency);
+
+            $results[$index] = ['ok' => true, 'value' => $currency['code'], 'label' => $currency['title'] . ' (' . $currency['code'] . ')'];
+
+            if ($rate === null) {
+                $manualRate[] = $currency['code'];
+            }
+        }
+
+        $this->respondAdded($results, 'text_currency_added', $manualRate ? sprintf($this->language->get('text_currency_rate_manual'), implode(', ', $manualRate)) : '', 'added');
+    }
+
+    /**
+     * Shared tail of addCurrency()/addLanguage(): the notice for what was
+     * saved, then JSON (fetch) or a redirect back to the step (plain form).
+     *
+     * @param array<int, array{ok: bool, message?: string, value?: string, label?: string}> $results
+     */
+    private function respondAdded(array $results, string $addedText, string $warning, string $selectParam): void
+    {
+        $added = array_values(array_filter($results, function ($result) {
+            return $result['ok'];
+        }));
+        $failed = count($results) - count($added);
+
+        if ($added) {
+            $notice = ['type' => $warning !== '' || $failed ? 'warning' : 'success', 'text' => sprintf($this->language->get($addedText), implode(', ', array_column($added, 'value')))];
+
+            if ($warning !== '') {
+                $notice['text'] .= ' ' . $warning;
+            }
+        } else {
+            $notice = ['type' => 'warning', 'text' => $results ? $this->language->get('text_rows_failed') : $this->language->get('text_rows_empty')];
+        }
+
+        if (($this->request->server['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest') {
+            $this->response->addHeader('Content-Type: application/json');
+            $this->response->setOutput(json_encode(['rows' => $results, 'notice' => $notice]));
+
+            return;
+        }
+
+        $this->session->data['mintcart_wizard_notice'] = $notice;
+
+        $back = $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true);
+
+        if ($added) {
+            $back .= '&' . $selectParam . '=' . end($added)['value'];
+        }
+
+        $this->response->redirect($back);
+    }
+
+    /**
+     * @return array<int, string> non-empty trimmed values of a POSTed field (scalar or array), keyed by their position in the form
+     */
+    private function postedRows(string $field): array
+    {
+        $rows = [];
+
+        foreach ((array)($this->request->post[$field] ?? []) as $index => $row) {
+            $row = trim((string)$row);
+
+            if ($row !== '') {
+                $rows[(int)$index] = $row;
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Bundled language packs (`system/mintcart/data/languages.json`) that are
+     * on disk for both the storefront and the admin but not installed yet.
+     *
+     * @return array<string, array{code: string, name: string, locale: string}>
+     */
+    private function availableLanguages(): array
+    {
+        $this->load->model('localisation/language');
+
+        $installed = array_column($this->model_localisation_language->getLanguages(), 'code');
+        $catalog = json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/languages.json'), true) ?: [];
+        $available = [];
+
+        foreach ($catalog as $code => $language) {
+            if (!in_array($code, $installed, true) && is_dir(DIR_LANGUAGE . $code) && is_dir(DIR_CATALOG . 'language/' . $code)) {
+                $available[$code] = ['code' => $code, 'name' => $language['name'], 'locale' => $language['locale']];
+            }
+        }
+
+        ksort($available);
+
+        return $available;
+    }
+
+    public function addLanguage(): void
+    {
+        $this->load->language('mintcart/wizard');
+        $this->load->model('localisation/language');
+
+        $available = $this->availableLanguages();
+        $results = [];
+
+        foreach ($this->postedRows('add_language_code') as $index => $row) {
+            if (preg_match('/\(([a-z]{2}-[a-z]{2})\)\s*$/i', $row, $match)) {
+                $row = strtolower($match[1]);
+            }
+
+            if (!isset($available[$row])) {
+                $results[$index] = ['ok' => false, 'message' => $this->language->get('text_language_unknown')];
+                continue;
+            }
+
+            if (!$this->user->hasPermission('modify', 'mintcart/wizard')) {
+                $results[$index] = ['ok' => false, 'message' => $this->language->get('text_no_permission')];
+                continue;
+            }
+
+            $language = $available[$row];
+
+            $this->model_localisation_language->addLanguage([
+                'name'       => $language['name'],
+                'code'       => $language['code'],
+                'locale'     => $language['locale'],
+                'sort_order' => count($this->model_localisation_language->getLanguages()) + 1,
+                'status'     => 1,
+            ]);
+
+            // The home-goods demo catalogue, if it is still in the store, gets its
+            // Ukrainian text (a no-op without it); other languages keep the
+            // English copy OpenCart makes for a new language.
+            if ($language['code'] === 'uk-ua') {
+                \MintCart\Core\DemoData::apply($this->db, DB_PREFIX, DIR_SYSTEM . 'mintcart/data/demo-uk-ua.sql');
+            }
+
+            // SEO URL keywords of the new language, made from its own names (transliterated), so
+            // /uk/hornia-dlia-kavy instead of a copy of the English keyword. The first 300 items of
+            // each kind here; a bigger catalogue finishes in SEO > URL Generator.
+            $this->load->model('mintcart/seo_url');
+
+            $new_language = $this->model_localisation_language->getLanguageByCode($language['code']);
+            $templates = $this->config->get('mintcart_seo_url');
+
+            if ($new_language) {
+                foreach (array_keys(\MintCart\Seo\UrlTemplates::TYPES) as $kind) {
+                    $this->model_mintcart_seo_url->generateMissing($kind, (int)$new_language['language_id'], $language['code'], \MintCart\Seo\UrlTemplates::forType($templates, $kind), 300);
+                }
+            }
+
+            unset($available[$row]);
+            $results[$index] = ['ok' => true, 'value' => $language['code'], 'label' => $language['name']];
+        }
+
+        $this->respondAdded($results, 'text_language_added', '', 'added_language');
+    }
+
+    private function currencyCatalog(): \MintCart\Onboarding\CurrencyCatalog
+    {
+        return \MintCart\Onboarding\CurrencyCatalog::fromFile(DIR_SYSTEM . 'mintcart/data/currencies.json');
+    }
+
     public function toggleDelivery(): void
     {
         $this->load->language('mintcart/wizard');
@@ -751,6 +1081,7 @@ class ControllerMintcartWizard extends Controller
         $this->load->model('setting/setting');
 
         $code = isset($this->request->post['code']) ? (string)$this->request->post['code'] : '';
+        $enabled = null;
 
         if ($code !== '' && in_array($code, $this->model_setting_extension->getInstalled('shipping'), true)) {
             // Merge-then-save, never a bare editSetting('shipping_<code>', [...]) -
@@ -766,9 +1097,11 @@ class ControllerMintcartWizard extends Controller
             $existing['shipping_' . $code . '_status'] = empty($existing['shipping_' . $code . '_status']) ? '1' : '0';
 
             $this->model_setting_setting->editSetting('shipping_' . $code, $existing);
+
+            $enabled = $existing['shipping_' . $code . '_status'] === '1';
         }
 
-        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=delivery', true));
+        $this->finishToggle('delivery', $enabled);
     }
 
     /**
@@ -786,6 +1119,7 @@ class ControllerMintcartWizard extends Controller
         $this->load->model('setting/setting');
 
         $code = isset($this->request->post['code']) ? (string)$this->request->post['code'] : '';
+        $enabled = null;
 
         if ($code !== '' && in_array($code, $this->model_setting_extension->getInstalled('payment'), true)) {
             // Merge-then-save - see toggleDelivery()'s identical comment for
@@ -796,9 +1130,27 @@ class ControllerMintcartWizard extends Controller
             $existing['payment_' . $code . '_status'] = empty($existing['payment_' . $code . '_status']) ? '1' : '0';
 
             $this->model_setting_setting->editSetting('payment_' . $code, $existing);
+
+            $enabled = $existing['payment_' . $code . '_status'] === '1';
         }
 
-        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=payment', true));
+        $this->finishToggle('payment', $enabled);
+    }
+
+    /**
+     * End of toggleDelivery()/togglePayment(): JSON for the page's fetch()
+     * call, a redirect back to the step for a plain form post.
+     */
+    private function finishToggle(string $step, ?bool $enabled): void
+    {
+        if (($this->request->server['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest') {
+            $this->response->addHeader('Content-Type: application/json');
+            $this->response->setOutput(json_encode(['ok' => $enabled !== null, 'enabled' => $enabled]));
+
+            return;
+        }
+
+        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=' . $step, true));
     }
 
     /**
@@ -845,25 +1197,30 @@ class ControllerMintcartWizard extends Controller
      */
     private function loadShippingExtensions(): array
     {
-        $this->load->model('setting/extension');
+        $this->load->model('mintcart/methods');
 
-        $rows = [];
+        return $this->model_mintcart_methods->getInstalled('shipping');
+    }
 
-        foreach ($this->model_setting_extension->getInstalled('shipping') as $code) {
-            if (!is_file(DIR_APPLICATION . 'controller/extension/shipping/' . $code . '.php')) {
-                continue;
-            }
+    /**
+     * Saves one shipping method's inline settings (field[<key>] values) over
+     * fetch(). Only keys listed in method-fields.json are accepted, and the
+     * method's other settings (status, sort order, ...) are kept - the same
+     * merge-then-save rule toggleDelivery() documents.
+     */
+    public function saveMethod(): void
+    {
+        $this->load->language('mintcart/wizard');
+        $this->load->model('mintcart/methods');
 
-            $this->load->language('extension/shipping/' . $code, 'extension');
-
-            $rows[] = [
-                'code' => $code,
-                'name' => $this->language->get('extension')->get('heading_title'),
-                'enabled' => (bool)$this->config->get('shipping_' . $code . '_status'),
-            ];
+        if (!$this->user->hasPermission('modify', 'mintcart/wizard')) {
+            $result = ['ok' => false, 'message' => $this->language->get('text_no_permission'), 'errors' => []];
+        } else {
+            $result = $this->model_mintcart_methods->saveFields('shipping', (string)($this->request->post['code'] ?? ''), (array)($this->request->post['field'] ?? []));
         }
 
-        return $rows;
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($result));
     }
 
     /**

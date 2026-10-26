@@ -33,6 +33,9 @@ namespace MintCart\Seo;
  */
 final class MetaBuilder
 {
+    /** @var array */
+    private $rules = [];
+
     /**
      * @param string|null $entityTitle       The entity's own meta title
      *        field (`meta_title`/`config_meta_title`), if any.
@@ -52,16 +55,50 @@ final class MetaBuilder
      *         always present and always a string (never null) — `''` only
      *         when both the entity value and its fallback were empty.
      */
+    /**
+     * @param array{title?: array{template: string, always: bool}, description?: array{template: string, always: bool}} $rules
+     *        templates from `Marketing -> SEO -> Meta tags` (`MetaRules::forPage()`); none = the plain fallback rule above
+     */
+    public function __construct(array $rules = [])
+    {
+        $this->rules = $rules;
+    }
+
+    /**
+     * @param array<string, string|int|float|null> $variables values for the template placeholders
+     *        (`{name}`, `{store}`, ...), see `MetaRules::TYPES`
+     */
     public function build(
         ?string $entityTitle,
         ?string $entityDescription,
         string $fallbackTitle,
-        ?string $fallbackDescription = null
+        ?string $fallbackDescription = null,
+        array $variables = []
     ): array {
         return [
-            'title' => $this->pick($entityTitle, $fallbackTitle) ?? '',
-            'description' => $this->pick($entityDescription, $fallbackDescription) ?? '',
+            'title' => $this->field('title', $entityTitle, $fallbackTitle, $variables) ?? '',
+            'description' => $this->field('description', $entityDescription, $fallbackDescription, $variables) ?? '',
         ];
+    }
+
+    /**
+     * A template applies when the entity's own value is blank, or always when the rule says
+     * so; a template that renders empty falls back to the plain rule.
+     */
+    private function field(string $field, ?string $entityValue, ?string $fallback, array $variables): ?string
+    {
+        $rule = $this->rules[$field] ?? null;
+
+        if ($rule !== null && ($rule['always'] || trim((string) $entityValue) === '')) {
+            $rendered = MetaTemplate::render($rule['template'], $variables);
+
+            if ($rendered !== '') {
+                // Like every other stored meta value (OpenCart keeps them HTML-escaped; the header prints them as they are).
+                return htmlspecialchars($rendered, ENT_COMPAT, 'UTF-8');
+            }
+        }
+
+        return $this->pick($entityValue, $fallback);
     }
 
     private function pick(?string $primary, ?string $fallback): ?string

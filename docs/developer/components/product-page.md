@@ -30,5 +30,12 @@ Changed 2026-10-08:
 - Live total price on quantity / option change (main price + buy bar) —
   `docs/developer/commerce/product-price.md`.
 
-Not done yet: delivery / payment / returns info block (needs a decision on
-where that content comes from), Quick Order missing-option handling.
+- **`mc-purchase-info`** (2026-10-08) — Delivery / Payment / Returns rows
+  under Add to Cart, from `mintcart/purchase_info`: enabled shipping and
+  payment extensions by sort order (Free Shipping with its minimum total;
+  free_checkout left out), and the Return Terms information page
+  (`config_return_id`). A row is hidden when it has nothing to show.
+  Hand-written delivery/returns text is not supported yet.
+
+Not done yet: free-text delivery / returns content (needs a decision on
+where it is edited), Quick Order missing-option handling.

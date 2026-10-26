@@ -410,7 +410,7 @@ assertSame(
 assertSame(['theme.json'], $result['backup']['backed_up'] ?? null, 'backup wired in: backed up the one pre-existing overwritten file', $failures);
 assertSame(
     'old-contents',
-    @file_get_contents($workspace . '/dest/system/storage/mintcart/backup/mint_default/20260919120000/theme.json'),
+    @file_get_contents($workspace . '/dest/storage/mintcart/backup/mint_default/20260919120000/theme.json'),
     'backup wired in: snapshot holds the PRE-update file content',
     $failures
 );

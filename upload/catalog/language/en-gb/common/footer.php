@@ -10,6 +10,7 @@ $_['text_manufacturer'] = 'Brands';
 $_['text_voucher']      = 'Gift Certificates';
 $_['text_affiliate']    = 'Affiliate';
 $_['text_special']      = 'Specials';
+$_['text_mc_reviews']   = 'Customer Reviews';
 $_['text_account']      = 'My Account';
 $_['text_order']        = 'Order History';
 $_['text_wishlist']     = 'Wish List';

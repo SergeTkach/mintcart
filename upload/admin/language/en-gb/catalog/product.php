@@ -151,6 +151,9 @@ $_['help_category']          = '(Autocomplete)';
 $_['help_filter']            = '(Autocomplete)';
 $_['help_download']          = '(Autocomplete)';
 $_['help_related']           = '(Autocomplete)';
+$_['entry_mc_badges']        = 'Badges';
+$_['text_mc_badges_none']    = 'No badges yet.';
+$_['text_mc_badges_manage']  = 'Manage badges';
 $_['help_tag']               = 'Comma separated';
 
 // Error

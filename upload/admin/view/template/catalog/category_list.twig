@@ -47,6 +47,7 @@
                     {% else %}
                     <a href="{{ sort_name }}">{{ column_name }}</a>
                     {% endif %}</td>
+                  <td class="text-left">{{ column_status }}</td>
                   <td class="text-right">{% if sort == 'sort_order' %}
                     <a href="{{ sort_sort_order }}" class="{{ order|lower }}">{{ column_sort_order }}</a>
                     {% else %}
@@ -69,6 +70,7 @@
                     <input type="checkbox" name="selected[]" value="{{ category.category_id }}" />
                     {% endif %}</td>
                   <td class="text-left">{{ category.name }}</td>
+                  <td class="text-left"><span class="mc-status {{ category.status_on ? 'mc-status--on' : 'mc-status--off' }}">{{ category.status }}</span></td>
                   <td class="text-right">{{ category.sort_order }}</td>
                   <td class="text-center">{% if sort == 'sort_order' %}
                     <button type="button" class="btn btn-default btn-xs" data-mc-action="sortable-move-up" aria-label="{{ text_move_up }}" title="{{ text_move_up }}"><i class="fa fa-arrow-up"></i></button>
@@ -79,7 +81,7 @@
                 {% endfor %}
                 {% else %}
                 <tr>
-                  <td class="text-center" colspan="6">{{ text_no_results }}</td>
+                  <td class="text-center" colspan="7">{{ text_no_results }}</td>
                 </tr>
                 {% endif %}
               </tbody>

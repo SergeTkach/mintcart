@@ -92,6 +92,8 @@ class ControllerCheckoutCheckout extends Controller {
 		$data['footer'] = $this->load->controller('common/footer');
 		$data['header'] = $this->load->controller('common/header');
 
+		$data['mc_slots'] = \MintCart\Design\Slots::shared()->renderMany(array('checkout.before_confirm'));
+
 		$this->response->setOutput($this->load->view('checkout/checkout', $data));
 	}
 

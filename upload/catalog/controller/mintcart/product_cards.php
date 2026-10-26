@@ -50,10 +50,21 @@ class ControllerMintcartProductCards extends Controller {
 		$diagnostics = isset($args['diagnostics']) ? $args['diagnostics'] : null;
 
 		$renderer = new \MintCart\Design\ProductCardListRenderer(
-			new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $theme, 'components', $diagnostics)
+			new \MintCart\Design\ComponentRenderer(DIR_TEMPLATE, $theme, 'components', $diagnostics),
+			null,
+			\MintCart\Design\Slots::shared() // lets an extension fill the card's `product.after_actions` slot
 		);
 
+		$this->load->language('mintcart/quickorder', 'quickorder');
+
+		$quick_order_texts = array();
+
+		foreach (\MintCart\Commerce\QuickOrderService::TEXT_KEYS as $key) {
+			$quick_order_texts[$key] = $this->language->get('quickorder')->get('text_' . $key);
+		}
+
 		$strings = array(
+			'quick_order_texts'      => json_encode($quick_order_texts, JSON_UNESCAPED_UNICODE),
 			'text_badge'             => array(
 				'sale'         => $this->language->get('text_badge_sale'),
 				'out-of-stock' => $this->language->get('text_badge_out_of_stock'),
@@ -69,6 +80,7 @@ class ControllerMintcartProductCards extends Controller {
 			'text_add_to_cart_error' => $this->language->get('text_add_to_cart_error'),
 			'text_wishlist_error'    => $this->language->get('text_wishlist_error'),
 			'text_view_cart'         => $this->language->get('text_view_cart'),
+			'text_continue_shopping' => $this->language->get('text_continue_shopping'),
 			'cart_url'               => $this->url->link('checkout/cart')
 		);
 
@@ -77,11 +89,19 @@ class ControllerMintcartProductCards extends Controller {
 		// that allow backorders.
 		$allow_out_of_stock_purchase = (bool)$this->config->get('config_stock_checkout');
 
+		// Manual stickers (Marketing → Product Badges): one query for the list.
+		$this->load->model('mintcart/badge');
+
+		$manual_badges = $this->model_mintcart_badge->getByProductIds(array_column($args['results'], 'product_id'));
+
 		$cards = array();
 
 		foreach (array_values($args['results']) as $position => $result) {
+			$product = $this->product($result, $link_prefix, $url, $width, $height, $allow_out_of_stock_purchase);
+			$product['manual_badges'] = isset($manual_badges[(int)$result['product_id']]) ? $manual_badges[(int)$result['product_id']] : array();
+
 			$card = $renderer->render(
-				$this->product($result, $link_prefix, $url, $width, $height, $allow_out_of_stock_purchase),
+				$product,
 				array(),
 				array(
 					'listing_type' => $listing_type,
@@ -143,6 +163,8 @@ class ControllerMintcartProductCards extends Controller {
 			'tax'                         => $tax,
 			'rating'                      => $this->config->get('config_review_status') ? (int)$result['rating'] : false,
 			'quantity'                    => $result['quantity'],
+			// Discount in whole percent (a special price below the regular one), for the "-20%" tag.
+			'discount'                    => (!is_null($result['special']) && (float)$result['special'] >= 0 && (float)$result['price'] > 0) ? (int)round((1 - (float)$result['special'] / (float)$result['price']) * 100) : 0,
 			'stock_label'                 => isset($result['stock_status']) ? $result['stock_status'] : null,
 			'minimum'                     => $result['minimum'],
 			'manufacturer'                => isset($result['manufacturer']) ? $result['manufacturer'] : null,

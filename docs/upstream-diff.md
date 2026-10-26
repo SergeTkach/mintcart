@@ -23,6 +23,60 @@ in the OpenCart 3.0.5.1 baseline belong on this list.
 
 ---
 
+## `upload/admin/controller/common/filemanager.php`
+
+**Reason:** OpenCart's file manager lists only jpg / jpeg / png / gif / webp, so the MintCart logo
+(`image/catalog/mintcart-logo.svg`) and any SVG icon or logo a store uses was invisible in it and could not
+be picked in a form. `svg` is added to the listing glob; an SVG's thumbnail is the file itself, because GD
+cannot resize it (`model/tool/image` would warn).
+
+**Why not the MintCart layer:** the listing is built inside `ControllerCommonFilemanager::getFiles()` from a
+hard-coded glob; there is no event or setting between the glob and the view.
+
+**Compatibility impact:** SVG files now show in the grid like images (two-line change). Uploading SVG is still
+governed by the store's allowed file extensions / MIME settings, unchanged.
+
+**Tests:** manual (open the file manager in `image/catalog`, `mintcart-logo.svg` is listed with a thumbnail).
+
+---
+
+## Coloured status in the product and category lists
+
+**Files:** `upload/admin/view/template/catalog/product_list.twig` (the status cell is wrapped in a
+`mc-status` badge), `upload/admin/model/catalog/category.php` (`getCategories()` also selects
+`c1.status`), `upload/admin/controller/catalog/category.php` (the list rows carry `status` / `status_on`),
+`upload/admin/view/template/catalog/category_list.twig` (a Status column).
+
+**Reason:** the stock category list does not show whether a category is enabled at all; the product list
+shows the word only. A coloured badge (green / red) is readable at a glance.
+
+**Why not the MintCart layer:** the list markup and the category query are built inside these files.
+
+**Compatibility impact:** one more column in the category list and one more selected column in the
+category query; no behaviour change. Manufacturers have no status in OpenCart's schema, so their list is
+unchanged.
+
+**Tests:** manual (Catalog > Products, Catalog > Categories).
+
+---
+
+## `upload/system/config/catalog.php` - `startup/mc_seo_redirect`
+
+**Reason:** one more pre-action, after `startup/mc_language_url`, that 301-redirects a page reached by a duplicate
+address (`index.php?route=product/product&product_id=5`, `/kitchen/white-mug`, `/white-mug/`, `?page=1`) to its one SEO URL,
+and an old keyword to the page's current address (SEO -> Redirects, `docs/developer/seo/redirects.md`).
+
+**Why not the MintCart layer:** a redirect has to happen after the request is decoded (`startup/seo_url`) and before the
+router runs; OpenCart's event system cannot stop the request there. The same list already carries `startup/mc_language_prefix`
+and `startup/mc_language_url`.
+
+**Compatibility impact:** GET page requests only (never POST, AJAX, `extension/`, `api/`, `common/`); each kind of redirect can be
+switched off in the admin; a page without a SEO keyword is untouched.
+
+**Tests:** `tests/mintcart/seo/redirect-planner-test.php`; the redirects checked by hand with curl.
+
+---
+
 ## `upload/catalog/controller/event/theme.php`
 
 **Reason:** Found via live manual verification (`docs/MANUAL_VERIFICATION.md`,
@@ -3976,7 +4030,7 @@ environment) — see the registry entry's "Not verified" note.
 `checkout/checkout` controller, which loads only this language file; its
 section labels and messages (`text_mc_*`, `button_mc_place_order`, and
 since 2026-10-08 the coupon / gift certificate field's `entry_mc_code`,
-`button_mc_code_*`, `error_mc_code*`, `button_mc_close`) are
+`button_mc_code_*`, `error_mc_code*`, `button_mc_close`, `error_mc_no_payment`) are
 appended here so they reach the template through the stock
 `event/language` merge, without touching the controller.
 
@@ -4025,3 +4079,216 @@ admin permissions for `mintcart/*` screens and no wizard autostart event.
 migration throws like any install SQL error.
 **Tests:** `php -l`; migration logic: `tests/mintcart/core/admin-permissions-test.php`.
 Live fresh-install run still to do.
+
+## `upload/catalog/controller/product/product.php` / `.../language/en-gb/product/product.php` — purchase info (2026-10-08)
+
+**Change:** one line, `$data['mc_purchase_info'] = $this->load->controller('mintcart/purchase_info');`,
+plus four language keys (`text_mc_delivery`, `text_mc_payment`,
+`text_mc_returns`, `text_mc_from`). The data itself is built by the new
+additive `catalog/controller/mintcart/purchase_info.php` (enabled shipping /
+payment extensions, Return Terms page). **Why not Mint layer:** the product
+controller is what renders the page; the template cannot call a
+controller. **Compatibility:** additive `$data` key. **Tests:** page render
+on product 40 (Delivery row shown; Payment/Returns hidden while nothing is
+enabled/set).
+
+---
+
+## `upload/catalog/controller/common/menu.php` and `upload/catalog/controller/extension/module/category.php`
+
+**Reason:** Both controllers hand-rolled exactly two category levels. They now
+delegate the tree walk to `MintCart\Catalog\CategoryTree`
+(`upload/system/library/mintcart/catalog/categorytree.php`), which returns up to
+three levels. The keys the stock templates read (`name`, `href`, `column`,
+`children`, and for the module `category_id`, `child_id`) are unchanged; the
+module also exposes `grandchild_id`. Every node additionally carries
+`category_id` and a nested `children`.
+
+**Why it cannot live in the Mint layer:** the controllers *are* where the menu
+data is built, and a theme cannot add a level to data the controller never
+loads. The walk itself, the part worth testing, lives in the Mint class; the
+controllers only supply how to read children, build a link and count products.
+
+**Compatibility impact:** none for the stock/default templates (they ignore the
+third level); `mint_comfort` renders it. Product-count text and the module's
+"only the active branch is expanded" behaviour are kept.
+
+**Tests:** `tests/mintcart/catalog/category-tree-test.php`.
+
+---
+
+## `upload/admin/controller/common/column_left.php` and `upload/admin/language/en-gb/common/column_left.php` (Product Badges)
+
+**Reason:** one new conditional menu entry, Marketing → Product Badges
+(`mintcart/badge`), plus its label `text_mintcart_badge`. Same shape as the
+Quick Order Requests entry.
+
+**Why it cannot live in the Mint layer:** the OpenCart admin menu is built
+inside this controller; there is no extension point for adding an entry.
+
+**Compatibility impact:** none; the entry only shows for users who have
+`access` to `mintcart/badge`.
+
+**Tests:** menu item visible for the Administrator group after
+`202610221201_grant_admin_permissions_badges.php` (checked in the local DB).
+
+---
+
+## Product badges in the product form (`catalog/product`, admin)
+
+Files: `upload/admin/controller/catalog/product.php`,
+`upload/admin/model/catalog/product.php`,
+`upload/admin/view/template/catalog/product_form.twig`,
+`upload/admin/language/en-gb/catalog/product.php`,
+`upload/catalog/controller/product/product.php`,
+`upload/catalog/view/theme/mint_default/template/product/product.twig`.
+
+**Reason:** badges (stickers) are assigned to a product where the owner edits
+the product: a "Badges" row of checkboxes on the Links tab. The set of badges
+is edited in Marketing → Product Badges (own screen, no core change).
+
+**What changed:**
+- admin controller `getForm()`: builds `mc_badges` (the set with ticked state)
+  from POST or from the product; no other behaviour touched.
+- admin model: `addProduct()` / `editProduct()` call
+  `ModelMintcartBadge::setProductBadges()` when the form sent
+  `mc_product_badge`; `copyProduct()` carries the badges over;
+  `deleteProduct()` removes the product's assignments.
+- form template: one `form-group` in the Links tab; a hidden `0` keeps the
+  field present when nothing is ticked.
+- language: three strings (`entry_mc_badges`, `text_mc_badges_none`,
+  `text_mc_badges_manage`).
+- catalog product page: `mc_badges` data key and a badge list above the title.
+
+**Why it cannot live in the Mint layer:** OpenCart 3 has no extension point
+for extra fields in the product form or for saving them with the product, and
+the product page template cannot call a controller.
+
+**Compatibility impact:** additive. Callers of `addProduct()` / `editProduct()`
+that do not send `mc_product_badge` (imports, other extensions) leave badges
+untouched. Requires migration `202610221202_product_badge_definitions.php`
+(`deleteProduct()` deletes from `mc_product_badge`).
+
+**Tests:** `tests/mintcart/commerce/product-badge-test.php`; admin templates
+compile; storefront list and product page checked on the local store.
+
+---
+
+## `upload/install/opencart.sql` (default favicon)
+
+**Reason:** `config_icon` default changed from `catalog/cart.png` to
+`catalog/mintcart-favicon.png`, so a fresh MintCart install shows the MintCart
+icon (generated by `scripts/brand/build_favicon.py`; PNG + ICO in
+`upload/image/catalog/`).
+
+**Why it cannot live in the Mint layer:** it is the stock install data; a
+migration would run after install and leave the stock value until then.
+
+**Compatibility impact:** none; an existing store keeps its own setting.
+
+**Tests:** fresh install shows the new `<link rel="icon">` (local store checked
+after setting the same value by hand).
+
+---
+
+## `upload/install/opencart.sql` (theme image sizes)
+
+**Reason:** the stock OpenCart 3 sizes are too small for MintCart's cards and for
+retina screens: product 228, thumb 228, popup 500, additional 74, category 80,
+related 200, compare 90, wishlist/cart 47 px. New defaults:
+
+| Setting | Was | Now |
+|---|---|---|
+| `image_product` (cards, lists) | 228 x 228 | 400 x 400 (cards also load a 2x copy) |
+| `image_thumb` (product page picture) | 228 x 228 | 800 x 800 |
+| `image_popup` (zoom) | 500 x 500 | 1400 x 1400 |
+| `image_additional` (gallery thumbnails) | 74 x 74 | 160 x 160 |
+| `image_category` (category tiles) | 80 x 80 | 520 x 390 |
+| `image_related` | 200 x 200 | 400 x 400 |
+| `image_compare` | 90 x 90 | 160 x 160 |
+| `image_wishlist`, `image_cart` | 47 x 47 | 96 x 96 |
+
+**Why it cannot live in the Mint layer:** these are install-time settings rows; a store
+can change them in System → Settings → Option. An existing store keeps its own values
+(set them by hand or re-run the demo).
+
+**Compatibility impact:** new installs only; the picture cache (`image/cache`) is rebuilt on demand.
+
+**Tests:** product, category and home pages checked on the local store after the change.
+
+---
+
+## Extension slots in the page controllers and templates
+
+Files: `upload/catalog/controller/common/header.php`, `checkout/cart.php`, `checkout/checkout.php`,
+`product/product.php`, `mintcart/product_cards.php`; templates `mint_default/.../common/header.twig`,
+`checkout/cart.twig`, `checkout/checkout.twig`, `product/product.twig` and the card templates.
+
+**Reason:** Theme API slots (`header.before/after`, `product.*`, `cart.before/after_totals`,
+`checkout.before_confirm`) need the controller to ask `\MintCart\Design\Slots::shared()` and the
+template to print the result (docs/developer/theme-api/slots.md).
+
+**Why it cannot live in the Mint layer:** the page controllers and templates are where the
+positions are; there is no hook that lets an outside class add markup between two template lines.
+
+**Compatibility impact:** additive: one `mc_slots` data key per page, empty strings when nothing listens;
+stock `default` theme templates ignore it.
+
+**Tests:** `tests/mintcart/design/slot-registry-test.php`; pages checked on the local store with
+temporary listeners.
+
+---
+
+## Language folder in the URL (`/uk/...`)
+
+Files: `upload/system/config/catalog.php` (two entries in `action_pre_action`),
+`upload/catalog/controller/common/language.php` (an `href` per language),
+`upload/catalog/controller/common/header.php` (hreflang data), `mint_default/.../common/header.twig`.
+
+**Reason:** stock OpenCart 3 serves every language at one URL (session / cookie / Accept-Language),
+so there is nothing for hreflang to point at and search engines see one page in changing languages.
+The new `startup/mc_language_prefix` (before `startup/startup`) and `startup/mc_language_url` (after
+`startup/seo_url`) are MintCart files; the core edits only register them and let the switcher and
+header ask them for the per-language URLs (docs/developer/seo/language-urls.md).
+
+**Why it cannot live in the Mint layer:** pre-actions are a fixed list in the config file, and the
+language must be chosen before `startup/startup` runs. The switcher and header controllers build the
+data their templates print.
+
+**Compatibility impact:** off unless SEO URLs are on and two or more languages are enabled. The
+default language keeps its current URLs; other languages move under `/<folder>/`, so existing
+non-default-language URLs change (add redirects when migrating a live store). Requests with
+`route=` and no `_route_` (AJAX, payment callbacks) keep the session language.
+
+**Tests:** `tests/mintcart/seo/language-prefix-test.php`; browser check on a two-language store pending.
+
+---
+
+## Storage directory in the site root
+
+Files: `upload/system/storage/` moved to `upload/storage/` (rename only), `upload/install/index.php`, `upload/install/cli_install.php`,
+`upload/install/controller/install/step_3.php` (generated `config.php` files), `upload/.htaccess.txt`.
+
+**Reason:** MintCart keeps `storage` next to `system` in the site root, not inside `system` and not outside the web root
+(no surprises for the owner; no OpenCart security notice, which only fires for `system/storage`).
+
+**Why it cannot live in the Mint layer:** the location is written by the installer and the vendor libraries ship in it.
+
+**Compatibility impact:** extensions that hardcode `DIR_SYSTEM . 'storage/'` break; those that use `DIR_STORAGE`,
+`DIR_CACHE`, `DIR_LOGS`, ... (the normal way) are unaffected. The `.htaccess` rule `^storage/` replaces `^system/storage/`.
+
+**Tests:** `tests/mintcart/core/storage-location-test.php`, update tests (snapshot path).
+
+---
+
+## Admin header: project links
+
+File: `upload/admin/view/template/common/header.twig`.
+
+**Reason:** the profile menu pointed at opencart.com; it now links to mintcartcms.com and docs.mintcartcms.com. The forum link is commented out until a MintCart forum exists.
+
+**Why it cannot live in the Mint layer:** the links are hardcoded in the stock template.
+
+**Compatibility impact:** none (three `<a>` hrefs).
+
+**Tests:** visual check of the profile menu.

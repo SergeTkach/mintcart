@@ -16,6 +16,18 @@ class ControllerCommonColumnLeft extends Controller {
 				'children' => array()
 			);
 
+			// Setup Wizard: reachable from the menu on every admin page, not
+			// only through the Store Readiness dashboard widget.
+			if ($this->user->hasPermission('access', 'mintcart/wizard')) {
+				$data['menus'][] = array(
+					'id'       => 'menu-mintcart-wizard',
+					'icon'	   => 'fa-magic',
+					'name'	   => $this->language->get('text_mintcart_wizard'),
+					'href'     => $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			// Catalog
 			$catalog = array();
 
@@ -236,26 +248,6 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
-			if ($this->user->hasPermission('access', 'design/seo_url')) {
-				$design[] = array(
-					'name'	   => $this->language->get('text_seo_url'),
-					'href'     => $this->url->link('design/seo_url', 'user_token=' . $this->session->data['user_token'], true),
-					'children' => array()
-				);
-			}
-
-			// MintCart\Seo\SystemRoutes facade (MINTCART_FUNCTIONAL_SCOPE.md
-			// §4) - a friendlier alias picker for the fixed system-page
-			// list, over the exact same seo_url storage 'SEO / Url' above
-			// already edits.
-			if ($this->user->hasPermission('access', 'mintcart/seo/system_pages')) {
-				$design[] = array(
-					'name'	   => $this->language->get('text_mintcart_seo_system_pages'),
-					'href'     => $this->url->link('mintcart/seo/system_pages', 'user_token=' . $this->session->data['user_token'], true),
-					'children' => array()
-				);
-			}
-
 			if ($design) {
 				$data['menus'][] = array(
 					'id'       => 'menu-design',
@@ -456,6 +448,14 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			if ($this->user->hasPermission('access', 'mintcart/badge')) {
+				$marketing[] = array(
+					'name'	   => $this->language->get('text_mintcart_badge'),
+					'href'     => $this->url->link('mintcart/badge', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			if ($marketing) {
 				$data['menus'][] = array(
 					'id'       => 'menu-marketing',
@@ -463,6 +463,60 @@ class ControllerCommonColumnLeft extends Controller {
 					'name'	   => $this->language->get('text_marketing'),
 					'href'     => '',
 					'children' => $marketing
+				);
+			}
+
+			// SEO - its own section (docs/adr/018-seo-menu.md): meta tag templates, the
+			// addresses of the system pages and the stock SEO URL list (same seo_url storage).
+			$seo = array();
+
+			if ($this->user->hasPermission('access', 'mintcart/seo/meta')) {
+				$seo[] = array(
+					'name'	   => $this->language->get('text_mintcart_seo_meta'),
+					'href'     => $this->url->link('mintcart/seo/meta', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($this->user->hasPermission('access', 'mintcart/seo/url_generator')) {
+				$seo[] = array(
+					'name'	   => $this->language->get('text_mintcart_seo_url_generator'),
+					'href'     => $this->url->link('mintcart/seo/url_generator', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($this->user->hasPermission('access', 'mintcart/seo/system_pages')) {
+				$seo[] = array(
+					'name'	   => $this->language->get('text_mintcart_seo_system_pages'),
+					'href'     => $this->url->link('mintcart/seo/system_pages', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($this->user->hasPermission('access', 'design/seo_url')) {
+				$seo[] = array(
+					'name'	   => $this->language->get('text_mintcart_seo_urls'),
+					'href'     => $this->url->link('design/seo_url', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($this->user->hasPermission('access', 'mintcart/seo/redirects')) {
+				$seo[] = array(
+					'name'	   => $this->language->get('text_mintcart_seo_redirects'),
+					'href'     => $this->url->link('mintcart/seo/redirects', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($seo) {
+				$data['menus'][] = array(
+					'id'       => 'menu-seo',
+					'icon'	   => 'fa-search',
+					'name'	   => $this->language->get('text_mintcart_seo'),
+					'href'     => '',
+					'children' => $seo
 				);
 			}
 
@@ -712,6 +766,14 @@ class ControllerCommonColumnLeft extends Controller {
 				$maintenance[] = array(
 					'name'	   => $this->language->get('text_log'),
 					'href'     => $this->url->link('tool/log', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($this->user->hasPermission('access', 'mintcart/maintenance/storage')) {
+				$maintenance[] = array(
+					'name'	   => $this->language->get('text_mc_storage'),
+					'href'     => $this->url->link('mintcart/maintenance/storage', 'user_token=' . $this->session->data['user_token'], true),
 					'children' => array()
 				);
 			}

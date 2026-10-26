@@ -1,0 +1,33 @@
+<?php
+// Heading
+$_['heading_title']     = 'Storage';
+
+// Text
+$_['text_home']         = 'Home';
+$_['text_intro'] = 'The storage directory holds the cache, logs, sessions, uploaded files and PHP libraries. By default it sits in the site root, next to the system folder; the web server blocks direct access to it (.htaccess). Pick another place if your host needs it.';
+$_['text_current']      = 'Current location';
+$_['text_status']       = 'Status';
+$_['text_inside']       = 'Inside the web root';
+$_['text_inside_help']  = 'Anyone may be able to request these files. Move it.';
+$_['text_outside']      = 'Outside the web root';
+$_['text_outside_help'] = 'Nothing to do. You can still move it elsewhere.';
+$_['text_move_title']   = 'Move the storage directory';
+$_['text_move_help'] = 'Everything is copied first, the configuration is updated, and only then the old directory is removed. The new folder must not exist yet or must be empty, and its parent folder must be writable by the web server.';
+$_['text_success']      = 'Storage moved to %s. You stay signed in.';
+
+// Button
+$_['button_move']       = 'Move storage';
+
+// Error
+$_['error_permission']   = 'You do not have permission to move the storage directory.';
+$_['error_invalid'] = 'Choose one of the locations.';
+$_['error_exists']       = 'That folder already exists and is not empty.';
+$_['error_not_writable'] = 'The parent folder does not exist or the web server cannot write to it.';
+$_['error_config']       = 'The configuration files (config.php) are not writable, so nothing was moved.';
+$_['error_copy']         = 'Copying failed. Nothing was changed.';
+$_['error_failed']       = 'The storage directory was not moved.';
+$_['entry_location'] = 'Location';
+$_['text_current_mark'] = 'current';
+$_['text_location_root'] = 'In the site root, next to the system folder (default)';
+$_['text_location_system'] = 'Inside the system folder (stock OpenCart)';
+$_['text_location_outside'] = 'Outside the site root (next to it)';

@@ -1,0 +1,115 @@
+/**
+ * mc-menu-hint
+ *
+ * The pointer `assets/src/js/components/menu-hint.js` puts on an admin menu
+ * item when the Setup Wizard sends someone to that screen: a pulsing ring on
+ * the item and a bubble beside it. Lives in the legacy Bootstrap 3 admin, so
+ * sizes are in px (see admin-search.css) and every selector is namespaced.
+ */
+
+/* The pointers are red on purpose: they must stand out from the blue admin theme. */
+#menu a.mc-menu-hint,
+.mc-menu-hint__bubble,
+.mc-point-hint {
+    --mc-hint-color: var(--mc-danger);
+}
+
+#menu a.mc-menu-hint {
+    position: relative;
+    outline: 2px solid var(--mc-hint-color);
+    outline-offset: -2px;
+    animation: mc-menu-hint-pulse 1.8s ease-in-out infinite;
+}
+
+.mc-menu-hint__bubble {
+    position: absolute;
+    z-index: var(--mc-z-dropdown);
+    width: 260px;
+    padding: 12px 14px;
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-hint-color);
+    border-radius: var(--mc-radius-md);
+    box-shadow: var(--mc-shadow-md);
+    color: var(--mc-text);
+    font-size: 13px;
+    line-height: 18px;
+}
+
+/* The little arrow pointing at the menu item. */
+.mc-menu-hint__bubble::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: -7px;
+    width: 12px;
+    height: 12px;
+    background: var(--mc-surface);
+    border-bottom: 1px solid var(--mc-hint-color);
+    border-left: 1px solid var(--mc-hint-color);
+    transform: rotate(45deg);
+}
+
+.mc-menu-hint__text {
+    margin: 0 0 10px;
+}
+
+.mc-menu-hint__ok {
+    padding: 4px 12px;
+    background: var(--mc-primary);
+    border: 0;
+    border-radius: var(--mc-radius-md);
+    color: var(--mc-on-primary);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* The bubble under a button on the page: the arrow points up, at its right end. */
+.mc-menu-hint__bubble--below::before {
+    top: -7px;
+    right: 18px;
+    left: auto;
+    border-top: 1px solid var(--mc-hint-color);
+    border-right: 1px solid var(--mc-hint-color);
+    border-bottom: 0;
+    border-left: 0;
+}
+
+/* The button on the page that opens the thing the hint is about. */
+.mc-point-hint {
+    animation: mc-point-hint-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes mc-point-hint-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--mc-hint-color) 55%, transparent);
+    }
+
+    50% {
+        box-shadow: 0 0 0 7px color-mix(in srgb, var(--mc-hint-color) 0%, transparent);
+    }
+}
+
+@keyframes mc-menu-hint-pulse {
+    0%,
+    100% {
+        background-color: transparent;
+    }
+
+    50% {
+        background-color: color-mix(in srgb, var(--mc-hint-color) 28%, transparent);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-point-hint {
+        animation: none;
+        outline: 2px solid var(--mc-hint-color);
+        outline-offset: 2px;
+    }
+
+    #menu a.mc-menu-hint {
+        animation: none;
+        background-color: color-mix(in srgb, var(--mc-hint-color) 28%, transparent);
+    }
+}

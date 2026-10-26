@@ -48,6 +48,13 @@ them and re-sends the whole form) and allows one confirm at a time — a click
 made right after fixing a field used to be swallowed, and a double request
 left a stray status-0 order.
 
+**Auto-confirm for button-only payments (2026-10-08).** For `cod` and
+`free_checkout`, whose confirm step is only the extension's
+`#button-confirm`, Place order clicks it right away - no second click.
+`bank_transfer` / `cheque` show bank details / payee first and still need
+the customer's confirm. Not live-checked yet (COD was disabled in the
+store at the time).
+
 **Terms link (2026-10-08).** The agree link opens an `mc-modal` with the
 information page's text only, fetched from the stock content-only route
 `information/information/agree` (`state.agree_url`). The link's legacy
@@ -132,8 +139,7 @@ ships its own script against the three endpoints). Strings come from
 Address book for logged-in customers (their default address is prefilled,
 a changed address is used for the order but not saved to the book),
 registration during checkout, custom fields, captcha, separate billing
-address, reward points entry on the page, auto-click of simple
-payment confirm buttons.
+address, reward points entry on the page.
 
 ## Tests
 

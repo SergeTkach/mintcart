@@ -1,0 +1,123 @@
+{# Mint Gallery header: dark bar, logo centred, search left, account / wishlist /
+   cart right, navigation underneath. Same `header` contract as mint_default
+   (branding, account, contacts, links, widgets, announcement). #}
+<header class="mc-header mc-header--gallery mc-header--sticky" data-mc-sticky-header>
+    {% if announcement %}
+        <div class="mc-header__announcement">
+            <div class="container">
+                {% if announcement.url %}
+                    <a class="mc-header__announcement-link" href="{{ announcement.url }}">{{ announcement.text }}</a>
+                {% else %}
+                    <span>{{ announcement.text }}</span>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="mc-header__main">
+        <div class="container mc-header__grid">
+            <div class="mc-header__start">
+                {% if widgets.menu %}
+                    <button
+                        type="button"
+                        class="mc-header__nav-toggle d-lg-none"
+                        data-mc-action="open-drawer"
+                        data-mc-target="#mcHeaderNav"
+                        aria-expanded="false"
+                        aria-controls="mcHeaderNav"
+                        aria-label="{{ text_menu }}"
+                    >
+                        <span class="mc-header__nav-toggle-bar"></span>
+                        <span class="mc-header__nav-toggle-bar"></span>
+                        <span class="mc-header__nav-toggle-bar"></span>
+                    </button>
+                {% endif %}
+
+                <div class="mc-header__widget mc-header__widget--search">
+                    <div class="mc-search-box" data-mc-search-box>
+                        <input
+                            type="search"
+                            name="search"
+                            class="mc-search-box__input mc-field__control"
+                            data-mc-search-box-input
+                            placeholder="{{ text_search }}"
+                            aria-label="{{ text_search }}"
+                        >
+
+                        <div class="mc-search-box__results" data-mc-search-box-results hidden>
+                            <ul class="mc-search-box__list" role="listbox" data-mc-search-box-list></ul>
+
+                            <p class="mc-search-box__empty" data-mc-search-box-empty hidden>{{ text_search_empty|default('') }}</p>
+
+                            <a class="mc-search-box__view-all" data-mc-search-box-view-all hidden>{{ text_search_all|default('') }}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mc-header__branding">
+                <a class="mc-header__logo" href="{{ branding.home }}">
+                    {% if branding.logo %}
+                        <img src="{{ branding.logo }}" alt="{{ branding.name }}" title="{{ branding.name }}">
+                    {% else %}
+                        <span class="mc-header__logo-text">{{ branding.name }}</span>
+                    {% endif %}
+                </a>
+            </div>
+
+            <div class="mc-header__end">
+                {% if widgets.language %}
+                    <div class="mc-legacy">{{ widgets.language|raw }}</div>
+                {% endif %}
+                {% if widgets.currency %}
+                    <div class="mc-legacy">{{ widgets.currency|raw }}</div>
+                {% endif %}
+
+                <div class="mc-header__account">
+                    <button type="button" class="mc-header__account-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if account.logged %}{{ account.first_name }}{% else %}{{ text_account }}{% endif %}
+                    </button>
+                    <ul class="mc-header__account-menu dropdown-menu dropdown-menu-end">
+                        {% if account.logged %}
+                            <li><a class="mc-header__account-menu-link" href="{{ links.account }}">{{ text_account }}</a></li>
+                            <li><a class="mc-header__account-menu-link" href="{{ links.order }}">{{ text_order }}</a></li>
+                            <li><a class="mc-header__account-menu-link" href="{{ links.transaction }}">{{ text_transaction }}</a></li>
+                            <li><a class="mc-header__account-menu-link" href="{{ links.download }}">{{ text_download }}</a></li>
+                            <li><a class="mc-header__account-menu-link" href="{{ links.logout }}">{{ text_logout }}</a></li>
+                        {% else %}
+                            <li><a class="mc-header__account-menu-link" href="{{ links.register }}">{{ text_register }}</a></li>
+                            <li><a class="mc-header__account-menu-link" href="{{ links.login }}">{{ text_login }}</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                {% if links.wishlist %}
+                    <a class="mc-header__wishlist" href="{{ links.wishlist }}">{{ text_wishlist }}</a>
+                {% endif %}
+
+                {% if widgets.cart %}
+                    <div class="mc-header__widget mc-legacy">{{ widgets.cart|raw }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if widgets.menu %}
+        <nav
+            class="offcanvas-lg offcanvas-start mc-drawer mc-header__nav"
+            tabindex="-1"
+            id="mcHeaderNav"
+            aria-labelledby="mcHeaderNavTitle"
+        >
+            <div class="offcanvas-header d-lg-none">
+                <h2 class="offcanvas-title mc-drawer__title" id="mcHeaderNavTitle">{{ text_menu }}</h2>
+                <button type="button" class="mc-drawer__close" data-mc-action="close-drawer" aria-label="{{ text_close }}">&times;</button>
+            </div>
+            <div class="offcanvas-body mc-legacy">
+                <div class="container">
+                    {{ widgets.menu|raw }}
+                </div>
+            </div>
+        </nav>
+    {% endif %}
+</header>

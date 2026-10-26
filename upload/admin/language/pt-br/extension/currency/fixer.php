@@ -1,0 +1,16 @@
+<?php
+
+// MintCart
+$_['entry_api'] = 'Chave de acesso da API';
+$_['entry_cron'] = 'Comando CRON';
+$_['entry_ip'] = 'Endereço IP do servidor';
+$_['entry_status'] = 'Status';
+$_['error_api'] = 'A chave de acesso da API é obrigatória!';
+$_['error_ip'] = 'Endereço IP inválido!';
+$_['error_permission'] = 'Atenção: você não tem permissão para modificar o conversor de moedas Fixer!';
+$_['heading_title'] = 'Conversor de moedas Fixer';
+$_['help_cron'] = 'Use este comando ao configurar uma tarefa CRON no seu servidor.';
+$_['help_ip'] = 'Endereço IP opcional do servidor que executa uma tarefa CRON para atualizar as cotações.';
+$_['text_edit'] = 'Editar conversor de moedas Fixer';
+$_['text_extension'] = 'Extensões';
+$_['text_success'] = 'Sucesso: você modificou o conversor de moedas Fixer!';

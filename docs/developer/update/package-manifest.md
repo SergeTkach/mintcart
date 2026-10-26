@@ -192,7 +192,7 @@ $plan = $planner->plan(
 
 // $plan === [
 //     'package'      => 'mint_default',
-//     'snapshot_dir' => 'system/storage/mintcart/backup/mint_default/20260909120000',
+//     'snapshot_dir' => 'storage/mintcart/backup/mint_default/20260909120000',
 //     'files'        => ['catalog/view/theme/mint_default/theme.json'],
 //     'total_bytes'  => 512,
 // ]
@@ -209,9 +209,9 @@ Design decisions, following `docs/adr/005-theme-extension-update-rollback.md`:
   installed yet" — nothing to snapshot (a brand-new file the update only
   adds has nothing to back up).
 - **`snapshotPath()` never lands under a web-servable directory**
-  (decision #7) — `system/storage/mintcart/backup/<package>/<timestamp>`,
+  (decision #7) — `storage/mintcart/backup/<package>/<timestamp>`,
   the same convention OpenCart already uses for its own non-servable files
-  (`system/storage/cache`, `system/storage/logs`).
+  (`storage/cache`, `storage/logs`).
 - **`hasEnoughDiskSpace(int $snapshotBytes, int $incomingPackageBytes, int $freeBytes): bool`**
   is a separate pre-flight check (decision #6), sized for *both* the
   snapshot being written and the incoming package's own files landing on

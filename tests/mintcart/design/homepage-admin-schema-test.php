@@ -3,7 +3,7 @@
  * Standalone smoke test for ControllerDesignHomepage's generic,
  * schema-driven settings/content field handling
  * (`upload/admin/controller/design/homepage.php`) — the piece that lets
- * all 15 shipped Homepage Builder block types (Products through Gallery,
+ * all shipped Homepage Builder block types (Products through Gallery,
  * MINTCART_IMPLEMENTATION_GUIDE.md §51) be configured through this screen
  * instead of only Products.
  *
@@ -131,27 +131,26 @@ assertSame____(
     $failures
 );
 
-// 2. A type with a `json` items field (Banner Grid) decodes valid JSON
-//    text into a real PHP array, ready for json_encode() by the model -
-//    not a double-encoded string.
+// 2. A type with a list of rows (Banner Grid) turns the posted rows into the stored
+//    arrays: shared fields into settings, texts into each language's content.
 $controller = makeController([
     'type' => 'banner-grid',
     'settings' => [
         'columns' => '3',
-        'items' => '[{"image":"catalog/b1.jpg","url":"","image_width":600,"image_height":400}]',
+        'items' => [0 => ['image' => 'catalog/b1.jpg', 'url' => '']],
     ],
     'block_content' => [
-        1 => ['title' => 'Deals', 'items' => '[{"alt":"Sale","caption":"Up to 50% off"}]'],
+        1 => ['title' => 'Deals', 'items' => [0 => ['alt' => 'Sale', 'caption' => 'Up to 50% off']]],
     ],
 ]);
 
 $data = callPrivate($controller, 'prepareBlockData');
 
 assertSame____('3', $data['settings']['columns'], 'Scenario 2: select field value should round-trip', $failures);
-assertTrue____(is_array($data['settings']['items']), 'Scenario 2: JSON settings field should decode to a real array', $failures);
-assertSame____('catalog/b1.jpg', $data['settings']['items'][0]['image'] ?? null, 'Scenario 2: decoded settings items should keep their structure', $failures);
-assertTrue____(is_array($data['content'][1]['items']), 'Scenario 2: JSON content field should decode to a real array', $failures);
-assertSame____('Sale', $data['content'][1]['items'][0]['alt'] ?? null, 'Scenario 2: decoded content items should keep their structure', $failures);
+assertTrue____(is_array($data['settings']['items']), 'Scenario 2: the rows should be stored as a list', $failures);
+assertSame____('catalog/b1.jpg', $data['settings']['items'][0]['image'] ?? null, 'Scenario 2: the shared fields of a row should keep their values', $failures);
+assertTrue____(is_array($data['content'][1]['items']), 'Scenario 2: the texts of the rows should be stored per language', $failures);
+assertSame____('Sale', $data['content'][1]['items'][0]['alt'] ?? null, 'Scenario 2: the texts of a row should keep their values', $failures);
 
 // 3. Blank/omitted fields fall back to the schema's own default, never to
 //    PHP null-coercion surprises (e.g. Products' category_id default is
@@ -172,26 +171,25 @@ $data = callPrivate($controller, 'prepareBlockData');
 
 assertSame____('md', $data['settings']['size'], 'Scenario 4: an unrecognized select value should fall back to the default, not pass through', $failures);
 
-// 5. validateForm(): a genuinely malformed JSON items field is rejected...
+// 5. validateForm(): a list-type block with rows, or with no rows yet, is valid -
+//    an admin should be able to save a block before filling in every optional list.
 $controller = makeController([
     'type' => 'gallery',
-    'settings' => ['columns' => '4', 'items' => '{not valid json'],
+    'settings' => ['columns' => '4', 'items' => [0 => ['image' => 'catalog/p.jpg']]],
+    'block_content' => [1 => ['title' => 'Gallery', 'items' => [0 => ['alt' => 'x', 'caption' => '']]]],
+]);
+
+assertSame____(true, callPrivate($controller, 'validateForm'), 'Scenario 5: a gallery with rows should pass validation', $failures);
+
+$controller = makeController([
+    'type' => 'gallery',
+    'settings' => ['columns' => '4'],
     'block_content' => [1 => ['title' => 'Gallery']],
 ]);
 
-assertSame____(false, callPrivate($controller, 'validateForm'), 'Scenario 5: malformed JSON in a settings items field should fail validation', $failures);
+assertSame____(true, callPrivate($controller, 'validateForm'), 'Scenario 5b: a gallery with no rows yet should pass validation (an empty list)', $failures);
 
-// ...but a blank items field (nothing entered yet) is valid - an admin
-// should be able to save a block before filling in every optional list.
-$controller = makeController([
-    'type' => 'gallery',
-    'settings' => ['columns' => '4', 'items' => ''],
-    'block_content' => [1 => ['title' => 'Gallery', 'items' => '']],
-]);
-
-assertSame____(true, callPrivate($controller, 'validateForm'), 'Scenario 5b: a blank JSON items field should pass validation (normalizes to an empty list)', $failures);
-
-// 6. Every one of the 15 types resolves to a real field schema (no type
+// 6. Every shipped type resolves to a real field schema (no type
 //    silently falls through to the empty default), and every field
 //    referenced by that schema has a resolvable language string - a typo
 //    in a label_key/help_key would otherwise only surface as a broken
@@ -245,5 +243,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: Homepage admin schema test (6 scenarios, all 15 block types)\n";
+echo "PASS: Homepage admin schema test (6 scenarios, all block types)\n";
 exit(0);

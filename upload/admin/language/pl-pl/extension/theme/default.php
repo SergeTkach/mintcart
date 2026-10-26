@@ -1,0 +1,41 @@
+<?php
+
+// MintCart
+$_['entry_directory'] = 'Katalog motywu';
+$_['entry_height'] = 'Wysokość';
+$_['entry_image_additional'] = 'Rozmiar dodatkowego zdjęcia produktu (szer. x wys.)';
+$_['entry_image_cart'] = 'Rozmiar zdjęcia w koszyku (szer. x wys.)';
+$_['entry_image_category'] = 'Rozmiar zdjęcia kategorii (szer. x wys.)';
+$_['entry_image_compare'] = 'Rozmiar zdjęcia w porównaniu (szer. x wys.)';
+$_['entry_image_location'] = 'Rozmiar zdjęcia sklepu (szer. x wys.)';
+$_['entry_image_popup'] = 'Rozmiar zdjęcia produktu w oknie powiększenia (szer. x wys.)';
+$_['entry_image_product'] = 'Rozmiar zdjęcia produktu na liście (szer. x wys.)';
+$_['entry_image_related'] = 'Rozmiar zdjęcia produktu powiązanego (szer. x wys.)';
+$_['entry_image_thumb'] = 'Rozmiar miniatury zdjęcia produktu (szer. x wys.)';
+$_['entry_image_wishlist'] = 'Rozmiar zdjęcia na liście życzeń (szer. x wys.)';
+$_['entry_product_description_length'] = 'Limit opisu na liście';
+$_['entry_product_limit'] = 'Domyślna liczba pozycji na stronie';
+$_['entry_status'] = 'Status';
+$_['entry_width'] = 'Szerokość';
+$_['error_image_additional'] = 'Wymiary dodatkowego zdjęcia produktu są wymagane!';
+$_['error_image_cart'] = 'Wymiary zdjęcia w koszyku są wymagane!';
+$_['error_image_category'] = 'Wymiary listy kategorii są wymagane!';
+$_['error_image_compare'] = 'Wymiary zdjęcia w porównaniu są wymagane!';
+$_['error_image_location'] = 'Wymiary zdjęcia sklepu są wymagane!';
+$_['error_image_popup'] = 'Wymiary zdjęcia produktu w oknie powiększenia są wymagane!';
+$_['error_image_product'] = 'Wymiary listy produktów są wymagane!';
+$_['error_image_related'] = 'Wymiary zdjęcia produktu powiązanego są wymagane!';
+$_['error_image_thumb'] = 'Wymiary miniatury zdjęcia produktu są wymagane!';
+$_['error_image_wishlist'] = 'Wymiary zdjęcia na liście życzeń są wymagane!';
+$_['error_limit'] = 'Limit produktów jest wymagany!';
+$_['error_permission'] = 'Uwaga: Nie masz uprawnień do modyfikowania domyślnego motywu sklepu!';
+$_['heading_title'] = 'Domyślny motyw sklepu';
+$_['help_directory'] = 'To pole służy tylko do zapewnienia zgodności starszych motywów z nowym systemem motywów. Możesz ustawić katalog motywu używany dla zdefiniowanych tutaj rozmiarów zdjęć.';
+$_['help_product_description_length'] = 'W widoku listy limit znaków krótkiego opisu (kategorie, promocje itp.)';
+$_['help_product_limit'] = 'Określa, ile pozycji katalogu jest wyświetlanych na stronie (produkty, kategorie itp.)';
+$_['text_edit'] = 'Edytuj domyślny motyw sklepu';
+$_['text_extension'] = 'Rozszerzenia';
+$_['text_general'] = 'Ogólne';
+$_['text_image'] = 'Zdjęcia';
+$_['text_product'] = 'Produkty';
+$_['text_success'] = 'Sukces: Zmodyfikowano domyślny motyw sklepu!';

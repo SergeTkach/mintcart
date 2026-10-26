@@ -36,6 +36,7 @@
  * OpenCart core, so this isn't a `docs/upstream-diff.md` entry).
  */
 
+import './compat/keep-bootstrap3-jquery.js';
 import 'bootstrap';
 
 import { initAlertDismiss } from './components/alert.js';
@@ -48,7 +49,15 @@ import { initTabsTriggers } from './components/tabs.js';
 import { initProgressBars } from './components/progress.js';
 import { createEntityPicker } from './components/entity-picker.js';
 import { createMediaPicker } from './components/media-picker.js';
-import { initAdminSearch } from './components/admin-search.js';
+import { initAdminSearch, initFieldJump } from './components/admin-search.js';
+import { initAddRows } from './components/add-rows.js';
+import { initSelectSearch } from './components/select-search.js';
+import { initAjaxForms } from './components/ajax-form.js';
+import { initMenuHint } from './components/menu-hint.js';
+import { initDesignStyles } from './components/design-styles.js';
+import { initHomepageItems } from './components/homepage-items.js';
+import { initHomepageAiTranslate } from './components/homepage-ai-translate.js';
+import { initSeoUrlAutofill } from './components/seo-url-autofill.js';
 
 // `mc-modal`'s, `mc-drawer`'s and `mc-toast`'s CSS/JS (Phase 4, shared with
 // catalog.js) already cover the admin dialog/panel/notification use cases;
@@ -103,6 +112,15 @@ function boot() {
     initTabsTriggers();
     initProgressBars();
     initAdminSearch();
+    initFieldJump();
+    initAddRows();
+    initSelectSearch();
+    initAjaxForms();
+    initMenuHint();
+    initDesignStyles();
+    initHomepageItems();
+    initHomepageAiTranslate();
+    initSeoUrlAutofill();
 }
 
 if (document.readyState === 'loading') {

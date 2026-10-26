@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html dir="{{ direction }}" lang="{{ lang }}"{% if mc_preset %} data-mc-preset="{{ mc_preset }}"{% endif %}>
+<html dir="{{ direction }}" lang="{{ lang }}"{% if mc_preset %} data-mc-preset="{{ mc_preset }}"{% endif %}{% if mc_theme %} data-mc-theme="{{ mc_theme }}"{% endif %}{% if mc_phone_mask %} data-mc-phone-mask="{{ mc_phone_mask }}"{% endif %}>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,6 +12,9 @@
 {% if keywords %}
 <meta name="keywords" content="{{ keywords }}" />
 {% endif %}
+{% for alternate in mc_hreflang %}
+<link rel="alternate" hreflang="{{ alternate.hreflang }}" href="{{ alternate.href }}" />
+{% endfor %}
 {% if mc_robots_content %}
 <meta name="robots" content="{{ mc_robots_content }}" />
 {% endif %}
@@ -36,6 +39,14 @@
 {% for style in styles %}
 <link href="{{ style.href }}" type="text/css" rel="{{ style.rel }}" media="{{ style.media }}" />
 {% endfor %}
+{% if mc_fonts_url %}
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="{{ mc_fonts_url }}" rel="stylesheet" />
+{% endif %}
+{% if mc_style_css %}
+<style id="mc-style-overrides">{{ mc_style_css|raw }}</style>
+{% endif %}
 {% for script in scripts %}
 <script src="{{ script }}" type="text/javascript"></script>
 {% endfor %}
@@ -51,4 +62,6 @@
 {% endif %}
 </head>
 <body>
+{{ mc_slots['header.before'] }}
 {{ mc_header }}
+{{ mc_slots['header.after'] }}

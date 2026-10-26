@@ -14,22 +14,24 @@
  * Contract: docs/developer/components/product-gallery.md
  */
 
+/* No frame: the picture sits on a soft tint (like the product cards), and a
+   photo shot on white melts into it through the multiply blend. */
 .mc-product-gallery__main-link {
     display: block;
+    margin-bottom: var(--mc-space-3);
+    overflow: hidden;
+    border-radius: var(--mc-radius-xl);
+    background: var(--mc-surface-tint);
     cursor: zoom-in;
 }
 
 .mc-product-gallery__main {
     display: block;
     width: 100%;
+    height: auto; /* the img's height attribute must not win over the 1:1 ratio */
     aspect-ratio: 1 / 1;
     object-fit: contain;
-    /* Product photos usually carry their own white background - a tinted
-       backdrop would frame them as a white box inside a grey square. */
-    background: var(--mc-surface);
-    border: var(--mc-border-width) solid color-mix(in srgb, var(--mc-border) 45%, transparent);
-    border-radius: var(--mc-radius-lg);
-    margin-bottom: var(--mc-space-3);
+    mix-blend-mode: multiply;
 }
 
 .mc-product-gallery__thumbs {
@@ -46,20 +48,29 @@
     width: 4.5rem;
     height: 4.5rem;
     padding: 0;
-    background: var(--mc-surface);
-    border: var(--mc-border-width) solid color-mix(in srgb, var(--mc-border) 45%, transparent);
-    border-radius: var(--mc-radius-md);
+    background: var(--mc-surface-tint);
+    border: 0;
+    border-radius: var(--mc-radius-lg);
     cursor: pointer;
+    opacity: 0.6;
     overflow: hidden;
+    transition: opacity var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
 }
 
 .mc-product-gallery__thumb:hover,
 .mc-product-gallery__thumb:focus-visible {
-    border-color: var(--mc-border);
+    opacity: 1;
 }
 
+/* The chosen thumbnail: full strength with a bar under it (no frame). */
 .mc-product-gallery__thumb.is-active {
-    border-color: var(--mc-primary);
+    opacity: 1;
+    box-shadow: inset 0 -3px 0 var(--mc-primary);
+}
+
+.mc-product-gallery__thumb:focus-visible {
+    outline: 2px solid var(--mc-primary);
+    outline-offset: 2px;
 }
 
 .mc-product-gallery__thumb-image {
@@ -67,4 +78,11 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-product-gallery__thumb {
+        transition: none;
+    }
 }

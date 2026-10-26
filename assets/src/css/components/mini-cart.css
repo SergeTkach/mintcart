@@ -251,7 +251,7 @@ a.mc-mini-cart__name:focus-visible {
 
 .mc-mini-cart__actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--mc-space-2);
     margin-top: var(--mc-space-4);
 }
@@ -259,6 +259,7 @@ a.mc-mini-cart__name:focus-visible {
 .mc-mini-cart__actions .mc-button {
     justify-content: center;
     text-align: center;
+    white-space: normal;
 }
 
 .mc-mini-cart__empty {
@@ -266,4 +267,10 @@ a.mc-mini-cart__name:focus-visible {
     padding-block: var(--mc-space-4);
     text-align: center;
     color: var(--mc-muted);
+}
+
+/* The cart amount next to the icon is a theme option (mint_comfort shows it as a pill);
+   the other themes already print the summary text, so it stays hidden there. */
+.mc-mini-cart__amount {
+    display: none;
 }

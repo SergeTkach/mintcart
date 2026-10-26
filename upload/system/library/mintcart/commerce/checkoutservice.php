@@ -65,7 +65,7 @@ final class CheckoutService
     /**
      * @return array<string, string> field => language key
      */
-    public function validateContact(array $input): array
+    public function validateContact(array $input, string $phoneMask = ''): array
     {
         $errors = [];
 
@@ -85,6 +85,8 @@ final class CheckoutService
 
         if (!$this->lengthBetween($input['telephone'] ?? '', 3, 32)) {
             $errors['telephone'] = 'error_telephone';
+        } elseif (!PhoneMask::isComplete((string) $input['telephone'], $phoneMask)) {
+            $errors['telephone'] = 'error_telephone_mask';
         }
 
         return $errors;

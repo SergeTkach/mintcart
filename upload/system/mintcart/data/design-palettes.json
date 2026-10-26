@@ -1,0 +1,327 @@
+[
+ {
+  "key": "coalred",
+  "label": "Coal & Red",
+  "colors": [
+   "#fffffa",
+   "#515052",
+   "#000103",
+   "#333138",
+   "#ff312e"
+  ],
+  "primary": "#e32c29",
+  "accent": "#e32c29"
+ },
+ {
+  "key": "inkember",
+  "label": "Ink & Ember",
+  "colors": [
+   "#fffcf2",
+   "#ccc5b9",
+   "#403d39",
+   "#252422",
+   "#eb5e28"
+  ],
+  "primary": "#c85022",
+  "accent": "#c85022"
+ },
+ {
+  "key": "reef",
+  "label": "Reef",
+  "colors": [
+   "#1a535c",
+   "#4ecdc4",
+   "#f7fff7",
+   "#ff6b6b",
+   "#ffe66d"
+  ],
+  "primary": "#4ecdc4",
+  "accent": "#ff6b6b"
+ },
+ {
+  "key": "harbor",
+  "label": "Harbor",
+  "colors": [
+   "#3d5a80",
+   "#98c1d9",
+   "#e0fbfc",
+   "#ee6c4d",
+   "#293241"
+  ],
+  "primary": "#ee6c4d",
+  "accent": "#98c1d9"
+ },
+ {
+  "key": "fjord",
+  "label": "Fjord",
+  "colors": [
+   "#16697a",
+   "#489fb5",
+   "#82c0cc",
+   "#ede7e3",
+   "#ffa62b"
+  ],
+  "primary": "#489fb5",
+  "accent": "#ffa62b"
+ },
+ {
+  "key": "tangerine",
+  "label": "Slate & Tangerine",
+  "colors": [
+   "#2d3142",
+   "#4f5d75",
+   "#bfc0c0",
+   "#ffffff",
+   "#ef8354"
+  ],
+  "primary": "#4f5d75",
+  "accent": "#ef8354"
+ },
+ {
+  "key": "steelteal",
+  "label": "Steel Teal",
+  "colors": [
+   "#dcdcdd",
+   "#c5c3c6",
+   "#46494c",
+   "#4c5c68",
+   "#1985a1"
+  ],
+  "primary": "#18819c",
+  "accent": "#18819c"
+ },
+ {
+  "key": "nightindigo",
+  "label": "Night Indigo",
+  "colors": [
+   "#f1dac4",
+   "#a69cac",
+   "#474973",
+   "#161b33",
+   "#0d0c1d"
+  ],
+  "primary": "#474973",
+  "accent": "#f1dac4"
+ },
+ {
+  "key": "sandstone",
+  "label": "Sandstone",
+  "colors": [
+   "#9f7e69",
+   "#d2bba0",
+   "#f2efc7",
+   "#f7ffe0",
+   "#ffeee2"
+  ],
+  "primary": "#8e705d",
+  "accent": "#d2bba0"
+ },
+ {
+  "key": "plumflame",
+  "label": "Plum & Flame",
+  "colors": [
+   "#e8e8e8",
+   "#bfbfbf",
+   "#96939b",
+   "#564256",
+   "#fc814a"
+  ],
+  "primary": "#fc814a",
+  "accent": "#fc814a"
+ },
+ {
+  "key": "nordic",
+  "label": "Nordic Clay",
+  "colors": [
+   "#f4f1de",
+   "#e07a5f",
+   "#3d405b",
+   "#81b29a",
+   "#f2cc8f"
+  ],
+  "primary": "#e07a5f",
+  "accent": "#81b29a"
+ },
+ {
+  "key": "mist",
+  "label": "Mist",
+  "colors": [
+   "#555b6e",
+   "#89b0ae",
+   "#bee3db",
+   "#faf9f9",
+   "#ffd6ba"
+  ],
+  "primary": "#89b0ae",
+  "accent": "#ffd6ba"
+ },
+ {
+  "key": "crimson",
+  "label": "Crimson Navy",
+  "colors": [
+   "#273043",
+   "#9197ae",
+   "#eff6ee",
+   "#f02d3a",
+   "#dd0426"
+  ],
+  "primary": "#dd0426",
+  "accent": "#e22a37"
+ },
+ {
+  "key": "graphite",
+  "label": "Graphite",
+  "colors": [
+   "#323031",
+   "#3d3b3c",
+   "#7f7979",
+   "#c1bdb3",
+   "#5f5b6b"
+  ],
+  "primary": "#5f5b6b",
+  "accent": "#5f5b6b"
+ },
+ {
+  "key": "oceanlime",
+  "label": "Ocean & Lime",
+  "colors": [
+   "#05668d",
+   "#427aa1",
+   "#ebf2fa",
+   "#679436",
+   "#a5be00"
+  ],
+  "primary": "#5a812f",
+  "accent": "#a5be00"
+ },
+ {
+  "key": "glacier",
+  "label": "Glacier",
+  "colors": [
+   "#e0fbfc",
+   "#c2dfe3",
+   "#9db4c0",
+   "#5c6b73",
+   "#253237"
+  ],
+  "primary": "#5c6b73",
+  "accent": "#9db4c0"
+ },
+ {
+  "key": "tidewater",
+  "label": "Tidewater",
+  "colors": [
+   "#031926",
+   "#468189",
+   "#77aca2",
+   "#9dbebb",
+   "#f4e9cd"
+  ],
+  "primary": "#457e86",
+  "accent": "#77aca2"
+ },
+ {
+  "key": "lilacpop",
+  "label": "Lilac Pop",
+  "colors": [
+   "#b8b8d1",
+   "#5b5f97",
+   "#ffc145",
+   "#fffffb",
+   "#ff6b6c"
+  ],
+  "primary": "#ff6b6c",
+  "accent": "#ffc145"
+ },
+ {
+  "key": "duskrose",
+  "label": "Dusk Rose",
+  "colors": [
+   "#f7ebec",
+   "#ddbdd5",
+   "#ac9fbb",
+   "#59656f",
+   "#1d1e2c"
+  ],
+  "primary": "#59656f",
+  "accent": "#ac9fbb"
+ },
+ {
+  "key": "morningsky",
+  "label": "Morning Sky",
+  "colors": [
+   "#ebe9e9",
+   "#f3f8f2",
+   "#3581b8",
+   "#fcb07e",
+   "#dee2d6"
+  ],
+  "primary": "#337cb1",
+  "accent": "#fcb07e"
+ },
+ {
+  "key": "neoncoast",
+  "label": "Neon Coast",
+  "colors": [
+   "#4c6085",
+   "#39a0ed",
+   "#36f1cd",
+   "#13c4a3",
+   "#32322c"
+  ],
+  "primary": "#39a0ed",
+  "accent": "#36f1cd"
+ },
+ {
+  "key": "coralnight",
+  "label": "Coral Night",
+  "colors": [
+   "#f6e8ea",
+   "#ef626c",
+   "#22181c",
+   "#312f2f",
+   "#84dccf"
+  ],
+  "primary": "#ef626c",
+  "accent": "#84dccf"
+ },
+ {
+  "key": "electric",
+  "label": "Electric",
+  "colors": [
+   "#0a0f1e",
+   "#1e40ff",
+   "#ffb000",
+   "#eceeff",
+   "#f4f6fa"
+  ],
+  "primary": "#1e40ff",
+  "accent": "#ffb000"
+ },
+ {
+  "key": "pulse",
+  "label": "Pulse",
+  "colors": [
+   "#0f0b1a",
+   "#7b3ff2",
+   "#00c2a8",
+   "#f0eafe",
+   "#f6f4fb"
+  ],
+  "primary": "#7b3ff2",
+  "accent": "#00c2a8"
+ },
+ {
+  "key": "plum",
+  "label": "Plum",
+  "colors": [
+   "#170d1b",
+   "#7b2d8b",
+   "#4f1c56",
+   "#f4e9f6",
+   "#f8f4f8"
+  ],
+  "primary": "#7b2d8b",
+  "accent": "#7b2d8b"
+ }
+]

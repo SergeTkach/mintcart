@@ -79,7 +79,8 @@ class ControllerCommonFooter extends Controller {
 					array('label' => $this->language->get('text_manufacturer'), 'href' => $data['manufacturer']),
 					array('label' => $this->language->get('text_voucher'), 'href' => $data['voucher']),
 					array('label' => $this->language->get('text_affiliate'), 'href' => $data['affiliate']),
-					array('label' => $this->language->get('text_special'), 'href' => $data['special'])
+					array('label' => $this->language->get('text_special'), 'href' => $data['special']),
+					array('label' => $this->language->get('text_mc_reviews'), 'href' => $this->url->link('mintcart/reviews'))
 				)
 			);
 

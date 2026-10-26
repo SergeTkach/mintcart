@@ -1241,6 +1241,33 @@ class ControllerCatalogProduct extends Controller {
 			}
 		}
 
+		// MintCart: badges (stickers) tickable on the Links tab; the set is edited in Marketing → Product Badges.
+		$this->load->model('mintcart/badge');
+
+		if (isset($this->request->post['mc_product_badge'])) {
+			$mint_selected_badges = array_map('intval', $this->request->post['mc_product_badge']);
+		} elseif (isset($this->request->get['product_id'])) {
+			$mint_selected_badges = $this->model_mintcart_badge->getProductBadgeIds($this->request->get['product_id']);
+		} else {
+			$mint_selected_badges = array();
+		}
+
+		$data['mc_badges'] = array();
+
+		foreach ($this->model_mintcart_badge->getBadges() as $mint_badge) {
+			$mint_badge_view = \MintCart\Commerce\ProductBadge::toView($mint_badge);
+
+			$data['mc_badges'][] = array(
+				'badge_id' => $mint_badge['badge_id'],
+				'label'    => $mint_badge['label'],
+				'color'    => $mint_badge_view['color'],
+				'on_color' => $mint_badge_view['on_color'],
+				'checked'  => in_array((int)$mint_badge['badge_id'], $mint_selected_badges)
+			);
+		}
+
+		$data['mc_badges_manage'] = $this->url->link('mintcart/badge', 'user_token=' . $this->session->data['user_token'], true);
+
 		if (isset($this->request->post['points'])) {
 			$data['points'] = $this->request->post['points'];
 		} elseif (!empty($product_info)) {

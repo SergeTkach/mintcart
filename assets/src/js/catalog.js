@@ -44,10 +44,12 @@ import { initReviews } from './components/reviews.js';
 import { initCheckout } from './components/checkout.js';
 import { initOptionUploads } from './components/option-upload.js';
 import { initStickyHeader } from './components/sticky-header.js';
+import { initHeaderUtility } from './components/header-utility.js';
 import { initCartPage } from './components/cart-page.js';
 import { initBuyBar } from './components/buy-bar.js';
 import { initSectionNav } from './components/section-nav.js';
 import { initProductPrice } from './components/product-price.js';
+import { initPhoneMask } from './components/phone-mask.js';
 
 // Swiper-based sliders live in their own bundle (slider(.min).js next to
 // this file), fetched only when a `[data-mc-slider]` is on the page - at
@@ -122,10 +124,12 @@ function boot() {
     initCheckout();
     initOptionUploads();
     initStickyHeader();
+    initHeaderUtility();
     initCartPage();
     initBuyBar();
     initSectionNav();
     initProductPrice();
+    initPhoneMask();
     watchSliders();
 }
 

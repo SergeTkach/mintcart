@@ -109,14 +109,16 @@ final class ProductViewProvider
 
     /**
      * @param array<string, mixed> $product
-     * @return list<array{type: string, label: ?string}>
+     * @return list<array{type: string, label: ?string, color?: string, on_color?: string}>
      */
     private function buildBadges(array $product, bool $inStock): array
     {
         $badges = [];
 
         if (!empty($product['special'])) {
-            $badges[] = ['type' => 'sale', 'label' => null];
+            // "-20%" when the discount is known (whole percent), else the plain "Sale" text.
+            $discount = (int) ($product['discount'] ?? 0);
+            $badges[] = ['type' => 'sale', 'label' => $discount > 0 ? '-' . $discount . '%' : null];
         }
 
         if (!$inStock) {
@@ -129,6 +131,14 @@ final class ProductViewProvider
         // rather than this class guessing a threshold from date_added.
         if (!empty($product['is_new'])) {
             $badges[] = ['type' => 'new', 'label' => null];
+        }
+
+        // Manual stickers set in Marketing → Product Badges, shown after
+        // the automatic ones. Rows are mc_product_badge rows (label, color).
+        foreach ($product['manual_badges'] ?? [] as $row) {
+            if (is_array($row) && trim((string) ($row['label'] ?? '')) !== '') {
+                $badges[] = ProductBadge::toView($row);
+            }
         }
 
         return $badges;

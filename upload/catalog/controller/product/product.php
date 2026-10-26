@@ -237,10 +237,35 @@ class ControllerProductProduct extends Controller {
 			// copy of the title. Mirrors category.php/home.php's MC-0015
 			// wiring. See docs/developer/seo/meta-builder.md, "Live wiring".
 			// Pure string logic, cannot throw - no try/catch needed.
-			$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+			// Marketing -> SEO -> Meta tags: the merchant's templates, with the product's values.
+			$meta_category = '';
+
+			$this->load->model('catalog/category');
+
+			foreach ($this->model_catalog_product->getCategories($product_id) as $meta_row) {
+				$meta_category_info = $this->model_catalog_category->getCategory($meta_row['category_id']);
+
+				if ($meta_category_info) {
+					$meta_category = $meta_category_info['name'];
+
+					break;
+				}
+			}
+
+			$mint_meta = (new \MintCart\Seo\MetaBuilder(\MintCart\Seo\MetaRules::forPage($this->config->get('mintcart_seo_meta'), 'product', (int)$this->config->get('config_language_id'))))->build(
 				$product_info['meta_title'],
 				$product_info['meta_description'],
-				$product_info['name']
+				$product_info['name'],
+				null,
+				array(
+					'name'        => $product_info['name'],
+					'store'       => $this->config->get('config_name'),
+					'brand'       => $product_info['manufacturer'],
+					'category'    => $meta_category,
+					'model'       => $product_info['model'],
+					'price'       => $this->currency->format($this->tax->calculate($product_info['price'], $product_info['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']),
+					'description' => $product_info['description']
+				)
 			);
 
 			$this->document->setTitle($mint_meta['title']);
@@ -255,6 +280,23 @@ class ControllerProductProduct extends Controller {
 			$this->document->addStyle('catalog/view/javascript/jquery/datetimepicker/bootstrap-datetimepicker.min.css');
 
 			$data['heading_title'] = $product_info['name'];
+
+			// Extension slots shown on the product page (docs/developer/theme-api/slots.md).
+			$data['mc_slots'] = \MintCart\Design\Slots::shared()->renderMany(
+				array('product.before_title', 'product.after_title', 'product.before_price', 'product.after_price', 'product.after_actions'),
+				array('product_id' => (int)$product_info['product_id'], 'name' => $product_info['name'])
+			);
+
+			// Manual badges (Marketing → Product Badges), same ones the product cards show.
+			$this->load->model('mintcart/badge');
+
+			$mint_badge_rows = $this->model_mintcart_badge->getByProductIds(array((int)$product_info['product_id']));
+
+			$data['mc_badges'] = array();
+
+			foreach (isset($mint_badge_rows[(int)$product_info['product_id']]) ? $mint_badge_rows[(int)$product_info['product_id']] : array() as $mint_badge_row) {
+				$data['mc_badges'][] = \MintCart\Commerce\ProductBadge::toView($mint_badge_row);
+			}
 
 			$data['text_minimum'] = sprintf($this->language->get('text_minimum'), $product_info['minimum']);
 			$data['text_login'] = sprintf($this->language->get('text_login'), $this->url->link('account/login', '', true), $this->url->link('account/register', '', true));
@@ -275,6 +317,17 @@ class ControllerProductProduct extends Controller {
 			$data['text_added_to_cart'] = $this->language->get('text_added_to_cart');
 			// Add-to-cart toast: product name + "View cart" link (product-card.js).
 			$data['text_view_cart'] = $this->language->get('text_view_cart');
+			$data['text_continue_shopping'] = $this->language->get('text_continue_shopping');
+			$this->load->language('mintcart/quickorder', 'quickorder');
+
+			$quick_order_texts = array();
+
+			foreach (\MintCart\Commerce\QuickOrderService::TEXT_KEYS as $key) {
+				$quick_order_texts[$key] = $this->language->get('quickorder')->get('text_' . $key);
+			}
+
+			$data['text_quick_order'] = $quick_order_texts['title'];
+			$data['quick_order_texts'] = json_encode($quick_order_texts, JSON_UNESCAPED_UNICODE);
 			$data['cart_url'] = $this->url->link('checkout/cart');
 			$data['text_add_to_cart_error'] = $this->language->get('text_add_to_cart_error');
 			$data['text_wishlist_error'] = $this->language->get('text_wishlist_error');
@@ -341,6 +394,8 @@ class ControllerProductProduct extends Controller {
 			// mint_default PDP stock marker (in / out colour), alongside the
 			// stock text above.
 			$data['mc_in_stock'] = $product_info['quantity'] > 0;
+			// Delivery / payment / returns summary (mintcart/purchase_info).
+			$data['mc_purchase_info'] = $this->load->controller('mintcart/purchase_info');
 
 			$this->load->model('tool/image');
 

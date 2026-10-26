@@ -1,0 +1,132 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="form-options" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> {{ success }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-share"></i> {{ text_options }}</h3>
+      </div>
+      <div class="panel-body">
+        <p class="text-muted">{{ text_intro }}</p>
+        <form action="{{ action }}" method="post" id="form-options" class="mc-redirects">
+          {% for option in options %}
+          <label class="mc-redirects__option">
+            <input type="checkbox" name="option[{{ option.code }}]" value="1"{% if option.checked %} checked{% endif %} />
+            <strong>{{ option.label }}</strong>
+            <span class="mc-redirects__help">{{ option.help }}</span>
+          </label>
+          {% endfor %}
+        </form>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-list"></i> {{ text_list }}</h3>
+      </div>
+      <div class="panel-body">
+        <p class="text-muted">{{ text_list_intro }}</p>
+        <form action="{{ delete }}" method="post" id="form-redirects">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <td style="width: 1px;" class="text-center"><input type="checkbox" onclick="$('input[name*=\'selected\']').prop('checked', this.checked);" /></td>
+                  <td class="text-left">{{ column_old }}</td>
+                  <td class="text-left">{{ column_target }}</td>
+                  <td class="text-left">{{ column_language }}</td>
+                  <td class="text-left">{{ column_source }}</td>
+                  <td class="text-right">{{ column_hits }}</td>
+                </tr>
+              </thead>
+              <tbody>
+                {% if redirects %}
+                {% for redirect in redirects %}
+                <tr>
+                  <td class="text-center"><input type="checkbox" name="selected[]" value="{{ redirect.id }}" /></td>
+                  <td class="text-left"><code>{{ redirect.old }}</code></td>
+                  <td class="text-left"><span class="mc-redirects__arrow">&rarr; {{ redirect.code }}</span> <code>{{ redirect.target }}</code></td>
+                  <td class="text-left">{{ redirect.language }}</td>
+                  <td class="text-left">{{ redirect.source }}</td>
+                  <td class="text-right">{{ redirect.hits }}{% if redirect.last_hit %}<br /><small class="text-muted">{{ redirect.last_hit }}</small>{% endif %}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr><td class="text-center" colspan="6">{{ text_no_results }}</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+          {% if redirects %}
+          <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('{{ text_confirm }}');"><i class="fa fa-trash-o"></i> {{ button_delete }}</button>
+          {% endif %}
+        </form>
+        <div class="row">
+          <div class="col-sm-6 text-left">{{ pagination }}</div>
+          <div class="col-sm-6 text-right">{{ results }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-plus-circle"></i> {{ text_add }}</h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action }}" method="post" class="mc-redirects mc-redirects__add">
+          <div class="mc-redirects__field">
+            <label class="mc-redirects__label" for="add-old">{{ entry_old }}</label>
+            <input type="text" name="add_old_path" id="add-old" class="form-control" placeholder="old-page" />
+          </div>
+          <div class="mc-redirects__field">
+            <label class="mc-redirects__label" for="add-target">{{ entry_target }}</label>
+            <input type="text" name="add_target" id="add-target" class="form-control" placeholder="/new-page" />
+          </div>
+          <div class="mc-redirects__field mc-redirects__field--small">
+            <label class="mc-redirects__label" for="add-language">{{ column_language }}</label>
+            <select name="add_language_id" id="add-language" class="form-control">
+              <option value="0">{{ text_any_language }}</option>
+              {% for id, name in languages %}
+              <option value="{{ id }}">{{ name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mc-redirects__field mc-redirects__field--small">
+            <label class="mc-redirects__label" for="add-code">{{ entry_code }}</label>
+            <select name="add_code" id="add-code" class="form-control">
+              <option value="301">301 — {{ text_permanent }}</option>
+              <option value="302">302 — {{ text_temporary }}</option>
+            </select>
+          </div>
+          <div class="mc-redirects__field mc-redirects__field--button">
+            <button type="submit" class="btn btn-primary"><i class="fa fa-plus-circle"></i> {{ button_add }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{ footer }}

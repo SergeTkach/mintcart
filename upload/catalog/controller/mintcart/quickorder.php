@@ -52,7 +52,11 @@ class ControllerMintcartQuickorder extends Controller {
 		}
 
 		$quick_order_service = new \MintCart\Commerce\QuickOrderService();
-		$result = $quick_order_service->validate($this->request->post);
+		$this->load->model('localisation/country');
+
+		$country_info = $this->model_localisation_country->getCountry((int)$this->config->get('config_country_id'));
+		$phone_mask = \MintCart\Commerce\PhoneMask::forStore((string)$this->config->get('config_mc_phone_mask'), $country_info ? (string)$country_info['iso_code_2'] : '', DIR_SYSTEM . 'mintcart/data/phone-masks.json');
+		$result = $quick_order_service->validate($this->request->post, $phone_mask);
 
 		if (!$result['valid']) {
 			$errors = array();

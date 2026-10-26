@@ -33,11 +33,11 @@ targets MySQL/`mysqli` in practice, see §2) plus the following extensions:
 - `image/`
 - `image/cache/`
 - `image/catalog/`
-- `system/storage/cache/`
-- `system/storage/logs/`
-- `system/storage/download/`
-- `system/storage/upload/`
-- `system/storage/modification/`
+- `storage/cache/`
+- `storage/logs/`
+- `storage/download/`
+- `storage/upload/`
+- `storage/modification/`
 
 **Database:** MySQL (or MariaDB), `InnoDB` + `utf8mb4`. MintCart's base
 schema (`install/opencart.sql`) is already normalized to

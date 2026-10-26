@@ -1,0 +1,43 @@
+<?php
+
+// MintCart
+$_['label_backup_restore'] = 'Sicherung / Wiederherstellung';
+$_['label_business_contacts'] = 'Geschäft → Kontakt';
+$_['label_business_delivery'] = 'Geschäft → Versand';
+$_['label_business_payments'] = 'Geschäft → Zahlungen';
+$_['label_categories'] = 'Kategorien';
+$_['label_countries'] = 'Länder';
+$_['label_coupons'] = 'Gutscheine';
+$_['label_currency'] = 'Währung';
+$_['label_customers'] = 'Kunden';
+$_['label_default_currency'] = 'Standardwährung';
+$_['label_default_language'] = 'Standardsprache';
+$_['label_design_banners'] = 'Design → Banner';
+$_['label_design_homepage'] = 'Design → Startseite';
+$_['label_design_layouts'] = 'Design → Layouts';
+$_['label_design_themes'] = 'Design → Themes';
+$_['label_diagnostics'] = 'Diagnose';
+$_['label_error_log'] = 'Fehlerprotokoll';
+$_['label_extensions'] = 'Erweiterungen';
+$_['label_favicon'] = 'Favicon';
+$_['label_geo_zones'] = 'Geozonen';
+$_['label_language'] = 'Sprache';
+$_['label_manufacturers'] = 'Hersteller';
+$_['label_marketing'] = 'Marketing';
+$_['label_meta_title'] = 'Meta-Titel';
+$_['label_order_statuses'] = 'Bestellstatus';
+$_['label_orders'] = 'Bestellungen';
+$_['label_products'] = 'Produkte';
+$_['label_seo_urls'] = 'SEO-URLs';
+$_['label_stock_statuses'] = 'Lagerstatus';
+$_['label_store_address'] = 'Shop-Adresse';
+$_['label_store_email'] = 'Shop-E-Mail';
+$_['label_store_logo'] = 'Shop-Logo';
+$_['label_store_name'] = 'Shop-Name';
+$_['label_store_settings'] = 'Shop-Einstellungen';
+$_['label_store_telephone'] = 'Shop-Telefon';
+$_['label_system_pages_seo'] = 'SEO der Systemseiten';
+$_['label_tax_classes'] = 'Steuerklassen';
+$_['label_tax_rates'] = 'Steuersätze';
+$_['label_users'] = 'Benutzer';
+$_['label_zones'] = 'Zonen';

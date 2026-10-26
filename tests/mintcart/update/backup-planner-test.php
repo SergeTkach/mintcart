@@ -96,16 +96,16 @@ $plan = $planner->plan($overlap, ['catalog/view/theme/mint_default/theme.json' =
 assertSame(['catalog/view/theme/mint_default/theme.json'], $plan['files'], '5. plan: a path in both files() and removes() is de-duplicated', $failures);
 assertSame(512, $plan['total_bytes'], '5. plan: de-duplicated path is only counted once toward total_bytes', $failures);
 
-// 6. snapshotPath() places snapshots under system/storage/, outside any
+// 6. snapshotPath() places snapshots under storage/, outside any
 // web-servable path (ADR 005 decision #7).
 assertSame(
-    'system/storage/mintcart/backup/mint_default/20260909120000',
+    'storage/mintcart/backup/mint_default/20260909120000',
     BackupPlanner::snapshotPath('mint_default', '20260909120000'),
-    '6. snapshotPath: builds the documented system/storage/ path',
+    '6. snapshotPath: builds the documented storage/ path',
     $failures
 );
 assertSame('mint_default', $plan['package'], '6. plan: package name still echoes manifest after overlap case', $failures);
-assertTrue(strpos($planner->plan($empty, [], 't')['snapshot_dir'], 'system/storage/') === 0, '6. plan: snapshot_dir also starts under system/storage/', $failures);
+assertTrue(strpos($planner->plan($empty, [], 't')['snapshot_dir'], 'storage/') === 0, '6. plan: snapshot_dir also starts under storage/', $failures);
 
 // 7. hasEnoughDiskSpace(): exactly enough free space (snapshot + incoming)
 // passes; one byte short fails. Sized for BOTH the snapshot being written

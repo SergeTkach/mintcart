@@ -1,0 +1,147 @@
+{# Mint Comfort header: logo left, a short search next to it, language /
+   currency / account / cart icon right, calm menu underneath. Same `header`
+   contract as mint_default (branding, account, contacts, links, widgets,
+   announcement). #}
+<header class="mc-header mc-header--comfort mc-header--sticky" data-mc-sticky-header>
+    {# Top bar (dark): the store phone on the left, the announcement text next to it. #}
+    {% if announcement or contacts.phone %}
+        <div class="mc-header__announcement">
+            <div class="container mc-header__topbar-row">
+                {% if contacts.phone %}
+                    <a class="mc-header__phone" href="tel:{{ contacts.phone|replace({' ': '', '(': '', ')': '', '-': ''}) }}">
+                        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.6 17.6 0 0 0 4.168 6.608 17.6 17.6 0 0 0 6.608 4.168c.601.211 1.286.033 1.77-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.68.68 0 0 0-.58-.122l-2.19.547a1.75 1.75 0 0 1-1.657-.459L5.482 8.062a1.75 1.75 0 0 1-.46-1.657l.548-2.19a.68.68 0 0 0-.122-.58z"/></svg>
+                        <span class="mc-header__phone-label">{{ text_call }}</span>
+                        <strong>{{ contacts.phone }}</strong>
+                    </a>
+                {% endif %}
+                {% if announcement %}
+                    {% if announcement.url %}
+                        <a class="mc-header__announcement-link" href="{{ announcement.url }}">{{ announcement.text }}</a>
+                    {% else %}
+                        <span class="mc-header__announcement-text">{{ announcement.text }}</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="mc-header__main">
+        <div class="container mc-header__row">
+            {% if widgets.menu %}
+                <button
+                    type="button"
+                    class="mc-header__nav-toggle d-lg-none"
+                    data-mc-action="open-drawer"
+                    data-mc-target="#mcHeaderNav"
+                    aria-expanded="false"
+                    aria-controls="mcHeaderNav"
+                    aria-label="{{ text_menu }}"
+                >
+                    <span class="mc-header__nav-toggle-bar"></span>
+                    <span class="mc-header__nav-toggle-bar"></span>
+                    <span class="mc-header__nav-toggle-bar"></span>
+                </button>
+            {% endif %}
+
+            <div class="mc-header__branding">
+                <a class="mc-header__logo" href="{{ branding.home }}">
+                    {% if branding.logo %}
+                        <img src="{{ branding.logo }}" alt="{{ branding.name }}" title="{{ branding.name }}">
+                    {% else %}
+                        <span class="mc-header__logo-text">{{ branding.name }}</span>
+                    {% endif %}
+                </a>
+            </div>
+
+            <div class="mc-header__widget mc-header__widget--search">
+                <div class="mc-search-box" data-mc-search-box>
+                    <input
+                        type="search"
+                        name="search"
+                        class="mc-search-box__input mc-field__control"
+                        data-mc-search-box-input
+                        placeholder="{{ text_search }}"
+                        aria-label="{{ text_search }}"
+                    >
+                    <button type="button" class="mc-search-box__submit" data-mc-search-box-submit aria-label="{{ text_search }}">
+                        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>
+                    </button>
+
+                    <div class="mc-search-box__results" data-mc-search-box-results hidden>
+                        <ul class="mc-search-box__list" role="listbox" data-mc-search-box-list></ul>
+
+                        <p class="mc-search-box__empty" data-mc-search-box-empty hidden>{{ text_search_empty|default('') }}</p>
+
+                        <a class="mc-search-box__view-all" data-mc-search-box-view-all hidden>{{ text_search_all|default('') }}</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mc-header__end">
+                <div class="mc-header__utility" data-mc-header-utility>
+                    {% if widgets.language %}
+                        <div class="mc-legacy">{{ widgets.language|raw }}</div>
+                    {% endif %}
+                    {% if widgets.currency %}
+                        <div class="mc-legacy">{{ widgets.currency|raw }}</div>
+                    {% endif %}
+
+                    <div class="mc-header__account">
+                        <button type="button" class="mc-header__account-toggle" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                            {% if account.logged %}{{ account.first_name }}{% else %}{{ text_account }}{% endif %}
+                        </button>
+                        <ul class="mc-header__account-menu dropdown-menu dropdown-menu-end">
+                            {% if account.logged %}
+                                <li><a class="mc-header__account-menu-link" href="{{ links.account }}">{{ text_account }}</a></li>
+                                <li><a class="mc-header__account-menu-link" href="{{ links.order }}">{{ text_order }}</a></li>
+                                <li><a class="mc-header__account-menu-link" href="{{ links.transaction }}">{{ text_transaction }}</a></li>
+                                <li><a class="mc-header__account-menu-link" href="{{ links.download }}">{{ text_download }}</a></li>
+                                <li><a class="mc-header__account-menu-link" href="{{ links.logout }}">{{ text_logout }}</a></li>
+                            {% else %}
+                                <li><a class="mc-header__account-menu-link" href="{{ links.register }}">{{ text_register }}</a></li>
+                                <li><a class="mc-header__account-menu-link" href="{{ links.login }}">{{ text_login }}</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    {% if links.wishlist %}
+                        <a class="mc-header__wishlist" href="{{ links.wishlist }}">{{ text_wishlist }}</a>
+                    {% endif %}
+                    {% if links.compare %}
+                        <a class="mc-header__compare" href="{{ links.compare }}">{{ text_compare }}</a>
+                    {% endif %}
+                </div>
+
+                {% if widgets.cart %}
+                    <div class="mc-header__widget mc-legacy">{{ widgets.cart|raw }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if widgets.menu %}
+        <nav
+            class="offcanvas-lg offcanvas-start mc-drawer mc-header__nav"
+            tabindex="-1"
+            id="mcHeaderNav"
+            aria-labelledby="mcHeaderNavTitle"
+        >
+            <div class="offcanvas-header d-lg-none">
+                <h2 class="offcanvas-title mc-drawer__title" id="mcHeaderNavTitle">{{ text_menu }}</h2>
+                <button type="button" class="mc-drawer__close" data-mc-action="close-drawer" aria-label="{{ text_close }}">&times;</button>
+            </div>
+            <div class="offcanvas-body mc-legacy">
+                {% if contacts.phone %}
+                    <a class="mc-header__drawer-phone d-lg-none" href="tel:{{ contacts.phone|replace({' ': '', '(': '', ')': '', '-': ''}) }}">
+                        <span class="mc-header__drawer-phone-label">{{ text_call }}</span>
+                        <strong>{{ contacts.phone }}</strong>
+                    </a>
+                {% endif %}
+                <div class="mc-header__utility-slot d-lg-none" data-mc-header-utility-slot></div>
+                <div class="container">
+                    {{ widgets.menu|raw }}
+                </div>
+            </div>
+        </nav>
+    {% endif %}
+</header>

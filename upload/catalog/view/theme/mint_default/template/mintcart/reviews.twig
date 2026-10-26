@@ -1,0 +1,93 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item">
+                        <a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+                    </li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    {{ content_top }}
+
+    <header class="mc-reviews-summary">
+        <div class="mc-reviews-summary__intro">
+            <h1 class="mc-reviews-summary__title">{{ heading_title }}</h1>
+            <p class="mc-reviews-summary__text">{{ text_intro }}</p>
+        </div>
+
+        {% if summary.total %}
+            <div class="mc-reviews-summary__score">
+                <p class="mc-reviews-summary__average">{{ summary.average }}</p>
+                <div class="mc-rating" style="--mc-rating-value: {{ (summary.average / 5 * 100)|round }}%" role="img" aria-label="{{ text_rated|format(summary.average) }}">
+                    <span class="mc-rating__stars" aria-hidden="true">
+                        <span class="mc-rating__stars-empty">★★★★★</span>
+                        <span class="mc-rating__stars-filled">★★★★★</span>
+                    </span>
+                </div>
+                <p class="mc-reviews-summary__count">{{ text_based_on }}</p>
+            </div>
+
+            <ul class="mc-reviews-summary__bars">
+                {% for bar in summary.bars %}
+                    <li class="mc-reviews-summary__bar" style="--mc-bar: {{ bar.percent }}%">
+                        <span class="mc-reviews-summary__bar-label">{{ text_stars|format(bar.stars) }}</span>
+                        <span class="mc-reviews-summary__bar-track" aria-hidden="true"><span class="mc-reviews-summary__bar-fill"></span></span>
+                        <span class="mc-reviews-summary__bar-count">{{ bar.count }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </header>
+
+    {% if reviews %}
+        <div class="row g-4 mc-review-grid">
+            {% for review in reviews %}
+                <div class="col-12 col-md-6 col-xl-4">
+                    <article class="mc-review-card">
+                        <div class="mc-review-card__top">
+                            <div class="mc-rating mc-rating--sm" style="--mc-rating-value: {{ (review.rating / 5 * 100)|round }}%" role="img" aria-label="{{ text_rated|format(review.rating) }}">
+                                <span class="mc-rating__stars" aria-hidden="true">
+                                    <span class="mc-rating__stars-empty">★★★★★</span>
+                                    <span class="mc-rating__stars-filled">★★★★★</span>
+                                </span>
+                            </div>
+                            <span class="mc-review-card__date">{{ review.date_added }}</span>
+                        </div>
+
+                        <p class="mc-review-card__text">{{ review.text }}</p>
+
+                        <div class="mc-review-card__author">
+                            <span class="mc-review-card__avatar" aria-hidden="true">{{ review.initial }}</span>
+                            <strong class="mc-review-card__name">{{ review.author }}</strong>
+                        </div>
+
+                        <a class="mc-review-card__product" href="{{ review.product_href }}">
+                            <img class="mc-review-card__product-image" src="{{ review.product_image }}" alt="" width="56" height="56" loading="lazy">
+                            <span class="mc-review-card__product-text">
+                                <span class="mc-review-card__product-label">{{ text_about }}</span>
+                                <span class="mc-review-card__product-name">{{ review.product_name }}</span>
+                            </span>
+                        </a>
+                    </article>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mc-reviews__pagination mt-4">
+            <div class="mc-reviews__pagination-links">{{ pagination }}</div>
+            <p class="mc-reviews__pagination-summary">{{ results }}</p>
+        </div>
+    {% else %}
+        <p class="mc-reviews__empty">{{ text_empty }}</p>
+    {% endif %}
+
+    {{ content_bottom }}
+</div>
+{{ footer }}

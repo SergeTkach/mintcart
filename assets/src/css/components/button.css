@@ -19,9 +19,10 @@
     --mc-button-bg-active: var(--mc-primary-active);
     --mc-button-color: var(--mc-on-primary);
     --mc-button-border-color: transparent;
-    --mc-button-radius: var(--mc-radius-md);
-    --mc-button-padding-y: var(--mc-space-2);
-    --mc-button-padding-x: var(--mc-space-4);
+    --mc-button-radius: var(--mc-radius-lg);
+    --mc-button-padding-y: 0.625rem;
+    --mc-button-padding-x: 1.375rem;
+    --mc-button-min-height: 2.75rem;
     --mc-button-font-size: var(--mc-font-size-base);
     --mc-button-gap: var(--mc-space-2);
 
@@ -29,6 +30,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--mc-button-gap);
+    min-height: var(--mc-button-min-height);
     padding: var(--mc-button-padding-y) var(--mc-button-padding-x);
     border: var(--mc-border-width) solid var(--mc-button-border-color);
     border-radius: var(--mc-button-radius);
@@ -36,7 +38,8 @@
     color: var(--mc-button-color);
     font-family: var(--mc-font-family-base);
     font-size: var(--mc-button-font-size);
-    font-weight: var(--mc-font-weight-medium);
+    font-weight: var(--mc-font-weight-semibold);
+    letter-spacing: 0.01em;
     line-height: var(--mc-line-height-tight);
     text-decoration: none;
     white-space: nowrap;
@@ -45,17 +48,58 @@
     transition:
         background-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
         border-color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
-        color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+        color var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        transform var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        box-shadow var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+/* `a.mc-button`: keep the text colour on hover (Bootstrap's `a:hover` would otherwise win and
+   paint the label in the link colour - invisible on a button of that colour). */
+.mc-button:hover,
+.mc-button:focus,
+.mc-button:active {
+    color: var(--mc-button-color);
 }
 
 .mc-button:hover {
     background-color: var(--mc-button-bg-hover);
     border-color: var(--mc-button-bg-hover);
+    transform: translateY(-1px);
 }
 
 .mc-button:active {
     background-color: var(--mc-button-bg-active);
     border-color: var(--mc-button-bg-active);
+    transform: translateY(0);
+}
+
+/* The solid (primary) button: a little depth at rest - a thin coloured shadow and a faint
+   highlight on its top edge - that grows into a soft glow when it lifts on hover. */
+.mc-button--primary,
+.mc-button:not([class*='mc-button--']) {
+    box-shadow:
+        0 1px 2px color-mix(in srgb, var(--mc-button-bg) 45%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.mc-button--primary:hover,
+.mc-button:not([class*='mc-button--']):hover {
+    box-shadow:
+        0 8px 18px color-mix(in srgb, var(--mc-button-bg) 34%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.mc-button--primary:active,
+.mc-button:not([class*='mc-button--']):active {
+    box-shadow:
+        0 1px 2px color-mix(in srgb, var(--mc-button-bg) 45%, transparent),
+        inset 0 2px 4px rgba(0, 0, 0, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-button:hover {
+        transform: none;
+    }
 }
 
 /* Keyboard focus only - mouse/touch activation shouldn't show a ring. */
@@ -85,12 +129,13 @@
     --mc-button-border-color: transparent;
 }
 
+/* Quiet button: a wash of the brand colour with brand-colour text, no frame. */
 .mc-button--secondary {
-    --mc-button-bg: var(--mc-surface-alt);
-    --mc-button-bg-hover: var(--mc-color-gray-200);
-    --mc-button-bg-active: var(--mc-color-gray-300);
-    --mc-button-color: var(--mc-text);
-    --mc-button-border-color: var(--mc-border);
+    --mc-button-bg: color-mix(in srgb, var(--mc-primary) 10%, var(--mc-surface));
+    --mc-button-bg-hover: color-mix(in srgb, var(--mc-primary) 18%, var(--mc-surface));
+    --mc-button-bg-active: color-mix(in srgb, var(--mc-primary) 24%, var(--mc-surface));
+    --mc-button-color: var(--mc-primary-hover);
+    --mc-button-border-color: transparent;
 }
 
 .mc-button--outline {
@@ -122,15 +167,17 @@
 /* ---------------------------------------------------------------------- */
 
 .mc-button--sm {
-    --mc-button-padding-y: var(--mc-space-1);
-    --mc-button-padding-x: var(--mc-space-3);
+    --mc-button-padding-y: 0.375rem;
+    --mc-button-padding-x: 0.875rem;
+    --mc-button-min-height: 2.25rem;
     --mc-button-font-size: var(--mc-font-size-sm);
     --mc-button-gap: var(--mc-space-1);
 }
 
 .mc-button--lg {
-    --mc-button-padding-y: var(--mc-space-3);
-    --mc-button-padding-x: var(--mc-space-6);
+    --mc-button-padding-y: 0.875rem;
+    --mc-button-padding-x: 1.75rem;
+    --mc-button-min-height: 3.25rem;
     --mc-button-font-size: var(--mc-font-size-lg);
 }
 

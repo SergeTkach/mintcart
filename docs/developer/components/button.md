@@ -95,3 +95,16 @@ state the CSS shows:
 - [x] No OCMOD required
 - [ ] Theme override checked — deferred until the Theme resolver exists
       (Phase 8); there is no theme to override yet
+
+## Look (2026-10 pass)
+
+Sizes are `min-height` based (default 2.75 rem, `--sm` 2.25 rem, `--lg` 3.25 rem) so a touch target is
+always at least 44 px. Radius `--mc-radius-lg`, weight semibold.
+
+- **Primary** (and a bare `.mc-button`): solid brand colour with depth at rest (a thin coloured shadow and a faint
+  highlight on the top edge); on hover it lifts 1 px with a soft coloured glow; pressed, it sinks (inset shadow).
+- **Secondary**: a wash of the brand colour (10 %) with brand-colour text, no frame; hover 18 %.
+- **Outline / ghost / danger**: unchanged in meaning.
+- Reduced motion: no lift.
+
+The brand-colour band of the CTA block inverts the primary button through the `--mc-button-*` tokens.

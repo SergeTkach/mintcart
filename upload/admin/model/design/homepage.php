@@ -158,6 +158,11 @@ class ModelDesignHomepage extends Model {
 		$this->db->query("DELETE FROM " . DB_PREFIX . "mc_block_description WHERE `block_id` = '" . (int)$block_id . "'");
 	}
 
+	/** Enables / disables a block (the list screen's switch). */
+	public function setStatus($page_id, $block_id, $status) {
+		$this->db->query("UPDATE " . DB_PREFIX . "mc_block SET `status` = '" . ($status ? 1 : 0) . "', `date_modified` = NOW() WHERE `block_id` = '" . (int)$block_id . "' AND `page_id` = '" . (int)$page_id . "'");
+	}
+
 	/**
 	 * Persists the list screen's per-row `sort_order` number inputs. The
 	 * `page_id` guard on the UPDATE keeps a crafted `block_id` belonging to

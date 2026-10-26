@@ -1,0 +1,19 @@
+<?php
+$_['text_title']          = 'Nova Poshta';
+$_['text_method_warehouse'] = 'Nova Poshta branch';
+$_['text_method_postomat']  = 'Nova Poshta parcel locker';
+$_['text_method_courier']   = 'Nova Poshta courier';
+$_['text_carrier_rates']  = 'At the carrier\'s rates';
+$_['text_free']           = 'Free';
+$_['text_free_from']      = 'Free from %s';
+$_['text_city']           = 'City';
+$_['text_city_hint']      = 'Start typing the city name';
+$_['text_warehouse']      = 'Branch';
+$_['text_postomat']       = 'Parcel locker';
+$_['text_courier_address'] = 'Delivery address';
+$_['text_choose']         = 'Choose...';
+$_['text_loading']        = 'Loading...';
+$_['text_no_results']     = 'Nothing found';
+$_['error_city']          = 'Choose a city from the list';
+$_['error_point']         = 'Choose a pickup point';
+$_['error_courier']       = 'Enter the delivery address';

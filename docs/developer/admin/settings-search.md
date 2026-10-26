@@ -132,3 +132,18 @@ menu text are no longer blank.
   "quick search" convention) — not attempted this run, no real UX
   validation yet that it wouldn't collide with a form field already
   focused.
+
+## Jump to a field (2026-10)
+
+A catalog entry may carry `field` (the id of an input on the target page). The result's URL then ends
+with `#mc-field=<id>`; on that page `initFieldJump()` (`assets/src/js/components/admin-search.js`, started from
+`admin.js`) opens the tab holding the input, scrolls it to the middle, focuses it and flashes its row
+(`.mc-field-flash`). Entries so far, all on `setting/setting` (the default store's settings): store name, email,
+telephone, address, logo, favicon, default currency, default language, meta title. A field entry
+outranks a page-level entry that matches equally well, and a label hit no longer hides a better keyword hit.
+
+Keywords are already in English, Ukrainian and Russian; there is no Ukrainian admin language pack (the admin
+only ships `en-gb`), so the result labels are English.
+
+Not checked in a browser (the admin needs a login): the test covers the index and the ranking
+(`tests/mintcart/admin/settings-search-index-test.php`); the jump script is a few lines of DOM code.

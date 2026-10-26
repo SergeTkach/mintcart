@@ -1,0 +1,138 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> {{ success }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    <p class="text-muted">{{ text_help }}</p>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-plus-circle"></i> <span id="form-title">{{ text_add }}</span></h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action_save }}" method="post" id="form-badge" class="form-horizontal">
+          <input type="hidden" name="badge_id" value="0" />
+          <div class="form-group required">
+            <label class="col-sm-2 control-label" for="input-label">{{ entry_label }}</label>
+            <div class="col-sm-4">
+              <input type="text" name="label" value="" maxlength="{{ max_label_length }}" id="input-label" class="form-control" />
+              <div class="help-block">{{ help_label }}</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-color">{{ entry_color }}</label>
+            <div class="col-sm-4">
+              <label class="checkbox-inline"><input type="checkbox" id="input-use-color" /> {{ help_use_color }}</label>
+              <input type="color" name="color" value="#d92d20" id="input-color" class="form-control" disabled="disabled" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-sort-order">{{ entry_sort_order }}</label>
+            <div class="col-sm-2">
+              <input type="text" name="sort_order" value="0" id="input-sort-order" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-6">
+              <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> {{ button_save }}</button>
+              <button type="button" class="btn btn-default" id="button-cancel" style="display:none">{{ button_cancel }}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-list"></i> {{ text_list }}</h3>
+      </div>
+      <div class="panel-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead>
+              <tr>
+                <td class="text-left">{{ column_label }}</td>
+                <td class="text-right">{{ column_products }}</td>
+                <td class="text-right">{{ column_sort_order }}</td>
+                <td class="text-right">{{ column_action }}</td>
+              </tr>
+            </thead>
+            <tbody>
+              {% if badges %}
+              {% for badge in badges %}
+              <tr>
+                <td class="text-left"><span class="label" style="background:{{ badge.color ?: '#555555' }};color:{{ badge.on_color ?: '#ffffff' }}">{{ badge.label }}</span></td>
+                <td class="text-right">{{ badge.product_total }}</td>
+                <td class="text-right">{{ badge.sort_order }}</td>
+                <td class="text-right">
+                  <button type="button" class="btn btn-primary button-edit" data-badge-id="{{ badge.badge_id }}" data-label="{{ badge.label }}" data-color="{{ badge.color }}" data-sort-order="{{ badge.sort_order }}" title="{{ button_edit }}"><i class="fa fa-pencil"></i></button>
+                  <form action="{{ action_delete }}" method="post" style="display:inline" onsubmit="return confirm('{{ button_delete }}?');">
+                    <input type="hidden" name="badge_id" value="{{ badge.badge_id }}" />
+                    <button type="submit" class="btn btn-danger" title="{{ button_delete }}"><i class="fa fa-trash-o"></i></button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+              <tr>
+                <td class="text-center" colspan="4">{{ text_no_results }}</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript"><!--
+$('#input-use-color').on('change', function() {
+	$('#input-color').prop('disabled', !this.checked);
+});
+
+// Edit: load the row into the form.
+$('.button-edit').on('click', function() {
+	var b = $(this);
+
+	$('input[name=\'badge_id\']').val(b.data('badge-id'));
+	$('input[name=\'label\']').val(b.data('label'));
+	$('input[name=\'sort_order\']').val(b.data('sort-order'));
+
+	var color = String(b.data('color') || '');
+
+	$('#input-use-color').prop('checked', color !== '').trigger('change');
+
+	if (color !== '') {
+		$('#input-color').val(color);
+	}
+
+	$('#form-title').text('{{ text_edit }}');
+	$('#button-cancel').show();
+	$('html, body').animate({scrollTop: 0}, 150);
+});
+
+$('#button-cancel').on('click', function() {
+	$('#form-badge')[0].reset();
+	$('input[name=\'badge_id\']').val(0);
+	$('#input-color').prop('disabled', true);
+	$('#form-title').text('{{ text_add }}');
+	$(this).hide();
+});
+//--></script>
+</div>
+{{ footer }}

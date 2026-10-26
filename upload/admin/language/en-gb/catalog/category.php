@@ -52,3 +52,4 @@ $_['error_keyword']          = 'SEO URL already in use!';
 $_['error_unique']           = 'SEO URL must be unique!';
 $_['error_parent']           = 'The parent category you have chosen is a child of the current one!';
 $_['error_category']         = 'Category not found!';
+$_['column_status'] = 'Status';

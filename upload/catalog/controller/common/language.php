@@ -13,11 +13,15 @@ class ControllerCommonLanguage extends Controller {
 
 		$results = $this->model_localisation_language->getLanguages();
 
+		// MintCart: with language folders in the URL each language is a plain link.
+		$alternates = $this->load->controller('startup/mc_language_url/alternates');
+
 		foreach ($results as $result) {
 			if ($result['status']) {
 				$data['languages'][] = array(
 					'name' => $result['name'],
-					'code' => $result['code']
+					'code' => $result['code'],
+					'href' => isset($alternates[$result['code']]) ? $alternates[$result['code']] : ''
 				);
 			}
 		}

@@ -20,17 +20,17 @@
  */
 
 .mc-product-card {
-    --mc-product-card-bg: var(--mc-surface);
-    --mc-product-card-border-color: var(--mc-border);
-    --mc-product-card-radius: var(--mc-radius-lg);
-    --mc-product-card-shadow: var(--mc-shadow-sm);
-    --mc-product-card-padding: var(--mc-space-4);
+    /* No frame: the picture sits on a soft tint and the text lies on the page. */
+    --mc-product-card-bg: transparent;
+    --mc-product-card-border-color: transparent;
+    --mc-product-card-radius: var(--mc-radius-xl);
+    --mc-product-card-shadow: none;
+    --mc-product-card-padding: var(--mc-space-3) var(--mc-space-1) 0;
 
     position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
-    overflow: hidden;
     background-color: var(--mc-product-card-bg);
     border: var(--mc-border-width) solid var(--mc-product-card-border-color);
     border-radius: var(--mc-product-card-radius);
@@ -46,7 +46,8 @@
     display: block;
     aspect-ratio: 1 / 1;
     overflow: hidden;
-    background-color: var(--mc-surface-alt);
+    border-radius: var(--mc-product-card-radius);
+    background-color: var(--mc-surface-tint);
 }
 
 .mc-product-card__image {
@@ -54,6 +55,17 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+    transition: transform 0.5s var(--mc-motion-easing-standard, ease);
+}
+
+.mc-product-card:hover .mc-product-card__image:not(.mc-product-card__image--secondary) {
+    transform: scale(1.04);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-product-card__image {
+        transition: none;
+    }
 }
 
 /*
@@ -111,9 +123,10 @@
     width: 2.25rem;
     height: 2.25rem;
     padding: 0;
-    border: var(--mc-border-width) solid var(--mc-border);
+    border: 0;
     border-radius: var(--mc-radius-pill);
     background-color: var(--mc-surface);
+    box-shadow: var(--mc-shadow-soft);
     color: var(--mc-muted);
     cursor: pointer;
     transition:
@@ -184,6 +197,14 @@
     content: '';
 }
 
+/* Every real control of the card sits above that stretched link, otherwise a
+   click lands on the link and opens the product page instead of the action. */
+.mc-product-card__quick-order,
+.mc-product-card__actions .mc-button {
+    position: relative;
+    z-index: 1;
+}
+
 .mc-product-card__description {
     margin: 0;
     overflow: hidden;
@@ -223,6 +244,66 @@
     flex: 1 1 auto;
 }
 
+/* Pill buttons in the card. Quick Order is the secondary action: a small button that
+   keeps its own width, so "Add to cart" gets the room. */
+.mc-product-card__actions .mc-button {
+    --mc-button-radius: var(--mc-radius-pill);
+}
+
+.mc-product-card__actions .mc-product-card__quick-order {
+    --mc-button-padding-y: 0.375rem;
+    --mc-button-padding-x: 0.875rem;
+    --mc-button-font-size: var(--mc-font-size-sm);
+
+    flex: 0 0 auto;
+}
+
+/* The cart icon is for phones only: there "Add to cart" is a round icon button (the label stays
+   for screen readers), so a long translated label can't squash it into an oval. */
+.mc-product-card:not(.mc-product-card--soft) .mc-product-card__add-icon {
+    display: none;
+}
+
+@media (max-width: 575.98px) {
+    .mc-product-card__actions .mc-product-card__add-to-cart {
+        flex: 0 0 auto;
+        width: 2.5rem;
+        height: 2.5rem;
+        padding: 0;
+    }
+
+    .mc-product-card:not(.mc-product-card--soft) .mc-product-card__actions .mc-product-card__add-icon {
+        display: block;
+        width: 1.1rem;
+        height: 1.1rem;
+    }
+
+    .mc-product-card__actions .mc-product-card__add-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    .mc-product-card__actions {
+        gap: var(--mc-space-1);
+    }
+
+    .mc-product-card__actions .mc-button {
+        --mc-button-padding-y: 0.4375rem;
+        --mc-button-padding-x: 0.75rem;
+        --mc-button-font-size: var(--mc-font-size-sm);
+    }
+
+    .mc-product-card__actions .mc-product-card__quick-order {
+        --mc-button-padding-y: 0.3125rem;
+        --mc-button-padding-x: 0.625rem;
+        --mc-button-font-size: var(--mc-font-size-xs);
+    }
+}
+
 /* ---------------------------------------------------------------------- */
 /* Slots (MINTCART_TECHNICAL_PLAN.md §15, MINTCART_IMPLEMENTATION_GUIDE.md */
 /* §35) - a pass-through container for whatever markup an extension's      */
@@ -249,4 +330,109 @@
 
 .mc-product-card--compact .mc-product-card__body {
     padding: var(--mc-space-3);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tile variant (mint_gallery's product-card.twig): image on a grey tile,   */
+/* text underneath, no frame or shadow, add-to-cart revealed on hover.     */
+/* ---------------------------------------------------------------------- */
+
+.mc-product-card--tile {
+    --mc-product-card-bg: transparent;
+    --mc-product-card-radius: 0;
+    --mc-product-card-shadow: none;
+    --mc-product-card-padding: 0;
+
+    overflow: visible;
+    border: 0;
+}
+
+.mc-product-card--tile .mc-product-card__media {
+    aspect-ratio: 4 / 5;
+}
+
+.mc-product-card--tile .mc-product-card__image {
+    padding: var(--mc-space-4);
+    mix-blend-mode: multiply;
+}
+
+.mc-product-card--tile .mc-product-card__body {
+    align-items: center;
+    gap: var(--mc-space-1);
+    padding: var(--mc-space-3) 0 0;
+    text-align: center;
+}
+
+.mc-product-card--tile .mc-product-card__brand {
+    margin: 0;
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.mc-product-card--tile .mc-product-card__title {
+    font-family: var(--mc-font-family-base);
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-normal);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mc-product-card--tile .mc-product-card__action-button {
+    border-color: transparent;
+    background-color: transparent;
+}
+
+.mc-product-card--tile .mc-product-card__actions {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: var(--mc-space-2);
+}
+
+.mc-product-card--tile .mc-product-card__actions .mc-button {
+    width: 100%;
+}
+
+/* Mouse users: the button slides in on hover/focus. Touch users (no hover)
+   always see it, since there is no other way to reveal it. */
+@media (hover: hover) {
+    .mc-product-card--tile .mc-product-card__actions {
+        opacity: 0;
+        transform: translateY(0.5rem);
+        transition:
+            opacity var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+            transform var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+    }
+
+    .mc-product-card--tile:hover .mc-product-card__actions,
+    .mc-product-card--tile:focus-within .mc-product-card__actions {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+    .mc-product-card--tile .mc-product-card__actions {
+        transition: none;
+    }
+}
+
+/* Retail details: a bold discount tag and a clear price. */
+.mc-product-card .mc-badge--sale {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--mc-radius-md);
+    font-size: var(--mc-font-size-xs);
+    font-weight: var(--mc-font-weight-bold);
+    letter-spacing: 0.02em;
+}
+
+.mc-product-card .mc-price__current {
+    font-weight: var(--mc-font-weight-bold);
+}
+
+.mc-product-card .mc-rating {
+    margin-top: calc(var(--mc-space-1) * -1);
 }

@@ -24,6 +24,7 @@ $_['entry_system_route_compare']      = 'Compare Products';
 $_['entry_system_route_special']      = 'Specials';
 $_['entry_system_route_manufacturer'] = 'Brands';
 $_['entry_system_route_sitemap']      = 'Site Map';
+$_['entry_system_route_reviews']      = 'Customer Reviews';
 
 // Error
 $_['error_permission']     = 'Warning: You do not have permission to modify system page URLs!';

@@ -34,22 +34,20 @@
  * BlockProvider::build() reads), and `getForm()`/`prepareBlockData()` walk
  * it generically instead of switching on `type`.
  *
- * Five types (Banner Grid, Benefits, Testimonials, Brands, Gallery) have a
- * repeatable `items` list — each item's own structural fields (image path,
- * url, ...) and localized fields (alt, caption, ...). Building a real
- * dynamic add/remove-row JS UI for that is a separate increment from this
- * one (now that the asset bundle is enqueued here, it no longer needs to
- * resolve an asset-enqueue question of its own, just build the repeater
- * UI itself) — `items` stays a single raw-JSON textarea per list for now, a
- * real, working escape hatch (an admin can configure any of these blocks
- * today) rather than a half-built repeater. Each such field's `help_key`
- * shows the exact JSON shape.
+ * Types with a repeatable list (Slider slides and promo cards, Banner Grid,
+ * Benefits, Testimonials, Brands, Gallery, FAQ) describe it in `listSchema()`:
+ * one row per item, each row holding the item's shared fields (picture, link,
+ * colour - `settings_json`) and its per-language texts (`content_json`) side by
+ * side, so a reorder keeps both in step. `homepage_form.twig` renders the rows
+ * with drag & drop, add / remove and the OpenCart file manager for pictures
+ * (`assets/src/js/components/homepage-items.js`).
  */
 class ControllerDesignHomepage extends Controller {
 	private $error = array();
 
 	/** Every block type with a real, merged Provider/Renderer/template. */
 	const TYPES = array(
+		'slider'       => 'text_type_slider',
 		'products'     => 'text_type_products',
 		'hero'         => 'text_type_hero',
 		'categories'   => 'text_type_categories',
@@ -68,6 +66,14 @@ class ControllerDesignHomepage extends Controller {
 	);
 
 	const PAGE_CODE = 'home';
+
+	/** Font Awesome icon of each block type in the list. */
+	const TYPE_ICONS = array(
+		'slider' => 'fa-picture-o', 'products' => 'fa-th-large', 'hero' => 'fa-flag', 'categories' => 'fa-folder-open-o',
+		'banner-grid' => 'fa-th', 'benefits' => 'fa-check-circle-o', 'faq' => 'fa-question-circle', 'testimonials' => 'fa-comments-o',
+		'brands' => 'fa-tags', 'text-image' => 'fa-columns', 'cta' => 'fa-bullhorn', 'newsletter' => 'fa-envelope-o',
+		'spacer' => 'fa-arrows-v', 'text' => 'fa-font', 'html' => 'fa-code', 'gallery' => 'fa-camera'
+	);
 
 	/**
 	 * Declarative settings/content field list per block type, matching
@@ -93,9 +99,10 @@ class ControllerDesignHomepage extends Controller {
 					array('name' => 'sort', 'type' => 'select', 'default' => 'p.date_added', 'label_key' => 'entry_sort', 'options' => array(
 						'p.date_added' => 'Date Added', 'p.viewed' => 'Viewed', 'p.price' => 'Price', 'pd.name' => 'Name'
 					)),
-					array('name' => 'order', 'type' => 'select', 'default' => 'DESC', 'label_key' => 'entry_order', 'options' => array('ASC' => 'ASC', 'DESC' => 'DESC'))
+					array('name' => 'order', 'type' => 'select', 'default' => 'DESC', 'label_key' => 'entry_order', 'options' => array('ASC' => 'ASC', 'DESC' => 'DESC')),
+					array('name' => 'more_url', 'type' => 'text', 'default' => '', 'label_key' => 'entry_more_url', 'help_key' => 'help_more_url')
 				),
-				'content' => array($title)
+				'content' => array($title, array('name' => 'more_label', 'type' => 'text', 'default' => '', 'label_key' => 'entry_more_label'))
 			),
 			'hero' => array(
 				'settings' => array(
@@ -116,6 +123,18 @@ class ControllerDesignHomepage extends Controller {
 					array('name' => 'limit', 'type' => 'number', 'default' => 6, 'min' => 1, 'label_key' => 'entry_limit')
 				),
 				'content' => array($title)
+			),
+			'slider' => array(
+				'settings' => array(
+					array('name' => 'layout', 'type' => 'select', 'default' => 'split', 'label_key' => 'entry_slider_layout', 'options' => array('split' => 'Text + picture', 'full' => 'Picture behind the text', 'cards' => 'Slider + 2 promo cards')),
+					array('name' => 'autoplay', 'type' => 'number', 'default' => 6000, 'min' => 0, 'label_key' => 'entry_autoplay', 'help_key' => 'help_autoplay'),
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_slider_items', 'help_key' => 'help_slider_items_settings'),
+					array('name' => 'cards', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_slider_cards', 'help_key' => 'help_slider_cards_settings')
+				),
+				'content' => array(
+					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_slider_items', 'help_key' => 'help_slider_items_content'),
+					array('name' => 'cards', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_slider_cards', 'help_key' => 'help_slider_cards_content')
+				)
 			),
 			'banner-grid' => array(
 				'settings' => array(
@@ -145,11 +164,12 @@ class ControllerDesignHomepage extends Controller {
 			),
 			'testimonials' => array(
 				'settings' => array(
-					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_testimonial_items', 'help_key' => 'help_testimonial_items_settings')
+					array('name' => 'source', 'type' => 'select', 'default' => 'manual', 'label_key' => 'entry_testimonial_source', 'help_key' => 'help_testimonial_source', 'options' => array('manual' => 'Written here', 'reviews' => 'Latest customer reviews')),
+					array('name' => 'limit', 'type' => 'number', 'default' => 3, 'min' => 1, 'label_key' => 'entry_limit', 'help_key' => 'help_testimonial_limit')
 				),
 				'content' => array(
 					$title,
-					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_testimonial_items', 'help_key' => 'help_testimonial_items_content')
+					array('name' => 'more_label', 'type' => 'text', 'default' => '', 'label_key' => 'entry_more_label')
 				)
 			),
 			'brands' => array(
@@ -229,11 +249,107 @@ class ControllerDesignHomepage extends Controller {
 		);
 	}
 
-	/** @return array{settings: list<array>, content: list<array>} */
+	/**
+	 * Repeatable lists per block type. Each item field has a `scope`:
+	 * `settings` = the same in every language (picture, link, colour),
+	 * `content` = translated. `extra` fields sit behind a "More options"
+	 * toggle in the row. `options_lang` = the select's option labels are
+	 * language keys.
+	 *
+	 * @return array<string, array<string, array{label_key: string, fields: list<array>, show_when?: array{0: string, 1: string}, max?: int}>>
+	 */
+	private static function listSchema() {
+		$image = array('name' => 'image', 'type' => 'image', 'scope' => 'settings', 'label_key' => 'entry_item_image');
+		$alt = array('name' => 'alt', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_alt');
+		$caption = array('name' => 'caption', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_caption');
+		$url = array('name' => 'url', 'type' => 'text', 'scope' => 'settings', 'label_key' => 'entry_item_url', 'placeholder' => 'index.php?route=...');
+
+		return array(
+			'slider' => array(
+				'items' => array(
+					'label_key' => 'legend_slider_items',
+					'fields' => array(
+						$image,
+						array('name' => 'link', 'type' => 'text', 'scope' => 'settings', 'label_key' => 'entry_item_link', 'placeholder' => 'index.php?route=...'),
+						array('name' => 'color', 'type' => 'select', 'scope' => 'settings', 'label_key' => 'entry_item_color', 'options_lang' => true, 'options' => array('navy' => 'text_color_navy', 'light' => 'text_color_light')),
+						array('name' => 'btn2_link', 'type' => 'text', 'scope' => 'settings', 'label_key' => 'entry_item_btn2_link', 'extra' => true, 'placeholder' => 'index.php?route=...'),
+						array('name' => 'title', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_title', 'help_key' => 'help_item_slide_title'),
+						array('name' => 'subtitle', 'type' => 'textarea', 'scope' => 'content', 'label_key' => 'entry_item_subtitle'),
+						array('name' => 'btn_text', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_btn_text'),
+						array('name' => 'eyebrow', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_eyebrow', 'extra' => true),
+						array('name' => 'price', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_price', 'extra' => true),
+						array('name' => 'old_price', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_old_price', 'extra' => true),
+						array('name' => 'btn2_text', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_btn2_text', 'extra' => true),
+						array('name' => 'image_alt', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_alt', 'extra' => true)
+					)
+				),
+				'cards' => array(
+					'label_key' => 'legend_slider_cards',
+					'show_when' => array('layout', 'cards'),
+					'max' => 2,
+					'fields' => array(
+						$image,
+						array('name' => 'link', 'type' => 'text', 'scope' => 'settings', 'label_key' => 'entry_item_link', 'placeholder' => 'index.php?route=...'),
+						array('name' => 'kicker', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_kicker'),
+						array('name' => 'title', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_title'),
+						array('name' => 'link_text', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_link_text')
+					)
+				)
+			),
+			'banner-grid' => array(
+				'items' => array('label_key' => 'legend_banner_items', 'fields' => array($image, $url, $alt, $caption))
+			),
+			'benefits' => array(
+				'items' => array('label_key' => 'legend_benefit_items', 'fields' => array(
+					array('name' => 'icon', 'type' => 'select', 'scope' => 'settings', 'label_key' => 'entry_item_icon', 'options' => array(
+						'truck' => 'truck', 'arrow-repeat' => 'arrow-repeat', 'shield-check' => 'shield-check', 'headset' => 'headset', 'credit-card' => 'credit-card',
+						'gift' => 'gift', 'box-seam' => 'box-seam', 'heart' => 'heart', 'star' => 'star', 'tag' => 'tag', 'telephone' => 'telephone', 'geo-alt' => 'geo-alt', 'check' => 'check'
+					)),
+					array('name' => 'title', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_title'),
+					array('name' => 'description', 'type' => 'textarea', 'scope' => 'content', 'label_key' => 'entry_item_description')
+				))
+			),
+			'testimonials' => array(
+				'items' => array('label_key' => 'legend_testimonial_items', 'show_when' => array('source', 'manual'), 'fields' => array(
+					array('name' => 'avatar', 'type' => 'image', 'scope' => 'settings', 'label_key' => 'entry_item_avatar'),
+					array('name' => 'rating', 'type' => 'select', 'scope' => 'settings', 'label_key' => 'entry_item_rating', 'options' => array('' => '-', '5' => '5', '4' => '4', '3' => '3', '2' => '2', '1' => '1')),
+					array('name' => 'quote', 'type' => 'textarea', 'scope' => 'content', 'label_key' => 'entry_item_quote'),
+					array('name' => 'author_name', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_author_name'),
+					array('name' => 'author_role', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_author_role')
+				))
+			),
+			'brands' => array(
+				'items' => array('label_key' => 'legend_brand_items', 'fields' => array($image, $url, $alt))
+			),
+			'gallery' => array(
+				'items' => array('label_key' => 'legend_gallery_items', 'fields' => array($image, $alt, $caption))
+			),
+			'faq' => array(
+				'items' => array('label_key' => 'legend_faq_items', 'fields' => array(
+					array('name' => 'question', 'type' => 'text', 'scope' => 'content', 'label_key' => 'entry_item_question'),
+					array('name' => 'answer', 'type' => 'textarea', 'scope' => 'content', 'label_key' => 'entry_item_answer')
+				))
+			)
+		);
+	}
+
+	/** @return array{settings: list<array>, content: list<array>, lists: array<string, array>} */
 	private static function fieldsForType($type) {
 		$schema = self::fieldSchema();
+		$lists = self::listSchema();
 
-		return isset($schema[$type]) ? $schema[$type] : array('settings' => array(), 'content' => array());
+		$fields = isset($schema[$type]) ? $schema[$type] : array('settings' => array(), 'content' => array());
+
+		// The raw-JSON `items` / `cards` fields are replaced by the row editor (listSchema()).
+		foreach (array('settings', 'content') as $scope) {
+			$fields[$scope] = array_values(array_filter($fields[$scope], function ($field) {
+				return $field['type'] !== 'json';
+			}));
+		}
+
+		$fields['lists'] = isset($lists[$type]) ? $lists[$type] : array();
+
+		return $fields;
 	}
 
 	public function index() {
@@ -316,13 +432,80 @@ class ControllerDesignHomepage extends Controller {
 
 		$this->load->model('design/homepage');
 
-		if (isset($this->request->post['order']) && is_array($this->request->post['order']) && $this->user->hasPermission('modify', 'design/homepage')) {
-			$this->model_design_homepage->updateSortOrder($this->getPageId(), $this->request->post['order']);
+		$saved = isset($this->request->post['order']) && is_array($this->request->post['order']) && $this->user->hasPermission('modify', 'design/homepage');
 
+		if ($saved) {
+			$this->model_design_homepage->updateSortOrder($this->getPageId(), $this->request->post['order']);
+		}
+
+		if ($this->isAjax()) {
+			$this->response->addHeader('Content-Type: application/json');
+			$this->response->setOutput(json_encode(array('success' => $saved)));
+
+			return;
+		}
+
+		if ($saved) {
 			$this->session->data['success'] = $this->language->get('text_success');
 		}
 
 		$this->response->redirect($this->url->link('design/homepage', 'user_token=' . $this->session->data['user_token'], true));
+	}
+
+	private function isAjax() {
+		return isset($this->request->server['HTTP_X_REQUESTED_WITH']) && strtolower($this->request->server['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+	}
+
+	/** route=design/homepage/status - POST block_id, status (0/1): the list's enable / disable switch. */
+	public function status() {
+		$this->load->model('design/homepage');
+
+		$ok = $this->user->hasPermission('modify', 'design/homepage') && isset($this->request->post['block_id']);
+
+		if ($ok) {
+			$this->model_design_homepage->setStatus($this->getPageId(), (int)$this->request->post['block_id'], !empty($this->request->post['status']));
+		}
+
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode(array('success' => $ok)));
+	}
+
+	/** One line under a block's name in the list: its title and how many rows its lists hold. */
+	private function summarizeBlock(array $block) {
+		$parts = array();
+
+		$title = isset($block['content']['title']) && is_string($block['content']['title']) ? trim(strip_tags($block['content']['title'])) : '';
+
+		if ($title !== '') {
+			$parts[] = $title;
+		}
+
+		$lists = self::listSchema();
+
+		if (isset($lists[$block['type']])) {
+			foreach ($lists[$block['type']] as $name => $list) {
+				$count = max(
+					isset($block['settings'][$name]) && is_array($block['settings'][$name]) ? count($block['settings'][$name]) : 0,
+					isset($block['content'][$name]) && is_array($block['content'][$name]) ? count($block['content'][$name]) : 0
+				);
+
+				if ($count) {
+					$parts[] = $this->language->get($list['label_key']) . ': ' . $count;
+				}
+			}
+		}
+
+		if (!$parts && isset($block['content']) && is_array($block['content'])) {
+			foreach ($block['content'] as $value) {
+				if (is_string($value) && trim(strip_tags($value)) !== '') {
+					$parts[] = mb_strimwidth(trim(strip_tags($value)), 0, 90, '…');
+
+					break;
+				}
+			}
+		}
+
+		return implode(' · ', $parts);
 	}
 
 	/** Returns the `home` page's `page_id`, creating the row on first use. */
@@ -373,6 +556,7 @@ class ControllerDesignHomepage extends Controller {
 		$data['add'] = $this->url->link('design/homepage/add', 'user_token=' . $this->session->data['user_token'], true);
 		$data['delete'] = $this->url->link('design/homepage/delete', 'user_token=' . $this->session->data['user_token'], true);
 		$data['save_order'] = $this->url->link('design/homepage/saveOrder', 'user_token=' . $this->session->data['user_token'], true);
+		$data['status_url'] = $this->url->link('design/homepage/status', 'user_token=' . $this->session->data['user_token'], true);
 
 		$data['blocks'] = array();
 
@@ -384,8 +568,10 @@ class ControllerDesignHomepage extends Controller {
 			$data['blocks'][] = array(
 				'block_id'   => $block['block_id'],
 				'type'       => $type_name,
-				'title'      => isset($block['content']['title']) ? $block['content']['title'] : '',
-				'status'     => $block['status'] ? $this->language->get('text_enabled') : $this->language->get('text_disabled'),
+				'icon'       => isset(self::TYPE_ICONS[$block['type']]) ? self::TYPE_ICONS[$block['type']] : 'fa-square-o',
+				'summary'    => $this->summarizeBlock($block),
+				'status_on'  => $block['status'],
+				'delete'     => $this->url->link('design/homepage/delete', 'user_token=' . $this->session->data['user_token'], true),
 				'sort_order' => $block['sort_order'],
 				'edit'       => $this->url->link('design/homepage/edit', 'user_token=' . $this->session->data['user_token'] . '&block_id=' . $block['block_id'], true)
 			);
@@ -502,6 +688,10 @@ class ControllerDesignHomepage extends Controller {
 			$raw_settings = array();
 		}
 
+		$this->load->model('tool/image');
+
+		$data['placeholder'] = $this->model_tool_image->resize('no_image.png', 100, 100);
+
 		$data['settings_fields'] = array();
 
 		foreach ($fields['settings'] as $field) {
@@ -509,6 +699,7 @@ class ControllerDesignHomepage extends Controller {
 
 			$data['settings_fields'][] = array(
 				'name'    => $field['name'],
+				'thumb'   => ($field['type'] === 'image' && is_string($raw) && $raw !== '' && is_file(DIR_IMAGE . $raw)) ? $this->model_tool_image->resize($raw, 100, 100) : $data['placeholder'],
 				'type'    => $field['type'],
 				'label'   => $this->language->get($field['label_key']),
 				'help'    => isset($field['help_key']) ? $this->language->get($field['help_key']) : '',
@@ -558,6 +749,13 @@ class ControllerDesignHomepage extends Controller {
 			$data['block_content'][$language_id] = $language_values;
 		}
 
+		$data['ai_languages_count'] = count($data['languages']);
+		$data['ai_languages'] = json_encode(array_map(function ($language) {
+			return array('id' => (int)$language['language_id'], 'code' => $language['code'], 'name' => $language['name']);
+		}, array_values($data['languages'])), JSON_UNESCAPED_UNICODE);
+
+		$data['lists'] = $this->buildLists($fields['lists'], $raw_settings, $raw_content_by_language, $data['languages'], $data['placeholder']);
+
 		$data['user_token'] = $this->session->data['user_token'];
 
 		$data['header'] = $this->load->controller('common/header');
@@ -565,6 +763,272 @@ class ControllerDesignHomepage extends Controller {
 		$data['footer'] = $this->load->controller('common/footer');
 
 		$this->response->setOutput($this->load->view('design/homepage_form', $data));
+	}
+
+	/**
+	 * The row editor's data: for every list of the block type, one row per
+	 * item with its shared values, its per-language texts and the thumbnails
+	 * of its picture fields, plus an empty row the JS clones for "Add".
+	 *
+	 * @param array<string, array> $lists listSchema() entry of the type
+	 * @param array<int, array> $languages
+	 * @return list<array>
+	 */
+	/**
+	 * Which column of a row a field sits in (picture fields get their own narrow column):
+	 * 1 = the main texts, 2 = links and buttons, 3 = the small choices (colour, icon, rating).
+	 */
+	const ITEM_COLUMN = array(
+		'btn_text' => 2, 'btn2_text' => 2, 'link' => 2, 'btn2_link' => 2, 'url' => 2, 'link_text' => 2,
+		'color' => 3, 'icon' => 3, 'rating' => 3, 'image_alt' => 3
+	);
+
+	private function buildLists(array $lists, $raw_settings, $raw_content_by_language, array $languages, $placeholder) {
+		$result = array();
+
+		foreach ($lists as $name => $list) {
+			$shared = isset($raw_settings[$name]) && is_array($raw_settings[$name]) ? array_values($raw_settings[$name]) : array();
+			$texts = array();
+
+			foreach ($languages as $language) {
+				$language_id = (int)$language['language_id'];
+
+				$texts[$language_id] = isset($raw_content_by_language[$language_id][$name]) && is_array($raw_content_by_language[$language_id][$name])
+					? array_values($raw_content_by_language[$language_id][$name])
+					: array();
+			}
+
+			$count = count($shared);
+
+			foreach ($texts as $items) {
+				$count = max($count, count($items));
+			}
+
+			$defs = array();
+			$images = array();
+			$columns = array();
+
+			foreach ($list['fields'] as $field) {
+				$options = isset($field['options']) ? $field['options'] : array();
+
+				if (!empty($field['options_lang'])) {
+					foreach ($options as $value => $key) {
+						$options[$value] = $this->language->get($key);
+					}
+				}
+
+				$def = array(
+					'name'        => $field['name'],
+					'type'        => $field['type'],
+					'scope'       => $field['scope'],
+					'label'       => $this->language->get($field['label_key']),
+					'help'        => isset($field['help_key']) ? $this->language->get($field['help_key']) : '',
+					'options'     => $options,
+					'extra'       => !empty($field['extra']),
+					'placeholder' => isset($field['placeholder']) ? $field['placeholder'] : ''
+				);
+
+				$defs[] = $def;
+
+				if ($field['type'] === 'image') {
+					$images[] = $def;
+				} else {
+					$column = isset(self::ITEM_COLUMN[$field['name']]) ? self::ITEM_COLUMN[$field['name']] : 1;
+
+					$columns[$column][] = $def;
+				}
+			}
+
+			ksort($columns);
+
+			$rows = array();
+
+			for ($i = 0; $i < $count; $i++) {
+				$row = array('settings' => array(), 'content' => array(), 'thumbs' => array(), 'extra_filled' => false);
+
+				foreach ($list['fields'] as $field) {
+					if ($field['scope'] === 'settings') {
+						$value = isset($shared[$i][$field['name']]) && is_scalar($shared[$i][$field['name']]) ? (string)$shared[$i][$field['name']] : '';
+
+						$row['settings'][$field['name']] = $value;
+
+						if ($field['type'] === 'image') {
+							$row['thumbs'][$field['name']] = ($value !== '' && is_file(DIR_IMAGE . $value)) ? $this->model_tool_image->resize($value, 100, 100) : $placeholder;
+						}
+
+						if (!empty($field['extra']) && $value !== '') {
+							$row['extra_filled'] = true;
+						}
+					} else {
+						foreach ($texts as $language_id => $items) {
+							$value = isset($items[$i][$field['name']]) && is_scalar($items[$i][$field['name']]) ? (string)$items[$i][$field['name']] : '';
+
+							$row['content'][$language_id][$field['name']] = $value;
+
+							if (!empty($field['extra']) && $value !== '') {
+								$row['extra_filled'] = true;
+							}
+						}
+					}
+				}
+
+				$rows[] = $row;
+			}
+
+			$blank = array('settings' => array(), 'content' => array(), 'thumbs' => array(), 'extra_filled' => false);
+
+			foreach ($list['fields'] as $field) {
+				if ($field['scope'] === 'settings') {
+					$blank['settings'][$field['name']] = '';
+
+					if ($field['type'] === 'image') {
+						$blank['thumbs'][$field['name']] = $placeholder;
+					}
+				} else {
+					foreach ($texts as $language_id => $items) {
+						$blank['content'][$language_id][$field['name']] = '';
+					}
+				}
+			}
+
+			$result[] = array(
+				'name'      => $name,
+				'label'     => $this->language->get($list['label_key']),
+				'fields'    => $defs,
+				'images'    => $images,
+				'has_extra' => (bool)array_filter($defs, function ($def) {
+					return $def['extra'];
+				}),
+				'columns'   => $columns,
+				'rows'      => $rows,
+				'blank'     => $blank,
+				'max'       => isset($list['max']) ? (int)$list['max'] : 0,
+				'show_when' => isset($list['show_when']) ? $list['show_when'] : array()
+			);
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Posted list rows -> the stored shape. Rows are kept in the posted order;
+	 * a row with every field empty (in every language) is dropped from the
+	 * shared list and from every language alike, so the parallel arrays the
+	 * block providers read by index stay aligned.
+	 *
+	 * @param array<string, array> $lists
+	 * @param array<string, mixed> $posted_settings
+	 * @param array<int, mixed> $posted_content
+	 * @return array{settings: array<string, list<array>>, content: array<int, array<string, list<array>>>}
+	 */
+	private function normalizeLists(array $lists, array $posted_settings, array $posted_content) {
+		$settings = array();
+		$content = array();
+
+		foreach ($posted_content as $language_id => $value) {
+			$content[(int)$language_id] = array();
+		}
+
+		foreach ($lists as $name => $list) {
+			$shared = isset($posted_settings[$name]) && is_array($posted_settings[$name]) ? $posted_settings[$name] : array();
+			$keys = array_keys($shared);
+
+			foreach ($posted_content as $value) {
+				if (is_array($value) && isset($value[$name]) && is_array($value[$name])) {
+					$keys = array_merge($keys, array_keys($value[$name]));
+				}
+			}
+
+			$keys = array_values(array_unique($keys));
+
+			usort($keys, function ($a, $b) {
+				return (int)$a <=> (int)$b;
+			});
+
+			$settings[$name] = array();
+			$kept = 0;
+
+			foreach (array_keys($content) as $language_id) {
+				$content[$language_id][$name] = array();
+			}
+
+			foreach ($keys as $key) {
+				$row_settings = array();
+				$row_content = array();
+				$filled = false;
+
+				foreach ($list['fields'] as $field) {
+					if ($field['scope'] === 'settings') {
+						$value = $this->normalizeItemValue($field, isset($shared[$key][$field['name']]) ? $shared[$key][$field['name']] : null);
+
+						$row_settings[$field['name']] = $value;
+
+						// A select always posts a value (its first option): it does not make a row a row.
+						if ($value !== '' && $field['type'] !== 'select') {
+							$filled = true;
+						}
+					}
+				}
+
+				foreach (array_keys($content) as $language_id) {
+					$row_content[$language_id] = array();
+
+					foreach ($list['fields'] as $field) {
+						if ($field['scope'] === 'content') {
+							$raw = isset($posted_content[$language_id][$name][$key][$field['name']]) ? $posted_content[$language_id][$name][$key][$field['name']] : null;
+							$value = $this->normalizeItemValue($field, $raw);
+
+							$row_content[$language_id][$field['name']] = $value;
+
+							if ($value !== '') {
+								$filled = true;
+							}
+						}
+					}
+				}
+
+				// A row with nothing typed or picked is not a row.
+				if (!$filled) {
+					continue;
+				}
+
+				if (!empty($list['max']) && $kept >= $list['max']) {
+					break;
+				}
+
+				$kept++;
+
+				// FAQ and other text-only lists have no shared fields: nothing to store beside the texts.
+				if ($row_settings) {
+					$settings[$name][] = $row_settings;
+				}
+
+				foreach ($row_content as $language_id => $values) {
+					$content[$language_id][$name][] = $values;
+				}
+			}
+		}
+
+		return array('settings' => $settings, 'content' => $content);
+	}
+
+	/**
+	 * OpenCart HTML-escapes every posted string (Request::clean); the block data is stored as typed,
+	 * and escaped again when it is put into a form control (homepage_form.twig `|e`).
+	 */
+	private function unescapePosted($value) {
+		return html_entity_decode((string)$value, ENT_QUOTES, 'UTF-8');
+	}
+
+	/** One item field: always a trimmed string; a select only keeps a known option. */
+	private function normalizeItemValue(array $field, $value) {
+		$value = is_string($value) ? trim($this->unescapePosted($value)) : '';
+
+		if ($field['type'] === 'select') {
+			return array_key_exists($value, $field['options']) ? $value : '';
+		}
+
+		return $value;
 	}
 
 	/**
@@ -624,6 +1088,14 @@ class ControllerDesignHomepage extends Controller {
 			$content[(int)$language_id] = $language_content;
 		}
 
+		$rows = $this->normalizeLists($fields['lists'], $posted_settings, $posted_content);
+
+		$settings += $rows['settings'];
+
+		foreach ($rows['content'] as $language_id => $lists) {
+			$content[$language_id] = (isset($content[$language_id]) ? $content[$language_id] : array()) + $lists;
+		}
+
 		return array(
 			'type'     => $type,
 			'status'   => !empty($this->request->post['status']),
@@ -653,7 +1125,7 @@ class ControllerDesignHomepage extends Controller {
 			case 'text':
 			case 'textarea':
 			default:
-				return is_string($value) ? $value : (string)$field['default'];
+				return is_string($value) ? $this->unescapePosted($value) : (string)$field['default'];
 		}
 	}
 

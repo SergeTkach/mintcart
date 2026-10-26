@@ -43,6 +43,7 @@ final class SystemRoutes
         'special'      => 'product/special',
         'manufacturer' => 'product/manufacturer',
         'sitemap'      => 'information/sitemap',
+        'reviews'      => 'mintcart/reviews',
     ];
 
     /**

@@ -142,3 +142,36 @@ environment — a human should confirm on a real install that the `{% if %}`
 guard in both `product-card.twig` files renders nothing when no
 `SlotRegistry` is wired (today, always — no controller constructs one yet)
 and renders the listener's fragment once a future consumer wires one in.
+
+## Slots that are rendered today (2026-10)
+
+One shared registry per request: `\MintCart\Design\Slots::shared()`
+(`upload/system/library/mintcart/design/slots.php`). An extension registers from an
+OpenCart event handler that runs before the page controller, for example
+`catalog/controller/product/product/before`:
+
+```php
+\MintCart\Design\Slots::shared()->listen('product.after_price', function (array $context): string {
+    return '<p class="mc-badge">Ships today</p>';   // $context['product_id'], $context['name']
+});
+```
+
+A controller hands its template `mc_slots` (slot name => markup, `''` when nothing listens) with
+`SlotRegistry::renderMany()`; the template prints `{{ mc_slots['...'] }}`.
+
+| Slot | Where | Context |
+|---|---|---|
+| `header.before` / `header.after` | around the header, in `common/header.twig` | none |
+| `product.before_title` / `after_title` | product page, around the h1 | `product_id`, `name` |
+| `product.before_price` / `after_price` | product page, around the price | `product_id`, `name` |
+| `product.after_actions` (page) | product page, under the buy buttons | `product_id`, `name` |
+| `product.after_actions` (card) | every product card (all three themes) | the card's `product` array |
+| `cart.before_totals` / `after_totals` | cart page, around the totals | `total_rows` |
+| `checkout.before_confirm` | checkout, above the place-order button | none |
+
+Themes: `mint_default` renders them all (child themes inherit); a theme that overrides
+`product.twig`, `cart.twig`, `checkout.twig`, `header.twig` or a card keeps the slots by printing the same
+variables. Fragments are printed unescaped (the extension owns its markup).
+
+Tests: `tests/mintcart/design/slot-registry-test.php` (registry, `renderMany`, shared instance); the page wiring
+was checked on the local store with temporary listeners.

@@ -26,7 +26,6 @@
 
 .mc-header {
     background-color: var(--mc-surface);
-    border-bottom: var(--mc-border-width) solid var(--mc-border);
 }
 
 /*
@@ -51,6 +50,30 @@
 
 .mc-header--sticky:has(.offcanvas-lg.show, .offcanvas-lg.showing, .offcanvas-lg.hiding) {
     z-index: var(--mc-z-drawer);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Announcement (top info bar)                                             */
+/* ---------------------------------------------------------------------- */
+
+.mc-header__announcement {
+    padding-top: var(--mc-space-2);
+    padding-bottom: var(--mc-space-2);
+    background-color: var(--mc-primary);
+    color: var(--mc-on-primary);
+    font-size: var(--mc-font-size-sm);
+    text-align: center;
+}
+
+.mc-header__announcement-link {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.mc-header__announcement-link:hover,
+.mc-header__announcement-link:focus-visible {
+    color: inherit;
+    text-decoration: none;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -211,6 +234,29 @@
     cursor: pointer;
 }
 
+/* Caret: tells the visitor the name opens a menu. Pure CSS (a chevron drawn
+   with borders), rotated while the dropdown is open. */
+.mc-header__account-toggle::after {
+    content: "";
+    width: 0.4em;
+    height: 0.4em;
+    margin-left: 0.15em;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-0.12em) rotate(45deg);
+    transition: transform var(--mc-duration-fast, 0.15s) ease;
+}
+
+.mc-header__account-toggle[aria-expanded="true"]::after {
+    transform: translateY(0.05em) rotate(-135deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-header__account-toggle::after {
+        transition: none;
+    }
+}
+
 .mc-header__account-menu {
     z-index: var(--mc-z-dropdown);
     min-width: 12rem;
@@ -287,4 +333,150 @@
 .mc-header__nav-toggle:focus-visible {
     outline: var(--mc-border-width-thick) solid var(--mc-accent);
     outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Gallery variant (mint_gallery's header.twig): dark bar, centred logo,    */
+/* search left, account/cart right, navigation underneath.                 */
+/* ---------------------------------------------------------------------- */
+
+.mc-header--gallery {
+    background-color: var(--mc-surface-inverse);
+    border-bottom: 0;
+    color: var(--mc-text-inverse);
+}
+
+/* The announcement stays a light strip above the dark bar. */
+.mc-header--gallery .mc-header__announcement {
+    background-color: var(--mc-surface);
+    color: var(--mc-text);
+}
+
+.mc-header__grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: var(--mc-space-4);
+}
+
+.mc-header__start,
+.mc-header__end {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    min-width: 0;
+}
+
+.mc-header__end {
+    justify-content: flex-end;
+}
+
+.mc-header--gallery .mc-header__logo-text,
+.mc-header--gallery .mc-header__account-toggle,
+.mc-header--gallery .mc-header__wishlist,
+.mc-header--gallery .mc-header__main .btn-link,
+.mc-header--gallery .mc-header__main a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.mc-header--gallery .mc-header__logo-text {
+    font-size: var(--mc-font-size-2xl);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.mc-header--gallery .mc-header__widget--search {
+    flex: 1 1 auto;
+    max-width: 16rem;
+}
+
+.mc-header--gallery .mc-search-box__input {
+    border-color: transparent;
+    border-bottom-color: var(--mc-muted);
+    background-color: transparent;
+    color: inherit;
+}
+
+.mc-header--gallery .mc-header__nav-toggle {
+    border-color: transparent;
+    background-color: transparent;
+}
+
+.mc-header--gallery .mc-header__nav-toggle-bar {
+    background-color: var(--mc-text-inverse);
+}
+
+.mc-header--gallery .mc-header__nav {
+    border-top: 0;
+}
+
+/* lg and up: navigation centred, bold caps, no frames. */
+@media (min-width: 992px) {
+    .mc-header--gallery .mc-header__nav .navbar-nav,
+    .mc-header--gallery .mc-header__nav ul.nav {
+        justify-content: center;
+    }
+
+    .mc-header--gallery .mc-header__nav a {
+        color: var(--mc-text-inverse);
+        font-weight: var(--mc-font-weight-bold);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+}
+
+/* Below lg: [toggle] [logo] [actions]; search drops to its own row. */
+@media (max-width: 991.98px) {
+    .mc-header__grid {
+        grid-template-columns: auto 1fr auto;
+    }
+
+    .mc-header--gallery .mc-header__widget--search {
+        display: none;
+    }
+
+    .mc-header--gallery .mc-header__branding {
+        text-align: center;
+    }
+}
+
+/* A logo is usually drawn for a light background: flatten it to white on the
+   dark bar instead of requiring a second logo file. */
+.mc-header--gallery .mc-header__logo img {
+    filter: brightness(0) invert(1);
+}
+
+/* The mini-cart toggle reads as plain text on the dark bar. */
+.mc-header--gallery .mc-mini-cart__toggle {
+    border-color: transparent;
+    background-color: transparent;
+    color: inherit;
+}
+
+.mc-header--gallery .mc-mini-cart__toggle:hover,
+.mc-header--gallery .mc-mini-cart__toggle[aria-expanded='true'] {
+    border-color: transparent;
+    color: inherit;
+    opacity: 0.75;
+}
+
+.mc-header--gallery .mc-mini-cart__toggle:focus-visible {
+    outline-color: var(--mc-text-inverse);
+}
+
+/* Language / currency dropdown (legacy markup in `mc-legacy`): items read left to right,
+   the flag with a gap before the name, instead of Bootstrap-3-shim's centred block buttons. */
+.mc-header .mc-legacy .dropdown-menu .btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--mc-space-2);
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.mc-header .mc-legacy .dropdown-menu .btn img {
+    flex: 0 0 auto;
 }

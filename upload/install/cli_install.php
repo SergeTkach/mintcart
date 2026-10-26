@@ -29,7 +29,7 @@ error_reporting(E_ALL);
 define('DIR_APPLICATION', str_replace('\\', '/', realpath(dirname(__FILE__))) . '/');
 define('DIR_SYSTEM', str_replace('\\', '/', realpath(dirname(__FILE__) . '/../')) . '/system/');
 define('DIR_OPENCART', str_replace('\\', '/', realpath(DIR_APPLICATION . '../')) . '/');
-define('DIR_STORAGE', DIR_SYSTEM . 'storage/');
+define('DIR_STORAGE', DIR_OPENCART . 'storage/');
 define('DIR_DATABASE', DIR_SYSTEM . 'database/');
 define('DIR_LANGUAGE', DIR_APPLICATION . 'language/');
 define('DIR_TEMPLATE', DIR_APPLICATION . 'view/template/');
@@ -133,6 +133,7 @@ function install($options) {
 	if ($check[0]) {
 		setup_db($options);
 		write_config_files($options);
+
 		dir_permissions();
 	} else {
 		echo 'FAILED! Pre-installation check failed: ' . $check[1] . "\n\n";
@@ -225,6 +226,17 @@ function setup_db($data) {
 		$db->query("DELETE FROM `" . $data['db_prefix'] . "setting` WHERE `key` = 'config_email'");
 		$db->query("INSERT INTO `" . $data['db_prefix'] . "setting` SET `code` = 'config', `key` = 'config_email', value = '" . $db->escape($data['email']) . "'");
 
+		// Friendly URLs from the first minute: the shipped .htaccess.txt becomes .htaccess and SEO URLs are switched on.
+		// Only for a store in the web root (the rewrite rules assume RewriteBase /); otherwise they stay off.
+		$mc_seo = (parse_url($data['http_server'], PHP_URL_PATH) ?: '/') === '/';
+
+		if ($mc_seo && !is_file(DIR_OPENCART . '.htaccess')) {
+			$mc_seo = is_file(DIR_OPENCART . '.htaccess.txt') && @copy(DIR_OPENCART . '.htaccess.txt', DIR_OPENCART . '.htaccess');
+		}
+
+		$db->query("DELETE FROM `" . $data['db_prefix'] . "setting` WHERE `key` = 'config_seo_url'");
+		$db->query("INSERT INTO `" . $data['db_prefix'] . "setting` SET `code` = 'config', `key` = 'config_seo_url', value = '" . ($mc_seo ? 1 : 0) . "'");
+
 		$db->query("DELETE FROM `" . $data['db_prefix'] . "setting` WHERE `key` = 'config_encryption'");
 		$db->query("INSERT INTO `" . $data['db_prefix'] . "setting` SET `code` = 'config', `key` = 'config_encryption', value = '" . $db->escape(token(1024)) . "'");
 
@@ -246,6 +258,10 @@ function setup_db($data) {
 
 		$migrations = new \MintCart\Core\Migration\MigrationManager($db, $data['db_prefix'], DIR_SYSTEM . 'mintcart/migrations');
 		$migrations->run();
+
+		// MintCart: the starter catalogue (replaces OpenCart's demo products);
+		// needs the mc_* tables, so it runs after the migrations.
+		\MintCart\Core\DemoData::apply($db, $data['db_prefix'], DIR_APPLICATION . 'mintcart-demo.sql');
 	}
 }
 
@@ -262,7 +278,7 @@ function write_config_files($options) {
 	$output .= 'define(\'DIR_APPLICATION\', \'' . addslashes(DIR_OPENCART) . 'catalog/\');' . "\n";
 	$output .= 'define(\'DIR_SYSTEM\', \'' . addslashes(DIR_OPENCART) . 'system/\');' . "\n";
 	$output .= 'define(\'DIR_IMAGE\', \'' . addslashes(DIR_OPENCART) . 'image/\');' . "\n";
-	$output .= 'define(\'DIR_STORAGE\', DIR_SYSTEM . \'storage/\');' . "\n";			
+	$output .= 'define(\'DIR_STORAGE\', dirname(DIR_SYSTEM) . \'/storage/\');' . "\n";			
 	$output .= 'define(\'DIR_LANGUAGE\', DIR_APPLICATION . \'language/\');' . "\n";
 	$output .= 'define(\'DIR_TEMPLATE\', DIR_APPLICATION . \'view/theme/\');' . "\n";
 	$output .= 'define(\'DIR_CONFIG\', DIR_SYSTEM . \'config/\');' . "\n";
@@ -302,7 +318,7 @@ function write_config_files($options) {
 	$output .= 'define(\'DIR_APPLICATION\', \'' . addslashes(DIR_OPENCART) . 'admin/\');' . "\n";
 	$output .= 'define(\'DIR_SYSTEM\', \'' . addslashes(DIR_OPENCART) . 'system/\');' . "\n";
 	$output .= 'define(\'DIR_IMAGE\', \'' . addslashes(DIR_OPENCART) . 'image/\');' . "\n";	
-	$output .= 'define(\'DIR_STORAGE\', DIR_SYSTEM . \'storage/\');' . "\n";
+	$output .= 'define(\'DIR_STORAGE\', dirname(DIR_SYSTEM) . \'/storage/\');' . "\n";
 	$output .= 'define(\'DIR_CATALOG\', \'' . addslashes(DIR_OPENCART) . 'catalog/\');' . "\n";
 	$output .= 'define(\'DIR_LANGUAGE\', DIR_APPLICATION . \'language/\');' . "\n";
 	$output .= 'define(\'DIR_TEMPLATE\', DIR_APPLICATION . \'view/template/\');' . "\n";
@@ -338,11 +354,11 @@ function write_config_files($options) {
 function dir_permissions() {
 	$dirs = array(
 		DIR_OPENCART . 'image/',
-		DIR_OPENCART . 'system/storage/download/',
-		DIR_OPENCART . 'system/storage/upload/',
-		DIR_OPENCART . 'system/storage/cache/',
-		DIR_OPENCART . 'system/storage/logs/',
-		DIR_OPENCART . 'system/storage/modification/',
+		DIR_OPENCART . 'storage/download/',
+		DIR_OPENCART . 'storage/upload/',
+		DIR_OPENCART . 'storage/cache/',
+		DIR_OPENCART . 'storage/logs/',
+		DIR_OPENCART . 'storage/modification/',
 	);
 	exec('chmod o+w -R ' . implode(' ', $dirs));
 }

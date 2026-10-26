@@ -326,38 +326,21 @@ It is not redundant with the `ready` step's own checklist — one is "here
 is how ready your real store is today", the other is "there is no more
 Wizard content to show you right now, go to your dashboard".
 
-## Why a standalone page, not the usual admin chrome
+## An ordinary admin page
 
-`upload/admin/view/template/mintcart/wizard.twig` is a complete, self-
-contained HTML document — it does **not** include
-`common/header`/`common/column_left`/`common/footer`, and
-`ControllerMintcartWizard` never calls `$this->load->controller('common/...')`
-the way `ControllerCommonDashboard` does.
+`upload/admin/view/template/mintcart/wizard.twig` renders inside the stock admin:
+`ControllerMintcartWizard::render()` loads `common/header`, `common/column_left` and
+`common/footer` and the wizard lives in `#content` (page header with the title,
+breadcrumb and "Skip for now"; stepper on the left, step panel on the right).
 
-This is deliberate, not an oversight: every other admin page shares the
-legacy Bootstrap 3 + jQuery + Font Awesome chrome those common controllers
-render, and a previous attempt to add a plain `<link>` to
-`assets/dist/css/index.min.css` on a page sharing that chrome broke live
-Bootstrap 3 widgets (see `docs/IMPLEMENTATION_STATUS.md`'s Phase 15 "human
-session" update — reverted, not theoretical). A brand-new, standalone
-Wizard page has no legacy markup to conflict with, so it can safely load
-**only** Bootstrap 5 + `mc-*` — nothing else. This is the first live page in
-MintCart to actually enqueue `assets/dist/css/index.min.css`.
-
-The page intentionally ships CSS-only (no `<script>` tag) — nothing on the
-Welcome/Store steps needs JS (plain server-rendered forms, full-page
-POST → redirect → GET), so there's no reason to also try enqueuing
-`assets/dist/js/admin.min.js` on a live page in the same increment. That
-remains open for whichever future step first needs client-side behavior
-(e.g. an Entity/Media Picker-driven step).
-
-Asset path: `HTTP_CATALOG . 'assets/dist/css/index.min.css'` — `HTTP_CATALOG`
-is the same constant `ControllerCommonHeader` already uses for storefront
-links from within admin; `assets/` is a sibling of `admin/`/`catalog/` under
-`upload/` (see `.gitignore`'s own comment on the `upload/assets/` dev-time
-copy), so `HTTP_CATALOG` (the storefront's own base URL) is the correct base
-to resolve it from, not `HTTP_SERVER` (admin's own base, one directory
-level off).
+It loads the Bootstrap-5-free bundles, like every other MintCart admin screen
+(`docs/developer/admin/asset-enqueue.md`): `assets/dist/css/components.min.css`
+(includes `wizard.css`) and `assets/dist/js/admin.min.js`. Because the legacy admin is
+Bootstrap 3 with `html { font-size: 10px }`, `wizard.css` puts the root back to 16px
+(`html:has(.mc-wizard)`; the stock admin CSS uses px), supplies its own two-column field
+grid (`mc-wizard__fields` / `mc-wizard__col`) and the handful of spacing helpers the
+step markup uses. `admin.min.js` keeps Bootstrap 5 off jQuery
+(`compat/keep-bootstrap3-jquery.js`), so the legacy modals and the file manager still work.
 
 ## No `hasPermission()` gate
 

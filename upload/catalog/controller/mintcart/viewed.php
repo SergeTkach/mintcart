@@ -50,11 +50,14 @@ class ControllerMintcartViewed extends Controller {
 				continue;
 			}
 
-			if ($result['image']) {
-				$image = $this->model_tool_image->resize($result['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_cart_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_cart_height'));
-			} else {
-				$image = $this->model_tool_image->resize('placeholder.png', $this->config->get('theme_' . $this->config->get('config_theme') . '_image_cart_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_cart_height'));
-			}
+			// The strip shows full product cards, so it uses the card picture size
+			// (and a 2x picture for sharp screens), not the 47 px cart thumbnail.
+			$width = (int)$this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_width');
+			$height = (int)$this->config->get('theme_' . $this->config->get('config_theme') . '_image_product_height');
+			$source = $result['image'] ? $result['image'] : 'placeholder.png';
+
+			$image = $this->model_tool_image->resize($source, $width, $height);
+			$image_2x = $this->model_tool_image->resize($source, $width * 2, $height * 2);
 
 			if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
 				$price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
@@ -73,6 +76,9 @@ class ControllerMintcartViewed extends Controller {
 				'name'    => html_entity_decode($result['name'], ENT_QUOTES, 'UTF-8'),
 				'url'     => str_replace('&amp;', '&', $this->url->link('product/product', 'product_id=' . $result['product_id'])),
 				'image'   => $image,
+				'srcset'  => $image . ' 1x, ' . $image_2x . ' 2x',
+				'width'   => $width,
+				'height'  => $height,
 				'price'   => $price,
 				'special' => $special
 			);

@@ -16,3 +16,29 @@
     flex-direction: column;
     gap: var(--mc-space-3);
 }
+
+/* Confirmation state of the same dialog, shown instead of the form after a successful submit. */
+.mc-quick-order-done__body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--mc-space-2);
+    padding-block: var(--mc-space-5);
+    text-align: center;
+}
+
+.mc-quick-order-done__icon {
+    color: var(--mc-success);
+}
+
+.mc-quick-order-done__message {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--mc-text);
+}
+
+.mc-quick-order-done__product {
+    margin: 0;
+    color: var(--mc-muted);
+}

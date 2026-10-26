@@ -1,0 +1,217 @@
+/**
+ * The "Customer reviews" page (mintcart/reviews): a summary band (average rating and
+ * the split by stars) and a grid of review cards, each with the product it is about.
+ * Documentation: docs/developer/commerce/customer-reviews.md
+ */
+
+.mc-reviews-summary {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--mc-space-6);
+    align-items: center;
+    margin-bottom: var(--mc-space-8);
+    padding: var(--mc-space-6);
+    border-radius: var(--mc-radius-xl);
+    background: var(--mc-surface-tint);
+}
+
+@media (min-width: 992px) {
+    .mc-reviews-summary {
+        grid-template-columns: 1.3fr auto 1fr;
+        gap: var(--mc-space-10, 2.5rem);
+        padding: var(--mc-space-8) var(--mc-space-10, 2.5rem);
+    }
+}
+
+.mc-reviews-summary__title {
+    margin: 0 0 var(--mc-space-2);
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-heading);
+    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+    font-weight: var(--mc-font-weight-bold);
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+}
+
+.mc-reviews-summary__text {
+    max-width: 28rem;
+    margin: 0;
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-lg);
+}
+
+.mc-reviews-summary__score {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--mc-space-1);
+}
+
+@media (min-width: 992px) {
+    .mc-reviews-summary__score {
+        align-items: center;
+        text-align: center;
+    }
+}
+
+.mc-reviews-summary__average {
+    margin: 0;
+    color: var(--mc-text);
+    font-family: var(--mc-font-family-heading);
+    font-size: 3.5rem;
+    font-weight: var(--mc-font-weight-bold);
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+.mc-reviews-summary__count {
+    margin: 0;
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-reviews-summary__bars {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-reviews-summary__bar {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr 2rem;
+    gap: var(--mc-space-3);
+    align-items: center;
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-reviews-summary__bar-track {
+    display: block;
+    height: 0.5rem;
+    overflow: hidden;
+    border-radius: var(--mc-radius-pill);
+    background: var(--mc-surface);
+}
+
+.mc-reviews-summary__bar-fill {
+    display: block;
+    width: var(--mc-bar, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: var(--mc-primary);
+}
+
+.mc-reviews-summary__bar-count {
+    text-align: right;
+}
+
+/* Review cards ------------------------------------------------------------ */
+
+.mc-review-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-4);
+    height: 100%;
+    padding: var(--mc-space-6);
+    border-radius: var(--mc-radius-xl);
+    background: var(--mc-surface-muted);
+}
+
+.mc-review-card__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-3);
+}
+
+.mc-review-card__date {
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-review-card__text {
+    margin: 0;
+    color: var(--mc-text);
+    font-size: var(--mc-font-size-lg);
+    line-height: 1.55;
+}
+
+.mc-review-card__author {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    margin-top: auto;
+}
+
+.mc-review-card__avatar {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--mc-radius-pill);
+    background: var(--mc-primary);
+    color: var(--mc-on-primary);
+    font-weight: var(--mc-font-weight-bold);
+}
+
+.mc-review-card__name {
+    color: var(--mc-text);
+    font-weight: var(--mc-font-weight-semibold);
+}
+
+/* The product the review is about: a white row with its picture. */
+.mc-review-card__product {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    padding: var(--mc-space-2);
+    border-radius: var(--mc-radius-lg);
+    background: var(--mc-surface);
+    color: var(--mc-text);
+    text-decoration: none;
+    transition: box-shadow var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-review-card__product:hover,
+.mc-review-card__product:focus-visible {
+    box-shadow: var(--mc-shadow-soft);
+}
+
+.mc-review-card__product-image {
+    flex: none;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--mc-radius-md);
+    object-fit: cover;
+}
+
+.mc-review-card__product-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mc-review-card__product-label {
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.mc-review-card__product-name {
+    overflow: hidden;
+    font-weight: var(--mc-font-weight-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-review-card__product {
+        transition: none;
+    }
+}

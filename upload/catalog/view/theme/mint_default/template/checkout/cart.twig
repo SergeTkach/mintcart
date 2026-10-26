@@ -118,6 +118,7 @@
 
                 <div class="col-lg-4">
                     <aside class="mc-cart-page__summary">
+                        {{ mc_slots['cart.before_totals'] }}
                         <dl class="mc-cart-page__totals">
                             {% for total in totals %}
                                 <div class="mc-cart-page__total-row{% if loop.last %} mc-cart-page__total-row--grand{% endif %}">
@@ -126,6 +127,7 @@
                                 </div>
                             {% endfor %}
                         </dl>
+                        {{ mc_slots['cart.after_totals'] }}
                         <a class="mc-button mc-button--primary mc-cart-page__checkout" href="{{ checkout }}">{{ button_checkout }}</a>
                         <a class="mc-cart-page__continue" href="{{ continue }}">{{ button_shopping }}</a>
                     </aside>

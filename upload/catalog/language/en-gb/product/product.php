@@ -42,6 +42,7 @@ $_['text_badge_out_of_stock']  = 'Out of Stock';
 $_['text_badge_new']           = 'New';
 $_['text_added_to_cart']       = 'Added to cart';
 $_['text_view_cart']           = 'View cart';
+$_['text_continue_shopping']   = 'Continue shopping';
 $_['text_add_to_cart_error']   = 'Could not add this product to your cart';
 $_['text_wishlist_error']      = 'Could not update your wishlist';
 
@@ -59,6 +60,10 @@ $_['tab_attribute']            = 'Specification';
 $_['tab_review']               = 'Reviews (%s)';
 $_['tab_overview']             = 'Overview';
 $_['text_section_nav']         = 'Product sections';
+$_['text_mc_delivery']         = 'Delivery';
+$_['text_mc_payment']          = 'Payment';
+$_['text_mc_returns']          = 'Returns';
+$_['text_mc_from']             = 'orders over %s';
 
 // Error
 $_['error_name']               = 'Warning: Review Name must be between 3 and 25 characters!';

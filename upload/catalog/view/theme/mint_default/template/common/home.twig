@@ -1,5 +1,12 @@
 {{ header }}
 
+{# Slider first (layout position content_top), then the Homepage Builder blocks, then content_bottom (featured products, brands). #}
+{% if content_top %}
+    <div class="container pt-3">
+        {{ content_top }}
+    </div>
+{% endif %}
+
 {% for mc_block in mc_blocks %}
     {{ mc_block }}
 {% endfor %}
@@ -17,7 +24,6 @@
         {% endif %}
 
         <div class="{{ content_class }}">
-            {{ content_top }}
             {{ content_bottom }}
         </div>
 

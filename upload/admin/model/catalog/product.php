@@ -134,6 +134,13 @@ class ModelCatalogProduct extends Model {
 		}
 
 
+		// MintCart: product badges (only when the form sent the field).
+		if (isset($data['mc_product_badge'])) {
+			$this->load->model('mintcart/badge');
+
+			$this->model_mintcart_badge->setProductBadges($product_id, $data['mc_product_badge']);
+		}
+
 		$this->cache->delete('product');
 
 		return $product_id;
@@ -299,6 +306,13 @@ class ModelCatalogProduct extends Model {
 			}
 		}
 
+		// MintCart: product badges (only when the form sent the field).
+		if (isset($data['mc_product_badge'])) {
+			$this->load->model('mintcart/badge');
+
+			$this->model_mintcart_badge->setProductBadges($product_id, $data['mc_product_badge']);
+		}
+
 		$this->cache->delete('product');
 	}
 
@@ -401,6 +415,8 @@ class ModelCatalogProduct extends Model {
 			$data['product_image'] = $this->getProductImages($product_id);
 			$data['product_option'] = $this->getProductOptions($product_id);
 			$data['product_related'] = $this->getProductRelated($product_id);
+			$this->load->model('mintcart/badge');
+			$data['mc_product_badge'] = $this->model_mintcart_badge->getProductBadgeIds($product_id);
 			$data['product_reward'] = $this->getProductRewards($product_id);
 			$data['product_special'] = $this->getProductSpecials($product_id);
 			$data['product_category'] = $this->getProductCategories($product_id);
@@ -422,6 +438,7 @@ class ModelCatalogProduct extends Model {
 		$this->db->query("DELETE FROM " . DB_PREFIX . "product_image WHERE product_id = '" . (int)$product_id . "'");
 		$this->db->query("DELETE FROM " . DB_PREFIX . "product_option WHERE product_id = '" . (int)$product_id . "'");
 		$this->db->query("DELETE FROM " . DB_PREFIX . "product_option_value WHERE product_id = '" . (int)$product_id . "'");
+		$this->db->query("DELETE FROM " . DB_PREFIX . "mc_product_badge WHERE product_id = '" . (int)$product_id . "'");
 		$this->db->query("DELETE FROM " . DB_PREFIX . "product_related WHERE product_id = '" . (int)$product_id . "'");
 		$this->db->query("DELETE FROM " . DB_PREFIX . "product_related WHERE related_id = '" . (int)$product_id . "'");
 		$this->db->query("DELETE FROM " . DB_PREFIX . "product_reward WHERE product_id = '" . (int)$product_id . "'");

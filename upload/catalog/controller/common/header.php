@@ -35,8 +35,15 @@ class ControllerCommonHeader extends Controller {
 		$mint_render_header = \MintCart\Design\ActiveTheme::isMintAware(DIR_TEMPLATE, $mint_theme);
 
 		if ($mint_render_header) {
-			$this->document->addStyle($server . 'assets/dist/css/index.min.css');
-			$this->document->addScript($server . 'assets/dist/js/catalog.min.js');
+			// ?v= = the file's modification time, so a rebuilt asset is never served from a stale browser cache.
+			$asset = function ($path) use ($server) {
+				$file = dirname(rtrim(DIR_APPLICATION, '/' . chr(92))) . '/' . $path;
+
+				return $server . $path . (is_file($file) ? '?v=' . filemtime($file) : '');
+			};
+
+			$this->document->addStyle($asset('assets/dist/css/index.min.css'));
+			$this->document->addScript($asset('assets/dist/js/catalog.min.js'));
 		}
 
 		if (is_file(DIR_IMAGE . $this->config->get('config_icon'))) {
@@ -96,6 +103,34 @@ class ControllerCommonHeader extends Controller {
 		$data['cart'] = $this->load->controller('common/cart');
 		$data['menu'] = $this->load->controller('common/menu');
 
+		// MintCart: hreflang alternates when the store has language folders in
+		// the URL (startup/mc_language_url). Pages that are not for search
+		// engines (cart, checkout, account, errors, ...) get none.
+		$data['mc_hreflang'] = array();
+
+		$hreflang_route = isset($this->request->get['route']) ? $this->request->get['route'] : 'common/home';
+
+		if (!preg_match('#^(error|checkout|account|mintcart|extension|api)/#', $hreflang_route)) {
+			$alternates = array();
+
+			foreach ($this->load->controller('startup/mc_language_url/alternates') as $code => $href) {
+				$alternates[] = array('hreflang' => $code, 'href' => $href);
+			}
+
+			$data['mc_hreflang'] = (new \MintCart\Seo\HreflangBuilder())->build($alternates, $this->config->get('config_language'));
+		}
+
+		// MintCart: phone input mask (the store's own format, else the country default).
+		$this->load->model('localisation/country');
+
+		$country_info = $this->model_localisation_country->getCountry((int)$this->config->get('config_country_id'));
+
+		$data['mc_phone_mask'] = \MintCart\Commerce\PhoneMask::resolve(
+			(string)$this->config->get('config_mc_phone_mask'),
+			$country_info ? (string)$country_info['iso_code_2'] : '',
+			(array)json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/phone-masks.json'), true)
+		);
+
 		// MintCart\Design\ComponentRenderer / MintCart\Design\HeaderViewProvider
 		// wiring (MINTCART_TECHNICAL_PLAN.md §14, Phase 7), via the shared
 		// MintCart\Design\ActiveTheme resolver every other listing/common
@@ -138,6 +173,7 @@ class ControllerCommonHeader extends Controller {
 						'download' => $data['download'],
 						'logout' => $data['logout'],
 						'wishlist' => $data['wishlist'],
+						'compare' => $this->url->link('product/compare', '', true),
 						'shopping_cart' => $data['shopping_cart'],
 						'checkout' => $data['checkout'],
 						'contact' => $data['contact']
@@ -148,6 +184,10 @@ class ControllerCommonHeader extends Controller {
 						'cart' => $data['cart'],
 						'language' => $data['language'],
 						'currency' => $data['currency']
+					),
+					array(
+						'text' => $this->config->get('mintcart_announcement_text'),
+						'url' => $this->config->get('mintcart_announcement_url')
 					)
 				);
 
@@ -160,9 +200,13 @@ class ControllerCommonHeader extends Controller {
 					'text_download' => $this->language->get('text_download'),
 					'text_logout' => $this->language->get('text_logout'),
 					'text_wishlist' => $data['text_wishlist'],
+					'text_compare' => $this->language->get('text_mc_compare'),
+					'text_call' => $this->language->get('text_mc_call'),
 					'text_menu' => $this->language->get('text_menu'),
 					'text_close' => $this->language->get('text_close'),
-					'text_search' => $this->language->get('text_search')
+					'text_search' => $this->language->get('text_search'),
+					'text_search_empty' => $this->language->get('text_mc_search_empty'),
+					'text_search_all' => $this->language->get('text_mc_search_all')
 				));
 			} catch (\Throwable $e) {
 				// Same rationale as ControllerCommonFooter's own catch: a
@@ -263,6 +307,27 @@ class ControllerCommonHeader extends Controller {
 		}
 
 		$data['mc_preset'] = $mc_preset;
+
+		// Design > Styles: the owner's colours / corners / fonts on top of the preset.
+		$mc_styles = \MintCart\Design\StyleOverrides::build(array(
+			'primary'      => $this->config->get('mintcart_design_primary'),
+			'accent'       => $this->config->get('mintcart_design_accent'),
+			'radius'       => $this->config->get('mintcart_design_radius'),
+			'border'       => $this->config->get('mintcart_design_border'),
+			'button_style' => $this->config->get('mintcart_design_button_style'),
+			'container'    => $this->config->get('mintcart_design_container'),
+			'font_heading' => $this->config->get('mintcart_design_font_heading'),
+			'font_body'    => $this->config->get('mintcart_design_font_body')
+		));
+
+		$data['mc_style_css'] = $mint_render_header ? $mc_styles['css'] : '';
+		$data['mc_fonts_url'] = $mint_render_header ? $mc_styles['fonts_url'] : '';
+
+		// <html data-mc-theme>: lets a theme scope its own CSS to its pages
+		// (e.g. mint_gallery's product page) without a page-template copy.
+		$data['mc_theme'] = $mint_render_header ? $mint_theme : '';
+
+		$data['mc_slots'] = \MintCart\Design\Slots::shared()->renderMany(array('header.before', 'header.after'));
 
 		return $this->load->view('common/header', $data);
 	}

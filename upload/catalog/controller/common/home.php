@@ -13,10 +13,12 @@ class ControllerCommonHome extends Controller {
 		// description field in stock OpenCart), so the description simply
 		// stays '' when config_meta_description is blank, same as today.
 		// The third argument is title-only; see docs/developer/seo/meta-builder.md.
-		$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+		$mint_meta = (new \MintCart\Seo\MetaBuilder(\MintCart\Seo\MetaRules::forPage($this->config->get('mintcart_seo_meta'), 'home', (int)$this->config->get('config_language_id'))))->build(
 			$this->config->get('config_meta_title'),
 			$this->config->get('config_meta_description'),
-			$this->config->get('config_name')
+			$this->config->get('config_name'),
+			null,
+			array('store' => $this->config->get('config_name'))
 		);
 
 		$this->document->setTitle($mint_meta['title']);
@@ -105,6 +107,8 @@ class ControllerCommonHome extends Controller {
 				$markup = $this->renderBrandsBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'text-image') {
 				$markup = $this->renderTextImageBlock($block, $block_renderer);
+			} elseif ($block['type'] === 'slider') {
+				$markup = $this->renderSliderBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'cta') {
 				$markup = $this->renderCtaBlock($block, $block_renderer);
 			} elseif ($block['type'] === 'newsletter') {
@@ -152,6 +156,12 @@ class ControllerCommonHome extends Controller {
 			return null;
 		}
 
+		$icons = new \MintCart\Design\Icon(DIR_SYSTEM . 'mintcart/icons');
+
+		foreach ($settings['items'] as $key => $item) {
+			$settings['items'][$key]['svg'] = $icons->svg($item['icon']);
+		}
+
 		return $block_renderer->render('benefits', $settings);
 	}
 
@@ -174,6 +184,31 @@ class ControllerCommonHome extends Controller {
 	private function renderTestimonialsBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
 		$settings = (new \MintCart\Blocks\TestimonialsBlockProvider())->build($block['settings'], $block['content']);
 
+		$this->load->language('mintcart/reviews');
+
+		$more_url = '';
+
+		if ($settings['source'] === 'reviews') {
+			// The store's latest approved reviews (docs/developer/commerce/customer-reviews.md).
+			$this->load->model('mintcart/review');
+
+			$settings['items'] = array();
+
+			foreach ($this->model_mintcart_review->getReviews(0, $settings['limit']) as $review) {
+				$settings['items'][] = array(
+					'quote'         => htmlspecialchars(utf8_substr(trim(strip_tags(html_entity_decode($review['text'], ENT_QUOTES, 'UTF-8'))), 0, 180), ENT_QUOTES, 'UTF-8'),
+					'author_name'   => $review['author'],
+					'author_role'   => $review['product_name'],
+					'avatar'        => null,
+					'avatar_width'  => 64,
+					'avatar_height' => 64,
+					'rating'        => (int)$review['rating'] >= 1 && (int)$review['rating'] <= 5 ? (int)$review['rating'] : null
+				);
+			}
+
+			$more_url = $this->url->link('mintcart/reviews');
+		}
+
 		if (!$settings['items']) {
 			return null;
 		}
@@ -190,8 +225,11 @@ class ControllerCommonHome extends Controller {
 		unset($item);
 
 		return $block_renderer->render('testimonials', array(
-			'title' => $settings['title'],
-			'items' => $settings['items']
+			'title'      => $settings['title'],
+			'items'      => $settings['items'],
+			'text_rated' => $this->language->get('text_rated'),
+			'more_url'   => $more_url,
+			'more_label' => $settings['more_label'] !== '' ? $settings['more_label'] : $this->language->get('text_all_reviews')
 		));
 	}
 
@@ -237,9 +275,69 @@ class ControllerCommonHome extends Controller {
 			return null;
 		}
 
+		$this->load->language('mintcart/reviews');
+
+		// Optional "View all" link beside the title (settings `more_url`, content `more_label`).
+		$more_url = isset($block['settings']['more_url']) && is_string($block['settings']['more_url']) ? trim($block['settings']['more_url']) : '';
+		$more_label = isset($block['content']['more_label']) && is_string($block['content']['more_label']) && trim($block['content']['more_label']) !== '' ? trim($block['content']['more_label']) : $this->language->get('text_view_all');
+
 		return $block_renderer->render('products', array(
 			'title'         => $settings['title'],
-			'product_cards' => $product_cards
+			'product_cards' => $product_cards,
+			'more_url'      => $more_url !== '' ? htmlspecialchars($more_url, ENT_QUOTES, 'UTF-8') : '',
+			'more_label'    => htmlspecialchars($more_label, ENT_QUOTES, 'UTF-8')
+		));
+	}
+
+	/**
+	 * Renders one 'slider' mc_block row (Homepage Builder main slider with rich
+	 * slides). SliderBlockProvider normalizes the data; this resolves pictures
+	 * (resized per layout, a missing file just drops the picture, the slide's
+	 * text still shows) and escapes links. docs/developer/blocks/slider.md
+	 *
+	 * @param array{settings: array<string, mixed>, content: array<string, mixed>} $block
+	 * @return string|null Markup, or null when no slide is left to show.
+	 */
+	private function renderSliderBlock(array $block, \MintCart\Blocks\BlockRenderer $block_renderer) {
+		$settings = (new \MintCart\Blocks\SliderBlockProvider())->build($block['settings'], $block['content']);
+
+		if (!$settings['slides']) {
+			return null;
+		}
+
+		$this->load->language('mintcart/slider');
+		$this->load->model('tool/image');
+
+		// Picture sizes per layout: the half of a split slide, a full slide, a promo card.
+		$slide_size = $settings['layout'] === 'full' ? array(1600, 700) : array(1000, 1000);
+
+		foreach ($settings['slides'] as &$slide) {
+			$slide['image'] = ($slide['image'] !== '' && is_file(DIR_IMAGE . $slide['image'])) ? $this->model_tool_image->resize($slide['image'], $slide_size[0], $slide_size[1]) : '';
+			$slide['link'] = htmlspecialchars($slide['link'], ENT_QUOTES, 'UTF-8');
+			$slide['btn2_link'] = htmlspecialchars($slide['btn2_link'], ENT_QUOTES, 'UTF-8');
+			$slide['btn_text'] = $slide['btn_text'] !== '' ? $slide['btn_text'] : $this->language->get('text_default_button');
+		}
+		unset($slide);
+
+		foreach ($settings['cards'] as $key => &$card) {
+			if (!is_file(DIR_IMAGE . $card['image'])) {
+				unset($settings['cards'][$key]);
+
+				continue;
+			}
+
+			$card['image'] = $this->model_tool_image->resize($card['image'], 640, 340);
+			$card['link'] = htmlspecialchars($card['link'], ENT_QUOTES, 'UTF-8');
+		}
+		unset($card);
+
+		return $block_renderer->render('slider', array(
+			'layout'        => $settings['layout'],
+			'autoplay'      => $settings['autoplay'],
+			'slides'        => $settings['slides'],
+			'cards'         => array_values($settings['cards']),
+			'text_previous' => $this->language->get('text_previous'),
+			'text_next'     => $this->language->get('text_next')
 		));
 	}
 

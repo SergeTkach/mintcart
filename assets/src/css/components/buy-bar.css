@@ -1,7 +1,9 @@
 /**
  * mc-buy-bar - sticky add-to-cart bar on the product page (buy-bar.js).
- * Fixed to the bottom of the viewport while the main Add to Cart button is
- * scrolled out of view.
+ * Phones/tablets: fixed to the bottom of the viewport while the main Add to
+ * Cart button is scrolled out of view. From 992px up the bar is not used: the
+ * `mc-buy-box` beside the lower sections takes over (a full-width bottom bar
+ * on a wide screen is mostly empty space).
  */
 
 .mc-buy-bar {
@@ -12,8 +14,7 @@
     z-index: var(--mc-z-sticky);
     padding-block: var(--mc-space-3);
     background: var(--mc-surface);
-    border-top: var(--mc-border-width) solid var(--mc-border);
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 -10px 30px rgba(20, 40, 30, 0.10);
     animation: mc-buy-bar-in var(--mc-motion-duration-base) var(--mc-motion-easing-decelerate);
 }
 
@@ -37,9 +38,8 @@
     flex: 0 0 auto;
     width: 3rem;
     height: 3rem;
-    object-fit: contain;
-    border: var(--mc-border-width) solid color-mix(in srgb, var(--mc-border) 45%, transparent);
-    border-radius: var(--mc-radius-md);
+    object-fit: cover;
+    border-radius: var(--mc-radius-lg);
 }
 
 .mc-buy-bar__info {
@@ -77,4 +77,87 @@ body:has(.mc-buy-bar:not([hidden])) {
     .mc-buy-bar__thumb {
         display: none;
     }
+}
+
+@media (min-width: 992px) {
+    .mc-buy-bar {
+        display: none;
+    }
+
+    body:has(.mc-buy-bar:not([hidden])) {
+        padding-bottom: 0;
+    }
+}
+
+/**
+ * mc-product-body / mc-buy-box - the lower product sections with a sticky
+ * mini buy box on the right (desktop only), below the sticky section nav.
+ */
+.mc-product-body__main {
+    min-width: 0;
+}
+
+.mc-buy-box {
+    display: none;
+}
+
+@media (min-width: 992px) {
+    .mc-product-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 17rem;
+        gap: 0 var(--mc-space-8, 2rem);
+        align-items: start;
+    }
+
+    .mc-buy-box {
+        display: block;
+        position: sticky;
+        top: calc(var(--mc-header-sticky-offset, 0px) + var(--mc-section-nav-height, 3rem) + var(--mc-space-4));
+        margin-top: var(--mc-space-4);
+    }
+}
+
+.mc-buy-box__inner {
+    padding: var(--mc-space-5);
+    background: var(--mc-surface-tint);
+    border-radius: var(--mc-radius-xl);
+}
+
+.mc-buy-box__product {
+    display: flex;
+    gap: var(--mc-space-3);
+    margin-bottom: var(--mc-space-3);
+}
+
+.mc-buy-box__thumb {
+    flex: 0 0 auto;
+    width: 4rem;
+    height: 4rem;
+    object-fit: cover;
+    border-radius: var(--mc-radius-lg);
+}
+
+.mc-buy-box__name {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-semibold);
+    line-height: 1.4;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.mc-buy-box__price {
+    margin: 0 0 var(--mc-space-4);
+    font-size: var(--mc-font-size-xl);
+    font-weight: var(--mc-font-weight-bold);
+}
+
+.mc-buy-box__price--special {
+    color: var(--mc-danger);
+}
+
+.mc-buy-box__button {
+    width: 100%;
 }

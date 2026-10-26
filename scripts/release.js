@@ -2,7 +2,7 @@
 /**
  * MintCart release packaging script.
  *
- * docs/IMPLEMENTATION_STATUS.md's "Phase 11 (Technical Plan) — Update /
+ * docs/implementation-log.md's "Phase 11 (Technical Plan) — Update /
  * Compatibility" section flagged this as a standing TODO: `npm install` and
  * `npm run build`, plus the PHP vendor libraries already committed under
  * `upload/system/**\/vendor/`, are dev/release-time tooling only — the
@@ -20,7 +20,7 @@
  *      how OpenCart's own downloadable zip ships a clean `upload/` an
  *      installer still has to run against.
  *   3. Copies the freshly built `assets/dist/{css,js}` into
- *      `upload/assets/{css,js}` inside that staging copy — mirroring the
+ *      `upload/assets/dist/{css,js}` inside that staging copy — mirroring the
  *      local-dev convention already documented in `.gitignore` (`assets/`
  *      lives outside `upload/`, which is what the webserver serves, so the
  *      built output needs to land inside `upload/` to be reachable by URL).
@@ -48,8 +48,38 @@ const ROOT = path.resolve(__dirname, '..');
 const RELEASE_DIR = path.join(ROOT, 'release');
 const STAGING_DIR = path.join(RELEASE_DIR, 'staging');
 
+const IS_WINDOWS = process.platform === 'win32';
+
 function run(command, args, options = {}) {
-    execFileSync(command, args, { stdio: 'inherit', cwd: ROOT, ...options });
+    // npm is npm.cmd on Windows, which execFileSync can only start via a shell.
+    execFileSync(command, args, { stdio: 'inherit', cwd: ROOT, shell: IS_WINDOWS && command === 'npm', ...options });
+}
+
+function commandExists(command) {
+    try {
+        execFileSync(IS_WINDOWS ? 'where' : 'which', [command], { stdio: 'ignore' });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+// `zip` when available; otherwise Windows' own bsdtar (System32\tar.exe,
+// Windows 10+), which writes zip archives with -a.
+function zipDirectory(zipPath, directory, cwd) {
+    if (commandExists('zip')) {
+        run('zip', ['-r', '-q', zipPath, directory], { cwd });
+        return;
+    }
+
+    if (IS_WINDOWS) {
+        const bsdtar = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe');
+
+        run(bsdtar, ['-a', '-c', '-f', zipPath, directory], { cwd });
+        return;
+    }
+
+    throw new Error('No "zip" command found - install zip and run again.');
 }
 
 function readVersion() {
@@ -80,16 +110,23 @@ function main() {
     console.log('\n[2/4] Staging committed upload/ contents (git archive HEAD)...');
     fs.rmSync(RELEASE_DIR, { recursive: true, force: true });
     fs.mkdirSync(STAGING_DIR, { recursive: true });
-    // `git archive` writes a tar stream to stdout; pipe it straight into
-    // `tar -x` rather than writing an intermediate .tar file to disk.
-    execFileSync(
-        `git archive --format=tar HEAD upload | tar -x -C "${STAGING_DIR}"`,
-        { shell: true, stdio: 'inherit', cwd: ROOT }
-    );
+    // Write the archive to a file and extract it without a shell pipe: on
+    // Windows a shell resolves `tar` to Git's GNU tar, which mangles
+    // C:\ paths; System32's bsdtar handles them.
+    const tarPath = path.join(RELEASE_DIR, 'upload.tar');
+    const tarCommand = IS_WINDOWS
+        ? path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe')
+        : 'tar';
 
-    console.log('\n[3/4] Copying built assets into upload/assets/{css,js}...');
+    run('git', ['archive', '--format=tar', '-o', tarPath, 'HEAD', 'upload']);
+    run(tarCommand, ['-x', '-f', tarPath, '-C', STAGING_DIR]);
+    fs.rmSync(tarPath);
+
+    console.log('\n[3/4] Copying built assets into upload/assets/dist/{css,js}...');
     const distDir = path.join(ROOT, 'assets/dist');
-    const uploadAssetsDir = path.join(STAGING_DIR, 'upload/assets');
+    // Pages load assets/dist/{css,js}/*.min.* (catalog and admin
+    // common/header.php) - the package must use the same path.
+    const uploadAssetsDir = path.join(STAGING_DIR, 'upload/assets/dist');
 
     for (const kind of ['css', 'js']) {
         const source = path.join(distDir, kind);
@@ -102,11 +139,17 @@ function main() {
         }
 
         fs.mkdirSync(destination, { recursive: true });
-        fs.cpSync(source, destination, { recursive: true });
+        // Only the minified files pages load; assets/dist may also hold
+        // dev builds and source maps from `npm run dev`.
+        for (const file of fs.readdirSync(source)) {
+            if (/\.min\.(css|js)$/.test(file)) {
+                fs.copyFileSync(path.join(source, file), path.join(destination, file));
+            }
+        }
     }
 
     console.log('\n[4/4] Zipping upload/ into ' + path.relative(ROOT, zipPath) + '...');
-    run('zip', ['-r', '-q', zipPath, 'upload'], { cwd: STAGING_DIR });
+    zipDirectory(zipPath, 'upload', STAGING_DIR);
 
     fs.rmSync(STAGING_DIR, { recursive: true, force: true });
 

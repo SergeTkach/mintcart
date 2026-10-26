@@ -2,6 +2,7 @@
 class ControllerCommonHeader extends Controller {
 	public function index() {
 		$data['title'] = $this->document->getTitle();
+		$data['mc_favicon'] = HTTP_CATALOG . 'image/catalog/mintcart-favicon.png';
 
 		if ($this->request->server['HTTPS']) {
 			$data['base'] = HTTPS_SERVER;
@@ -66,6 +67,11 @@ class ControllerCommonHeader extends Controller {
 			// docs/developer/admin/asset-enqueue.md for why that one, not
 			// "index", on a legacy Bootstrap 3 admin screen like this one.
 			$this->enqueueMintAssets();
+
+			// $data['styles'] / ['scripts'] were read above, before the
+			// queue grew - refresh them or the bundle never reaches the page.
+			$data['styles'] = $this->document->getStyles();
+			$data['scripts'] = $this->document->getScripts();
 
 			$data['mc_admin_search_url'] = $this->url->link('mintcart/adminsearch', 'user_token=' . $this->session->data['user_token'], true);
 

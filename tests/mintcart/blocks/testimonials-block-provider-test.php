@@ -92,6 +92,17 @@ assertSame____(1, count($result['items']), 'Scenario 3: only the one fully valid
 assertSame____('Valid quote', $result['items'][0]['quote'], 'Scenario 3: the surviving item should be the valid one', $failures);
 assertSame____(null, $result['items'][0]['rating'], 'Scenario 3: an out-of-range rating (11) should normalize to null, not pass through', $failures);
 
+// Scenario 4: review-backed block (source "reviews"): source/limit/more_label normalization.
+$result = $provider->build(['source' => 'reviews', 'limit' => 5], ['more_label' => '  See all  ']);
+assertSame____('reviews', $result['source'], 'Scenario 4: source reviews is kept', $failures);
+assertSame____(5, $result['limit'], 'Scenario 4: limit is kept', $failures);
+assertSame____('See all', $result['more_label'], 'Scenario 4: more_label is trimmed', $failures);
+
+$result = $provider->build(['source' => 'whatever', 'limit' => 99], []);
+assertSame____('manual', $result['source'], 'Scenario 4: unknown source falls back to manual', $failures);
+assertSame____(3, $result['limit'], 'Scenario 4: out-of-range limit falls back to 3', $failures);
+assertSame____('', $result['more_label'], 'Scenario 4: no more_label by default', $failures);
+
 if ($failures) {
     fwrite(STDERR, 'FAIL: ' . count($failures) . " assertion(s) failed:\n");
     foreach ($failures as $failure) {
@@ -100,5 +111,5 @@ if ($failures) {
     exit(1);
 }
 
-echo "PASS: TestimonialsBlockProvider smoke test (3 scenarios)\n";
+echo "PASS: TestimonialsBlockProvider smoke test (4 scenarios)\n";
 exit(0);

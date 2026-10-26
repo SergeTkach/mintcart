@@ -98,10 +98,26 @@ class ControllerProductCategory extends Controller {
 			// Pure string logic, cannot throw - no try/catch needed, same
 			// as every other Diagnostics/CanonicalUrlBuilder-shaped pure
 			// value object wired into this controller.
-			$mint_meta = (new \MintCart\Seo\MetaBuilder())->build(
+			// Marketing -> SEO -> Meta tags: the merchant's templates, with the category's values.
+			$meta_parent = '';
+
+			if (!empty($category_info['parent_id'])) {
+				$meta_parent_info = $this->model_catalog_category->getCategory($category_info['parent_id']);
+
+				$meta_parent = $meta_parent_info ? $meta_parent_info['name'] : '';
+			}
+
+			$mint_meta = (new \MintCart\Seo\MetaBuilder(\MintCart\Seo\MetaRules::forPage($this->config->get('mintcart_seo_meta'), 'category', (int)$this->config->get('config_language_id'))))->build(
 				$category_info['meta_title'],
 				$category_info['meta_description'],
-				$category_info['name']
+				$category_info['name'],
+				null,
+				array(
+					'name'        => $category_info['name'],
+					'parent'      => $meta_parent,
+					'store'       => $this->config->get('config_name'),
+					'description' => $category_info['description']
+				)
 			);
 
 			$this->document->setTitle($mint_meta['title']);
@@ -134,6 +150,11 @@ class ControllerProductCategory extends Controller {
 			}
 
 			$data['description'] = html_entity_decode($category_info['description'], ENT_QUOTES, 'UTF-8');
+
+			// MintCart: a short intro above the product list, the rest below it.
+			$description_parts = (new \MintCart\Catalog\DescriptionSplitter())->split($data['description'], 360);
+			$data['description_intro'] = $description_parts['intro'];
+			$data['description_rest'] = $description_parts['rest'];
 			$data['compare'] = $this->url->link('product/compare');
 
 			$url = '';

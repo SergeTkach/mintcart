@@ -47,6 +47,12 @@ class ControllerMintcartBusinessDelivery extends Controller {
 			$data['success'] = '';
 		}
 
+		if (isset($this->session->data['warning'])) {
+			$this->error['warning'] = $this->session->data['warning'];
+
+			unset($this->session->data['warning']);
+		}
+
 		$data['error_warning'] = isset($this->error['warning']) ? $this->error['warning'] : '';
 
 		$data['breadcrumbs'] = array();
@@ -63,7 +69,12 @@ class ControllerMintcartBusinessDelivery extends Controller {
 
 		$data['action_toggle'] = $this->url->link('mintcart/business/delivery/toggle', 'user_token=' . $this->session->data['user_token'], true);
 		$data['manage'] = $this->url->link('extension/extension/shipping', 'user_token=' . $this->session->data['user_token'], true);
-		$data['extensions'] = $this->getExtensionRows('shipping');
+		$this->load->model('mintcart/methods');
+
+		$data['action_save'] = $this->url->link('mintcart/business/delivery/save', 'user_token=' . $this->session->data['user_token'], true);
+		$data['action_install'] = $this->url->link('mintcart/business/delivery/install', 'user_token=' . $this->session->data['user_token'], true);
+		$data['extensions'] = $this->model_mintcart_methods->getInstalled('shipping');
+		$data['available'] = $this->model_mintcart_methods->getAvailable('shipping');
 
 		$data['header'] = $this->load->controller('common/header');
 		$data['column_left'] = $this->load->controller('common/column_left');
@@ -115,32 +126,38 @@ class ControllerMintcartBusinessDelivery extends Controller {
 		return !$this->error;
 	}
 
-	/**
-	 * Same defensive "only list an extension that still has a real
-	 * controller file" check `ControllerExtensionExtensionShipping::getList()`
-	 * already performs (an extension can be uninstalled by deleting its
-	 * file directly on disk, leaving a stale `oc_extension` row behind).
-	 *
-	 * @return array<int, array{code: string, name: string, enabled: bool, edit: string}>
-	 */
-	protected function getExtensionRows($type) {
-		$rows = array();
+	// route=mintcart/business/delivery/save - POST code, field[<key>]; JSON
+	public function save() {
+		$this->load->language('mintcart/business/delivery');
+		$this->load->model('mintcart/methods');
 
-		foreach ($this->model_setting_extension->getInstalled($type) as $code) {
-			if (!is_file(DIR_APPLICATION . 'controller/extension/' . $type . '/' . $code . '.php')) {
-				continue;
-			}
-
-			$this->load->language('extension/' . $type . '/' . $code, 'extension');
-
-			$rows[] = array(
-				'code'    => $code,
-				'name'    => $this->language->get('extension')->get('heading_title'),
-				'enabled' => (bool)$this->config->get($type . '_' . $code . '_status'),
-				'edit'    => $this->url->link('extension/' . $type . '/' . $code, 'user_token=' . $this->session->data['user_token'], true)
-			);
+		if (!$this->user->hasPermission('modify', 'mintcart/business/delivery')) {
+			$result = array('ok' => false, 'message' => $this->language->get('error_permission'), 'errors' => array());
+		} else {
+			$result = $this->model_mintcart_methods->saveFields('shipping', (string)($this->request->post['code'] ?? ''), (array)($this->request->post['field'] ?? array()));
 		}
 
-		return $rows;
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($result));
+	}
+
+	// route=mintcart/business/delivery/install - POST code of an available extension
+	public function install() {
+		$this->load->language('mintcart/business/delivery');
+		$this->load->model('mintcart/methods');
+
+		$code = (string)($this->request->post['code'] ?? '');
+
+		if (!$this->user->hasPermission('modify', 'mintcart/business/delivery')) {
+			$this->session->data['warning'] = $this->language->get('error_permission');
+		} elseif (!$this->model_mintcart_methods->isAvailable('shipping', $code)) {
+			$this->session->data['warning'] = $this->language->get('error_extension');
+		} else {
+			$this->model_mintcart_methods->install('shipping', $code);
+
+			$this->session->data['success'] = $this->language->get('text_added');
+		}
+
+		$this->response->redirect($this->url->link('mintcart/business/delivery', 'user_token=' . $this->session->data['user_token'], true));
 	}
 }

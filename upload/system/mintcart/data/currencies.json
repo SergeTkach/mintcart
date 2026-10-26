@@ -1,0 +1,242 @@
+{
+ "USD": {
+  "title": "US Dollar",
+  "symbol": "$",
+  "side": "l",
+  "decimals": 2
+ },
+ "EUR": {
+  "title": "Euro",
+  "symbol": "€",
+  "side": "r",
+  "decimals": 2
+ },
+ "GBP": {
+  "title": "Pound Sterling",
+  "symbol": "£",
+  "side": "l",
+  "decimals": 2
+ },
+ "UAH": {
+  "title": "Ukrainian Hryvnia",
+  "symbol": "₴",
+  "side": "r",
+  "decimals": 2
+ },
+ "PLN": {
+  "title": "Polish Zloty",
+  "symbol": "zł",
+  "side": "r",
+  "decimals": 2
+ },
+ "CZK": {
+  "title": "Czech Koruna",
+  "symbol": "Kč",
+  "side": "r",
+  "decimals": 2
+ },
+ "HUF": {
+  "title": "Hungarian Forint",
+  "symbol": "Ft",
+  "side": "r",
+  "decimals": 0
+ },
+ "RON": {
+  "title": "Romanian Leu",
+  "symbol": "lei",
+  "side": "r",
+  "decimals": 2
+ },
+ "BGN": {
+  "title": "Bulgarian Lev",
+  "symbol": "лв",
+  "side": "r",
+  "decimals": 2
+ },
+ "CHF": {
+  "title": "Swiss Franc",
+  "symbol": "CHF",
+  "side": "l",
+  "decimals": 2
+ },
+ "SEK": {
+  "title": "Swedish Krona",
+  "symbol": "kr",
+  "side": "r",
+  "decimals": 2
+ },
+ "NOK": {
+  "title": "Norwegian Krone",
+  "symbol": "kr",
+  "side": "r",
+  "decimals": 2
+ },
+ "DKK": {
+  "title": "Danish Krone",
+  "symbol": "kr",
+  "side": "r",
+  "decimals": 2
+ },
+ "ISK": {
+  "title": "Icelandic Krona",
+  "symbol": "kr",
+  "side": "r",
+  "decimals": 0
+ },
+ "TRY": {
+  "title": "Turkish Lira",
+  "symbol": "₺",
+  "side": "l",
+  "decimals": 2
+ },
+ "CAD": {
+  "title": "Canadian Dollar",
+  "symbol": "$",
+  "side": "l",
+  "decimals": 2
+ },
+ "AUD": {
+  "title": "Australian Dollar",
+  "symbol": "$",
+  "side": "l",
+  "decimals": 2
+ },
+ "NZD": {
+  "title": "New Zealand Dollar",
+  "symbol": "$",
+  "side": "l",
+  "decimals": 2
+ },
+ "JPY": {
+  "title": "Japanese Yen",
+  "symbol": "¥",
+  "side": "l",
+  "decimals": 0
+ },
+ "CNY": {
+  "title": "Chinese Yuan",
+  "symbol": "¥",
+  "side": "l",
+  "decimals": 2
+ },
+ "KRW": {
+  "title": "South Korean Won",
+  "symbol": "₩",
+  "side": "l",
+  "decimals": 0
+ },
+ "INR": {
+  "title": "Indian Rupee",
+  "symbol": "₹",
+  "side": "l",
+  "decimals": 2
+ },
+ "BRL": {
+  "title": "Brazilian Real",
+  "symbol": "R$",
+  "side": "l",
+  "decimals": 2
+ },
+ "MXN": {
+  "title": "Mexican Peso",
+  "symbol": "$",
+  "side": "l",
+  "decimals": 2
+ },
+ "ZAR": {
+  "title": "South African Rand",
+  "symbol": "R",
+  "side": "l",
+  "decimals": 2
+ },
+ "ILS": {
+  "title": "Israeli Shekel",
+  "symbol": "₪",
+  "side": "l",
+  "decimals": 2
+ },
+ "SGD": {
+  "title": "Singapore Dollar",
+  "symbol": "$",
+  "side": "l",
+  "decimals": 2
+ },
+ "HKD": {
+  "title": "Hong Kong Dollar",
+  "symbol": "$",
+  "side": "l",
+  "decimals": 2
+ },
+ "THB": {
+  "title": "Thai Baht",
+  "symbol": "฿",
+  "side": "l",
+  "decimals": 2
+ },
+ "IDR": {
+  "title": "Indonesian Rupiah",
+  "symbol": "Rp",
+  "side": "l",
+  "decimals": 0
+ },
+ "MYR": {
+  "title": "Malaysian Ringgit",
+  "symbol": "RM",
+  "side": "l",
+  "decimals": 2
+ },
+ "PHP": {
+  "title": "Philippine Peso",
+  "symbol": "₱",
+  "side": "l",
+  "decimals": 2
+ },
+ "AED": {
+  "title": "UAE Dirham",
+  "symbol": "AED",
+  "side": "l",
+  "decimals": 2
+ },
+ "SAR": {
+  "title": "Saudi Riyal",
+  "symbol": "SAR",
+  "side": "l",
+  "decimals": 2
+ },
+ "KZT": {
+  "title": "Kazakhstani Tenge",
+  "symbol": "₸",
+  "side": "r",
+  "decimals": 2
+ },
+ "GEL": {
+  "title": "Georgian Lari",
+  "symbol": "₾",
+  "side": "r",
+  "decimals": 2
+ },
+ "MDL": {
+  "title": "Moldovan Leu",
+  "symbol": "L",
+  "side": "r",
+  "decimals": 2
+ },
+ "RSD": {
+  "title": "Serbian Dinar",
+  "symbol": "дин",
+  "side": "r",
+  "decimals": 2
+ },
+ "RUB": {
+  "title": "Russian Ruble",
+  "symbol": "₽",
+  "side": "r",
+  "decimals": 2
+ },
+ "BYN": {
+  "title": "Belarusian Ruble",
+  "symbol": "Br",
+  "side": "r",
+  "decimals": 2
+ }
+}

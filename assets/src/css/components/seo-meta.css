@@ -1,0 +1,243 @@
+/**
+ * Marketing > Meta tags screen (admin/view/template/mintcart/seo/meta.twig); legacy admin page, own classes only.
+ */
+
+
+/* ---------------------------------------------------------------------- */
+/* Marketing > Meta tags (mintcart/seo/meta)                                */
+/* ---------------------------------------------------------------------- */
+
+.mc-meta__langs {
+    margin-bottom: 12px;
+}
+
+.mc-meta__type {
+    margin-top: 24px;
+}
+
+.mc-meta [hidden] {
+    display: none !important;
+}
+
+.mc-meta__hint {
+    margin: 0 0 8px;
+    color: #888;
+    font-size: 12px;
+}
+
+.mc-meta__vars {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.mc-meta__vars-label {
+    color: #999;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mc-meta__var {
+    padding: 2px 8px;
+    color: #5a4fcf;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    background: #f4f2ff;
+    border: 1px solid #d9d3ff;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.mc-meta__var:hover {
+    background: #e8e4ff;
+}
+
+.mc-meta__field {
+    max-width: 880px;
+    margin-bottom: 16px;
+}
+
+.mc-meta__label {
+    display: block;
+    margin-bottom: 4px;
+    color: #999;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mc-meta .form-control {
+    color: #444;
+    font-size: 13px;
+    border-color: #e0e2e5;
+    border-radius: 3px;
+    box-shadow: none;
+}
+
+.mc-meta .form-control:focus {
+    border-color: #66afe9;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04), 0 0 5px rgba(102, 175, 233, 0.5);
+}
+
+.mc-meta__always {
+    display: block;
+    margin: 6px 0 0;
+    color: #777;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.mc-meta__always input {
+    margin-right: 4px;
+}
+
+.mc-meta__preview {
+    margin-top: 6px;
+    padding: 6px 10px;
+    color: #1a0dab;
+    font-size: 13px;
+    background: #f8f9fa;
+    border-left: 3px solid #c5bbff;
+    border-radius: 0 3px 3px 0;
+}
+
+.mc-meta__preview span {
+    color: #999;
+    font-size: 11px;
+}
+
+.mc-meta__preview.is-empty {
+    color: #999;
+    font-size: 12px;
+    border-left-color: #ddd;
+}
+
+
+/* ---------------------------------------------------------------------- */
+/* SEO -> URL Generator (mintcart/seo/url_generator)                        */
+/* ---------------------------------------------------------------------- */
+
+.mc-urlgen__row {
+    max-width: 880px;
+    margin-bottom: 16px;
+}
+
+.mc-urlgen__label {
+    display: block;
+    margin-bottom: 4px;
+    color: #999;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mc-urlgen .form-control {
+    color: #444;
+    font-size: 13px;
+    border-color: #e0e2e5;
+    border-radius: 3px;
+    box-shadow: none;
+}
+
+.mc-urlgen .form-control:focus {
+    border-color: #66afe9;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04), 0 0 5px rgba(102, 175, 233, 0.5);
+}
+
+.mc-urlgen__vars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.mc-urlgen__var {
+    padding: 2px 8px;
+    color: #5a4fcf;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    background: #f4f2ff;
+    border: 1px solid #d9d3ff;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.mc-urlgen__var:hover {
+    background: #e8e4ff;
+}
+
+.mc-urlgen__note {
+    margin-left: 10px;
+    color: #2f7d32;
+}
+
+
+/* ---------------------------------------------------------------------- */
+/* SEO -> Redirects (mintcart/seo/redirects)                                */
+/* ---------------------------------------------------------------------- */
+
+.mc-redirects__option {
+    display: block;
+    margin: 0 0 10px;
+    font-weight: 400;
+}
+
+.mc-redirects__option input {
+    margin-right: 6px;
+}
+
+.mc-redirects__help {
+    display: block;
+    margin-left: 22px;
+    color: #999;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+}
+
+.mc-redirects__arrow {
+    color: #2f7d32;
+    font-weight: 600;
+}
+
+.mc-redirects__add {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.mc-redirects__field {
+    flex: 1 1 220px;
+}
+
+.mc-redirects__field--small {
+    flex: 0 1 170px;
+}
+
+.mc-redirects__field--button {
+    flex: 0 0 auto;
+}
+
+.mc-redirects__label {
+    display: block;
+    margin-bottom: 4px;
+    color: #999;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mc-redirects .form-control {
+    color: #444;
+    font-size: 13px;
+    border-color: #e0e2e5;
+    border-radius: 3px;
+    box-shadow: none;
+}

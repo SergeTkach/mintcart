@@ -1,3 +1,13 @@
+{%- import _self as m -%}
+{%- set t = {
+  'drag': text_item_drag,
+  'remove': text_item_remove,
+  'more': text_item_more,
+  'add': button_add_item,
+  'empty': text_items_empty,
+  'pick': text_image_pick,
+  'placeholder': placeholder
+} -%}
 {{ header }}{{ column_left }}
 <div id="content">
   <div class="page-header">
@@ -29,7 +39,7 @@
         <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_form }}</h3>
       </div>
       <div class="panel-body">
-        <form action="{{ action }}" method="post" id="form-block" class="form-horizontal">
+        <form action="{{ action }}" method="post" id="form-block" class="form-horizontal" data-mc-items-form>
           <div class="form-group required">
             <label class="col-sm-2 control-label" for="input-type">{{ entry_type }}</label>
             <div class="col-sm-10">
@@ -71,10 +81,10 @@
               <div class="form-group">
                 <label class="col-sm-2 control-label" for="input-{{ field.name }}{{ language.language_id }}">{{ field.label }}</label>
                 <div class="col-sm-10">
-                  {% if field.type == 'textarea' or field.type == 'json' %}
-                  <textarea name="block_content[{{ language.language_id }}][{{ field.name }}]" placeholder="{{ field.label }}" id="input-{{ field.name }}{{ language.language_id }}" class="form-control" rows="{% if field.type == 'json' %}6{% else %}4{% endif %}">{{ block_content[language.language_id][field.name] }}</textarea>
+                  {% if field.type == 'textarea' %}
+                  <textarea name="block_content[{{ language.language_id }}][{{ field.name }}]" placeholder="{{ field.label|e }}" id="input-{{ field.name }}{{ language.language_id }}" class="form-control" rows="4">{{ block_content[language.language_id][field.name]|e }}</textarea>
                   {% else %}
-                  <input type="text" name="block_content[{{ language.language_id }}][{{ field.name }}]" value="{{ block_content[language.language_id][field.name] }}" placeholder="{{ field.label }}" id="input-{{ field.name }}{{ language.language_id }}" class="form-control" />
+                  <input type="text" name="block_content[{{ language.language_id }}][{{ field.name }}]" value="{{ block_content[language.language_id][field.name]|e }}" placeholder="{{ field.label|e }}" id="input-{{ field.name }}{{ language.language_id }}" class="form-control" />
                   {% endif %}
                   {% if field.help %}
                   <div class="help-block">{{ field.help }}</div>
@@ -99,58 +109,15 @@
                   <option value="{{ value }}"{% if value == field.value %} selected="selected"{% endif %}>{{ label }}</option>
                   {% endfor %}
                 </select>
-                {% elseif field.type == 'json' %}
-                <textarea name="settings[{{ field.name }}]" placeholder="{{ field.label }}" id="input-{{ field.name }}" class="form-control" rows="6">{{ field.value }}</textarea>
                 {% elseif field.type == 'number' %}
-                <input type="number" name="settings[{{ field.name }}]" value="{{ field.value }}" placeholder="{{ field.label }}" id="input-{{ field.name }}" class="form-control"{% if field.min is not null %} min="{{ field.min }}"{% endif %} />
+                <input type="number" name="settings[{{ field.name }}]" value="{{ field.value|e }}" placeholder="{{ field.label|e }}" id="input-{{ field.name }}" class="form-control"{% if field.min is not null %} min="{{ field.min }}"{% endif %} />
                 {% elseif field.type == 'image' %}
-                {#
-                  MintCart Phase 11/25 (Media UX, MINTCART_FUNCTIONAL_SCOPE.md
-                  §25) - mc-media-picker as an additional way to fill this
-                  path field, alongside the plain text input (kept exactly
-                  as before: a merchant who already knows the path can still
-                  type/paste it directly, same "picker is additive, not a
-                  replacement" shape as product_form.twig's Manufacturer/
-                  Category pickers and order_form.twig's Customer picker -
-                  see docs/developer/admin/asset-enqueue.md). Confirming a
-                  selection writes the chosen image's catalog-relative path
-                  (ModelDesignMedia::getFiles()'s `id`, the same shape
-                  `model_tool_image->resize()` already expects everywhere
-                  else this file's own image settings are rendered) into the
-                  text input below - no change to how the value is posted/
-                  normalized (ControllerDesignHomepage::normalizeFieldValue()
-                  still just sees a plain string).
-                #}
-                <div class="input-group">
-                  <input type="text" name="settings[{{ field.name }}]" value="{{ field.value }}" placeholder="{{ field.label }}" id="input-{{ field.name }}" class="form-control" data-mc-image-field-path />
-                  <span class="input-group-btn">
-                    <button type="button" class="btn btn-default" data-mc-action="browse-image" aria-controls="image-picker-{{ field.name }}" aria-expanded="false"><i class="fa fa-picture-o"></i> {{ text_media_picker_browse }}</button>
-                  </span>
-                </div>
-                <div class="mc-media-picker" id="image-picker-{{ field.name }}" data-mc-image-picker hidden>
-                  <div class="mc-media-picker__toolbar">
-                    <input type="search" class="mc-field__control" data-mc-media-picker-search placeholder="{{ text_media_picker_search }}" aria-label="{{ text_media_picker_search }}">
-                    <select class="mc-field__control" data-mc-media-picker-folder aria-label="{{ text_media_picker_search }}"></select>
-                    <label class="mc-button mc-button--secondary">
-                      {{ text_media_picker_upload }}
-                      <input type="file" multiple hidden accept="image/*" data-mc-media-picker-upload>
-                    </label>
-                  </div>
-                  <div class="mc-media-picker__grid" role="listbox" aria-label="{{ field.label }}" data-mc-media-picker-grid></div>
-                  <p class="mc-media-picker__empty" data-mc-media-picker-empty hidden>{{ text_media_picker_empty }}</p>
-                  <div class="mc-media-picker__pager">
-                    <button type="button" class="mc-button mc-button--secondary" data-mc-action="media-picker-prev">{{ text_media_picker_prev }}</button>
-                    <span class="mc-media-picker__page-info" data-mc-media-picker-page-info></span>
-                    <button type="button" class="mc-button mc-button--secondary" data-mc-action="media-picker-next">{{ text_media_picker_next }}</button>
-                  </div>
-                  <div class="mc-media-picker__footer">
-                    <span data-mc-media-picker-selected-count></span>
-                    <button type="button" class="mc-button mc-button--secondary" data-mc-action="media-picker-delete"></button>
-                    <button type="button" class="mc-button mc-button--primary" data-mc-action="media-picker-confirm">{{ text_media_picker_confirm }}</button>
-                  </div>
+                <div class="mc-items__image">
+                  <a href="" id="thumb-{{ field.name }}" data-toggle="image" class="img-thumbnail" title="{{ text_image_pick }}"><img src="{{ field.thumb }}" alt="" data-placeholder="{{ placeholder }}" /></a>
+                  <input type="hidden" name="settings[{{ field.name }}]" value="{{ field.value|e }}" id="input-{{ field.name }}" />
                 </div>
                 {% else %}
-                <input type="text" name="settings[{{ field.name }}]" value="{{ field.value }}" placeholder="{{ field.label }}" id="input-{{ field.name }}" class="form-control" />
+                <input type="text" name="settings[{{ field.name }}]" value="{{ field.value|e }}" placeholder="{{ field.label|e }}" id="input-{{ field.name }}" class="form-control" />
                 {% endif %}
                 {% if field.help %}
                 <div class="help-block">{{ field.help }}</div>
@@ -160,128 +127,106 @@
             {% endfor %}
           </fieldset>
           {% endif %}
+
+          {% for list in lists %}
+          <fieldset class="mc-items" data-mc-items data-list="{{ list.name }}" data-max="{{ list.max }}"{% if list.show_when %} data-mc-show-setting="{{ list.show_when[0] }}" data-mc-show-value="{{ list.show_when[1] }}"{% endif %}>
+            <legend>{{ list.label }}</legend>
+            {% if languages|length > 1 %}
+            <ul class="nav nav-tabs mc-items__langs">
+              {% for language in languages %}
+              <li{% if loop.first %} class="active"{% endif %}><a href="#" data-mc-items-lang="{{ language.language_id }}"><img src="language/{{ language.code }}/{{ language.code }}.png" title="{{ language.name }}" /> {{ language.name }}</a></li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="mc-items__list" data-mc-items-list>
+              {% for row in list.rows %}
+              {{ m.item_row(list, row, loop.index0, languages, t) }}
+              {% endfor %}
+            </div>
+            <p class="mc-items__empty text-muted" data-mc-items-empty>{{ t.empty }}</p>
+            <button type="button" class="btn btn-primary btn-sm" data-mc-items-add><i class="fa fa-plus-circle"></i> {{ t.add }}</button>
+            <template data-mc-items-template>{{ m.item_row(list, list.blank, '__UID__', languages, t) }}</template>
+          </fieldset>
+          {% endfor %}
+
+          {% if ai_languages_count > 1 %}
+          <div class="mc-ai" data-mc-ai-translate data-languages="{{ ai_languages|e }}" data-text-confirm="{{ text_ai_confirm|e }}" data-text-invalid="{{ text_ai_invalid|e }}" data-text-notes="{{ text_ai_notes|e }}">
+            <div class="mc-ai__head">
+              <span class="mc-ai__title"><i class="fa fa-magic"></i> {{ text_ai_title }}</span>
+              <span>
+                <button type="button" class="btn btn-default btn-xs" data-mc-ai-copy><i class="fa fa-clipboard"></i> {{ button_ai_copy }}</button>
+                <button type="button" class="btn btn-default btn-xs" data-mc-ai-refresh><i class="fa fa-refresh"></i> {{ button_ai_refresh }}</button>
+                <button type="button" class="btn btn-xs mc-ai__apply" data-mc-ai-apply><i class="fa fa-level-up"></i> {{ button_ai_apply }}</button>
+              </span>
+            </div>
+            <div class="mc-ai__body">
+              <p class="mc-ai__hint">{{ text_ai_hint }} <em>{{ text_ai_prompt }}</em></p>
+              <textarea class="form-control mc-ai__json" rows="12" data-mc-ai-json spellcheck="false"></textarea>
+            </div>
+          </div>
+          {% endif %}
         </form>
       </div>
     </div>
   </div>
 </div>
-<script type="text/javascript"><!--
-// MintCart Phase 11/25 (Media UX, MINTCART_FUNCTIONAL_SCOPE.md §25) -
-// mc-media-picker for this form's `image`-type settings fields (currently
-// Hero/Text+Image's `image` field, see docs/developer/components/media-picker.md).
-// Generic over however many `[data-mc-image-picker]` roots the
-// settings_fields loop above renders (today: at most one visible at a
-// time, since only one block type's fields render per page load) rather
-// than hardcoding one field name - same "no mc-drawer/mc-modal needed,
-// plain hidden-attribute toggle" shape as sale/order_form.twig's Customer
-// field McEntityPicker (neither mc-drawer nor mc-modal work on this
-// Bootstrap-3 legacy screen - components.min.css deliberately excludes
-// the Bootstrap 5 JS/CSS they depend on, see
-// docs/developer/admin/asset-enqueue.md).
-//
-// Known, documented limitation: ModelDesignMedia::getFiles() lists
-// subdirectories inline in the same grid as images (type: 'directory'),
-// since the backend was built for a general-purpose browse/upload/delete
-// API, not specifically for this single-image-field consumer. This
-// picker does not let a directory cell be "entered" (clicking one only
-// toggles its (inert) selection) - folder navigation here is limited to
-// the top-level folder <select> fetchFolders() already populates. Picking
-// a directory cell and confirming does nothing (no path is applied),
-// rather than silently writing a folder path into an image field.
-(function () {
-	if (!window.MintCart || !window.MintCart.createMediaPicker) {
-		return;
-	}
-
-	function fetchJson(url, options) {
-		return fetch(url, options).then(function (response) {
-			return response.json();
-		});
-	}
-
-	document.querySelectorAll('[data-mc-image-picker]').forEach(function (pickerRoot) {
-		var wrapper = pickerRoot.previousElementSibling;
-		var pathInput = wrapper ? wrapper.querySelector('[data-mc-image-field-path]') : null;
-		var browseButton = wrapper ? wrapper.querySelector('[data-mc-action="browse-image"]') : null;
-		var folderSelect = pickerRoot.querySelector('[data-mc-media-picker-folder]');
-
-		if (!pathInput || !browseButton) {
-			return;
-		}
-
-		var picker = window.MintCart.createMediaPicker(pickerRoot, {
-			multiple: false,
-			fetchItems: function (options) {
-				var params = new URLSearchParams({
-					folder: options.folder || '',
-					query: options.query || '',
-					page: options.page,
-					pageSize: options.pageSize
-				});
-
-				return fetchJson('index.php?route=design/media/list&user_token={{ user_token }}&' + params, { signal: options.signal });
-			},
-			fetchFolders: function () {
-				return fetchJson('index.php?route=design/media/folders&user_token={{ user_token }}').then(function (json) {
-					return json.folders || [];
-				});
-			},
-			uploadFiles: function (files) {
-				var formData = new FormData();
-
-				files.forEach(function (file) {
-					formData.append('file[]', file);
-				});
-
-				var folder = folderSelect ? folderSelect.value : '';
-
-				return fetch('index.php?route=design/media/upload&user_token={{ user_token }}&folder=' + encodeURIComponent(folder), {
-					method: 'POST',
-					body: formData
-				}).then(function (response) {
-					return response.json();
-				});
-			},
-			deleteItems: function (items) {
-				var params = new URLSearchParams();
-
-				items.forEach(function (item) {
-					params.append('paths[]', item.id);
-				});
-
-				return fetch('index.php?route=design/media/delete&user_token={{ user_token }}', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-					body: params.toString()
-				}).then(function (response) {
-					return response.json();
-				});
-			},
-			onConfirm: function (selected) {
-				var item = selected[0];
-
-				if (item && item.type !== 'directory') {
-					pathInput.value = item.id;
-				}
-
-				picker.clear();
-				pickerRoot.hidden = true;
-				browseButton.setAttribute('aria-expanded', 'false');
-				browseButton.focus();
-			}
-		});
-
-		browseButton.addEventListener('click', function () {
-			var opening = pickerRoot.hidden;
-
-			pickerRoot.hidden = !pickerRoot.hidden;
-			browseButton.setAttribute('aria-expanded', String(opening));
-
-			if (opening) {
-				picker.refresh();
-			}
-		});
-	});
-})();
-//--></script>
 {{ footer }}
+{#
+  One row of a block's list (a slide, banner, benefit, ...). Used for the existing rows and,
+  with uid "__UID__" and empty values, for the <template> the "Add" button clones.
+  Left to right: drag handle, the fields shared by every language (picture, links, colour),
+  the texts (one pane per language, switched by the tabs above the list), row actions.
+#}
+{% macro item_row(list, row, uid, languages, t) %}
+<div class="mc-items__row" data-mc-items-row data-uid="{{ uid }}">
+  <div class="mc-items__handle">
+    <i class="fa fa-arrows mc-items__grip" data-mc-items-handle title="{{ t.drag }}" aria-hidden="true"></i>
+  </div>
+  {% for f in list.images %}
+  <div class="mc-items__col mc-items__col--image">
+    <label class="mc-items__label">{{ f.label }}</label>
+    <div class="mc-items__image">
+      <a href="" id="thumb-{{ list.name }}-{{ uid }}-{{ f.name }}" data-toggle="image" class="img-thumbnail" title="{{ t.pick }}"><img src="{{ row.thumbs[f.name] }}" alt="" data-placeholder="{{ t.placeholder }}" /></a>
+      <input type="hidden" name="settings[{{ list.name }}][{{ uid }}][{{ f.name }}]" value="{{ row.settings[f.name]|e }}" id="input-{{ list.name }}-{{ uid }}-{{ f.name }}" />
+    </div>
+  </div>
+  {% endfor %}
+  {% for column, fields in list.columns %}
+  <div class="mc-items__col mc-items__col--{{ column }}">
+    {% for f in fields %}
+    <div class="mc-items__field{% if f.extra %} mc-items__field--extra{% endif %}" data-mc-items-field{% if f.extra %} data-mc-items-extra hidden{% endif %}>
+      <label class="mc-items__label">{{ f.label }}</label>
+      {% if f.scope == 'settings' %}
+        {% if f.type == 'select' %}
+        <select name="settings[{{ list.name }}][{{ uid }}][{{ f.name }}]" class="form-control">
+          {% for value, label in f.options %}
+          <option value="{{ value }}"{% if value == row.settings[f.name] %} selected="selected"{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <input type="text" name="settings[{{ list.name }}][{{ uid }}][{{ f.name }}]" value="{{ row.settings[f.name]|e }}" placeholder="{{ f.placeholder|e }}" class="form-control" />
+        {% endif %}
+      {% else %}
+        {% for language in languages %}
+        <div data-mc-items-lang-pane="{{ language.language_id }}"{% if not loop.first %} hidden{% endif %}>
+          {% if f.type == 'textarea' %}
+          <textarea name="block_content[{{ language.language_id }}][{{ list.name }}][{{ uid }}][{{ f.name }}]" rows="2" class="form-control">{{ row.content[language.language_id][f.name]|e }}</textarea>
+          {% else %}
+          <input type="text" name="block_content[{{ language.language_id }}][{{ list.name }}][{{ uid }}][{{ f.name }}]" value="{{ row.content[language.language_id][f.name]|e }}" class="form-control" />
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% endif %}
+      {% if f.help %}<div class="mc-items__help">{{ f.help }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  <div class="mc-items__col mc-items__col--actions">
+    <button type="button" class="btn btn-xs btn-danger mc-items__remove" data-mc-items-remove title="{{ t.remove }}" aria-label="{{ t.remove }}"><i class="fa fa-close"></i></button>
+    {% if list.has_extra %}
+    <button type="button" class="mc-items__more{% if row.extra_filled %} mc-items__more--filled{% endif %}" data-mc-items-more><i class="fa fa-sliders"></i> {{ t.more }}</button>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}

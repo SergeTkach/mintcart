@@ -1,129 +1,165 @@
 <?php
 /**
- * MintCart\Seo\SitemapBuilder wiring (MINTCART_FUNCTIONAL_SCOPE.md §16,
- * MINTCART_TECHNICAL_PLAN.md §31, MINTCART_IMPLEMENTATION_GUIDE.md §65) —
- * the "genuinely first-class MintCart-owned `mintcart/seo/sitemap.xml`
- * route — always available, no extra extension install" `SitemapBuilder`'s
- * own docblock and docs/developer/seo/sitemap.md's "Not done yet" section
- * both named as the real remaining gap: the stock
- * `ControllerExtensionFeedGoogleSitemap` only works when a merchant finds
- * and enables `Extensions > Feeds > Google Sitemap` and its own
- * `feed_google_sitemap_status` setting, which is exactly the kind of
- * technical decision `MINTCART_PRODUCT_VISION.md` §5 says a shop owner
- * should not have to make.
+ * `mintcart/seo/sitemap` - the always-on XML sitemap (no Extensions > Feeds
+ * install, no `feed_google_sitemap_status`), built by `MintCart\Seo\SitemapBuilder`
+ * from the same product / category / manufacturer / information enumeration the
+ * stock `ControllerExtensionFeedGoogleSitemap` uses.
  *
- * Deliberately a new, fully-additive controller under `mintcart/seo/`
- * (matching `upload/admin/controller/mintcart/seo/system_pages.php`'s
- * namespacing on the admin side) rather than a modification of
- * `extension/feed/google_sitemap.php` — same "new controller, not a patch
- * of the thing it replaces" rationale `ControllerMintcartSearch`/
- * `ControllerMintcartCart` already established. Reuses the exact same
- * `model_catalog_product`/`model_catalog_category`/
- * `model_catalog_manufacturer`/`model_catalog_information` enumeration the
- * stock extension already does (so the two, if both enabled, never
- * disagree on what a "page" is) and the same `SitemapBuilder::urlset()`
- * XML assembly, just always on, with no admin extension install required.
+ * Two deliberate choices, both about a big catalog finishing in time:
+ *  - no `<image:image>` blocks: resizing a picture per product on the fly is
+ *    what used to stall the sitemap half way;
+ *  - with language folders in the URL (docs/developer/seo/language-urls.md)
+ *    every page is listed once per language with `<xhtml:link rel="alternate"
+ *    hreflang>` to all of its versions, and the URLs come from one in-memory copy
+ *    of `seo_url` (`MintCart\Seo\SitemapUrlMap`) instead of a query per link.
  *
- * What's deliberately not done here (see docs/developer/seo/sitemap.md
- * "Not done yet", unchanged by this run beyond the one bullet this
- * increment closes): `SitemapBuilder::sitemapIndex()`-based paging once a
- * catalog exceeds `MAX_URLS_PER_SITEMAP` (`urlset()` already truncates
- * safely at that limit, same as the stock extension does today — no
- * regression, just no multi-file split yet); self-registering a
- * `Sitemap:` line in `robots.txt` (OpenCart ships no `robots.txt`
- * management at all today, a separate, larger feature); and per-language
- * `hreflang` alternate links (`MintCart\Seo\HreflangBuilder` still has no
- * consumer anywhere, a separate follow-up per its own doc).
+ * Not done: splitting into a `sitemapIndex()` of several files past 50,000 URLs
+ * (`urlset()` truncates safely, as the stock extension does).
  */
 class ControllerMintcartSeoSitemap extends Controller {
-	// route=mintcart/seo/sitemap - always-on XML sitemap, no
-	// feed_google_sitemap_status gate and no Extensions install required.
+	// route=mintcart/seo/sitemap
 	public function index() {
-		$entries = array();
-
 		$this->load->model('catalog/product');
-		$this->load->model('tool/image');
-
-		$products = $this->model_catalog_product->getProducts();
-
-		foreach ($products as $product) {
-			$images = array();
-
-			if ($product['image']) {
-				$name = html_entity_decode($product['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
-
-				$images[] = array(
-					'loc'     => $this->model_tool_image->resize($product['image'], $this->config->get('theme_' . $this->config->get('config_theme') . '_image_popup_width'), $this->config->get('theme_' . $this->config->get('config_theme') . '_image_popup_height')),
-					'caption' => $name,
-					'title'   => $name
-				);
-			}
-
-			$entries[] = array(
-				'loc'        => $this->url->link('product/product', 'product_id=' . $product['product_id']),
-				'lastmod'    => date('Y-m-d\TH:i:sP', strtotime($product['date_modified'])),
-				'changefreq' => 'weekly',
-				'priority'   => 1.0,
-				'images'     => $images
-			);
-		}
-
 		$this->load->model('catalog/category');
-
-		$entries = array_merge($entries, $this->getCategoryEntries(0));
-
 		$this->load->model('catalog/manufacturer');
-
-		$manufacturers = $this->model_catalog_manufacturer->getManufacturers();
-
-		foreach ($manufacturers as $manufacturer) {
-			$entries[] = array(
-				'loc'        => $this->url->link('product/manufacturer/info', 'manufacturer_id=' . $manufacturer['manufacturer_id']),
-				'changefreq' => 'weekly',
-				'priority'   => 0.7
-			);
-		}
-
 		$this->load->model('catalog/information');
 
-		$informations = $this->model_catalog_information->getInformations();
+		$map = $this->urlMap();
 
-		foreach ($informations as $information) {
-			$entries[] = array(
-				'loc'        => $this->url->link('information/information', 'information_id=' . $information['information_id']),
-				'changefreq' => 'weekly',
-				'priority'   => 0.5
-			);
+		// Each page: type, id and its own sitemap hints.
+		$pages = array();
+
+		foreach ($this->model_catalog_product->getProducts() as $product) {
+			$pages[] = array('type' => 'product', 'id' => (int)$product['product_id'], 'lastmod' => date('Y-m-d\TH:i:sP', strtotime($product['date_modified'])), 'changefreq' => 'weekly', 'priority' => 1.0);
 		}
 
-		$sitemap_builder = new \MintCart\Seo\SitemapBuilder();
+		foreach ($this->categoryIds(0) as $category_id) {
+			$pages[] = array('type' => 'category', 'id' => $category_id, 'changefreq' => 'weekly', 'priority' => 0.7);
+		}
 
-		$output = $sitemap_builder->urlset($entries);
+		foreach ($this->model_catalog_manufacturer->getManufacturers() as $manufacturer) {
+			$pages[] = array('type' => 'manufacturer', 'id' => (int)$manufacturer['manufacturer_id'], 'changefreq' => 'weekly', 'priority' => 0.7);
+		}
+
+		foreach ($this->model_catalog_information->getInformations() as $information) {
+			$pages[] = array('type' => 'information', 'id' => (int)$information['information_id'], 'changefreq' => 'weekly', 'priority' => 0.5);
+		}
+
+		$entries = array();
+
+		foreach ($pages as $page) {
+			$hints = array_diff_key($page, array('type' => 1, 'id' => 1));
+
+			if (!$map) {
+				$entries[] = array('loc' => $this->plainUrl($page)) + $hints;
+
+				continue;
+			}
+
+			$urls = array();
+
+			foreach ($map['codes'] as $code) {
+				$urls[$code] = $this->mappedUrl($map['urls'], $code, $page);
+			}
+
+			$alternates = array();
+
+			foreach ($urls as $code => $url) {
+				$alternates[] = array('hreflang' => $code, 'href' => $url);
+			}
+
+			$alternates[] = array('hreflang' => 'x-default', 'href' => $urls[$map['default']]);
+
+			foreach ($urls as $url) {
+				$entries[] = array('loc' => $url, 'alternates' => $alternates) + $hints;
+			}
+		}
 
 		$this->response->addHeader('Content-Type: application/xml');
-		$this->response->setOutput($output);
+		$this->response->setOutput((new \MintCart\Seo\SitemapBuilder())->urlset($entries));
 	}
 
 	/**
-	 * @return array SitemapBuilder::urlset() entries, recursive by category
-	 *         parent (same recursion shape
-	 *         `ControllerExtensionFeedGoogleSitemap::getCategories()` uses).
+	 * @return array|null null without language folders (one language or SEO URLs off)
 	 */
-	protected function getCategoryEntries($parent_id) {
-		$entries = array();
+	private function urlMap() {
+		$prefix = $this->load->controller('startup/mc_language_prefix/prefix');
 
-		$results = $this->model_catalog_category->getCategories($parent_id);
-
-		foreach ($results as $result) {
-			$entries[] = array(
-				'loc'        => $this->url->link('product/category', 'path=' . $result['category_id']),
-				'changefreq' => 'weekly',
-				'priority'   => 0.7
-			);
-
-			$entries = array_merge($entries, $this->getCategoryEntries($result['category_id']));
+		if (!$prefix) {
+			return null;
 		}
 
-		return $entries;
+		$this->load->model('localisation/language');
+
+		$codes = array();
+		$by_id = array();
+
+		foreach ($this->model_localisation_language->getLanguages() as $code => $language) {
+			if ($language['status']) {
+				$codes[] = $code;
+				$by_id[(int)$language['language_id']] = $code;
+			}
+		}
+
+		$keywords = array();
+
+		$query = $this->db->query("SELECT `language_id`, `query`, `keyword` FROM `" . DB_PREFIX . "seo_url` WHERE `store_id` = '" . (int)$this->config->get('config_store_id') . "' AND `keyword` != '' AND (`query` LIKE 'product\\_id=%' OR `query` LIKE 'category\\_id=%' OR `query` LIKE 'manufacturer\\_id=%' OR `query` LIKE 'information\\_id=%')");
+
+		foreach ($query->rows as $row) {
+			if (isset($by_id[(int)$row['language_id']])) {
+				$keywords[$by_id[(int)$row['language_id']]][$row['query']] = $row['keyword'];
+			}
+		}
+
+		return array(
+			'codes'   => $codes,
+			'default' => $this->config->get('config_language'),
+			'urls'    => new \MintCart\Seo\SitemapUrlMap($keywords, $this->config->get('config_url'), $prefix)
+		);
+	}
+
+	private function mappedUrl($urls, $code, $page) {
+		switch ($page['type']) {
+			case 'product':
+				return $urls->entity($code, 'product/product', 'product_id', $page['id']);
+			case 'category':
+				return $urls->category($code, (string)$page['id']);
+			case 'manufacturer':
+				return $urls->entity($code, 'product/manufacturer/info', 'manufacturer_id', $page['id']);
+			default:
+				return $urls->entity($code, 'information/information', 'information_id', $page['id']);
+		}
+	}
+
+	private function plainUrl($page) {
+		return html_entity_decode($this->plainLink($page), ENT_QUOTES, 'UTF-8');
+	}
+
+	// url->link() returns "&amp;"; the builder escapes the XML itself.
+	private function plainLink($page) {
+		switch ($page['type']) {
+			case 'product':
+				return $this->url->link('product/product', 'product_id=' . $page['id']);
+			case 'category':
+				return $this->url->link('product/category', 'path=' . $page['id']);
+			case 'manufacturer':
+				return $this->url->link('product/manufacturer/info', 'manufacturer_id=' . $page['id']);
+			default:
+				return $this->url->link('information/information', 'information_id=' . $page['id']);
+		}
+	}
+
+	/**
+	 * @return int[] enabled category ids, depth first
+	 */
+	protected function categoryIds($parent_id) {
+		$ids = array();
+
+		foreach ($this->model_catalog_category->getCategories($parent_id) as $result) {
+			$ids[] = (int)$result['category_id'];
+			$ids = array_merge($ids, $this->categoryIds($result['category_id']));
+		}
+
+		return $ids;
 	}
 }

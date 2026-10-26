@@ -1,0 +1,46 @@
+{#
+    Category navigation for mint_comfort (mc-nav). Same markup as mint_default
+    plus a third level: `category.children[i].children` (built by
+    MintCart\Catalog\CategoryTree). Parents open as a dropdown panel on
+    desktop and as an inline list in the mobile drawer, where the levels are
+    shown by indentation.
+#}
+{% if categories %}
+<ul class="mc-nav">
+    {% for category in categories %}
+        {% if category.children %}
+            <li class="mc-nav__item dropdown">
+                <a
+                    class="mc-nav__link mc-nav__link--parent"
+                    href="{{ category.href }}"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    data-bs-display="static"
+                    aria-expanded="false"
+                >{{ category.name }}</a>
+                <div class="mc-nav__panel dropdown-menu">
+                    <ul class="mc-nav__sublist">
+                        {% for child in category.children %}
+                            <li>
+                                <a class="mc-nav__sublink" href="{{ child.href }}">{{ child.name }}</a>
+                                {% if child.children %}
+                                    <ul class="mc-nav__sublist mc-nav__sublist--nested">
+                                        {% for grandchild in child.children %}
+                                            <li><a class="mc-nav__sublink mc-nav__sublink--nested" href="{{ grandchild.href }}">{{ grandchild.name }}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <a class="mc-nav__all" href="{{ category.href }}">{{ text_all }} {{ category.name }}</a>
+                </div>
+            </li>
+        {% else %}
+            <li class="mc-nav__item">
+                <a class="mc-nav__link" href="{{ category.href }}">{{ category.name }}</a>
+            </li>
+        {% endif %}
+    {% endfor %}
+</ul>
+{% endif %}

@@ -1,0 +1,444 @@
+/**
+ * mc-items - the row editor of the Homepage block form (design/homepage_form.twig,
+ * assets/src/js/components/homepage-items.js). Lives on the legacy Bootstrap 3 admin page,
+ * so it only uses its own classes. The look follows the st_slideshow admin: a light card per
+ * row, a grey drag strip on the left, the picture, text and button columns, a grey strip with
+ * the remove button and "More options" on the right, small uppercase labels, 30px inputs.
+ */
+
+.mc-items {
+    margin-top: 24px;
+}
+
+.mc-items [hidden] {
+    display: none !important;
+}
+
+.mc-items__langs {
+    margin-bottom: 12px;
+}
+
+.mc-items__list {
+    margin-bottom: 12px;
+}
+
+.mc-items__row {
+    display: flex;
+    margin-bottom: 8px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.15s;
+}
+
+.mc-items__row:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.09);
+}
+
+.mc-items__row.is-dragging {
+    background: #f5faff;
+    border-color: #a0c4e8;
+    box-shadow: 0 2px 8px rgba(51, 122, 183, 0.15);
+}
+
+.mc-items__handle {
+    display: flex;
+    flex: 0 0 32px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: #f1f3f5;
+    border-right: 1px solid #ebebeb;
+    border-radius: 4px 0 0 4px;
+}
+
+.mc-items__grip {
+    padding: 4px 0;
+    color: #bbb;
+    font-size: 16px;
+    cursor: move;
+}
+
+.mc-items__grip:hover {
+    color: #888;
+}
+
+.mc-items__col {
+    min-width: 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-right: 1px solid #ebebeb;
+}
+
+.mc-items__col--image {
+    flex: 0 0 136px;
+}
+
+.mc-items__col--1,
+.mc-items__col--2 {
+    flex: 1 1 0;
+}
+
+.mc-items__col--3 {
+    flex: 0 0 160px;
+}
+
+.mc-items__col--actions {
+    position: relative;
+    display: flex;
+    flex: 0 0 152px;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-top: 28px;
+    background: #f1f3f5;
+    border-right: 0;
+    border-left: 1px solid #e8e8e8;
+    border-radius: 0 4px 4px 0;
+}
+
+.mc-items__remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+}
+
+.mc-items__field + .mc-items__field {
+    margin-top: 8px;
+}
+
+.mc-items__label {
+    display: block;
+    margin-bottom: 4px;
+    color: #999;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mc-items__row .form-control {
+    height: 30px;
+    padding: 5px 8px;
+    color: #444;
+    font-size: 12px;
+    background: #fff;
+    border-color: #e0e2e5;
+    border-radius: 3px;
+    box-shadow: none;
+}
+
+.mc-items__row textarea.form-control {
+    height: auto;
+    resize: vertical;
+}
+
+.mc-items__row .form-control:focus {
+    border-color: #66afe9;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04), 0 0 5px rgba(102, 175, 233, 0.5);
+}
+
+.mc-items__help {
+    margin-top: 3px;
+    color: #999;
+    font-size: 11px;
+}
+
+.mc-items__image .img-thumbnail {
+    display: block;
+    padding: 4px;
+    background: #fff;
+    border-color: #e0e2e5;
+}
+
+.mc-items__image img {
+    display: block;
+    width: 100%;
+    height: 96px;
+    object-fit: contain;
+}
+
+/* "More options": quiet, turns amber when something inside is filled. */
+.mc-items__more {
+    padding: 4px 10px;
+    color: #888;
+    font-size: 11px;
+    line-height: 1.25;
+    white-space: normal;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.mc-items__more:hover {
+    color: #337ab7;
+    background: #f4f8fd;
+    border-color: #337ab7;
+}
+
+.mc-items__more--filled {
+    color: #e09900;
+    background: #fffbf0;
+    border-color: #f0ad4e;
+}
+
+.mc-items__empty {
+    margin: 0 0 12px;
+}
+
+@media (max-width: 991px) {
+    .mc-items__row {
+        flex-wrap: wrap;
+    }
+
+    .mc-items__handle {
+        flex-direction: row;
+        flex: 1 0 100%;
+        padding: 4px;
+        border-right: 0;
+        border-bottom: 1px solid #ebebeb;
+        border-radius: 4px 4px 0 0;
+    }
+
+    .mc-items__col,
+    .mc-items__col--image,
+    .mc-items__col--3,
+    .mc-items__col--actions {
+        flex: 1 0 100%;
+        border-right: 0;
+        border-left: 0;
+        border-bottom: 1px solid #ebebeb;
+        border-radius: 0;
+    }
+
+    .mc-items__col--actions {
+        flex-direction: row;
+        justify-content: flex-end;
+        padding-top: 10px;
+    }
+
+    .mc-items__remove {
+        position: static;
+    }
+}
+
+/* ---------------------------------------------------------------------- */
+/* The block list (design/homepage_list.twig)                               */
+/* ---------------------------------------------------------------------- */
+
+.mc-blocks {
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-blocks__row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 8px;
+    padding-right: 12px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.15s, opacity 0.15s;
+}
+
+.mc-blocks__row:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.09);
+}
+
+.mc-blocks__row.is-off {
+    background: #fafafa;
+}
+
+.mc-blocks__row.is-off .mc-blocks__icon,
+.mc-blocks__row.is-off .mc-blocks__main {
+    opacity: 0.55;
+}
+
+.mc-blocks__handle {
+    display: flex;
+    flex: 0 0 36px;
+    flex-direction: column;
+    align-items: center;
+    align-self: stretch;
+    justify-content: center;
+    gap: 2px;
+    background: #f1f3f5;
+    border-right: 1px solid #ebebeb;
+    border-radius: 4px 0 0 4px;
+}
+
+.mc-blocks__grip {
+    padding: 4px 6px;
+    color: #bbb;
+    font-size: 16px;
+    line-height: 1;
+    background: none;
+    border: 0;
+    cursor: move;
+}
+
+.mc-blocks__grip:hover {
+    color: #337ab7;
+}
+
+.mc-blocks__icon {
+    display: flex;
+    flex: 0 0 40px;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    color: #337ab7;
+    font-size: 18px;
+    background: #eef4fa;
+    border-radius: 6px;
+}
+
+.mc-blocks__main {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-block: 12px;
+}
+
+.mc-blocks__name {
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.mc-blocks__summary {
+    margin-top: 2px;
+    overflow: hidden;
+    color: #888;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-blocks__actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+}
+
+.mc-blocks__status {
+    min-width: 100px;
+    padding: 4px 10px;
+    color: #777;
+    font-size: 12px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.mc-blocks__status.is-on {
+    color: #2f7d32;
+    background: #f0f9f0;
+    border-color: #a5d6a7;
+}
+
+.mc-blocks__saved {
+    margin-left: 8px;
+    color: #2f7d32;
+}
+
+.mc-blocks .sortable-ghost {
+    opacity: 0.4;
+}
+
+@media (max-width: 767px) {
+    .mc-blocks__row {
+        flex-wrap: wrap;
+        padding-bottom: 8px;
+    }
+
+    .mc-blocks__actions {
+        flex: 1 0 100%;
+        justify-content: flex-end;
+    }
+}
+
+
+/* ---------------------------------------------------------------------- */
+/* Inputs of the block form: the st_* admin look (light border, no shadow)  */
+/* ---------------------------------------------------------------------- */
+
+#form-block .form-control {
+    color: #444;
+    border-color: #e0e2e5;
+    border-radius: 3px;
+    box-shadow: none;
+}
+
+#form-block .form-control:focus {
+    border-color: #66afe9;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04), 0 0 5px rgba(102, 175, 233, 0.5);
+}
+
+#form-block select.form-control {
+    background-color: #fff;
+}
+
+/* ---------------------------------------------------------------------- */
+/* AI translation panel                                                     */
+/* ---------------------------------------------------------------------- */
+
+.mc-ai {
+    margin-top: 24px;
+    overflow: hidden;
+    border: 1px solid #c5bbff;
+    border-radius: 4px;
+}
+
+.mc-ai__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 14px;
+    background: linear-gradient(135deg, #f0eeff, #e8e4ff);
+    border-bottom: 1px solid #c5bbff;
+}
+
+.mc-ai__title {
+    color: #5a4fcf;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.mc-ai__apply {
+    color: #fff;
+    background: #7b68ee;
+    border-color: #5a4fcf;
+}
+
+.mc-ai__apply:hover {
+    color: #fff;
+    background: #6b58de;
+}
+
+.mc-ai__body {
+    padding: 10px 14px 12px;
+}
+
+.mc-ai__hint {
+    margin: 0 0 8px;
+    color: #888;
+    font-size: 12px;
+}
+
+.mc-ai__json {
+    min-height: 224px;
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    resize: vertical;
+}

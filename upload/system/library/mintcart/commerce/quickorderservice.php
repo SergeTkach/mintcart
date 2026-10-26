@@ -31,6 +31,12 @@ final class QuickOrderService
     private const MIN_QUANTITY = 1;
 
     /**
+     * Texts of the Quick Order dialog (`text_<key>` in `mintcart/quickorder`
+     * language file); the controllers hand them to `quick-order.js` as JSON.
+     */
+    public const TEXT_KEYS = ['title', 'quantity', 'decrease', 'increase', 'name', 'phone', 'email', 'cancel', 'submit', 'close', 'ok', 'failed'];
+
+    /**
      * @param array{
      *     product_id?: mixed,
      *     quantity?: mixed,
@@ -41,6 +47,8 @@ final class QuickOrderService
      *        as a string) — this method does the trimming/casting/format
      *        checks that `checkout/*` controllers normally do inline.
      *
+     * @param string $phoneMask the store's phone mask (`PhoneMask`), '' = any phone
+     *
      * @return array{
      *     valid: bool,
      *     errors: array<string, string>,
@@ -48,13 +56,13 @@ final class QuickOrderService
      *     name: string,
      *     telephone: string,
      *     email: string
-     * } `errors` is keyed by field name (`quantity`, `name`, `contact`),
+     * } `errors` is keyed by field name (`quantity`, `name`, `telephone`, `email`, or `contact` when neither is given),
      *        empty when `valid` is true. `quantity`/`name`/`telephone`/
      *        `email` are always the trimmed/cast values regardless of
      *        `valid`, so a controller can echo them back into a re-shown
      *        form without re-parsing the raw request itself.
      */
-    public function validate(array $request): array
+    public function validate(array $request, string $phoneMask = ''): array
     {
         $errors = [];
 
@@ -80,10 +88,17 @@ final class QuickOrderService
         $telephone = trim((string) ($request['telephone'] ?? ''));
         $email = trim((string) ($request['email'] ?? ''));
 
+        // `contact`: neither given; otherwise the error belongs to the field that is wrong.
         if ($telephone === '' && $email === '') {
             $errors['contact'] = 'error_contact';
-        } elseif ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-            $errors['contact'] = 'error_email';
+        }
+
+        if ($telephone !== '' && !PhoneMask::isComplete($telephone, $phoneMask)) {
+            $errors['telephone'] = 'error_telephone';
+        }
+
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            $errors['email'] = 'error_email';
         }
 
         return [
