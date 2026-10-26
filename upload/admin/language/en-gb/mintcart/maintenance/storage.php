@@ -15,9 +15,6 @@ $_['text_move_title']   = 'Move the storage directory';
 $_['text_move_help'] = 'Everything is copied first, the configuration is updated, and only then the old directory is removed. The new folder must not exist yet or must be empty, and its parent folder must be writable by the web server.';
 $_['text_success']      = 'Storage moved to %s. You stay signed in.';
 
-// Entry
-$_['entry_path']        = 'New location';
-
 // Button
 $_['button_move']       = 'Move storage';
 
