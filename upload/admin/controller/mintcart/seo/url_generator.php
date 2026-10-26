@@ -193,6 +193,22 @@ class ControllerMintcartSeoUrlGenerator extends Controller {
 		$language = $this->model_localisation_language->getLanguage($language_id);
 
 		if (isset(\MintCart\Seo\UrlTemplates::TYPES[$type]) && $language && $this->user->hasPermission('modify', 'mintcart/seo/url_generator')) {
+			// Regenerate: rewrite every keyword to the template, batch by batch after `after_id`.
+			if (!empty($this->request->post['regenerate'])) {
+				$after_id = isset($this->request->post['after_id']) ? (int)$this->request->post['after_id'] : 0;
+				$step = $this->model_mintcart_seo_url->regenerate($type, $language_id, $language['code'], \MintCart\Seo\UrlTemplates::forType($this->config->get(self::SETTING_KEY), $type), $after_id, self::BATCH);
+
+				$json['changed'] = $step['changed'];
+				$json['last_id'] = $step['last_id'];
+				$json['done'] = $step['done'];
+				$json['remaining'] = $this->model_mintcart_seo_url->totalMissing($type, 0, $language_id);
+
+				$this->response->addHeader('Content-Type: application/json');
+				$this->response->setOutput(json_encode($json));
+
+				return;
+			}
+
 			$json['created'] = $this->model_mintcart_seo_url->generateMissing($type, $language_id, $language['code'], \MintCart\Seo\UrlTemplates::forType($this->config->get(self::SETTING_KEY), $type), self::BATCH);
 
 			$json['remaining'] = $this->model_mintcart_seo_url->totalMissing($type, 0, $language_id);

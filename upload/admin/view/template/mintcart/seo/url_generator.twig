@@ -70,7 +70,8 @@
                 <td class="text-left">{{ type.name }}</td>
                 <td class="text-left"><img src="language/{{ count.code }}/{{ count.code }}.png" title="{{ count.name }}" /> {{ count.name }}</td>
                 <td class="text-right"><span class="mc-status {{ count.missing ? 'mc-status--off' : 'mc-status--on' }}" data-mc-urlgen-count>{{ count.missing }}</span></td>
-                <td class="text-right"><button type="button" class="btn btn-primary btn-sm" data-mc-urlgen-run{% if not count.missing %} disabled{% endif %}><i class="fa fa-magic"></i> {{ button_generate }}</button></td>
+                <td class="text-right"><button type="button" class="btn btn-primary btn-sm" data-mc-urlgen-run{% if not count.missing %} disabled{% endif %}><i class="fa fa-magic"></i> {{ button_generate }}</button>
+                  <button type="button" class="btn btn-warning btn-sm" data-mc-urlgen-regenerate><i class="fa fa-refresh"></i> {{ button_regenerate }}</button></td>
               </tr>
               {% endfor %}
               {% endfor %}
@@ -78,6 +79,7 @@
           </table>
         </div>
         <button type="button" class="btn btn-success" data-mc-urlgen-all><i class="fa fa-magic"></i> {{ button_generate_all }}</button>
+        <p class="text-muted" style="margin-top: 15px;">{{ text_regenerate_intro }}</p>
         <span class="mc-urlgen__note" data-mc-urlgen-note role="status" aria-live="polite"></span>
       </div>
     </div>
@@ -95,6 +97,8 @@
     var note = document.querySelector('[data-mc-urlgen-note]');
     var textDone = {{ text_done|json_encode|raw }};
     var textWorking = {{ text_working|json_encode|raw }};
+    var textConfirmRegenerate = {{ text_confirm_regenerate|json_encode|raw }};
+    var textRegenerated = {{ text_regenerated|json_encode|raw }};
     var busy = false;
 
     document.addEventListener('click', function (event) {
@@ -162,7 +166,45 @@
         });
     }
 
+    // Rewrites every keyword of the row's type and language to the template, 50 at a time.
+    function regenerateRow(row, afterId, changed) {
+        var params = new URLSearchParams({ type: row.dataset.type, language_id: row.dataset.language, regenerate: 1, after_id: afterId });
+
+        return fetch(table.dataset.runUrl, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        }).then(function (response) {
+            return response.json();
+        }).then(function (json) {
+            setCount(row, json.remaining);
+
+            return json.done || !json.last_id ? changed + json.changed : regenerateRow(row, json.last_id, changed + json.changed);
+        });
+    }
+
     table.addEventListener('click', function (event) {
+        var regenerate = event.target.closest('[data-mc-urlgen-regenerate]');
+
+        if (regenerate) {
+            if (busy || !window.confirm(textConfirmRegenerate)) {
+                return;
+            }
+
+            busy = true;
+            note.textContent = textWorking;
+
+            regenerateRow(regenerate.closest('tr'), 0, 0).then(function (changed) {
+                note.textContent = textRegenerated.replace('%s', changed);
+                busy = false;
+            }, function () {
+                note.textContent = '';
+                busy = false;
+            });
+
+            return;
+        }
+
         var button = event.target.closest('[data-mc-urlgen-run]');
 
         if (button) {

@@ -35,6 +35,13 @@ The screen lists, per type and language, how many items have no keyword (after a
 them in batches of 50 (`run`): `{created, remaining}`. Existing keywords are never changed - a changed URL breaks links and
 indexed pages. An item whose name gives an empty keyword gets `<type>-<id>`.
 
+## Regenerate
+
+The **Regenerate** button on a row (after a confirm) rewrites every keyword of that type and language to the current template: `run` with
+`regenerate=1&after_id=<last id>` -> `{changed, last_id, done, remaining}`, 50 items per request, repeated by the screen until `done`.
+Each keyword that changes goes through `ModelMintcartRedirect::trackKeywordChanges()`, so the old URL becomes a 301 to the new one
+(see `redirects.md`). Running it twice changes nothing the second time.
+
 Tests: `tests/mintcart/seo/slugger-test.php`.
 
 ## A language added in the Setup Wizard

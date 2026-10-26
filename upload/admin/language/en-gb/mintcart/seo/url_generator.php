@@ -22,3 +22,7 @@ $_['var_brand'] = 'Brand of the product';
 $_['var_category'] = 'First category of the product';
 $_['var_model'] = 'Model';
 $_['var_parent'] = 'Parent category';
+$_['button_regenerate'] = 'Regenerate';
+$_['text_regenerate_intro'] = 'Regenerate rewrites the existing URLs to the current template. Every URL that changes gets a 301 redirect from the old one (SEO > Redirects), but indexed pages and external links will take time to catch up.';
+$_['text_confirm_regenerate'] = 'Rewrite all URLs of this type and language to the template? Old URLs will redirect to the new ones.';
+$_['text_regenerated'] = 'Done. URLs changed: %s.';

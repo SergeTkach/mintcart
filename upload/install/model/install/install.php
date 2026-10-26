@@ -39,6 +39,17 @@ class ModelInstallInstall extends Model {
 			$db->query("DELETE FROM `" . $data['db_prefix'] . "setting` WHERE `key` = 'config_email'");
 			$db->query("INSERT INTO `" . $data['db_prefix'] . "setting` SET `code` = 'config', `key` = 'config_email', value = '" . $db->escape($data['email']) . "'");
 
+			// Friendly URLs from the first minute: the shipped .htaccess.txt becomes .htaccess and SEO URLs are switched on.
+			// Only for a store in the web root (the rewrite rules assume RewriteBase /); otherwise they stay off.
+			$mc_seo = (parse_url(HTTP_OPENCART, PHP_URL_PATH) ?: '/') === '/';
+
+			if ($mc_seo && !is_file(DIR_OPENCART . '.htaccess')) {
+				$mc_seo = is_file(DIR_OPENCART . '.htaccess.txt') && @copy(DIR_OPENCART . '.htaccess.txt', DIR_OPENCART . '.htaccess');
+			}
+
+			$db->query("DELETE FROM `" . $data['db_prefix'] . "setting` WHERE `key` = 'config_seo_url'");
+			$db->query("INSERT INTO `" . $data['db_prefix'] . "setting` SET `code` = 'config', `key` = 'config_seo_url', value = '" . ($mc_seo ? 1 : 0) . "'");
+
 			$db->query("DELETE FROM `" . $data['db_prefix'] . "setting` WHERE `key` = 'config_encryption'");
 			$db->query("INSERT INTO `" . $data['db_prefix'] . "setting` SET `code` = 'config', `key` = 'config_encryption', value = '" . $db->escape(token(1024)) . "'");
 

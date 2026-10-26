@@ -115,6 +115,69 @@ class ModelMintcartSeoUrl extends Model {
 		return $created;
 	}
 
+	/** Page route and link argument per type, for the redirect from a replaced keyword. */
+	private function pageOf($type) {
+		$pages = array(
+			'product'      => array('product/product', 'product_id'),
+			'category'     => array('product/category', 'path'),
+			'information'  => array('information/information', 'information_id'),
+			'manufacturer' => array('product/manufacturer/info', 'manufacturer_id')
+		);
+
+		return isset($pages[$type]) ? $pages[$type] : array('', '');
+	}
+
+	/**
+	 * Rewrites the keywords of one type in one language to the template, for the next batch of entities
+	 * after `$after_id`. A keyword that changes becomes a 301 redirect to the new one (SEO -> Redirects).
+	 *
+	 * @return array{last_id:int, done:bool, changed:int}
+	 */
+	public function regenerate($type, $language_id, $code, $template, $after_id, $limit) {
+		list($table, $column) = $this->source($type);
+		list($route, $arg) = $this->pageOf($type);
+
+		$result = array('last_id' => (int)$after_id, 'done' => true, 'changed' => 0);
+
+		if ($table === '') {
+			return $result;
+		}
+
+		$this->load->model('mintcart/redirect');
+
+		$ids = $this->db->query("SELECT `" . $column . "` AS id FROM `" . DB_PREFIX . $table . "` WHERE `" . $column . "` > '" . (int)$after_id . "' ORDER BY `" . $column . "` LIMIT " . (int)$limit)->rows;
+
+		foreach ($ids as $row) {
+			$id = (int)$row['id'];
+			$query = $this->queryOf($type, $id);
+			$base = \MintCart\Seo\UrlTemplates::keyword($template, $this->variables($type, $id, $language_id), $code);
+
+			if ($base === '') {
+				$base = $type . '-' . $id;
+			}
+
+			$keyword = $this->uniqueKeyword($base, 0, $query);
+
+			$old = $this->db->query("SELECT `keyword` FROM `" . DB_PREFIX . "seo_url` WHERE `query` = '" . $this->db->escape($query) . "' AND `store_id` = '0' AND `language_id` = '" . (int)$language_id . "'");
+
+			if (!$old->num_rows) {
+				$this->add($query, $keyword, 0, $language_id);
+				$result['changed']++;
+			} elseif ($old->row['keyword'] !== $keyword) {
+				$this->model_mintcart_redirect->trackKeywordChanges($this->keyOf($type), $id, $route, $arg, array(0 => array((int)$language_id => $keyword)));
+
+				$this->db->query("UPDATE `" . DB_PREFIX . "seo_url` SET `keyword` = '" . $this->db->escape($keyword) . "' WHERE `query` = '" . $this->db->escape($query) . "' AND `store_id` = '0' AND `language_id` = '" . (int)$language_id . "'");
+				$result['changed']++;
+			}
+
+			$result['last_id'] = $id;
+		}
+
+		$result['done'] = count($ids) < (int)$limit;
+
+		return $result;
+	}
+
 	/**
 	 * The template variables of one entity in one language (empty values for what the store does not have).
 	 *
