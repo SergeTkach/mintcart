@@ -55,13 +55,13 @@ $_['entry_currency']          = 'Default currency';
 $_['text_add_language']       = 'Add a language...';
 $_['button_add_language_row'] = 'Add another language';
 $_['button_save_languages']   = 'Save languages';
-$_['text_language_added']     = 'Added: %s. The last one is selected - press Continue to keep it as the default.';
+$_['text_language_added']     = 'Added: %s.';
 $_['text_language_unknown']   = 'That language is not in the list. Start typing a name and pick one of the suggestions.';
 $_['text_add_currency']       = 'Add a currency...';
 $_['button_add_currency_row'] = 'Add another currency';
 $_['button_save_currencies']  = 'Save currencies';
 $_['button_remove_row']       = 'Remove';
-$_['text_currency_added'] = 'Added: %s. The last one is selected - press Continue to keep it as the default.';
+$_['text_currency_added'] = 'Added: %s.';
 $_['text_currency_unknown'] = 'That currency is not in the list. Start typing a name or code and pick one of the suggestions.';
 $_['text_currency_rate_manual'] = 'Added, but the exchange rate for %s could not be fetched - set it in Localisation > Currencies.';
 

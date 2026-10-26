@@ -743,8 +743,8 @@ class ControllerMintcartWizard extends Controller
             $this->load->model('localisation/language');
             $this->load->model('localisation/currency');
 
-            $data['config_language'] = $this->request->post['config_language'] ?? $this->request->get['added_language'] ?? $this->config->get('config_language');
-            $data['config_currency'] = $this->request->post['config_currency'] ?? $this->request->get['added'] ?? $this->config->get('config_currency');
+            $data['config_language'] = $this->request->post['config_language'] ?? $this->config->get('config_language');
+            $data['config_currency'] = $this->request->post['config_currency'] ?? $this->config->get('config_currency');
             $data['languages'] = $this->model_localisation_language->getLanguages();
             $data['currencies'] = $this->model_localisation_currency->getCurrencies();
             $data['add_language_action'] = $this->url->link('mintcart/wizard/addLanguage', 'user_token=' . $this->session->data['user_token'], true);
@@ -925,7 +925,7 @@ class ControllerMintcartWizard extends Controller
             }
         }
 
-        $this->respondAdded($results, 'text_currency_added', $manualRate ? sprintf($this->language->get('text_currency_rate_manual'), implode(', ', $manualRate)) : '', 'added');
+        $this->respondAdded($results, 'text_currency_added', $manualRate ? sprintf($this->language->get('text_currency_rate_manual'), implode(', ', $manualRate)) : '');
     }
 
     /**
@@ -934,7 +934,7 @@ class ControllerMintcartWizard extends Controller
      *
      * @param array<int, array{ok: bool, message?: string, value?: string, label?: string}> $results
      */
-    private function respondAdded(array $results, string $addedText, string $warning, string $selectParam): void
+    private function respondAdded(array $results, string $addedText, string $warning): void
     {
         $added = array_values(array_filter($results, function ($result) {
             return $result['ok'];
@@ -960,13 +960,7 @@ class ControllerMintcartWizard extends Controller
 
         $this->session->data['mintcart_wizard_notice'] = $notice;
 
-        $back = $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true);
-
-        if ($added) {
-            $back .= '&' . $selectParam . '=' . end($added)['value'];
-        }
-
-        $this->response->redirect($back);
+        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true));
     }
 
     /**
@@ -1070,7 +1064,7 @@ class ControllerMintcartWizard extends Controller
             $results[$index] = ['ok' => true, 'value' => $language['code'], 'label' => $language['name']];
         }
 
-        $this->respondAdded($results, 'text_language_added', '', 'added_language');
+        $this->respondAdded($results, 'text_language_added', '');
     }
 
     /**

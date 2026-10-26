@@ -50,6 +50,31 @@ function setRowError(row, message) {
     row.append(error);
 }
 
+/**
+ * A just-added language / currency joins the "connected" list under the select, with its own
+ * remove button (cloned from the page's <template data-mc-connected-template>). It is never
+ * made the default: that stays whatever the select says until the owner changes it.
+ */
+function addConnectedBadge(kind, outcome) {
+    const list = document.querySelector(`[data-mc-connected="${kind}"]`);
+    const template = document.querySelector(`template[data-mc-connected-template="${kind}"]`);
+
+    if (!list || !template || list.querySelector(`button[value="${CSS.escape(outcome.value)}"]`)) {
+        return;
+    }
+
+    const item = template.content.cloneNode(true).firstElementChild;
+    const text = kind === 'currency' ? outcome.value : outcome.label;
+    const button = item.querySelector('button');
+    const name = `${template.dataset.mcRemovePrefix}: ${text}`;
+
+    button.value = outcome.value;
+    button.dataset.mcConfirmMessage = name;
+    button.setAttribute('aria-label', name);
+    item.prepend(document.createTextNode(text));
+    list.append(item);
+}
+
 function showNotice(root, notice) {
     const box = root.closest('form, section, main')?.parentElement?.querySelector('[data-mc-wizard-notice]')
         ?? document.querySelector('[data-mc-wizard-notice]');
@@ -92,7 +117,6 @@ async function save(host, form) {
         });
         const result = await response.json();
         const target = document.getElementById(host.dataset.mcAddRowsTarget);
-        let lastSaved = null;
 
         rows.forEach((row, index) => {
             const outcome = result.rows[index];
@@ -107,16 +131,12 @@ async function save(host, form) {
                     target.add(new Option(outcome.label, outcome.value));
                 }
 
-                lastSaved = outcome.value;
+                addConnectedBadge(host.dataset.mcAddRowsKind, outcome);
                 row.remove();
             } else {
                 setRowError(row, outcome.message);
             }
         });
-
-        if (target && lastSaved) {
-            target.value = lastSaved;
-        }
 
         showNotice(host, result.notice);
     } catch (error) {
