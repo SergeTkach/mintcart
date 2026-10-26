@@ -32,13 +32,25 @@ class ModelMintcartHealth extends Model {
 		return $extensions;
 	}
 
+	// The paths come from the config constants, not from DIR_SYSTEM/DIR_OPENCART
+	// + a relative path: DIR_OPENCART exists only in the installer, and the
+	// storage directory can live outside the web root.
 	private function getWritableSignals() {
+		$paths = array(
+			'image'            => DIR_IMAGE,
+			'image_cache'      => DIR_IMAGE . 'cache/',
+			'image_catalog'    => DIR_IMAGE . 'catalog/',
+			'storage_cache'    => DIR_CACHE,
+			'storage_logs'     => DIR_LOGS,
+			'storage_download' => DIR_DOWNLOAD,
+			'storage_upload'   => DIR_UPLOAD,
+			'storage_modification' => DIR_MODIFICATION
+		);
+
 		$writable = array();
 
 		foreach (\MintCart\Core\HealthCheck::REQUIRED_WRITABLE_PATHS as $path) {
-			$base = $path['base'] === 'system' ? DIR_SYSTEM : DIR_OPENCART;
-
-			$writable[$path['key']] = is_writable($base . $path['relative']);
+			$writable[$path['key']] = isset($paths[$path['key']]) && is_writable($paths[$path['key']]);
 		}
 
 		return $writable;
