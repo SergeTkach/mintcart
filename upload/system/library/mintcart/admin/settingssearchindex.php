@@ -82,6 +82,9 @@ final class SettingsSearchIndex
         ['label' => 'Users', 'route' => 'user/user', 'keywords' => ['user', 'admin account', 'користувач', 'користувачі', 'адміністратор', 'пользователь']],
         ['label' => 'Backup / Restore', 'route' => 'tool/backup', 'keywords' => ['backup', 'restore', 'database', 'резервна копія', 'бекап', 'відновлення', 'база даних', 'резервная копия']],
         ['label' => 'Error Log', 'route' => 'tool/log', 'keywords' => ['log', 'error log', 'журнал', 'лог', 'помилки', 'журнал помилок', 'ошибки']],
+        ['label' => 'Storage (cache, logs, sessions)', 'route' => 'mintcart/maintenance/storage', 'keywords' => ['storage', 'storage folder', 'storage directory', 'move storage', 'cache', 'sessions', 'logs folder', 'сховище', 'папка storage', 'перенести storage', 'кеш', 'сесії', 'хранилище', 'папка storage', 'перенести хранилище', 'сессии']],
+        ['label' => 'Design → Styles', 'route' => 'mintcart/design/styles', 'keywords' => ['styles', 'colors', 'fonts', 'typography', 'preset', 'стилі', 'кольори', 'шрифти', 'пресет', 'стили', 'цвета', 'шрифты']],
+        ['label' => 'Compatibility checker', 'route' => 'mintcart/compatibility', 'keywords' => ['compatibility', 'ocmod', 'extension check', 'install.xml', 'сумісність', 'перевірка розширення', 'совместимость']],
     ];
 
     /**
