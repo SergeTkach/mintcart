@@ -27,3 +27,6 @@ $_['error_path']       = 'Неверный путь!';
 $_['error_directory']  = 'Неверный каталог!';
 $_['error_exists']     = 'Каталог уже существует!';
 $_['error_writable']   = 'config.php and admin/config.php Должны быть доступны для записи!';
+
+// MintCart
+$_['entry_directory'] = 'Каталог';

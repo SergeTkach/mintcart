@@ -69,3 +69,6 @@ $_['text_mc_delivery'] = 'Доставка';
 $_['text_mc_payment'] = 'Оплата';
 $_['text_mc_returns'] = 'Повернення';
 $_['text_mc_from'] = 'від %s';
+
+// MintCart
+$_['error_product'] = 'Увага: для додавання відгуку потрібен товар!';

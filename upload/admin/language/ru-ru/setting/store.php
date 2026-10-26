@@ -126,3 +126,12 @@ $_['error_image_cart']                 = 'Необходимо установи�
 $_['error_image_location']             = 'Необходимо установить размер изображения магазина!';
 $_['error_default']                    = 'Нельзя удалить основной магазин!';
 $_['error_store']                      = 'Этот магазин нельзя удалить, поскольку он назначен к %s заказам!';
+
+// MintCart
+$_['entry_theme'] = 'Тема';
+$_['text_information_picker_browse'] = 'Просмотреть страницы';
+$_['text_information_picker_search'] = 'Поиск страниц';
+$_['text_information_picker_empty'] = 'Страниц не найдено.';
+$_['text_information_picker_prev'] = 'Назад';
+$_['text_information_picker_next'] = 'Далее';
+$_['text_information_picker_confirm'] = 'Выбрать';

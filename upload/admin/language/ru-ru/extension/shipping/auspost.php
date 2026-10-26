@@ -28,3 +28,7 @@ $_['help_weight_class']  = 'Set to grams.';
 // Error
 $_['error_permission']   = 'У вас недостаточно прав для внесения изменений!';
 $_['error_postcode']     = 'Post Code must be 4 digits!';
+
+// MintCart
+$_['entry_api'] = 'API-ключ';
+$_['text_extension'] = 'Расширения';

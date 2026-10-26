@@ -166,3 +166,14 @@ $_['error_upload_999']              = 'Неизвестная ошибка!';
 
 $_['summernote']                    = 'ru-RU';
 $_['datepicker']                    = 'ru';
+
+// MintCart
+$_['button_translation'] = 'Загрузить перевод по умолчанию';
+$_['button_translation_add'] = 'Добавить перевод';
+$_['button_deny'] = 'Отклонить';
+$_['button_order'] = 'Просмотреть заказ';
+$_['button_order_recurring'] = 'Просмотреть регулярный заказ';
+$_['button_buy'] = 'Купить';
+$_['button_developer'] = 'Настройки разработчика';
+$_['tab_documentation'] = 'Документация';
+$_['error_curl'] = 'CURL: код ошибки (%s): %s';

@@ -27,3 +27,14 @@ $_['text_model_asc']    = 'Модель (А - Я)';
 $_['text_model_desc']   = 'Модель (Я - А)';
 $_['text_limit']        = 'Показати:';
 $_['text_benefits']     = 'Переваги:';
+
+// MintCart
+$_['text_no_results'] = 'Брендів для відображення немає.';
+$_['text_add_to_cart_error'] = 'Не вдалося додати цей товар до кошика';
+$_['text_added_to_cart'] = 'Додано до кошика';
+$_['text_badge_new'] = 'Новинка';
+$_['text_badge_out_of_stock'] = 'Немає в наявності';
+$_['text_badge_sale'] = 'Акція';
+$_['text_quick_order'] = 'Швидке замовлення';
+$_['text_rated'] = 'Оцінка %s з 5 зірок';
+$_['text_wishlist_error'] = 'Не вдалося оновити список бажань';

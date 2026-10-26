@@ -43,3 +43,6 @@ $_['error_minimum']          					= 'Минимальное количество
 $_['error_required']         					= '%s необходим!';
 $_['error_product']          					= 'Ваша корзина пуста!';
 $_['error_recurring_required'] 					= 'Необходимо выбрать периодичность платежа!';
+
+// MintCart
+$_['text_payment_cancel'] = '%s каждые %d %s до отмены';

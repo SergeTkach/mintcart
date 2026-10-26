@@ -295,3 +295,21 @@ $_['error_ftp_password']               = 'Необходимо указать FT
 $_['error_error_filename']             = 'Необходимо ввести имя файла журнала ошибок!';
 $_['error_malformed_filename']	       = 'Неверное имя файла!';
 $_['error_encryption']                 = 'Ключ шифрования должен содержать от 32 до 1024 символов!';
+
+// MintCart
+$_['entry_symbol_left_space'] = 'Пробел после левого символа валюты';
+$_['entry_symbol_right_space'] = 'Пробел перед правым символом валюты';
+$_['entry_affiliate_group'] = 'Группа партнёров';
+$_['entry_timezone'] = 'Часовой пояс';
+$_['help_symbol_left_space'] = 'При необходимости добавляет пробел после левого символа валюты.';
+$_['help_symbol_right_space'] = 'При необходимости добавляет пробел перед правым символом валюты.';
+$_['help_mail_smtp_password'] = 'Для gmail может понадобиться пароль приложения, его создают здесь: https://security.google.com/settings/security/apppasswords.';
+$_['error_log_required'] = 'Требуется название файла журнала ошибок!';
+$_['error_log_invalid'] = 'Некорректное название файла журнала ошибок!';
+$_['error_log_extension'] = 'Файл журнала ошибок должен иметь расширение .log!';
+$_['text_information_picker_browse'] = 'Просмотреть страницы';
+$_['text_information_picker_search'] = 'Поиск страниц';
+$_['text_information_picker_empty'] = 'Страниц не найдено.';
+$_['text_information_picker_prev'] = 'Назад';
+$_['text_information_picker_next'] = 'Далее';
+$_['text_information_picker_confirm'] = 'Выбрать';

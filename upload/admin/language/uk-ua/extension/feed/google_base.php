@@ -25,3 +25,6 @@ $_['entry_data_feed']  = 'Адрес';
 $_['error_permission'] = 'У вас недостатньо прав для внесення змін';
 $_['error_upload']          = 'Файл не може бути завантажений';
 $_['error_filetype']        = 'Невірний формат файлу';
+
+// MintCart
+$_['text_extension'] = 'Розширення';

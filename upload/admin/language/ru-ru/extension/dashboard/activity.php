@@ -33,3 +33,6 @@ $_['entry_width']                  = 'Ширина';
 
 // Error
 $_['error_permission']             = 'У вас недостаточно прав для внесения изменений!';
+
+// MintCart
+$_['text_activity_affiliate_add'] = '<a href="customer_id=%d">%s</a> зарегистрировался как партнёр.';

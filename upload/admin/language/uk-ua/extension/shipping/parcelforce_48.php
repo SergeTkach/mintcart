@@ -29,3 +29,6 @@ $_['help_display_time']      = 'Do you want to display the shipping time? (e.g. 
 
 // Error
 $_['error_permission']        = 'У вас недостатньо прав для внесення змін';
+
+// MintCart
+$_['text_extension'] = 'Розширення';

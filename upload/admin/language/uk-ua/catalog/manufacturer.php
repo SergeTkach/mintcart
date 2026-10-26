@@ -52,3 +52,6 @@ $_['error_product']      	 = 'Виробника неможливо видали
 $_['error_meta_title']   	 = 'Мета-тег Title має містити від 0 до 255 символів';
 $_['error_meta_h1']	     	 = 'HTML-тег H1 має містити від 0 до 255 символів';
 $_['error_keyword']      	 = 'SEO URL вже використовується';
+
+// MintCart
+$_['error_unique'] = 'SEO URL має бути унікальним!';

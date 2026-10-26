@@ -17,3 +17,9 @@ $_['column_percent']   = 'Відсоток';
 
 // Error
 $_['error_permission'] = 'У вас недостатньо прав для внесення змін';
+
+// MintCart
+$_['text_edit'] = 'Редагування звіту «Переглянуті товари»';
+$_['entry_sort_order'] = 'Порядок сортування';
+$_['entry_status'] = 'Статус';
+$_['text_extension'] = 'Розширення';

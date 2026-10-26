@@ -15,3 +15,6 @@ $_['entry_status']     = 'Статус';
 
 // Error
 $_['error_permission'] = 'У вас недостаточно прав для внесения изменений!';
+
+// MintCart
+$_['text_extension'] = 'Расширения';

@@ -155,3 +155,9 @@ $_['text_mintcart_badge'] = 'Бейджі товарів';
 $_['text_mintcart_design_styles'] = 'Стилі';
 $_['text_mintcart_settings_diagnostics'] = 'Діагностика';
 $_['text_mintcart_compatibility'] = 'Перевірка сумісності';
+
+// MintCart
+$_['text_menu'] = 'Керування меню';
+$_['text_mc_menu_hint'] = 'Наступного разу ви знайдете це тут:';
+$_['text_mc_menu_hint_ok'] = 'Зрозуміло';
+$_['text_mc_menu_hint_click'] = 'Натисніть тут, щоб відкрити';

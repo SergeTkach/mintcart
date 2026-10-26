@@ -132,3 +132,12 @@ $_['error_warning']              = 'Уважно перевірте форму �
 $_['error_permission']           = 'У вас недостатньо прав для внесення змін';
 $_['error_action']               = 'Неможливо завершити операцію';
 $_['error_filetype']		 = 'Невірний формат файлу';
+
+// MintCart
+$_['text_success'] = 'Готово: ви змінили замовлення!';
+$_['text_customer_picker_browse'] = 'Переглянути клієнтів';
+$_['text_customer_picker_search'] = 'Пошук клієнтів';
+$_['text_customer_picker_empty'] = 'Клієнтів не знайдено.';
+$_['text_customer_picker_prev'] = 'Назад';
+$_['text_customer_picker_next'] = 'Далі';
+$_['text_customer_picker_confirm'] = 'Обрати';

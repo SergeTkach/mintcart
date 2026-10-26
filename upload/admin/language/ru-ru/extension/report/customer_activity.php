@@ -32,3 +32,26 @@ $_['entry_customer']      = 'Покупатель';
 $_['entry_ip']            = 'IP';
 $_['entry_date_start']    = 'Дата начала';
 $_['entry_date_end']      = 'Дата окончания';
+
+// MintCart
+$_['text_success'] = 'Готово: вы изменили отчёт об активности клиентов!';
+$_['text_activity_register'] = '<a href="customer_id=%d">%s</a> зарегистрировался.';
+$_['text_activity_edit'] = '<a href="customer_id=%d">%s</a> обновил данные учётной записи.';
+$_['text_activity_password'] = '<a href="customer_id=%d">%s</a> сменил пароль учётной записи.';
+$_['text_activity_reset'] = '<a href="customer_id=%d">%s</a> сбросил пароль учётной записи.';
+$_['text_activity_login'] = '<a href="customer_id=%d">%s</a> вошёл в систему.';
+$_['text_activity_forgotten'] = '<a href="customer_id=%d">%s</a> запросил сброс пароля.';
+$_['text_activity_address_add'] = '<a href="customer_id=%d">%s</a> добавил новый адрес.';
+$_['text_activity_address_edit'] = '<a href="customer_id=%d">%s</a> обновил свой адрес.';
+$_['text_activity_address_delete'] = '<a href="customer_id=%d">%s</a> удалил один из своих адресов.';
+$_['text_activity_return_account'] = '<a href="customer_id=%d">%s</a> подал заявку на возврат товара.';
+$_['text_activity_return_guest'] = '%s подал заявку на возврат товара.';
+$_['text_activity_order_account'] = '<a href="customer_id=%d">%s</a> создал <a href="order_id=%d">новый заказ</a>.';
+$_['text_activity_order_guest'] = '%s создал <a href="order_id=%d">новый заказ</a>.';
+$_['text_activity_affiliate_add'] = '<a href="customer_id=%d">%s</a> зарегистрировался как партнёр.';
+$_['text_activity_affiliate_edit'] = '<a href="customer_id=%d">%s</a> обновил партнёрские данные.';
+$_['text_activity_transaction'] = '<a href="customer_id=%d">%s</a> получил комиссию за новый <a href="order_id=%d">заказ</a>.';
+$_['error_permission'] = 'Внимание: у вас нет прав изменять отчёт об активности клиентов!';
+$_['entry_sort_order'] = 'Порядок сортировки';
+$_['entry_status'] = 'Статус';
+$_['text_extension'] = 'Расширения';

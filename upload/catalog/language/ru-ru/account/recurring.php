@@ -53,3 +53,18 @@ $_['text_transaction_expired'] 					= 'Истек';
 $_['error_not_cancelled'] 						= 'Ошибка: %s';
 $_['error_not_found'] 							= 'Нельзя отключить профиль';
 $_['text_cancelled'] 							= 'Регулярный платеж был закрыт';
+
+// MintCart
+$_['text_order_recurring_id'] = 'ID регулярного платежа:';
+$_['text_order_id'] = 'ID заказа:';
+$_['text_description'] = 'Описание';
+$_['text_reference'] = 'Референс';
+$_['text_transaction'] = 'Транзакции';
+$_['text_status_1'] = 'Активный';
+$_['text_status_2'] = 'Неактивный';
+$_['text_status_3'] = 'Отменён';
+$_['text_status_4'] = 'Приостановлен';
+$_['text_status_5'] = 'Завершён';
+$_['text_status_6'] = 'Ожидает';
+$_['text_error'] = 'Запрошенный регулярный заказ не найден!';
+$_['column_order_recurring_id'] = 'ID регулярного платежа';

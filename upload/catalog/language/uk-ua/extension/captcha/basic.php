@@ -7,3 +7,6 @@ $_['entry_captcha'] = '';
 
 // Error
 $_['error_captcha'] = 'Ви не пройшли перевірку';
+
+// MintCart
+$_['text_captcha'] = 'Captcha';

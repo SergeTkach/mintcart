@@ -29,3 +29,14 @@ $_['text_model_asc']    = 'Код Товара (А - Я)';
 $_['text_model_desc']   = 'Код Товара (Я - А)';
 $_['text_limit']        = 'Показать:';
 $_['text_benefits']     = 'Преимущества:';
+
+// MintCart
+$_['text_no_results'] = 'Брендов для отображения нет.';
+$_['text_add_to_cart_error'] = 'Не удалось добавить этот товар в корзину';
+$_['text_added_to_cart'] = 'Добавлено в корзину';
+$_['text_badge_new'] = 'Новинка';
+$_['text_badge_out_of_stock'] = 'Нет в наличии';
+$_['text_badge_sale'] = 'Акция';
+$_['text_quick_order'] = 'Быстрый заказ';
+$_['text_rated'] = 'Оценка %s из 5 звёзд';
+$_['text_wishlist_error'] = 'Не удалось обновить список желаний';

@@ -156,3 +156,9 @@ $_['text_mintcart_badge'] = 'Бейджи товаров';
 $_['text_mintcart_design_styles'] = 'Стили';
 $_['text_mintcart_settings_diagnostics'] = 'Диагностика';
 $_['text_mintcart_compatibility'] = 'Проверка совместимости';
+
+// MintCart
+$_['text_menu'] = 'Управление меню';
+$_['text_mc_menu_hint'] = 'В следующий раз вы найдёте это здесь:';
+$_['text_mc_menu_hint_ok'] = 'Понятно';
+$_['text_mc_menu_hint_click'] = 'Нажмите здесь, чтобы открыть';

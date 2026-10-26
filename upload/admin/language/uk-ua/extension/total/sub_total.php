@@ -15,3 +15,6 @@ $_['entry_sort_order'] = 'Порядок сортування';
 
 // Error
 $_['error_permission'] = 'У вас недостатньо прав для внесення змін';
+
+// MintCart
+$_['text_extension'] = 'Розширення';

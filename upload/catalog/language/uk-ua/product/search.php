@@ -34,3 +34,13 @@ $_['text_benefits']     = 'Переваги:';
 // Entry
 $_['entry_search']      = 'Пошук';
 $_['entry_description'] = 'Шукати в описах товарів';
+
+// MintCart
+$_['text_add_to_cart_error'] = 'Не вдалося додати цей товар до кошика';
+$_['text_added_to_cart'] = 'Додано до кошика';
+$_['text_badge_new'] = 'Новинка';
+$_['text_badge_out_of_stock'] = 'Немає в наявності';
+$_['text_badge_sale'] = 'Акція';
+$_['text_quick_order'] = 'Швидке замовлення';
+$_['text_rated'] = 'Оцінка %s з 5 зірок';
+$_['text_wishlist_error'] = 'Не вдалося оновити список бажань';

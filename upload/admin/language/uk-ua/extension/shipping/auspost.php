@@ -27,3 +27,7 @@ $_['help_weight_class']  = 'Показувати в грамах';
 // Error
 $_['error_permission']   = 'У вас недостатньо прав для внесення змін';
 $_['error_postcode']     = 'Поштовий індекс має складатись з 4 символів';
+
+// MintCart
+$_['entry_api'] = 'API-ключ';
+$_['text_extension'] = 'Розширення';

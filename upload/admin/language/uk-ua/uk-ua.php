@@ -165,3 +165,14 @@ $_['error_upload_999']              = 'Виникла невідома поми�
 
 $_['summernote']                    = 'uk-UA';
 $_['datepicker']                    = 'uk';
+
+// MintCart
+$_['button_translation'] = 'Завантажити переклад за замовчуванням';
+$_['button_translation_add'] = 'Додати переклад';
+$_['button_deny'] = 'Відхилити';
+$_['button_order'] = 'Переглянути замовлення';
+$_['button_order_recurring'] = 'Переглянути регулярне замовлення';
+$_['button_buy'] = 'Купити';
+$_['button_developer'] = 'Налаштування розробника';
+$_['tab_documentation'] = 'Документація';
+$_['error_curl'] = 'CURL: код помилки (%s): %s';

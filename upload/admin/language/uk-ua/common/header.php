@@ -47,3 +47,15 @@ $_['button_clearsystemcache']     = 'Видалити системний кеш'
 // MintCart Functional Scope §23 (P1) - quick settings search
 $_['text_mc_admin_search_placeholder'] = 'Пошук налаштувань…';
 $_['text_mc_admin_search_empty']       = 'Відповідних налаштувань не знайдено';
+
+// MintCart
+$_['heading_title'] = 'MintCart';
+$_['text_profile'] = 'Ваш профіль';
+$_['text_store'] = 'Магазини';
+$_['text_help'] = 'Допомога';
+$_['text_homepage'] = 'Сайт проекту';
+$_['text_support'] = 'Форум підтримки';
+$_['text_documentation'] = 'Документація';
+$_['text_logout'] = 'Вихід';
+$_['text_mc_admin_search_placeholder'] = 'Пошук налаштувань…';
+$_['text_mc_admin_search_empty'] = 'Відповідних налаштувань не знайдено';

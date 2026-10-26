@@ -48,3 +48,6 @@ $_['tab_international_economy']        = 'International Economy';
 
 // Error
 $_['error_permission']                 = 'У вас недостаточно прав для внесения изменений!';
+
+// MintCart
+$_['text_extension'] = 'Расширения';

@@ -71,3 +71,6 @@ $_['text_mc_delivery'] = 'Доставка';
 $_['text_mc_payment'] = 'Оплата';
 $_['text_mc_returns'] = 'Возврат';
 $_['text_mc_from'] = 'от %s';
+
+// MintCart
+$_['error_product'] = 'Внимание: для добавления отзыва нужен товар!';

@@ -55,3 +55,18 @@ $_['error_not_found'] 							= 'Не можна відключити профі�
 $_['button_continue'] 							= 'Продовжити';
 $_['button_view'] 								= 'Перегляд';
 $_['button_return'] 							= 'Назад';
+
+// MintCart
+$_['text_order_recurring_id'] = 'ID регулярного платежу:';
+$_['text_order_id'] = 'ID замовлення:';
+$_['text_description'] = 'Опис';
+$_['text_reference'] = 'Референс';
+$_['text_transaction'] = 'Транзакції';
+$_['text_status_1'] = 'Активний';
+$_['text_status_2'] = 'Неактивний';
+$_['text_status_3'] = 'Скасований';
+$_['text_status_4'] = 'Призупинений';
+$_['text_status_5'] = 'Завершений';
+$_['text_status_6'] = 'Очікує';
+$_['text_error'] = 'Запитане регулярне замовлення не знайдено!';
+$_['column_order_recurring_id'] = 'ID регулярного платежу';
