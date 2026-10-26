@@ -16,3 +16,6 @@ $_['error_permission'] = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania mod
 
 // MintCart
 $_['help_admin'] = 'Jeśli tak, lista sklepów będzie widoczna tylko po zalogowaniu administratora!';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

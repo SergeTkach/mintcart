@@ -130,3 +130,7 @@ $_['text_information_picker_empty'] = 'Nie znaleziono stron.';
 $_['text_information_picker_next'] = 'Następna';
 $_['text_information_picker_prev'] = 'Poprzednia';
 $_['text_information_picker_search'] = 'Szukaj stron';
+
+// MintCart
+$_['entry_theme'] = 'Motyw';
+$_['text_settings'] = 'Ustawienia';

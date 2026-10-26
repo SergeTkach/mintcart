@@ -19,3 +19,10 @@ $_['text_transaction']   = 'Twoje transakcje';
 $_['text_newsletter']    = 'Subskrypcja / rezygnacja z newslettera';
 $_['text_recurring']     = 'Płatności cykliczne';
 $_['text_transactions']  = 'Transakcje';
+
+// MintCart
+$_['text_affiliate_add'] = 'Zarejestruj konto partnerskie';
+$_['text_affiliate_edit'] = 'Edytuj dane partnerskie';
+$_['text_credit_card'] = 'Zarządzaj zapisanymi kartami kredytowymi';
+$_['text_my_affiliate'] = 'Moje konto partnerskie';
+$_['text_tracking'] = 'Własny kod śledzący partnera';

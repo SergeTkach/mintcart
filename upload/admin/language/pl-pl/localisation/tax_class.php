@@ -28,3 +28,7 @@ $_['error_permission']  = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania kl
 $_['error_title']       = 'Nazwa klasy podatkowej musi mieć od 3 do 32 znaków!';
 $_['error_description'] = 'Opis musi mieć od 3 do 255 znaków!';
 $_['error_product']     = 'Ostrzeżenie: Nie można usunąć tej klasy podatkowej, ponieważ jest ona obecnie przypisana do %s produktów!';
+
+// MintCart
+$_['text_tax_class'] = 'Klasa podatkowa';
+$_['text_tax_rate'] = 'Stawki podatkowe';

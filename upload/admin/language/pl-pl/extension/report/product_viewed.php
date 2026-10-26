@@ -14,3 +14,9 @@ $_['column_percent']   = 'Procent';
 
 // Error
 $_['error_permission'] = 'Ostrzeżenie: Nie masz uprawnień do resetowania raportu wyświetleń produktów!';
+
+// MintCart
+$_['entry_sort_order'] = 'Kolejność';
+$_['entry_status'] = 'Status';
+$_['text_edit'] = 'Edytuj raport wyświetlonych produktów';
+$_['text_extension'] = 'Rozszerzenia';

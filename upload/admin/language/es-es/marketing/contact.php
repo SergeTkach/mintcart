@@ -40,3 +40,7 @@ $_['error_message'] = '¡El mensaje de correo es obligatorio!';
 
 // MintCart
 $_['error_email'] = '¡El correo es obligatorio!';
+
+// MintCart
+$_['error_permission'] = 'Advertencia: ¡No tiene permiso para enviar correos electrónicos!';
+$_['error_subject'] = '¡El asunto del correo es obligatorio!';

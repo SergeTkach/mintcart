@@ -24,3 +24,12 @@ $_['entry_status']         = 'Status';
 $_['error_permission']     = 'Uwaga: Nie masz uprawnień do modyfikowania API!';
 $_['error_username']       = 'Uwaga: Nazwa użytkownika musi zawierać od 3 do 20 znaków!';
 $_['error_password']       = 'Uwaga: Hasło API musi zawierać od 3 do 256 znaków!';
+
+// MintCart
+$_['column_ip'] = 'IP';
+$_['column_token'] = 'Token';
+$_['entry_ip'] = 'IP';
+$_['entry_key'] = 'Klucz API';
+$_['error_ip'] = 'Na liście dozwolonych musi znajdować się co najmniej jeden adres IP!';
+$_['error_key'] = 'Klucz API musi mieć od 64 do 256 znaków!';
+$_['text_ip'] = 'Poniżej możesz utworzyć listę adresów IP uprawnionych do korzystania z API. Twój aktualny adres IP to %s';

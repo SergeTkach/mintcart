@@ -9,3 +9,6 @@ $_['text_footer']   = 'Jeśli masz jakiekolwiek pytania, odpowiedz na tą wiadom
 
 // MintCart
 $_['text_sent'] = 'Sukces: e-mail z bonem upominkowym został wysłany!';
+
+// MintCart
+$_['text_success'] = 'Sukces: Zmodyfikowano bony!';

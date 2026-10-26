@@ -39,3 +39,6 @@ $_['error_custom_field']   = '%s wymagane!';
 // MintCart
 $_['text_address_edit'] = 'Edytuj adres';
 $_['text_confirm'] = 'Czy na pewno?';
+
+// MintCart
+$_['text_address_add'] = 'Dodaj adres';

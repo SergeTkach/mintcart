@@ -135,3 +135,6 @@ $_['text_information_picker_empty'] = 'No se encontraron páginas.';
 $_['text_information_picker_prev'] = 'Anterior';
 $_['text_information_picker_next'] = 'Siguiente';
 $_['text_information_picker_confirm'] = 'Seleccionar';
+
+// MintCart
+$_['help_currency'] = 'Cambie la moneda predeterminada. Borre la caché del navegador para ver el cambio y restablecer su cookie actual.';

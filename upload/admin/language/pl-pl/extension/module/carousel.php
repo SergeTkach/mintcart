@@ -20,3 +20,10 @@ $_['entry_status']     = 'Status';
 $_['error_permission'] = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania modułu Karuzela!';
 $_['error_module']     = 'Ostrzeżenie: Moduł wymagany!';
 $_['error_image']      = 'Szerokości i wysokości obrazu wymagane!';
+
+// MintCart
+$_['entry_name'] = 'Nazwa modułu';
+$_['error_height'] = 'Wysokość jest wymagana!';
+$_['error_name'] = 'Nazwa modułu musi mieć od 3 do 64 znaków!';
+$_['error_width'] = 'Szerokość jest wymagana!';
+$_['text_extension'] = 'Rozszerzenia';

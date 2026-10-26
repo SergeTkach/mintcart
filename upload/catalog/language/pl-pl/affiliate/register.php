@@ -56,3 +56,12 @@ $_['error_country']             = 'Wybierz kraj!';
 $_['error_zone']                = 'Wybierz województwo!';
 $_['error_postcode']            = 'Kod pocztowy musi mieć od 2 do 10 znaków!';
 $_['error_agree']               = 'Ostrzeżenie: Musisz wyrazić zgodę na %s!';
+
+// MintCart
+$_['entry_customer_group'] = 'Grupa klientów';
+$_['error_bank_account_name'] = 'Nazwa konta jest wymagana!';
+$_['error_bank_account_number'] = 'Numer konta jest wymagany!';
+$_['error_cheque'] = 'Nazwa odbiorcy czeku jest wymagana!';
+$_['error_custom_field'] = 'Pole %s jest wymagane!';
+$_['error_paypal'] = 'Adres e-mail PayPal wydaje się nieprawidłowy!';
+$_['text_your_affiliate'] = 'Twoje dane partnerskie';

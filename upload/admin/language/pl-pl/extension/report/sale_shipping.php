@@ -25,3 +25,10 @@ $_['entry_status']      = 'Status zamówienia';
 
 // MintCart
 $_['text_filter'] = 'Filtr';
+
+// MintCart
+$_['entry_sort_order'] = 'Kolejność';
+$_['error_permission'] = 'Uwaga: Nie masz uprawnień do modyfikowania raportu wysyłek!';
+$_['text_edit'] = 'Edytuj raport wysyłek';
+$_['text_extension'] = 'Rozszerzenia';
+$_['text_success'] = 'Sukces: Zmodyfikowano raport wysyłek!';

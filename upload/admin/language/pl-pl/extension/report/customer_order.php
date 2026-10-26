@@ -20,3 +20,12 @@ $_['column_action']         = 'Działania';
 $_['entry_date_start']      = 'Data rozpoczęcia';
 $_['entry_date_end']        = 'Data zakończenia';
 $_['entry_status']          = 'Status zamówienia';
+
+// MintCart
+$_['entry_customer'] = 'Klient';
+$_['entry_sort_order'] = 'Kolejność';
+$_['error_permission'] = 'Uwaga: Nie masz uprawnień do modyfikowania raportu zamówień klientów!';
+$_['text_edit'] = 'Edytuj raport zamówień klientów';
+$_['text_extension'] = 'Rozszerzenia';
+$_['text_filter'] = 'Filtr';
+$_['text_success'] = 'Sukces: Zmodyfikowano raport zamówień klientów!';

@@ -22,3 +22,9 @@ $_ ['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar gr
 $_ ['error_name'] = '! Atributo Nombre del grupo debe tener entre 3 y 64 caracteres';
 $_ ['error_attribute'] = 'Advertencia: Este grupo de atributos no se puede eliminar, ya que est&aacute; actualmente asignado a los atributos% s';
 $_ ['error_product'] = 'Advertencia: Este grupo de atributos no se puede eliminar ya que se asigna actualmente a los productos de% s';
+
+// MintCart
+$_['error_permission'] = 'Advertencia: ¡No tiene permiso para modificar los grupos de atributos!';
+$_['error_name'] = '¡El nombre del grupo de atributos debe tener entre 1 y 64 caracteres!';
+$_['error_attribute'] = 'Advertencia: ¡Este grupo de atributos no se puede eliminar porque está asignado actualmente a %s atributos!';
+$_['error_product'] = 'Advertencia: ¡Este grupo de atributos no se puede eliminar porque está asignado actualmente a %s productos!';

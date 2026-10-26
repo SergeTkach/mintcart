@@ -19,3 +19,6 @@ $_['help_rate']        = 'Przykład: 5:10.00,7:12.00 (waga: koszt, waga: koszt, 
 
 // Error
 $_['error_permission'] = 'Uwaga: Nie masz uprawnień do modyfikacji ustawień!';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

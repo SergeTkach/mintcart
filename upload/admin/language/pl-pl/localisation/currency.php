@@ -38,3 +38,6 @@ $_['error_order']          = 'Ostrzeżenie: Nie można usunąć tej waluty, poni
 
 // MintCart
 $_['error_currency_engine'] = 'Uwaga: nie znaleziono aktywnego silnika kursów walut!';
+
+// MintCart
+$_['text_iso'] = 'Pełną listę kodów walut ISO i ustawień znajdziesz <a href="http://www.xe.com/iso4217.php" target="_blank" class="alert-link">tutaj</a>.';

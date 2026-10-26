@@ -13,3 +13,6 @@ $_['entry_sort_order'] = 'Kolejność sortowania';
 
 // Error
 $_['error_permission'] = 'Ostrzeżenie: Nie masz uprawnień do modyfikacji sumy bonu podarunkowego!';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

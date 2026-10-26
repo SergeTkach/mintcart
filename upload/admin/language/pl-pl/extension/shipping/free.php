@@ -18,3 +18,6 @@ $_['help_total']       = 'Suma częściowa potrzebna przed dostępnością darmo
 
 // Error
 $_['error_permission'] = 'Uwaga: Nie masz uprawnień do modyfikowania darmowej wysyłki!';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

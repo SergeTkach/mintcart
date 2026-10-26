@@ -163,3 +163,6 @@ $_['text_customer_picker_empty'] = 'No se encontraron clientes.';
 $_['text_customer_picker_prev'] = 'Anterior';
 $_['text_customer_picker_next'] = 'Siguiente';
 $_['text_customer_picker_confirm'] = 'Seleccionar';
+
+// MintCart
+$_['column_order_id'] = 'ID del pedido';

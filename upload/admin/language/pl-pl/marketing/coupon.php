@@ -54,3 +54,6 @@ $_['error_permission']    = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania 
 $_['error_exists']        = 'Ostrzeżenie: Kod kuponu jest już w użyciu!';
 $_['error_name']          = 'Nazwa kuponu musi mieć od 3 do 128 znaków!';
 $_['error_code']          = 'Kod musi mieć od 3 do 10 znaków!';
+
+// MintCart
+$_['text_coupon'] = 'Historia kuponu';

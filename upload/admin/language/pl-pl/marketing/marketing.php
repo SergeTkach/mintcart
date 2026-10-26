@@ -31,3 +31,7 @@ $_['help_example']      = 'Aby system mógł śledzić przekierowania musisz dod
 $_['error_permission']  = 'Uwaga: Nie masz uprawnień do modyfikowania kampanii marketingowych!';
 $_['error_name']        = 'Uwaga: Kampania musi zawierać od 1 do 32 znaków!';
 $_['error_code']        = 'Uwaga: Wymagany kod śledzenia!';
+
+// MintCart
+$_['error_exists'] = 'Kod śledzący jest używany przez inną kampanię!';
+$_['text_filter'] = 'Filtr';

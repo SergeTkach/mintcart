@@ -13,3 +13,7 @@ $_['entry_data_feed']  = 'URL kanału';
 
 // Error
 $_['error_permission'] = 'Uwaga: Nie masz uprawnień do modyfikowania kanału Google Sitemap!';
+
+// MintCart
+$_['text_edit'] = 'Edytuj Google Sitemap';
+$_['text_extension'] = 'Rozszerzenia';

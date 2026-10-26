@@ -19,3 +19,6 @@ $_['help_total']       = 'Suma zamówień jaką należy osiągnąć, aby te zam�
 
 // Error
 $_['error_permission'] = 'Uwaga: Nie masz uprawnień do modyfikowania wysyłek!';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

@@ -24,3 +24,6 @@ $_['error_permission']   = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania s
 $_['error_name']         = 'Nazwa strefy geograficznej musi mieć od 3 do 32 znaków!';
 $_['error_description']  = 'Opis strefy geograficznej musi mieć od 3 do 255 znaków!';
 $_['error_tax_rate']     = 'Ostrzeżenie: Nie można usunąć tej strefy geograficznej, ponieważ jest ona obecnie przypisana do jednej lub więcej stawek podatkowych!';
+
+// MintCart
+$_['text_geo_zone'] = 'Strefy geograficzne';

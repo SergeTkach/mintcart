@@ -62,3 +62,6 @@ $_['error_model']        = 'Model produktu musi mieć od 3 do 64 znaków!';
 $_['error_reason']       = 'Musisz wybrać powód zwrotu produktu!';
 $_['error_captcha']      = 'Kod weryfikacyjny nie pasuje do obrazu!';
 $_['error_agree']        = 'Ostrzeżenie: Musisz wyrazić zgodę na %s!';
+
+// MintCart
+$_['text_reason'] = 'Powód zwrotu';

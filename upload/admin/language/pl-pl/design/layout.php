@@ -33,3 +33,8 @@ $_['error_store']         = 'Ostrzeżenie: Nie można usunąć tego układu, pon
 $_['error_product']       = 'Ostrzeżenie: Nie można usunąć tego układu, ponieważ jest on obecnie przypisany do %s produktów!';
 $_['error_category']      = 'Ostrzeżenie: Nie można usunąć tego układu, ponieważ jest on obecnie przypisany do %s kategorii!';
 $_['error_information']   = 'Ostrzeżenie: Nie można usunąć tego układu, ponieważ jest on obecnie przypisany do %s stron informacyjnych!';
+
+// MintCart
+$_['text_module'] = 'Wybierz pozycję modułów';
+$_['text_remove'] = 'Usuń';
+$_['text_route'] = 'Wybierz sklep i ścieżki używane z tym układem';

@@ -245,3 +245,20 @@ $_['text_customer_picker_next'] = 'Następna';
 $_['text_customer_picker_prev'] = 'Poprzednia';
 $_['text_customer_picker_search'] = 'Szukaj klientów';
 $_['text_filter'] = 'Filtr';
+
+// MintCart
+$_['entry_currency'] = 'Waluta';
+$_['entry_override'] = 'Zastąp';
+$_['error_filetype'] = 'Nieprawidłowy typ pliku!';
+$_['help_override'] = 'Jeśli zmiana statusu zamówienia klienta jest blokowana przez rozszerzenie antyfraudowe, włącz zastąpienie.';
+$_['text_account_custom_field'] = 'Pola niestandardowe konta';
+$_['text_browser'] = 'Przeglądarka';
+$_['text_customer_detail'] = 'Dane klienta';
+$_['text_history_add'] = 'Dodaj historię zamówienia';
+$_['text_option'] = 'Opcje';
+$_['text_payment_address'] = 'Adres rozliczeniowy';
+$_['text_payment_custom_field'] = 'Pola niestandardowe adresu rozliczeniowego';
+$_['text_shipping_address'] = 'Adres dostawy';
+$_['text_shipping_custom_field'] = 'Pola niestandardowe adresu dostawy';
+$_['text_store'] = 'Sklep';
+$_['text_success'] = 'Sukces: Zmodyfikowano zamówienia!';

@@ -19,3 +19,7 @@ $_['text_order_id']             = 'Nr zamówienia:';
 $_['text_transaction_subject']  = '%s - Prowizja partnerów';
 $_['text_transaction_received'] = 'Odebrano %s prowizji!';
 $_['text_transaction_total']    = 'Całkowita kwota prowizji to %s.';
+
+// MintCart
+$_['text_customer_group'] = 'Grupa klientów:';
+$_['text_service'] = 'Po zalogowaniu będziesz mógł generować kody śledzące, śledzić wypłaty prowizji i edytować dane konta.';

@@ -60,3 +60,6 @@ $_['error_email']         = 'Uwaga: Adres e-mail wygląda na nieprawidłowy!';
 $_['error_telephone']     = 'Uwaga: Telefon musi zawierać od 3 do 32 znaków!';
 $_['error_product']       = 'Uwaga: Nazwa produktu musi zawierać od 3 do 255 znaków!';
 $_['error_model']         = 'Uwaga: Model produktu musi zawierać od 3 do 64 znaków!';
+
+// MintCart
+$_['text_history_add'] = 'Dodaj historię';

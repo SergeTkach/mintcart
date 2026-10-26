@@ -12,3 +12,6 @@ $_['entry_status']     = 'Status';
 
 // Error
 $_['error_permission'] = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania modułu Kategoria!';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

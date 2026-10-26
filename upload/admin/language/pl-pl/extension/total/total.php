@@ -13,3 +13,6 @@ $_['entry_sort_order'] = 'Sortowanie';
 
 // Error
 $_['error_permission'] = 'Uwaga! Nie masz uprawnień do modyfikowania danych!';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

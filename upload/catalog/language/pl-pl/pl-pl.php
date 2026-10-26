@@ -67,3 +67,8 @@ $_['error_upload_6']        = 'Ostrzeżenie: Brak folderu tymczasowego!';
 $_['error_upload_7']        = 'Ostrzeżenie: Nie można zapisać pliku na dysku!';
 $_['error_upload_8']        = 'Ostrzeżenie: Ładowanie pliku zatrzymane przez rozszerzenie!';
 $_['error_upload_999']      = 'Ostrzeżenie: Brak dostępnego kodu błędu!';
+
+// MintCart
+$_['datepicker'] = 'pl';
+$_['error_curl'] = 'CURL: kod błędu (%s): %s';
+$_['text_no_results'] = 'Brak wyników!';

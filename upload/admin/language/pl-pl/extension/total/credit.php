@@ -13,3 +13,6 @@ $_['entry_sort_order'] = 'Kolejność sortowania';
 
 // Error
 $_['error_permission'] = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania całkowitego kredytu sklepu!';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

@@ -11,3 +11,6 @@ $_['entry_status']     = 'Status';
 
 // Error
 $_['error_permission'] = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania modułu Konto!';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

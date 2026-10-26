@@ -13,3 +13,6 @@ $_['entry_sort_order'] = 'Status zamówienia';
 
 // Error
 $_['error_permission'] = 'Uwaga ! Nie posiadasz uprawnień do modyfikacji tych ustawień.';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

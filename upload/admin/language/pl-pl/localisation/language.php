@@ -44,3 +44,6 @@ $_['error_default']     = 'Ostrzeżenie: Nie można usunąć tego języka, ponie
 $_['error_admin']       = 'Ostrzeżenie: Nie można usunąć tego języka, ponieważ jest on obecnie przypisany jako język panelu administracyjnego!';
 $_['error_store']       = 'Ostrzeżenie: Nie można usunąć tego języka, ponieważ jest on obecnie przypisany do %s sklepów!';
 $_['error_order']       = 'Ostrzeżenie: Nie można usunąć tego języka, ponieważ jest on obecnie przypisany do %s zamówień!';
+
+// MintCart
+$_['error_exists'] = 'Uwaga: Ten język został już dodany!';

@@ -70,3 +70,6 @@ $_['text_section_nav'] = 'Sekcje produktu';
 $_['text_view_cart'] = 'Zobacz koszyk';
 $_['text_viewed'] = 'Ostatnio oglądane';
 $_['text_wishlist_error'] = 'Nie udało się zaktualizować listy życzeń';
+
+// MintCart
+$_['text_payment_cancel'] = '%s co %d %s do odwołania';

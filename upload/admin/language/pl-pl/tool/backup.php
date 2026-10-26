@@ -15,3 +15,11 @@ $_['entry_backup']     = 'Kopia zapasowa';
 $_['error_permission'] = 'Ostrzeżenie: Nie masz uprawnień do modyfikowania kopii zapasowych!';
 $_['error_backup']     = 'Ostrzeżenie: Należy wybrać co najmniej jedną tabelę do kopii zapasowej!';
 $_['error_empty']      = 'Uwaga: Plik, który wgrałeś był pusty!';
+
+// MintCart
+$_['entry_export'] = 'Eksport';
+$_['entry_progress'] = 'Postęp';
+$_['error_export'] = 'Uwaga: Musisz wybrać co najmniej jedną tabelę do eksportu!';
+$_['error_file'] = 'Nie znaleziono pliku!';
+$_['tab_backup'] = 'Kopia zapasowa';
+$_['tab_restore'] = 'Przywracanie';

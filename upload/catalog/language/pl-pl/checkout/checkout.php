@@ -115,3 +115,7 @@ $_['text_mc_payment'] = 'Płatność';
 $_['text_mc_payment_ready'] = 'Twoje zamówienie zostało utworzone. Zakończ krok płatności poniżej.';
 $_['text_mc_shipping'] = 'Dostawa';
 $_['text_mc_summary'] = 'Twoje zamówienie';
+
+// MintCart
+$_['text_payment_cancel'] = '%s co %d %s do odwołania';
+$_['text_recurring_item'] = 'Pozycja cykliczna';

@@ -165,10 +165,14 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 - [x] Storage lives in the site root, `<root>/storage`, next to `system` (installers write
       `DIR_STORAGE = dirname(DIR_SYSTEM) . '/storage/'`; the `.htaccess` blocks `^storage/`). System >
       Maintenance > Storage has a selector: site root / inside `system` / outside the site root (2026-10-26)
-- [x] Languages: uk-ua, ru-ru, tr-tr, es-es, ro-ro bundled (`system/mintcart/data/languages.json`, offered in the Setup Wizard).
-      Admin + storefront strings and all MintCart screens are translated in all five; third-party payment gateways and carriers
-      (PayPal, Square, Fedex, Royal Mail, ...) fall back to English for ro-ro. Still English: the demo catalogue for tr/es/ro, hardcoded
-      strings in templates/JS (not audited) (2026-10-26)
+- [x] Languages: uk-ua, ru-ru, tr-tr, es-es, ro-ro, cs-cz, pl-pl, el-gr, bg-bg, nl-nl, pt-br, fr-fr, hu-hu, de-de, it-it bundled
+      (`system/mintcart/data/languages.json`, offered in the Setup Wizard). Base files come from community packs (OpenCart-Romania
+      for ro, official 3.0.4.0 packs for tr/fr/it, others as listed in the commit history); the strings missing from them and all
+      MintCart screens were translated by the assistant and have not been reviewed by native speakers. Every language has 0 keys
+      missing against `en-gb` (checked with the static parser, third-party payment gateways and carriers excluded: PayPal, Square,
+      Fedex, Royal Mail, ... fall back to English). Still English: the demo catalogue for all languages except uk-ua, hardcoded
+      strings in templates/JS (not audited). The currency list (`currencies.json`, 40 currencies) is independent of the languages
+      and has no Latin-American Spanish / African French currencies (2026-10-26)
 - [x] Setup Wizard: shipping methods set up inline (cost, tax class, zone) and toggled
       over AJAX; steps passed but not set up get an amber `!`, unmet readiness rows link
       back to their step; admin menu pointer (red) shows where each setting lives

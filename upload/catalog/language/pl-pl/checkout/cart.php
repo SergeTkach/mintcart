@@ -40,3 +40,6 @@ $_['error_minimum']          = 'Minimalna zamawiana ilość dla %s to %s!';
 $_['error_required']         = '%s wymagane!';
 $_['error_product']          = 'Uwaga: W Twoim koszyku nie ma żadnych produktów!';
 $_['error_recurring_required'] = 'Proszę wybrać płatność cykliczną!';
+
+// MintCart
+$_['text_payment_cancel'] = '%s co %d %s do odwołania';

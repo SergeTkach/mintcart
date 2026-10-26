@@ -40,3 +40,6 @@ $_['error_warning'] = 'Advertencia: Por favor, consulte el formulario cuidadosam
 $_['error_permission'] = 'Advertencia: Usted no tiene permiso para modificar perfiles recurrentes';
 $_['error_name'] = 'Nombre de perfil debe ser superior a 3 y menos de 255 caracteres!';
 $_['error_product'] = 'Advertencia: Este perfil recurrente no puede suprimirse, ya que se asigna actualmente a los productos de %s';
+
+// MintCart
+$_['heading_title'] = 'Perfiles recurrentes';

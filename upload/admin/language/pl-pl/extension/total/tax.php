@@ -13,3 +13,6 @@ $_['entry_sort_order'] = 'Szybkie zamówienie';
 
 // Error
 $_['error_permission'] = 'Uwaga ! Nie masz uprawnień do edycji tego ustawienia.';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

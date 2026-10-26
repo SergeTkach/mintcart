@@ -50,3 +50,18 @@ $_['text_transaction_expired'] = 'Wygasła';
 $_['error_not_cancelled'] = 'Błąd: %s';
 $_['error_not_found'] = 'Nie można anulować cyklicznej';
 $_['text_cancelled'] = 'Płatność cykliczna została anulowana';
+
+// MintCart
+$_['column_order_recurring_id'] = 'ID płatności cyklicznej';
+$_['text_description'] = 'Opis';
+$_['text_error'] = 'Nie znaleziono żądanego zamówienia cyklicznego!';
+$_['text_order_id'] = 'ID zamówienia:';
+$_['text_order_recurring_id'] = 'ID płatności cyklicznej:';
+$_['text_reference'] = 'Numer referencyjny';
+$_['text_status_1'] = 'Aktywna';
+$_['text_status_2'] = 'Nieaktywna';
+$_['text_status_3'] = 'Anulowana';
+$_['text_status_4'] = 'Zawieszona';
+$_['text_status_5'] = 'Wygasła';
+$_['text_status_6'] = 'Oczekująca';
+$_['text_transaction'] = 'Transakcje';

@@ -22,3 +22,6 @@ $_['entry_sort_order'] = 'Kolejność sortowania';
 
 // Error
 $_['error_permission'] = 'Uwaga: Nie masz uprawnień do modyfikowania wysyłek!';
+
+// MintCart
+$_['text_extension'] = 'Rozszerzenia';

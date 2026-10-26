@@ -46,3 +46,9 @@ $_['error_from_name'] = 'Su nombre debe tener entre 1 y 64 caracteres!';
 $_['error_email'] = 'E-Mail no parece ser v&aacute;lida! ';
 $_['error_amount'] = 'La cantidad debe ser mayor que o igual a 1!';
 $_['error_order'] = 'Advertencia: Este bono no puede ser eliminado, ya que es parte de un pedido href="%s"> <a </a>';
+
+// MintCart
+$_['text_success'] = 'Éxito: ¡Ha modificado los cheques regalo!';
+$_['text_list'] = 'Lista de cheques regalo';
+$_['text_add'] = 'Añadir cheque regalo';
+$_['text_edit'] = 'Editar cheque regalo';

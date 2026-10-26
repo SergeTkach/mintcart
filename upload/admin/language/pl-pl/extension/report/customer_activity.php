@@ -28,3 +28,27 @@ $_['entry_customer']      = 'Klient';
 $_['entry_ip']            = 'Adres IP';
 $_['entry_date_start']    = 'Data rozpoczęcia';
 $_['entry_date_end']      = 'Data zakończenia';
+
+// MintCart
+$_['entry_sort_order'] = 'Kolejność';
+$_['entry_status'] = 'Status';
+$_['error_permission'] = 'Uwaga: Nie masz uprawnień do modyfikowania raportu aktywności klientów!';
+$_['text_activity_address_add'] = '<a href="customer_id=%d">%s</a> dodał(a) nowy adres.';
+$_['text_activity_address_delete'] = '<a href="customer_id=%d">%s</a> usunął(-ęła) jeden ze swoich adresów.';
+$_['text_activity_address_edit'] = '<a href="customer_id=%d">%s</a> zaktualizował(a) swój adres.';
+$_['text_activity_affiliate_add'] = '<a href="customer_id=%d">%s</a> zarejestrował(a) konto partnerskie.';
+$_['text_activity_affiliate_edit'] = '<a href="customer_id=%d">%s</a> zaktualizował(a) dane partnerskie.';
+$_['text_activity_edit'] = '<a href="customer_id=%d">%s</a> zaktualizował(a) dane konta.';
+$_['text_activity_forgotten'] = '<a href="customer_id=%d">%s</a> poprosił(a) o reset hasła.';
+$_['text_activity_login'] = '<a href="customer_id=%d">%s</a> zalogował(a) się.';
+$_['text_activity_order_account'] = '<a href="customer_id=%d">%s</a> utworzył(a) <a href="order_id=%d">nowe zamówienie</a>.';
+$_['text_activity_order_guest'] = '%s utworzył(a) <a href="order_id=%d">nowe zamówienie</a>.';
+$_['text_activity_password'] = '<a href="customer_id=%d">%s</a> zmienił(a) hasło do konta.';
+$_['text_activity_register'] = '<a href="customer_id=%d">%s</a> zarejestrował(a) konto.';
+$_['text_activity_reset'] = '<a href="customer_id=%d">%s</a> zresetował(a) hasło do konta.';
+$_['text_activity_return_account'] = '<a href="customer_id=%d">%s</a> złożył(a) zwrot produktu.';
+$_['text_activity_return_guest'] = '%s złożył(a) zwrot produktu.';
+$_['text_activity_transaction'] = '<a href="customer_id=%d">%s</a> otrzymał(a) prowizję z nowego <a href="order_id=%d">zamówienia</a>.';
+$_['text_extension'] = 'Rozszerzenia';
+$_['text_filter'] = 'Filtr';
+$_['text_success'] = 'Sukces: Zmodyfikowano raport aktywności klientów!';

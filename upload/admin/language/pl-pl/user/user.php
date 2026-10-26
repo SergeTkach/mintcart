@@ -37,3 +37,8 @@ $_['error_lastname']   	= 'Uwaga: Nazwisko musi zawierać od 1 do 32 znaków!';
 
 // MintCart
 $_['error_single_user'] = 'Uwaga: nie możesz wyłączyć własnego konta!';
+
+// MintCart
+$_['error_email'] = 'Adres e-mail wydaje się nieprawidłowy!';
+$_['error_exists_email'] = 'Uwaga: Ten adres e-mail jest już zarejestrowany!';
+$_['error_exists_username'] = 'Uwaga: Ta nazwa użytkownika jest już używana!';
