@@ -4261,3 +4261,20 @@ non-default-language URLs change (add redirects when migrating a live store). Re
 `route=` and no `_route_` (AJAX, payment callbacks) keep the session language.
 
 **Tests:** `tests/mintcart/seo/language-prefix-test.php`; browser check on a two-language store pending.
+
+---
+
+## Storage directory in the site root
+
+Files: `upload/system/storage/` moved to `upload/storage/` (rename only), `upload/install/index.php`, `upload/install/cli_install.php`,
+`upload/install/controller/install/step_3.php` (generated `config.php` files), `upload/.htaccess.txt`.
+
+**Reason:** MintCart keeps `storage` next to `system` in the site root, not inside `system` and not outside the web root
+(no surprises for the owner; no OpenCart security notice, which only fires for `system/storage`).
+
+**Why it cannot live in the Mint layer:** the location is written by the installer and the vendor libraries ship in it.
+
+**Compatibility impact:** extensions that hardcode `DIR_SYSTEM . 'storage/'` break; those that use `DIR_STORAGE`,
+`DIR_CACHE`, `DIR_LOGS`, ... (the normal way) are unaffected. The `.htaccess` rule `^storage/` replaces `^system/storage/`.
+
+**Tests:** `tests/mintcart/core/storage-location-test.php`, update tests (snapshot path).

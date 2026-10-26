@@ -29,7 +29,7 @@ error_reporting(E_ALL);
 define('DIR_APPLICATION', str_replace('\\', '/', realpath(dirname(__FILE__))) . '/');
 define('DIR_SYSTEM', str_replace('\\', '/', realpath(dirname(__FILE__) . '/../')) . '/system/');
 define('DIR_OPENCART', str_replace('\\', '/', realpath(DIR_APPLICATION . '../')) . '/');
-define('DIR_STORAGE', DIR_SYSTEM . 'storage/');
+define('DIR_STORAGE', DIR_OPENCART . 'storage/');
 define('DIR_DATABASE', DIR_SYSTEM . 'database/');
 define('DIR_LANGUAGE', DIR_APPLICATION . 'language/');
 define('DIR_TEMPLATE', DIR_APPLICATION . 'view/template/');
@@ -278,7 +278,7 @@ function write_config_files($options) {
 	$output .= 'define(\'DIR_APPLICATION\', \'' . addslashes(DIR_OPENCART) . 'catalog/\');' . "\n";
 	$output .= 'define(\'DIR_SYSTEM\', \'' . addslashes(DIR_OPENCART) . 'system/\');' . "\n";
 	$output .= 'define(\'DIR_IMAGE\', \'' . addslashes(DIR_OPENCART) . 'image/\');' . "\n";
-	$output .= 'define(\'DIR_STORAGE\', DIR_SYSTEM . \'storage/\');' . "\n";			
+	$output .= 'define(\'DIR_STORAGE\', dirname(DIR_SYSTEM) . \'/storage/\');' . "\n";			
 	$output .= 'define(\'DIR_LANGUAGE\', DIR_APPLICATION . \'language/\');' . "\n";
 	$output .= 'define(\'DIR_TEMPLATE\', DIR_APPLICATION . \'view/theme/\');' . "\n";
 	$output .= 'define(\'DIR_CONFIG\', DIR_SYSTEM . \'config/\');' . "\n";
@@ -318,7 +318,7 @@ function write_config_files($options) {
 	$output .= 'define(\'DIR_APPLICATION\', \'' . addslashes(DIR_OPENCART) . 'admin/\');' . "\n";
 	$output .= 'define(\'DIR_SYSTEM\', \'' . addslashes(DIR_OPENCART) . 'system/\');' . "\n";
 	$output .= 'define(\'DIR_IMAGE\', \'' . addslashes(DIR_OPENCART) . 'image/\');' . "\n";	
-	$output .= 'define(\'DIR_STORAGE\', DIR_SYSTEM . \'storage/\');' . "\n";
+	$output .= 'define(\'DIR_STORAGE\', dirname(DIR_SYSTEM) . \'/storage/\');' . "\n";
 	$output .= 'define(\'DIR_CATALOG\', \'' . addslashes(DIR_OPENCART) . 'catalog/\');' . "\n";
 	$output .= 'define(\'DIR_LANGUAGE\', DIR_APPLICATION . \'language/\');' . "\n";
 	$output .= 'define(\'DIR_TEMPLATE\', DIR_APPLICATION . \'view/template/\');' . "\n";
@@ -354,11 +354,11 @@ function write_config_files($options) {
 function dir_permissions() {
 	$dirs = array(
 		DIR_OPENCART . 'image/',
-		DIR_OPENCART . 'system/storage/download/',
-		DIR_OPENCART . 'system/storage/upload/',
-		DIR_OPENCART . 'system/storage/cache/',
-		DIR_OPENCART . 'system/storage/logs/',
-		DIR_OPENCART . 'system/storage/modification/',
+		DIR_OPENCART . 'storage/download/',
+		DIR_OPENCART . 'storage/upload/',
+		DIR_OPENCART . 'storage/cache/',
+		DIR_OPENCART . 'storage/logs/',
+		DIR_OPENCART . 'storage/modification/',
 	);
 	exec('chmod o+w -R ' . implode(' ', $dirs));
 }

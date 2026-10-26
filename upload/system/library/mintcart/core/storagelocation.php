@@ -8,12 +8,9 @@ namespace MintCart\Core;
  * Where OpenCart's `storage` directory (cache, logs, sessions, uploads and the
  * PHP libraries such as Twig) lives, and moving it.
  *
- * It must not be reachable from the web, so a fresh MintCart install puts it
- * next to the document root instead of inside it (OpenCart's own security
- * notice nags about exactly that). The same move is available afterwards under
- * System > Maintenance > Storage. One service, two callers: the installers
- * (`install/cli_install.php`, `install/controller/install/step_3.php`) and
- * `ControllerMintcartMaintenanceStorage`.
+ * By default it lives in the site root, next to `system` (`<root>/storage`; the
+ * `.htaccess` blocks it). System > Maintenance > Storage can move it to
+ * `system/storage` or out of the web root (`ControllerMintcartMaintenanceStorage`).
  *
  * `move()` copies, rewrites `DIR_STORAGE` in the given config files, and only
  * then removes the old directory, so a failure half way leaves the store

@@ -19,9 +19,9 @@ namespace MintCart\Update;
  *   check meant to run before any file is touched, refusing to *start*
  *   rather than aborting partway through a copy already in progress.
  * - decision #7 (security): `snapshotPath()` places snapshots under
- *   `system/storage/mintcart/backup/`, outside any web-servable path —
+ *   `storage/mintcart/backup/`, outside any web-servable path —
  *   the same convention OpenCart already uses for its own non-servable
- *   files (`system/storage/cache`, `system/storage/logs`, ...).
+ *   files (`storage/cache`, `storage/logs`, ...).
  *
  * Deliberately has **no OpenCart dependency** and does **no filesystem
  * I/O of its own** (no `disk_free_space()`, no `filesize()`, no actual
@@ -93,13 +93,13 @@ final class BackupPlanner
 
     /**
      * Per ADR 005 decision #7: snapshots live outside any web-servable
-     * path, the same `system/storage/` convention OpenCart already uses
+     * path, the same `storage/` convention OpenCart already uses
      * for its own non-servable files — so a snapshot of a file like
      * `config.php` can never be fetched directly over HTTP.
      */
     public static function snapshotPath(string $packageName, string $timestamp): string
     {
-        return 'system/storage/mintcart/backup/' . $packageName . '/' . $timestamp;
+        return 'storage/mintcart/backup/' . $packageName . '/' . $timestamp;
     }
 
     /**

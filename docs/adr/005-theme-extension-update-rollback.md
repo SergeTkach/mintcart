@@ -107,9 +107,9 @@ complexity with no concrete requirement driving them yet.
 
 ### 7. Security
 
-Snapshots live outside any web-servable path — `system/storage/mintcart/backup/<package>/`,
+Snapshots live outside any web-servable path — `storage/mintcart/backup/<package>/`,
 mirroring where OpenCart already keeps its own non-servable files under
-`system/storage` — so a snapshot of a file like `config.php` can never be
+`storage` — so a snapshot of a file like `config.php` can never be
 fetched directly over HTTP. Triggering a rollback requires whatever admin
 permission already gates Update Manager/Extensions; this is not a new
 permission group.

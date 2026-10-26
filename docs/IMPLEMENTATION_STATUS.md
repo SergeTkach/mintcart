@@ -162,9 +162,9 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
       MintCart logo, own home-goods demo catalogue via `install/mintcart-demo.sql`),
       MintCart admin logo/footer. Still to do: wizard steps 5-9 click-through and a
       real test order on the clean install
-- [x] Storage stays in `system/storage` after install (no surprises for the owner; the `.htaccess` blocks it).
-      Moving it out of the web root is an option: System > Maintenance > Storage (`StorageLocation`);
-      the installers no longer move it on their own (2026-10-26)
+- [x] Storage lives in the site root, `<root>/storage`, next to `system` (installers write
+      `DIR_STORAGE = dirname(DIR_SYSTEM) . '/storage/'`; the `.htaccess` blocks `^storage/`). System >
+      Maintenance > Storage has a selector: site root / inside `system` / outside the site root (2026-10-26)
 - [x] Setup Wizard: shipping methods set up inline (cost, tax class, zone) and toggled
       over AJAX; steps passed but not set up get an amber `!`, unmet readiness rows link
       back to their step; admin menu pointer (red) shows where each setting lives
