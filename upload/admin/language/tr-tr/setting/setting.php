@@ -209,3 +209,15 @@ $_['error_log_required']           = 'Hata kayıtları için dosya adı gerekli!
 $_['error_log_invalid']            = 'Hata kayıtları için dosya adı geçersiz!';
 $_['error_log_extension']          = 'Hata kayıtları dosya adı uzantısı .log olmalı!';
 $_['error_encryption']             = 'Şifreleme anahtarı 32 ile 1024 karakter arasında olmalı!';
+
+// MintCart
+$_['entry_symbol_left_space'] = 'Sol Para Birimi Simgesi Boşluğu';
+$_['entry_symbol_right_space'] = 'Sağ Para Birimi Simgesi Boşluğu';
+$_['help_symbol_left_space'] = 'İsteğe bağlı olarak sol para birimi simgesinden sonra bir boşluk ekler.';
+$_['help_symbol_right_space'] = 'İsteğe bağlı olarak sağ para birimi simgesinden önce bir boşluk ekler.';
+$_['text_information_picker_browse'] = 'Sayfalara göz at';
+$_['text_information_picker_search'] = 'Sayfa ara';
+$_['text_information_picker_empty'] = 'Sayfa bulunamadı.';
+$_['text_information_picker_prev'] = 'Önceki';
+$_['text_information_picker_next'] = 'Sonraki';
+$_['text_information_picker_confirm'] = 'Seç';

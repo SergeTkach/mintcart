@@ -77,3 +77,27 @@ $_['text_paypal_search']     = 'Arama';
 $_['text_complete_status']   = 'Tamamlanan Siparişler';
 $_['text_processing_status'] = 'Hazırlanan Siparişler';
 $_['text_other_status']      = 'Diğer Durumlar';
+
+// MintCart
+$_['text_homepage'] = 'Ana Sayfa';
+$_['text_mintcart_wizard'] = 'Kurulum Sihirbazı';
+$_['text_mintcart_business'] = 'İşletme';
+$_['text_mintcart_business_contacts'] = 'İletişim';
+$_['text_mintcart_business_delivery'] = 'Teslimat';
+$_['text_mintcart_business_payments'] = 'Ödemeler';
+$_['text_mintcart_quickorder'] = 'Hızlı Sipariş Talepleri';
+$_['text_mintcart_badge'] = 'Ürün Rozetleri';
+$_['text_mintcart_seo_system_pages'] = 'Sistem Sayfaları';
+$_['text_mintcart_design_styles'] = 'Stiller';
+$_['text_mintcart_settings_diagnostics'] = 'Tanılama';
+$_['text_mintcart_compatibility'] = 'Uyumluluk Denetleyicisi';
+$_['text_translation'] = 'Çeviriler';
+$_['text_mc_menu_hint'] = 'Bir dahaki sefere bunu burada bulacaksınız:';
+$_['text_mc_menu_hint_ok'] = 'Anladım';
+$_['text_mc_menu_hint_click'] = 'Açmak için buraya tıklayın';
+$_['text_mc_storage'] = 'Depolama';
+$_['text_mintcart_seo_meta'] = 'Meta Etiketleri';
+$_['text_mintcart_seo'] = 'SEO';
+$_['text_mintcart_seo_urls'] = 'Tüm URL\'ler';
+$_['text_mintcart_seo_url_generator'] = 'URL Oluşturucu';
+$_['text_mintcart_seo_redirects'] = 'Yönlendirmeler';

@@ -7,3 +7,6 @@ $_['text_welcome']  = '%s sitemize kayıt olduğunuz için teşekkür ederiz!';
 $_['text_login']    = 'Hesabınız onaylanmıştır. Aşağıdaki adres üzerinden, sitemize kayıtlı e-posta ve şifrenizi kullanarak giriş yapabilirsiniz:';
 $_['text_services'] = 'Giriş yaptıktan sonra, hesap bilgilerinizi düzenleyebilir veya geçmiş siparişlerinizi inceleyebilirsiniz';
 $_['text_thanks']   = 'Teşekkürler,';
+
+// MintCart
+$_['text_service'] = 'Giriş yaptığınızda geçmiş siparişleri incelemek, fatura yazdırmak ve hesap bilgilerinizi düzenlemek gibi diğer hizmetlere erişebileceksiniz.';

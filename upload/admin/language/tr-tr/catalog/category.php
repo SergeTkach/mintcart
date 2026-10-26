@@ -47,3 +47,13 @@ $_['error_meta_title']        = 'Uyarı: Meta başlığı 1 ile 255 karakter ara
 $_['error_keyword']           = 'SEO Bağlantısı zaten kullanılıyor!';
 $_['error_unique']            = 'SEO Bağlantısı benzersiz olmalı!';
 $_['error_parent']            = 'Kategorinin kendisi ana kategori olarak seçilemez!';
+
+// MintCart
+$_['text_drag_hint'] = 'Kategorileri yeniden sıralamak için bir satırı sürükleyin (veya yukarı/aşağı düğmelerini kullanın). Yeni sıra otomatik kaydedilir.';
+$_['text_move_up'] = 'Yukarı taşı';
+$_['text_move_down'] = 'Aşağı taşı';
+$_['text_order_saved'] = 'Sıra kaydedildi.';
+$_['text_order_failed'] = 'Yeni sıra kaydedilemedi. Liste sıfırlandı.';
+$_['text_sort_by_order_first'] = 'Kategorileri sürükle-bırak ile yeniden sıralamak için Sıralama\'ya göre sıralayın.';
+$_['error_category'] = 'Kategori bulunamadı!';
+$_['column_status'] = 'Durum';

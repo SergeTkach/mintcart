@@ -98,3 +98,11 @@ $_['error_telephone']              = 'Telefon 3 ile 32 karakter arasında olmal�
 $_['error_customer_group_display'] = 'Bu özelliğin kullanabilmesi için varsayılan müşteri grubu seçilmelidir!';
 $_['error_default']                = 'Uyarı: Varsayılan mağazayı silemezsiniz!';
 $_['error_store']                  = 'Uyarı: Bu mağazayı silemezsiniz, %s sipariş tarafından kullanılıyor!';
+
+// MintCart
+$_['text_information_picker_browse'] = 'Sayfalara göz at';
+$_['text_information_picker_search'] = 'Sayfa ara';
+$_['text_information_picker_empty'] = 'Sayfa bulunamadı.';
+$_['text_information_picker_prev'] = 'Önceki';
+$_['text_information_picker_next'] = 'Sonraki';
+$_['text_information_picker_confirm'] = 'Seç';

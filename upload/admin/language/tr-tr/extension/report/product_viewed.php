@@ -21,3 +21,6 @@ $_['entry_sort_order'] = 'Sıralama';
 
 // Error
 $_['error_permission'] = 'Uyarı: Ürün görüntüleme raporunu düzenleme iznine sahip değilsiniz!';
+
+// MintCart
+$_['text_success'] = 'Başarılı: Görüntülenen ürünler raporunu sıfırladınız!';

@@ -112,3 +112,8 @@ $_['error_cheque']              = 'Alacaklı adı gerekli!';
 $_['error_paypal']              = 'PayPal e-posta adersi geçersiz!';
 $_['error_bank_account_name']   = 'Hesap adı gerekli!';
 $_['error_bank_account_number'] = 'Hesap numarası gerekli!';
+
+// MintCart
+$_['text_option'] = 'Seçenekler';
+$_['text_login'] = 'Mağazaya giriş yap';
+$_['text_unlock'] = 'Hesabın kilidini aç';

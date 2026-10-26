@@ -8,3 +8,6 @@ $_['text_order_status'] = 'Sipariş Durumu:';
 $_['text_products']     = 'Ürünler:';
 $_['text_total']        = 'Toplam';
 $_['text_comment']      = 'Siparişiniz ile ilgili açıklamalar:';
+
+// MintCart
+$_['text_product'] = 'Ürünler';

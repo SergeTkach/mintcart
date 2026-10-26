@@ -21,3 +21,6 @@ $_['error_permission'] = 'Uyarı: En çok satılanlar modülünü değiştirme i
 $_['error_name']       = 'Modül Adı 3 ile 64 karakter arasında olmalıdır!';
 $_['error_width']      = 'Genişlik gerekli!';
 $_['error_height']     = 'Yükseklik gerekli!';
+
+// MintCart
+$_['entry_image'] = 'Görsel (G x Y) ve Yeniden Boyutlandırma Türü';

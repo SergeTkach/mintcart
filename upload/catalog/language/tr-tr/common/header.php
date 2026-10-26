@@ -17,3 +17,11 @@ $_['text_logout']        = 'Çıkış Yap';
 $_['text_checkout']      = 'Kasaya Git';
 $_['text_search']        = 'Ara';
 $_['text_all']           = 'Tümü Göster';
+
+// MintCart
+$_['text_mc_compare'] = 'Karşılaştır';
+$_['text_mc_call'] = 'Bizi arayın';
+$_['text_menu'] = 'Menü';
+$_['text_close'] = 'Kapat';
+$_['text_mc_search_empty'] = 'Hiçbir şey bulunamadı';
+$_['text_mc_search_all'] = 'Tüm sonuçları göster';

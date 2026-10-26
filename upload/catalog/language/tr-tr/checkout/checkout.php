@@ -93,3 +93,26 @@ $_['error_no_shipping']              = 'Uyarı: Kargo metodu mevcut değil. Lüt
 $_['error_payment']                  = 'Uyarı: Ödeme metodu gerekli!';
 $_['error_no_payment']               = 'Uyarı: Ödeme metodu mevcut değil. Lütfen <a href="%s">iletişim</a> için bize ulaşın!';
 $_['error_custom_field']             = '%s gerekli!';
+
+// MintCart
+$_['error_telephone_mask'] = 'Lütfen telefon numarasının tamamını girin!';
+$_['text_mc_contact'] = 'İletişim bilgileri';
+$_['text_mc_address'] = 'Teslimat adresi';
+$_['text_mc_shipping'] = 'Teslimat';
+$_['text_mc_payment'] = 'Ödeme';
+$_['text_mc_comment'] = 'Sipariş notu';
+$_['text_mc_summary'] = 'Siparişiniz';
+$_['text_mc_login'] = 'Hesabınız var mı? <a href="%s">Giriş yapın</a>';
+$_['text_mc_login_required'] = 'Bu sipariş için üye olmadan ödeme yapılamıyor. Devam etmek için lütfen giriş yapın veya hesap oluşturun.';
+$_['text_mc_no_shipping'] = 'Bu adres için teslimat seçeneği bulunmuyor.';
+$_['text_mc_no_payment'] = 'Kullanılabilir ödeme seçeneği yok.';
+$_['text_mc_payment_ready'] = 'Siparişiniz oluşturuldu. Aşağıdaki ödeme adımını tamamlayın.';
+$_['text_mc_error'] = 'Bir şeyler ters gitti. Lütfen tekrar deneyin.';
+$_['button_mc_place_order'] = 'Siparişi ver';
+$_['button_mc_close'] = 'Kapat';
+$_['error_mc_no_payment'] = 'Bu mağaza şu anda çevrimiçi sipariş alamıyor (kullanılabilir ödeme yöntemi yok). Sipariş vermek için lütfen mağazayla iletişime geçin.';
+$_['entry_mc_code'] = 'Kupon veya hediye çeki';
+$_['button_mc_code_apply'] = 'Uygula';
+$_['button_mc_code_remove'] = '%s kodunu kaldır';
+$_['error_mc_code_empty'] = 'Lütfen bir kod girin.';
+$_['error_mc_code'] = 'Bu kod geçersiz, süresi dolmuş veya tamamen kullanılmış.';

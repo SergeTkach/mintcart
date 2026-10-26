@@ -34,3 +34,13 @@ $_['text_limit']        = 'Göster:';
 // Entry
 $_['entry_search']      = 'Arama Kriteri';
 $_['entry_description'] = 'Ürün açıklamasında ara.';
+
+// MintCart
+$_['text_add_to_cart_error'] = 'Bu ürün sepetinize eklenemedi';
+$_['text_added_to_cart'] = 'Sepete eklendi';
+$_['text_badge_new'] = 'Yeni';
+$_['text_badge_out_of_stock'] = 'Stokta yok';
+$_['text_badge_sale'] = 'İndirim';
+$_['text_quick_order'] = 'Hızlı Sipariş';
+$_['text_rated'] = '5 yıldız üzerinden %s puan';
+$_['text_wishlist_error'] = 'İstek listeniz güncellenemedi';

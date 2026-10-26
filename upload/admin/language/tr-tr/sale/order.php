@@ -132,3 +132,11 @@ $_['error_warning']              = 'Uyarı: Oluşan hatalar için lütfen formu 
 $_['error_permission']           = 'Uyarı: Siparişleri düzenleme iznine sahip değilsiniz!';
 $_['error_action']               = 'Uyarı: Bu eylem tamamlanamadı!';
 $_['error_filetype']             = 'Dosya türü geçersiz!';
+
+// MintCart
+$_['text_customer_picker_browse'] = 'Müşterilere göz at';
+$_['text_customer_picker_search'] = 'Müşteri ara';
+$_['text_customer_picker_empty'] = 'Müşteri bulunamadı.';
+$_['text_customer_picker_prev'] = 'Önceki';
+$_['text_customer_picker_next'] = 'Sonraki';
+$_['text_customer_picker_confirm'] = 'Seç';

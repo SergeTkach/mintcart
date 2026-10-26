@@ -61,3 +61,7 @@ $_['error_product']      = 'Ürün adı alanı 3 ile 255 karakter arasında olma
 $_['error_model']        = 'Ürün kodu 3 ile 64 karakter arasında olmalı!';
 $_['error_reason']       = 'İade nedeni seçmelisiniz!';
 $_['error_agree']        = 'Uyarı: %s\'nı kabul etmelisiniz!';
+
+// MintCart
+$_['column_status'] = 'Durum';
+$_['column_date_added'] = 'Eklenme Tarihi';

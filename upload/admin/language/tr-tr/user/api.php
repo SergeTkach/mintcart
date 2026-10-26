@@ -30,3 +30,7 @@ $_['error_permission']     = 'Uyarı: APIleri düzenleme iznine sahip değilsini
 $_['error_name']           = 'API kullanıcı adı 3 ile 20 karakter arasında olmalı!';
 $_['error_key']            = 'API anahtarı 64 ile 256 karakter arasında olmalı!';
 $_['error_ip']             = 'İzin verilen listeye en az bir IP adresi eklemelisiniz!';
+
+// MintCart
+$_['text_ip'] = 'Aşağıda API\'ye erişmesine izin verilen IP\'lerin bir listesini oluşturabilirsiniz. Geçerli IP adresiniz: %s';
+$_['error_username'] = 'API kullanıcı adı 3 ile 20 karakter arasında olmalı!';

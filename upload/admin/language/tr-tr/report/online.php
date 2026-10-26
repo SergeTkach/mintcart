@@ -27,3 +27,6 @@ $_['entry_sort_order']  = 'Sıralama';
 
 // Error
 $_['error_permission']  = 'Uyarı: Çevrimiçi müşteri raporunu düzenleme iznine sahip değilsiniz!';
+
+// MintCart
+$_['text_list'] = 'Çevrimiçi Listesi';

@@ -12,3 +12,7 @@ $_['text_homepage']      = 'OpenCart Anasayfa';
 $_['text_support']       = 'Forum Destek';
 $_['text_documentation'] = 'Dökümantasyon';
 $_['text_logout']        = 'Çıkış Yap';
+
+// MintCart
+$_['text_mc_admin_search_placeholder'] = 'Ayarlarda ara…';
+$_['text_mc_admin_search_empty'] = 'Eşleşen ayar bulunamadı';

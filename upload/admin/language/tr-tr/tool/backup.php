@@ -19,3 +19,6 @@ $_['tab_restore']      = 'Geri Yükle';
 $_['error_permission'] = 'Uyarı: Yedekleme &amp; Geri Yüklemeleri düzenleme iznine sahip değilsiniz!';
 $_['error_export']     = 'Uyarı: Dışarı aktarmak için en az bir tablo seçmelisiniz!';
 $_['error_empty']      = 'Dosya bulunamadı!';
+
+// MintCart
+$_['error_file'] = 'Dosya bulunamadı!';

@@ -52,3 +52,22 @@ $_['error_name']               = 'Uyarı: Adınız alanı 3 ile 25 karakter aras
 $_['error_text']               = 'Uyarı: Yorum alanı 25 ile 1000 karakter arasında olmalı!';
 $_['error_rating']             = 'Uyarı: Lütfen yorumunuz için oylama seçiniz!';
 $_['error_product']            = 'Uyarı: Yorum eklemek için ürün gerekli!';
+
+// MintCart
+$_['text_viewed'] = 'Son Görüntülenenler';
+$_['text_view_cart'] = 'Sepeti görüntüle';
+$_['text_continue_shopping'] = 'Alışverişe devam et';
+$_['tab_overview'] = 'Genel Bakış';
+$_['text_section_nav'] = 'Ürün bölümleri';
+$_['text_mc_delivery'] = 'Teslimat';
+$_['text_mc_payment'] = 'Ödeme';
+$_['text_mc_returns'] = 'İade';
+$_['text_mc_from'] = '%s üzeri siparişlerde';
+$_['text_add_to_cart_error'] = 'Bu ürün sepetinize eklenemedi';
+$_['text_added_to_cart'] = 'Sepete eklendi';
+$_['text_badge_new'] = 'Yeni';
+$_['text_badge_out_of_stock'] = 'Stokta yok';
+$_['text_badge_sale'] = 'İndirim';
+$_['text_quick_order'] = 'Hızlı Sipariş';
+$_['text_rated'] = '5 yıldız üzerinden %s puan';
+$_['text_wishlist_error'] = 'İstek listeniz güncellenemedi';

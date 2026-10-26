@@ -15,3 +15,6 @@ $_['column_action']    = 'Eylem';
 
 // Error
 $_['error_permission'] = 'Uyarı: Raporları değiştirme iznine sahip değilsiniz!';
+
+// MintCart
+$_['column_sort_order'] = 'Sıralama';

@@ -80,3 +80,6 @@ $_['error_account']                            = 'Account required!';
 $_['error_meter']                              = 'Meter required!';
 $_['error_postcode']                           = 'Post Code required!';
 $_['error_dimension']                          = 'Width &amp; Height required!';
+
+// MintCart
+$_['text_shipping'] = 'Kargo';

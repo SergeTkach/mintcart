@@ -21,3 +21,6 @@ $_['error_permission'] = 'Uyarı: Afişler modülünü değiştirme iznine sahip
 $_['error_name']       = 'Modül Adı 3 ile 64 karakter arasında olmalıdır!';
 $_['error_width']      = 'Genişlik gerekli!';
 $_['error_height']     = 'Yükseklik gerekli!';
+
+// MintCart
+$_['entry_dimension'] = 'Boyut (G x Y) ve Yeniden Boyutlandırma Türü';

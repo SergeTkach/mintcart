@@ -48,3 +48,6 @@ $_['error_image_compare']              = 'Karşılaştırma için resim boyutlar
 $_['error_image_wishlist']             = 'Alışveriş listesi için resim boyutları gerekli!';
 $_['error_image_cart']                 = 'Sepetim sayfası için resim boyutları gerekli!';
 $_['error_image_location']             = 'Mağaza resim boyutları gerekli!';
+
+// MintCart
+$_['text_extension'] = 'Eklentiler';
