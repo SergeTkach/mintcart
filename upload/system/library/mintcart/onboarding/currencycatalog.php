@@ -59,6 +59,8 @@ final class CurrencyCatalog
             }
         }
 
+        ksort($list);
+
         return $list;
     }
 
