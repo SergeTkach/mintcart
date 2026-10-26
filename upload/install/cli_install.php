@@ -134,17 +134,6 @@ function install($options) {
 		setup_db($options);
 		write_config_files($options);
 
-		// MintCart: storage goes next to the web root, not inside it.
-		$moved = \MintCart\Core\StorageLocation::move(
-			DIR_STORAGE,
-			\MintCart\Core\StorageLocation::suggest(DIR_OPENCART),
-			array(DIR_OPENCART . 'config.php', DIR_OPENCART . 'admin/config.php')
-		);
-
-		if ($moved !== null) {
-			echo "NOTE: could not move the storage directory out of the web root (" . $moved . "); move it later under System > Maintenance > Storage.\n";
-		}
-
 		dir_permissions();
 	} else {
 		echo 'FAILED! Pre-installation check failed: ' . $check[1] . "\n\n";

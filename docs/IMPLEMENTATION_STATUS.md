@@ -162,9 +162,9 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
       MintCart logo, own home-goods demo catalogue via `install/mintcart-demo.sql`),
       MintCart admin logo/footer. Still to do: wizard steps 5-9 click-through and a
       real test order on the clean install
-- [x] Storage outside the web root from the first install (`StorageLocation`, installers
-      web + CLI) so OpenCart's security notice never appears; System > Maintenance >
-      Storage moves it later (2026-10-23)
+- [x] Storage stays in `system/storage` after install (no surprises for the owner; the `.htaccess` blocks it).
+      Moving it out of the web root is an option: System > Maintenance > Storage (`StorageLocation`);
+      the installers no longer move it on their own (2026-10-26)
 - [x] Setup Wizard: shipping methods set up inline (cost, tax class, zone) and toggled
       over AJAX; steps passed but not set up get an amber `!`, unmet readiness rows link
       back to their step; admin menu pointer (red) shows where each setting lives
