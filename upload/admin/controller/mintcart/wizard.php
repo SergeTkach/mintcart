@@ -822,6 +822,8 @@ class ControllerMintcartWizard extends Controller
             unset($check);
         }
 
+        $this->document->setTitle($this->language->get('heading_title'));
+
         // The normal admin page: the stock header / menu / footer around the wizard.
         $this->document->addStyle(HTTP_CATALOG . 'assets/dist/css/components.min.css');
         $this->document->addScript(HTTP_CATALOG . 'assets/dist/js/admin.min.js');

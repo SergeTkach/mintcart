@@ -19,6 +19,11 @@ html:has(.mc-wizard) {
     --mc-wizard-gap: var(--mc-space-6);
 }
 
+/* The Bootstrap 5 reboot that carries `[hidden] { display: none !important }` is not loaded on admin pages. */
+.mc-wizard [hidden] {
+    display: none !important;
+}
+
 /* Layout: stepper | panel ----------------------------------------------- */
 
 .mc-wizard__grid {
