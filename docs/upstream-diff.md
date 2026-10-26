@@ -4278,3 +4278,17 @@ Files: `upload/system/storage/` moved to `upload/storage/` (rename only), `uploa
 `DIR_CACHE`, `DIR_LOGS`, ... (the normal way) are unaffected. The `.htaccess` rule `^storage/` replaces `^system/storage/`.
 
 **Tests:** `tests/mintcart/core/storage-location-test.php`, update tests (snapshot path).
+
+---
+
+## Admin header: project links
+
+File: `upload/admin/view/template/common/header.twig`.
+
+**Reason:** the profile menu pointed at opencart.com; it now links to mintcartcms.com and docs.mintcartcms.com. The forum link is commented out until a MintCart forum exists.
+
+**Why it cannot live in the Mint layer:** the links are hardcoded in the stock template.
+
+**Compatibility impact:** none (three `<a>` hrefs).
+
+**Tests:** visual check of the profile menu.
