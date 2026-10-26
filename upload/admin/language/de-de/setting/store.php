@@ -117,3 +117,11 @@ $_['entry_ssl']						= 'Shop-URL https://';
 $_['entry_secure']					= 'SSL verwenden';
 $_['help_ssl']						= 'SSL-URL für diesen Shop, muss mit einem Slash \'/\' abschliessen.<br />Beispiel: https://www.meinedomain.com/path/ oder https://untershop.meinedomain.com/<br /><br />Kein Verzeichniss für neuen Shop verwenden.<br /><strong>Es sollte immer entweder auf eine andere Domain oder Subdomain des Hauptshops verwiesen werden.</strong>.<br />Domains bzw. Subdomains müssen innerhalb des Hauptshops am selben Server liegen, externe Domains sind nicht möglich';
 $_['help_secure']					= 'Soll eine SSL-Verbindung verwendet werden (empfohlen!), hier aktivieren (Zertifikat muss zuvor am Server installiert sein!)';
+
+// MintCart
+$_['text_information_picker_browse'] = 'Seiten durchsuchen';
+$_['text_information_picker_confirm'] = 'Auswählen';
+$_['text_information_picker_empty'] = 'Keine Seiten gefunden.';
+$_['text_information_picker_next'] = 'Weiter';
+$_['text_information_picker_prev'] = 'Zurück';
+$_['text_information_picker_search'] = 'Seiten suchen';

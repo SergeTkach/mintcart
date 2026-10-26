@@ -153,3 +153,11 @@ $_['text_payment_detail']		= 'Zahlungsdetails';
 $_['text_shipping_detail']		= 'Versanddetails';
 $_['text_total_detail']			= 'Gesamt';
 $_['text_reward']				= 'Bonuspunkte';
+
+// MintCart
+$_['text_customer_picker_browse'] = 'Kunden durchsuchen';
+$_['text_customer_picker_confirm'] = 'Auswählen';
+$_['text_customer_picker_empty'] = 'Keine Kunden gefunden.';
+$_['text_customer_picker_next'] = 'Weiter';
+$_['text_customer_picker_prev'] = 'Zurück';
+$_['text_customer_picker_search'] = 'Kunden suchen';

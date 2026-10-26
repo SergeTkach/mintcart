@@ -31,3 +31,9 @@ $_['text_telephone']	= 'Telefon';
 $_['text_fax']			= 'Fax';
 $_['text_email']		= 'Email';
 $_['button_email']		= 'Uns per Email kontaktieren';
+
+// MintCart
+$_['text_contact_us'] = 'Kontakt';
+$_['text_mc_reviews'] = 'Kundenbewertungen';
+$_['text_newsletter_email'] = 'E-Mail';
+$_['text_newsletter_submit'] = 'Abonnieren';

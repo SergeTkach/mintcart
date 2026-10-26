@@ -18,3 +18,7 @@ $_['text_homepage']			= 'OC Webseite';
 $_['text_support']			= 'Supportforum';
 $_['text_documentation']	= 'Dokumentation';
 $_['text_logout']			= 'Abmelden';
+
+// MintCart
+$_['text_mc_admin_search_empty'] = 'Keine passenden Einstellungen gefunden';
+$_['text_mc_admin_search_placeholder'] = 'Einstellungen suchen…';

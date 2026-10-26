@@ -44,3 +44,6 @@ $_['error_code']			= 'Währungscode muss 3 Zeichen lang sein';
 $_['error_default']			= 'Währung kann nicht gelöscht werden da Standardwährung des Shops';
 $_['error_store']			= 'Währung kann nicht gelöscht werden weil sie noch in %s Shop(s) verwendet wird';
 $_['error_order']			= 'Währung kann nicht gelöscht werden weil damit noch %s Bestellung(en) verknüpft ist/sind';
+
+// MintCart
+$_['error_currency_engine'] = 'Achtung: Keine aktive Wechselkurs-Engine gefunden!';

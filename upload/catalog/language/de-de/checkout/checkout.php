@@ -99,3 +99,26 @@ $_['error_no_shipping']					= 'Für die gewählte Adresse sind keine Versandarte
 $_['error_payment']						= 'Es muss eine Zahlungsart ausgewählt werden';
 $_['error_no_payment']					= 'Es sind keine Zahlungsarten verfügbar, für Hilfe bitte uns <a href="%s">kontaktieren</a>';
 $_['error_custom_field']				= '%s ist erforderlich';
+
+// MintCart
+$_['button_mc_close'] = 'Schließen';
+$_['button_mc_code_apply'] = 'Anwenden';
+$_['button_mc_code_remove'] = 'Code %s entfernen';
+$_['button_mc_place_order'] = 'Bestellung aufgeben';
+$_['entry_mc_code'] = 'Gutschein oder Geschenkgutschein';
+$_['error_mc_code'] = 'Dieser Code ist ungültig, abgelaufen oder bereits aufgebraucht.';
+$_['error_mc_code_empty'] = 'Bitte geben Sie einen Code ein.';
+$_['error_mc_no_payment'] = 'Dieser Shop kann derzeit keine Online-Bestellungen annehmen (keine Zahlungsart verfügbar). Bitte kontaktieren Sie den Shop, um zu bestellen.';
+$_['error_telephone_mask'] = 'Bitte geben Sie die vollständige Telefonnummer ein!';
+$_['text_mc_address'] = 'Lieferadresse';
+$_['text_mc_comment'] = 'Bestellkommentar';
+$_['text_mc_contact'] = 'Kontaktdaten';
+$_['text_mc_error'] = 'Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.';
+$_['text_mc_login'] = 'Sie haben bereits ein Konto? <a href="%s">Anmelden</a>';
+$_['text_mc_login_required'] = 'Für diese Bestellung ist kein Gastkauf möglich. Bitte melden Sie sich an oder erstellen Sie ein Konto, um fortzufahren.';
+$_['text_mc_no_payment'] = 'Keine Zahlungsmöglichkeiten verfügbar.';
+$_['text_mc_no_shipping'] = 'Für diese Adresse sind keine Versandmöglichkeiten verfügbar.';
+$_['text_mc_payment'] = 'Zahlung';
+$_['text_mc_payment_ready'] = 'Ihre Bestellung wurde erstellt. Schließen Sie die Zahlung im folgenden Schritt ab.';
+$_['text_mc_shipping'] = 'Versand';
+$_['text_mc_summary'] = 'Ihre Bestellung';

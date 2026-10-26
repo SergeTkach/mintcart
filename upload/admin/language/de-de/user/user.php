@@ -44,3 +44,6 @@ $_['error_firstname']		= 'Vorname muss zwischen 1 und 32 Zeichen lang sein';
 $_['error_lastname']		= 'Nachname muss zwischen 1 und 32 Zeichen lang sein';
 $_['error_email']			= 'Emailadresse scheint nicht gültig zu sein';
 $_['error_exists_email']	= 'Diese Emailadresse ist bereits registriert';
+
+// MintCart
+$_['error_single_user'] = 'Achtung: Sie können Ihr eigenes Konto nicht deaktivieren!';

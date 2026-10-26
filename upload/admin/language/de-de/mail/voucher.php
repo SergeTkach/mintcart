@@ -15,3 +15,6 @@ $_['text_from']		= 'Dieser Gutschein wurde von %s gesendet';
 $_['text_message']	= 'Mit folgender Nachricht';
 $_['text_redeem']	= 'Um diesen Geschenkgutschein einzulösen, bitte diesen Code <b>%s</b> notieren und dann auf den unten angeführten Link klicken. Der Code ist in Folge während der Bestellung anzugeben.';
 $_['text_footer']	= 'Bei Fragen bitte auf dieses Email antworten.';
+
+// MintCart
+$_['text_sent'] = 'Erfolgreich: Die E-Mail zum Geschenkgutschein wurde gesendet!';

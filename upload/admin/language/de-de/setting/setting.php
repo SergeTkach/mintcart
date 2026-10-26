@@ -243,3 +243,15 @@ $_['entry_gdpr']					= 'DSGVO Text';
 $_['help_gdpr']						= 'Aktiviere DSGVO-Werkzeuge und Link zu den Datenschutzbestimmungen lt. DSGVO';
 $_['help_cookie']					= 'Zeige Cookiehinweis gemäß EU-Datenschutzbestimungen';
 $_['help_secure']					= 'Um eine sichere Verbindung per <b>https</b> nutzen zu können, muss zuerst das SSL-Zertifikat am Server installiert sein.<br>Danach beide KOnfigurationsdateien <b>config.php</b> und <b>admin/config.php</b> anpassen (http in https ändern)';
+
+// MintCart
+$_['entry_symbol_left_space'] = 'Leerzeichen nach dem linken Währungssymbol';
+$_['entry_symbol_right_space'] = 'Leerzeichen vor dem rechten Währungssymbol';
+$_['help_symbol_left_space'] = 'Optional ein Leerzeichen nach dem linken Währungssymbol einfügen.';
+$_['help_symbol_right_space'] = 'Optional ein Leerzeichen vor dem rechten Währungssymbol einfügen.';
+$_['text_information_picker_browse'] = 'Seiten durchsuchen';
+$_['text_information_picker_confirm'] = 'Auswählen';
+$_['text_information_picker_empty'] = 'Keine Seiten gefunden.';
+$_['text_information_picker_next'] = 'Weiter';
+$_['text_information_picker_prev'] = 'Zurück';
+$_['text_information_picker_search'] = 'Seiten suchen';

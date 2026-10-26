@@ -42,3 +42,6 @@ $_['help_product']			= 'Sende nur an Kunden welche Produkte aus der Liste gekauf
 $_['error_permission']		= 'Keine Rechte für diese Aktion';
 $_['error_subject']			= 'Betreff erforderlich';
 $_['error_message']			= 'Nachrichtentext erforderlich';
+
+// MintCart
+$_['error_email'] = 'E-Mail erforderlich!';

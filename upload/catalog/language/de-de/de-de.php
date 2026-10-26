@@ -84,3 +84,6 @@ $_['summernote']			= 'de-DE';
 $_['datepicker']			= 'de';
 //$_['datepicker']			= 'de-at';
 //$_['datepicker']			= 'de-ch';
+
+// MintCart
+$_['button_address_add'] = 'Adresse hinzufügen';

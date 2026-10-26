@@ -42,3 +42,6 @@ $_['error_permission']	= 'Keine Berechigtigung zum bearbeiten';
 $_['error_query']		= 'Abfrage muss zwischen 3 und 64 zeichen lang sein';
 $_['error_keyword']		= 'Schlüsselwort muss zwischen 3 und 64 Zeichen lang sein';
 $_['error_exists']		= 'Schlüsselwort wird schon verwendet';
+
+// MintCart
+$_['error_query_exists'] = 'Abfrage wird bereits verwendet!';

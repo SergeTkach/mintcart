@@ -56,3 +56,23 @@ $_['tab_review']        = 'Bewertungen (%s)';
 $_['error_name']        = 'Name muss zwischen 3 und 25 Zeichen lang sein';
 $_['error_text']        = 'Text muss zwischen 25 und 1000 Zeichen lang sein';
 $_['error_rating']      = 'Bitte eine Bewertung auswählen';
+
+// MintCart
+$_['error_product'] = 'Achtung: Für eine Bewertung ist ein Produkt erforderlich!';
+$_['tab_overview'] = 'Übersicht';
+$_['text_add_to_cart_error'] = 'Dieses Produkt konnte nicht in Ihren Warenkorb gelegt werden';
+$_['text_added_to_cart'] = 'In den Warenkorb gelegt';
+$_['text_badge_new'] = 'Neu';
+$_['text_badge_out_of_stock'] = 'Ausverkauft';
+$_['text_badge_sale'] = 'Sale';
+$_['text_continue_shopping'] = 'Weiter einkaufen';
+$_['text_mc_delivery'] = 'Versand';
+$_['text_mc_from'] = 'bei Bestellungen über %s';
+$_['text_mc_payment'] = 'Zahlung';
+$_['text_mc_returns'] = 'Rückgabe';
+$_['text_quick_order'] = 'Schnellbestellung';
+$_['text_rated'] = 'Bewertet mit %s von 5 Sternen';
+$_['text_section_nav'] = 'Produktabschnitte';
+$_['text_view_cart'] = 'Warenkorb anzeigen';
+$_['text_viewed'] = 'Zuletzt angesehen';
+$_['text_wishlist_error'] = 'Ihre Wunschliste konnte nicht aktualisiert werden';

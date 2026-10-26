@@ -72,3 +72,6 @@ $_['error_agree']		= 'Hinweis: den %s muss zugestimmt werden';
 
 // < 3.1.x
 $_['text_empty']		= 'Es wurden noch keine Retouren erstellt';
+
+// MintCart
+$_['text_order_id'] = 'Bestell-ID:';

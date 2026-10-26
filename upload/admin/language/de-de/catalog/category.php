@@ -56,3 +56,13 @@ $_['error_keyword']				= 'SEO URL wird bereits verwendet';
 $_['error_parent']				= 'Die gewählte Hauptkategorie ist bereits eine Unterkategorie dieser Kategorie';
 // < 3.1.x
 $_['error_unique']				= 'SEO URL muss einmalig sein';
+
+// MintCart
+$_['column_status'] = 'Status';
+$_['error_category'] = 'Kategorie nicht gefunden!';
+$_['text_drag_hint'] = 'Ziehen Sie eine Zeile (oder nutzen Sie die Pfeiltasten), um Kategorien neu anzuordnen. Die neue Reihenfolge wird automatisch gespeichert.';
+$_['text_move_down'] = 'Nach unten';
+$_['text_move_up'] = 'Nach oben';
+$_['text_order_failed'] = 'Die neue Reihenfolge konnte nicht gespeichert werden. Die Liste wurde zurückgesetzt.';
+$_['text_order_saved'] = 'Reihenfolge gespeichert.';
+$_['text_sort_by_order_first'] = 'Sortieren Sie nach Sortierung, um Kategorien per Drag-and-drop neu anzuordnen.';

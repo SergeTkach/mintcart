@@ -24,3 +24,6 @@ $_['entry_status']		= 'Status';
 $_['error_permission']	= 'Keine Berechtigung für diese Aktion';
 $_['error_key']			= 'Öffentlicher Schlüssel erforderlich';
 $_['error_secret']		= 'Privater Schlüssel erforderlich';
+
+// MintCart
+$_['text_extension'] = 'Erweiterungen';

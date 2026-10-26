@@ -20,3 +20,12 @@ $_['entry_status']		= 'Status';
 
 // Error
 $_['error_permission']	= 'Keine Berechtigung zum bearbeiten';
+
+// MintCart
+$_['entry_api'] = 'API-Zugangsschlüssel';
+$_['entry_cron'] = 'CRON-Befehl';
+$_['entry_ip'] = 'IP-Adresse des Servers';
+$_['error_api'] = 'API-Zugangsschlüssel erforderlich!';
+$_['error_ip'] = 'Ungültige IP-Adresse!';
+$_['help_cron'] = 'Verwenden Sie diesen Befehl, wenn Sie auf Ihrem Server einen CRON-Job einrichten.';
+$_['help_ip'] = 'Optionale IP-Adresse des Servers, auf dem ein CRON-Job zur Aktualisierung der Wechselkurse läuft.';

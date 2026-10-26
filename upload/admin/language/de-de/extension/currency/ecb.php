@@ -21,3 +21,11 @@ $_['entry_status']		= 'Status';
 
 // Error
 $_['error_permission']	= 'Keine Berechtigung für diese Aktion';
+
+// MintCart
+$_['entry_cron'] = 'CRON-Befehl';
+$_['entry_ip'] = 'IP-Adresse des Servers';
+$_['error_euro'] = 'Diese Erweiterung benötigt den Euro als verfügbare Währung!';
+$_['error_ip'] = 'Ungültige IP-Adresse!';
+$_['help_cron'] = 'Verwenden Sie diesen Befehl, wenn Sie auf Ihrem Server einen CRON-Job einrichten.';
+$_['help_ip'] = 'Optionale IP-Adresse des Servers, auf dem ein CRON-Job zur Aktualisierung der Wechselkurse läuft.';

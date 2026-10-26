@@ -28,3 +28,6 @@ $_['error_permission']	= 'Keine Rechte zum bearbeiten';
 $_['error_name']		= 'Name muss zwischen 3 und 64 Zeichen lang sein';
 $_['error_width']		= 'Breite erforderlich';
 $_['error_height']		= 'Höhe erforderlich';
+
+// MintCart
+$_['entry_image'] = 'Bild (B x H) und Größenänderungstyp';

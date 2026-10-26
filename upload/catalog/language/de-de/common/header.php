@@ -23,3 +23,11 @@ $_['text_checkout']		= 'Kasse';
 $_['text_search']		= 'Suche';
 $_['text_all']			= 'Alle';
 $_['text_setting']		= 'Geschäftseinstellung';
+
+// MintCart
+$_['text_close'] = 'Schließen';
+$_['text_mc_call'] = 'Rufen Sie uns an';
+$_['text_mc_compare'] = 'Vergleichen';
+$_['text_mc_search_all'] = 'Alle Ergebnisse anzeigen';
+$_['text_mc_search_empty'] = 'Nichts gefunden';
+$_['text_menu'] = 'Menü';

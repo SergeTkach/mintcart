@@ -46,3 +46,6 @@ $_['error_custom_field']= '%s erforderlich';
 
 // < 3.1.x
 $_['text_empty']		= 'Aktuell ist noch keine Adresse angelegt';
+
+// MintCart
+$_['text_confirm'] = 'Sind Sie sicher?';

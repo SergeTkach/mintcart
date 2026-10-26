@@ -30,3 +30,6 @@ $_['entry_name']		= 'Name';
 $_['error_permission']	= 'Keine Berechtigung zum bearbeiten';
 $_['error_name']		= 'Name muss zwischen 3 und 64 Zeichen lang sein';
 $_['error_code']		= 'Erweiterung erforderlich';
+
+// MintCart
+$_['error_code_name'] = 'Der Modulcode muss zwischen 3 und 32 Zeichen lang sein!';
