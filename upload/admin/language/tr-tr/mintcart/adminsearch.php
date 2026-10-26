@@ -44,5 +44,5 @@ $_['label_users'] = 'Kullanıcılar';
 $_['label_backup_restore'] = 'Yedekle / Geri Yükle';
 $_['label_error_log'] = 'Hata Günlüğü';
 $_['label_storage_cache_logs_sessions'] = 'Depolama (önbellek, günlükler, oturumlar)';
-$_['label_design_styles'] = 'Tasarım → Stiller';
+$_['label_design_store_appearance'] = 'Tasarım → Mağaza görünümü';
 $_['label_compatibility_checker'] = 'Uyumluluk denetleyicisi';

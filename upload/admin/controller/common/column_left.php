@@ -196,6 +196,19 @@ class ControllerCommonColumnLeft extends Controller {
 			// Design
 			$design = array();
 
+			// MintCart\Design presets facade (MINTCART_FUNCTIONAL_SCOPE.md
+			// §9, Phase 9/31) - lets an admin pick which of the active
+			// theme's own declared theme.json presets applies, writing
+			// data-mc-preset (docs/developer/theme-api/presets.md).
+			// First in Design: it is the starting point (docs/IMPLEMENTATION_STATUS.md).
+			if ($this->user->hasPermission('access', 'mintcart/design/styles')) {
+				$design[] = array(
+					'name'	   => $this->language->get('text_mintcart_design_styles'),
+					'href'     => $this->url->link('mintcart/design/styles', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			if ($this->user->hasPermission('access', 'design/homepage')) {
 				$design[] = array(
 					'name'	   => $this->language->get('text_homepage'),
@@ -216,18 +229,6 @@ class ControllerCommonColumnLeft extends Controller {
 				$design[] = array(
 					'name'	   => $this->language->get('text_theme'),
 					'href'     => $this->url->link('design/theme', 'user_token=' . $this->session->data['user_token'], true),
-					'children' => array()
-				);
-			}
-
-			// MintCart\Design presets facade (MINTCART_FUNCTIONAL_SCOPE.md
-			// §9, Phase 9/31) - lets an admin pick which of the active
-			// theme's own declared theme.json presets applies, writing
-			// data-mc-preset (docs/developer/theme-api/presets.md).
-			if ($this->user->hasPermission('access', 'mintcart/design/styles')) {
-				$design[] = array(
-					'name'	   => $this->language->get('text_mintcart_design_styles'),
-					'href'     => $this->url->link('mintcart/design/styles', 'user_token=' . $this->session->data['user_token'], true),
 					'children' => array()
 				);
 			}

@@ -42,5 +42,5 @@ $_['label_users'] = 'Usuarios';
 $_['label_backup_restore'] = 'Copia de seguridad / Restaurar';
 $_['label_error_log'] = 'Registro de errores';
 $_['label_storage_cache_logs_sessions'] = 'Almacenamiento (caché, registros, sesiones)';
-$_['label_design_styles'] = 'Diseño → Estilos';
+$_['label_design_store_appearance'] = 'Diseño → Aspecto de la tienda';
 $_['label_compatibility_checker'] = 'Comprobador de compatibilidad';

@@ -1,4 +1,4 @@
-# Design > Styles
+# Design > Store appearance (route `mintcart/design/styles`; the menu entry was called "Styles" until 2026-10-26)
 
 The owner's look settings, stored in the `mintcart_design` setting code and applied as one
 `<style id="mc-style-overrides">` block after the theme CSS (and a Google Fonts `<link>` when a web

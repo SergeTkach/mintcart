@@ -125,7 +125,7 @@ tokens.
    supports it.
 4. Run `npm run build`.
 
-## Wired: `Design → Styles` (2026-09-29)
+## Wired: `Design → Store appearance` (2026-09-29)
 
 `ControllerMintcartDesignStyles` (`upload/admin/controller/mintcart/design/styles.php`,
 route `mintcart/design/styles`, menu entry under `Design`) is the first

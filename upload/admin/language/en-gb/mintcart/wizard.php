@@ -116,7 +116,7 @@ $_['error_logo'] = 'The logo must be an SVG, PNG, JPG, GIF or WebP image up to 2
 
 // Design
 $_['design_title']      = 'Choose a preset';
-$_['design_text']       = 'Pick a preset for your storefront. It sets colours, fonts and shapes together - you can switch it and fine-tune it any time under Design -> Styles.';
+$_['design_text']       = 'Pick a preset for your storefront. It sets colours, fonts and shapes together - you can switch it and fine-tune it any time under Design -> Store appearance.';
 $_['design_no_presets'] = 'Your current theme has no styles to choose from. Continue to the next step.';
 $_['design_preview']    = 'Open the store in a new tab';
 $_['preset_clean']      = 'Clean - fresh green, minimal';
@@ -163,7 +163,7 @@ $_['where_store']              = 'System › Settings';
 $_['where_contacts']           = 'Business › Contacts';
 $_['where_language']           = 'System › Localisation › Languages';
 $_['where_currency']           = 'System › Localisation › Currencies';
-$_['where_design']             = 'Design › Styles';
+$_['where_design']             = 'Design › Store appearance';
 $_['where_first_product']      = 'Catalog › Products';
 $_['text_translations']        = 'Translations (optional)';
 $_['text_translations_help']   = 'Leave a language empty and it will show the text above. You can translate it later from the product page.';

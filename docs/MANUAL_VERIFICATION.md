@@ -2066,7 +2066,7 @@ rendered admin screen has never been hit end to end. On a real install:
    returns the exact same shape as before this run — this increment only
    added a second consumer (`index()`), it did not change `check()`'s own
    behavior.
-## Phase 9/31 — `Design → Styles`, never exercised end to end
+## Phase 9/31 — `Design → Store appearance`, never exercised end to end
 
 `ControllerMintcartDesignStyles` is `php -l` clean and reads/writes through
 the same `setting/setting` model every other Mint settings facade in this
@@ -2074,7 +2074,7 @@ repo already uses, but nothing here has run it against a real admin
 session or rendered storefront page. On a real install with `mint_default`
 active:
 
-1. Go to **Design → Styles**. Confirm two radio options appear —
+1. Go to **Design → Store appearance**. Confirm two radio options appear —
    "Theme default" and "Warm" (mint_default's `theme.json` lists
    `["clean", "warm"]`; "Clean" is visually identical to "Theme default"
    per Phase 9, but still appears as its own labeled option) — plus "Theme
@@ -2089,7 +2089,7 @@ active:
    `data-mc-preset` disappears from `<html>` entirely (not
    `data-mc-preset=""`) and the page reverts to the base token values.
 4. Switch `config_theme` (Settings → Store, or System → Design → Theme) to
-   `test_theme` and reload **Design → Styles** — confirm it now shows the
+   `test_theme` and reload **Design → Store appearance** — confirm it now shows the
    "no presets declared" empty state (`test_theme`'s own `theme.json` lists
    `"presets": []`), not a stale list of Clean/Warm carried over from
    `mint_default`, and that any previously-saved `mint_default`-specific
@@ -2223,12 +2223,12 @@ registered listener into one of the listing controllers
    stops the redirect; the wizard stays reachable from the Store Readiness
    widget.
 2. Every wizard screen opens (no "Permission denied") — also Business,
-   Design → Styles and other Mint screens.
+   Design → Store appearance and other Mint screens.
 3. Store step: upload a PNG logo and an SVG logo → each shows on the
    storefront header; a .txt renamed to .png, a file over 2 MB and an SVG
    with `<script>` / `onload=` are refused with an error.
 4. Design step: Clean / Warm; Continue, open the store — the chosen style is
-   applied (same as Design → Styles).
+   applied (same as Design → Store appearance).
 5. Fresh install from `upload/` (not an old copy): `oc_mc_migration` lists
    all migrations, `oc_event` has `mintcart_wizard_autostart`, first login
    opens the wizard.
