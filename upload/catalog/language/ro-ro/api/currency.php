@@ -1,8 +1,7 @@
 <?php
+// Text
+$_['text_success']     = 'Succes: Moneda ta a fost schimbată!';
 
-// MintCart
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a accesa API-ul!';
-
-// MintCart
-$_['text_success'] = 'Succes: moneda a fost schimbată!';
-$_['error_currency'] = 'Atenție: codul monedei este invalid!';
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a accesa API!';
+$_['error_currency']   = 'Atenție: Cod monedă este incorect!';

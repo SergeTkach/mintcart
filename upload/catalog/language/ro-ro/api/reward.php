@@ -1,10 +1,9 @@
 <?php
+// Text
+$_['text_success']     = 'Succes: Reducerea punctelor de recompensă a fost aplicată!';
 
-// MintCart
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a accesa API-ul!';
-
-// MintCart
-$_['text_success'] = 'Succes: reducerea prin puncte de recompensă a fost aplicată!';
-$_['error_reward'] = 'Atenție: introduceți numărul de puncte de recompensă pe care doriți să le folosiți!';
-$_['error_points'] = 'Atenție: nu aveți %s puncte de recompensă!';
-$_['error_maximum'] = 'Atenție: numărul maxim de puncte care pot fi aplicate este %s!';
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a accesa API!';
+$_['error_reward']     = 'Atenție: Te rugăm să introduci valoarea punctelor de recompensă de utilizat!';
+$_['error_points']     = 'Atenție: Nu ai %s puncte de recompensă!';
+$_['error_maximum']    = 'Atenție: Numărul maxim de puncte care pot fi aplicate este %s!';

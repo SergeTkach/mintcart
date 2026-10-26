@@ -1,9 +1,14 @@
 <?php
+// Heading
+$_['heading_title'] = 'Folosește Voucher Cadou';
 
-// MintCart
-$_['heading_title'] = 'Folosiți un certificat cadou';
-$_['text_voucher'] = 'Certificat cadou (%s)';
-$_['text_success'] = 'Succes: reducerea certificatului cadou a fost aplicată!';
-$_['entry_voucher'] = 'Introduceți aici codul certificatului cadou';
-$_['error_voucher'] = 'Atenție: certificatul cadou este invalid sau soldul a fost consumat!';
-$_['error_empty'] = 'Atenție: introduceți codul certificatului cadou!';
+// Text
+$_['text_voucher']  = 'Voucher Cadou (%s)';
+$_['text_success']  = 'Succes: S-a aplicat reducerea voucher-ului cadou!';
+
+// Entry
+$_['entry_voucher'] = 'Introduceți codul voucher-ului dvs. aici';
+
+// Error
+$_['error_voucher'] = 'Atenție: Certificatul Cadou este fie incorect, fie soldul a fost epuizat!';
+$_['error_empty']   = 'Atenție: Introdu codul unui voucher cadou!';

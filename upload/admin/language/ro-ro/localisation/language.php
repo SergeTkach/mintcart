@@ -1,30 +1,37 @@
 <?php
+// Heading
+$_['heading_title']     = 'Languages';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_code'] = 'Cod';
-$_['column_sort_order'] = 'Ordine de sortare';
-$_['entry_code'] = 'Cod';
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
+// Text
+$_['text_success']      = 'Success: You have modified languages!';
+$_['text_list']         = 'Language List';
+$_['text_add']          = 'Add Language';
+$_['text_edit']         = 'Edit Language';
 
-// MintCart
-$_['heading_title'] = 'Limbi';
-$_['text_success'] = 'Succes: ați modificat limbile!';
-$_['text_list'] = 'Listă de limbi';
-$_['text_add'] = 'Adaugă limbă';
-$_['text_edit'] = 'Modifică limba';
-$_['column_name'] = 'Denumire limbă';
-$_['entry_name'] = 'Denumire limbă';
-$_['entry_locale'] = 'Setări regionale';
-$_['help_locale'] = 'Exemplu: en_US.UTF-8,en_US,en-gb,en_gb,english';
-$_['help_status'] = 'Ascunde/afișează în lista derulantă de limbi';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica limbile!';
-$_['error_exists'] = 'Atenție: ați adăugat deja această limbă!';
-$_['error_name'] = 'Denumirea limbii trebuie să aibă între 3 și 32 de caractere!';
-$_['error_code'] = 'Codul limbii trebuie să aibă cel puțin 2 caractere!';
-$_['error_locale'] = 'Setările regionale sunt obligatorii!';
-$_['error_default'] = 'Atenție: această limbă nu poate fi ștearsă deoarece este limba implicită a magazinului!';
-$_['error_admin'] = 'Atenție: această limbă nu poate fi ștearsă deoarece este limba de administrare!';
-$_['error_store'] = 'Atenție: această limbă nu poate fi ștearsă deoarece este atribuită la %s magazine!';
-$_['error_order'] = 'Atenție: această limbă nu poate fi ștearsă deoarece este atribuită la %s comenzi!';
+// Column
+$_['column_name']       = 'Language Name';
+$_['column_code']       = 'Code';
+$_['column_sort_order'] = 'Ordine de Sortare';
+$_['column_action']     = 'Acțiune';
+
+// Entry
+$_['entry_name']        = 'Language Name';
+$_['entry_code']        = 'Code';
+$_['entry_locale']      = 'Locale';
+$_['entry_status']      = 'Stare';
+$_['entry_sort_order']  = 'Ordine Sortare';
+
+// Help
+$_['help_locale']       = 'Example: en_US.UTF-8,en_US,en-gb,en_gb,english';
+$_['help_status']       = 'Hide/Show it in language dropdown';
+
+// Error
+$_['error_permission']  = 'Warning: You do not have permission to modify languages!';
+$_['error_exists']      = 'Warning: You added before the language!';
+$_['error_name']        = 'Language Name must be between 3 and 32 characters!';
+$_['error_code']        = 'Language Code must at least 2 characters!';
+$_['error_locale']      = 'Locale required!';
+$_['error_default']     = 'Atenție: Această limbă nu poate fi ștearsă, deoarece în prezent este atribuită ca limbă implicită magazin!';
+$_['error_admin']       = 'Atenție: Această Limbă nu poate fi ștearsă, deoarece în prezent este atribuită ca limbă de administrare!';
+$_['error_store']       = 'Atenție: Această limbă nu poate fi ștearsă, deoarece în prezent este atribuită la %s magazine!';
+$_['error_order']       = 'Atenție: Această limbă nu poate fi ștearsă, deoarece în prezent este atribuită la %s comenzi!';

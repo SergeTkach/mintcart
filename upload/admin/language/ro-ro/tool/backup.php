@@ -1,12 +1,19 @@
 <?php
+// Heading
+$_['heading_title']    = 'Backup &amp; Restore';
 
-// MintCart
-$_['heading_title'] = 'Copie de rezervă și restaurare';
-$_['text_success'] = 'Succes: baza de date a fost importată!';
-$_['entry_progress'] = 'Progres';
-$_['entry_export'] = 'Exportă';
-$_['tab_backup'] = 'Copie de rezervă';
-$_['tab_restore'] = 'Restaurare';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica Copie de rezervă și restaurare!';
-$_['error_export'] = 'Atenție: trebuie să selectați cel puțin un tabel pentru export!';
-$_['error_file'] = 'Fișierul nu a fost găsit!';
+// Text
+$_['text_success']     = 'Success: You have successfully imported your database!';
+
+// Entry
+$_['entry_progress']   = 'Progres';
+$_['entry_export']     = 'Export';
+
+// Tab
+$_['tab_backup']       = 'Backup';
+$_['tab_restore']      = 'Restore';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify Backup &amp; Restore!';
+$_['error_export']     = 'Warning: You must select at least one table to export!';
+$_['error_file']       = 'File could not be found!';

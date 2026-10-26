@@ -1,9 +1,14 @@
 <?php
+// Heading
+$_['heading_title'] = 'Utilizează Codul Cuponului';
 
-// MintCart
-$_['heading_title'] = 'Folosiți un cod de cupon';
-$_['text_coupon'] = 'Cupon (%s)';
-$_['text_success'] = 'Succes: reducerea cuponului a fost aplicată!';
-$_['entry_coupon'] = 'Introduceți cuponul aici';
-$_['error_coupon'] = 'Atenție: cuponul este invalid, a expirat sau și-a atins limita de utilizare!';
-$_['error_empty'] = 'Atenție: introduceți un cod de cupon!';
+// Text
+$_['text_coupon']   = 'Cupon (%s)';
+$_['text_success']  = 'Succes: Cuponul tău de reducere a fost aplicat!';
+
+// Entry
+$_['entry_coupon']  = 'Introdu cuponul tău aici';
+
+// Error
+$_['error_coupon']  = 'Atenție: Cuponul este fie incorect, expirat sau a atins limita de utilizare!';
+$_['error_empty']   = 'Atenție: Te rugăm să introduci un cod de cupon!';

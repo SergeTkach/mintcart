@@ -1,12 +1,15 @@
 <?php
+// Heading
+$_['heading_title']    = 'Marketing';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_status'] = 'Stare';
+// Text
+$_['text_success']     = 'Succes: Ai modificat marketing-ul!';
+$_['text_list']        = 'Listă Analytics';
 
-// MintCart
-$_['heading_title'] = 'Marketing';
-$_['text_success'] = 'Succes: ați modificat marketingul!';
-$_['text_list'] = 'Listă de analize';
-$_['column_name'] = 'Denumire marketing';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica marketingul!';
+// Column
+$_['column_name']      = 'Nume Marketing';
+$_['column_status']    = 'Stare';
+$_['column_action']    = 'Acțiune';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica marketing-ul!';

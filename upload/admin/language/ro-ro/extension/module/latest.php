@@ -1,18 +1,21 @@
 <?php
+// Heading
+$_['heading_title']    = 'Latest';
 
-// MintCart
-$_['entry_height'] = 'Înălțime';
-$_['entry_limit'] = 'Limită';
-$_['entry_name'] = 'Denumirea modulului';
-$_['entry_status'] = 'Stare';
-$_['entry_width'] = 'Lățime';
-$_['error_height'] = 'Înălțimea este obligatorie!';
-$_['error_name'] = 'Denumirea modulului trebuie să aibă între 3 și 64 de caractere!';
-$_['error_width'] = 'Lățimea este obligatorie!';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Succes: Ai modificat modulul cel mai recent!';
+$_['text_edit']        = 'Edit Latest Module';
 
-// MintCart
-$_['heading_title'] = 'Noutăți';
-$_['text_success'] = 'Succes: ați modificat modulul Noutăți!';
-$_['text_edit'] = 'Modifică modulul Noutăți';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica modulul Noutăți!';
+// Entry
+$_['entry_name']       = 'Module Name';
+$_['entry_limit']      = 'Limit';
+$_['entry_width']      = 'Lăţime';
+$_['entry_height']     = 'Înălţime';
+$_['entry_status']     = 'Stare';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica modulul cele mai recente!';
+$_['error_name']       = 'Numele Modulului trebuie să fie între 3 și 64 de caractere!';
+$_['error_width']      = 'Width required!';
+$_['error_height']     = 'Height required!';

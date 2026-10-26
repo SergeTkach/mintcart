@@ -1,19 +1,24 @@
 <?php
+// Heading
+$_['heading_title']    = 'Order Statuses';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
+// Text
+$_['text_success']     = 'Success: You have modified order statuses!';
+$_['text_list']        = 'Order Status List';
+$_['text_add']         = 'Add Order Status';
+$_['text_edit']        = 'Edit Order Status';
 
-// MintCart
-$_['heading_title'] = 'Stări de comandă';
-$_['text_success'] = 'Succes: ați modificat stările de comandă!';
-$_['text_list'] = 'Listă de stări de comandă';
-$_['text_add'] = 'Adaugă stare de comandă';
-$_['text_edit'] = 'Modifică starea de comandă';
-$_['column_name'] = 'Denumire stare de comandă';
-$_['entry_name'] = 'Denumire stare de comandă';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica stările de comandă!';
-$_['error_name'] = 'Denumirea stării de comandă trebuie să aibă între 3 și 32 de caractere!';
-$_['error_default'] = 'Atenție: această stare de comandă nu poate fi ștearsă deoarece este starea implicită a magazinului!';
-$_['error_download'] = 'Atenție: această stare de comandă nu poate fi ștearsă deoarece este starea implicită pentru descărcări!';
-$_['error_store'] = 'Atenție: această stare de comandă nu poate fi ștearsă deoarece este atribuită la %s magazine!';
-$_['error_order'] = 'Atenție: această stare de comandă nu poate fi ștearsă deoarece este atribuită la %s comenzi!';
+// Column
+$_['column_name']      = 'Order Status Name';
+$_['column_action']    = 'Acțiune';
+
+// Entry
+$_['entry_name']       = 'Order Status Name';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify order statuses!';
+$_['error_name']       = 'Order Status Name must be between 3 and 32 characters!';
+$_['error_default']    = 'Atenție: Această stare a comenzii nu poate fi ștearsă, deoarece în prezent este atribuită ca stare comandă implicită magazin!';
+$_['error_download']   = 'Atenție: Această stare a comenzii nu poate fi ștearsă, deoarece în prezent este atribuită ca stare implicită de descărcare!';
+$_['error_store']      = 'Atenție: Această stare de comandă nu poate fi ștearsă, deoarece în prezent este atribuită la %s magazine!';
+$_['error_order']      = 'Atenție: Această stare de comandă nu poate fi ștearsă, deoarece în prezent este atribuită la %s comenzi!';

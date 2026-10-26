@@ -1,10 +1,9 @@
 <?php
+// Heading
+$_['heading_title'] = 'Contul Tău de Afiliat A Fost Creat!';
 
-// MintCart
-$_['text_account'] = 'Cont';
-$_['text_success'] = 'Succes';
-
-// MintCart
-$_['heading_title'] = 'Contul dumneavoastră de afiliat a fost creat!';
-$_['text_message'] = '<p>Felicitări! Noul dumneavoastră cont a fost creat cu succes!</p><p>Sunteți acum membru al afiliaților %s.</p><p>Dacă aveți ORICE întrebări despre funcționarea acestui sistem de afiliere, trimiteți un e-mail proprietarului magazinului.</p><p>A fost trimisă o confirmare la adresa de e-mail furnizată. Dacă nu o primiți în decurs de o oră, <a href="%s">contactați-ne</a>.</p>';
-$_['text_approval'] = '<p>Vă mulțumim că v-ați înregistrat pentru un cont de afiliat la %s!</p><p>Veți fi înștiințat prin e-mail după ce contul dumneavoastră va fi activat de proprietarul magazinului.</p><p>Dacă aveți ORICE întrebări despre funcționarea acestui sistem de afiliere, <a href="%s">contactați proprietarul magazinului</a>.</p>';
+// Text
+$_['text_message']  = '<p>Felicitări! Noul tău cont a fost creat cu succes!</p> <p>Acum ești membru al %s afiliați.</p> <p>Dacă ai ORICE întrebare despre funcționarea acestui sistem de afiliere, te rugăm să trimiți un e-mail proprietarului magazinului</p> <p>A fost trimisă o confirmare pe adresa de e-mail furnizată. Dacă nu ai primit-o în decurs de o oră, te rugăm <a href="%s">să ne contactezi</a>.</p>';
+$_['text_approval'] = '<p>Îți mulțumim pentru înregistrarea unui cont de afiliat cu %s!</p><p>Vei fi notificat prin e-mail odată ce contul tău a fost activat de proprietarul magazinului.</p><p>Dacă ai ORICE întrebare despre funcționarea acestui sistem afiliat, te rugăm <a href="%s">contactează proprietarul magazinului</a>.</p>';
+$_['text_account']  = 'Cont';
+$_['text_success']  = 'Success';

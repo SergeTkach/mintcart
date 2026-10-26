@@ -1,23 +1,28 @@
 <?php
+// Heading
+$_['heading_title']         = 'Customer Approvals';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_customer_group'] = 'Grup de clienți';
-$_['column_date_added'] = 'Data adăugării';
-$_['column_email'] = 'E-mail';
-$_['column_type'] = 'Tip';
-$_['entry_customer_group'] = 'Grup de clienți';
-$_['entry_date_added'] = 'Data adăugării';
-$_['entry_email'] = 'E-mail';
-$_['entry_type'] = 'Tip';
-$_['text_affiliate'] = 'Afiliat';
-$_['text_customer'] = 'Client';
-$_['text_default'] = 'Implicit';
+// Text
+$_['text_success']          = 'Succes: Ai modificat aprobările clienților!';
+$_['text_list']             = 'Listă Aprobări Clienți';
+$_['text_default']          = 'Implicit';
+$_['text_customer']         = 'Client';
+$_['text_affiliate']        = 'Afiliat';
 
-// MintCart
-$_['heading_title'] = 'Aprobări clienți';
-$_['text_success'] = 'Succes: ați modificat aprobările clienților!';
-$_['text_list'] = 'Listă de aprobări ale clienților';
-$_['column_name'] = 'Nume client';
-$_['entry_name'] = 'Nume client';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica aprobările clienților!';
+// Column
+$_['column_name']           = 'Numele Clientului';
+$_['column_email']          = 'E-Mail';
+$_['column_customer_group'] = 'Customer Group';
+$_['column_type']           = 'Type';
+$_['column_date_added']     = 'Data Adăugării';
+$_['column_action']         = 'Acțiune';
+
+// Entry
+$_['entry_name']            = 'Customer Name';
+$_['entry_email']           = 'E-Mail';
+$_['entry_customer_group']  = 'Grupul de Clienți';
+$_['entry_type']            = 'Tip';
+$_['entry_date_added']      = 'Data Adăugării';
+
+// Error
+$_['error_permission']      = 'Atenție: Nu ai permisiunea de a modifica aprobările clienților!';

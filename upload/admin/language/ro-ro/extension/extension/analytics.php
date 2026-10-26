@@ -1,12 +1,15 @@
 <?php
+// Heading
+$_['heading_title']    = 'Analytics';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_status'] = 'Stare';
+// Text
+$_['text_success']     = 'Succes: Ai modificat analytics!';
+$_['text_list']        = 'Listă Analytics';
 
-// MintCart
-$_['heading_title'] = 'Analiză';
-$_['text_success'] = 'Succes: ați modificat analizele!';
-$_['text_list'] = 'Listă de analize';
-$_['column_name'] = 'Denumire analiză';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica analizele!';
+// Column
+$_['column_name']      = 'Nume Analytics';
+$_['column_status']    = 'Stare';
+$_['column_action']    = 'Acțiune';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica analytics!';

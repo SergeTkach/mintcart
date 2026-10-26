@@ -1,4 +1,3 @@
 <?php
-
-// MintCart
+// Text
 $_['text_total'] = 'Total';

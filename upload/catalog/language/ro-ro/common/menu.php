@@ -1,5 +1,4 @@
 <?php
-
-// MintCart
-$_['text_category'] = 'Categorii';
-$_['text_all'] = 'Arată tot';
+// Text
+$_['text_category']  = 'Categories';
+$_['text_all']       = 'Afișează Tot';

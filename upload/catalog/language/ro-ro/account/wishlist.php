@@ -1,19 +1,20 @@
 <?php
+// Heading
+$_['heading_title'] = 'Lista Mea de Dorințe';
 
-// MintCart
+// Text
+$_['text_account']  = 'Cont';
+$_['text_instock']  = 'În Stoc';
+$_['text_wishlist'] = 'Listă de Dorințe (%s)';
+$_['text_login']    = 'Trebuie să <a href="%s">te autentifici</a> sau <a href="%s">să creezi un cont</a> pentru a salva <a href="%s">%s</a> în <a href="%s">lista ta de dorințe</a>!';
+$_['text_success']  = 'Succes: Ai adăugat <a href="%s">%s</a> la <a href="%s">lista ta de dorințe</a>!';
+$_['text_remove']   = 'Succes: Ți-ai modificat lista de dorințe!';
+$_['text_empty']    = 'Lista ta de dorințe este goala.';
+
+// Column
+$_['column_image']  = 'Imagine';
+$_['column_name']   = 'Nume Produs';
+$_['column_model']  = 'Model';
+$_['column_stock']  = 'Stock';
+$_['column_price']  = 'Unit Price';
 $_['column_action'] = 'Acțiune';
-$_['column_model'] = 'Model';
-$_['column_name'] = 'Denumire produs';
-$_['column_price'] = 'Preț unitar';
-$_['text_account'] = 'Cont';
-$_['text_instock'] = 'În stoc';
-
-// MintCart
-$_['heading_title'] = 'Lista mea de dorințe';
-$_['text_wishlist'] = 'Lista de dorințe (%s)';
-$_['text_login'] = 'Trebuie să vă <a href="%s">autentificați</a> sau să <a href="%s">creați un cont</a> pentru a salva <a href="%s">%s</a> în <a href="%s">lista de dorințe</a>!';
-$_['text_success'] = 'Succes: ați adăugat <a href="%s">%s</a> în <a href="%s">lista de dorințe</a>!';
-$_['text_remove'] = 'Succes: ați modificat lista de dorințe!';
-$_['text_empty'] = 'Lista dumneavoastră de dorințe este goală.';
-$_['column_image'] = 'Imagine';
-$_['column_stock'] = 'Stoc';

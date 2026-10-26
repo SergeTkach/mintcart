@@ -1,17 +1,20 @@
 <?php
+// Heading
+$_['heading_title']        = 'Estimare Livrare &amp; Taxe';
 
-// MintCart
-$_['entry_country'] = 'Țară';
-$_['entry_postcode'] = 'Cod poștal';
-$_['entry_zone'] = 'Regiune / Județ';
-$_['error_country'] = 'Vă rugăm să selectați o țară!';
-$_['error_postcode'] = 'Codul poștal trebuie să aibă între 2 și 10 caractere!';
-$_['error_zone'] = 'Vă rugăm să selectați o regiune / un județ!';
+// Text
+$_['text_success']         = 'Succes: Estimarea de livrare a fost aplicată!';
+$_['text_shipping']        = 'Introdu destinația pentru a obține o estimare de livrare.';
+$_['text_shipping_method'] = 'Te rugăm să selectezi metoda de livrare preferată pentru a fi utilizată la această comandă.';
 
-// MintCart
-$_['heading_title'] = 'Estimare livrare și taxe';
-$_['text_success'] = 'Succes: estimarea livrării a fost aplicată!';
-$_['text_shipping'] = 'Introduceți destinația pentru a obține o estimare a livrării.';
-$_['text_shipping_method'] = 'Selectați metoda de livrare preferată pentru această comandă.';
-$_['error_shipping'] = 'Atenție: metoda de livrare este obligatorie!';
-$_['error_no_shipping'] = 'Atenție: nu există opțiuni de livrare disponibile. <a href="%s">Contactați-ne</a> pentru ajutor!';
+// Entry
+$_['entry_country']        = 'Țară';
+$_['entry_zone']           = 'Regiune / Stat';
+$_['entry_postcode']       = 'Cod Poștal';
+
+// Error
+$_['error_postcode']       = 'Codul poștal trebuie să fie între 2 și 10 caractere!';
+$_['error_country']        = 'Te rugăm selectează o țară!';
+$_['error_zone']           = 'Te rugăm selectează o regiune / stat!';
+$_['error_shipping']       = 'Warning: Shipping method required!';
+$_['error_no_shipping']    = 'Atenție: Nu sunt disponibile opțiuni de livrare. Te rugăm <a href="%s">contactează-ne</a> pentru asistență!';

@@ -1,16 +1,21 @@
 <?php
+// Heading
+$_['heading_title']    = 'Return Actions';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
+// Text
+$_['text_success']     = 'Success: You have modified return actions!';
+$_['text_list']        = 'Return Action List';
+$_['text_add']         = 'Add Return Action';
+$_['text_edit']        = 'Edit Return Action';
 
-// MintCart
-$_['heading_title'] = 'Acțiuni de returnare';
-$_['text_success'] = 'Succes: ați modificat acțiunile de returnare!';
-$_['text_list'] = 'Listă de acțiuni de returnare';
-$_['text_add'] = 'Adaugă acțiune de returnare';
-$_['text_edit'] = 'Modifică acțiunea de returnare';
-$_['column_name'] = 'Denumire acțiune de returnare';
-$_['entry_name'] = 'Denumire acțiune de returnare';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica acțiunile de returnare!';
-$_['error_name'] = 'Denumirea acțiunii de returnare trebuie să aibă între 3 și 64 de caractere!';
-$_['error_return'] = 'Atenție: această acțiune de returnare nu poate fi ștearsă deoarece este atribuită la %s produse returnate!';
+// Column
+$_['column_name']      = 'Return Action Name';
+$_['column_action']    = 'Acțiune';
+
+// Entry
+$_['entry_name']       = 'Return Action Name';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify return actions!';
+$_['error_name']       = 'Nume Acțiune de Returnare trebuie să fie între 3 și 64 de caractere!';
+$_['error_return']     = 'Atenție: Această acțiune de returnare nu poate fi ștearsă, deoarece în prezent este atribuită la %s produse returnate!';

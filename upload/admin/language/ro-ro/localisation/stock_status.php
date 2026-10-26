@@ -1,16 +1,21 @@
 <?php
+// Heading
+$_['heading_title']    = 'Stock Statuses';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
+// Text
+$_['text_success']     = 'Success: You have modified stock statuses!';
+$_['text_list']        = 'Stock Status List';
+$_['text_add']         = 'Add Stock Status';
+$_['text_edit']        = 'Edit Stock Status';
 
-// MintCart
-$_['heading_title'] = 'Stări de stoc';
-$_['text_success'] = 'Succes: ați modificat stările de stoc!';
-$_['text_list'] = 'Listă de stări de stoc';
-$_['text_add'] = 'Adaugă stare de stoc';
-$_['text_edit'] = 'Modifică starea de stoc';
-$_['column_name'] = 'Denumire stare de stoc';
-$_['entry_name'] = 'Denumire stare de stoc';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica stările de stoc!';
-$_['error_name'] = 'Denumirea stării de stoc trebuie să aibă între 3 și 32 de caractere!';
-$_['error_product'] = 'Atenție: această stare de stoc nu poate fi ștearsă deoarece este atribuită la %s produse!';
+// Column
+$_['column_name']      = 'Stock Status Name';
+$_['column_action']    = 'Acțiune';
+
+// Entry
+$_['entry_name']       = 'Stock Status Name';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify stock statuses!';
+$_['error_name']       = 'Stock Status Name must be between 3 and 32 characters!';
+$_['error_product']    = 'Atenție: Această stare a stocului nu poate fi ștearsă, deoarece în prezent este asociată cu %s produse!';

@@ -1,10 +1,7 @@
 <?php
-
-// MintCart
-$_['text_thanks'] = 'Vă mulțumim,';
-$_['text_welcome'] = 'Bun venit și vă mulțumim că v-ați înregistrat la %s!';
-
-// MintCart
-$_['text_subject'] = '%s - Contul dumneavoastră a fost activat!';
-$_['text_login'] = 'Contul dumneavoastră a fost creat și vă puteți autentifica cu adresa de e-mail și parola, pe site-ul nostru sau la următoarea adresă:';
-$_['text_service'] = 'După autentificare veți putea accesa și alte servicii, inclusiv consultarea comenzilor anterioare, tipărirea facturilor și modificarea informațiilor contului.';
+// Text
+$_['text_subject'] = '%s - Your Account has been activated!';
+$_['text_welcome'] = 'Bine ai venit și îți mulțumim că te-ai înregistrat la %s!';
+$_['text_login']   = 'Contul tău a fost creat acum și te poți conecta folosind adresa ta de email și parola, vizitând site-ul nostru web sau la următoarea adresă URL:';
+$_['text_service'] = 'La conectare, vei putea accesa alte servicii, inclusiv revizuirea comenzilor anterioare, imprimarea facturilor și editarea informațiilor contului.';
+$_['text_thanks']  = 'Îți mulțumim,';

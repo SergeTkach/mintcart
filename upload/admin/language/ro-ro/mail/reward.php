@@ -1,6 +1,5 @@
 <?php
-
-// MintCart
-$_['text_subject'] = '%s - Puncte de recompensă';
-$_['text_received'] = 'Ați primit %s puncte de recompensă!';
-$_['text_total'] = 'Numărul total al punctelor dumneavoastră de recompensă este acum %s.';
+// Text
+$_['text_subject']  = '%s - Puncte de Recompensă';
+$_['text_received'] = 'Ai primit %s Puncte de Recompensă!';
+$_['text_total']    = 'Numărul total de puncte de recompensă este acum %s.';

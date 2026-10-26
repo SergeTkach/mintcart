@@ -1,19 +1,22 @@
 <?php
+// Heading
+$_['heading_title']                 = 'Program de Afiliere';
 
-// MintCart
-$_['entry_password'] = 'Parolă';
-$_['error_approved'] = 'Atenție: contul dumneavoastră trebuie aprobat înainte de a vă putea autentifica.';
-$_['error_attempts'] = 'Atenție: contul dumneavoastră a depășit numărul permis de încercări de autentificare. Încercați din nou peste 1 oră.';
-$_['error_login'] = 'Atenție: adresa de e-mail și/sau parola nu se potrivesc.';
-$_['text_account'] = 'Cont';
-$_['text_forgotten'] = 'Parolă uitată';
-$_['text_login'] = 'Autentificare';
+// Text
+$_['text_account']                  = 'Cont';
+$_['text_login']                    = 'Login';
+$_['text_description']              = '<p>Programul de afiliere %s este gratuit și permite membrilor să câștige venituri prin plasarea unui link sau unor link-uri pe site-ul lor web care promovează %s sau produse specifice. Orice vânzare efectuată către clienții care au făcut click pe aceste link-uri va câștiga comisionul de afiliere. Rata standard a comisionului este în prezent %s.</p><p>Pentru mai multe informații, vizitați pagina noastră de întrebări frecvente sau consultați termenii &amp; condițiile de afiliere</p>';
+$_['text_new_affiliate']            = 'Afiliat Nou';
+$_['text_register_account']         = '<p>Nu sunt afiliat în prezent.</p><p>Faceți click pe Continuă mai jos pentru a crea un nou cont de afiliat. Te rugam sa reții ca acesta nu este conectat in nici un fel la contul tău de client.</p>';
+$_['text_returning_affiliate']      = 'Autentificare Afiliat';
+$_['text_i_am_returning_affiliate'] = 'Sunt un afiliat întors.';
+$_['text_forgotten']                = 'Parolă Uitată';
 
-// MintCart
-$_['heading_title'] = 'Program de afiliere';
-$_['text_description'] = '<p>Programul de afiliere %s este gratuit și le permite membrilor să câștige venituri plasând unul sau mai multe linkuri pe site-ul lor, care promovează %s sau anumite produse de aici. Orice vânzare către clienții care au accesat aceste linkuri aduce afiliatului un comision. Rata standard a comisionului este în prezent de %s.</p><p>Pentru mai multe informații, vizitați pagina de întrebări frecvente sau consultați termenii și condițiile programului de afiliere.</p>';
-$_['text_new_affiliate'] = 'Afiliat nou';
-$_['text_register_account'] = '<p>Nu sunt încă afiliat.</p><p>Apăsați Continuă mai jos pentru a crea un cont nou de afiliat. Rețineți că acesta nu este legat în niciun fel de contul dumneavoastră de client.</p>';
-$_['text_returning_affiliate'] = 'Autentificare afiliat';
-$_['text_i_am_returning_affiliate'] = 'Sunt afiliat existent.';
-$_['entry_email'] = 'E-mail afiliat';
+// Entry
+$_['entry_email']                   = 'E-Mail Afiliat';
+$_['entry_password']                = 'Parolă';
+
+// Error
+$_['error_login']                   = 'Atenție: Adresa de E-Mail și/sau Parola nu se potrivesc.';
+$_['error_attempts']                = 'Atenție: Contul tău a depășit numărul permis de încercări de conectare. Te rugăm să încerci din nou în 1 oră.';
+$_['error_approved']                = 'Atenție: Contul tău necesită aprobare înainte de a te putea autentifica.';

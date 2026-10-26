@@ -1,4 +1,3 @@
 <?php
-
-// MintCart
-$_['text_language'] = 'Limbă';
+// Text
+$_['text_language'] = 'Language';

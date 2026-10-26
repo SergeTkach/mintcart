@@ -1,4 +1,2 @@
 <?php
-
-// MintCart
-$_['text_klarna_fee'] = 'Taxă Klarna';
+$_['text_klarna_fee'] = 'Klarna Fee';

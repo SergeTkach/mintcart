@@ -1,12 +1,15 @@
 <?php
+// Heading
+$_['heading_title']    = 'Gift Voucher';
 
-// MintCart
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Success: You have modified gift voucher total!';
+$_['text_edit']        = 'Edit Gift Voucher Total';
 
-// MintCart
-$_['heading_title'] = 'Certificat cadou';
-$_['text_success'] = 'Succes: ați modificat totalul Certificat cadou!';
-$_['text_edit'] = 'Modifică totalul Certificat cadou';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica totalul Certificat cadou!';
+// Entry
+$_['entry_status']     = 'Stare';
+$_['entry_sort_order'] = 'Ordine Sortare';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify gift voucher total!';

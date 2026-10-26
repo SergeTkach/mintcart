@@ -1,4 +1,3 @@
 <?php
-
-// MintCart
-$_['text_sub_total'] = 'Subtotal';
+// Text
+$_['text_sub_total'] = 'Sub-Total';

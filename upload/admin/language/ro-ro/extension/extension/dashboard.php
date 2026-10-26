@@ -1,14 +1,17 @@
 <?php
+// Heading
+$_['heading_title']     = 'Dashboard';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_sort_order'] = 'Ordine de sortare';
-$_['column_status'] = 'Stare';
+// Text
+$_['text_success']      = 'Succes: Ai modificat dashboard-urile!';
+$_['text_list']         = 'Listă Dashboard';
 
-// MintCart
-$_['heading_title'] = 'Panou de control';
-$_['text_success'] = 'Succes: ați modificat panourile de control!';
-$_['text_list'] = 'Listă de widgeturi de panou';
-$_['column_name'] = 'Denumire widget';
-$_['column_width'] = 'Lățime';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica panourile de control!';
+// Column
+$_['column_name']       = 'Nume Dashboard';
+$_['column_width']      = 'Width';
+$_['column_status']     = 'Stare';
+$_['column_sort_order'] = 'Ordine de Sortare';
+$_['column_action']     = 'Acțiune';
+
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica dashboard-urile!';

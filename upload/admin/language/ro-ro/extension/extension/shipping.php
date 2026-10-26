@@ -1,13 +1,16 @@
 <?php
+// Heading
+$_['heading_title']     = 'Livrare';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_sort_order'] = 'Ordine de sortare';
-$_['column_status'] = 'Stare';
+// Text
+$_['text_success']      = 'Succes: Ai modificat livrarea!';
+$_['text_list']         = 'Listă de Livrare';
 
-// MintCart
-$_['heading_title'] = 'Livrare';
-$_['text_success'] = 'Succes: ați modificat livrarea!';
-$_['text_list'] = 'Listă de metode de livrare';
-$_['column_name'] = 'Metodă de livrare';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica livrarea!';
+// Column
+$_['column_name']       = 'Metoda de Livrare';
+$_['column_status']     = 'Stare';
+$_['column_sort_order'] = 'Ordine de Sortare';
+$_['column_action']     = 'Acțiune';
+
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica livrarea!';

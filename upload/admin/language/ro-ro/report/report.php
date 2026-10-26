@@ -1,10 +1,9 @@
 <?php
+// Heading
+$_['heading_title'] = 'Reports';
 
-// MintCart
-$_['text_filter'] = 'Filtru';
-
-// MintCart
-$_['heading_title'] = 'Rapoarte';
-$_['text_success'] = 'Succes: ați modificat rapoartele!';
-$_['text_list'] = 'Listă de rapoarte';
-$_['text_type'] = 'Alegeți tipul raportului';
+// Text
+$_['text_success']  = 'Succes: Ai modificat rapoartele!';
+$_['text_list']     = 'Report List';
+$_['text_type']     = 'Choose the report type';
+$_['text_filter']   = 'Filtru';

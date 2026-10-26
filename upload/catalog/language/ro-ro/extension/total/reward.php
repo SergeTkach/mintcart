@@ -1,11 +1,16 @@
 <?php
+// Heading
+$_['heading_title'] = 'Utilizează Puncte de Recompensă (Disponibile %s)';
 
-// MintCart
-$_['heading_title'] = 'Folosiți puncte de recompensă (disponibile: %s)';
-$_['text_reward'] = 'Puncte de recompensă (%s)';
-$_['text_order_id'] = 'ID comandă: #%s';
-$_['text_success'] = 'Succes: reducerea prin puncte de recompensă a fost aplicată!';
-$_['entry_reward'] = 'Puncte de folosit (max. %s)';
-$_['error_reward'] = 'Atenție: introduceți numărul de puncte de recompensă pe care doriți să le folosiți!';
-$_['error_points'] = 'Atenție: nu aveți %s puncte de recompensă!';
-$_['error_maximum'] = 'Atenție: numărul maxim de puncte care pot fi aplicate este %s!';
+// Text
+$_['text_reward']   = 'Puncte de Recompensă (%s)';
+$_['text_order_id'] = 'Număr Comandă: #%s';
+$_['text_success']  = 'Succes: Reducerea punctelor de recompensă a fost aplicată!';
+
+// Entry
+$_['entry_reward']  = 'Puncte de utilizat (Max %s)';
+
+// Error
+$_['error_reward']  = 'Atenție: Te rugăm să introduci valoarea punctelor de recompensă de utilizat!';
+$_['error_points']  = 'Atenție: Nu ai %s puncte de recompensă!';
+$_['error_maximum'] = 'Atenție: Numărul maxim de puncte care pot fi aplicate este %s!';

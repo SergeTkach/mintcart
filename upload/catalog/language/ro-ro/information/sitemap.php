@@ -1,18 +1,17 @@
 <?php
+// Heading
+$_['heading_title']    = 'Site Map';
 
-// MintCart
-$_['text_account'] = 'Contul meu';
-$_['text_checkout'] = 'Finalizare comandă';
-$_['text_contact'] = 'Contact';
-$_['text_download'] = 'Descărcări';
-$_['text_search'] = 'Căutare';
-
-// MintCart
-$_['heading_title'] = 'Harta site-ului';
-$_['text_special'] = 'Oferte speciale';
-$_['text_edit'] = 'Informații cont';
-$_['text_password'] = 'Parolă';
-$_['text_address'] = 'Agendă de adrese';
-$_['text_history'] = 'Istoric comenzi';
-$_['text_cart'] = 'Coș de cumpărături';
-$_['text_information'] = 'Informații';
+// Text
+$_['text_special']     = 'Oferte Speciale';
+$_['text_account']     = 'My Account';
+$_['text_edit']        = 'Informații Cont';
+$_['text_password']    = 'Password';
+$_['text_address']     = 'Address Book';
+$_['text_history']     = 'Istoric Comenzi';
+$_['text_download']    = 'Downloads';
+$_['text_cart']        = 'Shopping Cart';
+$_['text_checkout']    = 'Checkout';
+$_['text_search']      = 'Search';
+$_['text_information'] = 'Information';
+$_['text_contact']     = 'Contactează-ne';

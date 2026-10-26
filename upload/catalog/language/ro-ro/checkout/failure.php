@@ -1,10 +1,20 @@
 <?php
+// Heading
+$_['heading_title'] = 'Plată Eșuată!';
 
-// MintCart
-$_['text_checkout'] = 'Finalizare comandă';
+// Text
+$_['text_basket']   = 'Shopping Cart';
+$_['text_checkout'] = 'Checkout';
+$_['text_failure']  = 'Plată Eșuată';
+$_['text_message']  = '<p>A existat o problemă la procesarea plății și comanda nu s-a finalizat.</p>
 
-// MintCart
-$_['heading_title'] = 'Plata a eșuat!';
-$_['text_basket'] = 'Coș de cumpărături';
-$_['text_failure'] = 'Plata a eșuat';
-$_['text_message'] = '<p>A apărut o problemă la procesarea plății dumneavoastră, iar comanda nu a fost finalizată.</p><p>Motive posibile:</p><ul><li>Fonduri insuficiente</li><li>Verificarea a eșuat</li></ul><p>Încercați să comandați din nou folosind o altă metodă de plată.</p><p>Dacă problema persistă, <a href="%s">contactați-ne</a> și furnizați detaliile comenzii pe care încercați să o plasați.</p>';
+<p>Motivele posibile sunt:</p>
+<ul>
+  <li>Fonduri insuficiente</li>
+  <li>Verificarea a eșuat</li>
+</ul>
+
+<p>Te rugăm să încerci să comanzi din nou folosind o altă metodă de plată.</p>
+
+<p>Dacă problema persistă, te rugăm <a href="%s">să ne contactezi</a> cu detaliile comenzii pe care încerci să o plasezi.</p>
+';

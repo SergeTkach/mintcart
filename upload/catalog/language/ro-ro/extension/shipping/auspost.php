@@ -1,4 +1,3 @@
 <?php
-
-// MintCart
-$_['text_title'] = 'Australia Post';
+// Text
+$_['text_title']    = 'Australia Post';

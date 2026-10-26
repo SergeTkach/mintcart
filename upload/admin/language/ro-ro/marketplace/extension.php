@@ -1,10 +1,9 @@
 <?php
+// Heading
+$_['heading_title'] = 'Extensions';
 
-// MintCart
-$_['text_filter'] = 'Filtru';
-$_['text_success'] = 'Succes: ați modificat extensiile!';
-
-// MintCart
-$_['heading_title'] = 'Extensii';
-$_['text_list'] = 'Listă de extensii';
-$_['text_type'] = 'Alegeți tipul extensiei';
+// Text
+$_['text_success']  = 'Success: You have modified extensions!';
+$_['text_list']     = 'Extension List';
+$_['text_type']     = 'Choose the extension type';
+$_['text_filter']   = 'Filtru';

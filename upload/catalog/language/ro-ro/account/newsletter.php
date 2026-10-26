@@ -1,8 +1,11 @@
 <?php
+// Heading
+$_['heading_title']    = 'Abonare la Newsletter';
 
-// MintCart
-$_['heading_title'] = 'Abonare la buletinul informativ';
-$_['text_success'] = 'Succes: abonarea la buletinul informativ a fost actualizată!';
-$_['entry_newsletter'] = 'Abonare';
-$_['text_account'] = 'Cont';
-$_['text_newsletter'] = 'Buletin informativ';
+// Text
+$_['text_account']     = 'Cont';
+$_['text_newsletter']  = 'Newsletter';
+$_['text_success']     = 'Succes: Abonarea ta la newsletter ta a fost actualizată cu succes!';
+
+// Entry
+$_['entry_newsletter'] = 'Abonează-te';

@@ -1,8 +1,7 @@
 <?php
+// Heading
+$_['heading_title'] = 'Choose a Store';
 
-// MintCart
-$_['text_default'] = 'Implicit';
-
-// MintCart
-$_['heading_title'] = 'Alegeți un magazin';
-$_['text_store'] = 'Alegeți magazinul pe care doriți să îl vizitați.';
+// Text
+$_['text_default']  = 'Implicit';
+$_['text_store']    = 'Please choose the store you wish to visit.';

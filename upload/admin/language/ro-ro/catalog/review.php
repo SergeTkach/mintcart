@@ -1,29 +1,36 @@
 <?php
+// Heading
+$_['heading_title']     = 'Recenzii';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_date_added'] = 'Data adăugării';
-$_['column_product'] = 'Produs';
-$_['column_status'] = 'Stare';
-$_['entry_date_added'] = 'Data adăugării';
-$_['entry_product'] = 'Produs';
-$_['entry_status'] = 'Stare';
-$_['entry_text'] = 'Text';
-$_['help_product'] = '(Completare automată)';
-$_['text_filter'] = 'Filtru';
+// Text
+$_['text_success']      = 'Succes: Ai modificat recenziile!';
+$_['text_list']         = 'Listă Recenzii';
+$_['text_add']          = 'Adaugă Recenzie';
+$_['text_edit']         = 'Editare Recenzie';
+$_['text_filter']       = 'Filtru';
 
-// MintCart
-$_['heading_title'] = 'Recenzii';
-$_['text_success'] = 'Succes: ați modificat recenziile!';
-$_['text_list'] = 'Listă de recenzii';
-$_['text_add'] = 'Adaugă recenzie';
-$_['text_edit'] = 'Modifică recenzia';
-$_['column_author'] = 'Autor';
-$_['column_rating'] = 'Evaluare';
-$_['entry_author'] = 'Autor';
-$_['entry_rating'] = 'Evaluare';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica recenziile!';
-$_['error_product'] = 'Produsul este obligatoriu!';
-$_['error_author'] = 'Autorul trebuie să aibă între 3 și 64 de caractere!';
-$_['error_text'] = 'Textul recenziei trebuie să aibă cel puțin 1 caracter!';
-$_['error_rating'] = 'Evaluarea recenziei este obligatorie!';
+// Column
+$_['column_product']    = 'Produs';
+$_['column_author']     = 'Autor';
+$_['column_rating']     = 'Evaluare';
+$_['column_status']     = 'Stare';
+$_['column_date_added'] = 'Data Adăugării';
+$_['column_action']     = 'Acțiune';
+
+// Entry
+$_['entry_product']     = 'Produs';
+$_['entry_author']      = 'Autor';
+$_['entry_rating']      = 'Evaluare';
+$_['entry_status']      = 'Stare';
+$_['entry_text']        = 'Text';
+$_['entry_date_added']  = 'Data Adăugării';
+
+// Help
+$_['help_product']      = '(Autocompletare)';
+
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica recenziile!';
+$_['error_product']     = 'Produs necesar!';
+$_['error_author']      = 'Autor trebuie să fie între 3 și 64 de caractere!';
+$_['error_text']        = 'Textul Recenziei trebuie să aibă cel puțin 1 caracter!';
+$_['error_rating']      = 'Evaluare Recenzie necesară!';

@@ -1,16 +1,21 @@
 <?php
+// Heading
+$_['heading_title']    = 'Comision Comandă Scăzută';
 
-// MintCart
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['entry_tax_class'] = 'Clasă de taxe';
-$_['entry_total'] = 'Total comandă';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Success: You have modified low order fee total!';
+$_['text_edit']        = 'Edit Low Order Fee Total';
 
-// MintCart
-$_['heading_title'] = 'Taxă pentru comandă mică';
-$_['text_success'] = 'Succes: ați modificat totalul Taxă pentru comandă mică!';
-$_['text_edit'] = 'Modifică totalul Taxă pentru comandă mică';
-$_['entry_fee'] = 'Taxă';
-$_['help_total'] = 'Totalul comenzii care trebuie atins pentru ca acest total să fie dezactivat.';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica totalul Taxă pentru comandă mică!';
+// Entry
+$_['entry_total']      = 'Order Total';
+$_['entry_fee']        = 'Fee';
+$_['entry_tax_class']  = 'Clasa Fiscală';
+$_['entry_status']     = 'Stare';
+$_['entry_sort_order'] = 'Ordine Sortare';
+
+// Help
+$_['help_total']       = 'The checkout total the order must reach before this order total is deactivated.';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify low order fee total!';

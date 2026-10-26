@@ -1,9 +1,8 @@
 <?php
-
-// MintCart
-$_['text_subject'] = 'Ați primit un certificat cadou de la %s';
-$_['text_greeting'] = 'Felicitări, ați primit un certificat cadou în valoare de %s';
-$_['text_from'] = 'Acest certificat cadou v-a fost trimis de %s';
-$_['text_message'] = 'Cu următorul mesaj';
-$_['text_redeem'] = 'Pentru a folosi acest certificat cadou, notați codul de utilizare <b>%s</b>, apoi faceți clic pe linkul de mai jos și cumpărați produsul pentru care doriți să folosiți certificatul. Puteți introduce codul certificatului cadou pe pagina coșului de cumpărături, înainte de a face clic pe Finalizare comandă.';
-$_['text_footer'] = 'Vă rugăm să răspundeți la acest e-mail dacă aveți întrebări.';
+// Text
+$_['text_subject']  = 'Ți-a fost trimis un certificat cadou de la %s';
+$_['text_greeting'] = 'Felicitări, Ai primit un Certificat Cadou în valoare de %s';
+$_['text_from']     = 'Acest Certificat Cadou ți-a fost trimis de %s';
+$_['text_message']  = 'Cu un mesaj care spune';
+$_['text_redeem']   = 'Pentru a valorifica acest Certificat Cadou, notează codul de revendicare care este <b>%s</b>, apoi click pe link-ul de mai jos și cumpărați produsul dorit, pe care să utilizați acest certificat cadou. Puteți introduce codul certificatului cadou pe pagina coșului de cumpărături înainte de a face click pe checkout.';
+$_['text_footer']   = 'Te rugăm să răspunzi la acest e-mail dacă ai întrebări.';

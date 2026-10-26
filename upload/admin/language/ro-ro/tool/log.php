@@ -1,8 +1,11 @@
 <?php
+// Heading
+$_['heading_title']    = 'Error Log';
 
-// MintCart
-$_['heading_title'] = 'Jurnal de erori';
-$_['text_success'] = 'Succes: jurnalul de erori a fost golit!';
-$_['text_list'] = 'Listă de erori';
-$_['error_warning'] = 'Atenție: fișierul jurnalului de erori %s are %s!';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a goli jurnalul de erori!';
+// Text
+$_['text_success']     = 'Success: You have successfully cleared your error log!';
+$_['text_list']        = 'Errors List';
+
+// Error
+$_['error_warning']    = 'Warning: Your error log file %s is %s!';
+$_['error_permission'] = 'Warning: You do not have permission to clear error log!';

@@ -1,11 +1,17 @@
 <?php
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_status'] = 'Stare';
+// Heading
+$_['heading_title'] = "Advertising";
 
-// MintCart
-$_['heading_title'] = 'Publicitate';
-$_['column_name'] = 'Denumire publicitate';
-$_['text_success'] = '<strong>Succes:</strong> ați modificat publicitatea!';
-$_['error_adblock'] = 'Se pare că folosiți un blocator de reclame. Pentru a folosi această secțiune de publicitate, dezactivați blocatorul pentru panoul de administrare.';
+
+// Columns
+$_['column_name']   = "Advertising Name";
+$_['column_status'] = "Stare";
+$_['column_action'] = "Acțiune";
+
+
+// Text
+$_['text_success']   = "<strong>Succes:</strong> Ai modificat publicitatea!";
+
+// Error
+$_['error_adblock'] = "It looks like you are using an ad blocker. In order to use this Advertising section, please disable your ad blocker for your OpenCart admin panel.";

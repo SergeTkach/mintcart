@@ -1,32 +1,37 @@
 <?php
+// Heading
+$_['heading_title']        = 'Mail';
 
-// MintCart
-$_['entry_affiliate'] = 'Afiliat';
-$_['entry_customer'] = 'Client';
-$_['entry_customer_group'] = 'Grup de clienți';
-$_['entry_message'] = 'Mesaj';
-$_['entry_product'] = 'Produse';
-$_['text_customer'] = 'Clienți';
-$_['text_default'] = 'Implicit';
-$_['text_product'] = 'Produse';
+// Text
+$_['text_success']         = 'Your message has been successfully sent!';
+$_['text_sent']            = 'Your message has been successfully sent to %s - %s recipients!';
+$_['text_list']            = 'Mail List';
+$_['text_default']         = 'Implicit';
+$_['text_newsletter']      = 'All Newsletter Subscribers';
+$_['text_customer_all']    = 'All Customers';
+$_['text_customer_group']  = 'Customer Group';
+$_['text_customer']        = 'Clienți';
+$_['text_affiliate_all']   = 'Toți Afiliații';
+$_['text_affiliate']       = 'Afiliați';
+$_['text_product']         = 'Products';
 
-// MintCart
-$_['heading_title'] = 'E-mail';
-$_['text_success'] = 'Mesajul dumneavoastră a fost trimis cu succes!';
-$_['text_sent'] = 'Mesajul dumneavoastră a fost trimis cu succes către %s - %s destinatari!';
-$_['text_list'] = 'Listă de e-mailuri';
-$_['text_newsletter'] = 'Toți abonații la buletinul informativ';
-$_['text_customer_all'] = 'Toți clienții';
-$_['text_customer_group'] = 'Grup de clienți';
-$_['text_affiliate_all'] = 'Toți afiliații';
-$_['text_affiliate'] = 'Afiliați';
-$_['entry_store'] = 'De la';
-$_['entry_to'] = 'Către';
-$_['entry_subject'] = 'Subiect';
-$_['help_customer'] = '(Completare automată)';
-$_['help_affiliate'] = '(Completare automată)';
-$_['help_product'] = 'Trimite doar clienților care au comandat produsele din listă. (Completare automată)';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a trimite e-mailuri!';
-$_['error_subject'] = 'Subiectul e-mailului este obligatoriu!';
-$_['error_message'] = 'Mesajul e-mailului este obligatoriu!';
-$_['error_email'] = 'Adresa de e-mail este obligatorie!';
+// Entry
+$_['entry_store']          = 'From';
+$_['entry_to']             = 'To';
+$_['entry_customer_group'] = 'Grupul de Clienți';
+$_['entry_customer']       = 'Customer';
+$_['entry_affiliate']      = 'Affiliate';
+$_['entry_product']        = 'Products';
+$_['entry_subject']        = 'Subject';
+$_['entry_message']        = 'Message';
+
+// Help
+$_['help_customer']        = '(Autocomplete)';
+$_['help_affiliate']       = '(Autocomplete)';
+$_['help_product']         = 'Send only to customers who have ordered products in the list. (Autocomplete)';
+
+// Error
+$_['error_permission']     = 'Warning: You do not have permission to send E-Mails!';
+$_['error_subject']        = 'E-Mail Subject required!';
+$_['error_message']        = 'E-Mail Message required!';
+$_['error_email']          = 'E-Mail required!';

@@ -1,13 +1,18 @@
 <?php
+// Heading
+$_['heading_title']    = 'Store';
 
-// MintCart
-$_['entry_status'] = 'Stare';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Succes: Ai modificat modulul magazin!';
+$_['text_edit']        = 'Edit Store Module';
 
-// MintCart
-$_['heading_title'] = 'Magazin';
-$_['text_success'] = 'Succes: ați modificat modulul Magazin!';
-$_['text_edit'] = 'Modifică modulul Magazin';
-$_['entry_admin'] = 'Doar pentru administratori';
-$_['help_admin'] = 'Dacă da, lista magazinelor va fi vizibilă doar când este autentificat un administrator!';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica modulul Magazin!';
+// Entry
+$_['entry_admin']      = 'Admin Users Only';
+$_['entry_status']     = 'Stare';
+
+//Help
+$_['help_admin']       = 'If yes, then multi store list will be visible only when admin user login!';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica modulul magazin!';

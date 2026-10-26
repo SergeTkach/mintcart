@@ -1,21 +1,26 @@
 <?php
+// Heading
+$_['heading_title']          = 'Atribute';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_sort_order'] = 'Ordine de sortare';
-$_['entry_sort_order'] = 'Ordine de sortare';
+// Text
+$_['text_success']           = 'Succes: Ai modificat atributele!';
+$_['text_list']              = 'Listă Atribute';
+$_['text_add']               = 'Adaugă Atribut';
+$_['text_edit']              = 'Editare Atribut';
 
-// MintCart
-$_['heading_title'] = 'Atribute';
-$_['text_success'] = 'Succes: ați modificat atributele!';
-$_['text_list'] = 'Listă de atribute';
-$_['text_add'] = 'Adaugă atribut';
-$_['text_edit'] = 'Modifică atributul';
-$_['column_name'] = 'Denumire atribut';
-$_['column_attribute_group'] = 'Grup de atribute';
-$_['entry_name'] = 'Denumire atribut';
-$_['entry_attribute_group'] = 'Grup de atribute';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica atributele!';
-$_['error_attribute_group'] = 'Grupul de atribute este obligatoriu!';
-$_['error_name'] = 'Denumirea atributului trebuie să aibă între 1 și 64 de caractere!';
-$_['error_product'] = 'Atenție: acest atribut nu poate fi șters deoarece este atribuit în prezent la %s produse!';
+// Column
+$_['column_name']            = 'Nume Atribut';
+$_['column_attribute_group'] = 'Grup Atribute';
+$_['column_sort_order']      = 'Ordine de Sortare';
+$_['column_action']          = 'Acțiune';
+
+// Entry
+$_['entry_name']             = 'Nume Atribut';
+$_['entry_attribute_group']  = 'Grup Atribute';
+$_['entry_sort_order']       = 'Ordine Sortare';
+
+// Error
+$_['error_permission']       = 'Atenție: Nu ai permisiunea de a modifica atributele!';
+$_['error_attribute_group']  = 'Grup Atribute Necesar!';
+$_['error_name']             = 'Nume Atribut trebuie să fie între 1 și 64 de caractere!';
+$_['error_product']          = 'Atenție: Acest atribut nu poate fi șters deoarece în prezent este asociat cu %s produse!';

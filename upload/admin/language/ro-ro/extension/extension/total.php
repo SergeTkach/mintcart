@@ -1,13 +1,16 @@
 <?php
+// Heading
+$_['heading_title']     = 'Totaluri Comandă';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_sort_order'] = 'Ordine de sortare';
-$_['column_status'] = 'Stare';
+// Text
+$_['text_success']      = 'Succes: Ai modificat totalurile!';
+$_['text_list']         = 'Order Total List';
 
-// MintCart
-$_['heading_title'] = 'Totaluri comandă';
-$_['text_success'] = 'Succes: ați modificat totalurile!';
-$_['text_list'] = 'Listă de totaluri de comandă';
-$_['column_name'] = 'Totaluri comandă';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica totalurile!';
+// Column
+$_['column_name']       = 'Order Totals';
+$_['column_status']     = 'Stare';
+$_['column_sort_order'] = 'Ordine de Sortare';
+$_['column_action']     = 'Acțiune';
+
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica totalurile!';

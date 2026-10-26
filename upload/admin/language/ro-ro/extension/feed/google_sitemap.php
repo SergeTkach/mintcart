@@ -1,12 +1,15 @@
 <?php
+// Heading
+$_['heading_title']    = 'Google Sitemap';
 
-// MintCart
-$_['entry_data_feed'] = 'URL flux de date';
-$_['entry_status'] = 'Stare';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Succes: Ai modificat feed-ul Google Sitemap!';
+$_['text_edit']        = 'Editare Google Sitemap';
 
-// MintCart
-$_['heading_title'] = 'Google Sitemap';
-$_['text_success'] = 'Succes: ați modificat fluxul Google Sitemap!';
-$_['text_edit'] = 'Modifică Google Sitemap';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica fluxul Google Sitemap!';
+// Entry
+$_['entry_status']     = 'Stare';
+$_['entry_data_feed']  = 'Data Feed Url';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica feed-ul Google Sitemap!';

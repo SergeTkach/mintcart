@@ -1,7 +1,6 @@
 <?php
-
-// MintCart
-$_['text_subject'] = '%s - Credit de afiliat';
-$_['text_received'] = 'Ați primit un credit de %s!';
-$_['text_total'] = 'Suma totală a creditului dumneavoastră este acum %s.';
-$_['text_credit'] = 'Creditul din cont poate fi dedus din următoarea achiziție.';
+// Text
+$_['text_subject']  = '%s - Affiliate Credit';
+$_['text_received'] = 'You have received %s credit!';
+$_['text_total']    = 'Your total amount of credit is now %s.';
+$_['text_credit']   = 'Your account credit can deducted from your next purchase.';

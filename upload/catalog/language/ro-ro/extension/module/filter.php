@@ -1,4 +1,3 @@
 <?php
-
-// MintCart
-$_['heading_title'] = 'Rafinare căutare';
+// Heading
+$_['heading_title'] = 'Refine Search';

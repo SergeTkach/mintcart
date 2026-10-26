@@ -1,9 +1,8 @@
 <?php
-
-// MintCart
-$_['text_subject'] = '%s - Actualizare returnare %s';
-$_['text_return_id'] = 'ID returnare:';
-$_['text_date_added'] = 'Data returnării:';
-$_['text_return_status'] = 'Returnarea dumneavoastră a fost actualizată la următoarea stare:';
-$_['text_comment'] = 'Comentariile pentru returnarea dumneavoastră sunt:';
-$_['text_footer'] = 'Vă rugăm să răspundeți la acest e-mail dacă aveți întrebări.';
+// Text
+$_['text_subject']       = '%s - Return Update %s';
+$_['text_return_id']     = 'Număr Returnare:';
+$_['text_date_added']    = 'Return Date:';
+$_['text_return_status'] = 'Your return has been updated to the following status:';
+$_['text_comment']       = 'The comments for your return are:';
+$_['text_footer']        = 'Te rugăm să răspunzi la acest email dacă ai întrebări.';

@@ -1,5 +1,4 @@
 <?php
-
-// MintCart
-$_['text_title'] = 'Per articol';
-$_['text_description'] = 'Tarif de livrare per articol';
+// Text
+$_['text_title']       = 'Per Item';
+$_['text_description'] = 'Per Item Shipping Rate';

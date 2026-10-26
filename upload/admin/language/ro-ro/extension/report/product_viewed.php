@@ -1,16 +1,21 @@
 <?php
+// Heading
+$_['heading_title']    = 'Raport Produse Vizualizate';
 
-// MintCart
-$_['column_model'] = 'Model';
-$_['column_name'] = 'Denumire produs';
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_edit']        = 'Editare Raport Produse Vizualizate';
+$_['text_success']     = 'Succes: Ai resetat raportul produselor vizualizate!';
 
-// MintCart
-$_['heading_title'] = 'Raport de produse vizualizate';
-$_['text_edit'] = 'Modifică raportul de produse vizualizate';
-$_['text_success'] = 'Succes: ați resetat raportul de produse vizualizate!';
-$_['column_viewed'] = 'Vizualizări';
-$_['column_percent'] = 'Procent';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica raportul de produse vizualizate!';
+// Column
+$_['column_name']      = 'Nume Produs';
+$_['column_model']     = 'Model';
+$_['column_viewed']    = 'Vizualizat';
+$_['column_percent']   = 'Percent';
+
+// Entry
+$_['entry_status']     = 'Stare';
+$_['entry_sort_order'] = 'Ordine Sortare';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica raportul produselor vizualizate!';

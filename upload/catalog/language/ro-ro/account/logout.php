@@ -1,7 +1,8 @@
 <?php
+// Heading
+$_['heading_title'] = 'Deconectare Cont';
 
-// MintCart
-$_['heading_title'] = 'Deconectare';
-$_['text_message'] = '<p>Ați fost deconectat din cont. Acum puteți părăsi calculatorul în siguranță.</p><p>Coșul dumneavoastră de cumpărături a fost salvat, iar produsele din el vor fi restaurate când vă autentificați din nou.</p>';
-$_['text_account'] = 'Cont';
-$_['text_logout'] = 'Deconectare';
+// Text
+$_['text_message']  = '<p>Ai fost deconectat de la contul tău. Acum este sigur să părăsești calculatorul.</p><p>Coșul tău de cumpărături a fost salvat, articolele din el vor fi restaurate oricând te conectezi din nou în contul tău</p>';
+$_['text_account']  = 'Cont';
+$_['text_logout']   = 'Deconectare';

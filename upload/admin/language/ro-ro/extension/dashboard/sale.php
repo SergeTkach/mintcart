@@ -1,14 +1,17 @@
 <?php
+// Heading
+$_['heading_title']    = 'Total Vânzări';
 
-// MintCart
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['entry_width'] = 'Lățime';
-$_['text_extension'] = 'Extensii';
-$_['text_view'] = 'Vezi mai multe...';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Succes: Ai modificat dashboard-ul vânzări!';
+$_['text_edit']        = 'Editare Dashboard Vânzări';
+$_['text_view']        = 'Vezi mai mult...';
 
-// MintCart
-$_['heading_title'] = 'Total vânzări';
-$_['text_success'] = 'Succes: ați modificat vânzările din panou!';
-$_['text_edit'] = 'Modifică vânzările din panou';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica vânzările din panou!';
+// Entry
+$_['entry_status']     = 'Stare';
+$_['entry_sort_order'] = 'Ordine Sortare';
+$_['entry_width']      = 'Lăţime';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica dashboard-ul vânzări!';

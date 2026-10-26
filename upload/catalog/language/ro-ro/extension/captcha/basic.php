@@ -1,6 +1,9 @@
 <?php
+// Text
+$_['text_captcha']  = 'Captcha';
 
-// MintCart
-$_['text_captcha'] = 'Captcha';
-$_['entry_captcha'] = 'Introduceți codul din caseta de mai jos';
-$_['error_captcha'] = 'Codul de verificare nu corespunde imaginii!';
+// Entry
+$_['entry_captcha'] = 'Enter the code in the box below';
+
+// Error
+$_['error_captcha'] = 'Verification code does not match the image!';

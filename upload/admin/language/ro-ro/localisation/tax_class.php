@@ -1,27 +1,32 @@
 <?php
+// Heading
+$_['heading_title']     = 'Tax Classes';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
+// Text
+$_['text_success']      = 'Succes: Ai modificat clasele fiscale!';
+$_['text_list']         = 'Tax Class List';
+$_['text_add']          = 'Add Tax Class';
+$_['text_edit']         = 'Edit Tax Class';
+$_['text_tax_class']    = 'Tax Class';
+$_['text_tax_rate']     = 'Cote Taxare';
+$_['text_shipping']     = 'Adresă Livrare';
+$_['text_payment']      = 'Adresă Plată';
+$_['text_store']        = 'Store Address';
+
+// Column
+$_['column_title']      = 'Tax Class Title';
+$_['column_action']     = 'Acțiune';
+
+// Entry
+$_['entry_title']       = 'Tax Class Title';
 $_['entry_description'] = 'Descriere';
-$_['entry_geo_zone'] = 'Zonă geografică';
-$_['text_payment'] = 'Adresă de facturare';
-$_['text_shipping'] = 'Adresă de livrare';
+$_['entry_rate']        = 'Tax Rate';
+$_['entry_based']       = 'Based On';
+$_['entry_geo_zone']    = 'Geo Zone';
+$_['entry_priority']    = 'Prioritate';
 
-// MintCart
-$_['heading_title'] = 'Clase de taxe';
-$_['text_success'] = 'Succes: ați modificat clasele de taxe!';
-$_['text_list'] = 'Listă de clase de taxe';
-$_['text_add'] = 'Adaugă clasă de taxe';
-$_['text_edit'] = 'Modifică clasa de taxe';
-$_['text_tax_class'] = 'Clasă de taxe';
-$_['text_tax_rate'] = 'Cote de taxe';
-$_['text_store'] = 'Adresa magazinului';
-$_['column_title'] = 'Denumire clasă de taxe';
-$_['entry_title'] = 'Denumire clasă de taxe';
-$_['entry_rate'] = 'Cotă de taxă';
-$_['entry_based'] = 'Bazat pe';
-$_['entry_priority'] = 'Prioritate';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica clasele de taxe!';
-$_['error_title'] = 'Denumirea clasei de taxe trebuie să aibă între 3 și 32 de caractere!';
-$_['error_description'] = 'Descrierea trebuie să aibă între 3 și 255 de caractere!';
-$_['error_product'] = 'Atenție: această clasă de taxe nu poate fi ștearsă deoarece este atribuită la %s produse!';
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica clasele fiscale!';
+$_['error_title']       = 'Tax Class Title must be between 3 and 32 characters!';
+$_['error_description'] = 'Description must be between 3 and 255 characters!';
+$_['error_product']     = 'Atenție: Această clasă fiscală nu poate fi ștearsă, deoarece în prezent este atribuită la %s produse!';

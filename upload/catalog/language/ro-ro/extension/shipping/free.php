@@ -1,5 +1,4 @@
 <?php
-
-// MintCart
-$_['text_title'] = 'Livrare gratuită';
-$_['text_description'] = 'Livrare gratuită';
+// Text
+$_['text_title']       = 'Free Shipping';
+$_['text_description'] = 'Free Shipping';

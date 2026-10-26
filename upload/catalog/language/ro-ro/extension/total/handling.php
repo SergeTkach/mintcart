@@ -1,4 +1,3 @@
 <?php
-
-// MintCart
-$_['text_handling'] = 'Taxă de manipulare';
+// Text
+$_['text_handling'] = 'Handling Fee';

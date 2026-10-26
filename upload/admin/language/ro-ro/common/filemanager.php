@@ -1,18 +1,23 @@
 <?php
+// Heading
+$_['heading_title']    = 'Manager Imagini';
 
-// MintCart
-$_['heading_title'] = 'Manager de imagini';
-$_['text_uploaded'] = 'Succes: fișierul a fost încărcat!';
-$_['text_directory'] = 'Succes: dosarul a fost creat!';
-$_['text_delete'] = 'Succes: fișierul sau dosarul a fost șters!';
-$_['entry_search'] = 'Căutare..';
-$_['entry_folder'] = 'Denumire dosar';
-$_['error_permission'] = 'Atenție: permisiune refuzată!';
-$_['error_filename'] = 'Atenție: numele fișierului trebuie să aibă între 3 și 255 de caractere!';
-$_['error_folder'] = 'Atenție: numele dosarului trebuie să aibă între 3 și 255 de caractere!';
-$_['error_exists'] = 'Atenție: există deja un fișier sau un dosar cu același nume!';
-$_['error_directory'] = 'Atenție: dosarul nu există!';
-$_['error_filesize'] = 'Atenție: dimensiune incorectă a fișierului!';
-$_['error_filetype'] = 'Atenție: tip incorect de fișier!';
-$_['error_upload'] = 'Atenție: fișierul nu a putut fi încărcat dintr-un motiv necunoscut!';
-$_['error_delete'] = 'Atenție: nu puteți șterge acest dosar!';
+// Text
+$_['text_uploaded']    = 'Succes: Fișierul tău a fost încărcat!';
+$_['text_directory']   = 'Succes: Director creat!';
+$_['text_delete']      = 'Succes: Fișierul sau directorul tău a fost șters!';
+
+// Entry
+$_['entry_search']     = 'Căutare..';
+$_['entry_folder']     = 'Nume dosar';
+
+// Error
+$_['error_permission'] = 'Atenție: Permisiune Refuzată!';
+$_['error_filename']   = 'Atenție: Numele fișierului trebuie să fie între 3 și 255!';
+$_['error_folder']     = 'Atenție: Numele directorului trebuie să fie între 3 și 255!';
+$_['error_exists']     = 'Atenție: Există deja un fișier sau director cu același nume!';
+$_['error_directory']  = 'Atenție: Directorul nu există!';
+$_['error_filesize']   = 'Atenție: Mărime fișier incorectă!';
+$_['error_filetype']   = 'Atenție: Tip fișier incorect!';
+$_['error_upload']     = 'Atenție: Fișierul nu a putut fi încărcat dintr-un motiv necunoscut!';
+$_['error_delete']     = 'Atenție: Nu poți șterge acest director!';

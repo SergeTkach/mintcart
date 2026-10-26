@@ -1,8 +1,7 @@
 <?php
-
-// MintCart
-$_['text_contact'] = 'Contact';
-
-// MintCart
+// Heading
 $_['heading_title'] = 'Informații';
-$_['text_sitemap'] = 'Harta site-ului';
+
+// Text
+$_['text_contact']  = 'Contactează-ne';
+$_['text_sitemap']  = 'Hartă Site';

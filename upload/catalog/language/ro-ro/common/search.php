@@ -1,4 +1,3 @@
 <?php
-
-// MintCart
-$_['text_search'] = 'Căutare';
+// Text
+$_['text_search'] = 'Search';

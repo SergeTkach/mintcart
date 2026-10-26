@@ -1,5 +1,4 @@
 <?php
-
-// MintCart
-$_['text_title'] = 'Tarif fix';
-$_['text_description'] = 'Tarif fix de livrare';
+// Text
+$_['text_title']       = 'Flat Rate';
+$_['text_description'] = 'Flat Shipping Rate';

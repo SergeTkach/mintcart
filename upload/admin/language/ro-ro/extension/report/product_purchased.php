@@ -1,22 +1,28 @@
 <?php
+// Heading
+$_['heading_title']     = 'Raport Produse Cumpărate';
 
-// MintCart
-$_['column_date_end'] = 'Data încheierii';
-$_['column_date_start'] = 'Data începerii';
-$_['column_model'] = 'Model';
-$_['column_name'] = 'Denumire produs';
-$_['column_quantity'] = 'Cantitate';
-$_['column_total'] = 'Total';
-$_['entry_date_end'] = 'Data încheierii';
-$_['entry_date_start'] = 'Data începerii';
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['text_all_status'] = 'Toate stările';
-$_['text_extension'] = 'Extensii';
-$_['text_filter'] = 'Filtru';
+// Text
+$_['text_extension']    = 'Extensii';
+$_['text_edit']         = 'Editare Raport Produse Cumpărate';
+$_['text_success']      = 'Succes: Ai modificat raportul produselor cumpărate!';
+$_['text_filter']       = 'Filtru';
+$_['text_all_status']   = 'All Statuses';
 
-// MintCart
-$_['heading_title'] = 'Raport de produse cumpărate';
-$_['text_edit'] = 'Modifică raportul de produse cumpărate';
-$_['text_success'] = 'Succes: ați modificat raportul de produse cumpărate!';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica raportul de produse cumpărate!';
+// Column
+$_['column_date_start'] = 'Date Start';
+$_['column_date_end']   = 'Date End';
+$_['column_name']       = 'Nume Produs';
+$_['column_model']      = 'Model';
+$_['column_quantity']   = 'Cantitate';
+$_['column_total']      = 'Total';
+
+// Entry
+$_['entry_date_start']  = 'Dată de Început';
+$_['entry_date_end']    = 'Dată de Sfârșit';
+$_['entry_status']      = 'Order Status';
+$_['entry_status']      = 'Stare';
+$_['entry_sort_order']  = 'Ordine Sortare';
+
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica raportul produselor cumpărate!';

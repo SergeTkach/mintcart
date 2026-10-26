@@ -1,17 +1,20 @@
 <?php
+// Heading
+$_['heading_title']     = 'Events';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_sort_order'] = 'Ordine de sortare';
-$_['column_status'] = 'Stare';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica extensiile!';
-$_['text_action'] = 'Acțiune';
+// Text
+$_['text_success']      = 'Success: You have modified events!';
+$_['text_list']         = 'Event List';
+$_['text_event']        = 'Events are used by extensions to override the default functionality of your store. If you have issues you can disable or enable the events here.';
+$_['text_info']         = 'Informații Eveniment';
+$_['text_trigger']      = 'Trigger';
+$_['text_action']       = 'Action';
 
-// MintCart
-$_['heading_title'] = 'Evenimente';
-$_['text_success'] = 'Succes: ați modificat evenimentele!';
-$_['text_list'] = 'Listă de evenimente';
-$_['text_event'] = 'Evenimentele sunt folosite de extensii pentru a suprascrie funcționalitatea implicită a magazinului. Dacă aveți probleme, puteți dezactiva sau activa evenimentele aici.';
-$_['text_info'] = 'Informații despre eveniment';
-$_['text_trigger'] = 'Declanșator';
-$_['column_code'] = 'Cod eveniment';
+// Column
+$_['column_code']       = 'Event Code';
+$_['column_status']     = 'Stare';
+$_['column_sort_order'] = 'Ordine de Sortare';
+$_['column_action']     = 'Acțiune';
+
+// Error
+$_['error_permission']  = 'Warning: You do not have permission to modify extensions!';

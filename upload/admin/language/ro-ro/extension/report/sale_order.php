@@ -1,27 +1,32 @@
 <?php
+// Heading
+$_['heading_title']     = 'Sales Report';
 
-// MintCart
-$_['column_date_end'] = 'Data încheierii';
-$_['column_date_start'] = 'Data începerii';
-$_['column_orders'] = 'Nr. comenzi';
-$_['column_total'] = 'Total';
-$_['entry_date_end'] = 'Data încheierii';
-$_['entry_date_start'] = 'Data începerii';
-$_['entry_group'] = 'Grupare după';
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['text_all_status'] = 'Toate stările';
-$_['text_day'] = 'Zile';
-$_['text_extension'] = 'Extensii';
-$_['text_filter'] = 'Filtru';
-$_['text_month'] = 'Luni';
-$_['text_week'] = 'Săptămâni';
-$_['text_year'] = 'Ani';
+// Text
+$_['text_extension']    = 'Extensii';
+$_['text_edit']         = 'Edit Sales Report';
+$_['text_success']      = 'Success: You have modified sales report!';
+$_['text_filter']       = 'Filtru';
+$_['text_year']         = 'Ani';
+$_['text_month']        = 'Months';
+$_['text_week']         = 'Săptămâni';
+$_['text_day']          = 'Zile';
+$_['text_all_status']   = 'All Statuses';
 
-// MintCart
-$_['heading_title'] = 'Raport de vânzări';
-$_['text_edit'] = 'Modifică raportul de vânzări';
-$_['text_success'] = 'Succes: ați modificat raportul de vânzări!';
-$_['column_products'] = 'Nr. produse';
-$_['column_tax'] = 'Taxe';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica raportul de vânzări!';
+// Column
+$_['column_date_start'] = 'Date Start';
+$_['column_date_end']   = 'Date End';
+$_['column_orders']     = 'No. Orders';
+$_['column_products']   = 'No. Products';
+$_['column_tax']        = 'Tax';
+$_['column_total']      = 'Total';
+
+// Entry
+$_['entry_date_start']  = 'Dată de Început';
+$_['entry_date_end']    = 'Dată de Sfârșit';
+$_['entry_group']       = 'Group By';
+$_['entry_status']      = 'Stare';
+$_['entry_sort_order']  = 'Ordine Sortare';
+
+// Error
+$_['error_permission']  = 'Warning: You do not have permission to modify sales report!';

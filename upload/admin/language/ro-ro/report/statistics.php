@@ -1,21 +1,24 @@
 <?php
+// Heading
+$_['heading_title']         = 'Statistics';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_value'] = 'Valoare';
+// Text
+$_['text_success']          = 'Success: You have modified statistics!';
+$_['text_list']             = 'Statistics List';
+$_['text_order_sale']       = 'Order Sales';
+$_['text_order_processing'] = 'Orders Processing';
+$_['text_order_complete']   = 'Orders Complete';
+$_['text_order_other']      = 'Orders Other';
+$_['text_returns']          = 'Returns';
+$_['text_customer']         = 'Customers Waiting for Approval';
+$_['text_affiliate']        = 'Afiliați în Așteptarea Aprobării';
+$_['text_product']          = 'Out of stock products';
+$_['text_review']           = 'Recenzii în Așteptare';
 
-// MintCart
-$_['heading_title'] = 'Statistici';
-$_['text_success'] = 'Succes: ați modificat statisticile!';
-$_['text_list'] = 'Listă de statistici';
-$_['text_order_sale'] = 'Vânzări din comenzi';
-$_['text_order_processing'] = 'Comenzi în procesare';
-$_['text_order_complete'] = 'Comenzi finalizate';
-$_['text_order_other'] = 'Alte comenzi';
-$_['text_returns'] = 'Returnări';
-$_['text_customer'] = 'Clienți în așteptarea aprobării';
-$_['text_affiliate'] = 'Afiliați în așteptarea aprobării';
-$_['text_product'] = 'Produse fără stoc';
-$_['text_review'] = 'Recenzii în așteptare';
-$_['column_name'] = 'Denumire statistică';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica statisticile!';
+// Column
+$_['column_name']           = 'Statistics Name';
+$_['column_value']	        = 'Value';
+$_['column_action']         = 'Acțiune';
+
+// Error
+$_['error_permission']      = 'Warning: You do not have permission to modify statistics!';

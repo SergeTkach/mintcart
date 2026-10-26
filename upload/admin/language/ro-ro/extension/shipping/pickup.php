@@ -1,13 +1,16 @@
 <?php
+// Heading
+$_['heading_title']    = 'Pickup From Store';
 
-// MintCart
-$_['entry_geo_zone'] = 'Zonă geografică';
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Success: You have modified pickup from store!';
+$_['text_edit']        = 'Edit Pickup From Store Shipping';
 
-// MintCart
-$_['heading_title'] = 'Ridicare din magazin';
-$_['text_success'] = 'Succes: ați modificat ridicarea din magazin!';
-$_['text_edit'] = 'Modifică livrarea prin ridicare din magazin';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica ridicarea din magazin!';
+// Entry
+$_['entry_geo_zone']   = 'Geo Zone';
+$_['entry_status']     = 'Stare';
+$_['entry_sort_order'] = 'Ordine Sortare';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify pickup from store!';

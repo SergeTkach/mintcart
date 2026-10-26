@@ -1,16 +1,19 @@
 <?php
+// Heading
+$_['heading_title']    = 'Google reCAPTCHA';
 
-// MintCart
-$_['entry_status'] = 'Stare';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Succes: Ai modificat Google reCAPTCHA!';
+$_['text_edit']        = 'Editare Google reCAPTCHA';
+$_['text_signup']      = 'Accesează <a href="https://www.google.com/recaptcha/intro/index.html" target="_blank"><u>pagina Google reCAPTCHA</u></a> si înregistrează-te cu website-ul tău.';
 
-// MintCart
-$_['heading_title'] = 'Google reCAPTCHA';
-$_['text_success'] = 'Succes: ați modificat Google reCAPTCHA!';
-$_['text_edit'] = 'Modifică Google reCAPTCHA';
-$_['text_signup'] = 'Accesați <a href="https://www.google.com/recaptcha/intro/index.html" target="_blank"><u>pagina Google reCAPTCHA</u></a> și înregistrați-vă site-ul.';
-$_['entry_key'] = 'Cheia site-ului';
-$_['entry_secret'] = 'Cheia secretă';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica Google reCAPTCHA!';
-$_['error_key'] = 'Cheia este obligatorie!';
-$_['error_secret'] = 'Cheia secretă este obligatorie!';
+// Entry
+$_['entry_key']        = 'Site key';
+$_['entry_secret']     = 'Secret key';
+$_['entry_status']     = 'Stare';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica Google reCAPTCHA!';
+$_['error_key']        = 'Key required!';
+$_['error_secret']     = 'Secret required!';

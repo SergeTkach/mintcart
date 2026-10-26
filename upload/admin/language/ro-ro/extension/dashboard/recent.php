@@ -1,19 +1,25 @@
 <?php
+// Heading
+$_['heading_title']     = 'Ultimele Comenzi';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_customer'] = 'Client';
-$_['column_date_added'] = 'Data adăugării';
-$_['column_order_id'] = 'ID comandă';
-$_['column_status'] = 'Stare';
-$_['column_total'] = 'Total';
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['entry_width'] = 'Lățime';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']    = 'Extensii';
+$_['text_success']      = 'Succes: Ai modificat dashboard-ul comenzi recente!';
+$_['text_edit']         = 'Editare Dashboard Comenzi Recente';
 
-// MintCart
-$_['heading_title'] = 'Ultimele comenzi';
-$_['text_success'] = 'Succes: ați modificat ultimele comenzi din panou!';
-$_['text_edit'] = 'Modifică ultimele comenzi din panou';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica ultimele comenzi din panou!';
+// Column
+$_['column_order_id']   = 'Număr Comandă';
+$_['column_customer']   = 'Customer';
+$_['column_status']     = 'Stare';
+$_['column_total']      = 'Total';
+$_['column_date_added'] = 'Data Adăugării';
+$_['column_action']     = 'Acțiune';
+
+
+// Entry
+$_['entry_status']      = 'Stare';
+$_['entry_sort_order']  = 'Ordine Sortare';
+$_['entry_width']       = 'Lăţime';
+
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica dashboard-ul comenzi recente!';

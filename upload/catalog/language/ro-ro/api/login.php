@@ -1,6 +1,7 @@
 <?php
+// Text
+$_['text_success'] = 'Succes: Sesiune a API a pornit cu succes!';
 
-// MintCart
-$_['text_success'] = 'Succes: sesiunea API a fost pornită!';
-$_['error_key'] = 'Atenție: cheie API incorectă!';
-$_['error_ip'] = 'Atenție: adresa dumneavoastră IP %s nu are permisiunea de a accesa acest API!';
+// Error
+$_['error_key']    = 'Atenție: Cheie API incorectă!';
+$_['error_ip']     = 'Atenție: IP-ul tău %s nu este permis să acceseze acest API!';

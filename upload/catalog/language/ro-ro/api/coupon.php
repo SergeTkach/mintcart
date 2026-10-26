@@ -1,8 +1,7 @@
 <?php
+// Text
+$_['text_success']     = 'Succes: Cuponul tău de reducere a fost aplicat!';
 
-// MintCart
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a accesa API-ul!';
-
-// MintCart
-$_['text_success'] = 'Succes: reducerea cuponului a fost aplicată!';
-$_['error_coupon'] = 'Atenție: cuponul este invalid, a expirat sau și-a atins limita de utilizare!';
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a accesa API!';
+$_['error_coupon']     = 'Atenție: Cuponul este fie incorect, expirat sau a atins la limita de utilizare!';

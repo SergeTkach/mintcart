@@ -1,16 +1,21 @@
 <?php
+// Heading
+$_['heading_title']    = 'Weight Based Shipping';
 
-// MintCart
-$_['entry_geo_zone'] = 'Zonă geografică';
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['entry_tax_class'] = 'Clasă de taxe';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Success: You have modified weight based shipping!';
+$_['text_edit']        = 'Edit Weight Based Shipping';
 
-// MintCart
-$_['heading_title'] = 'Livrare în funcție de greutate';
-$_['text_success'] = 'Succes: ați modificat livrarea în funcție de greutate!';
-$_['text_edit'] = 'Modifică livrarea în funcție de greutate';
-$_['entry_rate'] = 'Tarife';
-$_['help_rate'] = 'Exemplu: 5:10.00,7:12.00 Greutate:Cost,Greutate:Cost etc.';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica livrarea în funcție de greutate!';
+// Entry
+$_['entry_rate']       = 'Rates';
+$_['entry_tax_class']  = 'Clasa Fiscală';
+$_['entry_geo_zone']   = 'Geo Zone';
+$_['entry_status']     = 'Stare';
+$_['entry_sort_order'] = 'Ordine Sortare';
+
+// Help
+$_['help_rate']        = 'Example: 5:10.00,7:12.00 Weight:Cost,Weight:Cost, etc..';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify weight based shipping!';

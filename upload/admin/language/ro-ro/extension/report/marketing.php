@@ -1,21 +1,26 @@
 <?php
+// Heading
+$_['heading_title']    = 'Raport de Marketing';
 
-// MintCart
-$_['column_code'] = 'Cod';
-$_['column_orders'] = 'Nr. comenzi';
-$_['column_total'] = 'Total';
-$_['entry_date_end'] = 'Data încheierii';
-$_['entry_date_start'] = 'Data începerii';
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['text_all_status'] = 'Toate stările';
-$_['text_extension'] = 'Extensii';
-$_['text_filter'] = 'Filtru';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_edit']        = 'Editare Raport de Marketing';
+$_['text_success']     = 'Succes: Ai modificat raportul de marketing!';
+$_['text_filter']      = 'Filtru';
+$_['text_all_status']  = 'All Statuses';
 
-// MintCart
-$_['heading_title'] = 'Raport de marketing';
-$_['text_edit'] = 'Modifică raportul de marketing';
-$_['text_success'] = 'Succes: ați modificat raportul de marketing!';
-$_['column_campaign'] = 'Denumire campanie';
-$_['column_clicks'] = 'Clicuri';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica raportul de marketing!';
+// Column
+$_['column_campaign']  = 'Campaign Name';
+$_['column_code']      = 'Code';
+$_['column_clicks']    = 'Clicks';
+$_['column_orders']    = 'No. Orders';
+$_['column_total']     = 'Total';
+
+// Entry
+$_['entry_date_start'] = 'Dată de Început';
+$_['entry_date_end']   = 'Dată de Sfârșit';
+$_['entry_status']     = 'Stare';
+$_['entry_sort_order'] = 'Ordine Sortare';
+
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica raportul de marketing!';

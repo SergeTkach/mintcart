@@ -1,25 +1,26 @@
 <?php
+// Heading
+$_['heading_title']            = 'Informații Lay-Buy';
 
-// MintCart
-$_['column_status'] = 'Stare';
-$_['text_status'] = 'Stare:';
+// Text
+$_['text_reference_info']      = 'Reference Information';
+$_['text_laybuy_ref_no']       = 'Număr de Referință Lay-Buy:';
+$_['text_paypal_profile_id']   = 'PayPal Profile ID:';
+$_['text_payment_plan']        = 'Payment Plan';
+$_['text_status']              = 'Status:';
+$_['text_amount']              = 'Amount:';
+$_['text_downpayment_percent'] = 'Down Payment Percent:';
+$_['text_months']              = 'Luni:';
+$_['text_downpayment_amount']  = 'Down Payment Amount:';
+$_['text_payment_amounts']     = 'Payment Amounts:';
+$_['text_first_payment_due']   = 'First Payment Due:';
+$_['text_last_payment_due']    = 'Last Payment Due:';
+$_['text_downpayment']         = 'Down Payment';
+$_['text_month']               = 'Lună';
 
-// MintCart
-$_['heading_title'] = 'Informații Lay-Buy';
-$_['text_reference_info'] = 'Informații de referință';
-$_['text_laybuy_ref_no'] = 'ID de referință Lay-Buy:';
-$_['text_paypal_profile_id'] = 'ID profil PayPal:';
-$_['text_payment_plan'] = 'Plan de plată';
-$_['text_amount'] = 'Sumă:';
-$_['text_downpayment_percent'] = 'Procent avans:';
-$_['text_months'] = 'Luni:';
-$_['text_downpayment_amount'] = 'Suma avansului:';
-$_['text_payment_amounts'] = 'Sumele plăților:';
-$_['text_first_payment_due'] = 'Prima plată scadentă:';
-$_['text_last_payment_due'] = 'Ultima plată scadentă:';
-$_['text_downpayment'] = 'Avans';
-$_['text_month'] = 'Lună';
-$_['column_instalment'] = 'Rată';
-$_['column_amount'] = 'Sumă';
-$_['column_date'] = 'Dată';
-$_['column_pp_trans_id'] = 'ID tranzacție PayPal';
+// Column
+$_['column_instalment']        = 'Instalment';
+$_['column_amount']            = 'Valoare';
+$_['column_date']              = 'Date';
+$_['column_pp_trans_id']       = 'PayPal Transaction ID';
+$_['column_status']            = 'Stare';

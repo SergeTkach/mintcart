@@ -1,20 +1,23 @@
 <?php
+// Heading
+$_['heading_title']     = 'Theme Editor';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_date_added'] = 'Data adăugării';
-$_['column_store'] = 'Magazin';
-$_['text_default'] = 'Implicit';
+// Text
+$_['text_success']      = 'Succes: Ai modificat temele!';
+$_['text_edit']         = 'Editare Temă';
+$_['text_store']        = 'Alege-ți magazinul';
+$_['text_template']     = 'Alege un șablon';
+$_['text_default']      = 'Implicit';
+$_['text_history']      = 'Istoric Temă';
+$_['text_twig']         = 'Editorul de teme utilizează limbajul pentru șabloane Twig. Poți citi despre <a href="http://twig.sensiolabs.org/documentation" target="_blank" class="alert-link">Sintaxa Twig aici</a>.';
 
-// MintCart
-$_['heading_title'] = 'Editor de teme';
-$_['text_success'] = 'Succes: ați modificat temele!';
-$_['text_edit'] = 'Modifică tema';
-$_['text_store'] = 'Alegeți magazinul';
-$_['text_template'] = 'Alegeți un șablon';
-$_['text_history'] = 'Istoricul temei';
-$_['text_twig'] = 'Editorul de teme folosește limbajul de șabloane Twig. Puteți citi despre <a href="https://twig.symfony.com/doc/" target="_blank" class="alert-link">sintaxa Twig aici</a>.';
-$_['column_route'] = 'Rută';
-$_['column_theme'] = 'Temă';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica editorul de teme!';
-$_['error_twig'] = 'Atenție: puteți salva doar fișiere .twig!';
+// Column
+$_['column_store']      = 'Store';
+$_['column_route']      = 'Route';
+$_['column_theme']      = 'Theme';
+$_['column_date_added'] = 'Data Adăugării';
+$_['column_action']     = 'Acțiune';
+
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica editorul de teme!';
+$_['error_twig']        = 'Atenție: Poți salva numai fișiere .twig!';

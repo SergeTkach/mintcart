@@ -1,28 +1,35 @@
 <?php
+// Heading
+$_['heading_title']     = 'Urmărire Marketing';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_code'] = 'Cod';
-$_['column_date_added'] = 'Data adăugării';
-$_['entry_date_added'] = 'Data adăugării';
-$_['text_filter'] = 'Filtru';
+// Text
+$_['text_success']      = 'Succes: Ai modificat urmărirea marketing-ului!';
+$_['text_list']         = 'Listă Urmărire Marketing';
+$_['text_add']          = 'Adaugă Urmărire Marketing';
+$_['text_edit']         = 'Editare Urmărire Marketing';
+$_['text_filter']       = 'Filtru';
+		
+// Column
+$_['column_name']       = 'Campaign Name';
+$_['column_code']       = 'Code';
+$_['column_clicks']     = 'Clicks';
+$_['column_orders']     = 'Orders';
+$_['column_date_added'] = 'Data Adăugării';
+$_['column_action']     = 'Acțiune';
 
-// MintCart
-$_['heading_title'] = 'Urmărire marketing';
-$_['text_success'] = 'Succes: ați modificat urmărirea marketingului!';
-$_['text_list'] = 'Listă de urmăriri de marketing';
-$_['text_add'] = 'Adaugă urmărire de marketing';
-$_['text_edit'] = 'Modifică urmărirea de marketing';
-$_['column_name'] = 'Denumire campanie';
-$_['column_clicks'] = 'Clicuri';
-$_['column_orders'] = 'Comenzi';
-$_['entry_name'] = 'Denumire campanie';
-$_['entry_description'] = 'Descrierea campaniei';
-$_['entry_code'] = 'Cod de urmărire';
-$_['entry_example'] = 'Exemple';
-$_['help_code'] = 'Codul de urmărire folosit pentru a urmări campaniile de marketing.';
-$_['help_example'] = 'Pentru ca sistemul să poată urmări recomandările, adăugați codul de urmărire la sfârșitul URL-ului care duce la site-ul dumneavoastră.';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica urmărirea marketingului!';
-$_['error_name'] = 'Campania trebuie să aibă între 1 și 32 de caractere!';
-$_['error_code'] = 'Codul de urmărire este obligatoriu!';
-$_['error_exists'] = 'Codul de urmărire este folosit de o altă campanie!';
+// Entry
+$_['entry_name']        = 'Campaign Name';
+$_['entry_description'] = 'Campaign Description';
+$_['entry_code']        = 'Tracking Code';
+$_['entry_example']     = 'Examples';
+$_['entry_date_added']  = 'Data Adăugării';
+
+// Help
+$_['help_code']         = 'Codul de urmărire care va fi utilizat pentru a urmări campaniile de marketing.';
+$_['help_example']      = 'So the system can track referrals you need to add the tracking code to the end of the URL linking to your site.';
+
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica urmărirea marketing-ului!';
+$_['error_name']        = 'Campaign must be between 1 and 32 characters!';
+$_['error_code']        = 'Tracking Code required!';
+$_['error_exists']      = 'Tracking code is being used by another campaign!';

@@ -1,43 +1,48 @@
 <?php
+// Heading
+$_['heading_title']                    = 'Default Store Theme';
 
-// MintCart
-$_['entry_height'] = 'Înălțime';
-$_['entry_status'] = 'Stare';
-$_['entry_width'] = 'Lățime';
-$_['text_extension'] = 'Extensii';
-$_['text_product'] = 'Produse';
+// Text
+$_['text_extension']                   = 'Extensii';
+$_['text_success']                     = 'Success: You have modified the default store theme!';
+$_['text_edit']                        = 'Editare Temă Implicită Magazin';
+$_['text_general']                     = 'General';
+$_['text_product']                     = 'Products';
+$_['text_image']                       = 'Imagini';
 
-// MintCart
-$_['heading_title'] = 'Tema implicită a magazinului';
-$_['text_success'] = 'Succes: ați modificat tema implicită a magazinului!';
-$_['text_edit'] = 'Modifică tema implicită a magazinului';
-$_['text_general'] = 'General';
-$_['text_image'] = 'Imagini';
-$_['entry_directory'] = 'Dosarul temei';
-$_['entry_product_limit'] = 'Elemente implicite pe pagină';
-$_['entry_product_description_length'] = 'Limita descrierii în listă';
-$_['entry_image_category'] = 'Dimensiunea imaginii categoriei (L x Î)';
-$_['entry_image_thumb'] = 'Dimensiunea miniaturii produsului (L x Î)';
-$_['entry_image_popup'] = 'Dimensiunea imaginii popup a produsului (L x Î)';
-$_['entry_image_product'] = 'Dimensiunea imaginii produsului în listă (L x Î)';
-$_['entry_image_additional'] = 'Dimensiunea imaginii suplimentare a produsului (L x Î)';
-$_['entry_image_related'] = 'Dimensiunea imaginii produsului similar (L x Î)';
-$_['entry_image_compare'] = 'Dimensiunea imaginii la comparare (L x Î)';
-$_['entry_image_wishlist'] = 'Dimensiunea imaginii din lista de dorințe (L x Î)';
-$_['entry_image_cart'] = 'Dimensiunea imaginii din coș (L x Î)';
-$_['entry_image_location'] = 'Dimensiunea imaginii magazinului (L x Î)';
-$_['help_directory'] = 'Acest câmp există doar pentru ca temele mai vechi să fie compatibile cu noul sistem de teme. Puteți seta dosarul temei folosit pentru setările de dimensiune a imaginilor definite aici.';
-$_['help_product_limit'] = 'Stabilește câte elemente din catalog se afișează pe pagină (produse, categorii etc.)';
-$_['help_product_description_length'] = 'În lista de produse, limita de caractere a descrierii scurte (categorii, oferte etc.)';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica tema implicită a magazinului!';
-$_['error_limit'] = 'Limita de produse este obligatorie!';
-$_['error_image_thumb'] = 'Dimensiunile miniaturii produsului sunt obligatorii!';
-$_['error_image_popup'] = 'Dimensiunile imaginii popup a produsului sunt obligatorii!';
-$_['error_image_product'] = 'Dimensiunile listei de produse sunt obligatorii!';
-$_['error_image_category'] = 'Dimensiunile listei de categorii sunt obligatorii!';
-$_['error_image_additional'] = 'Dimensiunile imaginii suplimentare a produsului sunt obligatorii!';
-$_['error_image_related'] = 'Dimensiunile imaginii produsului similar sunt obligatorii!';
-$_['error_image_compare'] = 'Dimensiunile imaginii la comparare sunt obligatorii!';
-$_['error_image_wishlist'] = 'Dimensiunile imaginii din lista de dorințe sunt obligatorii!';
-$_['error_image_cart'] = 'Dimensiunile imaginii din coș sunt obligatorii!';
-$_['error_image_location'] = 'Dimensiunile imaginii magazinului sunt obligatorii!';
+// Entry
+$_['entry_directory']                  = 'Theme Directory';
+$_['entry_status']                     = 'Stare';
+$_['entry_product_limit']              = 'Default Items Per Page';
+$_['entry_product_description_length'] = 'List Description Limit';
+$_['entry_image_category']             = 'Category Image Size (W x H)';
+$_['entry_image_thumb']                = 'Product Image Thumb Size (W x H)';
+$_['entry_image_popup']                = 'Product Image Popup Size (W x H)';
+$_['entry_image_product']              = 'Product Image List Size (W x H)';
+$_['entry_image_additional']           = 'Additional Product Image Size (W x H)';
+$_['entry_image_related']              = 'Related Product Image Size (W x H)';
+$_['entry_image_compare']              = 'Compare Image Size (W x H)';
+$_['entry_image_wishlist']             = 'Wish List Image Size (W x H)';
+$_['entry_image_cart']                 = 'Cart Image Size (W x H)';
+$_['entry_image_location']             = 'Store Image Size (W x H)';
+$_['entry_width']                      = 'Lăţime';
+$_['entry_height']                     = 'Înălţime';
+
+// Help
+$_['help_directory']                   = 'This field is only to enable older themes to be compatible with the new theme system. You can set the theme directory to use on the image size settings defined here.';
+$_['help_product_limit']               = 'Determines how many catalog items are shown per page (products, categories, etc)';
+$_['help_product_description_length']  = 'In the list view, short description character limit (categories, special etc)';
+
+// Error
+$_['error_permission']                 = 'Warning: You do not have permission to modify the default store theme!';
+$_['error_limit']                      = 'Product Limit required!';
+$_['error_image_thumb']                = 'Product Image Thumb Size dimensions required!';
+$_['error_image_popup']                = 'Product Image Popup Size dimensions required!';
+$_['error_image_product']              = 'Product List Size dimensions required!';
+$_['error_image_category']             = 'Category List Size dimensions required!';
+$_['error_image_additional']           = 'Additional Product Image Size dimensions required!';
+$_['error_image_related']              = 'Related Product Image Size dimensions required!';
+$_['error_image_compare']              = 'Compare Image Size dimensions required!';
+$_['error_image_wishlist']             = 'Wish List Image Size dimensions required!';
+$_['error_image_cart']                 = 'Cart Image Size dimensions required!';
+$_['error_image_location']             = 'Store Image Size dimensions required!';

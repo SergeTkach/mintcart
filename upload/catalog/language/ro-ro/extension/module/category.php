@@ -1,4 +1,3 @@
 <?php
-
-// MintCart
+// Heading
 $_['heading_title'] = 'Categorii';

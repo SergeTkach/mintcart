@@ -1,22 +1,27 @@
 <?php
+// Heading
+$_['heading_title']         = 'Customer Transaction Report';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_customer'] = 'Nume client';
-$_['column_customer_group'] = 'Grup de clienți';
-$_['column_email'] = 'E-mail';
-$_['column_status'] = 'Stare';
-$_['column_total'] = 'Total';
-$_['entry_customer'] = 'Client';
-$_['entry_date_end'] = 'Data încheierii';
-$_['entry_date_start'] = 'Data începerii';
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['text_extension'] = 'Extensii';
-$_['text_filter'] = 'Filtru';
+// Column
+$_['text_extension']        = 'Extensii';
+$_['text_edit']             = 'Edit Customer Transaction Report';
+$_['text_success']          = 'Success: You have modified customer credit report!';
+$_['text_filter']           = 'Filtru';
 
-// MintCart
-$_['heading_title'] = 'Raport de tranzacții ale clienților';
-$_['text_edit'] = 'Modifică raportul de tranzacții ale clienților';
-$_['text_success'] = 'Succes: ați modificat raportul de credit al clienților!';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica raportul de credit al clienților!';
+// Column
+$_['column_customer']       = 'Customer Name';
+$_['column_email']          = 'E-Mail';
+$_['column_customer_group'] = 'Customer Group';
+$_['column_status']         = 'Stare';
+$_['column_total']          = 'Total';
+$_['column_action']         = 'Acțiune';
+
+// Entry
+$_['entry_date_start']      = 'Dată de Început';
+$_['entry_date_end']        = 'Dată de Sfârșit';
+$_['entry_customer']        = 'Customer';
+$_['entry_status']          = 'Stare';
+$_['entry_sort_order']      = 'Ordine Sortare';
+
+// Error
+$_['error_permission']      = 'Atenție: Nu ai permisiunea de a modifica raportul de credit al clientului!';

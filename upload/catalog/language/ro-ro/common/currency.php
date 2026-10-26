@@ -1,4 +1,3 @@
 <?php
-
-// MintCart
-$_['text_currency'] = 'Monedă';
+// Text
+$_['text_currency'] = 'Currency';

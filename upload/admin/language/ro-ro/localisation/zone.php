@@ -1,25 +1,30 @@
 <?php
+// Heading
+$_['heading_title']          = 'Zones';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['entry_country'] = 'Țară';
-$_['entry_status'] = 'Stare';
+// Text
+$_['text_success']           = 'Success: You have modified zones!';
+$_['text_list']              = 'Zone List';
+$_['text_add']               = 'Add Zone';
+$_['text_edit']              = 'Edit Zone';
 
-// MintCart
-$_['heading_title'] = 'Zone';
-$_['text_success'] = 'Succes: ați modificat zonele!';
-$_['text_list'] = 'Listă de zone';
-$_['text_add'] = 'Adaugă zonă';
-$_['text_edit'] = 'Modifică zona';
-$_['column_name'] = 'Denumire zonă';
-$_['column_code'] = 'Cod zonă';
-$_['column_country'] = 'Țară';
-$_['entry_name'] = 'Denumire zonă';
-$_['entry_code'] = 'Cod zonă';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica zonele!';
-$_['error_name'] = 'Denumirea zonei trebuie să aibă între 1 și 128 de caractere!';
-$_['error_default'] = 'Atenție: această zonă nu poate fi ștearsă deoarece este zona implicită a magazinului!';
-$_['error_store'] = 'Atenție: această zonă nu poate fi ștearsă deoarece este atribuită la %s magazine!';
-$_['error_address'] = 'Atenție: această zonă nu poate fi ștearsă deoarece este atribuită la %s înregistrări din agenda de adrese!';
-$_['error_affiliate'] = 'Atenție: această zonă nu poate fi ștearsă deoarece este atribuită la %s afiliați!';
-$_['error_zone_to_geo_zone'] = 'Atenție: această zonă nu poate fi ștearsă deoarece este atribuită la %s asocieri zonă–zonă geografică!';
+// Column
+$_['column_name']            = 'Zone Name';
+$_['column_code']            = 'Zone Code';
+$_['column_country']         = 'Country';
+$_['column_action']          = 'Acțiune';
+
+// Entry
+$_['entry_name']             = 'Zone Name';
+$_['entry_code']             = 'Zone Code';
+$_['entry_country']          = 'Țară';
+$_['entry_status']           = 'Stare';
+
+// Error
+$_['error_permission']       = 'Warning: You do not have permission to modify zones!';
+$_['error_name']             = 'Nume Zonă trebuie să fie între 1 şi 128 de caractere!';
+$_['error_default']          = 'Atenție: Această zonă nu poate fi ștearsă, deoarece în prezent este atribuită ca zonă implicită magazin!';
+$_['error_store']            = 'Atenție: Această zonă nu poate fi ștearsă, deoarece în prezent este atribuită la %s magazine!';
+$_['error_address']          = 'Atenție: Această zonă nu poate fi ștearsă, deoarece în prezent este atribuită la %s intrări în agendă!';
+$_['error_affiliate']        = 'Atenție: Această zonă nu poate fi ștearsă, deoarece în prezent este atribuită la %s afiliați!';
+$_['error_zone_to_geo_zone'] = 'Atenție: Această zonă nu poate fi ștearsă, deoarece în prezent este atribuită la %s zone din zonele geografice!';

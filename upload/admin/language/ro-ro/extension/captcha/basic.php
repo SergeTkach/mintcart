@@ -1,11 +1,14 @@
 <?php
+// Heading
+$_['heading_title']    = 'Basic Captcha';
 
-// MintCart
-$_['entry_status'] = 'Stare';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Succes: Ai modificat Basic Captcha!';
+$_['text_edit']        = 'Editare Basic Captcha';
 
-// MintCart
-$_['heading_title'] = 'Captcha de bază';
-$_['text_success'] = 'Succes: ați modificat Captcha de bază!';
-$_['text_edit'] = 'Modifică Captcha de bază';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica Captcha de bază!';
+// Entry
+$_['entry_status']     = 'Stare';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica Basic Captcha!';

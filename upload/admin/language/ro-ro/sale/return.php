@@ -1,56 +1,63 @@
 <?php
+// Heading
+$_['heading_title']        = 'Returnări Produse';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_comment'] = 'Comentariu';
-$_['column_customer'] = 'Client';
-$_['column_date_added'] = 'Data adăugării';
-$_['column_date_modified'] = 'Data modificării';
-$_['column_model'] = 'Model';
-$_['column_order_id'] = 'ID comandă';
-$_['column_product'] = 'Produs';
-$_['column_status'] = 'Stare';
-$_['entry_comment'] = 'Comentariu';
-$_['entry_customer'] = 'Client';
-$_['entry_date_added'] = 'Data adăugării';
-$_['entry_email'] = 'E-mail';
-$_['entry_firstname'] = 'Prenume';
-$_['entry_lastname'] = 'Nume';
-$_['entry_order_id'] = 'ID comandă';
-$_['entry_product'] = 'Produs';
-$_['entry_quantity'] = 'Cantitate';
-$_['entry_telephone'] = 'Telefon';
-$_['error_email'] = 'Adresa de e-mail pare să nu fie validă!';
-$_['error_firstname'] = 'Prenumele trebuie să aibă între 1 și 32 de caractere!';
-$_['error_lastname'] = 'Numele trebuie să aibă între 1 și 32 de caractere!';
-$_['error_telephone'] = 'Telefonul trebuie să aibă între 3 și 32 de caractere!';
-$_['error_warning'] = 'Atenție: verificați cu atenție formularul pentru erori!';
-$_['help_product'] = '(Completare automată)';
+// Text
+$_['text_success']         = 'Success: You have modified returns!';
+$_['text_list']            = 'Product Return List';
+$_['text_add']             = 'Add Product Return';
+$_['text_edit']            = 'Edit Product Return';
+$_['text_opened']          = 'Deschis';
+$_['text_unopened']        = 'Unopened';
+$_['text_order']           = 'Informații Comandă';
+$_['text_product']         = 'Informații Produs &amp; Motivul Returnării';
+$_['text_history']         = 'Istoric';
+$_['text_history_add']     = 'Adaugă Istoric';
 
-// MintCart
-$_['heading_title'] = 'Returnări de produse';
-$_['text_success'] = 'Succes: ați modificat returnările!';
-$_['text_list'] = 'Listă de returnări de produse';
-$_['text_add'] = 'Adaugă returnare de produs';
-$_['text_edit'] = 'Modifică returnarea de produs';
-$_['text_opened'] = 'Deschis';
-$_['text_unopened'] = 'Nedeschis';
-$_['text_order'] = 'Informații comandă';
-$_['text_product'] = 'Informații produs și motivul returnării';
-$_['text_history'] = 'Istoric';
-$_['text_history_add'] = 'Adaugă în istoric';
-$_['column_return_id'] = 'ID returnare';
-$_['column_notify'] = 'Client notificat';
-$_['entry_date_ordered'] = 'Data comenzii';
-$_['entry_model'] = 'Model';
-$_['entry_opened'] = 'Deschis';
-$_['entry_return_reason'] = 'Motivul returnării';
-$_['entry_return_action'] = 'Acțiunea de returnare';
-$_['entry_return_status'] = 'Starea returnării';
-$_['entry_notify'] = 'Notifică clientul';
-$_['entry_return_id'] = 'ID returnare';
-$_['entry_date_modified'] = 'Data modificării';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica returnările!';
-$_['error_order_id'] = 'ID-ul comenzii este obligatoriu!';
-$_['error_product'] = 'Denumirea produsului trebuie să aibă între 4 și 254 de caractere!';
-$_['error_model'] = 'Modelul produsului trebuie să aibă între 4 și 63 de caractere!';
+// Column
+$_['column_return_id']     = 'Număr Returnare';
+$_['column_order_id']      = 'Număr Comandă';
+$_['column_customer']      = 'Customer';
+$_['column_product']       = 'Produs';
+$_['column_model']         = 'Model';
+$_['column_status']        = 'Stare';
+$_['column_date_added']    = 'Data Adăugării';
+$_['column_date_modified'] = 'Date Modified';
+$_['column_comment']       = 'Comentariu';
+$_['column_notify']        = 'Customer Notified';
+$_['column_action']        = 'Acțiune';
+
+// Entry
+$_['entry_customer']       = 'Customer';
+$_['entry_order_id']       = 'Order ID';
+$_['entry_date_ordered']   = 'Data Comenzii';
+$_['entry_firstname']      = 'Prenume';
+$_['entry_lastname']       = 'Nume de Familie';
+$_['entry_email']          = 'E-Mail';
+$_['entry_telephone']      = 'Telefon';
+$_['entry_product']        = 'Produs';
+$_['entry_model']          = 'Model';
+$_['entry_quantity']       = 'Cantitate';
+$_['entry_opened']         = 'Opened';
+$_['entry_comment']        = 'Comment';
+$_['entry_return_reason']  = 'Motiv Returnare';
+$_['entry_return_action']  = 'Return Action';
+$_['entry_return_status']  = 'Return Status';
+$_['entry_notify']         = 'Notify Customer';
+$_['entry_return_id']      = 'Return ID';
+$_['entry_date_added']     = 'Data Adăugării';
+$_['entry_date_modified']  = 'Date Modified';
+
+// Help
+$_['help_product']         = '(Autocompletare)';
+
+// Error
+$_['error_warning']        = 'Atenție: Te rugăm să verifici cu atenție formularul pentru erori!';
+$_['error_permission']     = 'Warning: You do not have permission to modify returns!';
+$_['error_order_id']       = 'Număr Comandă necesar!';
+$_['error_firstname']      = 'Prenumele trebuie să fie între 1 și 32 de caractere!';
+$_['error_lastname']       = 'Numele de Familie trebuie să fie între 1 și 32 de caractere!';
+$_['error_email']          = 'Adresa E-Mail nu pare să fie validă!';
+$_['error_telephone']      = 'Telefonul trebuie să fie între 3 și 32 de caractere!';
+$_['error_product']        = 'Nume Produs trebuie să fie mai mare de 3 și mai mic de 255 de caractere!';
+$_['error_model']          = 'Model Produs trebuie să fie mai mare de 3 și mai mic de 64 de caractere!';

@@ -1,13 +1,17 @@
 <?php
+// Heading
+$_['heading_title']     = 'Payments';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_sort_order'] = 'Ordine de sortare';
-$_['column_status'] = 'Stare';
+// Text
+$_['text_success']      = 'Succes: Ai modificat plățile!';
+$_['text_list']         = 'Payment List';
 
-// MintCart
-$_['heading_title'] = 'Plăți';
-$_['text_success'] = 'Succes: ați modificat plățile!';
-$_['text_list'] = 'Listă de metode de plată';
-$_['column_name'] = 'Metodă de plată';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica plățile!';
+
+// Column
+$_['column_name']       = 'Payment Method';
+$_['column_status']     = 'Stare';
+$_['column_sort_order'] = 'Ordine de Sortare';
+$_['column_action']     = 'Acțiune';
+
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica plățile!';

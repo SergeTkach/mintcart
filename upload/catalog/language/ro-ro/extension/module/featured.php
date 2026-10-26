@@ -1,7 +1,6 @@
 <?php
+// Heading
+$_['heading_title'] = 'Featured';
 
-// MintCart
-$_['text_tax'] = 'Fără TVA:';
-
-// MintCart
-$_['heading_title'] = 'Recomandate';
+// Text
+$_['text_tax']      = 'Fără Taxe:';

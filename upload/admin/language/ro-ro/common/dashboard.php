@@ -1,5 +1,6 @@
 <?php
+// Heading
+$_['heading_title'] = 'Dashboard';
 
-// MintCart
-$_['heading_title'] = 'Panou de control';
-$_['error_install'] = 'Atenție: dosarul install există încă și trebuie șters din motive de securitate!';
+// Error
+$_['error_install'] = 'Atenție: Directorul de instalare încă există și ar trebui șters din motive de securitate!';

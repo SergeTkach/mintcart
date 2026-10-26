@@ -1,22 +1,29 @@
 <?php
+// Heading
+$_['heading_title']     = 'Extension Installer';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_date_added'] = 'Data adăugării';
-$_['error_filetype'] = 'Tip de fișier invalid!';
-$_['error_install'] = 'Se instalează o extensie; așteptați câteva secunde înainte de a încerca din nou!';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica extensiile!';
-$_['error_upload'] = 'Fișierul nu a putut fi încărcat!';
+// Text
+$_['text_progress']     = 'Install Progress';
+$_['text_upload']       = 'Upload your extensions';
+$_['text_history']      = 'Install History';
+$_['text_success']      = 'Success: The extension has been installed!';
+$_['text_install']      = 'Installing';
 
-// MintCart
-$_['heading_title'] = 'Instalator de extensii';
-$_['text_progress'] = 'Progresul instalării';
-$_['text_upload'] = 'Încărcați extensiile';
-$_['text_history'] = 'Istoricul instalărilor';
-$_['text_success'] = 'Succes: extensia a fost instalată!';
-$_['text_install'] = 'Se instalează';
-$_['column_filename'] = 'Nume fișier';
-$_['entry_upload'] = 'Încarcă fișier';
-$_['entry_progress'] = 'Progres';
-$_['help_upload'] = 'Necesită un fișier de modificare cu extensia „.ocmod.zip”.';
-$_['error_file'] = 'Fișierul nu a fost găsit!';
+// Column
+$_['column_filename']   = 'Filename';
+$_['column_date_added'] = 'Data Adăugării';
+$_['column_action']     = 'Acțiune';
+
+// Entry
+$_['entry_upload']      = 'Încarcă Fișier';
+$_['entry_progress']    = 'Progres';
+
+// Help
+$_['help_upload']       = 'Requires a modification file with extension \'.ocmod.zip\'.';
+
+// Error
+$_['error_permission']  = 'Warning: You do not have permission to modify extensions!';
+$_['error_install']     = 'Extension installation taking place please wait a few seconds before trying to install!';
+$_['error_upload']      = 'File could not be uploaded!';
+$_['error_filetype']    = 'Tip fișier incorect!';
+$_['error_file']        = 'File could not be found!';

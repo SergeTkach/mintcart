@@ -1,27 +1,32 @@
 <?php
+// Heading
+$_['heading_title']    = 'Language Editor';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_language'] = 'Limbă';
-$_['column_store'] = 'Magazin';
-$_['column_value'] = 'Valoare';
-$_['entry_language'] = 'Limbă';
-$_['entry_store'] = 'Magazin';
-$_['entry_value'] = 'Valoare';
-$_['text_default'] = 'Implicit';
+// Text
+$_['text_success']     = 'Succes: Ai modificat editorul de limbă!';
+$_['text_list']        = 'Translation List';
+$_['text_edit']        = 'Editare Traducere';
+$_['text_add']         = 'Adaugă Traducere';
+$_['text_default']     = 'Implicit';
+$_['text_store']       = 'Store';
+$_['text_language']    = 'Language';
 
-// MintCart
-$_['heading_title'] = 'Editor de limbi';
-$_['text_success'] = 'Succes: ați modificat editorul de limbi!';
-$_['text_list'] = 'Listă de traduceri';
-$_['text_edit'] = 'Modifică traducerea';
-$_['text_add'] = 'Adaugă traducere';
-$_['text_store'] = 'Magazin';
-$_['text_language'] = 'Limbă';
-$_['column_route'] = 'Rută';
-$_['column_key'] = 'Cheie';
-$_['entry_route'] = 'Rută';
-$_['entry_key'] = 'Cheie';
-$_['entry_default'] = 'Implicit';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica editorul de limbi!';
-$_['error_key'] = 'Cheia trebuie să aibă între 3 și 64 de caractere!';
+// Column
+$_['column_store']     = 'Store';
+$_['column_language']  = 'Limbă';
+$_['column_route']     = 'Route';
+$_['column_key']       = 'Key';
+$_['column_value']     = 'Value';
+$_['column_action']    = 'Acțiune';
+
+// Entry
+$_['entry_store']      = 'Magazin';
+$_['entry_language']   = 'Language';
+$_['entry_route']      = 'Rută';
+$_['entry_key']        = 'Key';
+$_['entry_default']    = 'Default';
+$_['entry_value']      = 'Valoare';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica editorul de limbă!';
+$_['error_key']        = 'Cheia trebuie să fie între 3 și 64 de caractere!';

@@ -1,18 +1,23 @@
 <?php
+// Heading
+$_['heading_title']     = 'Uploads';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_date_added'] = 'Data adăugării';
-$_['entry_date_added'] = 'Data adăugării';
+// Text
+$_['text_success']      = 'Success: You have modified uploads!';
+$_['text_list']         = 'Upload List';
 
-// MintCart
-$_['heading_title'] = 'Încărcări';
-$_['text_success'] = 'Succes: ați modificat încărcările!';
-$_['text_list'] = 'Listă de încărcări';
-$_['column_name'] = 'Denumire încărcare';
-$_['column_filename'] = 'Nume fișier';
-$_['entry_name'] = 'Denumire încărcare';
-$_['entry_filename'] = 'Nume fișier';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica încărcările!';
-$_['error_upload'] = 'Încărcare invalidă!';
-$_['error_file'] = 'Fișierul de încărcat nu a fost găsit!';
+// Column
+$_['column_name']       = 'Upload Name';
+$_['column_filename']   = 'Filename';
+$_['column_date_added'] = 'Data Adăugării';
+$_['column_action']     = 'Acțiune';
+
+// Entry
+$_['entry_name']        = 'Upload Name';
+$_['entry_filename']    = 'Nume Fișier';
+$_['entry_date_added']  = 'Data Adăugării';
+
+// Error
+$_['error_permission']  = 'Warning: You do not have permission to modify uploads!';
+$_['error_upload']      = 'Invalid upload!';
+$_['error_file']        = 'Upload file is not found!';

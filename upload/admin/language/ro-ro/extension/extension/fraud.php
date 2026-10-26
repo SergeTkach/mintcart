@@ -1,12 +1,15 @@
 <?php
+// Heading
+$_['heading_title']    = 'Anti-Fraudă';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_status'] = 'Stare';
+// Text
+$_['text_success']     = 'Succes: Ai modificat anti-frauda!';
+$_['text_list']        = 'Lista Anti-Fraudă';
 
-// MintCart
-$_['heading_title'] = 'Antifraudă';
-$_['text_success'] = 'Succes: ați modificat modulele antifraudă!';
-$_['text_list'] = 'Listă de module antifraudă';
-$_['column_name'] = 'Denumire modul antifraudă';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica modulele antifraudă!';
+// Column
+$_['column_name']      = 'Nume Anti-Fraudă';
+$_['column_status']    = 'Stare';
+$_['column_action']    = 'Acțiune';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica anti-frauda!';

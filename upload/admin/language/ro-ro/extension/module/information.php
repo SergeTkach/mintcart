@@ -1,11 +1,14 @@
 <?php
+// Heading
+$_['heading_title']    = 'Informații';
 
-// MintCart
-$_['entry_status'] = 'Stare';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Succes: Ai modificat modulul de informare!';
+$_['text_edit']        = 'Editare Modul Informații';
 
-// MintCart
-$_['heading_title'] = 'Informații';
-$_['text_success'] = 'Succes: ați modificat modulul Informații!';
-$_['text_edit'] = 'Modifică modulul Informații';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica modulul Informații!';
+// Entry
+$_['entry_status']     = 'Stare';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica modulul de informații!';

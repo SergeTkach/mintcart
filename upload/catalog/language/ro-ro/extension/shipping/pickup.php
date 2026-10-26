@@ -1,5 +1,4 @@
 <?php
-
-// MintCart
-$_['text_title'] = 'Ridicare personală';
-$_['text_description'] = 'Ridicare din magazin';
+// Text
+$_['text_title']       = 'Pickup';
+$_['text_description'] = 'Pickup From Store';

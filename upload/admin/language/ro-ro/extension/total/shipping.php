@@ -1,13 +1,16 @@
 <?php
+// Heading
+$_['heading_title']    = 'Livrare';
 
-// MintCart
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Success: You have modified shipping total!';
+$_['text_edit']        = 'Edit Shipping Total';
 
-// MintCart
-$_['heading_title'] = 'Livrare';
-$_['text_success'] = 'Succes: ați modificat totalul Livrare!';
-$_['text_edit'] = 'Modifică totalul Livrare';
-$_['entry_estimator'] = 'Estimator de livrare';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica totalul Livrare!';
+// Entry
+$_['entry_estimator']  = 'Shipping Estimator';
+$_['entry_status']     = 'Stare';
+$_['entry_sort_order'] = 'Ordine Sortare';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify shipping total!';

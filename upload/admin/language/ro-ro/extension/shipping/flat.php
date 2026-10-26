@@ -1,15 +1,18 @@
 <?php
+// Heading
+$_['heading_title']    = 'Flat Rate';
 
-// MintCart
-$_['entry_geo_zone'] = 'Zonă geografică';
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['entry_tax_class'] = 'Clasă de taxe';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Success: You have modified flat rate shipping!';
+$_['text_edit']        = 'Edit Flat Rate Shipping';
 
-// MintCart
-$_['heading_title'] = 'Tarif fix';
-$_['text_success'] = 'Succes: ați modificat livrarea cu tarif fix!';
-$_['text_edit'] = 'Modifică livrarea cu tarif fix';
-$_['entry_cost'] = 'Cost';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica livrarea cu tarif fix!';
+// Entry
+$_['entry_cost']       = 'Cost';
+$_['entry_tax_class']  = 'Clasa Fiscală';
+$_['entry_geo_zone']   = 'Geo Zone';
+$_['entry_status']     = 'Stare';
+$_['entry_sort_order'] = 'Ordine Sortare';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify flat rate shipping!';

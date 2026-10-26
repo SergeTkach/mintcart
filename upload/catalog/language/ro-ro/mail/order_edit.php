@@ -1,12 +1,9 @@
 <?php
-
-// MintCart
-$_['text_comment'] = 'Comentariile pentru comanda dumneavoastră sunt:';
-$_['text_date_added'] = 'Data adăugării:';
-$_['text_order_id'] = 'ID comandă:';
-
-// MintCart
-$_['text_subject'] = '%s - Actualizare comandă %s';
-$_['text_order_status'] = 'Comanda dumneavoastră a fost actualizată la următoarea stare:';
-$_['text_link'] = 'Pentru a vedea comanda, faceți clic pe linkul de mai jos:';
-$_['text_footer'] = 'Vă rugăm să răspundeți la acest e-mail dacă aveți întrebări.';
+// Text
+$_['text_subject']      = '%s - Actualizarea Comenzi %s';
+$_['text_order_id']     = 'Număr Comandă:';
+$_['text_date_added']   = 'Data Adăugării:';
+$_['text_order_status'] = 'Comanda dvs. a fost actualizată la următoarea stare:';
+$_['text_comment']      = 'Comentariile pentru comanda ta sunt:';
+$_['text_link']         = 'Pentru a vizualiza comanda click pe link-ul de mai jos:';
+$_['text_footer']       = 'Te rugăm să răspunzi la acest email dacă ai întrebări.';

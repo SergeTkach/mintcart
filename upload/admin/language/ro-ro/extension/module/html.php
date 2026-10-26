@@ -1,15 +1,18 @@
 <?php
+// Heading
+$_['heading_title']     = 'HTML Content';
 
-// MintCart
+// Text
+$_['text_extension']    = 'Extensii';
+$_['text_success']      = 'Succes: Ai modificat modulul de Conținut HTML!';
+$_['text_edit']         = 'Editare Modul Conținut HTML';
+
+// Entry
+$_['entry_name']        = 'Module Name';
+$_['entry_title']       = 'Heading Title';
 $_['entry_description'] = 'Descriere';
-$_['entry_name'] = 'Denumirea modulului';
-$_['entry_status'] = 'Stare';
-$_['error_name'] = 'Denumirea modulului trebuie să aibă între 3 și 64 de caractere!';
-$_['text_extension'] = 'Extensii';
+$_['entry_status']      = 'Stare';
 
-// MintCart
-$_['heading_title'] = 'Conținut HTML';
-$_['text_success'] = 'Succes: ați modificat modulul Conținut HTML!';
-$_['text_edit'] = 'Modifică modulul Conținut HTML';
-$_['entry_title'] = 'Titlu';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica modulul Conținut HTML!';
+// Error
+$_['error_permission']  = 'Atenție: Nu ai permisiunea de a modifica modulul de conținut HTML!';
+$_['error_name']        = 'Numele Modulului trebuie să fie între 3 și 64 de caractere!';

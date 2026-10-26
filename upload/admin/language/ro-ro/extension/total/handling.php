@@ -1,16 +1,21 @@
 <?php
+// Heading
+$_['heading_title']    = 'Comision Manipulare';
 
-// MintCart
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['entry_tax_class'] = 'Clasă de taxe';
-$_['entry_total'] = 'Total comandă';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Success: You have modified handling fee total!';
+$_['text_edit']        = 'Edit Handling Fee Total';
 
-// MintCart
-$_['heading_title'] = 'Taxă de manipulare';
-$_['text_success'] = 'Succes: ați modificat totalul Taxă de manipulare!';
-$_['text_edit'] = 'Modifică totalul Taxă de manipulare';
-$_['entry_fee'] = 'Taxă';
-$_['help_total'] = 'Totalul comenzii care trebuie atins pentru ca acest total să devină activ.';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica totalul Taxă de manipulare!';
+// Entry
+$_['entry_total']      = 'Order Total';
+$_['entry_fee']        = 'Fee';
+$_['entry_tax_class']  = 'Clasa Fiscală';
+$_['entry_status']     = 'Stare';
+$_['entry_sort_order'] = 'Ordine Sortare';
+
+// Help
+$_['help_total']       = 'The checkout total the order must reach before this order total becomes active.';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify handling fee total!';

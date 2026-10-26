@@ -1,11 +1,16 @@
 <?php
+// Heading
+$_['heading_title']  = 'Schimbă Parola';
 
-// MintCart
-$_['heading_title'] = 'Schimbare parolă';
-$_['text_password'] = 'Parola dumneavoastră';
-$_['text_success'] = 'Succes: parola dumneavoastră a fost actualizată.';
-$_['entry_confirm'] = 'Confirmare parolă';
+// Text
+$_['text_account']   = 'Cont';
+$_['text_password']  = 'Parola Ta';
+$_['text_success']   = 'Succes: Parola ta a fost actualizată cu succes.';
+
+// Entry
 $_['entry_password'] = 'Parolă';
-$_['error_confirm'] = 'Confirmarea parolei nu corespunde parolei!';
-$_['error_password'] = 'Parola trebuie să aibă între 4 și 20 de caractere!';
-$_['text_account'] = 'Cont';
+$_['entry_confirm']  = 'Confirmare Parolă';
+
+// Error
+$_['error_password'] = 'Parola trebuie să fie între 4 și 20 de caractere!';
+$_['error_confirm']  = 'Confirmarea parolei nu se potrivește cu parola!';

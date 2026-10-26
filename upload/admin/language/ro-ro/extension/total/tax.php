@@ -1,12 +1,15 @@
 <?php
+// Heading
+$_['heading_title']    = 'Taxes';
 
-// MintCart
-$_['entry_sort_order'] = 'Ordine de sortare';
-$_['entry_status'] = 'Stare';
-$_['text_extension'] = 'Extensii';
+// Text
+$_['text_extension']   = 'Extensii';
+$_['text_success']     = 'Success: You have modified taxes total!';
+$_['text_edit']        = 'Edit Tax Total';
 
-// MintCart
-$_['heading_title'] = 'Taxe';
-$_['text_success'] = 'Succes: ați modificat totalul Taxe!';
-$_['text_edit'] = 'Modifică totalul Taxe';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica totalul Taxe!';
+// Entry
+$_['entry_status']     = 'Stare';
+$_['entry_sort_order'] = 'Ordine Sortare';
+
+// Error
+$_['error_permission'] = 'Warning: You do not have permission to modify taxes total!';

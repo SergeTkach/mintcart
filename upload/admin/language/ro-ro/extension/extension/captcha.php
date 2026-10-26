@@ -1,12 +1,15 @@
 <?php
+// Heading
+$_['heading_title']    = 'Captchas';
 
-// MintCart
-$_['column_action'] = 'Acțiune';
-$_['column_status'] = 'Stare';
+// Text
+$_['text_success']     = 'Succes: Ai modificat captchas!';
+$_['text_list']        = 'Listă Captcha';
 
-// MintCart
-$_['heading_title'] = 'Captcha';
-$_['text_success'] = 'Succes: ați modificat captcha!';
-$_['text_list'] = 'Listă de captcha';
-$_['column_name'] = 'Denumire captcha';
-$_['error_permission'] = 'Atenție: nu aveți permisiunea de a modifica captcha!';
+// Column
+$_['column_name']      = 'Nume Captcha';
+$_['column_status']    = 'Stare';
+$_['column_action']    = 'Acțiune';
+
+// Error
+$_['error_permission'] = 'Atenție: Nu ai permisiunea de a modifica captchas!';
