@@ -18,5 +18,29 @@
  "ro-ro": {
   "name": "Română",
   "locale": "ro_RO.UTF-8,ro_RO,ro-ro,romanian"
+ },
+ "cs-cz": {
+  "name": "Čeština",
+  "locale": "cs_CZ.UTF-8,cs_CZ,cs-cz,czech"
+ },
+ "pl-pl": {
+  "name": "Polski",
+  "locale": "pl_PL.UTF-8,pl_PL,pl-pl,polish"
+ },
+ "el-gr": {
+  "name": "Ελληνικά",
+  "locale": "el_GR.UTF-8,el_GR,el-gr,greek"
+ },
+ "bg-bg": {
+  "name": "Български",
+  "locale": "bg_BG.UTF-8,bg_BG,bg-bg,bulgarian"
+ },
+ "nl-nl": {
+  "name": "Nederlands",
+  "locale": "nl_NL.UTF-8,nl_NL,nl-nl,dutch"
+ },
+ "pt-br": {
+  "name": "Português (Brasil)",
+  "locale": "pt_BR.UTF-8,pt_BR,pt-br,portuguese"
  }
 }

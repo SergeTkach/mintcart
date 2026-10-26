@@ -1,0 +1,132 @@
+<?php
+// Heading
+$_['heading_title']              = 'Παραγγελίες';
+
+// Text
+$_['text_success']               = 'Τροποποιήσατε τις Παραγγελίες με επιτυχία!';
+$_['text_list']                  = 'Λίστα Παραγγελιών';
+$_['text_add']                   = 'Νέα Παραγγελία';
+$_['text_edit']                  = 'Επεξεργασία Παραγγελίας';
+$_['text_filter']                = 'Φίλτρο';
+$_['text_order_detail']          = 'Λεπτομέρειες Παραγγελίας';
+$_['text_customer_detail']       = 'Λεπτομέρειες Πελάτη';
+$_['text_option']                = 'Επιλογές';
+$_['text_store']                 = 'Κατάστημα';
+$_['text_date_added']            = 'Ημερομηνία Δημιουργίας';
+$_['text_payment_method']        = 'Τρόπος Πληρωμής';
+$_['text_shipping_method']       = 'Τρόπος Αποστολής';
+$_['text_customer']              = 'Πελάτης';
+$_['text_customer_group']        = 'Κατηγορία Πελάτη';
+$_['text_email']                 = 'E-Mail';
+$_['text_telephone']             = 'Τηλέφωνο';
+$_['text_fax']                   = 'Φαχ';
+$_['text_invoice']               = 'Τιμολόγιο';
+$_['text_reward']                = 'Πόντοι Ανταμοιβής';
+$_['text_affiliate']             = 'Συνεργάτης';
+$_['text_order']                 = 'Παραγγελία (#%s)';
+$_['text_payment_address']       = 'Διευθυνση Πληρωμής';
+$_['text_shipping_address']      = 'Διευθυνση Αποστολής';
+$_['text_comment']               = 'Σημείωση Πελάτη';
+$_['text_history']               = 'Ιστορικό Παραγγελίας';
+$_['text_history_add']           = 'Προσθήκη Ιστορικού Παραγγελίας';
+$_['text_account_custom_field']  = 'Προσαρμοσμένα πεδία λογαρισμού';
+$_['text_payment_custom_field']  = 'Προσαρμοσμένα Πεδία Διεύθυνσης Πληρωμής';
+$_['text_shipping_custom_field'] = 'Προσαρμοσμένα Πεδία Διεύθυνσης Αποστολής';
+$_['text_browser']               = 'Περιηγητής';
+$_['text_ip']                    = 'Διεύθυνση IP';
+$_['text_forwarded_ip']          = 'Προωθημένη IP (forward IP)';
+$_['text_user_agent']            = 'Μέσο Πελάτη (User Agent)';
+$_['text_accept_language']       = 'Αποδοχή Γλώσσας<br> (Accept Language)';
+$_['text_order_id']              = 'Αριθμός Παραγγελίας:';
+$_['text_website']               = 'Ιστοσελίδα:';
+$_['text_invoice_no']            = 'Αριθμός Τιμολογίου.';
+$_['text_invoice_date']          = 'Ημερομηνία Τιμολογίου:';
+$_['text_sku']                   = 'SKU:';
+$_['text_upc']                   = 'UPC:';
+$_['text_ean']                   = 'EAN:';
+$_['text_jan']                   = 'JAN:';
+$_['text_isbn']                  = 'ISBN:';
+$_['text_mpn']                   = 'MPN:';
+$_['text_missing']               = 'Παραγγελίες που λείπουν';
+$_['text_default']               = 'Προεπιλογή';
+$_['text_product']               = 'Νέο Προιόν';
+$_['text_voucher']               = 'Νέα Δωροεπιταγή';
+$_['text_shipping']              = 'Αποστολή';
+$_['text_contact']               = 'Επικοινωνία';
+$_['text_reward_added']          = 'Οι πόντοι ανταμοιβής προστέθηκαν!';
+$_['text_reward_removed']        = 'Οι πόντοι ανταμοιβής αφαιρέθηκαν!';
+$_['text_commission_added']      = 'Η προμήθεια προστέθηκε!';
+$_['text_commission_removed']    = 'Η προμήθεια αφαιρέθηκε!';
+$_['text_restock']               = 'Το απόθεμα των προϊόντων έχει ανανεωθεί!';
+$_['text_upload']                = 'Το αρχείο σας έχει ανέβει με επιτυχία!';
+$_['text_picklist']              = 'Δελτίο αποστολής';
+
+// Column
+$_['column_order_id']            = 'Αριθμός Παραγγελίας';
+$_['column_customer']            = 'Πελάτης';
+$_['column_status']              = 'Κατάσταση';
+$_['column_date_added']          = 'Ημερομηνία Δημιουργίας';
+$_['column_date_modified']       = 'Ημερομηνία Επεξεργασίας';
+$_['column_total']               = 'Σύνολο';
+$_['column_product']             = 'Προιόν';
+$_['column_model']               = 'Κωδικός Προιόντος';
+$_['column_quantity']            = 'Ποσότητα';
+$_['column_price']               = 'Τιμή Μονάδας';
+$_['column_comment']             = 'Σχόλια';
+$_['column_notify']              = 'Ενημερώθηκε ο Πελάτης';
+$_['column_location']            = 'Τοποθεσία';
+$_['column_reference']           = 'Παραπομπή';
+$_['column_action']              = 'Ενέργεια';
+$_['column_weight']              = 'Βάρος προϊόντος';
+
+// Entry
+$_['entry_store']                = 'Κατάστημα';
+$_['entry_customer']             = 'Πελάτης';
+$_['entry_customer_group']       = 'Ομάδα Πελατών';
+$_['entry_firstname']            = 'Όνομα';
+$_['entry_lastname']             = 'Επίθετο';
+$_['entry_email']                = 'E-Mail';
+$_['entry_telephone']            = 'Τηλέφωνο';
+$_['entry_address']              = 'Επιλογή Διεύθυνσης';
+$_['entry_company']              = 'Επωνυμία';
+$_['entry_address_1']            = 'Διευθυνση 1';
+$_['entry_address_2']            = 'Διευθυνση 2';
+$_['entry_city']                 = 'Πόλη';
+$_['entry_postcode']             = 'Τ.Κ.';
+$_['entry_country']              = 'Χώρα';
+$_['entry_zone']                 = 'Περιφέρεια / Περιοχή';
+$_['entry_zone_code']            = 'Κωδικός Περιφέρειας / Περιοχής';
+$_['entry_product']              = 'Επιλέξτε Προϊόν';
+$_['entry_option']               = 'Επιλογές Προϊόντος';
+$_['entry_quantity']             = 'Ποσότητα';
+$_['entry_to_name']              = 'Όνομα Παραλήπτη';
+$_['entry_to_email']             = 'E-mail Παραλήπτη';
+$_['entry_from_name']            = 'Όνομα Αποστολέα';
+$_['entry_from_email']           = 'E-mail Αποστολέα';
+$_['entry_theme']                = 'Θέμα Δωροεπιταγής';
+$_['entry_message']              = 'Μήνυμα';
+$_['entry_amount']               = 'Ποσό';
+$_['entry_affiliate']            = 'Συνεργάτης';
+$_['entry_order_status']         = 'Κατάσταση Παραγγελίας';
+$_['entry_notify']               = 'Ενημέρωση Πελάτη';
+$_['entry_override']             = 'Παράκαμψη';
+$_['entry_comment']              = 'Σχόλια';
+$_['entry_currency']             = 'Νόμισμα';
+$_['entry_shipping_method']      = 'Τρόπος Αποστολής';
+$_['entry_payment_method']       = 'Τρόπος Πληρωμής';
+$_['entry_coupon']               = 'Κουπόνι';
+$_['entry_voucher']              = 'Δωροεπιταγή';
+$_['entry_reward']               = 'Πόντοι Ανταμοιβής';
+$_['entry_order_id']             = 'Αριθμός Παραγγελίας';
+$_['entry_total']                = 'Σύνολο';
+$_['entry_date_added']           = 'Ημερομηνία Δημιουργίας';
+$_['entry_date_modified']        = 'Ημερομηνία Επεξεργασίας';
+
+// Help
+$_['help_override']              = 'Παράκαμψη περιορισμού αλλαγής κατάστασης παραγγελίας από επεκτάσεις καταπολέμησης απάτης.';
+
+// Error
+$_['error_warning']              = 'Παρακαλώ ελέγξτε προσεκτικά τη φόρμα για λάθη!';
+$_['error_permission']           = 'Δεν έχετε Δικαίωμα για Επεξεργασία της Παραγγελίας';
+$_['error_action']               = 'Η Ενέργεια Δεν ολοκληρώθηκε!';
+$_['error_filetype']             = 'Μη έγκυρος τύπος αρχείού!';

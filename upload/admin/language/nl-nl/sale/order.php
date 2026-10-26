@@ -1,0 +1,132 @@
+<?php
+// Heading
+$_['heading_title']              = 'Bestellingen';
+
+// Text
+$_['text_success']               = 'Je hebt bestellingen bijgewerkt!';
+$_['text_list']                  = 'Lijst van bestellingen';
+$_['text_add']                   = 'Bestelling toevoegen';
+$_['text_edit']                  = 'Bestelling bewerken';
+$_['text_filter']                = 'Filteren';
+$_['text_order_detail']          = 'Bestelling informatie';
+$_['text_customer_detail']       = 'Klantinformatie';
+$_['text_option']                = 'Opties';
+$_['text_store']                 = 'Winkel';
+$_['text_date_added']            = 'Datum toegevoegd';
+$_['text_payment_method']        = 'Betaalmethode';
+$_['text_shipping_method']       = 'Verzendmethode';
+$_['text_customer']              = 'Klant';
+$_['text_customer_group']        = 'Klantengroep';
+$_['text_email']                 = 'E-mail';
+$_['text_telephone']             = 'Telefoonnummer';
+$_['text_fax']                   = 'Fax';
+$_['text_invoice']               = 'Factuur';
+$_['text_reward']                = 'Spaarpunten';
+$_['text_affiliate']             = 'Affiliate';
+$_['text_order']                 = 'Bestelling (#%s)';
+$_['text_payment_address']       = 'Betaaladres';
+$_['text_shipping_address']      = 'Afleveradres';
+$_['text_comment']               = 'Opmerking';
+$_['text_history']               = 'Bestelgeschiedenis';
+$_['text_history_add']           = 'Bestelgeschiedenis toevoegen';
+$_['text_account_custom_field']  = 'Account eigen velden';
+$_['text_payment_custom_field']  = 'Betaaladres eigen velden';
+$_['text_shipping_custom_field'] = 'Afleveradres eigen velden';
+$_['text_browser']               = 'Browser';
+$_['text_ip']                    = 'IP adres';
+$_['text_forwarded_ip']          = 'Forwarded IP';
+$_['text_user_agent']            = 'User Agent';
+$_['text_accept_language']       = 'Accepteer taal';
+$_['text_order_id']              = 'Bestelling ID:';
+$_['text_website']               = 'Website:';
+$_['text_invoice_no']            = 'Factuurnummer';
+$_['text_invoice_date']          = 'Factuurdatum';
+$_['text_sku']                   = 'SKU:';
+$_['text_upc']                   = 'UPC:';
+$_['text_ean']                   = 'EAN:';
+$_['text_jan']                   = 'JAN:';
+$_['text_isbn']                  = 'ISBN:';
+$_['text_mpn']                   = 'MPN:';
+$_['text_missing']               = 'Ontbrekende bestellingen';
+$_['text_default']               = 'Standaard';
+$_['text_product']               = 'Product(en) toevoegen';
+$_['text_voucher']               = 'Waardebon(nen) toevoegen';
+$_['text_shipping']              = 'Verzending';
+$_['text_contact']               = 'Contact';
+$_['text_reward_added']          = 'Spaarpunten toegevoegd!';
+$_['text_reward_removed']        = 'Spaarpunten verwijderd!';
+$_['text_commission_added']      = 'Commissie toegevoegd!';
+$_['text_commission_removed']    = 'Commissie verwijderd!';
+$_['text_restock']               = 'Producten opnieuw aan voorraad toegevoegd!';
+$_['text_upload']                = 'Bestand succesvol geüpload!';
+$_['text_picklist']              = 'Dispatch note';
+
+// Column
+$_['column_order_id']            = 'Bestelling ID';
+$_['column_customer']            = 'Klant';
+$_['column_status']              = 'Status';
+$_['column_date_added']          = 'Datum toegevoegd';
+$_['column_date_modified']       = 'Laatst bijgewerkt';
+$_['column_total']               = 'Totaal';
+$_['column_product']             = 'Product';
+$_['column_model']               = 'Model';
+$_['column_quantity']            = 'Aantal';
+$_['column_price']               = 'Prijs per eenheid';
+$_['column_comment']             = 'Opmerking';
+$_['column_notify']              = 'Klant op de hoogte';
+$_['column_location']            = 'Locatie';
+$_['column_reference']           = 'Referentie';
+$_['column_action']              = 'Actie';
+$_['column_weight']              = 'Product gewicht';
+
+// Entry
+$_['entry_store']                = 'Winkel';
+$_['entry_customer']             = 'Klant';
+$_['entry_customer_group']       = 'Klantengroep';
+$_['entry_firstname']            = 'Voornaam';
+$_['entry_lastname']             = 'Achternaam';
+$_['entry_email']                = 'E-mail';
+$_['entry_telephone']            = 'Telefoonnummer';
+$_['entry_address']              = 'Kies een adres';
+$_['entry_company']              = 'Bedrijf';
+$_['entry_address_1']            = 'Adres 1';
+$_['entry_address_2']            = 'Adres 2';
+$_['entry_city']                 = 'Plaats';
+$_['entry_postcode']             = 'Postcode';
+$_['entry_country']              = 'Land';
+$_['entry_zone']                 = 'Provincie';
+$_['entry_zone_code']            = 'Provinciecode';
+$_['entry_product']              = 'Product kiezen';
+$_['entry_option']               = 'Optie(s) kiezen';
+$_['entry_quantity']             = 'Aantal';
+$_['entry_to_name']              = 'Naam ontvanger';
+$_['entry_to_email']             = 'E-mail ontvanger';
+$_['entry_from_name']            = 'Naam verzender';
+$_['entry_from_email']           = 'E-mail verzender';
+$_['entry_theme']                = 'Cadeaukaart thema';
+$_['entry_message']              = 'Bericht';
+$_['entry_amount']               = 'Aantal';
+$_['entry_affiliate']            = 'Affiliate';
+$_['entry_order_status']         = 'Status bestelling';
+$_['entry_notify']               = 'Klant op de hoogte brengen';
+$_['entry_override']             = 'Overschrijven';
+$_['entry_comment']              = 'Opmerking';
+$_['entry_currency']             = 'Valuta';
+$_['entry_shipping_method']      = 'Verzendmethode';
+$_['entry_payment_method']       = 'Betaalmethode';
+$_['entry_coupon']               = 'Waardebon';
+$_['entry_voucher']              = 'Cadeaukaart';
+$_['entry_reward']               = 'Beloning';
+$_['entry_order_id']             = 'Bestelling ID';
+$_['entry_total']                = 'Totaal';
+$_['entry_date_added']           = 'Datum toegevoegd';
+$_['entry_date_modified']        = 'Laatst bijgewerkt';
+
+// Help
+$_['help_override']              = 'Als het veranderen van de status van een bestelling van de klant is geblokkeerd door de fraude-detectie, sta overschrijven toe.';
+
+// Error
+$_['error_warning']              = 'Controleer het formulier!';
+$_['error_permission']           = 'Je hebt geen toestemming om bestellingen te bewerken!';
+$_['error_action']               = 'Kan deze actie niet uitvoeren!';
+$_['error_filetype']             = 'Onbekend bestandstype!';
