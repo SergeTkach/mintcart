@@ -166,7 +166,7 @@
     z-index: 2;
     width: 100%;
     max-width: 40rem;
-    padding: var(--mc-space-8, 2rem) var(--mc-space-5) var(--mc-space-8, 2rem) 4rem;
+    padding: var(--mc-space-8, 2rem) var(--mc-space-5) var(--mc-space-8, 2rem) 5rem;
 }
 
 /* A scrim on the text side for every "full" slide (light for dark text, dark for white text), so
@@ -176,7 +176,7 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.8) 40%, rgba(255, 255, 255, 0) 75%);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.55) 40%, rgba(255, 255, 255, 0) 75%);
 }
 
 .mc-slide--light::before {
@@ -222,7 +222,7 @@
     .mc-slide--full .mc-slide__inner {
         max-width: none;
         padding: var(--mc-space-6) var(--mc-space-5) var(--mc-space-4);
-        background: linear-gradient(0deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 55%, rgba(255, 255, 255, 0) 100%);
+        background: linear-gradient(0deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.55) 55%, rgba(255, 255, 255, 0) 100%);
     }
 
     .mc-slide--full.mc-slide--light .mc-slide__inner {
@@ -446,5 +446,15 @@ a.mc-slide-card:hover .mc-slide-card__image {
     .mc-slider--rich .mc-slider__arrow--next {
         right: var(--mc-space-3);
         left: auto;
+    }
+}
+
+/* Full slides (text on the picture): the arrows sit at the vertical middle of the slide on every
+   screen size, the way a gallery's arrows do. */
+@media (max-width: 767.98px) {
+    .mc-slider--full .mc-slider__arrow {
+        top: 50%;
+        bottom: auto;
+        transform: translateY(-50%);
     }
 }
