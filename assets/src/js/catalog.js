@@ -34,6 +34,7 @@ import { initModalTriggers } from './components/modal.js';
 import { initDrawerTriggers } from './components/drawer.js';
 import { initToastTriggers } from './components/toast.js';
 import { initProductCardActions } from './components/product-card.js';
+import { initHeaderCounts } from './components/header-counts.js';
 import { initHeaderCartRefresh } from './components/header-cart.js';
 import { initProductGalleries } from './components/product-gallery.js';
 import { initQuickOrderActions } from './components/quick-order.js';
@@ -114,6 +115,7 @@ function boot() {
     initDrawerTriggers();
     initToastTriggers();
     initProductCardActions();
+    initHeaderCounts();
     initHeaderCartRefresh();
     initProductGalleries();
     initQuickOrderActions();

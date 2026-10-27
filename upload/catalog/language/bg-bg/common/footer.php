@@ -14,8 +14,7 @@ $_['text_account']      = 'Моят профил';
 $_['text_order']        = 'История на поръчките';
 $_['text_wishlist']     = 'Желани продукти';
 $_['text_newsletter']   = 'Бюлетин';
-$_['text_powered']      = 'Сиситема: <a href="http://www.opencart.com">OpenCart</a><br /> %s &copy; %s';
-
+$_['text_powered'] = '%s &copy; %s<br />Работи на MintCart';
 // MintCart
 $_['text_contact_us'] = 'Контакти';
 $_['text_mc_reviews'] = 'Отзиви на клиенти';

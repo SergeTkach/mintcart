@@ -87,8 +87,10 @@ class ControllerMintcartBusinessContacts extends Controller {
 
 		$announcement_url = trim((string)($this->request->post['announcement_url'] ?? ''));
 
-		if (utf8_strlen(trim((string)($this->request->post['announcement_text'] ?? ''))) > 200) {
-			$this->error['announcement_text'] = $this->language->get('error_announcement_text');
+		foreach ((array)($this->request->post['announcement_text'] ?? array()) as $announcement_text) {
+			if (utf8_strlen(trim((string)$announcement_text)) > 200) {
+				$this->error['announcement_text'] = $this->language->get('error_announcement_text');
+			}
 		}
 
 		if ($announcement_url !== '' && !preg_match('#^(https?://|/(?!/))#i', $announcement_url)) {
@@ -138,8 +140,21 @@ class ControllerMintcartBusinessContacts extends Controller {
 
 		// Own setting code: the Wizard's Contacts step rewrites the whole
 		// 'mintcart_contacts' code, which would wipe the announcement.
+		// One text per language; the plain setting stays as the fallback for a
+		// language without its own text (the first filled one).
+		$texts = array();
+
+		foreach ((array)($this->request->post['announcement_text'] ?? array()) as $language_id => $text) {
+			$text = trim((string)$text);
+
+			if ($text !== '') {
+				$texts[(int)$language_id] = $text;
+			}
+		}
+
 		$this->model_setting_setting->editSetting('mintcart_announcement', array(
-			'mintcart_announcement_text' => trim((string)$this->request->post['announcement_text']),
+			'mintcart_announcement_text'  => $texts ? reset($texts) : '',
+			'mintcart_announcement_texts' => $texts,
 			'mintcart_announcement_url'  => trim((string)$this->request->post['announcement_url'])
 		));
 
@@ -158,6 +173,10 @@ class ControllerMintcartBusinessContacts extends Controller {
 		$data['entry_announcement_text'] = $this->language->get('entry_announcement_text');
 		$data['entry_announcement_url'] = $this->language->get('entry_announcement_url');
 		$data['error_announcement_text'] = $this->error['announcement_text'] ?? '';
+
+		$this->load->model('localisation/language');
+
+		$data['languages'] = $this->model_localisation_language->getLanguages();
 		$data['error_announcement_url'] = $this->error['announcement_url'] ?? '';
 
 		if (isset($this->error['warning'])) {
@@ -202,7 +221,7 @@ class ControllerMintcartBusinessContacts extends Controller {
 			$data['config_email'] = $this->request->post['config_email'] ?? '';
 			$data['config_address'] = $this->request->post['config_address'] ?? '';
 			$data['config_mc_phone_mask'] = $this->request->post['config_mc_phone_mask'] ?? '';
-			$data['announcement_text'] = $this->request->post['announcement_text'] ?? '';
+			$data['announcement_text'] = (array)($this->request->post['announcement_text'] ?? array());
 			$data['announcement_url'] = $this->request->post['announcement_url'] ?? '';
 
 			foreach (\MintCart\Onboarding\SocialProfileLinks::NETWORKS as $network) {
@@ -217,7 +236,16 @@ class ControllerMintcartBusinessContacts extends Controller {
 			$this->load->model('setting/setting');
 
 			$announcement_setting = $this->model_setting_setting->getSetting('mintcart_announcement');
-			$data['announcement_text'] = $announcement_setting['mintcart_announcement_text'] ?? '';
+			$texts = $announcement_setting['mintcart_announcement_texts'] ?? array();
+
+			// A store saved before per-language texts: its single text is shown for every language.
+			$legacy = $announcement_setting['mintcart_announcement_text'] ?? '';
+
+			$data['announcement_text'] = array();
+
+			foreach ($this->model_localisation_language->getLanguages() as $language) {
+				$data['announcement_text'][$language['language_id']] = is_array($texts) && $texts ? ($texts[$language['language_id']] ?? '') : $legacy;
+			}
 			$data['announcement_url'] = $announcement_setting['mintcart_announcement_url'] ?? '';
 
 			$contacts_setting = $this->model_setting_setting->getSetting('mintcart_contacts');

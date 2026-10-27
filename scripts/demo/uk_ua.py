@@ -133,7 +133,9 @@ def specs(material, size_text, care):
 
 # Home page blocks (same structure as in build_demo.py, keyed by block type).
 BLOCKS = {
-    'slider': {'items': [
+    'slider': {'cards': [
+        {'kicker': 'Горнятка та чашки', 'title': 'Знижки до <em>30%</em>', 'link_text': 'До горняток'},
+        {'kicker': 'Вази', 'title': 'Нові <em>форми</em> для свіжих квітів', 'link_text': 'До ваз'}], 'items': [
         {'eyebrow': 'Меблі', 'title': 'Невеликі речі, <em>зроблені надовго</em>', 'subtitle': 'Масив дуба та берези, збирається за дві хвилини.', 'price': 'від $59', 'btn_text': 'До меблів', 'btn2_text': 'Стільці'},
         {'eyebrow': 'Освітлення', 'title': 'М’якше <em>світло</em>', 'subtitle': 'Лампи й підвіси для неспішних вечорів.', 'price': '$69', 'old_price': '$89', 'btn_text': 'До освітлення', 'btn2_text': 'Усі акції'},
         {'eyebrow': 'Свічки', 'title': 'Неспішні вечори, <em>добре освітлені</em>', 'subtitle': 'Соєві свічки ручного розливу в склі, яке можна використати вдруге.', 'price': 'від $15', 'btn_text': 'До свічок', 'btn2_text': 'Текстиль'}]},
@@ -152,3 +154,6 @@ BLOCKS = {
         {'question': 'Які способи оплати ви приймаєте?', 'answer': 'Банківські картки, банківський переказ і накладений платіж.'}]},
     'cta': {'title': 'Не знаєте, що обрати?', 'text': 'Розкажіть про вашу кімнату, і ми підберемо кілька речей, які добре поєднуються.', 'cta_label': 'Зв’язатися з нами', 'cta_url': 'index.php?route=information/contact'},
 }
+
+# Top info bar of the header (Business -> Contacts).
+ANNOUNCEMENT = 'Безкоштовна доставка від 60 $ · 30 днів на повернення'

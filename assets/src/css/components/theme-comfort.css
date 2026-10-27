@@ -79,8 +79,9 @@
     flex: 0 0 auto;
     width: 2.5rem;
     height: 2.5rem;
+    min-height: 0;
     padding: 0;
-    border-radius: var(--mc-radius-pill);
+    border-radius: 50%;
 }
 
 .mc-product-card--soft .mc-product-card__add-icon {
@@ -187,6 +188,15 @@
 .mc-header--comfort .mc-header__wishlist:hover,
 .mc-header--comfort .mc-header__end .btn-link:hover {
     background-color: var(--mc-surface-muted);
+    color: var(--mc-primary-hover);
+}
+
+/* Open account menu: no grey fill, only the accent colour tells it is active. */
+.mc-header--comfort .mc-header__account-toggle[aria-expanded='true'],
+.mc-header--comfort .mc-header__account-toggle.show,
+.mc-header--comfort .mc-header__account-toggle:active,
+.mc-header--comfort .mc-header__account-toggle:focus {
+    background-color: transparent;
     color: var(--mc-primary-hover);
 }
 
@@ -428,7 +438,7 @@
 /* Pages                                                                    */
 /* ====================================================================== */
 
-[data-mc-theme='mint_comfort'] .mc-button {
+[data-mc-theme='mint_comfort'] .mc-button:not(.mc-product-card__add-to-cart) {
     border-radius: var(--mc-radius-md);
 }
 

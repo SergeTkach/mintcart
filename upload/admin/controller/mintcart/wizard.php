@@ -743,11 +743,15 @@ class ControllerMintcartWizard extends Controller
             $this->load->model('localisation/language');
             $this->load->model('localisation/currency');
 
-            $data['config_language'] = $this->request->post['config_language'] ?? $this->request->get['added_language'] ?? $this->config->get('config_language');
-            $data['config_currency'] = $this->request->post['config_currency'] ?? $this->request->get['added'] ?? $this->config->get('config_currency');
+            $data['config_language'] = $this->request->post['config_language'] ?? $this->config->get('config_language');
+            $data['config_currency'] = $this->request->post['config_currency'] ?? $this->config->get('config_currency');
             $data['languages'] = $this->model_localisation_language->getLanguages();
             $data['currencies'] = $this->model_localisation_currency->getCurrencies();
             $data['add_language_action'] = $this->url->link('mintcart/wizard/addLanguage', 'user_token=' . $this->session->data['user_token'], true);
+            $data['remove_language_action'] = $this->url->link('mintcart/wizard/removeLanguage', 'user_token=' . $this->session->data['user_token'], true);
+            $data['remove_currency_action'] = $this->url->link('mintcart/wizard/removeCurrency', 'user_token=' . $this->session->data['user_token'], true);
+            $data['text_confirm'] = $this->language->get('text_confirm');
+            $data['button_cancel'] = $this->language->get('button_cancel');
             $data['available_languages'] = array_map(function ($language) {
                 return $language['name'] . ' (' . $language['code'] . ')';
             }, $this->availableLanguages());
@@ -921,7 +925,7 @@ class ControllerMintcartWizard extends Controller
             }
         }
 
-        $this->respondAdded($results, 'text_currency_added', $manualRate ? sprintf($this->language->get('text_currency_rate_manual'), implode(', ', $manualRate)) : '', 'added');
+        $this->respondAdded($results, 'text_currency_added', $manualRate ? sprintf($this->language->get('text_currency_rate_manual'), implode(', ', $manualRate)) : '');
     }
 
     /**
@@ -930,7 +934,7 @@ class ControllerMintcartWizard extends Controller
      *
      * @param array<int, array{ok: bool, message?: string, value?: string, label?: string}> $results
      */
-    private function respondAdded(array $results, string $addedText, string $warning, string $selectParam): void
+    private function respondAdded(array $results, string $addedText, string $warning): void
     {
         $added = array_values(array_filter($results, function ($result) {
             return $result['ok'];
@@ -956,13 +960,7 @@ class ControllerMintcartWizard extends Controller
 
         $this->session->data['mintcart_wizard_notice'] = $notice;
 
-        $back = $this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true);
-
-        if ($added) {
-            $back .= '&' . $selectParam . '=' . end($added)['value'];
-        }
-
-        $this->response->redirect($back);
+        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true));
     }
 
     /**
@@ -1066,7 +1064,99 @@ class ControllerMintcartWizard extends Controller
             $results[$index] = ['ok' => true, 'value' => $language['code'], 'label' => $language['name']];
         }
 
-        $this->respondAdded($results, 'text_language_added', '', 'added_language');
+        $this->respondAdded($results, 'text_language_added', '');
+    }
+
+    /**
+     * route=mintcart/wizard/removeLanguage - POST code. Takes a language out of the store from the
+     * "Connected languages" list, with the same refusals as Localisation > Languages (the default
+     * and admin language, a language a store uses, one that has orders), so a wrong click at the
+     * start of a store cannot break it. Answers by redirecting back to the step with a notice.
+     */
+    public function removeLanguage(): void
+    {
+        $this->load->language('mintcart/wizard');
+        $this->load->model('localisation/language');
+
+        $code = (string)($this->request->post['code'] ?? '');
+        $language = $this->model_localisation_language->getLanguageByCode($code);
+        $notice = ['type' => 'warning', 'text' => $this->language->get('text_language_unknown')];
+
+        if (!$this->user->hasPermission('modify', 'mintcart/wizard')) {
+            $notice['text'] = $this->language->get('text_no_permission');
+        } elseif ($language) {
+            // Stock texts of Localisation > Languages, already translated in every language pack.
+            $wizard_texts = $this->language->all();
+            $this->load->language('localisation/language');
+            $this->load->model('setting/store');
+            $this->load->model('sale/order');
+
+            $store_total = $this->model_setting_store->getTotalStoresByLanguage($language['code']);
+            $order_total = $this->model_sale_order->getTotalOrdersByLanguageId($language['language_id']);
+
+            if ($this->config->get('config_language') == $language['code']) {
+                $notice['text'] = $this->language->get('error_default');
+            } elseif ($this->config->get('config_admin_language') == $language['code']) {
+                $notice['text'] = $this->language->get('error_admin');
+            } elseif ($store_total) {
+                $notice['text'] = sprintf($this->language->get('error_store'), $store_total);
+            } elseif ($order_total) {
+                $notice['text'] = sprintf($this->language->get('error_order'), $order_total);
+            } else {
+                $this->model_localisation_language->deleteLanguage($language['language_id']);
+
+                // MintCart's own per-language rows (stock OpenCart leaves its description rows behind).
+                foreach (['mc_page_description', 'mc_block_description', 'mc_redirect'] as $table) {
+                    $this->db->query("DELETE FROM `" . DB_PREFIX . $table . "` WHERE language_id = '" . (int)$language['language_id'] . "'");
+                }
+
+                $notice = ['type' => 'success', 'text' => sprintf($wizard_texts['text_language_removed'] ?? '%s', $language['name'])];
+            }
+        }
+
+        $this->session->data['mintcart_wizard_notice'] = $notice;
+        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true));
+    }
+
+    /**
+     * route=mintcart/wizard/removeCurrency - POST code. The currency twin of removeLanguage(): the
+     * default currency, one a store uses and one that has orders stay.
+     */
+    public function removeCurrency(): void
+    {
+        $this->load->language('mintcart/wizard');
+        $this->load->model('localisation/currency');
+
+        $code = (string)($this->request->post['code'] ?? '');
+        $currency = $this->model_localisation_currency->getCurrencyByCode($code);
+        $notice = ['type' => 'warning', 'text' => $this->language->get('text_currency_unknown')];
+
+        if (!$this->user->hasPermission('modify', 'mintcart/wizard')) {
+            $notice['text'] = $this->language->get('text_no_permission');
+        } elseif ($currency) {
+            $wizard_texts = $this->language->all();
+            $this->load->language('localisation/currency');
+            $this->load->model('setting/store');
+            $this->load->model('sale/order');
+
+            $store_total = $this->model_setting_store->getTotalStoresByCurrency($currency['code']);
+            $order_total = $this->model_sale_order->getTotalOrdersByCurrencyId($currency['currency_id']);
+
+            if ($this->config->get('config_currency') == $currency['code']) {
+                $notice['text'] = $this->language->get('error_default');
+            } elseif ($store_total) {
+                $notice['text'] = sprintf($this->language->get('error_store'), $store_total);
+            } elseif ($order_total) {
+                $notice['text'] = sprintf($this->language->get('error_order'), $order_total);
+            } else {
+                $this->model_localisation_currency->deleteCurrency($currency['currency_id']);
+
+                $notice = ['type' => 'success', 'text' => sprintf($wizard_texts['text_currency_removed'] ?? '%s', $currency['code'])];
+            }
+        }
+
+        $this->session->data['mintcart_wizard_notice'] = $notice;
+        $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'] . '&step=language_currency', true));
     }
 
     private function currencyCatalog(): \MintCart\Onboarding\CurrencyCatalog

@@ -101,7 +101,7 @@ $_['help_parent_id'] = 'Pozostaw 0, aby pokazywać kategorie najwyższego poziom
 $_['help_slider_cards_content'] = 'Ta sama kolejność co na liście Karty promocyjne w Ustawieniach. Przykład: [{"kicker": "Wyprzedaż", "title": "Do 30% zniżki", "link_text": "Kup teraz"}]';
 $_['help_slider_cards_settings'] = 'Tylko dla układu „Slider + 2 karty promocyjne”: do dwóch kart, po kolei. Przykład: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_items_content'] = 'Ta sama kolejność co na liście Slajdy w Ustawieniach. W tytule <em>słowo</em> wyróżnia słowo. Przykład: [{"eyebrow": "Nowy sezon", "title": "Światło na <em>spokojne</em> wieczory", "subtitle": "Lampy i świece", "price": "39 $", "old_price": "49 $", "btn_text": "Kup teraz", "btn2_text": "Dowiedz się więcej"}]';
-$_['help_slider_items_settings'] = 'Jeden obiekt na slajd. color: "navy" (ciemny tekst) lub "light" (biały tekst, dla ciemnego obrazu, układ „Obraz za tekstem”). Przykład: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Jeden obiekt na slajd. color: "navy" (ciemny tekst) lub "light" (jasny tekst, dla ciemnego obrazu, układ „Obraz za tekstem”). Przykład: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_testimonial_items_content'] = 'Ta sama kolejność co na liście Elementy w Ustawieniach. Przykład: [{"quote": "Świetny sklep!", "author_name": "Anna Kowalska", "author_role": "Zweryfikowana klientka"}]';
 $_['help_testimonial_items_settings'] = 'Jeden obiekt na opinię. Przykład: [{"avatar": "catalog/jane.jpg", "avatar_width": 64, "avatar_height": 64, "rating": 5}]';
 $_['help_testimonial_limit'] = 'Ile opinii klientów pokazać (1-12).';
@@ -122,7 +122,7 @@ $_['text_ai_invalid'] = 'To nie jest poprawny JSON.';
 $_['text_ai_notes'] = 'Zastosowano. Wiersze w JSON i w formularzu różnią się (JSON -> formularz):';
 $_['text_ai_prompt'] = 'Prompt: "Przetłumacz wszystkie wartości pól na język wskazany przez każdy klucz (en-gb, uk-ua, ...). Zachowaj strukturę JSON i każdy klucz bez zmian. Niektóre wartości zawierają HTML (na przykład &lt;em&gt;słowo&lt;/em&gt; lub linki): zachowaj znaczniki, a podwójne cudzysłowy w wartościach zapisz jako \\", aby wynik był poprawnym JSON."';
 $_['text_ai_title'] = 'Tłumaczenie AI';
-$_['text_color_light'] = 'Biały tekst';
+$_['text_color_light'] = 'Jasny tekst';
 $_['text_color_navy'] = 'Ciemny tekst';
 $_['text_confirm'] = 'Czy na pewno chcesz usunąć wybrane bloki?';
 $_['text_drag_handle'] = 'Przeciągnij, aby zmienić kolejność';

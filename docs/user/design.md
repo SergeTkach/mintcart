@@ -6,7 +6,7 @@ hand-code a theme to get a decent-looking store, and a designer shouldn't
 have to patch OpenCart to build you a different one.
 
 **This guide describes what's actually built today, not the full Theme API
-roadmap.** Several pieces (Design → Styles, live preview, a theme picker)
+roadmap.** Several pieces (Design → Store appearance, live preview, a theme picker)
 are still open work — see `docs/IMPLEMENTATION_STATUS.md`'s Phase 8/9
 sections for exactly what each routine run has shipped so far. If you want
 the full intended scope, see `MINTCART_FUNCTIONAL_SCOPE.md` §9.
@@ -53,7 +53,7 @@ Mint Default ships two:
 | `warm`  | Terracotta/gold on cream, serif headings, rounder radii, roomier spacing |
 
 **Known gap:** there is currently no admin screen to pick a preset — no
-`Design → Styles` menu entry exists yet, and nothing in the shipped storefront
+`Design → Store appearance` menu entry exists yet, and nothing in the shipped storefront
 sets the `data-mc-preset` attribute presets rely on. The CSS for both presets
 is built, tested, and ships in `assets/dist/css/`, but switching your live
 store to `warm` today means manually adding `data-mc-preset="warm"` to the

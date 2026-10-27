@@ -152,7 +152,7 @@ $_['text_mintcart_business_delivery'] = 'Доставка';
 $_['text_mintcart_business_payments'] = 'Оплата';
 $_['text_mintcart_quickorder'] = 'Швидкі замовлення';
 $_['text_mintcart_badge'] = 'Бейджі товарів';
-$_['text_mintcart_design_styles'] = 'Стилі';
+$_['text_mintcart_design_styles'] = 'Вигляд магазину';
 $_['text_mintcart_settings_diagnostics'] = 'Діагностика';
 $_['text_mintcart_compatibility'] = 'Перевірка сумісності';
 

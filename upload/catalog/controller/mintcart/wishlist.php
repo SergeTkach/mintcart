@@ -54,7 +54,14 @@ class ControllerMintcartWishlist extends Controller {
 			$this->session->data['wishlist'] = $wishlist_service->withProduct($this->currentIds(), $product_id, $add);
 		}
 
-		$this->respond($wishlist_service->snapshot($this->currentIds(), $product_id));
+		$this->load->language('mintcart/wishlist');
+
+		$json = $wishlist_service->snapshot($this->currentIds(), $product_id);
+		$json['message'] = $this->language->get($add ? 'text_wishlist_added' : 'text_wishlist_removed');
+		$json['view_text'] = $this->language->get('text_wishlist_view');
+		$json['view_url'] = $this->url->link('account/wishlist', '', true);
+
+		$this->respond($json);
 	}
 
 	// route=mintcart/wishlist/add - POST product_id

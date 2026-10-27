@@ -16,29 +16,88 @@ class ModelMintcartSeoUrl extends Model {
 	}
 
 	/**
-	 * Whether the keyword is in use in this store - in ANY language: OpenCart's product / category /
-	 * page forms refuse a keyword that another page, or another language of the same page, already has.
+	 * Whether the keyword is taken for an entity in this store and language.
 	 *
-	 * @param string[] $avoid keywords typed in the form but not saved yet
+	 * Uniqueness is per language (the same product may have the same keyword in every language) and,
+	 * for categories, per parent: `clothes/mens` and `shoes/mens` can both exist. The scopes:
+	 *  - `$parent_id` > 0 (a nested category): only its siblings (categories with the same parent) count;
+	 *  - otherwise (products, pages, brands, top-level categories): the root level counts, i.e. every
+	 *    keyword except those of nested categories.
+	 * The incoming-URL decoder (catalog/controller/startup/seo_url.php) resolves a keyword the same way.
+	 *
+	 * @param string   $ignore_query the entity's own `query` (its own row is not a conflict)
+	 * @param int|null $parent_id    parent category of a category, null for everything else
 	 */
-	public function keywordTaken($keyword, $store_id, $ignore_query = '', array $avoid = array()) {
-		if (in_array($keyword, $avoid, true)) {
-			return true;
-		}
-
-		$sql = "SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "seo_url` WHERE `keyword` = '" . $this->db->escape($keyword) . "' AND `store_id` = '" . (int)$store_id . "'";
+	public function keywordTaken($keyword, $store_id, $language_id, $ignore_query = '', $parent_id = null) {
+		$sql = "SELECT `query` FROM `" . DB_PREFIX . "seo_url` WHERE `keyword` = '" . $this->db->escape($keyword) . "' AND `store_id` = '" . (int)$store_id . "' AND `language_id` = '" . (int)$language_id . "'";
 
 		if ($ignore_query !== '') {
 			$sql .= " AND `query` != '" . $this->db->escape($ignore_query) . "'";
 		}
 
-		return (int)$this->db->query($sql)->row['total'] > 0;
+		$rows = $this->db->query($sql)->rows;
+
+		if (!$rows) {
+			return false;
+		}
+
+		$parents = $this->categoryParents(array_column($rows, 'query'));
+
+		foreach ($rows as $row) {
+			$nested_parent = isset($parents[$row['query']]) ? $parents[$row['query']] : 0;
+
+			if ($parent_id > 0 ? $nested_parent === (int)$parent_id : $nested_parent === 0) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
-	/** The free keyword for `$base` in this store (`base`, `base-2`, ...). */
-	public function uniqueKeyword($base, $store_id, $ignore_query = '', array $avoid = array()) {
-		return \MintCart\Seo\Slugger::unique($base, function ($keyword) use ($store_id, $ignore_query, $avoid) {
-			return $this->keywordTaken($keyword, $store_id, $ignore_query, $avoid);
+	/**
+	 * The parent category of every `category_id=N` query in the list (0 for a top-level category and
+	 * for every query that is not a category).
+	 *
+	 * @param string[] $queries
+	 * @return array<string, int> query => parent_id
+	 */
+	private function categoryParents(array $queries) {
+		$ids = array();
+
+		foreach ($queries as $query) {
+			if (strpos($query, 'category_id=') === 0) {
+				$ids[(int)substr($query, 12)] = $query;
+			}
+		}
+
+		$result = array();
+
+		if ($ids) {
+			$rows = $this->db->query("SELECT `category_id`, `parent_id` FROM `" . DB_PREFIX . "category` WHERE `category_id` IN (" . implode(',', array_map('intval', array_keys($ids))) . ")")->rows;
+
+			foreach ($rows as $row) {
+				$result[$ids[(int)$row['category_id']]] = (int)$row['parent_id'];
+			}
+		}
+
+		return $result;
+	}
+
+	/** The parent category of a category (its keyword scope); null for every other type. */
+	public function parentOf($type, $id) {
+		if ($type !== 'category') {
+			return null;
+		}
+
+		$query = $this->db->query("SELECT `parent_id` FROM `" . DB_PREFIX . "category` WHERE `category_id` = '" . (int)$id . "'");
+
+		return $query->num_rows ? (int)$query->row['parent_id'] : 0;
+	}
+
+	/** The free keyword for `$base` in this store and language (`base`, `base-2`, ...). */
+	public function uniqueKeyword($base, $store_id, $language_id, $ignore_query = '', $parent_id = null) {
+		return \MintCart\Seo\Slugger::unique($base, function ($keyword) use ($store_id, $language_id, $ignore_query, $parent_id) {
+			return $this->keywordTaken($keyword, $store_id, $language_id, $ignore_query, $parent_id);
 		});
 	}
 
@@ -107,7 +166,7 @@ class ModelMintcartSeoUrl extends Model {
 				$base = $type . '-' . $id;
 			}
 
-			$this->add($this->queryOf($type, $id), $this->uniqueKeyword($base, 0), 0, $language_id);
+			$this->add($this->queryOf($type, $id), $this->uniqueKeyword($base, 0, $language_id, '', $this->parentOf($type, $id)), 0, $language_id);
 
 			$created++;
 		}
@@ -156,7 +215,7 @@ class ModelMintcartSeoUrl extends Model {
 				$base = $type . '-' . $id;
 			}
 
-			$keyword = $this->uniqueKeyword($base, 0, $query);
+			$keyword = $this->uniqueKeyword($base, 0, $language_id, $query, $this->parentOf($type, $id));
 
 			$old = $this->db->query("SELECT `keyword` FROM `" . DB_PREFIX . "seo_url` WHERE `query` = '" . $this->db->escape($query) . "' AND `store_id` = '0' AND `language_id` = '" . (int)$language_id . "'");
 

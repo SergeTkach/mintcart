@@ -90,7 +90,12 @@ function initSlider(el) {
     const dots = el.querySelector('[data-mc-slider-dots]');
     // Loop needs more slides than are visible at once; with too few, rewind
     // to the first slide instead so autoplay does not stall on the last one.
-    const loop = Boolean(wantsLoop) && slides.length > (options.slidesPerView || 1) + 1;
+    // The widest breakpoint counts too: Swiper warns when it shows more slides than loop can clone.
+    const maxPerView = Math.max(
+        options.slidesPerView || 1,
+        ...Object.values(options.breakpoints || {}).map((point) => Number(point.slidesPerView) || 1)
+    );
+    const loop = Boolean(wantsLoop) && slides.length > maxPerView + 1;
 
     // Before Swiper measures: slider.css hides every slide but the first
     // until `is-ready`, and a hidden slide would be measured as 0 wide.

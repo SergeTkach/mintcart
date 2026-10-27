@@ -85,7 +85,7 @@ $_['help_action'] = 'Lăsați gol pentru a ascunde formularul de abonare și a a
 $_['help_type_change'] = 'Schimbarea tipului reîncarcă formularul cu câmpurile specifice tipului; salvați din nou pentru a aplica.';
 $_['help_more_url'] = 'Opțional. Un link afișat la capătul din dreapta al titlului, de ex. index.php?route=product/special. Lăsați gol dacă nu doriți link.';
 $_['help_autoplay'] = 'Timp pe slide în milisecunde (minim 2000). 0 dezactivează redarea automată.';
-$_['help_slider_items_settings'] = 'Un obiect pe slide. color: "navy" (text închis) sau "light" (text alb, pentru o imagine închisă, aspectul „Imagine în spatele textului”). Exemplu: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Un obiect pe slide. color: "navy" (text închis) sau "light" (text deschis, pentru o imagine închisă, aspectul „Imagine în spatele textului”). Exemplu: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_slider_items_content'] = 'Aceeași ordine ca în lista Slide-uri din Setări. În titlu, <em>cuvânt</em> evidențiază un cuvânt. Exemplu: [{"eyebrow": "Sezon nou", "title": "Lumină pentru seri <em>liniștite</em>", "subtitle": "Lămpi și lumânări", "price": "$39", "old_price": "$49", "btn_text": "Cumpără acum", "btn2_text": "Află mai multe"}]';
 $_['help_slider_cards_settings'] = 'Doar pentru aspectul „Slider + 2 carduri promoționale”: cel mult două carduri, în ordine. Exemplu: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_cards_content'] = 'Aceeași ordine ca în lista Carduri promoționale din Setări. Exemplu: [{"kicker": "Reduceri", "title": "Până la 30% reducere", "link_text": "Cumpără"}]';
@@ -123,7 +123,7 @@ $_['entry_testimonial_source'] = 'Recenzii din';
 $_['help_testimonial_source'] = 'Scrise aici = lista de mai jos. Ultimele recenzii ale clienților = preluate din recenziile produselor.';
 $_['help_testimonial_limit'] = 'Câte recenzii ale clienților să se afișeze (1-12).';
 $_['text_color_navy'] = 'Text închis';
-$_['text_color_light'] = 'Text alb';
+$_['text_color_light'] = 'Text deschis';
 $_['entry_item_image'] = 'Imagine';
 $_['entry_item_avatar'] = 'Fotografie';
 $_['entry_item_alt'] = 'Text alternativ';

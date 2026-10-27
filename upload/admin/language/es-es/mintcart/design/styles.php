@@ -1,7 +1,7 @@
 <?php
 
 // MintCart
-$_['heading_title'] = 'Estilos';
+$_['heading_title'] = 'Aspecto de la tienda';
 $_['text_success'] = 'Éxito: ¡Ha modificado los estilos!';
 $_['text_edit'] = 'Ajuste preestablecido de diseño';
 $_['text_intro'] = 'Un ajuste preestablecido es la base del diseño de su tienda: colores, esquinas, espaciado, sombras y fuentes en conjunto. Elija uno y ajústelo abajo. La vista previa de la derecha muestra sus elecciones antes de guardar.';

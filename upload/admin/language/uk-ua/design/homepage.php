@@ -43,7 +43,7 @@ $_['entry_testimonial_source'] = 'Звідки відгуки';
 $_['help_testimonial_source'] = 'Написані тут = список нижче. Останні відгуки покупців = беруться з відгуків до товарів.';
 $_['help_testimonial_limit'] = 'Скільки відгуків покупців показувати (1-12).';
 $_['text_color_navy'] = 'Темний текст';
-$_['text_color_light'] = 'Білий текст';
+$_['text_color_light'] = 'Світлий текст';
 $_['entry_item_image'] = 'Картинка';
 $_['entry_item_avatar'] = 'Фото';
 $_['entry_item_alt'] = 'Альтернативний текст';
@@ -145,7 +145,7 @@ $_['help_action'] = 'Залиште порожнім, щоб сховати фо
 $_['help_type_change'] = 'Зміна типу перезавантажує форму з полями цього типу: збережіть ще раз, щоб застосувати.';
 $_['help_more_url'] = 'Необов\'язково. Посилання біля правого краю заголовка, наприклад index.php?route=product/special. Залиште порожнім, якщо посилання не потрібне.';
 $_['help_autoplay'] = 'Час показу одного слайда в мілісекундах (не менше 2000). 0 вимикає автоматичне гортання.';
-$_['help_slider_items_settings'] = 'Один обʼєкт на слайд. color: "navy" (темний текст) або "light" (білий текст, для темного зображення, макет «Зображення за текстом»). Приклад: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Один обʼєкт на слайд. color: "navy" (темний текст) або "light" (світлий текст, для темного зображення, макет «Зображення за текстом»). Приклад: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_slider_items_content'] = 'Той самий порядок, що й у списку «Слайди» в налаштуваннях. У заголовку <em>слово</em> виділяє слово. Приклад: [{"eyebrow": "Новий сезон", "title": "Світло для <em>неспішних</em> вечорів", "subtitle": "Лампи та свічки", "price": "$39", "old_price": "$49", "btn_text": "До магазину", "btn2_text": "Докладніше"}]';
 $_['help_slider_cards_settings'] = 'Лише для макета «Слайдер + 2 промо-картки»: до двох карток, по порядку. Приклад: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_cards_content'] = 'Той самий порядок, що й у списку «Промо-картки» в налаштуваннях. Приклад: [{"kicker": "Розпродаж", "title": "Знижки до 30%", "link_text": "До магазину"}]';

@@ -1,6 +1,6 @@
 <?php
 // Heading
-$_['heading_title'] = 'Styles';
+$_['heading_title'] = 'Store appearance';
 
 // Text
 $_['text_success']    = 'Success: You have modified styles!';

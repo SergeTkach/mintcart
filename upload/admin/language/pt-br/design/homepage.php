@@ -101,7 +101,7 @@ $_['help_parent_id'] = 'Deixe em 0 para mostrar as categorias de nível superior
 $_['help_slider_cards_content'] = 'Mesma ordem da lista Cartões promocionais em Configurações. Exemplo: [{"kicker": "Liquidação", "title": "Até 30% de desconto", "link_text": "Comprar"}]';
 $_['help_slider_cards_settings'] = 'Somente para o layout "Slider + 2 cartões promocionais": até dois cartões, em ordem. Exemplo: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_items_content'] = 'Mesma ordem da lista Slides em Configurações. No título, <em>palavra</em> destaca uma palavra. Exemplo: [{"eyebrow": "Nova estação", "title": "Luz para noites <em>tranquilas</em>", "subtitle": "Luminárias e velas", "price": "US$ 39", "old_price": "US$ 49", "btn_text": "Comprar agora", "btn2_text": "Saiba mais"}]';
-$_['help_slider_items_settings'] = 'Um objeto por slide. color: "navy" (texto escuro) ou "light" (texto branco, para imagem escura, layout "Imagem atrás do texto"). Exemplo: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Um objeto por slide. color: "navy" (texto escuro) ou "light" (texto claro, para imagem escura, layout "Imagem atrás do texto"). Exemplo: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_testimonial_items_content'] = 'Mesma ordem da lista Itens em Configurações. Exemplo: [{"quote": "Ótima loja!", "author_name": "Maria Silva", "author_role": "Compradora verificada"}]';
 $_['help_testimonial_items_settings'] = 'Um objeto por depoimento. Exemplo: [{"avatar": "catalog/jane.jpg", "avatar_width": 64, "avatar_height": 64, "rating": 5}]';
 $_['help_testimonial_limit'] = 'Quantas avaliações de clientes mostrar (1-12).';
@@ -122,7 +122,7 @@ $_['text_ai_invalid'] = 'Este não é um JSON válido.';
 $_['text_ai_notes'] = 'Aplicado. As linhas do JSON e do formulário diferem (JSON -> formulário):';
 $_['text_ai_prompt'] = 'Prompt: "Traduza todos os valores dos campos para o idioma indicado em cada chave (en-gb, uk-ua, ...). Mantenha a estrutura do JSON e todas as chaves inalteradas. Alguns valores contêm HTML (por exemplo &lt;em&gt;palavra&lt;/em&gt; ou links): mantenha as tags e escape as aspas duplas dentro dos valores como \\" para que o resultado seja um JSON válido."';
 $_['text_ai_title'] = 'Tradução com IA';
-$_['text_color_light'] = 'Texto branco';
+$_['text_color_light'] = 'Texto claro';
 $_['text_color_navy'] = 'Texto escuro';
 $_['text_confirm'] = 'Tem certeza de que deseja excluir os blocos selecionados?';
 $_['text_drag_handle'] = 'Arraste para reordenar';

@@ -101,7 +101,7 @@ $_['help_parent_id'] = 'Laat op 0 om categorieën van het hoogste niveau te tone
 $_['help_slider_cards_content'] = 'Zelfde volgorde als de lijst Promotiekaarten in de instellingen. Voorbeeld: [{"kicker": "Uitverkoop", "title": "Tot 30% korting", "link_text": "Winkelen"}]';
 $_['help_slider_cards_settings'] = 'Alleen voor de indeling "Slider + 2 promotiekaarten": maximaal twee kaarten, op volgorde. Voorbeeld: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_items_content'] = 'Zelfde volgorde als de lijst Dia\'s in de instellingen. In de titel benadrukt <em>woord</em> een woord. Voorbeeld: [{"eyebrow": "Nieuw seizoen", "title": "Licht voor <em>rustige</em> avonden", "subtitle": "Lampen en kaarsen", "price": "$39", "old_price": "$49", "btn_text": "Nu winkelen", "btn2_text": "Meer informatie"}]';
-$_['help_slider_items_settings'] = 'Eén object per dia. color: "navy" (donkere tekst) of "light" (witte tekst, voor een donkere afbeelding, indeling "Afbeelding achter de tekst"). Voorbeeld: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Eén object per dia. color: "navy" (donkere tekst) of "light" (lichte tekst, voor een donkere afbeelding, indeling "Afbeelding achter de tekst"). Voorbeeld: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_testimonial_items_content'] = 'Zelfde volgorde als de lijst Items in de instellingen. Voorbeeld: [{"quote": "Geweldige winkel!", "author_name": "Jan de Vries", "author_role": "Geverifieerde koper"}]';
 $_['help_testimonial_items_settings'] = 'Eén object per beoordeling. Voorbeeld: [{"avatar": "catalog/jane.jpg", "avatar_width": 64, "avatar_height": 64, "rating": 5}]';
 $_['help_testimonial_limit'] = 'Hoeveel klantbeoordelingen er worden getoond (1-12).';
@@ -122,7 +122,7 @@ $_['text_ai_invalid'] = 'Dit is geen geldige JSON.';
 $_['text_ai_notes'] = 'Toegepast. Rijen in de JSON en in het formulier verschillen (JSON -> formulier):';
 $_['text_ai_prompt'] = 'Prompt: "Vertaal alle veldwaarden naar de taal die bij elke sleutel hoort (en-gb, uk-ua, ...). Laat de JSON-structuur en elke sleutel ongewijzigd. Sommige waarden bevatten HTML (bijvoorbeeld &lt;em&gt;woord&lt;/em&gt; of links): behoud de tags en escape dubbele aanhalingstekens in waarden als \\" zodat het resultaat geldige JSON is."';
 $_['text_ai_title'] = 'AI-vertaling';
-$_['text_color_light'] = 'Witte tekst';
+$_['text_color_light'] = 'Lichte tekst';
 $_['text_color_navy'] = 'Donkere tekst';
 $_['text_confirm'] = 'Weet u zeker dat u de geselecteerde blokken wilt verwijderen?';
 $_['text_drag_handle'] = 'Slepen om te herordenen';

@@ -79,7 +79,7 @@ $_['help_action'] = 'Déjelo en blanco para ocultar el formulario de suscripció
 $_['help_type_change'] = 'Cambiar el tipo recarga el formulario con los campos propios de ese tipo; guarde de nuevo para aplicarlo.';
 $_['help_more_url'] = 'Opcional. Enlace que se muestra en el extremo derecho del título, por ejemplo index.php?route=product/special. Déjelo vacío si no quiere enlace.';
 $_['help_autoplay'] = 'Tiempo por diapositiva en milisegundos (mínimo 2000). 0 desactiva la reproducción automática.';
-$_['help_slider_items_settings'] = 'Un objeto por diapositiva. color: "navy" (texto oscuro) o "light" (texto blanco, para una imagen oscura, diseño «Imagen detrás del texto»). Ejemplo: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Un objeto por diapositiva. color: "navy" (texto oscuro) o "light" (texto claro, para una imagen oscura, diseño «Imagen detrás del texto»). Ejemplo: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_slider_items_content'] = 'Mismo orden que la lista de Diapositivas en Ajustes. En el título, <em>palabra</em> resalta una palabra. Ejemplo: [{"eyebrow": "Nueva temporada", "title": "Luz para <em>lentas</em> tardes", "subtitle": "Lámparas y velas", "price": "$39", "old_price": "$49", "btn_text": "Comprar ahora", "btn2_text": "Saber más"}]';
 $_['help_slider_cards_settings'] = 'Solo para el diseño «Slider + 2 tarjetas promocionales»: hasta dos tarjetas, en orden. Ejemplo: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_cards_content'] = 'Mismo orden que la lista de Tarjetas promocionales en Ajustes. Ejemplo: [{"kicker": "Rebajas", "title": "Hasta un 30 % de descuento", "link_text": "Comprar"}]';
@@ -117,7 +117,7 @@ $_['entry_testimonial_source'] = 'Opiniones de';
 $_['help_testimonial_source'] = 'Escritas aquí = la lista de abajo. Últimas reseñas de clientes = tomadas de las reseñas de los productos.';
 $_['help_testimonial_limit'] = 'Cuántas reseñas de clientes mostrar (1-12).';
 $_['text_color_navy'] = 'Texto oscuro';
-$_['text_color_light'] = 'Texto blanco';
+$_['text_color_light'] = 'Texto claro';
 $_['entry_item_image'] = 'Imagen';
 $_['entry_item_avatar'] = 'Foto';
 $_['entry_item_alt'] = 'Texto alternativo';

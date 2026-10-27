@@ -114,17 +114,27 @@
     display: flex;
     flex-direction: column;
     gap: var(--mc-space-1);
+    pointer-events: auto;
 }
 
 .mc-product-card__action-button {
+    position: relative;
+    z-index: 2;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex: 0 0 auto;
+    box-sizing: border-box;
     width: 2.25rem;
     height: 2.25rem;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    aspect-ratio: 1;
     padding: 0;
     border: 0;
-    border-radius: var(--mc-radius-pill);
+    border-radius: 50%;
+    font-size: 1rem;
+    line-height: 1;
     background-color: var(--mc-surface);
     box-shadow: var(--mc-shadow-soft);
     color: var(--mc-muted);
@@ -143,9 +153,19 @@
     outline-offset: 2px;
 }
 
-.mc-product-card__action-button[aria-pressed='true'] {
-    border-color: var(--mc-primary);
+/* Pressed = the heart / arrows turn the accent colour on the same white disc (the bubble
+   from action-note.js is the confirmation). Selector is strong enough to beat the
+   per-theme background rules (soft / tile). */
+.mc-product-card__action-button[aria-pressed='true'],
+.mc-product-card .mc-product-card__action-button[aria-pressed='true'],
+.mc-product-card .mc-product-card__action-button[aria-pressed='true']:hover {
+    background-color: var(--mc-surface);
     color: var(--mc-primary);
+}
+
+.mc-product-card__action-button:disabled {
+    opacity: 0.6;
+    cursor: progress;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -260,16 +280,37 @@
 
 /* The cart icon is for phones only: there "Add to cart" is a round icon button (the label stays
    for screen readers), so a long translated label can't squash it into an oval. */
-.mc-product-card:not(.mc-product-card--soft) .mc-product-card__add-icon {
-    display: none;
+.mc-product-card:not(.mc-product-card--soft) .mc-product-card__actions .mc-product-card__add-to-cart:has(.mc-product-card__add-icon) {
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border-radius: 50%;
+}
+
+.mc-product-card:not(.mc-product-card--soft) .mc-product-card__actions .mc-product-card__add-to-cart:has(.mc-product-card__add-icon) .mc-product-card__add-icon {
+    display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.mc-product-card:not(.mc-product-card--soft) .mc-product-card__actions .mc-product-card__add-to-cart:has(.mc-product-card__add-icon) .mc-product-card__add-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
 }
 
 @media (max-width: 575.98px) {
     .mc-product-card__actions .mc-product-card__add-to-cart {
         flex: 0 0 auto;
-        width: 2.5rem;
-        height: 2.5rem;
+        width: 2.75rem;
+        height: 2.75rem;
+        min-height: 0;
         padding: 0;
+        border-radius: 50%;
     }
 
     .mc-product-card:not(.mc-product-card--soft) .mc-product-card__actions .mc-product-card__add-icon {
@@ -298,7 +339,8 @@
     }
 
     .mc-product-card__actions .mc-product-card__quick-order {
-        --mc-button-padding-y: 0.3125rem;
+        --mc-button-min-height: 2.5rem;
+        --mc-button-padding-y: 0.25rem;
         --mc-button-padding-x: 0.625rem;
         --mc-button-font-size: var(--mc-font-size-xs);
     }

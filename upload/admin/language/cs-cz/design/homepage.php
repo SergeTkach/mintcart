@@ -101,7 +101,7 @@ $_['help_parent_id'] = 'Nechte 0, chcete-li zobrazit kategorie nejvyšší úrov
 $_['help_slider_cards_content'] = 'Stejné pořadí jako v seznamu Propagační karty v nastavení. Příklad: [{"kicker": "Výprodej", "title": "Slevy až 30 %", "link_text": "Nakupovat"}]';
 $_['help_slider_cards_settings'] = 'Pouze pro rozvržení „Slider + 2 propagační karty“: nejvýše dvě karty v daném pořadí. Příklad: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_items_content'] = 'Stejné pořadí jako v seznamu Snímky v nastavení. V nadpisu <em>slovo</em> zvýrazní slovo. Příklad: [{"eyebrow": "Nová sezóna", "title": "Světlo pro <em>klidné</em> večery", "subtitle": "Lampy a svíčky", "price": "39 $", "old_price": "49 $", "btn_text": "Nakupovat", "btn2_text": "Zjistit více"}]';
-$_['help_slider_items_settings'] = 'Jeden objekt na snímek. color: "navy" (tmavý text) nebo "light" (bílý text, pro tmavý obrázek, rozvržení „Obrázek za textem“). Příklad: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Jeden objekt na snímek. color: "navy" (tmavý text) nebo "light" (světlý text, pro tmavý obrázek, rozvržení „Obrázek za textem“). Příklad: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_testimonial_items_content'] = 'Stejné pořadí jako v seznamu Položky v nastavení. Příklad: [{"quote": "Skvělý obchod!", "author_name": "Jana Nováková", "author_role": "Ověřený kupující"}]';
 $_['help_testimonial_items_settings'] = 'Jeden objekt na recenzi. Příklad: [{"avatar": "catalog/jane.jpg", "avatar_width": 64, "avatar_height": 64, "rating": 5}]';
 $_['help_testimonial_limit'] = 'Kolik recenzí zákazníků zobrazit (1–12).';
@@ -122,7 +122,7 @@ $_['text_ai_invalid'] = 'Toto není platný JSON.';
 $_['text_ai_notes'] = 'Použito. Řádky v JSON a ve formuláři se liší (JSON -> formulář):';
 $_['text_ai_prompt'] = 'Prompt: "Přelož všechny hodnoty polí do jazyka uvedeného u každého klíče (en-gb, uk-ua, ...). Strukturu JSON a všechny klíče ponech beze změny. Některé hodnoty obsahují HTML (například &lt;em&gt;slovo&lt;/em&gt; nebo odkazy): zachovej značky a dvojité uvozovky uvnitř hodnot escapuj jako \\", aby byl výsledek platný JSON."';
 $_['text_ai_title'] = 'Překlad pomocí AI';
-$_['text_color_light'] = 'Bílý text';
+$_['text_color_light'] = 'Světlý text';
 $_['text_color_navy'] = 'Tmavý text';
 $_['text_confirm'] = 'Opravdu chcete smazat vybrané bloky?';
 $_['text_drag_handle'] = 'Přetažením změníte pořadí';

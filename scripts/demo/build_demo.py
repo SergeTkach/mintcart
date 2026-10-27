@@ -391,8 +391,10 @@ def main():
           {'layout': 'split', 'autoplay': 6000, 'items': [
               {'image': IMG_PREFIX + 'slide1.jpg', 'link': cat + '103', 'btn2_link': cat + '103_113', 'color': 'navy'},
               {'image': IMG_PREFIX + 'slide2.jpg', 'link': cat + '102', 'btn2_link': 'index.php?route=product/special', 'color': 'navy'},
-              {'image': IMG_PREFIX + 'slide3.jpg', 'link': cat + '107', 'btn2_link': cat + '106', 'color': 'navy'}]},
-          {'items': [
+              {'image': IMG_PREFIX + 'slide3.jpg', 'link': cat + '107', 'btn2_link': cat + '106', 'color': 'navy'}],
+           'cards': [{'image': IMG_PREFIX + 'category100.jpg', 'link': cat + '100'}, {'image': IMG_PREFIX + 'category101.jpg', 'link': cat + '101'}]},
+          {'cards': [{'kicker': 'Mugs & Cups', 'title': 'Up to <em>30%</em> off', 'link_text': 'Shop mugs'}, {'kicker': 'Vases', 'title': 'New <em>shapes</em> for fresh flowers', 'link_text': 'See vases'}],
+           'items': [
               {'eyebrow': 'Furniture', 'title': 'Small pieces, <em>built to last</em>', 'subtitle': 'Solid oak and birch, assembled in two minutes.', 'price': 'from $59', 'btn_text': 'Browse furniture', 'btn2_text': 'Chairs'},
               {'eyebrow': 'Lighting', 'title': 'A softer kind of <em>light</em>', 'subtitle': 'Lamps and pendants for slow evenings.', 'price': '$69', 'old_price': '$89', 'btn_text': 'See lighting', 'btn2_text': 'All specials'},
               {'eyebrow': 'Candles', 'title': 'Slow evenings, <em>well lit</em>', 'subtitle': 'Hand-poured soy candles in glass you can reuse.', 'price': 'from $15', 'btn_text': 'Shop candles', 'btn2_text': 'Textiles'}]})
@@ -415,8 +417,12 @@ def main():
     block(80, 'cta', {}, {'title': 'Not sure what to choose?', 'text': 'Tell us about your room and we will suggest a few things that go well together.', 'cta_label': 'Contact us', 'cta_url': 'index.php?route=information/contact'})
 
     # Header: the dark promo bar text, and a real-looking phone instead of the install placeholder.
-    sql.append("DELETE FROM oc_setting WHERE store_id = 0 AND `key` = 'mintcart_announcement_text';")
-    sql.append("INSERT INTO oc_setting (store_id, `code`, `key`, `value`, serialized) VALUES (0, 'mintcart', 'mintcart_announcement_text', 'Free delivery on orders over $60 · 30-day returns', 0);")
+    # Own setting code (Business -> Contacts reads it); one text per language id, the plain key is the fallback.
+    announcement = 'Free delivery on orders over $60 · 30-day returns'
+    sql.append("DELETE FROM oc_setting WHERE store_id = 0 AND `key` IN ('mintcart_announcement_text', 'mintcart_announcement_texts');")
+    sql.append("INSERT INTO oc_setting (store_id, `code`, `key`, `value`, serialized) VALUES (0, 'mintcart_announcement', 'mintcart_announcement_text', %s, 0);" % q(announcement))
+    sql.append("INSERT INTO oc_setting (store_id, `code`, `key`, `value`, serialized) VALUES (0, 'mintcart_announcement', 'mintcart_announcement_texts', %s, 1);" % q(json.dumps({'1': announcement}, ensure_ascii=False)))
+    uk.append("UPDATE oc_setting SET `value` = JSON_SET(`value`, CONCAT('$.\"', @uk, '\"'), %s) WHERE store_id = 0 AND `key` = 'mintcart_announcement_texts' AND @uk IS NOT NULL;" % q(uk_ua.ANNOUNCEMENT))
     sql.append("UPDATE oc_setting SET `value` = '+380 44 123 45 67' WHERE store_id = 0 AND `key` = 'config_telephone' AND `value` = '123456789';")
 
     sql.append('COMMIT;')

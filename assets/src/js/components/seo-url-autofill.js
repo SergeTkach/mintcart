@@ -109,13 +109,6 @@ export function initSeoUrlAutofill() {
                     ...kind.extra(document),
                 });
 
-                // Keywords of the other languages in this form: a keyword may not repeat in a store.
-                fields.forEach((other) => {
-                    if (other.input !== input && other.store === store && other.input.value !== '') {
-                        params.append('avoid[]', other.input.value);
-                    }
-                });
-
                 fetch(url, {
                     method: 'POST',
                     headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },

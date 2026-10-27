@@ -42,5 +42,5 @@ $_['label_users'] = 'Utilizatori';
 $_['label_backup_restore'] = 'Copie de rezervă / Restaurare';
 $_['label_error_log'] = 'Jurnal de erori';
 $_['label_storage_cache_logs_sessions'] = 'Stocare (cache, jurnale, sesiuni)';
-$_['label_design_styles'] = 'Design → Stiluri';
+$_['label_design_store_appearance'] = 'Design → Aspectul magazinului';
 $_['label_compatibility_checker'] = 'Verificator de compatibilitate';

@@ -1,7 +1,7 @@
 <?php
 
 // MintCart
-$_['heading_title'] = 'Stiluri';
+$_['heading_title'] = 'Aspectul magazinului';
 $_['text_success'] = 'Succes: ați modificat stilurile!';
 $_['text_edit'] = 'Presetare de design';
 $_['text_intro'] = 'O presetare este baza designului magazinului dumneavoastră: culori, colțuri, spațieri, umbre și fonturi împreună. Alegeți una, apoi ajustați-o mai jos. Previzualizarea din dreapta arată alegerile dumneavoastră înainte de salvare.';

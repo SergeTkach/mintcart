@@ -4292,3 +4292,19 @@ File: `upload/admin/view/template/common/header.twig`.
 **Compatibility impact:** none (three `<a>` hrefs).
 
 **Tests:** visual check of the profile menu.
+
+## upload/catalog/controller/account/wishlist.php (guest notice)
+
+**File:** `upload/catalog/controller/account/wishlist.php` (+ `default/template/account/wishlist.twig`)
+**Reason:** a guest opening the wishlist was redirected to the login form with no explanation. The page now renders a notice ("log in or create an account") with both links; `session redirect` still returns the user to the wishlist after login.
+**Why it cannot live in the MintCart layer:** the redirect is inside `index()` of the stock controller.
+**Compatibility impact:** logged-in behaviour unchanged; guests get a 200 page instead of a 302. Strings: `mintcart/wishlist` (all 16 languages).
+**Tests:** open `/index.php?route=account/wishlist` logged out and logged in.
+
+## SEO keyword scope (per language, per parent category)
+
+**Files:** `upload/catalog/controller/startup/seo_url.php`, `upload/admin/controller/catalog/{product,category,information,manufacturer}.php`, `upload/admin/controller/design/seo_url.php`
+**Reason:** OpenCart requires a keyword to be unique across the whole store (every language, every page type). We need the same keyword per language for one product, and the same alias for sub-categories of different parents (`clothes/mens`, `shoes/mens`); the decoder could not tell two segments with one keyword apart.
+**Why it cannot live in the MintCart layer:** the decoder and the form validation are inside the stock controllers. The rule itself is in the MintCart model `ModelMintcartSeoUrl::keywordTaken()`.
+**Compatibility impact:** stricter nothing, looser rules only: existing data is valid. The decoder keeps the language-first lookup (MC-0009) and the old "any row" fallback. Third-party SEO extensions that replace `startup/seo_url` do not know the rule. ADR 019.
+**Tests:** `tests/mintcart/seo/keyword-scope-test.php`.

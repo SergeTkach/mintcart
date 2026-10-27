@@ -14,8 +14,7 @@ $_['text_account']      = 'Můj účet';
 $_['text_order']        = 'Historie objednávek';
 $_['text_wishlist']     = 'Seznam přání';
 $_['text_newsletter']   = 'Novinky';
-$_['text_powered']      = 'Běží na <a href="http://www.opencart.com">OpenCart</a><br /> %s &copy; %s';
-
+$_['text_powered'] = '%s &copy; %s<br />Běží na MintCart';
 // MintCart
 $_['text_contact_us'] = 'Kontakt';
 $_['text_mc_reviews'] = 'Recenze zákazníků';

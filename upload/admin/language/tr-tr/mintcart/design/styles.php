@@ -1,7 +1,7 @@
 <?php
 
 // MintCart
-$_['heading_title'] = 'Stiller';
+$_['heading_title'] = 'Mağaza görünümü';
 $_['text_success'] = 'Başarılı: Stilleri değiştirdiniz!';
 $_['text_edit'] = 'Tasarım ön ayarı';
 $_['text_intro'] = 'Ön ayar, mağazanızın tasarımının temelidir: renkler, köşeler, boşluklar, gölgeler ve yazı tipleri bir arada. Birini seçin, ardından aşağıdan ince ayar yapın. Sağdaki önizleme, kaydetmeden önce seçimlerinizi gösterir.';

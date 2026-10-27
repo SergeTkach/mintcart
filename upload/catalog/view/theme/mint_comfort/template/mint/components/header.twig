@@ -108,7 +108,7 @@
                         <a class="mc-header__wishlist" href="{{ links.wishlist }}">{{ text_wishlist }}</a>
                     {% endif %}
                     {% if links.compare %}
-                        <a class="mc-header__compare" href="{{ links.compare }}">{{ text_compare }}</a>
+                        <a class="mc-header__compare" href="{{ links.compare }}" data-mc-label="{{ text_compare }}">{{ text_compare }}{% if compare_count %} ({{ compare_count }}){% endif %}</a>
                     {% endif %}
                 </div>
 

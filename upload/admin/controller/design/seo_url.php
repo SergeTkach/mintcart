@@ -531,14 +531,19 @@ class ControllerDesignSeoUrl extends Controller {
 			$this->error['query'] = $this->language->get('error_query');
 		}
 
-		$seo_urls = $this->model_design_seo_url->getSeoUrlsByKeyword($this->request->post['keyword']);
+		// MintCart: unique per store and language; for a category row only among its siblings
+		// (docs/developer/seo/keyword-scope.md). A different language may reuse the keyword.
+		$this->load->model('mintcart/seo_url');
 
-		foreach ($seo_urls as $seo_url) {
-			if ($seo_url['store_id'] == $this->request->post['store_id'] && $seo_url['query'] != $this->request->post['query']) {
-				$this->error['keyword'] = $this->language->get('error_exists');
+		$query = (string)$this->request->post['query'];
+		$parent_id = null;
 
-				break;
-			}
+		if (strpos($query, 'category_id=') === 0) {
+			$parent_id = $this->model_mintcart_seo_url->parentOf('category', (int)substr($query, 12));
+		}
+
+		if ($this->request->post['keyword'] !== '' && $this->model_mintcart_seo_url->keywordTaken($this->request->post['keyword'], (int)$this->request->post['store_id'], (int)$this->request->post['language_id'], $query, $parent_id)) {
+			$this->error['keyword'] = $this->language->get('error_exists');
 		}
 
 		if (!$this->request->post['keyword']) {

@@ -101,7 +101,7 @@ $_['help_parent_id'] = 'Laissez 0 pour afficher les catégories de premier nivea
 $_['help_slider_cards_content'] = 'Même ordre que la liste Cartes promotionnelles dans les paramètres. Exemple : [{"kicker": "Soldes", "title": "Jusqu\'à -30 %", "link_text": "J\'en profite"}]';
 $_['help_slider_cards_settings'] = 'Uniquement pour la disposition « Diaporama + 2 cartes promotionnelles » : jusqu\'à deux cartes, dans l\'ordre. Exemple : [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_items_content'] = 'Même ordre que la liste Diapositives dans les paramètres. Dans le titre, <em>mot</em> met un mot en valeur. Exemple : [{"eyebrow": "Nouvelle saison", "title": "De la lumière pour des soirées <em>paisibles</em>", "subtitle": "Lampes et bougies", "price": "39 $", "old_price": "49 $", "btn_text": "Acheter", "btn2_text": "En savoir plus"}]';
-$_['help_slider_items_settings'] = 'Un objet par diapositive. color : "navy" (texte foncé) ou "light" (texte blanc, pour une image sombre, disposition « Image derrière le texte »). Exemple : [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Un objet par diapositive. color : "navy" (texte foncé) ou "light" (texte clair, pour une image sombre, disposition « Image derrière le texte »). Exemple : [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_testimonial_items_content'] = 'Même ordre que la liste Éléments dans les paramètres. Exemple : [{"quote": "Super boutique !", "author_name": "Marie Dupont", "author_role": "Acheteuse vérifiée"}]';
 $_['help_testimonial_items_settings'] = 'Un objet par avis. Exemple : [{"avatar": "catalog/jane.jpg", "avatar_width": 64, "avatar_height": 64, "rating": 5}]';
 $_['help_testimonial_limit'] = 'Nombre d\'avis clients à afficher (1-12).';
@@ -122,7 +122,7 @@ $_['text_ai_invalid'] = 'Ce n\'est pas un JSON valide.';
 $_['text_ai_notes'] = 'Appliqué. Les lignes du JSON et du formulaire diffèrent (JSON -> formulaire) :';
 $_['text_ai_prompt'] = 'Prompt : "Traduis toutes les valeurs des champs dans la langue indiquée par chaque clé (en-gb, uk-ua, ...). Conserve la structure JSON et chaque clé inchangées. Certaines valeurs contiennent du HTML (par exemple &lt;em&gt;mot&lt;/em&gt; ou des liens) : conserve les balises et échappe les guillemets doubles dans les valeurs sous la forme \\" pour que le résultat soit un JSON valide."';
 $_['text_ai_title'] = 'Traduction par IA';
-$_['text_color_light'] = 'Texte blanc';
+$_['text_color_light'] = 'Texte clair';
 $_['text_color_navy'] = 'Texte foncé';
 $_['text_confirm'] = 'Voulez-vous vraiment supprimer les blocs sélectionnés ?';
 $_['text_drag_handle'] = 'Glisser pour réordonner';

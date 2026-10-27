@@ -47,32 +47,76 @@
 
 import { addToCart } from '../commerce/cart-client.js';
 import { addToWishlist, removeFromWishlist } from '../commerce/wishlist-client.js';
+import { addToCompare, removeFromCompare, refreshCompare } from '../commerce/compare-client.js';
+import { refreshWishlist } from '../commerce/wishlist-client.js';
+import { showActionNote } from './action-note.js';
 import { createToast, showToast } from './toast.js';
 import { showCartAdded } from './cart-added-modal.js';
 
-function toggleAction(root, actionName, eventName) {
-    root.addEventListener('click', (event) => {
-        const button = event.target.closest(`[data-mc-action="${actionName}"]`);
+function initCompareToggle(root) {
+    root.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-mc-action="toggle-compare"]');
 
-        if (!button) {
+        if (!button || button.disabled) {
             return;
         }
 
         const card = button.closest('.mc-product-card');
-        const pressed = button.getAttribute('aria-pressed') === 'true';
+        const productId = button.dataset.productId ?? null;
+        const wasPressed = button.getAttribute('aria-pressed') === 'true';
+        const errorText = button.dataset.mcTextCompareError || 'Could not update comparison';
 
-        button.setAttribute('aria-pressed', String(!pressed));
+        button.setAttribute('aria-pressed', String(!wasPressed));
+        button.disabled = true;
 
         (card || button).dispatchEvent(
-            new CustomEvent(eventName, {
+            new CustomEvent('mc:product-card:compare-toggle', {
                 bubbles: true,
-                detail: {
-                    productId: button.dataset.productId ?? null,
-                    active: !pressed,
-                },
+                detail: { productId, active: !wasPressed },
             })
         );
+
+        try {
+            const result = wasPressed ? await removeFromCompare(productId) : await addToCompare(productId);
+
+            if (result.error) {
+                throw new Error(result.error);
+            }
+
+            showActionNote(button, { message: result.message, linkText: result.view_text, linkUrl: result.view_url });
+        } catch {
+            button.setAttribute('aria-pressed', String(wasPressed));
+            showToast(createToast({ title: errorText, message: errorText, variant: 'danger' }));
+        } finally {
+            button.disabled = false;
+        }
     });
+}
+
+/**
+ * Cards are rendered with aria-pressed="false"; the server knows what is in
+ * the wishlist / comparison. Mark the pressed ones on load and whenever the
+ * lists change (also for cards added to the page later).
+ */
+function syncPressed(action, ids) {
+    const set = new Set((ids || []).map(String));
+
+    document.querySelectorAll(`[data-mc-action="${action}"]`).forEach((button) => {
+        button.setAttribute('aria-pressed', String(set.has(String(button.dataset.productId))));
+    });
+}
+
+function initPressedSync() {
+    document.addEventListener('mc:wishlist:updated', (event) => syncPressed('toggle-wishlist', event.detail.product_ids));
+    document.addEventListener('mc:compare:updated', (event) => syncPressed('toggle-compare', event.detail.product_ids));
+
+    if (document.querySelector('[data-mc-action="toggle-wishlist"]')) {
+        refreshWishlist().catch(() => {});
+    }
+
+    if (document.querySelector('[data-mc-action="toggle-compare"]')) {
+        refreshCompare().catch(() => {});
+    }
 }
 
 /**
@@ -172,6 +216,8 @@ function initWishlistToggle(root) {
             if (result.error) {
                 throw new Error(result.error);
             }
+
+            showActionNote(button, { message: result.message, linkText: result.view_text, linkUrl: result.view_url });
         } catch {
             button.setAttribute('aria-pressed', String(wasPressed));
             showToast(createToast({ title: errorText, message: errorText, variant: 'danger' }));
@@ -285,7 +331,8 @@ function initAddToCart(root) {
 
 export function initProductCardActions(root = document) {
     initWishlistToggle(root);
-    toggleAction(root, 'toggle-compare', 'mc:product-card:compare-toggle');
+    initCompareToggle(root);
+    initPressedSync();
     initAddToCart(root);
     initOptionErrorReset(root);
 }

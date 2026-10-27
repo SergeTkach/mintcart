@@ -101,7 +101,7 @@ $_['help_parent_id'] = 'Hagyja 0-n a legfelső szintű kategóriák megjelenít�
 $_['help_slider_cards_content'] = 'Ugyanolyan sorrend, mint a Beállítások Promóciós kártyák listájában. Példa: [{"kicker": "Akció", "title": "Akár 30% kedvezmény", "link_text": "Vásárlás"}]';
 $_['help_slider_cards_settings'] = 'Csak a „Csúszka + 2 promóciós kártya” elrendezéshez: legfeljebb két kártya, sorrendben. Példa: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_items_content'] = 'Ugyanolyan sorrend, mint a Beállítások Diák listájában. A címben a <em>szó</em> kiemel egy szót. Példa: [{"eyebrow": "Új szezon", "title": "Fény a <em>lassú</em> estékhez", "subtitle": "Lámpák és gyertyák", "price": "39 EUR", "old_price": "49 EUR", "btn_text": "Vásárlás", "btn2_text": "Tudjon meg többet"}]';
-$_['help_slider_items_settings'] = 'Egy objektum diánként. color: "navy" (sötét szöveg) vagy "light" (fehér szöveg, sötét képhez, „Kép a szöveg mögött” elrendezés). Példa: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Egy objektum diánként. color: "navy" (sötét szöveg) vagy "light" (világos szöveg, sötét képhez, „Kép a szöveg mögött” elrendezés). Példa: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_testimonial_items_content'] = 'Ugyanolyan sorrend, mint a Beállítások Elemek listájában. Példa: [{"quote": "Remek bolt!", "author_name": "Kiss Anna", "author_role": "Ellenőrzött vásárló"}]';
 $_['help_testimonial_items_settings'] = 'Egy objektum véleményenként. Példa: [{"avatar": "catalog/jane.jpg", "avatar_width": 64, "avatar_height": 64, "rating": 5}]';
 $_['help_testimonial_limit'] = 'Hány vásárlói vélemény jelenjen meg (1–12).';
@@ -122,7 +122,7 @@ $_['text_ai_invalid'] = 'Ez nem érvényes JSON.';
 $_['text_ai_notes'] = 'Alkalmazva. A JSON és az űrlap sorai eltérnek (JSON -> űrlap):';
 $_['text_ai_prompt'] = 'Utasítás: „Fordítsd le az összes mezőértéket az egyes kulcsok által megnevezett nyelvre (en-gb, uk-ua, ...). Tartsd meg a JSON szerkezetét és minden kulcsot változatlanul. Egyes értékek HTML-t tartalmaznak (például &lt;em&gt;szó&lt;/em&gt; vagy hivatkozások): tartsd meg a címkéket, az értékeken belüli idézőjeleket pedig escape-eld \\"-ként, hogy az eredmény érvényes JSON legyen.”';
 $_['text_ai_title'] = 'MI-fordítás';
-$_['text_color_light'] = 'Fehér szöveg';
+$_['text_color_light'] = 'Világos szöveg';
 $_['text_color_navy'] = 'Sötét szöveg';
 $_['text_confirm'] = 'Biztosan törli a kijelölt blokko(ka)t?';
 $_['text_drag_handle'] = 'Húzza az átrendezéshez';

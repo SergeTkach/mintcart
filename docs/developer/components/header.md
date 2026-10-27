@@ -159,9 +159,9 @@ longer the blocker.
 ```
 
 `announcement` is `null` when the store has no message. Its source is
-Business → Contacts → "Top info bar" (settings `mintcart_announcement_text`
+Business → Contacts → "Top info bar" (settings `mintcart_announcement_text` = fallback, `mintcart_announcement_texts` = one text per language id
 / `mintcart_announcement_url`, own setting code so the Wizard's Contacts
-step cannot overwrite it). One text for all languages for now. The sticky
+step cannot overwrite it). The text is per language (falls back to the first filled one). The sticky
 header scrolls the announcement away together with the topbar.
 
 `text_account`, `text_register`, `text_login`, `text_order`,

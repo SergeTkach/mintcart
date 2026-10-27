@@ -112,6 +112,8 @@ class ControllerMintcartSeoSystemPages extends Controller {
 			$this->error['warning'] = $this->language->get('error_permission');
 		}
 
+		$this->load->model('mintcart/seo_url');
+
 		// language_id => [alias => code], so the same alias text can be
 		// reused across different languages without tripping the
 		// duplicate-in-this-form check below.
@@ -142,18 +144,9 @@ class ControllerMintcartSeoSystemPages extends Controller {
 
 				$seen[$language_id][$alias] = $code;
 
-				$existing = $this->model_design_seo_url->getSeoUrlsByKeyword($alias);
-
-				foreach ($existing as $row) {
-					// A row is only "in conflict" if it belongs to this
-					// store and this same language, and isn't simply this
-					// same route's own current value (editing a route's
-					// alias to the value it already has must not error).
-					if (((int)$row['store_id'] === $this->storeId()) && ((int)$row['language_id'] === $language_id) && ($row['query'] !== $route)) {
-						$this->error[$field] = $this->language->get('error_alias_exists');
-
-						break;
-					}
+				// Root level of this store and language; the route's own current alias is not a conflict.
+				if ($this->model_mintcart_seo_url->keywordTaken($alias, $this->storeId(), $language_id, $route)) {
+					$this->error[$field] = $this->language->get('error_alias_exists');
 				}
 			}
 		}

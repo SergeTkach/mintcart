@@ -289,6 +289,25 @@ class ControllerCommonHome extends Controller {
 		));
 	}
 
+
+	/**
+	 * Resizes a slider picture to fit inside width x height *keeping its own
+	 * proportions*. OpenCart's resize() pads a picture to the exact box with white
+	 * bars, which showed as a narrow picture on a white slide in the "full" layout;
+	 * the CSS (object-fit: cover) crops to the slide instead.
+	 */
+	private function fitSliderImage($filename, $max_width, $max_height) {
+		$size = @getimagesize(DIR_IMAGE . $filename);
+
+		if (!$size || !$size[0] || !$size[1]) {
+			return $this->model_tool_image->resize($filename, $max_width, $max_height);
+		}
+
+		$scale = min($max_width / $size[0], $max_height / $size[1], 1);
+
+		return $this->model_tool_image->resize($filename, max(1, (int)round($size[0] * $scale)), max(1, (int)round($size[1] * $scale)));
+	}
+
 	/**
 	 * Renders one 'slider' mc_block row (Homepage Builder main slider with rich
 	 * slides). SliderBlockProvider normalizes the data; this resolves pictures
@@ -309,10 +328,10 @@ class ControllerCommonHome extends Controller {
 		$this->load->model('tool/image');
 
 		// Picture sizes per layout: the half of a split slide, a full slide, a promo card.
-		$slide_size = $settings['layout'] === 'full' ? array(1600, 700) : array(1000, 1000);
+		$slide_size = in_array($settings['layout'], array('full', 'cards'), true) ? array(1600, 1200) : array(1000, 1000);
 
 		foreach ($settings['slides'] as &$slide) {
-			$slide['image'] = ($slide['image'] !== '' && is_file(DIR_IMAGE . $slide['image'])) ? $this->model_tool_image->resize($slide['image'], $slide_size[0], $slide_size[1]) : '';
+			$slide['image'] = ($slide['image'] !== '' && is_file(DIR_IMAGE . $slide['image'])) ? $this->fitSliderImage($slide['image'], $slide_size[0], $slide_size[1]) : '';
 			$slide['link'] = htmlspecialchars($slide['link'], ENT_QUOTES, 'UTF-8');
 			$slide['btn2_link'] = htmlspecialchars($slide['btn2_link'], ENT_QUOTES, 'UTF-8');
 			$slide['btn_text'] = $slide['btn_text'] !== '' ? $slide['btn_text'] : $this->language->get('text_default_button');
@@ -326,7 +345,7 @@ class ControllerCommonHome extends Controller {
 				continue;
 			}
 
-			$card['image'] = $this->model_tool_image->resize($card['image'], 640, 340);
+			$card['image'] = $this->fitSliderImage($card['image'], 640, 340);
 			$card['link'] = htmlspecialchars($card['link'], ENT_QUOTES, 'UTF-8');
 		}
 		unset($card);

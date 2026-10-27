@@ -101,7 +101,7 @@ $_['help_parent_id'] = 'Оставете 0, за да се показват ка
 $_['help_slider_cards_content'] = 'Същият ред като списъка Промоционални карти в Настройки. Пример: [{"kicker": "Разпродажба", "title": "До 30% отстъпка", "link_text": "Пазарувай"}]';
 $_['help_slider_cards_settings'] = 'Само за оформлението „Слайдер + 2 промоционални карти“: до две карти, по ред. Пример: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_items_content'] = 'Същият ред като списъка Слайдове в Настройки. В заглавието <em>дума</em> подчертава дума. Пример: [{"eyebrow": "Нов сезон", "title": "Светлина за <em>спокойни</em> вечери", "subtitle": "Лампи и свещи", "price": "39 $", "old_price": "49 $", "btn_text": "Купи сега", "btn2_text": "Научи повече"}]';
-$_['help_slider_items_settings'] = 'Един обект на слайд. color: "navy" (тъмен текст) или "light" (бял текст, за тъмна снимка, оформление „Изображение зад текста“). Пример: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Един обект на слайд. color: "navy" (тъмен текст) или "light" (светъл текст, за тъмна снимка, оформление „Изображение зад текста“). Пример: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_testimonial_items_content'] = 'Същият ред като списъка Елементи в Настройки. Пример: [{"quote": "Страхотен магазин!", "author_name": "Мария Иванова", "author_role": "Потвърден купувач"}]';
 $_['help_testimonial_items_settings'] = 'Един обект на отзив. Пример: [{"avatar": "catalog/jane.jpg", "avatar_width": 64, "avatar_height": 64, "rating": 5}]';
 $_['help_testimonial_limit'] = 'Колко отзива на клиенти да се показват (1-12).';
@@ -122,7 +122,7 @@ $_['text_ai_invalid'] = 'Това не е валиден JSON.';
 $_['text_ai_notes'] = 'Приложено. Редовете в JSON и във формата се различават (JSON -> форма):';
 $_['text_ai_prompt'] = 'Prompt: "Преведи всички стойности на полетата на езика, посочен от всеки ключ (en-gb, uk-ua, ...). Запази структурата на JSON и всеки ключ непроменени. Някои стойности съдържат HTML (например &lt;em&gt;дума&lt;/em&gt; или връзки): запази таговете и екранирай двойните кавички в стойностите като \\", за да е резултатът валиден JSON."';
 $_['text_ai_title'] = 'AI превод';
-$_['text_color_light'] = 'Бял текст';
+$_['text_color_light'] = 'Светъл текст';
 $_['text_color_navy'] = 'Тъмен текст';
 $_['text_confirm'] = 'Сигурни ли сте, че искате да изтриете избраните блокове?';
 $_['text_drag_handle'] = 'Плъзнете за пренареждане';
