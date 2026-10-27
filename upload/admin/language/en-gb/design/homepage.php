@@ -92,7 +92,7 @@ $_['help_action']       = 'Leave blank to hide the subscribe form and show only 
 $_['help_type_change']  = 'Changing the type reloads the form with that type\'s own fields - save again to apply it.';
 $_['help_more_url']           = 'Optional. A link shown at the right end of the title, for example index.php?route=product/special. Leave empty for no link.';
 $_['help_autoplay']                   = 'Time per slide in milliseconds (at least 2000). 0 turns autoplay off.';
-$_['help_slider_items_settings']      = 'One object per slide. color: "navy" (dark text) or "light" (white text, for a dark picture, layout "Picture behind the text"). Example: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings']      = 'One object per slide. color: "navy" (dark text) or "light" (light text, for a dark picture, layout "Picture behind the text"). Example: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_slider_items_content']       = 'Same order as the Slides list in Settings. In the title, <em>word</em> highlights a word. Example: [{"eyebrow": "New season", "title": "Light for <em>slow</em> evenings", "subtitle": "Lamps and candles", "price": "$39", "old_price": "$49", "btn_text": "Shop now", "btn2_text": "Learn more"}]';
 $_['help_slider_cards_settings']      = 'Only for the layout "Slider + 2 promo cards": up to two cards, in order. Example: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_cards_content']       = 'Same order as the Promo cards list in Settings. Example: [{"kicker": "Sale", "title": "Up to 30% off", "link_text": "Shop"}]';
@@ -138,7 +138,7 @@ $_['entry_testimonial_source'] = 'Testimonials from';
 $_['help_testimonial_source'] = 'Written here = the list below. Latest customer reviews = taken from the products\' reviews.';
 $_['help_testimonial_limit'] = 'How many customer reviews to show (1-12).';
 $_['text_color_navy'] = 'Dark text';
-$_['text_color_light'] = 'White text';
+$_['text_color_light'] = 'Light text';
 $_['entry_item_image'] = 'Picture';
 $_['entry_item_avatar'] = 'Photo';
 $_['entry_item_alt'] = 'Alt text';

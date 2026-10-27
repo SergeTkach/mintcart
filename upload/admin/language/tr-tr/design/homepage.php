@@ -79,7 +79,7 @@ $_['help_action'] = 'Abonelik formunu gizleyip yalnızca başlığı/metni duyur
 $_['help_type_change'] = 'Türü değiştirmek formu o türün kendi alanlarıyla yeniden yükler; uygulamak için tekrar kaydedin.';
 $_['help_more_url'] = 'İsteğe bağlı. Başlığın sağ ucunda gösterilen bağlantı, örn. index.php?route=product/special. Bağlantı istemiyorsanız boş bırakın.';
 $_['help_autoplay'] = 'Slayt başına süre (milisaniye, en az 2000). 0 otomatik oynatmayı kapatır.';
-$_['help_slider_items_settings'] = 'Slayt başına bir nesne. color: "navy" (koyu metin) veya "light" (koyu bir görsel için beyaz metin, "Görsel metnin arkasında" düzeni). Örnek: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Slayt başına bir nesne. color: "navy" (koyu metin) veya "light" (koyu bir görsel için açık renkli metin, "Görsel metnin arkasında" düzeni). Örnek: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_slider_items_content'] = 'Ayarlardaki Slaytlar listesiyle aynı sıra. Başlıkta <em>kelime</em> bir kelimeyi vurgular. Örnek: [{"eyebrow": "Yeni sezon", "title": "Yavaş akşamlar için <em>ışık</em>", "subtitle": "Lambalar ve mumlar", "price": "$39", "old_price": "$49", "btn_text": "Alışverişe başla", "btn2_text": "Daha fazla bilgi"}]';
 $_['help_slider_cards_settings'] = 'Yalnızca "Slayt + 2 tanıtım kartı" düzeni için: sırayla en fazla iki kart. Örnek: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_cards_content'] = 'Ayarlardaki Tanıtım kartları listesiyle aynı sıra. Örnek: [{"kicker": "İndirim", "title": "%30\'a varan indirim", "link_text": "Alışveriş"}]';
@@ -117,7 +117,7 @@ $_['entry_testimonial_source'] = 'Yorumların kaynağı';
 $_['help_testimonial_source'] = 'Burada yazılan = aşağıdaki liste. Son müşteri yorumları = ürün yorumlarından alınır.';
 $_['help_testimonial_limit'] = 'Kaç müşteri yorumu gösterileceği (1-12).';
 $_['text_color_navy'] = 'Koyu metin';
-$_['text_color_light'] = 'Beyaz metin';
+$_['text_color_light'] = 'Açık renkli metin';
 $_['entry_item_image'] = 'Görsel';
 $_['entry_item_avatar'] = 'Fotoğraf';
 $_['entry_item_alt'] = 'Alternatif metin';

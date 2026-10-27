@@ -101,7 +101,7 @@ $_['help_parent_id'] = 'Αφήστε 0 για να εμφανίζονται οι
 $_['help_slider_cards_content'] = 'Ίδια σειρά με τη λίστα Προωθητικές κάρτες στις Ρυθμίσεις. Παράδειγμα: [{"kicker": "Εκπτώσεις", "title": "Έως 30% έκπτωση", "link_text": "Αγορές"}]';
 $_['help_slider_cards_settings'] = 'Μόνο για τη διάταξη «Slider + 2 προωθητικές κάρτες»: έως δύο κάρτες, με τη σειρά. Παράδειγμα: [{"image": "catalog/card1.jpg", "link": "index.php?route=product/category&path=20"}]';
 $_['help_slider_items_content'] = 'Ίδια σειρά με τη λίστα Διαφάνειες στις Ρυθμίσεις. Στον τίτλο, το <em>λέξη</em> τονίζει μια λέξη. Παράδειγμα: [{"eyebrow": "Νέα σεζόν", "title": "Φως για <em>ήρεμα</em> βράδια", "subtitle": "Λάμπες και κεριά", "price": "39 $", "old_price": "49 $", "btn_text": "Αγόρασε τώρα", "btn2_text": "Μάθε περισσότερα"}]';
-$_['help_slider_items_settings'] = 'Ένα αντικείμενο ανά διαφάνεια. color: "navy" (σκούρο κείμενο) ή "light" (λευκό κείμενο, για σκούρα εικόνα, διάταξη «Εικόνα πίσω από το κείμενο»). Παράδειγμα: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
+$_['help_slider_items_settings'] = 'Ένα αντικείμενο ανά διαφάνεια. color: "navy" (σκούρο κείμενο) ή "light" (ανοιχτό κείμενο, για σκούρα εικόνα, διάταξη «Εικόνα πίσω από το κείμενο»). Παράδειγμα: [{"image": "catalog/slide1.jpg", "link": "index.php?route=product/category&path=20", "btn2_link": "index.php?route=product/special", "color": "navy"}]';
 $_['help_testimonial_items_content'] = 'Ίδια σειρά με τη λίστα Στοιχεία στις Ρυθμίσεις. Παράδειγμα: [{"quote": "Εξαιρετικό κατάστημα!", "author_name": "Μαρία Παπαδοπούλου", "author_role": "Επαληθευμένος αγοραστής"}]';
 $_['help_testimonial_items_settings'] = 'Ένα αντικείμενο ανά αξιολόγηση. Παράδειγμα: [{"avatar": "catalog/jane.jpg", "avatar_width": 64, "avatar_height": 64, "rating": 5}]';
 $_['help_testimonial_limit'] = 'Πόσες αξιολογήσεις πελατών να εμφανίζονται (1-12).';
@@ -122,7 +122,7 @@ $_['text_ai_invalid'] = 'Αυτό δεν είναι έγκυρο JSON.';
 $_['text_ai_notes'] = 'Εφαρμόστηκε. Οι γραμμές στο JSON και στη φόρμα διαφέρουν (JSON -> φόρμα):';
 $_['text_ai_prompt'] = 'Prompt: "Μετάφρασε όλες τις τιμές των πεδίων στη γλώσσα που υποδεικνύει κάθε κλειδί (en-gb, uk-ua, ...). Κράτησε τη δομή JSON και κάθε κλειδί αμετάβλητα. Μερικές τιμές περιέχουν HTML (για παράδειγμα &lt;em&gt;λέξη&lt;/em&gt; ή συνδέσμους): κράτησε τις ετικέτες και κάνε escape τα διπλά εισαγωγικά μέσα στις τιμές ως \\" ώστε το αποτέλεσμα να είναι έγκυρο JSON."';
 $_['text_ai_title'] = 'Μετάφραση με AI';
-$_['text_color_light'] = 'Λευκό κείμενο';
+$_['text_color_light'] = 'Ανοιχτό κείμενο';
 $_['text_color_navy'] = 'Σκούρο κείμενο';
 $_['text_confirm'] = 'Είστε βέβαιοι ότι θέλετε να διαγράψετε τα επιλεγμένα μπλοκ;';
 $_['text_drag_handle'] = 'Σύρετε για αναδιάταξη';
