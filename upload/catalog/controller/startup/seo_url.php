@@ -15,6 +15,10 @@ class ControllerStartupSeoUrl extends Controller {
 				array_pop($parts);
 			}
 
+			// The category the previous segment resolved to (clothes/mens: `mens` is looked up among the
+			// children of `clothes` first). null at the start and after any other kind of page.
+			$parent_category = null;
+
 			foreach ($parts as $part) {
 				// MintCart fix MC-0009 (docs/fixes/registry.md): prefer the
 				// seo_url row saved for the request's actual resolved
@@ -26,18 +30,25 @@ class ControllerStartupSeoUrl extends Controller {
 				// previously matched on keyword + store_id only and could
 				// silently resolve to a different language's entity that
 				// happens to share the same keyword text.
-				$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE keyword = '" . $this->db->escape($part) . "' AND store_id = '" . (int)$this->config->get('config_store_id') . "' AND language_id = '" . (int)$this->config->get('config_language_id') . "'");
-
+				//
 				// No row for the current language - fall back to the
 				// original language-agnostic match so a store that only
 				// ever set up SEO keywords for one language keeps working
 				// exactly as before for every other language.
-				if (!$query->num_rows) {
-					$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE keyword = '" . $this->db->escape($part) . "' AND store_id = '" . (int)$this->config->get('config_store_id') . "'");
-				}
+				//
+				// MintCart keyword scope (docs/developer/seo/keyword-scope.md): a keyword is unique per
+				// language, and a nested category only among its siblings, so several rows can share
+				// a keyword; findKeyword() picks the one that belongs to the URL's hierarchy.
+				$row = $this->findKeyword($part, $parent_category);
+
+				$query = new stdClass();
+				$query->num_rows = $row ? 1 : 0;
+				$query->row = $row ? $row : array();
 
 				if ($query->num_rows) {
 					$url = explode('=', $query->row['query']);
+
+					$parent_category = $url[0] == 'category_id' ? (int)$url[1] : null;
 
 					if ($url[0] == 'product_id') {
 						$this->request->get['product_id'] = $url[1];
@@ -81,6 +92,77 @@ class ControllerStartupSeoUrl extends Controller {
 				}
 			}
 		}
+	}
+
+	/**
+	 * The seo_url row of one URL segment: the current language first, then any language; among several
+	 * rows with that keyword the child category of the previous segment's category wins, then a root-level
+	 * row (not a nested category), then - so an old bookmark to a bare sub-category still works - any row.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findKeyword($part, $parent_category) {
+		$store_id = (int)$this->config->get('config_store_id');
+
+		foreach (array((int)$this->config->get('config_language_id'), 0) as $language_id) {
+			$rows = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE keyword = '" . $this->db->escape($part) . "' AND store_id = '" . $store_id . "'" . ($language_id ? " AND language_id = '" . $language_id . "'" : "") . " ORDER BY seo_url_id")->rows;
+
+			if (!$rows) {
+				continue;
+			}
+
+			if (count($rows) == 1) {
+				return $rows[0];
+			}
+
+			$parents = $this->categoryParents($rows);
+
+			if ($parent_category) {
+				foreach ($rows as $row) {
+					if (isset($parents[$row['query']]) && $parents[$row['query']] == $parent_category) {
+						return $row;
+					}
+				}
+			}
+
+			foreach ($rows as $row) {
+				if (empty($parents[$row['query']])) {
+					return $row;
+				}
+			}
+
+			return $rows[0];
+		}
+
+		return null;
+	}
+
+	/**
+	 * parent_id of each category_id=N row (query => parent_id); rows that are not categories are left out.
+	 *
+	 * @param array<int, array<string, mixed>> $rows
+	 * @return array<string, int>
+	 */
+	private function categoryParents(array $rows) {
+		$ids = array();
+
+		foreach ($rows as $row) {
+			if (strpos($row['query'], 'category_id=') === 0) {
+				$ids[(int)substr($row['query'], 12)] = $row['query'];
+			}
+		}
+
+		$parents = array();
+
+		if ($ids) {
+			$query = $this->db->query("SELECT category_id, parent_id FROM " . DB_PREFIX . "category WHERE category_id IN (" . implode(',', array_keys($ids)) . ")");
+
+			foreach ($query->rows as $category) {
+				$parents[$ids[(int)$category['category_id']]] = (int)$category['parent_id'];
+			}
+		}
+
+		return $parents;
 	}
 
 	public function rewrite($link) {

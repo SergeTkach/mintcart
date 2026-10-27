@@ -397,21 +397,18 @@ class ControllerCatalogManufacturer extends Controller {
 		}
 
 		if ($this->request->post['manufacturer_seo_url']) {
-			$this->load->model('design/seo_url');
-			
+			$this->load->model('mintcart/seo_url');
+
 			foreach ($this->request->post['manufacturer_seo_url'] as $store_id => $language) {
 				foreach ($language as $language_id => $keyword) {
 					if (!empty($keyword)) {
-						if (count(array_keys($language, $keyword)) > 1) {
-							$this->error['keyword'][$store_id][$language_id] = $this->language->get('error_unique');
-						}
+						// MintCart: a keyword is unique per language (the same one may be used in every language of this
+						// manufacturer); a category only has to differ from its siblings, so clothes/mens and shoes/mens can coexist
+						// (docs/upstream-diff.md, docs/developer/seo/keyword-scope.md).
+						$ignore_query = isset($this->request->get['manufacturer_id']) ? 'manufacturer_id=' . (int)$this->request->get['manufacturer_id'] : '';
 
-						$seo_urls = $this->model_design_seo_url->getSeoUrlsByKeyword($keyword);
-
-						foreach ($seo_urls as $seo_url) {
-							if (($seo_url['store_id'] == $store_id) && (!isset($this->request->get['manufacturer_id']) || (($seo_url['query'] != 'manufacturer_id=' . $this->request->get['manufacturer_id'])))) {
-								$this->error['keyword'][$store_id][$language_id] = $this->language->get('error_keyword');
-							}
+						if ($this->model_mintcart_seo_url->keywordTaken($keyword, $store_id, $language_id, $ignore_query, null)) {
+							$this->error['keyword'][$store_id][$language_id] = $this->language->get('error_keyword');
 						}
 					}
 				}

@@ -127,6 +127,10 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
 - [x] SEO -> Redirects: 301 from dirty addresses, category paths in a product URL, trailing slash and `?page=1` to the one SEO URL;
       an old keyword redirects to the page after the keyword is changed (written by events on the product / category / page /
       brand save); manual redirects; information pages got a canonical link. Checked with curl and unit tests
+- [x] SEO keyword scope (ADR 019): a keyword is unique per language (the same one for one product in every language) and a nested
+      category only among its siblings (`clothes/mens`, `shoes/mens`); decoder resolves a segment in the context of the previous
+      one; admin check in one place (`ModelMintcartSeoUrl::keywordTaken`); unit-tested with an in-memory DB, not clicked through
+      in the admin (2026-10-27)
 - [x] SEO menu section: Meta Tags (title / description templates per page type and language, live preview),
       System Pages, All URLs (ADR 018); URL Generator (templates, transliteration, auto-fill of the SEO URL fields in the
       product / category / page / brand forms, batch for items without a URL). Browser-checked only through the server

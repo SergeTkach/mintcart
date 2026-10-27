@@ -155,9 +155,10 @@ class ControllerMintcartSeoUrlGenerator extends Controller {
 
 			$ignore_query = $ignore_id ? $this->model_mintcart_seo_url->queryOf($type, $ignore_id) : '';
 
-			$avoid = isset($this->request->post['avoid']) && is_array($this->request->post['avoid']) ? array_map('strval', $this->request->post['avoid']) : array();
+			// A category's keyword only has to be free among its siblings (clothes/mens, shoes/mens).
+			$parent_id = $type === 'category' ? (isset($this->request->post['parent_id']) ? (int)$this->request->post['parent_id'] : 0) : null;
 
-			$json['slug'] = $this->model_mintcart_seo_url->uniqueKeyword($base, $store_id, $ignore_query, $avoid);
+			$json['slug'] = $this->model_mintcart_seo_url->uniqueKeyword($base, $store_id, $language_id, $ignore_query, $parent_id);
 		}
 
 		$this->response->addHeader('Content-Type: application/json');
