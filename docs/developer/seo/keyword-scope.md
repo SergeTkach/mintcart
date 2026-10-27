@@ -22,7 +22,24 @@ Which keyword (alias) may be used where. Decision: `docs/adr/019-seo-keyword-sco
   segment, then a root-level row, then the first row.
 - Tests: `tests/mintcart/seo/keyword-scope-test.php`.
 
+## Caveats
+
+1. **The same keyword in several languages needs the language folder in the URL** (ADR 017, `/uk/white-mug`). Without it
+   one address serves different languages by cookie or browser setting, and hreflang cannot point at it. Turn the
+   language folder on before using identical keywords across languages.
+2. **A bare sub-category alias is ambiguous.** `/mens` (no parent in the URL) opens the first sub-category with that alias.
+   Links the site generates always contain the parents; old bookmarks to a bare alias keep working through this fallback.
+3. **Third-party SEO extensions** that replace `startup/seo_url` (or write their own `seo_url` rows) do not know this rule;
+   they can create keywords the decoder then resolves in the first-row order, or refuse the ones this scope allows.
+4. **Direct core change.** The decoder and the form validation sit in stock controllers (`docs/upstream-diff.md`, "SEO
+   keyword scope"). A merge from upstream OpenCart has to keep them.
+5. **A category's parent change can create a clash** with its new siblings; the category form checks it on save, but data
+   edited straight in the database is not checked.
+6. **Not clicked through yet.** The rule is unit-tested with an in-memory database
+   (`tests/mintcart/seo/keyword-scope-test.php`); it has not been tried in the admin and on a running store (two categories
+   with the same alias under different parents, the same product keyword in two languages, an old `/mens` link).
+7. **The scope is per store.** Several stores of one installation keep separate scopes, as before.
+
 ## Notes
-- `/mens` (no parent in the URL) opens the first sub-category with that alias. Links the site generates always contain the parents.
-- Changing a category's parent can create a clash with its new siblings; the category form checks it on save.
 - Existing data needs no migration: a rule that was stricter is now looser.
+- No unique index exists on `seo_url.keyword`, so nothing in the schema had to change.
