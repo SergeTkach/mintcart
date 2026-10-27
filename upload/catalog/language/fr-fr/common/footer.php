@@ -14,8 +14,7 @@ $_['text_account']      = 'Mon Compte';
 $_['text_order']        = 'Historique des Commandes';
 $_['text_wishlist']     = 'Liste de Souhaits';
 $_['text_newsletter']   = 'Bulletin';
-$_['text_powered']      = 'Propulsé par <a href="http://www.opencart.com">OpenCart</a><br /> %s &copy; %s';
-
+$_['text_powered'] = '%s &copy; %s<br />Propulsé par MintCart';
 // MintCart
 $_['text_contact_us'] = 'Contact';
 $_['text_mc_reviews'] = 'Avis clients';

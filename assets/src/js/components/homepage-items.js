@@ -141,9 +141,34 @@ function initShowWhen(root, form) {
         return;
     }
 
+    // An accordion: the header (legend) is always there, so the visitor sees the section exists;
+    // it opens by itself when the setting asks for it, and can be toggled by hand.
+    const legend = root.querySelector(':scope > legend');
     const apply = () => {
-        root.hidden = control.value !== root.dataset.mcShowValue;
+        const open = control.value === root.dataset.mcShowValue;
+
+        root.classList.toggle('is-collapsed', !open);
+        legend?.setAttribute('aria-expanded', String(open));
     };
+
+    if (legend) {
+        legend.tabIndex = 0;
+        legend.setAttribute('role', 'button');
+
+        const toggle = () => {
+            const collapsed = root.classList.toggle('is-collapsed');
+
+            legend.setAttribute('aria-expanded', String(!collapsed));
+        };
+
+        legend.addEventListener('click', toggle);
+        legend.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                toggle();
+            }
+        });
+    }
 
     control.addEventListener('change', apply);
     apply();

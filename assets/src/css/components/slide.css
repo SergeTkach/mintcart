@@ -11,6 +11,15 @@
  * Documentation: docs/developer/blocks/slider.md
  */
 
+/* The hero's own colours come from the brand, so they follow any preset: labels are white pills
+   with dark text, the highlighted word is a light tint of the brand colour; the brand colour
+   itself stays on the buttons. Override the tokens in a preset/theme for something else. */
+.mc-block--slider {
+    --mc-slide-accent: color-mix(in srgb, var(--mc-primary) 45%, #fff);
+    --mc-slide-pill-bg: #fff;
+    --mc-slide-pill-color: var(--mc-text);
+}
+
 .mc-slider--rich .mc-slider__viewport {
     background: var(--mc-surface-alt);
 }
@@ -25,7 +34,10 @@
 .mc-slide__eyebrow {
     display: inline-block;
     margin-bottom: var(--mc-space-3);
-    color: var(--mc-primary);
+    padding: 0.25rem 0.7rem;
+    border-radius: var(--mc-radius-pill);
+    background: var(--mc-slide-pill-bg, var(--mc-primary));
+    color: var(--mc-slide-pill-color, var(--mc-on-primary));
     font-size: var(--mc-font-size-xs);
     font-weight: var(--mc-font-weight-bold);
     letter-spacing: 0.08em;
@@ -41,9 +53,14 @@
     line-height: 1.12;
 }
 
+/* Dark text on a light picture: the full brand colour; on a dark scrim (below) its light tint. */
 .mc-slide__title em {
     color: var(--mc-primary);
     font-style: normal;
+}
+
+.mc-slide--light .mc-slide__title em {
+    color: var(--mc-slide-accent, var(--mc-primary));
 }
 
 .mc-slide__subtitle {
@@ -146,21 +163,30 @@
 
 .mc-slide--full .mc-slide__inner {
     position: relative;
+    z-index: 2;
     width: 100%;
     max-width: 40rem;
     padding: var(--mc-space-8, 2rem) var(--mc-space-5) var(--mc-space-8, 2rem) 4rem;
+}
+
+/* A scrim on the text side for every "full" slide (light for dark text, dark for white text), so
+   the text stays readable whatever the picture is. */
+.mc-slide--full::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.8) 40%, rgba(255, 255, 255, 0) 75%);
 }
 
 .mc-slide--light::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(10, 18, 30, 0.72), rgba(10, 18, 30, 0.15));
+    background: linear-gradient(90deg, rgba(10, 18, 30, 0.78) 0%, rgba(10, 18, 30, 0.5) 40%, rgba(10, 18, 30, 0) 72%);
 }
 
-.mc-slide--light .mc-slide__eyebrow,
 .mc-slide--light .mc-slide__title,
-.mc-slide--light .mc-slide__title em,
 .mc-slide--light .mc-slide__subtitle,
 .mc-slide--light .mc-slide__price,
 .mc-slide--light .mc-slide__old-price {
@@ -169,13 +195,62 @@
 
 .mc-slide--light .mc-slide__subtitle,
 .mc-slide--light .mc-slide__old-price {
-    opacity: 0.85;
+    opacity: 0.88;
 }
 
 @media (max-width: 575.98px) {
     .mc-slide--full .mc-slide__inner,
     .mc-slide--split .mc-slide__body {
         padding-inline: var(--mc-space-5);
+    }
+}
+
+/* Full on phones: still the picture behind the text (that is what makes it a different layout
+   from split), but the picture gets a taller slide and the text sits at the bottom on a scrim
+   that only covers the text block (and a short fade above it), so the product in the picture
+   stays visible. */
+@media (max-width: 767.98px) {
+    .mc-slide--full {
+        align-items: flex-end;
+        min-height: 25.5rem;
+    }
+
+    .mc-slide--full::before {
+        display: none;
+    }
+
+    .mc-slide--full .mc-slide__inner {
+        max-width: none;
+        padding: var(--mc-space-6) var(--mc-space-5) var(--mc-space-4);
+        background: linear-gradient(0deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 55%, rgba(255, 255, 255, 0) 100%);
+    }
+
+    .mc-slide--full.mc-slide--light .mc-slide__inner {
+        background: linear-gradient(0deg, rgba(10, 18, 30, 0.88) 0%, rgba(10, 18, 30, 0.7) 55%, rgba(10, 18, 30, 0) 100%);
+    }
+
+    .mc-slide--full .mc-slide__title {
+        margin-bottom: var(--mc-space-2);
+        font-size: 1.375rem;
+    }
+
+    /* Phones keep the essentials (label, title, price, the main button) so the text block stays
+       short and the picture shows. */
+    .mc-slide--full .mc-slide__subtitle,
+    .mc-slide--full .mc-slide__actions .mc-button--secondary {
+        display: none;
+    }
+
+    .mc-slide--full .mc-slide__price {
+        margin-bottom: var(--mc-space-3);
+        font-size: var(--mc-font-size-lg);
+    }
+
+    .mc-slide--full .mc-slide__actions .mc-button {
+        --mc-button-padding-y: 0.5rem;
+        --mc-button-padding-x: 1rem;
+        --mc-button-min-height: 2.5rem;
+        --mc-button-font-size: var(--mc-font-size-sm);
     }
 }
 
@@ -214,7 +289,7 @@
     align-items: flex-end;
     min-height: 11rem;
     overflow: hidden;
-    border-radius: var(--mc-radius-lg);
+    border-radius: var(--mc-slider-radius, var(--mc-radius-xl));
     color: var(--mc-text);
     text-decoration: none;
     background: var(--mc-surface-alt);
@@ -237,23 +312,37 @@ a.mc-slide-card:hover .mc-slide-card__image {
     position: relative;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: var(--mc-space-1);
     width: 100%;
-    padding: var(--mc-space-4);
-    background: linear-gradient(0deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0));
+    padding: var(--mc-space-8, 2rem) var(--mc-space-5) var(--mc-space-4);
+    background: linear-gradient(0deg, rgba(10, 18, 30, 0.78) 0%, rgba(10, 18, 30, 0.45) 55%, rgba(10, 18, 30, 0) 100%);
+    color: #fff;
+}
+
+/* The small label above the title: a pill, readable on any picture. */
+.mc-slide-card__body .mc-slide__eyebrow {
+    margin-bottom: var(--mc-space-1);
+    padding: 0.2rem 0.6rem;
 }
 
 .mc-slide-card__title {
     font-family: var(--mc-font-family-heading);
-    font-size: var(--mc-font-size-lg);
+    font-size: var(--mc-font-size-xl, 1.375rem);
     font-weight: var(--mc-font-weight-bold);
-    line-height: 1.2;
+    line-height: 1.15;
+}
+
+.mc-slide-card__title em {
+    color: var(--mc-slide-accent, var(--mc-primary));
+    font-style: normal;
 }
 
 .mc-slide-card__more {
-    color: var(--mc-primary);
+    color: #fff;
     font-size: var(--mc-font-size-sm);
     font-weight: var(--mc-font-weight-semibold);
+    opacity: 0.92;
 }
 
 /* Phones: the slide is stacked (text, then picture), so arrows centred on the slide

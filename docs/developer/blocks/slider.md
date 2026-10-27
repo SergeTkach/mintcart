@@ -17,7 +17,7 @@ vanilla JS, `mc-*`, no OCMOD, no jQuery).
 |---|---|
 | `split` (default) | text on one side, the picture on the other; stacks on phones |
 | `full` | the picture fills the slide, text over it; `color` `navy` = dark text, `light` = white text over a dark shade |
-| `cards` | the slider (split slides) next to two promo cards; the cards go under the slider below 992 px |
+| `cards` | the slider (full slides: text over the picture) next to two promo cards; the cards go under the slider below 992 px |
 
 ## Data
 

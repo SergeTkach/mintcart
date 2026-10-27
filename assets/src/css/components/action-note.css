@@ -1,0 +1,78 @@
+/**
+ * mc-action-note (action-note.js) - a bubble anchored to the control that was
+ * just used, with a small arrow pointing at it.
+ */
+.mc-action-note {
+    --mc-action-note-arrow: 50%;
+
+    position: absolute;
+    z-index: var(--mc-z-toast, 1090);
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-3);
+    max-width: min(20rem, calc(100vw - 1rem));
+    padding: var(--mc-space-2) var(--mc-space-3);
+    border: var(--mc-border-width) solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    background: var(--mc-surface);
+    box-shadow: var(--mc-shadow-md, 0 8px 24px rgb(0 0 0 / 0.14));
+    color: var(--mc-text);
+    font-size: var(--mc-font-size-sm);
+    line-height: var(--mc-line-height-tight);
+    opacity: 0;
+    transform: translateY(0.25rem);
+    transition:
+        opacity var(--mc-motion-duration-fast) var(--mc-motion-easing-standard),
+        transform var(--mc-motion-duration-fast) var(--mc-motion-easing-standard);
+}
+
+.mc-action-note.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+.mc-action-note::before {
+    position: absolute;
+    left: var(--mc-action-note-arrow);
+    width: 0.625rem;
+    height: 0.625rem;
+    border: inherit;
+    background: inherit;
+    content: '';
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.mc-action-note.is-below::before {
+    top: -0.34rem;
+    border-right: 0;
+    border-bottom: 0;
+}
+
+.mc-action-note.is-above::before {
+    bottom: -0.34rem;
+    border-top: 0;
+    border-left: 0;
+}
+
+.mc-action-note__text {
+    font-weight: var(--mc-font-weight-medium);
+}
+
+.mc-action-note__link {
+    flex: none;
+    color: var(--mc-primary);
+    font-weight: var(--mc-font-weight-semibold);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.mc-action-note__link:hover,
+.mc-action-note__link:focus-visible {
+    text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-action-note {
+        transition: none;
+    }
+}

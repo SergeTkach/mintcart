@@ -14,8 +14,7 @@ $_['text_account']      = 'Ο Λογαριασμός μου';
 $_['text_order']        = 'Ιστορικό Παραγγελιών';
 $_['text_wishlist']     = 'Λίστα Επιθυμιών';
 $_['text_newsletter']   = 'Ενημερώσεις';
-$_['text_powered']      = 'Powered By <a href="http://www.opencart.com">OpenCart</a><br /> %s &copy; %s';
-
+$_['text_powered'] = '%s &copy; %s<br />Με την τεχνολογία MintCart';
 // MintCart
 $_['text_contact_us'] = 'Επικοινωνία';
 $_['text_mc_reviews'] = 'Αξιολογήσεις πελατών';

@@ -1,11 +1,9 @@
 <?php
 class ControllerAccountWishList extends Controller {
 	public function index() {
-		if (!$this->customer->isLogged()) {
-			$this->session->data['redirect'] = $this->url->link('account/wishlist', '', true);
-
-			$this->response->redirect($this->url->link('account/login', '', true));
-		}
+		// MintCart: a guest is not bounced to the login form; the page explains
+		// what is needed and offers log in / register (docs/upstream-diff.md).
+		$guest = !$this->customer->isLogged();
 
 		$this->load->language('account/wishlist');
 
@@ -15,7 +13,7 @@ class ControllerAccountWishList extends Controller {
 
 		$this->load->model('tool/image');
 
-		if (isset($this->request->get['remove'])) {
+		if (!$guest && isset($this->request->get['remove'])) {
 			// Remove Wishlist
 			$this->model_account_wishlist->deleteWishlist($this->request->get['remove']);
 
@@ -53,7 +51,21 @@ class ControllerAccountWishList extends Controller {
 
 		$data['products'] = array();
 
-		$results = $this->model_account_wishlist->getWishlist();
+		$data['guest'] = $guest;
+
+		if ($guest) {
+			$this->session->data['redirect'] = $this->url->link('account/wishlist', '', true);
+
+			$this->load->language('mintcart/wishlist');
+
+			$data['text_guest_notice'] = $this->language->get('text_guest_notice');
+			$data['text_guest_login'] = $this->language->get('text_guest_login');
+			$data['text_guest_register'] = $this->language->get('text_guest_register');
+			$data['login'] = $this->url->link('account/login', '', true);
+			$data['register'] = $this->url->link('account/register', '', true);
+		}
+
+		$results = $guest ? array() : $this->model_account_wishlist->getWishlist();
 
 		foreach ($results as $result) {
 			$product_info = $this->model_catalog_product->getProduct($result['product_id']);

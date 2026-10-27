@@ -16,8 +16,7 @@ $_['text_account']      = 'Hesabım';
 $_['text_order']        = 'Siparişlerim';
 $_['text_wishlist']     = 'Alışveriş Listem';
 $_['text_newsletter']   = 'Bülten Aboneliği';
-$_['text_powered']      = '%s &copy; %s - Tüm Hakları Saklıdır.<br />Altyapı: <a href="http://www.opencart.com" title="OpenCart">OpenCart</a> - Türkçe Çeviri: <a href="https://e-piksel.com" title="E-Piksel E-Ticaret ve Bilgi Teknolojileri">E-Piksel</a>';
-
+$_['text_powered'] = '%s &copy; %s<br />Altyapı: MintCart';
 // MintCart
 $_['text_mc_reviews'] = 'Müşteri Yorumları';
 $_['text_contact_us'] = 'Bize Ulaşın';

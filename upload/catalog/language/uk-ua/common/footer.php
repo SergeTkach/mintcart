@@ -18,8 +18,7 @@ $_['text_account']      = 'Особистий кабінет';
 $_['text_order']        = 'Історія замовлень';
 $_['text_wishlist']     = 'Закладки';
 $_['text_newsletter']   = 'Розсилка';
-$_['text_powered']      = '%s &copy; %s';
-
+$_['text_powered'] = '%s &copy; %s<br />Працює на MintCart';
 // MintCart
 $_['text_mc_reviews'] = 'Відгуки покупців';
 $_['text_contact_us'] = 'Зв’язатися з нами';

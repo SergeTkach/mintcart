@@ -16,6 +16,8 @@
  */
 
 .mc-footer {
+    /* Room above the footer on every page, so a sidebar / last block never sits against it. */
+    margin-top: var(--mc-space-10);
     padding-top: var(--mc-space-10);
     padding-bottom: var(--mc-space-6);
     background-color: var(--mc-surface-alt);

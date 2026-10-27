@@ -20,8 +20,7 @@ $_['text_account']      = 'Личный кабинет';
 $_['text_order']        = 'История заказов';
 $_['text_wishlist']     = 'Закладки';
 $_['text_newsletter']   = 'Рассылка';
-$_['text_powered']      = 'Работает на <a href="http://www.opencart.com">OpenCart</a><br /> %s &copy; %s';
-
+$_['text_powered'] = '%s &copy; %s<br />Работает на MintCart';
 // MintCart
 $_['text_mc_reviews'] = 'Отзывы покупателей';
 $_['text_contact_us'] = 'Свяжитесь с нами';

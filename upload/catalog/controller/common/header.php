@@ -186,7 +186,7 @@ class ControllerCommonHeader extends Controller {
 						'currency' => $data['currency']
 					),
 					array(
-						'text' => $this->config->get('mintcart_announcement_text'),
+						'text' => (is_array($this->config->get('mintcart_announcement_texts')) ? ($this->config->get('mintcart_announcement_texts')[(int)$this->config->get('config_language_id')] ?? null) : null) ?: $this->config->get('mintcart_announcement_text'),
 						'url' => $this->config->get('mintcart_announcement_url')
 					)
 				);
@@ -201,6 +201,7 @@ class ControllerCommonHeader extends Controller {
 					'text_logout' => $this->language->get('text_logout'),
 					'text_wishlist' => $data['text_wishlist'],
 					'text_compare' => $this->language->get('text_mc_compare'),
+					'compare_count' => isset($this->session->data['compare']) ? count($this->session->data['compare']) : 0,
 					'text_call' => $this->language->get('text_mc_call'),
 					'text_menu' => $this->language->get('text_menu'),
 					'text_close' => $this->language->get('text_close'),

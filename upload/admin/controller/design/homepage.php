@@ -126,7 +126,7 @@ class ControllerDesignHomepage extends Controller {
 			),
 			'slider' => array(
 				'settings' => array(
-					array('name' => 'layout', 'type' => 'select', 'default' => 'split', 'label_key' => 'entry_slider_layout', 'options' => array('split' => 'Text + picture', 'full' => 'Picture behind the text', 'cards' => 'Slider + 2 promo cards')),
+					array('name' => 'layout', 'type' => 'select', 'default' => 'split', 'before_list' => 'cards', 'label_key' => 'entry_slider_layout', 'options' => array('split' => 'Text + picture', 'full' => 'Picture behind the text', 'cards' => 'Slider + 2 promo cards')),
 					array('name' => 'autoplay', 'type' => 'number', 'default' => 6000, 'min' => 0, 'label_key' => 'entry_autoplay', 'help_key' => 'help_autoplay'),
 					array('name' => 'items', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_slider_items', 'help_key' => 'help_slider_items_settings'),
 					array('name' => 'cards', 'type' => 'json', 'default' => array(), 'label_key' => 'entry_slider_cards', 'help_key' => 'help_slider_cards_settings')
@@ -699,6 +699,7 @@ class ControllerDesignHomepage extends Controller {
 
 			$data['settings_fields'][] = array(
 				'name'    => $field['name'],
+				'before_list' => isset($field['before_list']) ? $field['before_list'] : '',
 				'thumb'   => ($field['type'] === 'image' && is_string($raw) && $raw !== '' && is_file(DIR_IMAGE . $raw)) ? $this->model_tool_image->resize($raw, 100, 100) : $data['placeholder'],
 				'type'    => $field['type'],
 				'label'   => $this->language->get($field['label_key']),

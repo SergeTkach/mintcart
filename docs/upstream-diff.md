@@ -4292,3 +4292,11 @@ File: `upload/admin/view/template/common/header.twig`.
 **Compatibility impact:** none (three `<a>` hrefs).
 
 **Tests:** visual check of the profile menu.
+
+## upload/catalog/controller/account/wishlist.php (guest notice)
+
+**File:** `upload/catalog/controller/account/wishlist.php` (+ `default/template/account/wishlist.twig`)
+**Reason:** a guest opening the wishlist was redirected to the login form with no explanation. The page now renders a notice ("log in or create an account") with both links; `session redirect` still returns the user to the wishlist after login.
+**Why it cannot live in the MintCart layer:** the redirect is inside `index()` of the stock controller.
+**Compatibility impact:** logged-in behaviour unchanged; guests get a 200 page instead of a 302. Strings: `mintcart/wishlist` (all 16 languages).
+**Tests:** open `/index.php?route=account/wishlist` logged out and logged in.

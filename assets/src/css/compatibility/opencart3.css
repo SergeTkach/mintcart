@@ -85,3 +85,24 @@ ul.breadcrumb > li:last-child a {
     display: flow-root;
     margin: var(--mc-space-6, 1.5rem) 0 0;
 }
+
+/* Stock star rating (Font Awesome stacks, e.g. the compare page): the stock
+   stylesheet colours them, Mint does not load it - without this they are
+   black and white. Same colours as mc-rating. */
+.rating .fa-stack {
+    font-size: 8px;
+}
+
+.rating .fa-star-o {
+    color: var(--mc-color-gray-300, #cbd0d6);
+    font-size: 15px;
+}
+
+.rating .fa-star {
+    color: var(--mc-color-amber-500, #f5b301);
+    font-size: 15px;
+}
+
+.rating .fa-star + .fa-star-o {
+    color: var(--mc-color-amber-500, #f5b301);
+}

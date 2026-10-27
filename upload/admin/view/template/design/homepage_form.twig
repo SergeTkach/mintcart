@@ -100,35 +100,19 @@
           <fieldset>
             <legend>{{ settings_legend }}</legend>
             {% for field in settings_fields %}
-            <div class="form-group">
-              <label class="col-sm-2 control-label" for="input-{{ field.name }}">{{ field.label }}</label>
-              <div class="col-sm-10">
-                {% if field.type == 'select' %}
-                <select name="settings[{{ field.name }}]" id="input-{{ field.name }}" class="form-control">
-                  {% for value, label in field.options %}
-                  <option value="{{ value }}"{% if value == field.value %} selected="selected"{% endif %}>{{ label }}</option>
-                  {% endfor %}
-                </select>
-                {% elseif field.type == 'number' %}
-                <input type="number" name="settings[{{ field.name }}]" value="{{ field.value|e }}" placeholder="{{ field.label|e }}" id="input-{{ field.name }}" class="form-control"{% if field.min is not null %} min="{{ field.min }}"{% endif %} />
-                {% elseif field.type == 'image' %}
-                <div class="mc-items__image">
-                  <a href="" id="thumb-{{ field.name }}" data-toggle="image" class="img-thumbnail" title="{{ text_image_pick }}"><img src="{{ field.thumb }}" alt="" data-placeholder="{{ placeholder }}" /></a>
-                  <input type="hidden" name="settings[{{ field.name }}]" value="{{ field.value|e }}" id="input-{{ field.name }}" />
-                </div>
-                {% else %}
-                <input type="text" name="settings[{{ field.name }}]" value="{{ field.value|e }}" placeholder="{{ field.label|e }}" id="input-{{ field.name }}" class="form-control" />
-                {% endif %}
-                {% if field.help %}
-                <div class="help-block">{{ field.help }}</div>
-                {% endif %}
-              </div>
-            </div>
+            {% if not field.before_list %}
+            {{ m.settings_field(field, t, placeholder) }}
+            {% endif %}
             {% endfor %}
           </fieldset>
           {% endif %}
 
           {% for list in lists %}
+          {% for field in settings_fields %}
+          {% if field.before_list == list.name %}
+          <div class="mc-items-setting">{{ m.settings_field(field, t, placeholder) }}</div>
+          {% endif %}
+          {% endfor %}
           <fieldset class="mc-items" data-mc-items data-list="{{ list.name }}" data-max="{{ list.max }}"{% if list.show_when %} data-mc-show-setting="{{ list.show_when[0] }}" data-mc-show-value="{{ list.show_when[1] }}"{% endif %}>
             <legend>{{ list.label }}</legend>
             {% if languages|length > 1 %}
@@ -229,4 +213,30 @@
     {% endif %}
   </div>
 </div>
+{% endmacro %}
+{% macro settings_field(field, t, placeholder) %}
+            <div class="form-group">
+              <label class="col-sm-2 control-label" for="input-{{ field.name }}">{{ field.label }}</label>
+              <div class="col-sm-10">
+                {% if field.type == 'select' %}
+                <select name="settings[{{ field.name }}]" id="input-{{ field.name }}" class="form-control">
+                  {% for value, label in field.options %}
+                  <option value="{{ value }}"{% if value == field.value %} selected="selected"{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                {% elseif field.type == 'number' %}
+                <input type="number" name="settings[{{ field.name }}]" value="{{ field.value|e }}" placeholder="{{ field.label|e }}" id="input-{{ field.name }}" class="form-control"{% if field.min is not null %} min="{{ field.min }}"{% endif %} />
+                {% elseif field.type == 'image' %}
+                <div class="mc-items__image">
+                  <a href="" id="thumb-{{ field.name }}" data-toggle="image" class="img-thumbnail" title="{{ text_image_pick }}"><img src="{{ field.thumb }}" alt="" data-placeholder="{{ placeholder }}" /></a>
+                  <input type="hidden" name="settings[{{ field.name }}]" value="{{ field.value|e }}" id="input-{{ field.name }}" />
+                </div>
+                {% else %}
+                <input type="text" name="settings[{{ field.name }}]" value="{{ field.value|e }}" placeholder="{{ field.label|e }}" id="input-{{ field.name }}" class="form-control" />
+                {% endif %}
+                {% if field.help %}
+                <div class="help-block">{{ field.help }}</div>
+                {% endif %}
+              </div>
+            </div>
 {% endmacro %}

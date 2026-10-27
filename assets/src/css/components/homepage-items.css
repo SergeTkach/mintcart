@@ -10,6 +10,48 @@
     margin-top: 24px;
 }
 
+.mc-items-setting {
+    margin-top: 24px;
+}
+
+.mc-items-setting + .mc-items {
+    margin-top: 0;
+}
+
+/* Accordion lists (the ones with a condition): the legend is the header. */
+.mc-items[data-mc-show-setting] > legend {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+}
+
+.mc-items[data-mc-show-setting] > legend::after {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid #777;
+    border-bottom: 2px solid #777;
+    content: "";
+    transform: translateY(-70%) rotate(45deg);
+    transition: transform 0.15s ease;
+}
+
+.mc-items[data-mc-show-setting].is-collapsed > legend {
+    margin-bottom: 0;
+    border-bottom: 0;
+    color: #888;
+}
+
+.mc-items[data-mc-show-setting].is-collapsed > legend::after {
+    transform: translateY(-30%) rotate(-45deg);
+}
+
+.mc-items.is-collapsed > :not(legend) {
+    display: none !important;
+}
+
 .mc-items [hidden] {
     display: none !important;
 }
