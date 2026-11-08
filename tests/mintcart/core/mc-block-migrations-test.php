@@ -118,6 +118,7 @@ check(
         '202610251300_grant_admin_permissions_seo_meta.php',
         '202610251400_seo_url_autofill.php',
         '202610251500_create_mc_redirect.php',
+        '202611081000_create_novaposhta_directory.php',
     ],
     'all real migrations should apply in filename order, got: ' . json_encode($result['applied']),
     $failures
