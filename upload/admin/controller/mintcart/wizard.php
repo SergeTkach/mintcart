@@ -133,6 +133,22 @@ class ControllerMintcartWizard extends Controller
             return;
         }
 
+        // "Skip for now" on an optional step: nothing is validated or saved,
+        // the step is just marked passed (the Ready step's checklist still
+        // lists whatever is unset). Store and Ready cannot be skipped.
+        $skippingStep = ($this->request->post['step_action'] ?? '') === 'skip'
+            && in_array($step, ['contacts', 'language_currency', 'delivery', 'payment', 'design'], true);
+
+        if ($skippingStep) {
+            $this->model_setting_setting->editSetting('mintcart_wizard', [
+                'mintcart_wizard_completed_steps' => $progress->withCompleted($step),
+            ]);
+
+            $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'], true));
+
+            return;
+        }
+
         if ($step === 'store') {
             $this->validateStoreStep();
         }

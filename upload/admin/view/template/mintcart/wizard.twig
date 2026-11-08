@@ -139,7 +139,7 @@
             {% endfor %}
           </div>
 
-          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+          {{ wizard.actions(prev_step_url, button_back, button_continue, button_skip) }}
         </form>
         {% endif %}
 
@@ -201,7 +201,7 @@
             </div>
           </div>
 
-          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+          {{ wizard.actions(prev_step_url, button_back, button_continue, button_skip) }}
         </form>
         <form id="mc-add-currency-form" action="{{ add_currency_action }}" method="post"></form>
         <form id="mc-add-language-form" action="{{ add_language_action }}" method="post"></form>
@@ -277,7 +277,7 @@
 
         <form action="{{ action }}" method="post">
           <input type="hidden" name="step" value="{{ step }}" />
-          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+          {{ wizard.actions(prev_step_url, button_back, button_continue, button_skip) }}
         </form>
         {% endif %}
 
@@ -303,7 +303,7 @@
           {% else %}
           <p class="mc-wizard__empty">{{ design_no_presets }}</p>
           {% endif %}
-          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+          {{ wizard.actions(prev_step_url, button_back, button_continue, button_skip) }}
         </form>
         {% endif %}
 
@@ -427,9 +427,10 @@
   Component: assets/src/css/components/wizard.css,
   docs/developer/onboarding/setup-wizard.md.
 #}
-{% macro actions(prev_step_url, button_back, label) %}
+{% macro actions(prev_step_url, button_back, label, skip_label = '') %}
   <div class="mc-wizard__actions">
     {% if prev_step_url %}<a class="mc-button mc-button--ghost" href="{{ prev_step_url }}">{{ button_back }}</a>{% endif %}
+    {% if skip_label %}<button type="submit" name="step_action" value="skip" formnovalidate class="mc-button mc-button--ghost">{{ skip_label }}</button>{% endif %}
     <button type="submit" class="mc-button mc-button--primary mc-wizard__next">{{ label }}</button>
   </div>
 {% endmacro %}
