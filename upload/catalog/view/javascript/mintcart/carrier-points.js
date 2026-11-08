@@ -169,7 +169,8 @@
     function loadPoints(root) {
         var picker = pickerOf(root, 'point');
 
-        if (!picker) {
+        // No city picker: the point picker searches on its own (e.g. by postcode).
+        if (!picker || !root.querySelector('[data-mc-points-city-ref]')) {
             return;
         }
 
@@ -265,7 +266,7 @@
                 }
 
                 timer = setTimeout(function () {
-                    getJson(hostOf(picker).dataset.citiesUrl, { term: term }).then(function (json) {
+                    getJson(picker.dataset.searchUrl || hostOf(picker).dataset.citiesUrl, { term: term }).then(function (json) {
                         // Ignore an answer for text that has been replaced since.
                         if (search.value.trim() === term) {
                             picker.mcItems = json.items;

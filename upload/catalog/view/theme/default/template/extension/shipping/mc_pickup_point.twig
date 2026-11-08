@@ -1,0 +1,23 @@
+{#
+    Checkout field of a carrier whose pickup points are found by a search (a postcode):
+    one searchable picker, the list comes from the carrier's endpoint as you type.
+    Behaviour: catalog/view/javascript/mintcart/carrier-points.js (the same component
+    as the city + branch form of Nova Poshta / Ukrposhta).
+    The carrier supplies the delivery city and address itself (see
+    docs/developer/commerce/shipping-method-forms.md).
+#}
+<div class="mc-points" data-mc-points data-text-none="{{ text_none }}" data-text-type-more="{{ hint_search }}">
+  <div class="mc-field" data-mc-checkout-field="{{ prefix }}_point">
+    <span class="mc-field__label" id="mc-points-point-label">{{ label_point }}</span>
+    <div class="mc-picker" data-mc-picker="point" data-remote data-search-url="{{ search_url }}">
+      <button type="button" class="mc-field__control mc-picker__toggle" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="mc-points-point-label"><span class="mc-picker__label" data-mc-picker-label>{{ point_text ? point_text : text_choose }}</span></button>
+      <div class="mc-picker__panel" hidden>
+        <input type="search" class="mc-field__control mc-picker__search" placeholder="{{ hint_search }}" aria-label="{{ label_point }}" autocomplete="off">
+        <ul class="mc-picker__list" role="listbox" aria-labelledby="mc-points-point-label"></ul>
+      </div>
+    </div>
+    <input type="hidden" name="{{ prefix }}_point" value="{{ point_id }}" data-mc-points-point-ref>
+    <p class="mc-field__error" role="alert" hidden></p>
+  </div>
+  <script src="{{ script }}"></script>
+</div>

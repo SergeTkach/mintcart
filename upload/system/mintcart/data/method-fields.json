@@ -76,6 +76,20 @@
     "optional": true,
     "default": ""
    }
+  ],
+  "mc_inpost_uk": [
+   {
+    "key": "api_key",
+    "type": "text",
+    "optional": true,
+    "default": ""
+   },
+   {
+    "key": "free_from",
+    "type": "number",
+    "optional": true,
+    "default": ""
+   }
   ]
  }
 }
