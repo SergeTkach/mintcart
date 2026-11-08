@@ -74,14 +74,31 @@
                     </div>
                 </fieldset>
 
+                {% if shipping_required %}
+                    <fieldset class="mc-checkout__section" data-mc-checkout-section="shipping">
+                        <legend class="mc-checkout__title">{{ text_mc_shipping }}</legend>
+                        <div class="mc-checkout__grid mb-3">
+                            <div class="mc-field" data-mc-checkout-field="country_id">
+                                <label class="mc-field__label" for="mc-checkout-country_id">{{ entry_country }}</label>
+                                <select id="mc-checkout-country_id" name="country_id" class="mc-field__control" autocomplete="country" aria-describedby="mc-checkout-country_id-error"></select>
+                                <p class="mc-field__error" id="mc-checkout-country_id-error" hidden></p>
+                            </div>
+                        </div>
+                        <div class="mc-checkout__options" data-mc-checkout-shipping aria-live="polite"></div>
+                        <p class="mc-field__error" data-mc-checkout-error="shipping_method" role="alert" hidden></p>
+                    </fieldset>
+                {% endif %}
+
                 <fieldset class="mc-checkout__section" data-mc-checkout-section="address">
                     <legend class="mc-checkout__title">{{ text_mc_address }}</legend>
                     <div class="mc-checkout__grid">
+{% if not shipping_required %}
                         <div class="mc-field" data-mc-checkout-field="country_id">
                             <label class="mc-field__label" for="mc-checkout-country_id">{{ entry_country }}</label>
                             <select id="mc-checkout-country_id" name="country_id" class="mc-field__control" autocomplete="country" aria-describedby="mc-checkout-country_id-error"></select>
                             <p class="mc-field__error" id="mc-checkout-country_id-error" hidden></p>
                         </div>
+{% endif %}
                         {{ f.field('city', entry_city, 'text', 'address-level2') }}
                         {{ f.field('address_1', entry_address_1, 'text', 'address-line1') }}
                         <div data-mc-checkout-postcode hidden>
@@ -89,14 +106,6 @@
                         </div>
                     </div>
                 </fieldset>
-
-                {% if shipping_required %}
-                    <fieldset class="mc-checkout__section" data-mc-checkout-section="shipping">
-                        <legend class="mc-checkout__title">{{ text_mc_shipping }}</legend>
-                        <div class="mc-checkout__options" data-mc-checkout-shipping aria-live="polite"></div>
-                        <p class="mc-field__error" data-mc-checkout-error="shipping_method" role="alert" hidden></p>
-                    </fieldset>
-                {% endif %}
 
                 <fieldset class="mc-checkout__section" data-mc-checkout-section="payment">
                     <legend class="mc-checkout__title">{{ text_mc_payment }}</legend>

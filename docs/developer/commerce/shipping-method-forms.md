@@ -47,6 +47,18 @@ data, never trust display text) and keeps its own values in the session.
 The returned `address` ends up in the order's shipping fields, so stock order
 screens, e-mails and shipping labels show the carrier's city and point.
 
+## Address fields
+
+The checkout asks for the delivery country first (inside the delivery step, hidden for a store that sells in one
+country), then the delivery methods, and only then the address. While an option with a form is chosen, the plain
+**city** and **address** fields are hidden and not validated: the form owns them, and its `address` result
+(`city`, `address_1`) goes into both the shipping and the payment address of the order. The postcode field still
+follows the country. So a carrier form must return `city` and `address_1` (or report an error for them).
+
+The Nova Poshta and Ukrposhta forms use one shared component (`mc_carrier_points.twig`, `carrier-points.js`): a
+searchable city picker (the list comes from the carrier's endpoint as you type) and a searchable picker of the city's
+branches (number and address).
+
 ## Events
 
 `mc:checkout:updated` (document) fires after each recalculation; a carrier

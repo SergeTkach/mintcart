@@ -203,6 +203,21 @@ function initCheckoutRoot(root) {
 
     shippingFormHost.className = 'mc-checkout__option-form';
 
+    // A carrier with its own form (city, pickup point or courier address) supplies the
+    // delivery city and address itself: the plain city / address fields are hidden while
+    // its option is chosen, and the whole address block when nothing is left in it.
+    function syncAddressFields() {
+        const carrierForm = shippingFormHost.isConnected;
+
+        ['city', 'address_1'].forEach((name) => {
+            form.querySelector(`[data-mc-checkout-field="${name}"]`).hidden = carrierForm;
+        });
+
+        const section = root.querySelector('[data-mc-checkout-section="address"]');
+
+        section.hidden = !Array.from(section.querySelectorAll('[data-mc-checkout-field]')).some((field) => !field.hidden && !field.closest('[data-mc-checkout-postcode]')?.hidden);
+    }
+
     function renderShippingForm(shipping) {
         const checked = root.querySelector('[data-mc-checkout-shipping] input[name="shipping_method"]:checked');
 
@@ -340,6 +355,7 @@ function initCheckoutRoot(root) {
         );
 
         renderShippingForm(state.shipping);
+        syncAddressFields();
 
         renderOptions(
             root.querySelector('[data-mc-checkout-payment-methods]'),
