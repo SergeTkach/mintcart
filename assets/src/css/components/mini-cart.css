@@ -70,6 +70,12 @@
     .mc-mini-cart__count {
         display: none;
     }
+
+    /* A reserve for the text: adding an item must not widen the toggle and push the header. */
+    .mc-mini-cart__toggle {
+        min-width: 6rem;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 575.98px) {
