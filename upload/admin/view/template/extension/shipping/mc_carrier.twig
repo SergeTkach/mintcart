@@ -1,0 +1,119 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="form-shipping" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }}</h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-shipping" class="form-horizontal">
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
+            <div class="col-sm-10">
+              <select name="shipping_mc_carrier_status" id="input-status" class="form-control">
+                <option value="1"{% if shipping_mc_carrier_status %} selected="selected"{% endif %}>{{ text_enabled }}</option>
+                <option value="0"{% if not shipping_mc_carrier_status %} selected="selected"{% endif %}>{{ text_disabled }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-sort-order">{{ entry_sort_order }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="shipping_mc_carrier_sort_order" value="{{ shipping_mc_carrier_sort_order }}" id="input-sort-order" class="form-control" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="col-sm-2 control-label">{{ entry_services }}</label>
+            <div class="col-sm-10">
+              <div class="help-block">{{ help_services }}</div>
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="services">
+                  <thead>
+                    <tr>
+                      <td class="text-left">{{ column_name }}</td>
+                      <td class="text-left">{{ column_cost }}</td>
+                      <td class="text-left">{{ column_free_from }}</td>
+                      <td class="text-left">{{ column_geo_zone }}</td>
+                      <td class="text-left">{{ column_tax_class }}</td>
+                      <td class="text-center">{{ column_point }}</td>
+                      <td></td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for service in services %}
+                    <tr>
+                      <td><input type="hidden" name="service[{{ loop.index0 }}][id]" value="{{ service.id }}" /><input type="text" name="service[{{ loop.index0 }}][name]" value="{{ service.name }}" class="form-control" /></td>
+                      <td><input type="text" name="service[{{ loop.index0 }}][cost]" value="{{ service.cost }}" class="form-control" /></td>
+                      <td><input type="text" name="service[{{ loop.index0 }}][free_from]" value="{{ service.free_from }}" class="form-control" /></td>
+                      <td><select name="service[{{ loop.index0 }}][geo_zone_id]" class="form-control">
+                          <option value="0">{{ text_all_zones }}</option>
+                          {% for geo_zone in geo_zones %}<option value="{{ geo_zone.geo_zone_id }}"{% if geo_zone.geo_zone_id == service.geo_zone_id %} selected="selected"{% endif %}>{{ geo_zone.name }}</option>{% endfor %}
+                        </select></td>
+                      <td><select name="service[{{ loop.index0 }}][tax_class_id]" class="form-control">
+                          <option value="0">{{ text_none }}</option>
+                          {% for tax_class in tax_classes %}<option value="{{ tax_class.tax_class_id }}"{% if tax_class.tax_class_id == service.tax_class_id %} selected="selected"{% endif %}>{{ tax_class.title }}</option>{% endfor %}
+                        </select></td>
+                      <td class="text-center"><input type="checkbox" name="service[{{ loop.index0 }}][point]" value="1"{% if service.point %} checked="checked"{% endif %} /></td>
+                      <td class="text-right"><button type="button" class="btn btn-danger button-remove" title="{{ button_remove }}"><i class="fa fa-minus-circle"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="6"></td>
+                      <td class="text-right"><button type="button" id="button-add" class="btn btn-primary" title="{{ button_add_service }}"><i class="fa fa-plus-circle"></i></button></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// Rows are indexed by a counter, so removing one never renumbers the others.
+var serviceRow = {{ services|length }};
+
+$('#button-add').on('click', function () {
+  var html = '<tr>';
+
+  html += '<td><input type="text" name="service[' + serviceRow + '][name]" value="" class="form-control" /></td>';
+  html += '<td><input type="text" name="service[' + serviceRow + '][cost]" value="0" class="form-control" /></td>';
+  html += '<td><input type="text" name="service[' + serviceRow + '][free_from]" value="" class="form-control" /></td>';
+  html += '<td><select name="service[' + serviceRow + '][geo_zone_id]" class="form-control"><option value="0">{{ text_all_zones }}</option>{% for geo_zone in geo_zones %}<option value="{{ geo_zone.geo_zone_id }}">{{ geo_zone.name|escape('js') }}</option>{% endfor %}</select></td>';
+  html += '<td><select name="service[' + serviceRow + '][tax_class_id]" class="form-control"><option value="0">{{ text_none }}</option>{% for tax_class in tax_classes %}<option value="{{ tax_class.tax_class_id }}">{{ tax_class.title|escape('js') }}</option>{% endfor %}</select></td>';
+  html += '<td class="text-center"><input type="checkbox" name="service[' + serviceRow + '][point]" value="1" /></td>';
+  html += '<td class="text-right"><button type="button" class="btn btn-danger button-remove" title="{{ button_remove }}"><i class="fa fa-minus-circle"></i></button></td>';
+  html += '</tr>';
+
+  $('#services tbody').append(html);
+  serviceRow++;
+});
+
+$('#services').on('click', '.button-remove', function () {
+  $(this).closest('tr').remove();
+});
+</script>
+{{ footer }}

@@ -1,0 +1,17 @@
+{#
+    Checkout fields of a delivery service whose pickup point the customer types
+    (extension/shipping/mc_carrier): the city and the point (a locker or shop number,
+    an address). Nothing is looked up; the text goes into the delivery address as typed.
+#}
+<div class="mc-points">
+  <div class="mc-field" data-mc-checkout-field="carrier_city">
+    <label class="mc-field__label" for="mc-carrier-city">{{ label_city }}</label>
+    <input type="text" id="mc-carrier-city" name="carrier_city" class="mc-field__control" value="{{ city }}" autocomplete="address-level2">
+    <p class="mc-field__error" role="alert" hidden></p>
+  </div>
+  <div class="mc-field" data-mc-checkout-field="carrier_point">
+    <label class="mc-field__label" for="mc-carrier-point">{{ label_point }}</label>
+    <input type="text" id="mc-carrier-point" name="carrier_point" class="mc-field__control" value="{{ point }}" placeholder="{{ hint_point }}">
+    <p class="mc-field__error" role="alert" hidden></p>
+  </div>
+</div>

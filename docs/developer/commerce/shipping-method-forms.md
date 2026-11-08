@@ -63,3 +63,11 @@ branches (number and address).
 
 `mc:checkout:updated` (document) fires after each recalculation; a carrier
 script can use it to refresh dependent fields.
+
+## Extensions that use this contract
+
+- `mc_novaposhta`, `mc_ukrposhta`: city and branch pickers over a local directory (`carrier-points.js`).
+- `mc_inpost_uk`: postcode search through the InPost points API, one locker picker (`mc_pickup_point.twig`).
+- `mc_carrier` ("Delivery services"): a configurable list of fixed-price services with no API (DHL, Hermes, Correos,
+  UPS, ...). A service marked "Pickup point" asks the customer to type the city and the locker or shop number; both go
+  into the delivery address as typed. A carrier that needs live points or tariffs gets its own extension instead.
