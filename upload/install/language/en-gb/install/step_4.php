@@ -6,27 +6,17 @@ $_['heading_title']               = 'Installation complete';
 $_['text_step_4']                 = 'Ready to start selling!';
 $_['text_catalog']                = 'Go to your Online Shop';
 $_['text_admin']                  = 'Login to your Administration';
-$_['text_loading']                = 'Loading modules...';
-$_['text_extension']              = 'visit the extensions store';
-$_['text_mail']                   = 'Join the mailing list';
-$_['text_mail_description']       = 'Stay informed of OpenCart updates and events.';
-$_['text_facebook']               = 'Like us on Facebook';
-$_['text_facebook_description']   = 'Tell us how much you like OpenCart!';
-$_['text_facebook_visit']         = 'Visit our Facebook page';
-$_['text_forum']                  = 'Community forums';
-$_['text_forum_description']      = 'Get help from other OpenCart users';
-$_['text_forum_visit']            = 'Visit our forums';
-$_['text_commercial']             = 'Commercial support';
-$_['text_commercial_description'] = 'Development services from OpenCart partners';
-$_['text_commercial_visit']       = 'Visit our partner page';
-$_['text_price']                  = 'Price';
-$_['text_view']                   = 'View details';
-$_['text_download']               = 'Download';
-$_['text_downloads']              = 'Downloads';
 
-// Button
-$_['button_mail']                 = 'Join here';
-$_['button_setup']                = 'Set-up now';
+
+$_['text_project']                = 'MintCart on GitHub';
+$_['text_project_description']    = 'Source code, releases and the roadmap.';
+$_['text_project_visit']          = 'Open the repository';
+$_['text_documentation']          = 'Documentation';
+$_['text_documentation_description'] = 'Setup, themes, components and the developer guides.';
+$_['text_documentation_visit']    = 'Read the docs';
+$_['text_issues']                 = 'Questions and bugs';
+$_['text_issues_description']     = 'Ask for help or report a problem.';
+$_['text_issues_visit']           = 'Open an issue';
 
 // Error
 $_['error_warning']               = 'Don\'t forget to delete your installation directory!';
