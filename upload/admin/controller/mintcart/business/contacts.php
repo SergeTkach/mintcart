@@ -127,7 +127,8 @@ class ControllerMintcartBusinessContacts extends Controller {
 			'config_telephone' => trim((string)$this->request->post['config_telephone']),
 			'config_email'     => trim((string)$this->request->post['config_email']),
 			'config_address'   => trim((string)$this->request->post['config_address']),
-			'config_mc_phone_mask' => trim((string)($this->request->post['config_mc_phone_mask'] ?? ''))
+			'config_mc_phone_mask' => trim((string)($this->request->post['config_mc_phone_mask'] ?? '')),
+			'config_mc_sell_abroad' => !empty($this->request->post['config_mc_sell_abroad']) ? '1' : '0'
 		));
 
 		$this->model_setting_setting->editSetting('config', $merged);
@@ -221,6 +222,7 @@ class ControllerMintcartBusinessContacts extends Controller {
 			$data['config_email'] = $this->request->post['config_email'] ?? '';
 			$data['config_address'] = $this->request->post['config_address'] ?? '';
 			$data['config_mc_phone_mask'] = $this->request->post['config_mc_phone_mask'] ?? '';
+			$data['config_mc_sell_abroad'] = !empty($this->request->post['config_mc_sell_abroad']);
 			$data['announcement_text'] = (array)($this->request->post['announcement_text'] ?? array());
 			$data['announcement_url'] = $this->request->post['announcement_url'] ?? '';
 
@@ -232,6 +234,8 @@ class ControllerMintcartBusinessContacts extends Controller {
 			$data['config_email'] = $this->config->get('config_email');
 			$data['config_address'] = $this->config->get('config_address');
 			$data['config_mc_phone_mask'] = $this->config->get('config_mc_phone_mask');
+			// Unset (a store from before the setting existed) means it sells abroad.
+			$data['config_mc_sell_abroad'] = (string)$this->config->get('config_mc_sell_abroad') !== '0';
 
 			$this->load->model('setting/setting');
 

@@ -1,0 +1,57 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="mc-account">
+    {% if success %}
+        <div class="mc-alert mc-alert--success mb-3" role="status"><div class="mc-alert__body"><p class="mc-alert__message">{{ success }}</p></div></div>
+    {% endif %}
+    {% if error_warning %}
+        <div class="mc-alert mc-alert--danger mb-3" role="alert"><div class="mc-alert__body"><p class="mc-alert__message">{{ error_warning }}</p></div></div>
+    {% endif %}
+        <h1 class="mc-account__heading">{{ heading_title }}</h1>
+        <p class="mc-account__lead">{{ text_total }} <strong>{{ total }}</strong>.</p>
+        {% if rewards %}
+            <div class="mc-account__card mc-account__card--flush">
+                <div class="table-responsive"><table class="mc-table">
+                    <thead><tr>
+                        <th>{{ column_date_added }}</th>
+                        <th>{{ column_description }}</th>
+                        <th>{{ column_points }}</th>
+                        <th></th>
+                    </tr></thead>
+                    <tbody>
+                        {% for row in rewards %}
+                            <tr>
+                                <td data-label="{{ column_date_added }}">{{ row.date_added }}</td>
+                                <td data-label="{{ column_description }}">{% if row.order_id %}<a href="{{ row.href }}">{{ row.description }}</a>{% else %}{{ row.description }}{% endif %}</td>
+                                <td data-label="{{ column_points }}">{{ row.points }}</td>
+                                <td data-label="{{ column_points }}"></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table></div>
+            </div>
+        {% if pagination %}
+            <div class="mc-account__pager"><div>{{ pagination }}</div><div class="mc-account__results">{{ results }}</div></div>
+        {% endif %}
+        {% else %}
+            <p class="mc-account__empty">{{ text_empty }}</p>
+        {% endif %}
+        <div class="mc-account__actions mc-account__actions--end">
+            <a class="mc-button mc-button--primary" href="{{ continue }}">{{ button_continue }}</a>
+        </div>
+    </div>
+    {{ content_bottom }}
+</div>
+{{ footer }}

@@ -1,0 +1,80 @@
+/**
+ * mc-contact - Contact us and information pages
+ * (catalog/view/theme/mint_default/template/information/contact.twig,
+ * information.twig). Fields are the shared mc-field component.
+ */
+
+.mc-contact__heading {
+    margin-top: 0;
+    font-size: var(--mc-font-size-3xl);
+    font-weight: var(--mc-font-weight-bold);
+    line-height: var(--mc-line-height-tight);
+}
+
+.mc-contact__card {
+    display: block;
+    padding: var(--mc-space-5);
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+}
+
+.mc-information {
+    max-width: 52rem;
+}
+
+.mc-contact__section {
+    margin: 0 0 var(--mc-space-4);
+    font-weight: var(--mc-font-weight-bold);
+}
+
+.mc-contact__place {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-3);
+}
+
+.mc-contact__image {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--mc-radius-md);
+}
+
+.mc-contact__details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--mc-space-2);
+}
+
+.mc-contact__name {
+    margin: 0;
+    font-weight: var(--mc-font-weight-bold);
+}
+
+.mc-contact__address,
+.mc-contact__row {
+    margin: 0;
+    color: var(--mc-muted);
+}
+
+.mc-contact__label {
+    display: block;
+    font-size: var(--mc-font-size-sm);
+    color: var(--mc-text);
+    font-weight: var(--mc-font-weight-bold);
+}
+
+.mc-contact__location {
+    padding: var(--mc-space-3) 0;
+    border-top: 1px solid var(--mc-border);
+}
+
+.mc-contact__location summary {
+    cursor: pointer;
+    font-weight: var(--mc-font-weight-bold);
+}
+
+.mc-contact__location .mc-contact__place {
+    margin-top: var(--mc-space-3);
+}

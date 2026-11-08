@@ -1,0 +1,39 @@
+/**
+ * mc-order-success - the "order placed" page
+ * (catalog/view/theme/mint_default/template/common/success.twig).
+ * The only heading is the h1; the message is store/language text in mc-prose.
+ */
+
+.mc-order-success {
+    max-width: 36rem;
+    margin: var(--mc-space-6, 2rem) auto var(--mc-space-8, 3rem);
+    padding: var(--mc-space-6, 2rem) var(--mc-space-5, 1.5rem);
+    text-align: center;
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+}
+
+.mc-order-success__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    margin-bottom: var(--mc-space-4);
+    color: var(--mc-success);
+    background: color-mix(in srgb, var(--mc-success) 12%, transparent);
+    border-radius: 50%;
+}
+
+.mc-order-success__title {
+    margin: 0 0 var(--mc-space-3);
+    font-size: var(--mc-font-size-2xl);
+    font-weight: var(--mc-font-weight-bold);
+    line-height: var(--mc-line-height-tight);
+}
+
+.mc-order-success__text {
+    margin-bottom: var(--mc-space-5);
+    color: var(--mc-muted);
+}

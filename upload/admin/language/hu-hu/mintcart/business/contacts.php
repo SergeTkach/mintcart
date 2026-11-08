@@ -27,3 +27,5 @@ $_['text_contact_details'] = 'Elérhetőségek';
 $_['text_edit'] = 'Elérhetőségek szerkesztése';
 $_['text_social_links'] = 'Közösségi hivatkozások';
 $_['text_success'] = 'Siker: Módosította az üzlet elérhetőségeit!';
+$_['entry_sell_abroad'] = 'Más országokba is értékesítek';
+$_['help_sell_abroad'] = 'Hagyja kikapcsolva, ha csak egy országban értékesít: a pénztár nem kérdez országot, minden rendelés az üzlet országába megy.';

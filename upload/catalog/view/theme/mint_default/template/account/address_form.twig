@@ -1,0 +1,122 @@
+{% macro input(name, label, type, value, error, autocomplete) %}
+    <div class="mc-field mb-3{% if error %} has-error{% endif %}">
+        <label class="mc-field__label" for="input-{{ name }}">{{ label }}</label>
+        <input type="{{ type }}" name="{{ name }}" value="{{ value }}" id="input-{{ name }}" class="mc-field__control" autocomplete="{{ autocomplete }}"{% if error %} aria-invalid="true" aria-describedby="error-{{ name }}"{% endif %}>
+        {% if error %}<p class="mc-field__error" id="error-{{ name }}" role="alert">{{ error }}</p>{% endif %}
+    </div>
+{% endmacro %}
+{% import _self as f %}
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="mc-account mc-account--narrow">
+    {% if success %}
+        <div class="mc-alert mc-alert--success mb-3" role="status"><div class="mc-alert__body"><p class="mc-alert__message">{{ success }}</p></div></div>
+    {% endif %}
+    {% if error_warning %}
+        <div class="mc-alert mc-alert--danger mb-3" role="alert"><div class="mc-alert__body"><p class="mc-alert__message">{{ error_warning }}</p></div></div>
+    {% endif %}
+        <form class="mc-account__card" action="{{ action }}" method="post" enctype="multipart/form-data">
+            <h1 class="mc-account__title">{{ heading_title }}</h1>
+            {{ f.input('firstname', entry_firstname, 'text', firstname, error_firstname, 'given-name') }}
+            {{ f.input('lastname', entry_lastname, 'text', lastname, error_lastname, 'family-name') }}
+            {{ f.input('company', entry_company, 'text', company, '', 'organization') }}
+            {{ f.input('address_1', entry_address_1, 'text', address_1, error_address_1, 'address-line1') }}
+            {{ f.input('address_2', entry_address_2, 'text', address_2, '', 'address-line2') }}
+            {{ f.input('city', entry_city, 'text', city, error_city, 'address-level2') }}
+            {{ f.input('postcode', entry_postcode, 'text', postcode, error_postcode, 'postal-code') }}
+            <div class="mc-field mb-3{% if error_country %} has-error{% endif %}">
+                <label class="mc-field__label" for="input-country">{{ entry_country }}</label>
+                <select name="country_id" id="input-country" class="mc-field__control" data-zones-url="index.php?route=account/account/country&country_id=">
+                    <option value="">{{ text_select }}</option>
+                    {% for country in countries %}<option value="{{ country.country_id }}"{% if country.country_id == country_id %} selected{% endif %}>{{ country.name }}</option>{% endfor %}
+                </select>
+                {% if error_country %}<p class="mc-field__error" role="alert">{{ error_country }}</p>{% endif %}
+            </div>
+            <div class="mc-field mb-3{% if error_zone %} has-error{% endif %}">
+                <label class="mc-field__label" for="input-zone">{{ entry_zone }}</label>
+                <select name="zone_id" id="input-zone" class="mc-field__control" data-selected="{{ zone_id }}" data-placeholder="{{ text_select }}" data-none="{{ text_none }}"></select>
+                {% if error_zone %}<p class="mc-field__error" role="alert">{{ error_zone }}</p>{% endif %}
+            </div>
+            {% for custom_field in custom_fields %}
+                {% set cf_name = 'custom_field[' ~ custom_field.location ~ '][' ~ custom_field.custom_field_id ~ ']' %}
+                {% set cf_id = 'input-custom-field' ~ custom_field.custom_field_id %}
+                {% set cf_error = error_custom_field[custom_field.custom_field_id] %}
+                {% set cf_saved = address_custom_field[custom_field.custom_field_id] %}
+                {% if custom_field.type != 'file' %}
+                    <div class="mc-field mb-3{% if cf_error %} has-error{% endif %}">
+                        {% if custom_field.type == 'radio' or custom_field.type == 'checkbox' %}
+                            <span class="mc-field__label">{{ custom_field.name }}</span>
+                            {% for value in custom_field.custom_field_value %}
+                                <label class="mc-{{ custom_field.type }}">
+                                    <input type="{{ custom_field.type }}" class="mc-{{ custom_field.type }}__input" name="{{ cf_name }}{% if custom_field.type == 'checkbox' %}[]{% endif %}" value="{{ value.custom_field_value_id }}"{% if cf_saved and (value.custom_field_value_id == cf_saved or (cf_saved is iterable and value.custom_field_value_id in cf_saved)) %} checked{% endif %}>
+                                    <span class="mc-{{ custom_field.type }}__label">{{ value.name }}</span>
+                                </label>
+                            {% endfor %}
+                        {% else %}
+                            <label class="mc-field__label" for="{{ cf_id }}">{{ custom_field.name }}</label>
+                            {% if custom_field.type == 'select' %}
+                                <select name="{{ cf_name }}" id="{{ cf_id }}" class="mc-field__control">
+                                    <option value="">{{ text_select }}</option>
+                                    {% for value in custom_field.custom_field_value %}
+                                        <option value="{{ value.custom_field_value_id }}"{% if value.custom_field_value_id == cf_saved %} selected{% endif %}>{{ value.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            {% elseif custom_field.type == 'textarea' %}
+                                <textarea name="{{ cf_name }}" id="{{ cf_id }}" rows="4" class="mc-field__control">{{ cf_saved ? cf_saved : custom_field.value }}</textarea>
+                            {% else %}
+                                <input type="{{ custom_field.type == 'datetime' ? 'datetime-local' : (custom_field.type in ['date', 'time'] ? custom_field.type : 'text') }}" name="{{ cf_name }}" id="{{ cf_id }}" value="{{ cf_saved ? cf_saved : custom_field.value }}" class="mc-field__control">
+                            {% endif %}
+                        {% endif %}
+                        {% if cf_error %}<p class="mc-field__error" role="alert">{{ cf_error }}</p>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            <label class="mc-checkbox mb-3">
+                <input type="hidden" name="default" value="0">
+                <input type="checkbox" class="mc-checkbox__input" name="default" value="1"{% if default %} checked{% endif %}>
+                <span class="mc-checkbox__label">{{ entry_default }}</span>
+            </label>
+            <div class="mc-account__actions">
+                <a class="mc-button mc-button--ghost" href="{{ back }}">{{ button_back }}</a>
+                <button type="submit" class="mc-button mc-button--primary">{{ button_continue }}</button>
+            </div>
+        </form>
+        <script>
+        // The regions of the chosen country (stock account/account/country JSON).
+        (function () {
+          var country = document.getElementById('input-country');
+          var zone = document.getElementById('input-zone');
+
+          function load(initial) {
+            zone.innerHTML = '';
+            if (!country.value) { zone.add(new Option(zone.dataset.placeholder, '')); return; }
+            fetch(country.dataset.zonesUrl + encodeURIComponent(country.value))
+              .then(function (r) { return r.json(); })
+              .then(function (json) {
+                var zones = json.zone || [];
+                if (!zones.length) { zone.add(new Option(zone.dataset.none, '0')); return; }
+                zone.add(new Option(zone.dataset.placeholder, ''));
+                zones.forEach(function (z) { zone.add(new Option(z.name, z.zone_id, false, initial && String(z.zone_id) === zone.dataset.selected)); });
+              });
+          }
+
+          country.addEventListener('change', function () { load(false); });
+          load(true);
+        })();
+        </script>
+    </div>
+    {{ content_bottom }}
+</div>
+{{ footer }}

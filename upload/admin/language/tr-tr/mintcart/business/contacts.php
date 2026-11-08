@@ -27,3 +27,5 @@ $_['error_social'] = '%s geçerli bir URL olmalı!';
 $_['entry_phone_mask'] = 'Telefon biçimi';
 $_['help_phone_mask'] = 'İsteğe bağlı. Telefon alanları (ödeme, Hızlı Sipariş) buna uyar; # bir rakamdır, örn. +90 (###) ###-##-##. Ülkenizin varsayılanını kullanmak için boş bırakın.';
 $_['error_phone_mask'] = 'Rakamlar, yazılacak her rakam için # ve + ( ) - veya boşluk kullanın; en az bir # olmalı.';
+$_['entry_sell_abroad'] = 'Diğer ülkelere de satış yapıyorum';
+$_['help_sell_abroad'] = 'Yalnızca tek ülkede satış yapıyorsanız kapalı bırakın: ödeme sayfası ülke sormaz, tüm siparişler mağazanın ülkesine gider.';

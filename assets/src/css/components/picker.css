@@ -1,0 +1,98 @@
+/**
+ * mc-picker - a select with a search box (a vanilla Select2 look-alike)
+ * (carrier city / pickup point fields,
+ * catalog/view/theme/default/template/extension/shipping/mc_carrier_points.twig,
+ * behaviour in catalog/view/javascript/mintcart/carrier-points.js).
+ * The toggle is the shared mc-field__control, so it matches the other fields.
+ */
+
+.mc-picker {
+    position: relative;
+}
+
+.mc-picker__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-2);
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.mc-picker__toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.mc-picker__toggle::after {
+    flex: 0 0 auto;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-top: -0.25rem;
+    content: '';
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+}
+
+.mc-picker.is-open .mc-picker__toggle::after {
+    margin-top: 0.25rem;
+    transform: rotate(-135deg);
+}
+
+.mc-picker__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-picker__panel {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + var(--mc-space-1));
+    right: 0;
+    left: 0;
+    padding: var(--mc-space-2);
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    box-shadow: var(--mc-shadow-md, 0 8px 24px rgb(0 0 0 / 12%));
+}
+
+.mc-picker__panel[hidden] {
+    display: none;
+}
+
+.mc-picker__list {
+    max-height: 16rem;
+    margin: var(--mc-space-2) 0 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.mc-picker__option,
+.mc-picker__empty {
+    padding: var(--mc-space-2) var(--mc-space-3);
+    border-radius: var(--mc-radius-sm, 0.375rem);
+}
+
+.mc-picker__option {
+    cursor: pointer;
+}
+
+.mc-picker__option:hover,
+.mc-picker__option.is-active {
+    background: var(--mc-surface-muted, rgb(0 0 0 / 5%));
+}
+
+.mc-picker__option[aria-selected='true'] {
+    font-weight: var(--mc-font-weight-bold);
+    color: var(--mc-primary);
+}
+
+.mc-picker__empty {
+    color: var(--mc-muted);
+}

@@ -20,6 +20,7 @@
  * Contract: docs/developer/commerce/checkout-service.md
  */
 
+import { setInputMask } from './phone-mask.js';
 import {
     fetchCheckoutState,
     updateCheckout,
@@ -67,10 +68,8 @@ function initCheckoutRoot(root) {
     const text = root.dataset;
 
     const countrySelect = form.elements.country_id;
-    const zoneSelect = form.elements.zone_id;
 
     let countries = [];
-    let zonesCountry = null;
     let timer = null;
     let controller = null;
     let confirming = false;
@@ -128,19 +127,17 @@ function initCheckoutRoot(root) {
         countries.forEach((c) => countrySelect.append(option(c.country_id, c.name, selected)));
     }
 
-    function renderZones(zones, selected) {
-        if (zones.length) {
-            zoneSelect.replaceChildren(option('', text.mcTextSelect, selected));
-            zones.forEach((z) => zoneSelect.append(option(z.zone_id, z.name, selected)));
-        } else {
-            zoneSelect.replaceChildren(option(0, text.mcTextNone, 0));
-        }
-    }
-
     function renderPostcode(countryId) {
         const country = countries.find((c) => String(c.country_id) === String(countryId));
 
         root.querySelector('[data-mc-checkout-postcode]').hidden = !(country && country.postcode_required);
+    }
+
+    // The phone format follows the buyer's country, not the store's.
+    function renderPhoneMask(countryId) {
+        const country = countries.find((c) => String(c.country_id) === String(countryId));
+
+        setInputMask(form.elements.telephone, country?.phone_mask ?? '');
     }
 
     function renderOptions(container, name, groups, selected, emptyText) {
@@ -205,6 +202,21 @@ function initCheckoutRoot(root) {
     let shippingFormFor = null;
 
     shippingFormHost.className = 'mc-checkout__option-form';
+
+    // A carrier with its own form (city, pickup point or courier address) supplies the
+    // delivery city and address itself: the plain city / address fields are hidden while
+    // its option is chosen, and the whole address block when nothing is left in it.
+    function syncAddressFields() {
+        const carrierForm = shippingFormHost.isConnected;
+
+        ['city', 'address_1'].forEach((name) => {
+            form.querySelector(`[data-mc-checkout-field="${name}"]`).hidden = carrierForm;
+        });
+
+        const section = root.querySelector('[data-mc-checkout-section="address"]');
+
+        section.hidden = !Array.from(section.querySelectorAll('[data-mc-checkout-field]')).some((field) => !field.hidden && !field.closest('[data-mc-checkout-postcode]')?.hidden);
+    }
 
     function renderShippingForm(shipping) {
         const checked = root.querySelector('[data-mc-checkout-shipping] input[name="shipping_method"]:checked');
@@ -304,6 +316,7 @@ function initCheckoutRoot(root) {
 
             form.elements.comment.value = state.comment;
             renderCountries(state.address.country_id);
+            renderPhoneMask(state.address.country_id);
 
             const loginEl = root.querySelector('[data-mc-checkout-login]');
 
@@ -328,10 +341,8 @@ function initCheckoutRoot(root) {
             });
         }
 
-        if (zonesCountry !== String(state.address.country_id)) {
-            zonesCountry = String(state.address.country_id);
-            renderZones(state.zones, state.address.zone_id);
-        }
+        // A store that sells in one country only does not ask for it.
+        form.querySelector('[data-mc-checkout-field="country_id"]').hidden = !state.sell_abroad;
 
         renderPostcode(state.address.country_id);
 
@@ -344,6 +355,7 @@ function initCheckoutRoot(root) {
         );
 
         renderShippingForm(state.shipping);
+        syncAddressFields();
 
         renderOptions(
             root.querySelector('[data-mc-checkout-payment-methods]'),
@@ -480,9 +492,8 @@ function initCheckoutRoot(root) {
     }
 
     form.addEventListener('change', (event) => {
-        // A new country invalidates the region; the response brings its zones.
         if (event.target === countrySelect) {
-            zoneSelect.value = '';
+            renderPhoneMask(countrySelect.value);
         }
 
         resetPayment();

@@ -122,5 +122,10 @@
 @import './components/progress.css';
 @import './components/cookie-consent.css';
 @import './components/checkout.css';
+@import './components/order-success.css';
+@import './components/contact.css';
+@import './components/auth.css';
+@import './components/picker.css';
+@import './components/account.css';
 @import './components/theme-gallery.css';
 @import './components/theme-comfort.css';

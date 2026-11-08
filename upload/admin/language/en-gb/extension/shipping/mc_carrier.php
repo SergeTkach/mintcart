@@ -1,0 +1,19 @@
+<?php
+$_['heading_title'] = 'Delivery services';
+$_['text_extension'] = 'Extensions';
+$_['text_success'] = 'Success: you have modified the delivery services!';
+$_['text_edit'] = 'Edit delivery services';
+$_['text_all_zones'] = 'All zones';
+$_['entry_status'] = 'Status';
+$_['entry_sort_order'] = 'Sort order';
+$_['entry_services'] = 'Services';
+$_['help_services'] = 'Each row is one delivery option at a fixed price: DHL, Hermes, Correos, UPS, any carrier without its own extension. Tick "Pickup point" to make the customer enter the locker or shop number and the city. Leave "Free from" empty for no free delivery.';
+$_['column_name'] = 'Name';
+$_['column_cost'] = 'Price';
+$_['column_free_from'] = 'Free from';
+$_['column_geo_zone'] = 'Geo zone';
+$_['column_tax_class'] = 'Tax class';
+$_['column_point'] = 'Pickup point';
+$_['button_add_service'] = 'Add a service';
+$_['error_permission'] = 'Warning: you do not have permission to modify delivery services!';
+$_['error_number'] = 'Price and "Free from" must be numbers.';

@@ -61,22 +61,21 @@ assertSameCheckoutService(
 $address = ['address_1' => 'вул. Хрещатик, 1', 'city' => 'Київ', 'postcode' => '', 'country_id' => '220', 'zone_id' => '3490'];
 $ukraine = ['country_id' => 220, 'postcode_required' => 0];
 
-assertSameCheckoutService([], $service->validateAddress($address, $ukraine, [3490, 3491]), 'validateAddress: valid', $failures);
+assertSameCheckoutService([], $service->validateAddress($address, $ukraine), 'validateAddress: valid', $failures);
 assertSameCheckoutService(
     ['postcode' => 'error_postcode'],
-    $service->validateAddress($address, ['postcode_required' => 1], [3490]),
+    $service->validateAddress($address, ['postcode_required' => 1]),
     'validateAddress: postcode required by country',
     $failures
 );
 assertSameCheckoutService(
-    ['country_id' => 'error_country', 'zone_id' => 'error_zone'],
-    $service->validateAddress(['address_1' => 'abc', 'city' => 'ab', 'zone_id' => ''], null, []),
-    'validateAddress: no country, no zone',
+    ['country_id' => 'error_country'],
+    $service->validateAddress(['address_1' => 'abc', 'city' => 'ab'], null),
+    'validateAddress: no country',
     $failures
 );
-// zone_id 0 ("None") is only valid for a country without zones.
-assertSameCheckoutService(['zone_id' => 'error_zone'], $service->validateAddress(['zone_id' => '0'] + $address, $ukraine, [3490]), 'validateAddress: zone 0 rejected when country has zones', $failures);
-assertSameCheckoutService([], $service->validateAddress(['zone_id' => '0'] + $address, $ukraine, []), 'validateAddress: zone 0 accepted for zoneless country', $failures);
+// The region is not asked at checkout: no zone, or zone 0, is fine.
+assertSameCheckoutService([], $service->validateAddress(['zone_id' => '0'] + $address, $ukraine), 'validateAddress: region is not validated', $failures);
 
 // --- buildAddress() --------------------------------------------------------
 

@@ -1,0 +1,39 @@
+{#
+    Header "Account" for guests: a login form in a Bootstrap modal, a Register button under it.
+    Rendered by common/header.php, passed to the header component as `login_modal`.
+    The form posts to the stock account/login (a failed login shows the error on /login).
+#}
+<div class="modal fade mc-login-modal" id="mc-login-modal" tabindex="-1" aria-labelledby="mc-login-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <p class="modal-title mc-auth__title" id="mc-login-modal-title">{{ text_returning_customer }}</p>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ text_close }}"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ action }}" method="post">
+                    <div class="mc-field mb-3">
+                        <label class="mc-field__label" for="mc-login-modal-email">{{ entry_email }}</label>
+                        <input type="email" name="email" id="mc-login-modal-email" class="mc-field__control" autocomplete="username" required>
+                    </div>
+                    <div class="mc-field mb-3">
+                        <label class="mc-field__label" for="mc-login-modal-password">{{ entry_password }}</label>
+                        <input type="password" name="password" id="mc-login-modal-password" class="mc-field__control" autocomplete="current-password" required>
+                        <a class="mc-auth__forgotten" href="{{ forgotten }}">{{ text_forgotten }}</a>
+                    </div>
+                    {% if redirect %}<input type="hidden" name="redirect" value="{{ redirect }}">{% endif %}
+                    <button type="submit" class="mc-button mc-button--primary mc-button--lg mc-auth__submit">{{ button_login }}</button>
+                </form>
+
+                <div class="mc-auth__new">
+                    <p class="mc-auth__new-text">{{ text_new_customer }}</p>
+                    <a class="mc-button mc-button--outline mc-button--lg mc-auth__submit" href="{{ register }}">{{ text_register }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// The header is sticky (its own stacking context): a modal inside it would sit under Bootstrap's backdrop.
+document.body.appendChild(document.getElementById('mc-login-modal'));
+</script>

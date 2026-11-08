@@ -191,7 +191,37 @@ class ControllerCommonHeader extends Controller {
 					)
 				);
 
+				$login_modal = '';
+
+				if (!$data['logged']) {
+					// Own language namespace: loading account/login into the page language would overwrite its keys.
+					$this->load->language('account/login', 'mc_login');
+
+					$mc_login = $this->language->get('mc_login');
+
+					$route = isset($this->request->get['route']) ? (string)$this->request->get['route'] : '';
+					$back = ($this->request->server['REQUEST_METHOD'] === 'GET' && strpos($route, 'account/') !== 0 && isset($this->request->server['REQUEST_URI']))
+						? rtrim($this->config->get('config_url'), '/') . $this->request->server['REQUEST_URI']
+						: '';
+
+					$login_modal = $this->load->view('mintcart/login_modal', array(
+						'action'                  => $data['login'],
+						'register'                => $data['register'],
+						'forgotten'               => $this->url->link('account/forgotten', '', true),
+						'redirect'                => $back,
+						'text_returning_customer' => $mc_login->get('text_returning_customer'),
+						'text_new_customer'       => $mc_login->get('text_new_customer'),
+						'text_register'           => $mc_login->get('text_register'),
+						'text_forgotten'          => $mc_login->get('text_forgotten'),
+						'entry_email'             => $mc_login->get('entry_email'),
+						'entry_password'          => $mc_login->get('entry_password'),
+						'button_login'            => $this->language->get('text_login'),
+						'text_close'              => $this->language->get('text_close')
+					));
+				}
+
 				$data['mc_header'] = $component_renderer->render('header', $header_view + array(
+					'login_modal' => $login_modal,
 					'text_account' => $this->language->get('text_account'),
 					'text_register' => $this->language->get('text_register'),
 					'text_login' => $this->language->get('text_login'),

@@ -922,6 +922,14 @@
 @media (min-width: 768px) {
     .mc-header--comfort .mc-mini-cart__amount {
         display: inline;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* A reserve for the total: adding an item must not widen the pill and push the header.
+       The icon and the sum stay together in the middle of it. */
+    .mc-header--comfort .mc-mini-cart__toggle {
+        min-width: 6.5rem;
+        justify-content: center;
     }
 }
 

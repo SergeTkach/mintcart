@@ -1,0 +1,86 @@
+{% macro place(title, store, image, address, geocode, geocode_hl, telephone, fax, open, comment, button_map, text_telephone, text_fax, text_open, text_comment) %}
+    <div class="mc-contact__place">
+        {% if image %}<img class="mc-contact__image" src="{{ image }}" alt="{{ store }}" loading="lazy">{% endif %}
+        <div class="mc-contact__details">
+            <p class="mc-contact__name">{{ title }}</p>
+            {% if address %}<address class="mc-contact__address">{{ address }}</address>{% endif %}
+            {% if telephone %}
+                <p class="mc-contact__row"><span class="mc-contact__label">{{ text_telephone }}</span> <a href="tel:{{ telephone|replace({' ': '', '(': '', ')': '', '-': ''}) }}">{{ telephone }}</a></p>
+            {% endif %}
+            {% if fax %}<p class="mc-contact__row"><span class="mc-contact__label">{{ text_fax }}</span> {{ fax }}</p>{% endif %}
+            {% if open %}<p class="mc-contact__row"><span class="mc-contact__label">{{ text_open }}</span> {{ open }}</p>{% endif %}
+            {% if comment %}<p class="mc-contact__row"><span class="mc-contact__label">{{ text_comment }}</span> {{ comment }}</p>{% endif %}
+            {% if geocode %}
+                <a class="mc-button mc-button--outline mc-button--sm" href="https://maps.google.com/maps?q={{ geocode|url_encode }}&hl={{ geocode_hl }}&t=m&z=15" target="_blank" rel="noopener">{{ button_map }}</a>
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}
+{% import _self as c %}
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <h1 class="mc-contact__heading mb-4">{{ heading_title }}</h1>
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="mc-contact__card">
+                <p class="mc-contact__section mc-heading mc-heading--md">{{ text_location }}</p>
+                {{ c.place(store, store, image, address, geocode, geocode_hl, telephone, fax, open, comment, button_map, text_telephone, text_fax, text_open, text_comment) }}
+            </div>
+
+            {% if locations %}
+                <div class="mc-contact__card mt-4">
+                    <p class="mc-contact__section mc-heading mc-heading--md">{{ text_store }}</p>
+                    {% for location in locations %}
+                        <details class="mc-contact__location">
+                            <summary>{{ location.name }}</summary>
+                            {{ c.place(location.name, location.name, location.image, location.address, location.geocode, geocode_hl, location.telephone, location.fax, location.open, location.comment, button_map, text_telephone, text_fax, text_open, text_comment) }}
+                        </details>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-7">
+            <form class="mc-contact__card" action="{{ action }}" method="post" enctype="multipart/form-data" novalidate>
+                <p class="mc-contact__section mc-heading mc-heading--md">{{ text_contact }}</p>
+
+                <div class="mc-field mb-3{% if error_name %} has-error{% endif %}">
+                    <label class="mc-field__label" for="input-name">{{ entry_name }}</label>
+                    <input type="text" name="name" value="{{ name }}" id="input-name" class="mc-field__control" autocomplete="name"{% if error_name %} aria-invalid="true" aria-describedby="error-name"{% endif %}>
+                    {% if error_name %}<p class="mc-field__error" id="error-name" role="alert">{{ error_name }}</p>{% endif %}
+                </div>
+
+                <div class="mc-field mb-3{% if error_email %} has-error{% endif %}">
+                    <label class="mc-field__label" for="input-email">{{ entry_email }}</label>
+                    <input type="email" name="email" value="{{ email }}" id="input-email" class="mc-field__control" autocomplete="email"{% if error_email %} aria-invalid="true" aria-describedby="error-email"{% endif %}>
+                    {% if error_email %}<p class="mc-field__error" id="error-email" role="alert">{{ error_email }}</p>{% endif %}
+                </div>
+
+                <div class="mc-field mb-3{% if error_enquiry %} has-error{% endif %}">
+                    <label class="mc-field__label" for="input-enquiry">{{ entry_enquiry }}</label>
+                    <textarea name="enquiry" rows="7" id="input-enquiry" class="mc-field__control"{% if error_enquiry %} aria-invalid="true" aria-describedby="error-enquiry"{% endif %}>{{ enquiry }}</textarea>
+                    {% if error_enquiry %}<p class="mc-field__error" id="error-enquiry" role="alert">{{ error_enquiry }}</p>{% endif %}
+                </div>
+
+                {% if captcha %}<div class="mc-legacy mb-3">{{ captcha }}</div>{% endif %}
+
+                <button type="submit" class="mc-button mc-button--primary">{{ button_submit }}</button>
+            </form>
+        </div>
+    </div>
+    {{ content_bottom }}
+</div>
+{{ footer }}

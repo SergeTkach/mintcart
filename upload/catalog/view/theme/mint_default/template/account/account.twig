@@ -1,0 +1,75 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="mc-account">
+    {% if success %}
+        <div class="mc-alert mc-alert--success mb-3" role="status"><div class="mc-alert__body"><p class="mc-alert__message">{{ success }}</p></div></div>
+    {% endif %}
+    {% if error_warning %}
+        <div class="mc-alert mc-alert--danger mb-3" role="alert"><div class="mc-alert__body"><p class="mc-alert__message">{{ error_warning }}</p></div></div>
+    {% endif %}
+        <h1 class="mc-account__heading">{{ text_my_account }}</h1>
+        <div class="mc-account__grid">
+            <div class="mc-account__card">
+                <p class="mc-account__section">{{ text_my_account }}</p>
+                <ul class="mc-account__links">
+                    <li><a href="{{ edit }}">{{ text_edit }}</a></li>
+                    <li><a href="{{ password }}">{{ text_password }}</a></li>
+                    <li><a href="{{ address }}">{{ text_address }}</a></li>
+                    <li><a href="{{ wishlist }}">{{ text_wishlist }}</a></li>
+                </ul>
+            </div>
+            <div class="mc-account__card">
+                <p class="mc-account__section">{{ text_my_orders }}</p>
+                <ul class="mc-account__links">
+                    <li><a href="{{ order }}">{{ text_order }}</a></li>
+                    <li><a href="{{ download }}">{{ text_download }}</a></li>
+                    {% if reward %}
+                    <li><a href="{{ reward }}">{{ text_reward }}</a></li>
+                    {% endif %}
+                    <li><a href="{{ return }}">{{ text_return }}</a></li>
+                    <li><a href="{{ transaction }}">{{ text_transaction }}</a></li>
+                    <li><a href="{{ recurring }}">{{ text_recurring }}</a></li>
+                </ul>
+            </div>
+            {% if credit_cards %}
+            <div class="mc-account__card">
+                <p class="mc-account__section">{{ text_credit_card }}</p>
+                <ul class="mc-account__links">
+                    {% for credit_card in credit_cards %}<li><a href="{{ credit_card.href }}">{{ credit_card.name }}</a></li>{% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <div class="mc-account__card">
+                <p class="mc-account__section">{{ text_my_affiliate }}</p>
+                <ul class="mc-account__links">
+                    {% if not tracking %}
+                        <li><a href="{{ affiliate }}">{{ text_affiliate_add }}</a></li>
+                    {% else %}
+                        <li><a href="{{ affiliate }}">{{ text_affiliate_edit }}</a></li>
+                        <li><a href="{{ tracking }}">{{ text_tracking }}</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="mc-account__card">
+                <p class="mc-account__section">{{ text_my_newsletter }}</p>
+                <ul class="mc-account__links">
+                    <li><a href="{{ newsletter }}">{{ text_newsletter }}</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {{ content_bottom }}
+</div>
+{{ footer }}

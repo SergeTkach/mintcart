@@ -1,0 +1,21 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <article class="mc-contact__card mc-information">
+        <h1 class="mc-contact__heading mb-4">{{ heading_title }}</h1>
+        <div class="mc-prose">{{ description }}</div>
+    </article>
+    {{ content_bottom }}
+</div>
+{{ footer }}

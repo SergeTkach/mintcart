@@ -1,0 +1,183 @@
+/**
+ * mc-account - the customer account pages (catalog/view/theme/mint_default/template/account/*.twig):
+ * the dashboard, orders, addresses, personal data, password, wishlist, ...
+ * Forms use the shared mc-field / mc-checkbox / mc-radio; lists use mc-table,
+ * which turns into stacked rows on phones (the cells carry data-label).
+ * The page's only heading is the h1; card titles are styled text.
+ */
+
+.mc-account {
+    margin: var(--mc-space-4) auto var(--mc-space-8, 3rem);
+}
+
+.mc-account--narrow {
+    max-width: 36rem;
+}
+
+.mc-account__heading {
+    margin: 0 0 var(--mc-space-4);
+    font-size: var(--mc-font-size-3xl);
+    font-weight: var(--mc-font-weight-bold);
+    line-height: var(--mc-line-height-tight);
+}
+
+.mc-account__title {
+    margin: 0 0 var(--mc-space-4);
+    font-size: var(--mc-font-size-2xl);
+    font-weight: var(--mc-font-weight-bold);
+    line-height: var(--mc-line-height-tight);
+}
+
+.mc-account__lead {
+    margin: 0 0 var(--mc-space-4);
+    color: var(--mc-muted);
+}
+
+.mc-account__card {
+    display: block;
+    padding: var(--mc-space-5);
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+}
+
+.mc-account__card--flush {
+    padding: 0;
+    overflow: hidden;
+}
+
+.mc-account__section {
+    margin: 0 0 var(--mc-space-3);
+    font-weight: var(--mc-font-weight-bold);
+}
+
+.mc-account__section--pad {
+    padding: var(--mc-space-4) var(--mc-space-5) 0;
+}
+
+.mc-account__row {
+    margin: 0 0 var(--mc-space-3);
+    color: var(--mc-muted);
+}
+
+.mc-account__empty {
+    color: var(--mc-muted);
+}
+
+.mc-account__grid {
+    display: grid;
+    gap: var(--mc-space-4);
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.mc-account__grid--two {
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+
+.mc-account__links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mc-account__links li + li {
+    margin-top: var(--mc-space-2);
+}
+
+.mc-account__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-3);
+    margin-top: var(--mc-space-4);
+}
+
+.mc-account__actions--end {
+    justify-content: flex-end;
+}
+
+.mc-account__pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mc-space-3);
+    margin-top: var(--mc-space-4);
+}
+
+.mc-account__results {
+    color: var(--mc-muted);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+}
+
+.mc-table th,
+.mc-table td {
+    padding: var(--mc-space-3) var(--mc-space-4);
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--mc-border);
+}
+
+.mc-table th {
+    font-size: var(--mc-font-size-sm);
+    font-weight: var(--mc-font-weight-bold);
+    color: var(--mc-muted);
+    white-space: nowrap;
+}
+
+.mc-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.mc-table tfoot td {
+    border-bottom: 0;
+}
+
+.mc-table__thumb {
+    width: 3.5rem;
+    height: 3.5rem;
+    object-fit: cover;
+    border-radius: var(--mc-radius-md);
+}
+
+@media (max-width: 575.98px) {
+    .mc-table thead {
+        display: none;
+    }
+
+    .mc-table,
+    .mc-table tbody,
+    .mc-table tr,
+    .mc-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .mc-table tr {
+        padding: var(--mc-space-3) 0;
+        border-bottom: 1px solid var(--mc-border);
+    }
+
+    .mc-table td {
+        padding: var(--mc-space-1) var(--mc-space-4);
+        border: 0;
+    }
+
+    .mc-table td[data-label]::before {
+        display: block;
+        content: attr(data-label);
+        font-size: var(--mc-font-size-sm);
+        color: var(--mc-muted);
+    }
+
+    .mc-table td:empty {
+        display: none;
+    }
+}

@@ -27,3 +27,5 @@ $_['text_contact_details'] = 'Contactgegevens';
 $_['text_edit'] = 'Contactgegevens bewerken';
 $_['text_social_links'] = 'Sociale links';
 $_['text_success'] = 'Gelukt: u hebt de winkelcontactgegevens gewijzigd!';
+$_['entry_sell_abroad'] = 'Ik verkoop ook naar andere landen';
+$_['help_sell_abroad'] = 'Laat uit als u in één land verkoopt: de kassa vraagt dan niet om een land, alle bestellingen gaan naar het land van uw winkel.';

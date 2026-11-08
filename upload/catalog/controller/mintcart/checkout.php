@@ -303,7 +303,19 @@ class ControllerMintcartCheckout extends Controller {
 			$input[$field] = isset($address[$field]) ? $address[$field] : '';
 		}
 
+		// A store that sells in one country only never takes another one.
+		if (!$this->sellsAbroad() && (int)$input['country_id'] !== (int)$this->config->get('config_country_id')) {
+			$input['country_id'] = (int)$this->config->get('config_country_id');
+			$input['zone_id'] = 0;
+		}
+
 		return $input;
+	}
+
+	// Business setting: does the store ship to other countries too? Unset (stores
+	// from before the setting existed) means yes.
+	private function sellsAbroad() {
+		return (string)$this->config->get('config_mc_sell_abroad') !== '0';
 	}
 
 	// Writes the posted (possibly partial) form into the stock checkout
@@ -329,11 +341,21 @@ class ControllerMintcartCheckout extends Controller {
 		}
 
 		$input = $this->addressInput();
+		$previous_country = (int)$input['country_id'];
 
 		foreach (\MintCart\Commerce\CheckoutService::ADDRESS_FIELDS as $field) {
 			if (isset($post[$field])) {
 				$input[$field] = trim((string)$post[$field]);
 			}
+		}
+
+		// The region is not asked; a new country drops the old one. One-country stores keep their country.
+		if (!$this->sellsAbroad()) {
+			$input['country_id'] = (int)$this->config->get('config_country_id');
+		}
+
+		if ((int)$input['country_id'] !== $previous_country) {
+			$input['zone_id'] = 0;
 		}
 
 		$this->load->model('localisation/country');
@@ -379,7 +401,8 @@ class ControllerMintcartCheckout extends Controller {
 
 		$model = $this->{'model_extension_shipping_' . $parts[0]};
 
-		return method_exists($model, $method) ? array($model, $parts[1]) : null;
+		// The loader hands out a Proxy whose methods are properties, so method_exists() alone is false.
+		return (method_exists($model, $method) || isset($model->{$method})) ? array($model, $parts[1]) : null;
 	}
 
 	private function applyCarrierForm($post) {
@@ -399,6 +422,11 @@ class ControllerMintcartCheckout extends Controller {
 
 		if (!empty($result['address'])) {
 			$this->session->data['shipping_address'] = array_merge($this->session->data['shipping_address'], $result['address']);
+
+			// The plain city / address fields are hidden for such a carrier: the order's payment address takes them too.
+			if (!empty($this->session->data['payment_address'])) {
+				$this->session->data['payment_address'] = array_merge($this->session->data['payment_address'], array_intersect_key($result['address'], array('city' => 1, 'address_1' => 1)));
+			}
 		}
 
 		$this->carrier_errors = !empty($result['errors']) ? (array)$result['errors'] : array();
@@ -465,6 +493,21 @@ class ControllerMintcartCheckout extends Controller {
 		}
 	}
 
+	// Phone mask for a buyer in $country (an OpenCart country row): the country's
+	// default format; the store's own custom mask (Business > Contacts) applies to
+	// the store's own country. '' = no known format (any international number).
+	private function phoneMaskFor($country) {
+		$custom = (int)$country['country_id'] === (int)$this->config->get('config_country_id') ? (string)$this->config->get('config_mc_phone_mask') : '';
+
+		static $defaults = null;
+
+		if ($defaults === null) {
+			$defaults = (array)json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/phone-masks.json'), true);
+		}
+
+		return \MintCart\Commerce\PhoneMask::resolve($custom, (string)$country['iso_code_2'], $defaults);
+	}
+
 	// @return array field => message
 	private function validate() {
 		$service = $this->service();
@@ -473,21 +516,24 @@ class ControllerMintcartCheckout extends Controller {
 		if (!$this->customer->isLogged()) {
 			$this->load->model('localisation/country');
 
-			$store_country = $this->model_localisation_country->getCountry((int)$this->config->get('config_country_id'));
-			$phone_mask = \MintCart\Commerce\PhoneMask::forStore((string)$this->config->get('config_mc_phone_mask'), $store_country ? (string)$store_country['iso_code_2'] : '', DIR_SYSTEM . 'mintcart/data/phone-masks.json');
-			$errors += $service->validateContact($this->contact(), $phone_mask);
+			// The phone format follows the buyer's country, not the store's.
+			$buyer_country = $this->model_localisation_country->getCountry((int)$this->addressInput()['country_id']);
+			$errors += $service->validateContact($this->contact(), $buyer_country ? $this->phoneMaskFor($buyer_country) : '');
 		}
 
 		$input = $this->addressInput();
 
 		$this->load->model('localisation/country');
 
-		$this->load->model('localisation/zone');
 
 		$country_info = $this->model_localisation_country->getCountry((int)$input['country_id']);
-		$zone_ids = array_column($this->model_localisation_zone->getZonesByCountryId((int)$input['country_id']), 'zone_id');
 
-		$errors += $service->validateAddress($input, $country_info ? $country_info : null, $zone_ids);
+		$errors += $service->validateAddress($input, $country_info ? $country_info : null);
+
+		// A carrier with its own form supplies the city and address (and answers for them in its own errors).
+		if ($this->carrierFormHtml() !== '') {
+			unset($errors['city'], $errors['address_1']);
+		}
 
 		if ($this->cart->hasShipping() && !isset($this->session->data['shipping_method'])) {
 			$errors['shipping_method'] = 'error_shipping';
@@ -539,6 +585,7 @@ class ControllerMintcartCheckout extends Controller {
 			'logged'            => $logged,
 			'can_guest'         => (bool)$this->canGuest(),
 			'shipping_required' => (bool)$this->cart->hasShipping(),
+			'sell_abroad'       => $this->sellsAbroad(),
 			'initialized'       => isset($this->session->data['payment_address']),
 			'contact'           => $this->contact(),
 			'address'           => $this->addressInput(),
@@ -552,23 +599,18 @@ class ControllerMintcartCheckout extends Controller {
 			$state['countries'] = array();
 
 			foreach ($this->model_localisation_country->getCountries() as $country) {
+				// A one-country store offers only its own country.
+				if (!$this->sellsAbroad() && (int)$country['country_id'] !== (int)$this->config->get('config_country_id')) {
+					continue;
+				}
+
 				$state['countries'][] = array(
 					'country_id'        => (int)$country['country_id'],
 					'name'              => $country['name'],
-					'postcode_required' => (bool)$country['postcode_required']
+					'postcode_required' => (bool)$country['postcode_required'],
+					'phone_mask'        => $this->phoneMaskFor($country)
 				);
 			}
-		}
-
-		$this->load->model('localisation/zone');
-
-		$state['zones'] = array();
-
-		foreach ($this->model_localisation_zone->getZonesByCountryId((int)$state['address']['country_id']) as $zone) {
-			$state['zones'][] = array(
-				'zone_id' => (int)$zone['zone_id'],
-				'name'    => $zone['name']
-			);
 		}
 
 		$shipping_service = new \MintCart\Commerce\ShippingMethodService();

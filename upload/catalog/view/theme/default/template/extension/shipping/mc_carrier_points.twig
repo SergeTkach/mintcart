@@ -1,9 +1,21 @@
-<div class="mc-points" data-mc-points data-method="{{ method }}" data-cities-url="{{ cities_url }}" data-points-url="{{ points_url }}" data-text-choose="{{ text_choose }}" data-text-loading="{{ text_loading }}" data-text-none="{{ text_none }}">
+{#
+    Checkout fields of a carrier with pickup points (Nova Poshta, Ukrposhta): a searchable
+    city picker, then a searchable picker of the city's branches (number and address).
+    Behaviour: catalog/view/javascript/mintcart/carrier-points.js (vanilla, no Select2).
+    The carrier supplies the delivery city and address itself, so the checkout hides its
+    own city / address fields while one of these options is chosen.
+#}
+<div class="mc-points" data-mc-points data-method="{{ method }}" data-cities-url="{{ cities_url }}" data-points-url="{{ points_url }}" data-text-choose="{{ text_choose }}" data-text-loading="{{ text_loading }}" data-text-none="{{ text_none }}" data-text-type-more="{{ hint_city }}">
   <div class="mc-field mc-points__city" data-mc-checkout-field="{{ prefix }}_city">
-    <label class="mc-field__label" for="mc-points-city">{{ label_city }}</label>
-    <input type="text" id="mc-points-city" class="mc-field__control" data-mc-points-city autocomplete="off" role="combobox" aria-expanded="false" aria-controls="mc-points-cities" value="{{ city_text }}" placeholder="{{ hint_city }}">
+    <span class="mc-field__label" id="mc-points-city-label">{{ label_city }}</span>
+    <div class="mc-picker" data-mc-picker="city" data-remote>
+      <button type="button" class="mc-field__control mc-picker__toggle" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="mc-points-city-label"><span class="mc-picker__label" data-mc-picker-label>{{ city_text ? city_text : text_choose }}</span></button>
+      <div class="mc-picker__panel" hidden>
+        <input type="search" class="mc-field__control mc-picker__search" placeholder="{{ hint_city }}" aria-label="{{ label_city }}" autocomplete="off">
+        <ul class="mc-picker__list" role="listbox" aria-labelledby="mc-points-city-label"></ul>
+      </div>
+    </div>
     <input type="hidden" name="{{ prefix }}_city" value="{{ city_ref }}" data-mc-points-city-ref>
-    <ul class="list-group mc-points__list" id="mc-points-cities" role="listbox" data-mc-points-cities hidden></ul>
     <p class="mc-field__error" role="alert" hidden></p>
   </div>
   {% if method == 'courier' %}
@@ -14,10 +26,15 @@
   </div>
   {% else %}
   <div class="mc-field" data-mc-checkout-field="{{ prefix }}_point">
-    <label class="mc-field__label" for="mc-points-point">{{ label_point }}</label>
-    <select id="mc-points-point" name="{{ prefix }}_point" class="mc-field__control" data-mc-points-point data-selected="{{ point_id }}" disabled>
-      <option value="">{{ text_choose }}</option>
-    </select>
+    <span class="mc-field__label" id="mc-points-point-label">{{ label_point }}</span>
+    <div class="mc-picker" data-mc-picker="point" data-disabled>
+      <button type="button" class="mc-field__control mc-picker__toggle" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="mc-points-point-label" disabled><span class="mc-picker__label" data-mc-picker-label>{{ text_choose }}</span></button>
+      <div class="mc-picker__panel" hidden>
+        <input type="search" class="mc-field__control mc-picker__search" placeholder="{{ label_point }}" aria-label="{{ label_point }}" autocomplete="off">
+        <ul class="mc-picker__list" role="listbox" aria-labelledby="mc-points-point-label"></ul>
+      </div>
+    </div>
+    <input type="hidden" name="{{ prefix }}_point" value="{{ point_id }}" data-mc-points-point-ref>
     <p class="mc-field__error" role="alert" hidden></p>
   </div>
   {% endif %}

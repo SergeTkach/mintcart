@@ -27,3 +27,5 @@ $_['text_contact_details'] = 'Dati di contatto';
 $_['text_edit'] = 'Modifica contatti';
 $_['text_social_links'] = 'Link social';
 $_['text_success'] = 'Operazione riuscita: hai modificato i contatti del negozio!';
+$_['entry_sell_abroad'] = 'Vendo anche in altri paesi';
+$_['help_sell_abroad'] = 'Lascia disattivato se vendi in un solo paese: il checkout non chiederà il paese, tutti gli ordini vanno nel paese del negozio.';

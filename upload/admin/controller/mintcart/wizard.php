@@ -133,6 +133,22 @@ class ControllerMintcartWizard extends Controller
             return;
         }
 
+        // "Skip for now" on an optional step: nothing is validated or saved,
+        // the step is just marked passed (the Ready step's checklist still
+        // lists whatever is unset). Store and Ready cannot be skipped.
+        $skippingStep = ($this->request->post['step_action'] ?? '') === 'skip'
+            && in_array($step, ['contacts', 'language_currency', 'delivery', 'payment', 'design'], true);
+
+        if ($skippingStep) {
+            $this->model_setting_setting->editSetting('mintcart_wizard', [
+                'mintcart_wizard_completed_steps' => $progress->withCompleted($step),
+            ]);
+
+            $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'], true));
+
+            return;
+        }
+
         if ($step === 'store') {
             $this->validateStoreStep();
         }
@@ -226,6 +242,14 @@ class ControllerMintcartWizard extends Controller
 
         if (utf8_strlen($telephone) < 3 || utf8_strlen($telephone) > 32) {
             $this->error['telephone'] = $this->language->get('error_telephone');
+        }
+
+        $this->load->model('localisation/country');
+
+        $countryId = (int)($this->request->post['config_country_id'] ?? 0);
+
+        if (!$countryId || !$this->model_localisation_country->getCountry($countryId)) {
+            $this->error['country'] = $this->language->get('error_country');
         }
 
         if (utf8_strlen($address) < 3 || utf8_strlen($address) > 256) {
@@ -411,6 +435,10 @@ class ControllerMintcartWizard extends Controller
             'config_email'     => trim((string)$this->request->post['config_email']),
             'config_telephone' => trim((string)$this->request->post['config_telephone']),
             'config_address'   => trim((string)$this->request->post['config_address']),
+            'config_country_id' => (int)$this->request->post['config_country_id'],
+            // The region is not asked (country only); a changed country drops the old one.
+            'config_zone_id'    => (int)$this->request->post['config_country_id'] === (int)($existing['config_country_id'] ?? 0) && (int)($existing['config_zone_id'] ?? 0) !== 3563 ? (int)($existing['config_zone_id'] ?? 0) : 0,
+            'config_mc_sell_abroad' => !empty($this->request->post['config_mc_sell_abroad']) ? '1' : '0',
         ]);
 
         $logo = $this->uploadedLogo();
@@ -726,6 +754,21 @@ class ControllerMintcartWizard extends Controller
             $data['config_email'] = $this->request->post['config_email'] ?? $this->config->get('config_email');
             $data['config_telephone'] = $this->request->post['config_telephone'] ?? $this->config->get('config_telephone');
             $data['config_address'] = $this->request->post['config_address'] ?? $this->config->get('config_address');
+
+            // Country: OpenCart installs as United Kingdom (222) / Aberdeen (3563)
+            // without asking, so that untouched pair is shown as "not chosen yet".
+            $this->load->model('localisation/country');
+
+            $untouched = (int)$this->config->get('config_country_id') === 222 && (int)$this->config->get('config_zone_id') === 3563;
+            $countryId = (int)($this->request->post['config_country_id'] ?? ($untouched ? 0 : $this->config->get('config_country_id')));
+
+            $data['config_country_id'] = $countryId;
+            $data['config_mc_sell_abroad'] = $this->request->server['REQUEST_METHOD'] === 'POST'
+                ? !empty($this->request->post['config_mc_sell_abroad'])
+                : (string)$this->config->get('config_mc_sell_abroad') === '1';
+            $data['countries'] = array_values(array_filter($this->model_localisation_country->getCountries(), function ($country) {
+                return !empty($country['status']);
+            }));
             $data['current_logo'] = $this->config->get('config_logo') && is_file(DIR_IMAGE . $this->config->get('config_logo'))
                 ? HTTP_CATALOG . 'image/' . $this->config->get('config_logo')
                 : '';

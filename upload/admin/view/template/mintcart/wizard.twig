@@ -92,6 +92,26 @@
                 {% if error.telephone %}<p class="mc-field__error" id="error-config-telephone" role="alert">{{ error.telephone }}</p>{% endif %}
               </div>
             </div>
+            <div class="mc-wizard__col">
+              <div class="mc-field {% if error.country %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-config-country">{{ entry_country }}</label>
+                <select id="input-config-country" name="config_country_id" class="mc-field__control" aria-describedby="help-config-country{% if error.country %} error-config-country{% endif %}" {% if error.country %}aria-invalid="true"{% endif %}>
+                  <option value="">{{ text_select }}</option>
+                  {% for country in countries %}
+                  <option value="{{ country.country_id }}"{% if country.country_id == config_country_id %} selected{% endif %}>{{ country.name }}</option>
+                  {% endfor %}
+                </select>
+                <p class="mc-field__help" id="help-config-country">{{ help_country }}</p>
+                {% if error.country %}<p class="mc-field__error" id="error-config-country" role="alert">{{ error.country }}</p>{% endif %}
+              </div>
+            </div>
+            <div class="mc-wizard__col">
+              <label class="mc-checkbox">
+                <input type="checkbox" class="mc-checkbox__input" name="config_mc_sell_abroad" value="1"{% if config_mc_sell_abroad %} checked{% endif %}>
+                <span class="mc-checkbox__label">{{ entry_sell_abroad }}</span>
+              </label>
+              <p class="mc-field__help">{{ help_sell_abroad }}</p>
+            </div>
             <div class="mc-wizard__col mc-wizard__col--full">
               <div class="mc-field {% if error.address %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-config-address">{{ entry_address }}</label>
@@ -139,7 +159,7 @@
             {% endfor %}
           </div>
 
-          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+          {{ wizard.actions(prev_step_url, button_back, button_continue, button_skip) }}
         </form>
         {% endif %}
 
@@ -201,7 +221,7 @@
             </div>
           </div>
 
-          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+          {{ wizard.actions(prev_step_url, button_back, button_continue, button_skip) }}
         </form>
         <form id="mc-add-currency-form" action="{{ add_currency_action }}" method="post"></form>
         <form id="mc-add-language-form" action="{{ add_language_action }}" method="post"></form>
@@ -277,7 +297,7 @@
 
         <form action="{{ action }}" method="post">
           <input type="hidden" name="step" value="{{ step }}" />
-          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+          {{ wizard.actions(prev_step_url, button_back, button_continue, button_skip) }}
         </form>
         {% endif %}
 
@@ -303,7 +323,7 @@
           {% else %}
           <p class="mc-wizard__empty">{{ design_no_presets }}</p>
           {% endif %}
-          {{ wizard.actions(prev_step_url, button_back, button_continue) }}
+          {{ wizard.actions(prev_step_url, button_back, button_continue, button_skip) }}
         </form>
         {% endif %}
 
@@ -427,9 +447,10 @@
   Component: assets/src/css/components/wizard.css,
   docs/developer/onboarding/setup-wizard.md.
 #}
-{% macro actions(prev_step_url, button_back, label) %}
+{% macro actions(prev_step_url, button_back, label, skip_label = '') %}
   <div class="mc-wizard__actions">
     {% if prev_step_url %}<a class="mc-button mc-button--ghost" href="{{ prev_step_url }}">{{ button_back }}</a>{% endif %}
+    {% if skip_label %}<button type="submit" name="step_action" value="skip" formnovalidate class="mc-button mc-button--ghost">{{ skip_label }}</button>{% endif %}
     <button type="submit" class="mc-button mc-button--primary mc-wizard__next">{{ label }}</button>
   </div>
 {% endmacro %}
