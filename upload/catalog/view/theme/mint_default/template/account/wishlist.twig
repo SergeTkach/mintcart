@@ -1,0 +1,64 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="mc-account">
+    {% if success %}
+        <div class="mc-alert mc-alert--success mb-3" role="status"><div class="mc-alert__body"><p class="mc-alert__message">{{ success }}</p></div></div>
+    {% endif %}
+    {% if error_warning %}
+        <div class="mc-alert mc-alert--danger mb-3" role="alert"><div class="mc-alert__body"><p class="mc-alert__message">{{ error_warning }}</p></div></div>
+    {% endif %}
+        <h1 class="mc-account__heading">{{ heading_title }}</h1>
+        {% if guest %}
+            <div class="mc-alert mc-alert--info mb-3" role="note">
+                <div class="mc-alert__body">
+                    <p class="mc-alert__message">{{ text_guest_notice }}</p>
+                    <div class="mc-account__actions">
+                        <a class="mc-button mc-button--primary mc-button--sm" href="{{ login }}">{{ text_guest_login }}</a>
+                        <a class="mc-button mc-button--outline mc-button--sm" href="{{ register }}">{{ text_guest_register }}</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if products %}
+            <div class="mc-account__card mc-account__card--flush">
+                <div class="table-responsive"><table class="mc-table">
+                    <thead><tr><th></th><th>{{ column_name }}</th><th>{{ column_stock }}</th><th>{{ column_price }}</th><th></th></tr></thead>
+                    <tbody>
+                        {% for product in products %}
+                            <tr>
+                                <td>{% if product.thumb %}<a href="{{ product.href }}"><img class="mc-table__thumb" src="{{ product.thumb }}" alt="{{ product.name }}" loading="lazy"></a>{% endif %}</td>
+                                <td data-label="{{ column_name }}"><a href="{{ product.href }}">{{ product.name }}</a><br><small>{{ product.model }}</small></td>
+                                <td data-label="{{ column_stock }}">{{ product.stock }}</td>
+                                <td data-label="{{ column_price }}">{% if product.price %}{% if not product.special %}{{ product.price }}{% else %}<s>{{ product.price }}</s> {{ product.special }}{% endif %}{% endif %}</td>
+                                <td>
+                                    <button type="button" class="mc-button mc-button--primary mc-button--sm" data-mc-action="add-to-cart" data-product-id="{{ product.product_id }}" data-product-name="{{ product.name }}" data-quantity="1" data-mc-cart-url="index.php?route=checkout/cart">{{ button_cart }}</button>
+                                    <a class="mc-button mc-button--ghost mc-button--sm" href="{{ product.remove }}">{{ button_remove }}</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table></div>
+            </div>
+        {% else %}
+            <p class="mc-account__empty">{{ text_empty }}</p>
+        {% endif %}
+        {% if not guest %}        <div class="mc-account__actions mc-account__actions--end">
+            <a class="mc-button mc-button--primary" href="{{ continue }}">{{ button_continue }}</a>
+        </div>
+        {% endif %}
+    </div>
+    {{ content_bottom }}
+</div>
+{{ footer }}

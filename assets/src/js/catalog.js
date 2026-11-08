@@ -51,6 +51,7 @@ import { initBuyBar } from './components/buy-bar.js';
 import { initSectionNav } from './components/section-nav.js';
 import { initProductPrice } from './components/product-price.js';
 import { initPhoneMask } from './components/phone-mask.js';
+import { initConfirmLinks } from './components/confirm-link.js';
 
 // Swiper-based sliders live in their own bundle (slider(.min).js next to
 // this file), fetched only when a `[data-mc-slider]` is on the page - at
@@ -132,6 +133,7 @@ function boot() {
     initSectionNav();
     initProductPrice();
     initPhoneMask();
+    initConfirmLinks();
     watchSliders();
 }
 

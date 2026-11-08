@@ -1,0 +1,37 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="mc-account mc-account--narrow">
+    {% if success %}
+        <div class="mc-alert mc-alert--success mb-3" role="status"><div class="mc-alert__body"><p class="mc-alert__message">{{ success }}</p></div></div>
+    {% endif %}
+    {% if error_warning %}
+        <div class="mc-alert mc-alert--danger mb-3" role="alert"><div class="mc-alert__body"><p class="mc-alert__message">{{ error_warning }}</p></div></div>
+    {% endif %}
+        <form class="mc-account__card" action="{{ action }}" method="post" enctype="multipart/form-data">
+            <h1 class="mc-account__title">{{ heading_title }}</h1>
+            <fieldset class="mc-field mb-3">
+                <legend class="mc-field__label">{{ entry_newsletter }}</legend>
+                <label class="mc-radio"><input type="radio" class="mc-radio__input" name="newsletter" value="1"{% if newsletter %} checked{% endif %}><span class="mc-radio__label">{{ text_yes }}</span></label>
+                <label class="mc-radio"><input type="radio" class="mc-radio__input" name="newsletter" value="0"{% if not newsletter %} checked{% endif %}><span class="mc-radio__label">{{ text_no }}</span></label>
+            </fieldset>
+            <div class="mc-account__actions">
+                <a class="mc-button mc-button--ghost" href="{{ back }}">{{ button_back }}</a>
+                <button type="submit" class="mc-button mc-button--primary">{{ button_continue }}</button>
+            </div>
+        </form>
+    </div>
+    {{ content_bottom }}
+</div>
+{{ footer }}

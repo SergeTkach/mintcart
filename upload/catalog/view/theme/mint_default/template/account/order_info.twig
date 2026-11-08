@@ -1,0 +1,85 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="mc-account">
+    {% if success %}
+        <div class="mc-alert mc-alert--success mb-3" role="status"><div class="mc-alert__body"><p class="mc-alert__message">{{ success }}</p></div></div>
+    {% endif %}
+    {% if error_warning %}
+        <div class="mc-alert mc-alert--danger mb-3" role="alert"><div class="mc-alert__body"><p class="mc-alert__message">{{ error_warning }}</p></div></div>
+    {% endif %}
+        <h1 class="mc-account__heading">{{ heading_title }} #{{ order_id }}</h1>
+
+        <div class="mc-account__grid mc-account__grid--two">
+            <div class="mc-account__card">
+                <p class="mc-account__section">{{ text_order_detail }}</p>
+                <p class="mc-account__row">{% if invoice_no %}<strong>{{ text_invoice_no }}</strong> {{ invoice_no }}<br>{% endif %}<strong>{{ text_order_id }}</strong> #{{ order_id }}<br><strong>{{ text_date_added }}</strong> {{ date_added }}</p>
+                <p class="mc-account__row">{% if payment_method %}<strong>{{ text_payment_method }}</strong> {{ payment_method }}<br>{% endif %}{% if shipping_method %}<strong>{{ text_shipping_method }}</strong> {{ shipping_method }}{% endif %}</p>
+            </div>
+            <div class="mc-account__card">
+                <p class="mc-account__section">{{ text_payment_address }}</p>
+                <p class="mc-account__row">{{ payment_address }}</p>
+                {% if shipping_address %}
+                    <p class="mc-account__section">{{ text_shipping_address }}</p>
+                    <p class="mc-account__row">{{ shipping_address }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mc-account__card mc-account__card--flush mt-4">
+            <div class="table-responsive"><table class="mc-table">
+                <thead><tr><th>{{ column_name }}</th><th>{{ column_model }}</th><th>{{ column_quantity }}</th><th>{{ column_price }}</th><th>{{ column_total }}</th><th></th></tr></thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td data-label="{{ column_name }}">{{ product.name }}{% for option in product.option %}<br><small>{{ option.name }}: {{ option.value }}</small>{% endfor %}</td>
+                            <td data-label="{{ column_model }}">{{ product.model }}</td>
+                            <td data-label="{{ column_quantity }}">{{ product.quantity }}</td>
+                            <td data-label="{{ column_price }}">{{ product.price }}</td>
+                            <td data-label="{{ column_total }}">{{ product.total }}</td>
+                            <td>{% if product.reorder %}<a class="mc-button mc-button--outline mc-button--sm" href="{{ product.reorder }}">{{ button_reorder }}</a>{% endif %}{% if product.return %} <a class="mc-button mc-button--ghost mc-button--sm" href="{{ product.return }}">{{ button_return }}</a>{% endif %}</td>
+                        </tr>
+                    {% endfor %}
+                    {% for voucher in vouchers %}
+                        <tr><td>{{ voucher.description }}</td><td></td><td>1</td><td>{{ voucher.amount }}</td><td>{{ voucher.amount }}</td><td></td></tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    {% for total in totals %}
+                        <tr><td colspan="3"></td><td><strong>{{ total.title }}</strong></td><td>{{ total.text }}</td><td></td></tr>
+                    {% endfor %}
+                </tfoot>
+            </table></div>
+        </div>
+
+        {% if comment %}
+            <div class="mc-account__card mt-4"><p class="mc-account__section">{{ text_comment }}</p><p class="mc-account__row">{{ comment }}</p></div>
+        {% endif %}
+
+        {% if histories %}
+            <div class="mc-account__card mc-account__card--flush mt-4">
+                <p class="mc-account__section mc-account__section--pad">{{ text_history }}</p>
+                <div class="table-responsive"><table class="mc-table">
+                    <thead><tr><th>{{ column_date_added }}</th><th>{{ column_status }}</th><th>{{ column_comment }}</th></tr></thead>
+                    <tbody>{% for history in histories %}<tr><td data-label="{{ column_date_added }}">{{ history.date_added }}</td><td data-label="{{ column_status }}">{{ history.status }}</td><td data-label="{{ column_comment }}">{{ history.comment }}</td></tr>{% endfor %}</tbody>
+                </table></div>
+            </div>
+        {% endif %}
+        <div class="mc-account__actions mc-account__actions--end">
+            <a class="mc-button mc-button--primary" href="{{ continue }}">{{ button_continue }}</a>
+        </div>
+    </div>
+    {{ content_bottom }}
+</div>
+{{ footer }}

@@ -1,0 +1,45 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="mc-account">
+    {% if success %}
+        <div class="mc-alert mc-alert--success mb-3" role="status"><div class="mc-alert__body"><p class="mc-alert__message">{{ success }}</p></div></div>
+    {% endif %}
+    {% if error_warning %}
+        <div class="mc-alert mc-alert--danger mb-3" role="alert"><div class="mc-alert__body"><p class="mc-alert__message">{{ error_warning }}</p></div></div>
+    {% endif %}
+        <h1 class="mc-account__heading">{{ text_address_book }}</h1>
+        {% if addresses %}
+            <div class="mc-account__grid mc-account__grid--two">
+                {% for result in addresses %}
+                    <div class="mc-account__card">
+                        <p class="mc-account__row">{{ result.address }}</p>
+                        <div class="mc-account__actions">
+                            <a class="mc-button mc-button--outline mc-button--sm" href="{{ result.update }}">{{ button_edit }}</a>
+                            <a class="mc-button mc-button--danger mc-button--sm" href="{{ result.delete }}" data-mc-confirm="{{ text_confirm }}">{{ button_delete }}</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="mc-account__empty">{{ text_empty }}</p>
+        {% endif %}
+        <div class="mc-account__actions mt-4">
+            <a class="mc-button mc-button--ghost" href="{{ back }}">{{ button_back }}</a>
+            <a class="mc-button mc-button--primary" href="{{ add }}">{{ button_new_address }}</a>
+        </div>
+    </div>
+    {{ content_bottom }}
+</div>
+{{ footer }}
