@@ -2232,3 +2232,18 @@ registered listener into one of the listing controllers
 5. Fresh install from `upload/` (not an old copy): `oc_mc_migration` lists
    all migrations, `oc_event` has `mintcart_wizard_autostart`, first login
    opens the wizard.
+
+## Checkout and delivery, 2026-11-08
+
+1. Setup Wizard, Store step: the country is *not chosen* on a fresh install, the step will not continue without it;
+   "I also sell to other countries" is off by default. Optional steps have **Skip for now**.
+2. Checkout with the box **off**: no country field, the phone mask is the store's country. With it **on**: the
+   country field appears and the phone mask follows the chosen country (UK has no mask).
+3. Choose Nova Poshta (branch): the plain City / Address fields and the whole address block disappear; pick a city
+   (type 2+ letters) and a branch; place the order: the order's delivery and payment address show the city and the
+   branch. Same for Ukrposhta. Choosing "Flat Rate" brings the address fields back.
+4. Admin: Extensions > Shipping > Nova Poshta shows the directory status; "Update the list" (needs the API key) fills
+   it page by page.
+5. Delivery services: add two services (one with "Pickup point"), both appear in the checkout.
+6. Account pages: dashboard, orders, order details, address book (add / edit / delete with the confirm), personal
+   data, password, wishlist.

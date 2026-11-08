@@ -4308,3 +4308,30 @@ File: `upload/admin/view/template/common/header.twig`.
 **Why it cannot live in the MintCart layer:** the decoder and the form validation are inside the stock controllers. The rule itself is in the MintCart model `ModelMintcartSeoUrl::keywordTaken()`.
 **Compatibility impact:** stricter nothing, looser rules only: existing data is valid. The decoder keeps the language-first lookup (MC-0009) and the old "any row" fallback. Third-party SEO extensions that replace `startup/seo_url` do not know the rule. ADR 019.
 **Tests:** `tests/mintcart/seo/keyword-scope-test.php`.
+
+
+---
+
+## `upload/catalog/controller/common/header.php` (login modal, 2026-11-08)
+
+**Reason:** guests get a login modal under "Account" in the header (form plus a Register button) instead of a
+two-link dropdown. The controller renders the modal fragment (`mintcart/login_modal`) and hands it to the header
+component as `login_modal`; the stock `account/login` language strings are loaded into their own namespace
+(`$this->load->language('account/login', 'mc_login')`) so the page language is not overwritten.
+**Why it cannot live in the Mint layer:** the header controller is where `mc_header` is already assembled; the data
+(account state, login/register links, the language strings) is only available here. A theme cannot add it without a
+controller patch.
+**Compatibility impact:** only the `$mint_render_header` branch changes (Mint-aware themes); the stock theme and the
+other themes ignore `login_modal`. The posted form goes to the stock `account/login`.
+**Tests:** `php -l`; checked in a browser (modal opens, Register button, form).
+
+## `upload/install/**` (installer branding, 2026-11-08)
+
+**Reason:** the installer no longer promotes OpenCart: the logo is the MintCart one (`view/image/logo.svg`), the
+footer and the last step link to the MintCart repository, documentation and issues; the OpenCart promotion call
+(`controller/install/promotion.php`), the extension-store call (`controller/3rd_party/extension.php`), the forums,
+Facebook and newsletter blocks are removed; "OpenCart" in the installer's own texts reads "MintCart".
+**Why it cannot live in the Mint layer:** the installer runs before MintCart exists.
+**Compatibility impact:** the installer steps, checks and database writes are untouched (`DIR_OPENCART`,
+`OPENCART_SERVER` and the schema stay as they are). The upgrade screen still works.
+**Tests:** the release zip installs on a clean database (`install/cli_install.php`) and the storefront opens.

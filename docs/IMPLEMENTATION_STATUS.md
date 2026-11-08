@@ -150,8 +150,9 @@ Branch state: PR #190 merged to master 2026-10-08. Work continues on
       ledger, orchestrator, admin screen; never run against a real package
 - [~] Rollback: changed-file detection + ledger; no rollback action
 - [x] Compatibility Checker (install.xml analysis, admin screen)
-- [~] Release packaging: `npm run release` (`scripts/release.js`); asset
-      path bug fixed 2026-10-08; needs `zip` on PATH, never run end to end
+- [x] Release packaging: `npm run release` (`scripts/release.js`) builds `release/mintcart-<version>.zip`
+      from `HEAD` (run end to end, 2026-11-08, 31 MB). `README.md` and `LICENSE` (GPL v3) in the repo root;
+      the installer is MintCart-branded (no OpenCart promotion, forums or newsletter, no calls to opencart.com)
 - [x] Homepage Builder Slider block (split / full / cards layouts, rich slides)
       on the `mc-slider` engine; Customer reviews page + review-backed Testimonials;
       manual product badges (set + per-product assignment); Quick Order on the
@@ -232,24 +233,49 @@ manage methods (an "Add a method" button that installs an available extension,
 inline settings instead of the pencil to another page), Extensions stays under
 Advanced; the wizard's Delivery and Payment steps use the same screen.
 
+Done 2026-11-08 (browser check of the checkout pieces pending, see MANUAL_VERIFICATION.md):
+
+- Setup Wizard: **store country** (required; OpenCart's untouched United Kingdom shows as "not chosen"), setting
+  **"I also sell to other countries"** (also in Business > Contacts, `config_mc_sell_abroad`), **Skip for now** on the
+  optional steps. Region is no longer asked anywhere (country only).
+- Checkout: order is contacts, delivery (country when selling abroad, methods), **delivery address after the method**,
+  payment. Phone mask follows the buyer's country; a one-country store hides the country and forces it on the server.
+  Fixed: shipping-extension forms never rendered (the loader's model Proxy hides methods from `method_exists()`).
+- Delivery pickers: Nova Poshta and Ukrposhta use a searchable city picker and a searchable branch picker (vanilla,
+  Select2-style, `carrier-points.js`, ADR 020); while such a form is chosen the plain city / address fields are hidden.
+- Nova Poshta moved from live API calls to a **local directory** (`mc_novaposhta_city`, `mc_novaposhta_warehouse`,
+  migration `202611081000`), refilled page by page from the extension's admin screen; the method is not offered until
+  it has been loaded. Dev data copied from the elegansa database into `mintcart` and `mintcart_fresh`.
+- New extensions: **Delivery services** (`mc_carrier`: fixed-price carriers without an API, optional typed pickup point,
+  one extension for DHL / Hermes / Correos / UPS ...) and **InPost UK** (`mc_inpost_uk`, postcode search through the
+  InPost points API; **not verified against the live API**: the host did not answer from the dev machine; InPost
+  Spain and Royal Mail Collect not started, no documented points API found).
+- Pages on the Mint design: login (form first, then Register), header login modal for guests, register, order success,
+  contact, information pages, and 15 account pages (dashboard, orders, order details, addresses, personal data,
+  password, reset, newsletter, wishlist, downloads, returns, transactions, rewards). Not done: affiliate, voucher,
+  return form, recurring, mail templates (about 20 templates still on the stock design).
+- Mini cart keeps its width when the total changes.
+
 Shipping carriers (added 2026-10-23, after the first release):
 
-1. [x] Nova Poshta (`mc_novaposhta`, live API, no sync tables) and Ukrposhta (`mc_ukrposhta`, own
+1. [x] Nova Poshta (`mc_novaposhta`, local directory, see above) and Ukrposhta (`mc_ukrposhta`, own
    directory in `mc_ukrposhta_city` / `mc_ukrposhta_branch`, region-by-region admin sync): city and
    point form comes from the extension itself through the checkout hook
    (`docs/developer/commerce/shipping-method-forms.md`), no shared city field. Written without API
-   keys: client parsing is unit-tested, the live API calls and the checkout form still need a
-   click-through. Original plan was:
+   keys: client parsing is unit-tested, the live API calls (directory refresh) still need a
+   click-through with a key. Original plan was:
    ported from the Cartello project
    (`C:\laragon\www\themes\cartello`: `ocnp_novaposhta`, `st_ukrposhta`): adapt
    them to the MintCart design and to the MintCart checkout. Cartello's versions are
    built around the old checkout, so first check how they behave in ours (city and
    warehouse pickers, price calculation, API key stored and shown inline in the
    wizard's delivery card like the core methods). No OCMOD, no controller patches
-2. [ ] US postal carriers (2-3, e.g. USPS, UPS, FedEx) and UK (e.g. Royal Mail,
+2. [~] US postal carriers (2-3, e.g. USPS, UPS, FedEx) and UK (e.g. Royal Mail,
    Parcelforce): OpenCart already ships some of them; check what works on the
-   MintCart checkout, then give them inline settings in the wizard
-3. [ ] DHL
+   MintCart checkout, then give them inline settings in the wizard. Fixed-price versions: **Delivery services**
+   (`mc_carrier`); live pickup points: InPost UK written, UPS Access Point / FedEx Hold at Location / DHL Packstation /
+   Hermes / Correos Citypaq not started (each needs its own API access)
+3. [~] DHL (as a fixed-price service in `mc_carrier`)
 4. [ ] Inline settings for payment methods in the wizard (same mechanism as
    shipping: `system/mintcart/data/method-fields.json`; the Business screens and
    `ModelMintcartMethods` already take any type)
@@ -264,11 +290,11 @@ full Bulk Editor, rollback action.
 
 ## Shortest path to a first release
 
-1. Live click-through: Setup Wizard in the admin; checkout with an active
-   coupon (`docs/MANUAL_VERIFICATION.md`).
-2. Run `npm run release`, install the zip on a clean DB, go install →
-   wizard → product → order.
-3. Decide whether the product-page delivery/returns block also needs
+1. [x] Setup Wizard click-through and a test order on `mintcart-fresh` (2026-11-08).
+2. [x] `npm run release`, installer branding, README / LICENSE (2026-11-08).
+3. [ ] Install the new zip on a clean DB once more and click through the installer's last screens.
+4. [ ] Tag and GitHub Release (version string is still `0.1.0-dev`).
+5. [ ] Decide whether the product-page delivery/returns block also needs
    hand-written text (the automatic version is in).
-4. Admin navigation restructured in business language.
-5. Early Access.
+6. [ ] Admin navigation restructured in business language.
+7. [ ] Early Access.
