@@ -36,6 +36,13 @@ class ControllerMintcartWizard extends Controller
         $progress = $this->loadProgress();
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
+            // A view-only admin (access without modify, e.g. the demo user) can open the steps but not save them.
+            if (!$this->user->hasPermission('modify', 'mintcart/wizard')) {
+                $this->response->redirect($this->url->link('mintcart/wizard', 'user_token=' . $this->session->data['user_token'], true));
+
+                return;
+            }
+
             $this->handleSubmit($progress);
 
             return;
