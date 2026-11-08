@@ -1,0 +1,117 @@
+{#
+    Registration page for mint_default (mc-auth). Same controller data as the stock
+    account/register: the form posts to `action`, errors come back as error_*.
+    Custom fields are all shown (text, textarea, select, radio, checkbox, date, time);
+    a "file" custom field is not supported here, and the stock per-customer-group
+    show/hide of custom fields is not reproduced.
+#}
+{% macro input(name, label, type, value, error, autocomplete) %}
+    <div class="mc-field mb-3{% if error %} has-error{% endif %}">
+        <label class="mc-field__label" for="input-{{ name }}">{{ label }}</label>
+        <input type="{{ type }}" name="{{ name }}" value="{{ value }}" id="input-{{ name }}" class="mc-field__control" autocomplete="{{ autocomplete }}"{% if error %} aria-invalid="true" aria-describedby="error-{{ name }}"{% endif %}>
+        {% if error %}<p class="mc-field__error" id="error-{{ name }}" role="alert">{{ error }}</p>{% endif %}
+    </div>
+{% endmacro %}
+{% import _self as f %}
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="mc-auth">
+        {% if error_warning %}
+            <div class="mc-alert mc-alert--danger mb-3" role="alert">
+                <div class="mc-alert__body"><p class="mc-alert__message">{{ error_warning }}</p></div>
+            </div>
+        {% endif %}
+
+        <form class="mc-auth__card" action="{{ action }}" method="post" enctype="multipart/form-data">
+            <h1 class="mc-auth__title">{{ heading_title }}</h1>
+            <p class="mc-auth__lead">{{ text_account_already }}</p>
+
+            {% if customer_groups|length > 1 %}
+                <fieldset class="mc-field mb-3">
+                    <legend class="mc-field__label">{{ entry_customer_group }}</legend>
+                    {% for customer_group in customer_groups %}
+                        <label class="mc-radio">
+                            <input type="radio" class="mc-radio__input" name="customer_group_id" value="{{ customer_group.customer_group_id }}"{% if customer_group.customer_group_id == customer_group_id %} checked{% endif %}>
+                            <span class="mc-radio__label">{{ customer_group.name }}</span>
+                        </label>
+                    {% endfor %}
+                </fieldset>
+            {% else %}
+                {% for customer_group in customer_groups %}<input type="hidden" name="customer_group_id" value="{{ customer_group.customer_group_id }}">{% endfor %}
+            {% endif %}
+
+            {{ f.input('firstname', entry_firstname, 'text', firstname, error_firstname, 'given-name') }}
+            {{ f.input('lastname', entry_lastname, 'text', lastname, error_lastname, 'family-name') }}
+            {{ f.input('email', entry_email, 'email', email, error_email, 'email') }}
+            {{ f.input('telephone', entry_telephone, 'tel', telephone, error_telephone, 'tel') }}
+
+            {% for custom_field in custom_fields %}
+                {% set cf_name = 'custom_field[' ~ custom_field.location ~ '][' ~ custom_field.custom_field_id ~ ']' %}
+                {% set cf_id = 'input-custom-field' ~ custom_field.custom_field_id %}
+                {% set cf_error = error_custom_field[custom_field.custom_field_id] %}
+                {% set cf_saved = register_custom_field[custom_field.custom_field_id] %}
+                {% if custom_field.type != 'file' %}
+                    <div class="mc-field mb-3{% if cf_error %} has-error{% endif %}">
+                        {% if custom_field.type == 'radio' or custom_field.type == 'checkbox' %}
+                            <span class="mc-field__label">{{ custom_field.name }}</span>
+                            {% for value in custom_field.custom_field_value %}
+                                <label class="mc-{{ custom_field.type }}">
+                                    <input type="{{ custom_field.type }}" class="mc-{{ custom_field.type }}__input" name="{{ cf_name }}{% if custom_field.type == 'checkbox' %}[]{% endif %}" value="{{ value.custom_field_value_id }}"{% if cf_saved and (value.custom_field_value_id == cf_saved or (cf_saved is iterable and value.custom_field_value_id in cf_saved)) %} checked{% endif %}>
+                                    <span class="mc-{{ custom_field.type }}__label">{{ value.name }}</span>
+                                </label>
+                            {% endfor %}
+                        {% else %}
+                            <label class="mc-field__label" for="{{ cf_id }}">{{ custom_field.name }}</label>
+                            {% if custom_field.type == 'select' %}
+                                <select name="{{ cf_name }}" id="{{ cf_id }}" class="mc-field__control">
+                                    <option value="">{{ text_select }}</option>
+                                    {% for value in custom_field.custom_field_value %}
+                                        <option value="{{ value.custom_field_value_id }}"{% if value.custom_field_value_id == cf_saved %} selected{% endif %}>{{ value.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            {% elseif custom_field.type == 'textarea' %}
+                                <textarea name="{{ cf_name }}" id="{{ cf_id }}" rows="4" class="mc-field__control">{{ cf_saved ? cf_saved : custom_field.value }}</textarea>
+                            {% else %}
+                                <input type="{{ custom_field.type == 'datetime' ? 'datetime-local' : (custom_field.type in ['date', 'time'] ? custom_field.type : 'text') }}" name="{{ cf_name }}" id="{{ cf_id }}" value="{{ cf_saved ? cf_saved : custom_field.value }}" class="mc-field__control">
+                            {% endif %}
+                        {% endif %}
+                        {% if cf_error %}<p class="mc-field__error" role="alert">{{ cf_error }}</p>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            {{ f.input('password', entry_password, 'password', password, error_password, 'new-password') }}
+            {{ f.input('confirm', entry_confirm, 'password', confirm, error_confirm, 'new-password') }}
+
+            <label class="mc-checkbox mb-3">
+                <input type="checkbox" class="mc-checkbox__input" name="newsletter" value="1"{% if newsletter %} checked{% endif %}>
+                <span class="mc-checkbox__label">{{ entry_newsletter }}</span>
+            </label>
+
+            {% if captcha %}<div class="mc-legacy mb-3">{{ captcha }}</div>{% endif %}
+
+            {% if text_agree %}
+                <label class="mc-checkbox mb-3">
+                    <input type="checkbox" class="mc-checkbox__input" name="agree" value="1"{% if agree %} checked{% endif %}>
+                    <span class="mc-checkbox__label">{{ text_agree|replace({'class="agree"': 'class="agree" target="_blank" rel="noopener"'}) }}</span>
+                </label>
+            {% endif %}
+
+            <button type="submit" class="mc-button mc-button--primary mc-button--lg mc-auth__submit">{{ button_continue }}</button>
+        </form>
+    </div>
+    {{ content_bottom }}
+</div>
+{{ footer }}

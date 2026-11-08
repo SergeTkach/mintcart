@@ -49,3 +49,17 @@
     margin: 0 0 var(--mc-space-3);
     color: var(--mc-muted);
 }
+
+.mc-auth__lead {
+    margin: 0 0 var(--mc-space-4);
+    color: var(--mc-muted);
+}
+
+/* The header login modal reuses the page's form; the title sits in the modal header. */
+.mc-login-modal .modal-title {
+    margin: 0;
+}
+
+.mc-login-modal .mc-auth__new {
+    margin-top: var(--mc-space-4);
+}

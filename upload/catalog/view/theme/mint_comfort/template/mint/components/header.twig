@@ -87,21 +87,20 @@
                     {% endif %}
 
                     <div class="mc-header__account">
-                        <button type="button" class="mc-header__account-toggle" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-                            {% if account.logged %}{{ account.first_name }}{% else %}{{ text_account }}{% endif %}
-                        </button>
+                        {% if account.logged %}
+                            <button type="button" class="mc-header__account-toggle" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">{{ account.first_name }}</button>
                         <ul class="mc-header__account-menu dropdown-menu dropdown-menu-end">
-                            {% if account.logged %}
                                 <li><a class="mc-header__account-menu-link" href="{{ links.account }}">{{ text_account }}</a></li>
                                 <li><a class="mc-header__account-menu-link" href="{{ links.order }}">{{ text_order }}</a></li>
                                 <li><a class="mc-header__account-menu-link" href="{{ links.transaction }}">{{ text_transaction }}</a></li>
                                 <li><a class="mc-header__account-menu-link" href="{{ links.download }}">{{ text_download }}</a></li>
                                 <li><a class="mc-header__account-menu-link" href="{{ links.logout }}">{{ text_logout }}</a></li>
-                            {% else %}
-                                <li><a class="mc-header__account-menu-link" href="{{ links.register }}">{{ text_register }}</a></li>
-                                <li><a class="mc-header__account-menu-link" href="{{ links.login }}">{{ text_login }}</a></li>
-                            {% endif %}
                         </ul>
+                        {% else %}
+                            {# Guests: a login modal (mintcart/login_modal.twig) instead of a menu of two links. #}
+                            <button type="button" class="mc-header__account-toggle" data-bs-toggle="modal" data-bs-target="#mc-login-modal">{{ text_account }}</button>
+                            {{ login_modal|raw }}
+                        {% endif %}
                     </div>
 
                     {% if links.wishlist %}
