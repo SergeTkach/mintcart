@@ -41,6 +41,12 @@
                 {% endif %}
               </div>
             </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox"><label><input type="checkbox" name="config_mc_sell_abroad" value="1"{% if config_mc_sell_abroad %} checked{% endif %} /> {{ entry_sell_abroad }}</label></div>
+                <div class="help-block">{{ help_sell_abroad }}</div>
+              </div>
+            </div>
             <div class="form-group{% if error_config_mc_phone_mask %} has-error{% endif %}">
               <label class="col-sm-2 control-label" for="input-phone-mask">{{ entry_phone_mask }}</label>
               <div class="col-sm-10">

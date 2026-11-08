@@ -68,10 +68,8 @@ function initCheckoutRoot(root) {
     const text = root.dataset;
 
     const countrySelect = form.elements.country_id;
-    const zoneSelect = form.elements.zone_id;
 
     let countries = [];
-    let zonesCountry = null;
     let timer = null;
     let controller = null;
     let confirming = false;
@@ -127,15 +125,6 @@ function initCheckoutRoot(root) {
     function renderCountries(selected) {
         countrySelect.replaceChildren(option('', text.mcTextSelect, selected));
         countries.forEach((c) => countrySelect.append(option(c.country_id, c.name, selected)));
-    }
-
-    function renderZones(zones, selected) {
-        if (zones.length) {
-            zoneSelect.replaceChildren(option('', text.mcTextSelect, selected));
-            zones.forEach((z) => zoneSelect.append(option(z.zone_id, z.name, selected)));
-        } else {
-            zoneSelect.replaceChildren(option(0, text.mcTextNone, 0));
-        }
     }
 
     function renderPostcode(countryId) {
@@ -337,10 +326,8 @@ function initCheckoutRoot(root) {
             });
         }
 
-        if (zonesCountry !== String(state.address.country_id)) {
-            zonesCountry = String(state.address.country_id);
-            renderZones(state.zones, state.address.zone_id);
-        }
+        // A store that sells in one country only does not ask for it.
+        form.querySelector('[data-mc-checkout-field="country_id"]').hidden = !state.sell_abroad;
 
         renderPostcode(state.address.country_id);
 
@@ -489,9 +476,7 @@ function initCheckoutRoot(root) {
     }
 
     form.addEventListener('change', (event) => {
-        // A new country invalidates the region; the response brings its zones.
         if (event.target === countrySelect) {
-            zoneSelect.value = '';
             renderPhoneMask(countrySelect.value);
         }
 

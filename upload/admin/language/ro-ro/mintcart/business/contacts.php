@@ -29,3 +29,5 @@ $_['error_social'] = '%s trebuie să fie un URL valid!';
 $_['entry_phone_mask'] = 'Formatul telefonului';
 $_['help_phone_mask'] = 'Opțional. Câmpurile de telefon (finalizare comandă, comandă rapidă) îl urmează; # este o cifră, de ex. +40 ### ### ###. Lăsați gol pentru a folosi formatul implicit al țării dumneavoastră.';
 $_['error_phone_mask'] = 'Folosiți cifre, # pentru fiecare cifră de introdus și + ( ) - sau spații; cel puțin un #.';
+$_['entry_sell_abroad'] = 'Vând și în alte țări';
+$_['help_sell_abroad'] = 'Lăsați dezactivat dacă vindeți într-o singură țară: finalizarea comenzii nu mai cere țara, toate comenzile merg în țara magazinului.';

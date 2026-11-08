@@ -27,3 +27,5 @@ $_['text_contact_details'] = 'Coordonnées';
 $_['text_edit'] = 'Modifier les contacts';
 $_['text_social_links'] = 'Liens sociaux';
 $_['text_success'] = 'Succès : vous avez modifié les contacts de la boutique !';
+$_['entry_sell_abroad'] = 'Je vends aussi à l\'étranger';
+$_['help_sell_abroad'] = 'Laissez désactivé si vous ne vendez que dans un pays : la commande ne demande alors pas le pays, toutes les commandes vont dans le pays de la boutique.';

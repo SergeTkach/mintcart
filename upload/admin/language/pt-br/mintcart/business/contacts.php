@@ -27,3 +27,5 @@ $_['text_contact_details'] = 'Dados de contato';
 $_['text_edit'] = 'Editar contatos';
 $_['text_social_links'] = 'Links sociais';
 $_['text_success'] = 'Sucesso: você modificou os contatos da loja!';
+$_['entry_sell_abroad'] = 'Também vendo para outros países';
+$_['help_sell_abroad'] = 'Deixe desligado se você vende em um só país: o checkout não pergunta o país e todos os pedidos vão para o país da loja.';

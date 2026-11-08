@@ -27,3 +27,5 @@ $_['text_contact_details'] = 'Kontaktní údaje';
 $_['text_edit'] = 'Upravit kontakty';
 $_['text_social_links'] = 'Odkazy na sociální sítě';
 $_['text_success'] = 'Úspěch: Kontakty obchodu byly upraveny!';
+$_['entry_sell_abroad'] = 'Prodávám i do jiných zemí';
+$_['help_sell_abroad'] = 'Nechte vypnuté, pokud prodáváte jen v jedné zemi: pokladna se pak na zemi neptá, všechny objednávky jdou do země obchodu.';

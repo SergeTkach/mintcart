@@ -303,7 +303,19 @@ class ControllerMintcartCheckout extends Controller {
 			$input[$field] = isset($address[$field]) ? $address[$field] : '';
 		}
 
+		// A store that sells in one country only never takes another one.
+		if (!$this->sellsAbroad() && (int)$input['country_id'] !== (int)$this->config->get('config_country_id')) {
+			$input['country_id'] = (int)$this->config->get('config_country_id');
+			$input['zone_id'] = 0;
+		}
+
 		return $input;
+	}
+
+	// Business setting: does the store ship to other countries too? Unset (stores
+	// from before the setting existed) means yes.
+	private function sellsAbroad() {
+		return (string)$this->config->get('config_mc_sell_abroad') !== '0';
 	}
 
 	// Writes the posted (possibly partial) form into the stock checkout
@@ -329,11 +341,21 @@ class ControllerMintcartCheckout extends Controller {
 		}
 
 		$input = $this->addressInput();
+		$previous_country = (int)$input['country_id'];
 
 		foreach (\MintCart\Commerce\CheckoutService::ADDRESS_FIELDS as $field) {
 			if (isset($post[$field])) {
 				$input[$field] = trim((string)$post[$field]);
 			}
+		}
+
+		// The region is not asked; a new country drops the old one. One-country stores keep their country.
+		if (!$this->sellsAbroad()) {
+			$input['country_id'] = (int)$this->config->get('config_country_id');
+		}
+
+		if ((int)$input['country_id'] !== $previous_country) {
+			$input['zone_id'] = 0;
 		}
 
 		$this->load->model('localisation/country');
@@ -497,12 +519,10 @@ class ControllerMintcartCheckout extends Controller {
 
 		$this->load->model('localisation/country');
 
-		$this->load->model('localisation/zone');
 
 		$country_info = $this->model_localisation_country->getCountry((int)$input['country_id']);
-		$zone_ids = array_column($this->model_localisation_zone->getZonesByCountryId((int)$input['country_id']), 'zone_id');
 
-		$errors += $service->validateAddress($input, $country_info ? $country_info : null, $zone_ids);
+		$errors += $service->validateAddress($input, $country_info ? $country_info : null);
 
 		if ($this->cart->hasShipping() && !isset($this->session->data['shipping_method'])) {
 			$errors['shipping_method'] = 'error_shipping';
@@ -554,6 +574,7 @@ class ControllerMintcartCheckout extends Controller {
 			'logged'            => $logged,
 			'can_guest'         => (bool)$this->canGuest(),
 			'shipping_required' => (bool)$this->cart->hasShipping(),
+			'sell_abroad'       => $this->sellsAbroad(),
 			'initialized'       => isset($this->session->data['payment_address']),
 			'contact'           => $this->contact(),
 			'address'           => $this->addressInput(),
@@ -567,6 +588,11 @@ class ControllerMintcartCheckout extends Controller {
 			$state['countries'] = array();
 
 			foreach ($this->model_localisation_country->getCountries() as $country) {
+				// A one-country store offers only its own country.
+				if (!$this->sellsAbroad() && (int)$country['country_id'] !== (int)$this->config->get('config_country_id')) {
+					continue;
+				}
+
 				$state['countries'][] = array(
 					'country_id'        => (int)$country['country_id'],
 					'name'              => $country['name'],
@@ -574,17 +600,6 @@ class ControllerMintcartCheckout extends Controller {
 					'phone_mask'        => $this->phoneMaskFor($country)
 				);
 			}
-		}
-
-		$this->load->model('localisation/zone');
-
-		$state['zones'] = array();
-
-		foreach ($this->model_localisation_zone->getZonesByCountryId((int)$state['address']['country_id']) as $zone) {
-			$state['zones'][] = array(
-				'zone_id' => (int)$zone['zone_id'],
-				'name'    => $zone['name']
-			);
 		}
 
 		$shipping_service = new \MintCart\Commerce\ShippingMethodService();

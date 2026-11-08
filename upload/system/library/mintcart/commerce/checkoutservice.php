@@ -94,12 +94,11 @@ final class CheckoutService
 
     /**
      * @param array|null $country OpenCart country row (needs `postcode_required`), null if not found
-     * @param int[] $zoneIds the country's zone ids; when the country has
-     *        zones, one of them must be chosen (stock guest.php gets the
-     *        same effect from its empty "Please select" option value)
+     * The region is not asked at checkout (country only), so it is not validated.
+     *
      * @return array<string, string> field => language key
      */
-    public function validateAddress(array $input, ?array $country, array $zoneIds): array
+    public function validateAddress(array $input, ?array $country): array
     {
         $errors = [];
 
@@ -117,12 +116,6 @@ final class CheckoutService
 
         if (!$country) {
             $errors['country_id'] = 'error_country';
-        }
-
-        $zoneId = $input['zone_id'] ?? '';
-
-        if ($zoneId === '' || !is_numeric($zoneId) || ($zoneIds && !in_array((int) $zoneId, array_map('intval', $zoneIds), true))) {
-            $errors['zone_id'] = 'error_zone';
         }
 
         return $errors;

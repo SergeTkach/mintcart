@@ -29,3 +29,5 @@ $_['error_social'] = '¡%s debe ser una URL válida!';
 $_['entry_phone_mask'] = 'Formato del teléfono';
 $_['help_phone_mask'] = 'Opcional. Los campos de teléfono (pago, pedido rápido) lo siguen; # es un dígito, p. ej. +34 ### ## ## ##. Déjelo vacío para usar el formato predeterminado de su país.';
 $_['error_phone_mask'] = 'Use dígitos, # por cada dígito a escribir, y + ( ) - o espacios; al menos un #.';
+$_['entry_sell_abroad'] = 'También vendo a otros países';
+$_['help_sell_abroad'] = 'Déjelo desactivado si vende en un solo país: el pago no pedirá el país y todos los pedidos irán al país de la tienda.';

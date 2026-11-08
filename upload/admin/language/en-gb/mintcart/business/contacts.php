@@ -32,3 +32,5 @@ $_['error_social']     = '%s must be a valid URL!';
 $_['entry_phone_mask'] = 'Phone format';
 $_['help_phone_mask']  = "Optional. Phone fields (checkout, Quick Order) follow it; # is one digit, e.g. +380 (##) ###-##-##. Leave empty to use your country's default.";
 $_['error_phone_mask'] = 'Use digits, # for each digit to type, and + ( ) - or spaces; at least one #.';
+$_['entry_sell_abroad'] = 'I also sell to other countries';
+$_['help_sell_abroad'] = 'Leave off if you sell in one country only: checkout then does not ask the buyer for a country, every order goes to your store\'s country.';

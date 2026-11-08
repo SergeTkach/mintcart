@@ -82,11 +82,6 @@
                             <select id="mc-checkout-country_id" name="country_id" class="mc-field__control" autocomplete="country" aria-describedby="mc-checkout-country_id-error"></select>
                             <p class="mc-field__error" id="mc-checkout-country_id-error" hidden></p>
                         </div>
-                        <div class="mc-field" data-mc-checkout-field="zone_id">
-                            <label class="mc-field__label" for="mc-checkout-zone_id">{{ entry_zone }}</label>
-                            <select id="mc-checkout-zone_id" name="zone_id" class="mc-field__control" autocomplete="address-level1" aria-describedby="mc-checkout-zone_id-error"></select>
-                            <p class="mc-field__error" id="mc-checkout-zone_id-error" hidden></p>
-                        </div>
                         {{ f.field('city', entry_city, 'text', 'address-level2') }}
                         {{ f.field('address_1', entry_address_1, 'text', 'address-line1') }}
                         <div data-mc-checkout-postcode hidden>

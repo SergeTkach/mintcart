@@ -245,19 +245,11 @@ class ControllerMintcartWizard extends Controller
         }
 
         $this->load->model('localisation/country');
-        $this->load->model('localisation/zone');
 
         $countryId = (int)($this->request->post['config_country_id'] ?? 0);
 
         if (!$countryId || !$this->model_localisation_country->getCountry($countryId)) {
             $this->error['country'] = $this->language->get('error_country');
-        } else {
-            $zones = $this->model_localisation_zone->getZonesByCountryId($countryId);
-            $zoneId = (int)($this->request->post['config_zone_id'] ?? 0);
-
-            if ($zones && !in_array($zoneId, array_map('intval', array_column($zones, 'zone_id')), true)) {
-                $this->error['zone'] = $this->language->get('error_zone');
-            }
         }
 
         if (utf8_strlen($address) < 3 || utf8_strlen($address) > 256) {
@@ -444,7 +436,9 @@ class ControllerMintcartWizard extends Controller
             'config_telephone' => trim((string)$this->request->post['config_telephone']),
             'config_address'   => trim((string)$this->request->post['config_address']),
             'config_country_id' => (int)$this->request->post['config_country_id'],
-            'config_zone_id'    => (int)($this->request->post['config_zone_id'] ?? 0),
+            // The region is not asked (country only); a changed country drops the old one.
+            'config_zone_id'    => (int)$this->request->post['config_country_id'] === (int)($existing['config_country_id'] ?? 0) && (int)($existing['config_zone_id'] ?? 0) !== 3563 ? (int)($existing['config_zone_id'] ?? 0) : 0,
+            'config_mc_sell_abroad' => !empty($this->request->post['config_mc_sell_abroad']) ? '1' : '0',
         ]);
 
         $logo = $this->uploadedLogo();
@@ -761,22 +755,20 @@ class ControllerMintcartWizard extends Controller
             $data['config_telephone'] = $this->request->post['config_telephone'] ?? $this->config->get('config_telephone');
             $data['config_address'] = $this->request->post['config_address'] ?? $this->config->get('config_address');
 
-            // Country / region: OpenCart installs as United Kingdom (222) / Aberdeen (3563)
+            // Country: OpenCart installs as United Kingdom (222) / Aberdeen (3563)
             // without asking, so that untouched pair is shown as "not chosen yet".
             $this->load->model('localisation/country');
-            $this->load->model('localisation/zone');
 
             $untouched = (int)$this->config->get('config_country_id') === 222 && (int)$this->config->get('config_zone_id') === 3563;
             $countryId = (int)($this->request->post['config_country_id'] ?? ($untouched ? 0 : $this->config->get('config_country_id')));
-            $zoneId = (int)($this->request->post['config_zone_id'] ?? ($untouched ? 0 : $this->config->get('config_zone_id')));
 
             $data['config_country_id'] = $countryId;
-            $data['config_zone_id'] = $zoneId;
+            $data['config_mc_sell_abroad'] = $this->request->server['REQUEST_METHOD'] === 'POST'
+                ? !empty($this->request->post['config_mc_sell_abroad'])
+                : (string)$this->config->get('config_mc_sell_abroad') === '1';
             $data['countries'] = array_values(array_filter($this->model_localisation_country->getCountries(), function ($country) {
                 return !empty($country['status']);
             }));
-            $data['zones'] = $countryId ? $this->model_localisation_zone->getZonesByCountryId($countryId) : [];
-            $data['zones_url'] = $this->url->link('localisation/country/country', 'user_token=' . $this->session->data['user_token'], true);
             $data['current_logo'] = $this->config->get('config_logo') && is_file(DIR_IMAGE . $this->config->get('config_logo'))
                 ? HTTP_CATALOG . 'image/' . $this->config->get('config_logo')
                 : '';

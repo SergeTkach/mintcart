@@ -27,3 +27,5 @@ $_['text_contact_details'] = 'Kontaktdaten';
 $_['text_edit'] = 'Kontakt bearbeiten';
 $_['text_social_links'] = 'Social-Media-Links';
 $_['text_success'] = 'Erfolgreich: Sie haben die Kontaktdaten des Shops geändert!';
+$_['entry_sell_abroad'] = 'Ich verkaufe auch in andere Länder';
+$_['help_sell_abroad'] = 'Aus lassen, wenn Sie nur in einem Land verkaufen: Dann fragt die Kasse nicht nach dem Land, alle Bestellungen gehen in das Land Ihres Shops.';
