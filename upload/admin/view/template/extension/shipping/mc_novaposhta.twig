@@ -36,6 +36,15 @@
             </div>
           </div>
           <div class="form-group">
+            <label class="col-sm-2 control-label">{{ entry_directory }}</label>
+            <div class="col-sm-10">
+              <p class="form-control-static" id="directory-status">{{ directory_status }}</p>
+              <button type="button" class="btn btn-default" id="button-sync" data-loading-text="{{ text_loading }}"><i class="fa fa-refresh"></i> {{ button_sync }}</button>
+              <div class="help-block">{{ help_directory }}</div>
+              <div class="text-danger" id="sync-error"></div>
+            </div>
+          </div>
+          <div class="form-group">
             <label class="col-sm-2 control-label" for="input-free-from">{{ entry_free_from }}</label>
             <div class="col-sm-10">
               <input type="text" name="shipping_mc_novaposhta_free_from" value="{{ shipping_mc_novaposhta_free_from }}" id="input-free-from" class="form-control" />
@@ -62,4 +71,52 @@
     </div>
   </div>
 </div>
+<script>
+// Refills the local directory page by page: cities, branches, then "finish" drops what Nova Poshta no longer lists.
+$('#button-sync').on('click', function () {
+  var $button = $(this), $status = $('#directory-status'), $error = $('#sync-error');
+  var idle = $button.html(), batch = Math.floor(Date.now() / 1000);
+  var steps = ['cities', 'warehouses', 'finish'], total = 0;
+
+  $error.text('');
+  $button.prop('disabled', true).text($button.data('loading-text'));
+
+  function fail() {
+    $error.text('{{ error_api }}');
+    $button.prop('disabled', false).html(idle);
+  }
+
+  function run(index, page) {
+    if (index >= steps.length) {
+      return;
+    }
+
+    $.post('{{ sync_url }}', { step: steps[index], page: page, batch: batch }, null, 'json').done(function (result) {
+      if (!result.ok) {
+        $error.text(result.message);
+        $button.prop('disabled', false).html(idle);
+        return;
+      }
+
+      if (steps[index] === 'finish') {
+        $status.text(result.message);
+        $button.prop('disabled', false).html(idle);
+        return;
+      }
+
+      total += result.count;
+      $status.text(steps[index] + ': ' + total);
+
+      if (result.last) {
+        total = 0;
+        run(index + 1, 1);
+      } else {
+        run(index, page + 1);
+      }
+    }).fail(fail);
+  }
+
+  run(0, 1);
+});
+</script>
 {{ footer }}

@@ -2,10 +2,11 @@
 namespace MintCart\Shipping;
 
 /**
- * Nova Poshta JSON API, the two calls the checkout needs: city search
- * (`Address.searchSettlements`) and the pickup points of a city
- * (`AddressGeneral.getWarehouses`). Live calls, no local copy of the city or
- * branch tables to sync; callers cache the results.
+ * Nova Poshta JSON API, the three calls that refill the local city and branch
+ * directory: regions (`Address.getAreas`), cities (`Address.getCities`) and
+ * branches/lockers (`AddressGeneral.getWarehouses`), the last two page by page.
+ * The checkout itself reads the local copy (migration
+ * 202611081000_create_novaposhta_directory.php), never the API.
  *
  * No OpenCart dependency: the HTTP call is an injected callable
  * `fn(string $url, string $json): ?string`, so the parsing is tested without
@@ -15,6 +16,8 @@ final class NovaPoshtaClient
 {
     /** TypeOfWarehouse of a parcel locker (postomat); every other type is a branch. */
     public const POSTOMAT_TYPE = 'f9316480-5f2d-425d-bc2c-ac7cd29decf0';
+
+    public const PAGE_SIZE = 500;
 
     private string $apiKey;
 
@@ -31,66 +34,78 @@ final class NovaPoshtaClient
     }
 
     /**
-     * @return list<array{id: string, name: string, text: string}> id = the
-     *         city ref the pickup points are asked for; text includes the region
+     * @return array<string, array{name: string, name_ru: string}> by region ref
      */
-    public function searchCities(string $term, int $limit = 20): array
+    public function getAreas(): array
     {
-        $term = trim($term);
+        $areas = [];
 
-        if ($term === '') {
-            return [];
-        }
-
-        $data = $this->call('Address', 'searchSettlements', ['CityName' => $term, 'Limit' => (string)$limit]);
-        $cities = [];
-
-        foreach ($data[0]['Addresses'] ?? [] as $row) {
-            if (empty($row['DeliveryCity'])) {
-                continue;
+        foreach ($this->call('Address', 'getAreas', []) as $row) {
+            if (!empty($row['Ref'])) {
+                $areas[(string)$row['Ref']] = [
+                    'name'    => (string)($row['Description'] ?? ''),
+                    'name_ru' => (string)($row['DescriptionRu'] ?? ''),
+                ];
             }
-
-            $cities[] = [
-                'id'   => (string)$row['DeliveryCity'],
-                'name' => (string)($row['MainDescription'] ?? ''),
-                'text' => (string)($row['Present'] ?? $row['MainDescription'] ?? ''),
-            ];
         }
 
-        return $cities;
+        return $areas;
     }
 
     /**
-     * @return list<array{id: string, text: string, postomat: bool}>
+     * @return array{rows: list<array{city_ref: string, name: string, name_ru: string, area_ref: string}>, raw: int}
+     *         `raw` = rows the API returned (a page shorter than PAGE_SIZE is the last)
      */
-    public function getPoints(string $cityRef): array
+    public function getCitiesPage(int $page): array
     {
-        $cityRef = trim($cityRef);
+        $data = $this->call('Address', 'getCities', ['Page' => (string)$page, 'Limit' => (string)self::PAGE_SIZE]);
+        $rows = [];
 
-        if ($cityRef === '') {
-            return [];
-        }
-
-        $points = [];
-
-        foreach ($this->call('AddressGeneral', 'getWarehouses', ['CityRef' => $cityRef, 'Limit' => '1000']) as $row) {
+        foreach ($data as $row) {
             if (empty($row['Ref']) || empty($row['Description'])) {
                 continue;
             }
 
-            $points[] = [
-                'id'       => (string)$row['Ref'],
-                'text'     => (string)$row['Description'],
-                'postomat' => ($row['TypeOfWarehouse'] ?? '') === self::POSTOMAT_TYPE,
+            $rows[] = [
+                'city_ref' => (string)$row['Ref'],
+                'name'     => (string)$row['Description'],
+                'name_ru'  => (string)($row['DescriptionRu'] ?? ''),
+                'area_ref' => (string)($row['Area'] ?? ''),
             ];
         }
 
-        return $points;
+        return ['rows' => $rows, 'raw' => count($data)];
+    }
+
+    /**
+     * @return array{rows: list<array{point_ref: string, city_ref: string, number: int, postomat: bool, description: string, description_ru: string}>, raw: int}
+     */
+    public function getWarehousesPage(int $page): array
+    {
+        $data = $this->call('AddressGeneral', 'getWarehouses', ['Page' => (string)$page, 'Limit' => (string)self::PAGE_SIZE, 'Language' => 'UA']);
+        $rows = [];
+
+        foreach ($data as $row) {
+            if (empty($row['Ref']) || empty($row['CityRef']) || empty($row['Description'])) {
+                continue;
+            }
+
+            $rows[] = [
+                'point_ref'      => (string)$row['Ref'],
+                'city_ref'       => (string)$row['CityRef'],
+                'number'         => (int)($row['Number'] ?? 0),
+                'postomat'       => ($row['TypeOfWarehouse'] ?? '') === self::POSTOMAT_TYPE,
+                'description'    => (string)$row['Description'],
+                'description_ru' => (string)($row['DescriptionRu'] ?? ''),
+            ];
+        }
+
+        return ['rows' => $rows, 'raw' => count($data)];
     }
 
     /**
      * @return array the response's `data`, [] on any failure (no key, network
-     *         error, `success: false`) so the checkout degrades to an empty list
+     *         error, `success: false`)
      */
     private function call(string $model, string $method, array $properties): array
     {
@@ -102,7 +117,7 @@ final class NovaPoshtaClient
             'apiKey'           => $this->apiKey,
             'modelName'        => $model,
             'calledMethod'     => $method,
-            'methodProperties' => $properties,
+            'methodProperties' => (object)$properties,
         ]);
 
         $raw = ($this->transport)($this->url, (string)$body);

@@ -3,14 +3,15 @@
  * Nova Poshta delivery: pick up at a branch, at a parcel locker, or by courier.
  * The customer picks the city and the point in the checkout form this model
  * supplies (docs/developer/commerce/shipping-method-forms.md); cities and
- * points come live from the Nova Poshta API. The delivery fee is paid to the
- * carrier, so the quotes cost 0 in the order.
+ * points come from the local directory (`mc_novaposhta_city` / `_warehouse`),
+ * refilled from the Nova Poshta API on the extension's admin screen. The
+ * delivery fee is paid to the carrier, so the quotes cost 0 in the order.
  */
 class ModelExtensionShippingMcNovaposhta extends Model {
 	const METHODS = array('warehouse', 'postomat', 'courier');
 
 	public function getQuote($address) {
-		if (!$this->config->get('shipping_mc_novaposhta_status') || !$this->config->get('shipping_mc_novaposhta_api_key')) {
+		if (!$this->config->get('shipping_mc_novaposhta_status') || !$this->hasDirectory()) {
 			return array();
 		}
 
@@ -46,49 +47,83 @@ class ModelExtensionShippingMcNovaposhta extends Model {
 		);
 	}
 
+	public function hasDirectory() {
+		return (bool)$this->db->query("SELECT 1 FROM `" . DB_PREFIX . "mc_novaposhta_warehouse` LIMIT 1")->num_rows;
+	}
+
+	// Russian-language storefronts get the Russian names; everything else Ukrainian.
+	private function russian() {
+		return strpos((string)$this->config->get('config_language'), 'ru') === 0;
+	}
+
+	private function cityRow($row) {
+		$ru = $this->russian();
+		$name = ($ru && $row['name_ru'] !== '') ? $row['name_ru'] : $row['name'];
+		$area = ($ru && $row['area_ru'] !== '') ? $row['area_ru'] : $row['area'];
+
+		return array(
+			'id'   => $row['city_ref'],
+			'name' => $name,
+			'text' => $area !== '' ? $name . ', ' . $area : $name
+		);
+	}
+
 	/**
 	 * @return list<array{id: string, name: string, text: string}>
 	 */
 	public function searchCities($term) {
-		$cities = $this->client()->searchCities((string)$term);
+		$term = trim((string)$term);
 
-		// Remember what was offered: processCheckout() resolves the posted
-		// city id against this, never against text sent by the browser.
-		$seen = isset($this->session->data['mc_novaposhta_cities']) ? $this->session->data['mc_novaposhta_cities'] : array();
-
-		foreach ($cities as $city) {
-			$seen[$city['id']] = array('name' => $city['name'], 'text' => $city['text']);
+		if ($term === '') {
+			return array();
 		}
 
-		$this->session->data['mc_novaposhta_cities'] = array_slice($seen, -60, null, true);
+		$like = $this->db->escape(addcslashes(utf8_strtolower($term), '%_\\')) . '%';
+
+		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "mc_novaposhta_city` WHERE `name` LIKE '" . $like . "' OR `name_ru` LIKE '" . $like . "' ORDER BY CHAR_LENGTH(`name`), `name`, `area` LIMIT 20");
+
+		$cities = array();
+
+		foreach ($query->rows as $row) {
+			$cities[] = $this->cityRow($row);
+		}
 
 		return $cities;
+	}
+
+	// A city by ref, or null: the posted ref is always resolved here, never trusted.
+	public function getCity($city_ref) {
+		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "mc_novaposhta_city` WHERE `city_ref` = '" . $this->db->escape((string)$city_ref) . "'");
+
+		return $query->num_rows ? $this->cityRow($query->row) : null;
+	}
+
+	private function pointRow($row) {
+		$text = ($this->russian() && $row['description_ru'] !== '') ? $row['description_ru'] : $row['description'];
+
+		return array('id' => $row['point_ref'], 'text' => $text);
 	}
 
 	/**
 	 * @return list<array{id: string, text: string}> branches or lockers of a city
 	 */
 	public function getPoints($city_ref, $type) {
-		$key = 'mc_np_points.' . strtr((string)$city_ref, '0123456789', 'ghijklmnop');
-		$points = $this->cache->get($key);
-
-		if (!is_array($points)) {
-			$points = $this->client()->getPoints((string)$city_ref);
-
-			if ($points) {
-				$this->cache->set($key, $points);
-			}
-		}
+		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "mc_novaposhta_warehouse` WHERE `city_ref` = '" . $this->db->escape((string)$city_ref) . "' AND `postomat` = '" . (int)($type === 'postomat') . "' ORDER BY `number`, `description`");
 
 		$result = array();
 
-		foreach ($points as $point) {
-			if ($point['postomat'] === ($type === 'postomat')) {
-				$result[] = array('id' => $point['id'], 'text' => $point['text']);
-			}
+		foreach ($query->rows as $row) {
+			$result[] = $this->pointRow($row);
 		}
 
 		return $result;
+	}
+
+	// A branch/locker by ref that belongs to the city and the chosen type, or null.
+	public function getPoint($point_ref, $city_ref, $type) {
+		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "mc_novaposhta_warehouse` WHERE `point_ref` = '" . $this->db->escape((string)$point_ref) . "' AND `city_ref` = '" . $this->db->escape((string)$city_ref) . "' AND `postomat` = '" . (int)($type === 'postomat') . "'");
+
+		return $query->num_rows ? $this->pointRow($query->row) : null;
 	}
 
 	public function getCheckoutForm($quote_key) {
@@ -133,23 +168,23 @@ class ModelExtensionShippingMcNovaposhta extends Model {
 		}
 
 		$stored = isset($this->session->data['mc_novaposhta']) ? $this->session->data['mc_novaposhta'] : array();
-		$seen = isset($this->session->data['mc_novaposhta_cities']) ? $this->session->data['mc_novaposhta_cities'] : array();
 
 		$city_ref = isset($post['np_city']) ? trim((string)$post['np_city']) : (isset($stored['city_ref']) ? $stored['city_ref'] : '');
+		$city = $city_ref !== '' ? $this->getCity($city_ref) : null;
 
-		if ($city_ref === '' || !isset($seen[$city_ref])) {
+		if (!$city) {
 			$city_ref = '';
 		}
 
 		$stored['city_ref'] = $city_ref;
-		$stored['city_text'] = $city_ref !== '' ? $seen[$city_ref]['text'] : '';
+		$stored['city_text'] = $city ? $city['text'] : '';
 
 		if (!$city_ref) {
 			$stored['point_id'] = '';
 			$stored['point_text'] = '';
 			$result['errors']['np_city'] = $this->language->get('error_city');
 		} else {
-			$result['address']['city'] = $seen[$city_ref]['name'];
+			$result['address']['city'] = $city['name'];
 		}
 
 		if ($quote_key === 'courier') {
@@ -163,24 +198,11 @@ class ModelExtensionShippingMcNovaposhta extends Model {
 		} elseif ($city_ref) {
 			$point_id = isset($post['np_point']) ? trim((string)$post['np_point']) : (isset($stored['point_id']) ? $stored['point_id'] : '');
 
-			$known = isset($stored['point_id'], $stored['point_text'], $stored['point_type'], $stored['point_city'])
-				&& $stored['point_id'] === $point_id && $stored['point_type'] === $quote_key && $stored['point_city'] === $city_ref;
+			$point = $point_id !== '' ? $this->getPoint($point_id, $city_ref, $quote_key) : null;
 
-			// The point is resolved against the carrier's list only when it changed.
-			if (!$known) {
-				$stored['point_text'] = '';
-
-				if ($point_id !== '') {
-					foreach ($this->getPoints($city_ref, $quote_key) as $point) {
-						if ($point['id'] === $point_id) {
-							$stored['point_text'] = $point['text'];
-						}
-					}
-				}
-
-				$stored['point_type'] = $quote_key;
-				$stored['point_city'] = $city_ref;
-			}
+			$stored['point_text'] = $point ? $point['text'] : '';
+			$stored['point_type'] = $quote_key;
+			$stored['point_city'] = $city_ref;
 
 			$stored['point_id'] = $stored['point_text'] !== '' ? $point_id : '';
 
@@ -194,26 +216,5 @@ class ModelExtensionShippingMcNovaposhta extends Model {
 		$this->session->data['mc_novaposhta'] = $stored;
 
 		return $result;
-	}
-
-	private function client() {
-		return new \MintCart\Shipping\NovaPoshtaClient((string)$this->config->get('shipping_mc_novaposhta_api_key'), function ($url, $json) {
-			$curl = curl_init($url);
-
-			curl_setopt_array($curl, array(
-				CURLOPT_POST           => true,
-				CURLOPT_POSTFIELDS     => $json,
-				CURLOPT_HTTPHEADER     => array('Content-Type: application/json'),
-				CURLOPT_RETURNTRANSFER => true,
-				CURLOPT_CONNECTTIMEOUT => 4,
-				CURLOPT_TIMEOUT        => 8
-			));
-
-			$body = curl_exec($curl);
-
-			curl_close($curl);
-
-			return $body === false ? null : $body;
-		});
 	}
 }
