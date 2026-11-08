@@ -20,6 +20,7 @@
  * Contract: docs/developer/commerce/checkout-service.md
  */
 
+import { setInputMask } from './phone-mask.js';
 import {
     fetchCheckoutState,
     updateCheckout,
@@ -141,6 +142,13 @@ function initCheckoutRoot(root) {
         const country = countries.find((c) => String(c.country_id) === String(countryId));
 
         root.querySelector('[data-mc-checkout-postcode]').hidden = !(country && country.postcode_required);
+    }
+
+    // The phone format follows the buyer's country, not the store's.
+    function renderPhoneMask(countryId) {
+        const country = countries.find((c) => String(c.country_id) === String(countryId));
+
+        setInputMask(form.elements.telephone, country?.phone_mask ?? '');
     }
 
     function renderOptions(container, name, groups, selected, emptyText) {
@@ -304,6 +312,7 @@ function initCheckoutRoot(root) {
 
             form.elements.comment.value = state.comment;
             renderCountries(state.address.country_id);
+            renderPhoneMask(state.address.country_id);
 
             const loginEl = root.querySelector('[data-mc-checkout-login]');
 
@@ -483,6 +492,7 @@ function initCheckoutRoot(root) {
         // A new country invalidates the region; the response brings its zones.
         if (event.target === countrySelect) {
             zoneSelect.value = '';
+            renderPhoneMask(countrySelect.value);
         }
 
         resetPayment();

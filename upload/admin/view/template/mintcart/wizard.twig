@@ -92,6 +92,31 @@
                 {% if error.telephone %}<p class="mc-field__error" id="error-config-telephone" role="alert">{{ error.telephone }}</p>{% endif %}
               </div>
             </div>
+            <div class="mc-wizard__col">
+              <div class="mc-field {% if error.country %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-config-country">{{ entry_country }}</label>
+                <select id="input-config-country" name="config_country_id" class="mc-field__control" data-zones-url="{{ zones_url }}" aria-describedby="help-config-country{% if error.country %} error-config-country{% endif %}" {% if error.country %}aria-invalid="true"{% endif %}>
+                  <option value="">{{ text_select }}</option>
+                  {% for country in countries %}
+                  <option value="{{ country.country_id }}"{% if country.country_id == config_country_id %} selected{% endif %}>{{ country.name }}</option>
+                  {% endfor %}
+                </select>
+                <p class="mc-field__help" id="help-config-country">{{ help_country }}</p>
+                {% if error.country %}<p class="mc-field__error" id="error-config-country" role="alert">{{ error.country }}</p>{% endif %}
+              </div>
+            </div>
+            <div class="mc-wizard__col">
+              <div class="mc-field {% if error.zone %}has-error{% endif %}">
+                <label class="mc-field__label" for="input-config-zone">{{ entry_zone }}</label>
+                <select id="input-config-zone" name="config_zone_id" class="mc-field__control" data-selected="{{ config_zone_id }}" data-placeholder="{{ text_select }}" {% if error.zone %}aria-invalid="true" aria-describedby="error-config-zone"{% endif %}>
+                  <option value="">{{ text_select }}</option>
+                  {% for zone in zones %}
+                  <option value="{{ zone.zone_id }}"{% if zone.zone_id == config_zone_id %} selected{% endif %}>{{ zone.name }}</option>
+                  {% endfor %}
+                </select>
+                {% if error.zone %}<p class="mc-field__error" id="error-config-zone" role="alert">{{ error.zone }}</p>{% endif %}
+              </div>
+            </div>
             <div class="mc-wizard__col mc-wizard__col--full">
               <div class="mc-field {% if error.address %}has-error{% endif %}">
                 <label class="mc-field__label" for="input-config-address">{{ entry_address }}</label>
@@ -114,6 +139,34 @@
 
           {{ wizard.actions(prev_step_url, button_back, button_continue) }}
         </form>
+        <script>
+        (function () {
+          var country = document.getElementById('input-config-country');
+          var zone = document.getElementById('input-config-zone');
+
+          if (!country || !zone) {
+            return;
+          }
+
+          // A new country brings its own regions (stock localisation/country/country JSON).
+          country.addEventListener('change', function () {
+            zone.innerHTML = '';
+            zone.add(new Option(zone.getAttribute('data-placeholder'), ''));
+
+            if (!country.value) {
+              return;
+            }
+
+            fetch(country.getAttribute('data-zones-url') + '&country_id=' + encodeURIComponent(country.value), { credentials: 'same-origin' })
+              .then(function (response) { return response.json(); })
+              .then(function (data) {
+                (data.zone || []).forEach(function (item) {
+                  zone.add(new Option(item.name, item.zone_id));
+                });
+              });
+          });
+        })();
+        </script>
         {% endif %}
 
         {% if step == 'contacts' %}

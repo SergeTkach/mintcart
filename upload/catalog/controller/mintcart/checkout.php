@@ -465,6 +465,21 @@ class ControllerMintcartCheckout extends Controller {
 		}
 	}
 
+	// Phone mask for a buyer in $country (an OpenCart country row): the country's
+	// default format; the store's own custom mask (Business > Contacts) applies to
+	// the store's own country. '' = no known format (any international number).
+	private function phoneMaskFor($country) {
+		$custom = (int)$country['country_id'] === (int)$this->config->get('config_country_id') ? (string)$this->config->get('config_mc_phone_mask') : '';
+
+		static $defaults = null;
+
+		if ($defaults === null) {
+			$defaults = (array)json_decode((string)@file_get_contents(DIR_SYSTEM . 'mintcart/data/phone-masks.json'), true);
+		}
+
+		return \MintCart\Commerce\PhoneMask::resolve($custom, (string)$country['iso_code_2'], $defaults);
+	}
+
 	// @return array field => message
 	private function validate() {
 		$service = $this->service();
@@ -473,9 +488,9 @@ class ControllerMintcartCheckout extends Controller {
 		if (!$this->customer->isLogged()) {
 			$this->load->model('localisation/country');
 
-			$store_country = $this->model_localisation_country->getCountry((int)$this->config->get('config_country_id'));
-			$phone_mask = \MintCart\Commerce\PhoneMask::forStore((string)$this->config->get('config_mc_phone_mask'), $store_country ? (string)$store_country['iso_code_2'] : '', DIR_SYSTEM . 'mintcart/data/phone-masks.json');
-			$errors += $service->validateContact($this->contact(), $phone_mask);
+			// The phone format follows the buyer's country, not the store's.
+			$buyer_country = $this->model_localisation_country->getCountry((int)$this->addressInput()['country_id']);
+			$errors += $service->validateContact($this->contact(), $buyer_country ? $this->phoneMaskFor($buyer_country) : '');
 		}
 
 		$input = $this->addressInput();
@@ -555,7 +570,8 @@ class ControllerMintcartCheckout extends Controller {
 				$state['countries'][] = array(
 					'country_id'        => (int)$country['country_id'],
 					'name'              => $country['name'],
-					'postcode_required' => (bool)$country['postcode_required']
+					'postcode_required' => (bool)$country['postcode_required'],
+					'phone_mask'        => $this->phoneMaskFor($country)
 				);
 			}
 		}

@@ -11,7 +11,13 @@
 
 const SELECTOR = 'input[type="tel"], input[name$="telephone"]';
 
-function getMask() {
+function getMask(input) {
+    // An input's own attribute (even empty) wins: the checkout sets it from the
+    // buyer's country, and a country without a known format stays free-form.
+    if (input instanceof HTMLInputElement && input.hasAttribute('data-mc-phone-mask')) {
+        return input.getAttribute('data-mc-phone-mask') || '';
+    }
+
     return document.documentElement.getAttribute('data-mc-phone-mask') || '';
 }
 
@@ -63,7 +69,7 @@ export function formatPhone(value, mask) {
 export function initPhoneMask() {
     document.addEventListener('input', (event) => {
         const input = event.target;
-        const mask = getMask();
+        const mask = getMask(input);
 
         if (!mask || !(input instanceof HTMLInputElement) || !input.matches(SELECTOR)) {
             return;
@@ -81,11 +87,24 @@ export function initPhoneMask() {
 
     document.addEventListener('focusin', (event) => {
         const input = event.target;
-        const mask = getMask();
+        const mask = getMask(input);
 
         if (mask && input instanceof HTMLInputElement && input.matches(SELECTOR)) {
             input.placeholder = mask.replace(/#/g, '0');
             input.setAttribute('inputmode', 'tel');
         }
     });
+}
+
+/**
+ * Pins `input` to a country's mask (empty string = no mask) and reformats what
+ * is already typed.
+ */
+export function setInputMask(input, mask) {
+    input.setAttribute('data-mc-phone-mask', mask);
+    input.placeholder = mask ? mask.replace(/#/g, '0') : '';
+
+    if (mask && input.value) {
+        input.value = formatPhone(input.value, mask);
+    }
 }
