@@ -1,0 +1,52 @@
+{{ header }}
+<div class="container py-4">
+    <nav class="mc-breadcrumb mb-4" aria-label="Breadcrumb">
+        <ol class="mc-breadcrumb__list">
+            {% for breadcrumb in breadcrumbs %}
+                {% if not loop.last %}
+                    <li class="mc-breadcrumb__item"><a class="mc-breadcrumb__link" href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="mc-breadcrumb__item" aria-current="page">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="mc-auth">
+        {% if success %}
+            <div class="mc-alert mc-alert--success mb-3" role="status">
+                <div class="mc-alert__body"><p class="mc-alert__message">{{ success }}</p></div>
+            </div>
+        {% endif %}
+        {% if error_warning %}
+            <div class="mc-alert mc-alert--danger mb-3" role="alert">
+                <div class="mc-alert__body"><p class="mc-alert__message">{{ error_warning }}</p></div>
+            </div>
+        {% endif %}
+
+        <form class="mc-auth__card" action="{{ action }}" method="post" enctype="multipart/form-data">
+            <h1 class="mc-auth__title">{{ text_returning_customer }}</h1>
+
+            <div class="mc-field mb-3">
+                <label class="mc-field__label" for="input-email">{{ entry_email }}</label>
+                <input type="email" name="email" value="{{ email }}" id="input-email" class="mc-field__control" autocomplete="username">
+            </div>
+
+            <div class="mc-field mb-3">
+                <label class="mc-field__label" for="input-password">{{ entry_password }}</label>
+                <input type="password" name="password" value="{{ password }}" id="input-password" class="mc-field__control" autocomplete="current-password">
+                <a class="mc-auth__forgotten" href="{{ forgotten }}">{{ text_forgotten }}</a>
+            </div>
+
+            {% if redirect %}<input type="hidden" name="redirect" value="{{ redirect }}">{% endif %}
+            <button type="submit" class="mc-button mc-button--primary mc-button--lg mc-auth__submit">{{ button_login }}</button>
+        </form>
+
+        <div class="mc-auth__new">
+            <p class="mc-auth__new-text">{{ text_new_customer }}</p>
+            <a class="mc-button mc-button--outline mc-button--lg mc-auth__submit" href="{{ register }}">{{ text_register }}</a>
+        </div>
+    </div>
+    {{ content_bottom }}
+</div>
+{{ footer }}

@@ -1,0 +1,51 @@
+/**
+ * mc-auth - login page (catalog/view/theme/mint_default/template/account/login.twig):
+ * the sign-in form first, then a clear "Register" button. One narrow column on
+ * every screen; the buttons are full width on phones.
+ */
+
+.mc-auth {
+    max-width: 26rem;
+    margin: var(--mc-space-4) auto var(--mc-space-8, 3rem);
+}
+
+.mc-auth__card {
+    display: block;
+    padding: var(--mc-space-5);
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+}
+
+.mc-auth__title {
+    margin: 0 0 var(--mc-space-4);
+    font-size: var(--mc-font-size-2xl);
+    font-weight: var(--mc-font-weight-bold);
+    line-height: var(--mc-line-height-tight);
+}
+
+.mc-auth__forgotten {
+    display: inline-block;
+    margin-top: var(--mc-space-2);
+    font-size: var(--mc-font-size-sm);
+}
+
+.mc-auth__submit {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
+.mc-auth__new {
+    margin-top: var(--mc-space-5);
+    padding: var(--mc-space-5);
+    text-align: center;
+    background: var(--mc-surface-muted, var(--mc-surface));
+    border: 1px dashed var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+}
+
+.mc-auth__new-text {
+    margin: 0 0 var(--mc-space-3);
+    color: var(--mc-muted);
+}

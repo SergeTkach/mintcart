@@ -92,6 +92,7 @@
 @import './components/checkout.css';
 @import './components/order-success.css';
 @import './components/contact.css';
+@import './components/auth.css';
 @import './compatibility/bootstrap3-shim.css';
 @import './compatibility/opencart3.css';
 @import './components/theme-gallery.css';
